@@ -32,4 +32,5 @@ export type BaseTextProps<V extends TextVariant = 'p'> = {
   children?: ReactNode;
   stringProps: StringProps;
   i18nTFn?: i18n['t'];
+  testId?: string; // used for debugging purposes.
 } & VariantMap[V];

@@ -23,7 +23,7 @@ const variants: TextVariant[] = [
 // Dynamically create variant components
 const variantEntries = variants.map((variant) => {
   const Component = (props: Omit<BaseTextProps<typeof variant>, 'variant'>) =>
-    !!props.i18nTFn ? (
+    'plainText' in props.stringProps || !!props.i18nTFn ? (
       <ServerBaseText variant={variant} {...props} />
     ) : (
       <ClientBaseText variant={variant} {...props} />

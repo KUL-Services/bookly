@@ -2,6 +2,7 @@
 
 import initTranslations from '@/app/i18n/i18n';
 import { H1 } from '@/components/atoms';
+import KulIcon from '@/components/atoms/kul-icon/kul-icon.component';
 import WideBar from '@/components/templates/wide-bar/wide-bar.component';
 import { PageProps } from '@/types';
 
@@ -14,7 +15,7 @@ export default async function Home({ params }: PageProps) {
   );
 
   return (
-    <div className='flex flex-1 content-center items-center'>
+    <div className='flex flex-1 flex-col content-center items-center'>
       <H1
         stringProps={{
           localeKey: 'helloPerson',
@@ -22,6 +23,7 @@ export default async function Home({ params }: PageProps) {
         }}
         i18nTFn={t}
       />
+      <KulIcon />
 
       <WideBar myTextComponent={renderH1Component} />
       
