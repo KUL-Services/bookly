@@ -24,9 +24,9 @@ const variants: TextVariant[] = [
 const variantEntries = variants.map((variant) => {
   const Component = (props: Omit<BaseTextProps<typeof variant>, 'variant'>) =>
     'plainText' in props.stringProps || !!props.i18nTFn ? (
-      <ServerBaseText variant={variant} {...props} />
+      <ServerBaseText variant={variant} {...props} className='text-primary-300/0 '/>
     ) : (
-      <ClientBaseText variant={variant} {...props} />
+      <ClientBaseText variant={variant} {...props} className='text-primary-300/80 '/>
     );
   Component.displayName = capitalize(variant);
   return [capitalize(variant), Component] as const;

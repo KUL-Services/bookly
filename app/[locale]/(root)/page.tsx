@@ -27,6 +27,8 @@ export default async function Home({ params }: PageProps) {
 
       <WideBar myTextComponent={renderH1Component} />
       
+      <H1 fontSize='L' type='desc' fontStyle='bold' stringProps={{plainText: 'Below me should be a CSR text'}}></H1>
+
       <H1 stringProps={{plainText: 'Below me should be a CSR text'}}></H1>
       <H1 stringProps={{localeKey: 'footerTemp'}}></H1>
     </div>

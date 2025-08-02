@@ -33,6 +33,7 @@ const ClientBaseText = <V extends TextVariant = 'p'>({
   const { t } = useTranslation();
   console.log('I am in client', stringProps);
 
+
   return React.createElement(
     Component,
     { className: clsx('base-text', className), ...restDefaultProps },

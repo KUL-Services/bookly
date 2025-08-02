@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { TranslationsProvider } from '@/providers';
 import { PageProps } from '@/types';
+import { ThemeProvider } from 'next-themes';
+import { ThemeChanger } from '@/components/temporary';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -28,11 +30,16 @@ export default async function RootLayout({
 }>) {
   const { locale } = await params;
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <TranslationsProvider locale={locale}>{children}</TranslationsProvider>
+        <TranslationsProvider locale={locale}>
+          <ThemeProvider attribute='class' enableSystem>
+            <ThemeChanger />
+            {children}
+          </ThemeProvider>
+        </TranslationsProvider>
       </body>
     </html>
   );
