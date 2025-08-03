@@ -1,4 +1,19 @@
-.my-custom-class {
-    color: var(--color-primary-500);
-    font-size: xx-large;
+.kul-icon-XL {
+  font-size: x-large;
+}
+
+.kul-icon-L {
+  font-size: large;
+}
+
+.kul-icon-M {
+  font-size: medium;
+}
+
+.kul-icon-S {
+  font-size: small;
+}
+
+.kul-icon-XS {
+  font-size: x-small;
 }

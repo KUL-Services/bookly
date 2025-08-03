@@ -23,7 +23,7 @@ export default async function Home({ params }: PageProps) {
         }}
         i18nTFn={t}
       />
-      <KulIcon />
+      <KulIcon icon={'mdi:bucket'} iconColor='warning-500' />
 
       <WideBar myTextComponent={renderH1Component} />
       
