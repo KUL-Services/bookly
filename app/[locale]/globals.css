@@ -102,7 +102,7 @@
   --black-900: #999999;
 }
 
-[class='dark'] {
+[class='dark']  {
   --primary-100: #0d47a1;
   --primary-200: #1565c0;
   --primary-300: #1976d2;
@@ -184,13 +184,29 @@
   --black-900: #666666;
 }
 
-
 @theme inline {
   /* --color-background: var(--background);
   --color-foreground: var(--foreground); */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
+
+  --font-size-base: 1rem;      /* 16px base */
+  --font-scale: 1.12;           /* Modular scale ratio */
+
+  /* literally if you need to change the font based
+  on the project you can tweak these 2 values
+  and then all is reflected */
+
+  --text-h6: calc();
+  --text-p: var(--font-size-base);
+  --text-h6: calc(var(--text-p) * var(--font-scale));
+  --text-h5: calc(var(--text-h6) * var(--font-scale));
+  --text-h4: calc(var(--text-h5) * var(--font-scale));
+  --text-h3: calc(var(--text-h4) * var(--font-scale));
+  --text-h2: calc(var(--text-h3) * var(--font-scale));
+  --text-h1: calc(var(--text-h2) * var(--font-scale));
+  --text-small: calc(var(--text-p) / var(--font-scale));
 
   --color-primary-100: var(--primary-100);
   --color-primary-200: var(--primary-200);
@@ -271,9 +287,6 @@
   --color-error-700: var(--error-700);
   --color-error-800: var(--error-800);
   --color-error-900: var(--error-900);
-
-
-
 }
 
 body {
@@ -281,13 +294,40 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* 
+h1 {
+  font-size: 2.986rem;
+}
+h2 {
+  font-size: 2.488rem;
+}
+h3 {
+  font-size: 2.074rem;
+}
+h4 {
+  font-size: 1.728rem;
+}
+h5 {
+  font-size: 1.44rem;
+}
+h6 {
+  font-size: 1.2rem;
+}
+p,
+label,
+span {
+  font-size: 1rem;
+}
+small {
+  font-size: 0.833rem;
+} */
 
 .text-style {
   color: var(--text-color);
 }
 
 iconify-icon {
- display: inline-block;
- width: 1em;
- height: 1em;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
 }

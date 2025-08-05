@@ -6,6 +6,7 @@ export {
   H5,
   H6,
   P,
+  Small,
   Span,
   Label,
   Strong,
