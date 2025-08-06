@@ -16,6 +16,7 @@ import {
 } from '@/components/atoms';
 import KulIcon from '@/components/atoms/kul-icon/kul-icon.component';
 import WideBar from '@/components/templates/wide-bar/wide-bar.component';
+import { FontSize } from '@/constants/enums';
 import { PageProps } from '@/types';
 
 export default async function Home({ params }: PageProps) {
@@ -57,6 +58,15 @@ export default async function Home({ params }: PageProps) {
       <Span stringProps={{ plainText: 'This is (Span) text!' }}></Span>
       <Label stringProps={{ plainText: 'This is (Label) text!' }}></Label>
       <Strong stringProps={{ plainText: 'This is (Strong) text!' }}></Strong>
+
+      <KulIcon icon={'mdi:bucket'} iconColor='primary-500' fontSize={FontSize.S} />
+      <KulIcon icon={'mdi:bucket'} iconColor='secondary-500' fontSize={FontSize.M} />
+      <KulIcon icon={'mdi:bucket'} iconColor='alternate-500' fontSize={FontSize.L} />
+      <KulIcon icon={'mdi:bucket'} iconColor='success-500' fontSize={FontSize.XL} />
+      <KulIcon icon={'mdi:bucket'} iconColor='error-500' fontSize={FontSize['2XL']} />
+      <KulIcon icon={'mdi:bucket'} iconColor='warning-500' fontSize={FontSize['3XL']} />
+      <KulIcon icon={'mdi:bucket'} iconColor='white-500' fontSize={FontSize['4XL']} />
+      <KulIcon icon={'mdi:bucket'} iconColor='black-500' fontSize={FontSize['5XL']} />
 
       <H1 stringProps={{ plainText: 'Below me should be a CSR text' }}></H1>
       <H1 stringProps={{ localeKey: 'footerTemp' }}></H1>

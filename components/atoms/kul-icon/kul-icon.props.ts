@@ -1,3 +1,4 @@
+import { FontSize } from '@/constants/enums';
 import { AppColor } from '@/types';
 import { IconifyIconProperties } from '@iconify-icon/react/dist/iconify.mjs';
 
@@ -12,5 +13,6 @@ export type KulIconProps = Omit<IconifyIconProps, 'color'> & {
   wrapperClass?: string[] | string | undefined;
   iconClass?: string[] | string | undefined;
   iconColor?: AppColor;
+  fontSize?: FontSize;
   testId?: string; // used for debugging purposes.
 };

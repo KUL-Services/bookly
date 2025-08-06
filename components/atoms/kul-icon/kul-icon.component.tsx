@@ -7,12 +7,15 @@ import { Icon } from '@iconify-icon/react';
 import { KulIconProps } from './kul-icon.props';
 import { getIconColor } from './utils';
 import { getElementClasses } from '@/utils';
+import { FontSize } from '@/constants/enums';
+import clsx from 'clsx';
 
 const KulIcon = ({
   icon,
   iconColor,
   wrapperClass,
   iconClass,
+  fontSize = FontSize.L,
 }: KulIconProps) => {
 
 
@@ -20,7 +23,8 @@ const KulIcon = ({
     <div className={getElementClasses(wrapperClass)}>
       <Icon
         icon={icon}
-        className={getElementClasses(iconClass, getIconColor(iconColor))}
+        // className={getElementClasses(iconClass, getIconColor(iconColor))}
+        className={clsx(iconClass, getIconColor(iconColor), fontSize)}
       />
     </div>
   );
