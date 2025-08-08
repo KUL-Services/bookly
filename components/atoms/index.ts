@@ -11,3 +11,5 @@ export {
   Label,
   Strong,
 } from './base-text/base-text.component';
+
+export { default as BaseImage } from './base-image/base-image.component';
