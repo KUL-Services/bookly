@@ -10,7 +10,7 @@ const Button = ({
 }: ButtonProps) => {
   return (
     <Pressable {...restProps}>
-      <div className='flex flex-row content-between items-center px-3 py-2 gap-3 bg-alternate-400'>
+      <div className='flex flex-row content-between items-center px-3 py-2 gap-3'>
         <KulIcon
           {...prefixIcon}
           style={{ borderWidth: 1, borderColor: 'red', borderStyle: 'solid' }}

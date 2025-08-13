@@ -2,7 +2,6 @@
 
 import initTranslations from '@/app/i18n/i18n';
 import {
-  BaseImage,
   H1,
   H2,
   H3,
@@ -16,7 +15,8 @@ import {
   Strong,
 } from '@/components/atoms';
 import KulIcon from '@/components/atoms/kul-icon/kul-icon.component';
-import { Avatar, Button } from '@/components/molecules';
+import { Avatar } from '@/components/molecules';
+import { TempButtonHolder } from '@/components/organisms';
 import WideBar from '@/components/templates/wide-bar/wide-bar.component';
 import { FontSize } from '@/constants/enums';
 import { PageProps } from '@/types';
@@ -62,14 +62,7 @@ export default async function Home({ params }: PageProps) {
       <Strong stringProps={{ plainText: 'This is (Strong) text!' }}></Strong>
 
       {/* Buttons */}
-      <Button
-        buttonText={{ plainText: 'Base Button with H5' }}
-        prefixIcon={{ icon: 'lucide:arrow-left' }}
-        suffixIcon={{ icon: 'lucide:arrow-right' }}
-        onClick={() => {
-          console.log('prprprprprpr');
-        }}
-      />
+      <TempButtonHolder />
       {/* Buttons */}
 
       <KulIcon
