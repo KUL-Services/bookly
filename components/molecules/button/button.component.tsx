@@ -15,7 +15,7 @@ const Button = ({
           {...prefixIcon}
           style={{ borderWidth: 1, borderColor: 'red', borderStyle: 'solid' }}
         />
-        <H5 stringProps={buttonText} style={{ background: 'red' }} />
+        <H5 stringProps={buttonText} />
         <KulIcon {...suffixIcon} />
       </div>
     </Pressable>
