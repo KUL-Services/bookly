@@ -7,6 +7,7 @@ type AvatarProps = {
   avatarTitle: string;
   size?: ElementSize;
   testId?: string;
+  alt?: string;
 };
 
 export default AvatarProps;

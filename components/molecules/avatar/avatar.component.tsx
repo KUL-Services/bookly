@@ -1,10 +1,10 @@
-import React from 'react';
-import AvatarProps from './avatar.props';
-import KulIcon from '@/components/atoms/kul-icon/kul-icon.component';
-import { BaseImage, H6 } from '@/components/atoms';
-import { getInitials } from '@/utils';
-import getAvatarSize from './avatar-size.util';
-import clsx from 'clsx';
+import React from "react";
+import AvatarProps from "./avatar.props";
+import KulIcon from "@/components/atoms/kul-icon/kul-icon.component";
+import { BaseImage, H6 } from "@/components/atoms";
+import { getInitials } from "@/utils";
+import getAvatarSize from "./avatar-size.util";
+import clsx from "clsx";
 
 const Avatar = ({
   avatarTitle,
@@ -12,24 +12,25 @@ const Avatar = ({
   imageUrl,
   size,
   testId,
+  alt,
 }: AvatarProps) => {
   const avatarSize = getAvatarSize(size);
   if (imageUrl)
     return (
       <div
         className={clsx(
-          'border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative',
+          "border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative",
           avatarSize
         )}
       >
-        <BaseImage src={imageUrl} />
+        <BaseImage src={imageUrl} alt={alt || ""} />
       </div>
     );
   if (iconProps)
     return (
       <div
         className={clsx(
-          'border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative',
+          "border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative",
           avatarSize
         )}
       >
@@ -41,7 +42,7 @@ const Avatar = ({
     return (
       <div
         className={clsx(
-          'border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative',
+          "border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative",
           avatarSize
         )}
       >
