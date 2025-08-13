@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import './kul-icon.styles.css';
 
 import { Icon } from '@iconify-icon/react';
 import { KulIconProps } from './kul-icon.props';
 import { getIconColor } from './utils';
-import { getElementClasses } from '@/utils';
 import { FontSize } from '@/constants/enums';
 import clsx from 'clsx';
 
@@ -17,10 +16,8 @@ const KulIcon = ({
   iconClass,
   fontSize = FontSize.L,
 }: KulIconProps) => {
-
-
   return (
-    <div className={getElementClasses(wrapperClass)}>
+    <div className={clsx('flex items-center content-center', wrapperClass)}>
       <Icon
         icon={icon}
         // className={getElementClasses(iconClass, getIconColor(iconColor))}

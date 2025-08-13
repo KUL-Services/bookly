@@ -1,7 +1,6 @@
 import React from 'react';
-import ButtonInner from './button.inner.component';
 import { ButtonProps } from './button.props';
-import { KulIcon, Pressable } from '@/components/atoms';
+import { H5, KulIcon, Pressable } from '@/components/atoms';
 
 const Button = ({
   buttonText,
@@ -11,10 +10,13 @@ const Button = ({
 }: ButtonProps) => {
   return (
     <Pressable {...restProps}>
-      <div>
-        <KulIcon />
-        {/* TEXT */}
-        <KulIcon />
+      <div className='flex flex-row content-between items-center px-3 py-2 gap-3 bg-alternate-400'>
+        <KulIcon
+          {...prefixIcon}
+          style={{ borderWidth: 1, borderColor: 'red', borderStyle: 'solid' }}
+        />
+        <H5 stringProps={buttonText} style={{ background: 'red' }} />
+        <KulIcon {...suffixIcon} />
       </div>
     </Pressable>
   );

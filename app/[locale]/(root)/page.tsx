@@ -16,7 +16,7 @@ import {
   Strong,
 } from '@/components/atoms';
 import KulIcon from '@/components/atoms/kul-icon/kul-icon.component';
-import { Avatar } from '@/components/molecules';
+import { Avatar, Button } from '@/components/molecules';
 import WideBar from '@/components/templates/wide-bar/wide-bar.component';
 import { FontSize } from '@/constants/enums';
 import { PageProps } from '@/types';
@@ -60,6 +60,17 @@ export default async function Home({ params }: PageProps) {
       <Span stringProps={{ plainText: 'This is (Span) text!' }}></Span>
       <Label stringProps={{ plainText: 'This is (Label) text!' }}></Label>
       <Strong stringProps={{ plainText: 'This is (Strong) text!' }}></Strong>
+
+      {/* Buttons */}
+      <Button
+        buttonText={{ plainText: 'Base Button with H5' }}
+        prefixIcon={{ icon: 'lucide:arrow-left' }}
+        suffixIcon={{ icon: 'lucide:arrow-right' }}
+        onClick={() => {
+          console.log('prprprprprpr');
+        }}
+      />
+      {/* Buttons */}
 
       <KulIcon
         icon={'mdi:bucket'}
