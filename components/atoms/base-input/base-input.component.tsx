@@ -13,6 +13,7 @@ interface BaseInputProps
   i18nTFn?: i18n["t"];
   LeadingIcon?: LucideIcon;
   TrailingIcon?: LucideIcon;
+  focusColor?: string;
 }
 
 export const BaseInput = ({
@@ -23,6 +24,7 @@ export const BaseInput = ({
   className,
   LeadingIcon,
   TrailingIcon,
+  focusColor = "#4caf50",
   ...props
 }: BaseInputProps) => {
   const translatedPlaceholder =
@@ -44,6 +46,7 @@ export const BaseInput = ({
             errorProps && "border-red-500 focus-visible:ring-red-500",
             className
           )}
+          focusColor={errorProps ? "#ef4444" : focusColor}
           placeholder={translatedPlaceholder}
           {...props}
         />
