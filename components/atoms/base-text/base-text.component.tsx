@@ -26,12 +26,14 @@ const variantEntries = variants.map((variant) => {
   let textClass = variant
   if(variant === 'span' || variant === 'label' || variant === 'strong')
     textClass = 'p'
-  const Component = (props: Omit<BaseTextProps<typeof variant>, 'variant'>) =>
-    'plainText' in props.stringProps || !!props.i18nTFn ? (
-      <ServerBaseText variant={variant} {...props} className={`text-primary-300 text-${textClass}`}/>
+  const Component = (props: Omit<BaseTextProps<typeof variant>, 'variant'>) => {
+    const { i18nTFn, ...restProps } = props;
+    return 'plainText' in props.stringProps || !!i18nTFn ? (
+      <ServerBaseText variant={variant} {...restProps} i18nTFn={i18nTFn} className={`text-primary-300 text-${textClass}`}/>
     ) : (
-      <ClientBaseText variant={variant} {...props} className={`text-primary-300 text-${textClass}`}/>
+      <ClientBaseText variant={variant} {...restProps} i18nTFn={i18nTFn} className={`text-primary-300 text-${textClass}`}/>
     );
+  };
   Component.displayName = capitalize(variant);
   return [capitalize(variant), Component] as const;
 });

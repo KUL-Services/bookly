@@ -1,1 +1,41 @@
-{"footerTemp":"هذا تذييل مؤقت","headerTemp":"هذا عنوان مؤقت","helloPerson":"مرحبًا، {{userName}}."}
+{
+  "footerTemp": "هذا تذييل مؤقت",
+  "headerTemp": "هذا عنوان مؤقت",
+  "helloPerson": "مرحبًا، {{userName}}.",
+  "auth": {
+    "login": {
+      "title": "مرحباً بعودتك",
+      "description": "سجل دخولك إلى حساب بوكلي",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل بريدك الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "rememberMe": "تذكرني",
+      "forgotPassword": "نسيت كلمة المرور؟",
+      "submitButton": "تسجيل الدخول",
+      "noAccount": "ليس لديك حساب؟",
+      "createAccount": "أنشئ حساباً"
+    },
+    "register": {
+      "title": "إنشاء حساب",
+      "description": "أدخل معلوماتك لإنشاء حساب بوكلي",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل بريدك الإلكتروني",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "confirmPasswordLabel": "تأكيد كلمة المرور",
+      "confirmPasswordPlaceholder": "أكد كلمة المرور",
+      "submitButton": "إنشاء حساب",
+      "haveAccount": "لديك حساب بالفعل؟",
+      "login": "تسجيل الدخول"
+    },
+    "validation": {
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "emailInvalid": "يرجى إدخال بريد إلكتروني صحيح",
+      "passwordRequired": "كلمة المرور مطلوبة",
+      "passwordMinLength": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+      "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
+      "confirmPasswordRequired": "يرجى تأكيد كلمة المرور"
+    }
+  }
+}

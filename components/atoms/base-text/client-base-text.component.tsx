@@ -26,19 +26,20 @@ const ClientBaseText = <V extends TextVariant = 'p'>({
   children,
   className,
   stringProps,
-  ...restDefaultProps
+  i18nTFn: _i18nTFn, // ignore this prop since we use useTranslation
+  ...restProps
 }: BaseTextProps<V>) => {
   const Component = variant;
-
   const { t } = useTranslation();
-  console.log('I am in client', stringProps);
 
+  const elementProps = {
+    className: clsx('base-text', className),
+    ...restProps
+  };
 
-  return React.createElement(
-    Component,
-    { className: clsx('base-text', className), ...restDefaultProps },
-    stringProps ? extractStringFromStringProps(stringProps, t) : children
-  );
+  const content = stringProps ? extractStringFromStringProps(stringProps, t) : children;
+
+  return React.createElement(Component, elementProps, content);
 };
 
 export { ClientBaseText };

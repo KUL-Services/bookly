@@ -10,8 +10,9 @@ export {
   Span,
   Label,
   Strong,
-} from './base-text/base-text.component';
+} from "./base-text/base-text.component";
 
-export { default as BaseImage } from './base-image/base-image.component';
-export { default as KulIcon } from './kul-icon/kul-icon.component';
-export { default as Pressable } from './pressable/pressable.component';
+export { default as BaseImage } from "./base-image/base-image.component";
+export { default as KulIcon } from "./kul-icon/kul-icon.component";
+export { default as Pressable } from "./pressable/pressable.component";
+export { BaseCard } from "./base-card/base-card.component";

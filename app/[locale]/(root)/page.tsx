@@ -2,6 +2,7 @@
 
 import initTranslations from "@/app/i18n/i18n";
 import {
+  BaseCard,
   H1,
   H2,
   H3,
@@ -15,7 +16,7 @@ import {
   Strong,
 } from "@/components/atoms";
 import KulIcon from "@/components/atoms/kul-icon/kul-icon.component";
-import { Avatar } from "@/components/molecules";
+import { Avatar, InteractiveCard } from "@/components/molecules";
 import { TempButtonHolder } from "@/components/organisms";
 import WideBar from "@/components/templates/wide-bar/wide-bar.component";
 import { FontSize } from "@/constants/enums";
@@ -230,6 +231,40 @@ export default async function Home({ params }: PageProps) {
           ]}
           i18nTFn={t}
         />
+      </div>
+
+      {/* Card Components Demo */}
+      <div className="w-full max-w-2xl space-y-8 p-4">
+        <H2 stringProps={{ plainText: "Card Components Demo" }} />
+
+        <BaseCard
+          titleProps={{ plainText: "Simple Card" }}
+          descriptionProps={{ plainText: "A basic card with title and description" }}
+          className="bg-white dark:bg-zinc-900"
+        >
+          <P stringProps={{ plainText: "This is the content of a basic card." }} />
+        </BaseCard>
+
+        <InteractiveCard
+          titleProps={{ localeKey: "helloPerson", localeProps: { userName: "User" } }}
+          descriptionProps={{ plainText: "A card with i18n support and custom footer" }}
+          contentProps={{ plainText: "This card demonstrates i18n support and a custom footer with a button." }}
+          className="bg-white dark:bg-zinc-900"
+        />
+
+        <BaseCard
+          titleProps={{ plainText: "Card with Image" }}
+          descriptionProps={{ plainText: "A card showcasing image support" }}
+          imageSrc="https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-1170x780.jpg"
+          imageAlt="Augmented Reality Demo"
+          className="bg-white dark:bg-zinc-900"
+          headerClassName="space-y-4"
+        >
+          <div className="space-y-4">
+            <P stringProps={{ plainText: "This card includes a header image along with title and description." }} />
+            <P stringProps={{ plainText: "The image is responsive and maintains its aspect ratio." }} />
+          </div>
+        </BaseCard>
       </div>
     </div>
   );

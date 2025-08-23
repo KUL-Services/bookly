@@ -1,1 +1,41 @@
-{"footerTemp":"This is a temporary footer","headerTemp":"This is a temporary header","helloPerson":"Hello, {{userName}}."}
+{
+  "footerTemp": "This is a temporary footer",
+  "headerTemp": "This is a temporary header",
+  "helloPerson": "Hello, {{userName}}.",
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "description": "Log in to your Bookly account",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot your password?",
+      "submitButton": "Log in",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create one"
+    },
+    "register": {
+      "title": "Create an account",
+      "description": "Enter your information to create a Bookly account",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "confirmPasswordLabel": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "submitButton": "Create account",
+      "haveAccount": "Already have an account?",
+      "login": "Log in"
+    },
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email",
+      "passwordRequired": "Password is required",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "confirmPasswordRequired": "Please confirm your password"
+    }
+  }
+}

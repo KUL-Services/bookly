@@ -1,6 +1,7 @@
 import Image from "next/image";
 import React from "react";
 import BaseImageProps from "./base-image.props";
+import { cn } from "@/lib/utils";
 
 const BaseImage = ({
   src,
@@ -9,18 +10,34 @@ const BaseImage = ({
   width,
   height,
   alt,
+  className,
+  fill = !width || !height,
+  style,
+  sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
+  quality,
+  placeholder,
+  onLoad,
+  onError,
+  ...restProps
 }: BaseImageProps) => {
   return (
     <Image
       src={src}
       alt={alt || ""}
-      fill={!width || !height}
-      objectFit="cover"
-      className="rounded-full overflow-clip"
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      width={width}
+      height={height}
+      fill={fill}
+      className={cn("rounded overflow-clip object-cover", className)}
+      style={style}
+      sizes={sizes}
+      quality={quality}
       loading={loading}
       priority={priority}
-    ></Image>
+      placeholder={placeholder}
+      onLoad={onLoad}
+      onError={onError}
+      {...restProps}
+    />
   );
 };
 
