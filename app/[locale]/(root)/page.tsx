@@ -17,7 +17,7 @@ import {
 } from "@/components/atoms";
 import KulIcon from "@/components/atoms/kul-icon/kul-icon.component";
 import { Avatar, InteractiveCard } from "@/components/molecules";
-import { TempButtonHolder } from "@/components/organisms";
+import { TempButtonHolder, ExploreSection } from "@/components/organisms";
 import WideBar from "@/components/templates/wide-bar/wide-bar.component";
 import { FontSize } from "@/constants/enums";
 import { PageProps } from "@/types";
@@ -35,6 +35,10 @@ export default async function Home({ params }: PageProps) {
 
   return (
     <div className="flex flex-1 flex-col content-center items-center">
+      <ExploreSection />
+
+      
+
       <H1
         stringProps={{
           localeKey: "helloPerson",
