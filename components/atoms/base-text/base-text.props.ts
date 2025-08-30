@@ -1,19 +1,19 @@
-import { FontSize, StringProps } from '@/types';
-import { i18n } from 'i18next';
-import { ReactNode, HTMLAttributes } from 'react';
+import { FontSize, StringProps } from "@/types";
+import { i18n } from "i18next";
+import { ReactNode, HTMLAttributes } from "react";
 
 export type TextVariant =
-  | 'h1'
-  | 'h2'
-  | 'h3'
-  | 'h4'
-  | 'h5'
-  | 'h6'
-  | 'p'
-  | 'small'
-  | 'span'
-  | 'label'
-  | 'strong';
+  | "h1"
+  | "h2"
+  | "h3"
+  | "h4"
+  | "h5"
+  | "h6"
+  | "p"
+  | "small"
+  | "span"
+  | "label"
+  | "strong";
 
 type VariantMap = {
   h1: HTMLAttributes<HTMLHeadingElement>;
@@ -29,11 +29,13 @@ type VariantMap = {
   strong: HTMLAttributes<HTMLElement>;
 };
 
-export type BaseTextProps<V extends TextVariant = 'p'> = {
+export type BaseTextProps<V extends TextVariant = "p"> = {
   variant?: V;
   children?: ReactNode;
   stringProps: StringProps;
-  i18nTFn?: i18n['t'];
+  i18nTFn?: i18n["t"];
   fontSize?: FontSize;
   testId?: string; // used for debugging purposes.
+  className?: string;
+  textClass?: string;
 } & VariantMap[V];

@@ -13,7 +13,7 @@ interface BaseInputProps
   i18nTFn?: i18n["t"];
   LeadingIcon?: LucideIcon;
   TrailingIcon?: LucideIcon;
-  focusColor?: string;
+  focusColor?: "primary" | "secondary" | "teal" | "red" | "blue" | "green";
 }
 
 export const BaseInput = ({
@@ -24,13 +24,27 @@ export const BaseInput = ({
   className,
   LeadingIcon,
   TrailingIcon,
-  focusColor = "#4caf50",
+  focusColor = "teal",
   ...props
 }: BaseInputProps) => {
   const translatedPlaceholder =
     "plainText" in placeholderProps
       ? placeholderProps.plainText
       : i18nTFn?.(placeholderProps.localeKey!, placeholderProps.localeProps);
+
+  const getFocusClasses = () => {
+    if (errorProps)
+      return "focus-visible:ring-red-500 focus-visible:border-red-500";
+    const colorMap = {
+      primary: "focus-visible:ring-primary focus-visible:border-primary",
+      secondary: "focus-visible:ring-secondary focus-visible:border-secondary",
+      teal: "focus-visible:ring-teal-500 focus-visible:border-teal-500",
+      red: "focus-visible:ring-red-500 focus-visible:border-red-500",
+      blue: "focus-visible:ring-blue-500 focus-visible:border-blue-500",
+      green: "focus-visible:ring-green-500 focus-visible:border-green-500",
+    };
+    return colorMap[focusColor];
+  };
 
   return (
     <div className="w-full space-y-2">
@@ -43,10 +57,10 @@ export const BaseInput = ({
           className={cn(
             LeadingIcon && "pl-10",
             TrailingIcon && "pr-10",
-            errorProps && "border-red-500 focus-visible:ring-red-500",
+            errorProps && "border-red-500",
+            getFocusClasses(),
             className
           )}
-          focusColor={errorProps ? "#ef4444" : focusColor}
           placeholder={translatedPlaceholder}
           {...props}
         />

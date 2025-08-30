@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { H2, P as Description } from "../base-text/base-text.component";
+import { H2, P as Description, H3 } from "../base-text/base-text.component";
 import { StringProps } from "@/types";
 import { i18n } from "i18next";
 import BaseImage from "../base-image/base-image.component";
@@ -44,7 +44,7 @@ export const BaseCard = ({
       {(titleProps || descriptionProps || imageSrc) && (
         <CardHeader className={headerClassName}>
           {imageSrc && (
-            <div className="relative w-full h-48">
+            <div className="relative w-full h-48 object-cover">
               <BaseImage
                 src={imageSrc}
                 alt={imageAlt || ""}
@@ -54,7 +54,11 @@ export const BaseCard = ({
           )}
           {titleProps && (
             <CardTitle>
-              <H2 stringProps={titleProps} i18nTFn={i18nTFn} />
+              <H3
+                stringProps={titleProps}
+                i18nTFn={i18nTFn}
+                className="font-bold text-gray-900 mb-2"
+              />
             </CardTitle>
           )}
           {descriptionProps && (

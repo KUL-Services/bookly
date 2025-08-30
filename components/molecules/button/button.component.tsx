@@ -1,22 +1,51 @@
-import React from 'react';
-import { ButtonProps } from './button.props';
-import { H5, KulIcon, Pressable } from '@/components/atoms';
+import React from "react";
+import { ButtonProps } from "./button.props";
+import { H5, KulIcon, Pressable } from "@/components/atoms";
+import { cn } from "@/lib/utils";
+import { buttonConfig } from "@/config/theme/button.config";
 
 const Button = ({
   buttonText,
   prefixIcon,
   suffixIcon,
+  variant = "contained",
+  size = "md",
+  disabled = false,
+  fullWidth = false,
+  className,
   ...restProps
 }: ButtonProps) => {
   return (
-    <Pressable {...restProps}>
-      <div className='flex flex-row content-between items-center px-3 py-2 gap-3'>
-        <KulIcon
-          {...prefixIcon}
-          style={{ borderWidth: 1, borderColor: 'red', borderStyle: 'solid' }}
-        />
-        <H5 stringProps={buttonText} />
-        <KulIcon {...suffixIcon} />
+    <Pressable
+      className={cn(
+        buttonConfig.base,
+        buttonConfig.variant[variant],
+        buttonConfig.size[size],
+        disabled && buttonConfig.state.disabled,
+        fullWidth && buttonConfig.state.fullWidth,
+        className
+      )}
+      disabled={disabled}
+      {...restProps}
+    >
+      <div className="inline-flex items-center justify-center gap-2">
+        {prefixIcon && (
+          <KulIcon
+            {...prefixIcon}
+            className={cn("h-4 w-4", prefixIcon.className)}
+          />
+        )}
+        {buttonText && (
+          <span className="relative top-[0.5px]">
+            <H5 stringProps={buttonText} className="font-medium" />
+          </span>
+        )}
+        {suffixIcon && (
+          <KulIcon
+            {...suffixIcon}
+            className={cn("h-4 w-4", suffixIcon.className)}
+          />
+        )}
       </div>
     </Pressable>
   );

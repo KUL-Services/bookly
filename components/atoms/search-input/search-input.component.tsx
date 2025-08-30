@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { LucideIcon, Search } from "lucide-react";
 import { BaseInput } from "../base-input/base-input.component";
 import { i18n } from "i18next";
 import { StringProps } from "@/types";
@@ -12,16 +12,18 @@ interface SearchInputProps
   placeholderProps?: StringProps;
   i18nTFn?: i18n["t"];
   label?: string;
+  leadingIcon?: LucideIcon;
 }
 
 export const SearchInput = ({
   className,
   placeholderProps,
+  leadingIcon,
   ...props
 }: SearchInputProps) => {
   return (
     <BaseInput
-      LeadingIcon={Search}
+      LeadingIcon={leadingIcon || Search}
       type="search"
       placeholderProps={placeholderProps || { plainText: "Search..." }}
       className={className}

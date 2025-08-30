@@ -2,6 +2,7 @@ import React from "react";
 import { BaseTextProps, TextVariant } from "./base-text.props";
 import clsx from "clsx";
 import { extractStringFromStringProps } from "./utils";
+import { cn } from "@/lib/utils";
 
 /**
  * DO NOT IMPORT THIS UNLESS THIS IS A SPECIAL SPECIAL CASE!!!
@@ -24,6 +25,7 @@ const ServerBaseText = <V extends TextVariant = "p">({
   className,
   stringProps,
   i18nTFn,
+  textClass,
   ...restDefaultProps
 }: BaseTextProps<V>) => {
   const Component = variant;
@@ -31,11 +33,11 @@ const ServerBaseText = <V extends TextVariant = "p">({
   if (!i18nTFn && !("plainText" in stringProps))
     throw "Received undefined i18nTFn inside ServerBaseText";
 
-  const { i18nTFn: _, ...restProps } = restDefaultProps;
+  const { ...restProps } = restDefaultProps;
 
   return React.createElement(
     Component,
-    { className: clsx("base-text", className), ...restProps },
+    { className: clsx("base-text", textClass, className), ...restProps },
     stringProps ? extractStringFromStringProps(stringProps, i18nTFn) : children
   );
 };
