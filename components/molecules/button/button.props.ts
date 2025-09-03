@@ -1,6 +1,6 @@
-import PressableProps from "@/components/atoms/pressable/pressable.props";
-import { StringProps } from "@/types";
-import { KulIconProps } from "@/components/atoms/kul-icon/kul-icon.props";
+import PressableProps from "@/bookly/components/atoms/pressable/pressable.props";
+import { StringProps } from "@/bookly/types";
+import { KulIconProps } from "@/bookly/components/atoms/kul-icon/kul-icon.props";
 
 export type ButtonVariant =
   | "text"

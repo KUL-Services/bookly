@@ -1,5 +1,5 @@
 'use client';
-import { Button } from '@/components/molecules';
+import { Button } from '@/bookly/components/molecules';
 import React from 'react';
 
 const TempButtonHolder = () => {

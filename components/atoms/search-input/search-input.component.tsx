@@ -1,7 +1,7 @@
 import { LucideIcon, Search } from "lucide-react";
 import { BaseInput } from "../base-input/base-input.component";
 import { i18n } from "i18next";
-import { StringProps } from "@/types";
+import { StringProps } from "@/bookly/types";
 
 interface SearchInputProps
   extends Omit<

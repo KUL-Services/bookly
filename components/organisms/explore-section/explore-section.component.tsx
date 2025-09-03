@@ -1,8 +1,8 @@
 "use client";
 
-import { BaseCard, H2 } from "@/components/atoms";
-import { CategoryCard, BusinessCard } from "@/components/molecules";
-import { categories, mockBusinesses } from "@/data/mock-data";
+import { BaseCard, H2 } from "@/bookly/components/atoms";
+import { CategoryCard, BusinessCard } from "@/bookly/components/molecules";
+import { categories, mockBusinesses } from "@/bookly/data/mock-data";
 import { useRouter } from "next/navigation";
 
 export const ExploreSection = () => {

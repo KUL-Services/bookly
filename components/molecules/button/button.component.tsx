@@ -1,8 +1,8 @@
 import React from "react";
 import { ButtonProps } from "./button.props";
-import { H5, KulIcon, Pressable } from "@/components/atoms";
-import { cn } from "@/lib/utils";
-import { buttonConfig } from "@/config/theme/button.config";
+import { H5, KulIcon, Pressable } from "@/bookly/components/atoms";
+import { cn } from "@/bookly/lib/utils";
+import { buttonConfig } from "@/bookly/config/theme/button.config";
 
 const Button = ({
   buttonText,

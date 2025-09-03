@@ -11,15 +11,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+} from '@/bookly/components/ui/form';
+import { Input } from '@/bookly/components/ui/input';
+import { Button } from '@/bookly/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/bookly/components/ui/card';
+import { Checkbox } from '@/bookly/components/ui/checkbox';
 import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
-import KulIcon from '@/components/atoms/kul-icon/kul-icon.component';
-import { FontSize } from '@/constants/enums';
+import KulIcon from '@/bookly/components/atoms/kul-icon/kul-icon.component';
+import { FontSize } from '@/bookly/constants/enums';
 
 const loginSchema = z.object({
   email: z.string().email(),

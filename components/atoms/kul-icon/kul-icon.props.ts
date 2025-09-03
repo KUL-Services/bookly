@@ -1,5 +1,5 @@
-import { FontSize } from '@/constants/enums';
-import { AppColor } from '@/types';
+import { FontSize } from '@/bookly/constants/enums';
+import { AppColor } from '@/bookly/types';
 import { IconifyIconProperties } from '@iconify-icon/react/dist/iconify.mjs';
 
 interface IconifyIconProps

@@ -1,8 +1,8 @@
-import { Input } from "@/components/ui/input";
+import { Input } from "@/bookly/components/ui/input";
 import { Label, P } from "../base-text/base-text.component";
-import { cn } from "@/lib/utils";
+import { cn } from "@/bookly/lib/utils";
 import { LucideIcon } from "lucide-react";
-import { StringProps } from "@/types";
+import { StringProps } from "@/bookly/types";
 import { i18n } from "i18next";
 
 interface BaseInputProps

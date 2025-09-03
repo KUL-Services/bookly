@@ -1,7 +1,7 @@
-import { BaseCard } from "@/components/atoms/base-card/base-card.component";
-import { StaffMember } from "@/types/api.types";
-import { cn } from "@/lib/utils";
-import { getInitials } from "@/utils";
+import { BaseCard } from "@/bookly/components/atoms/base-card/base-card.component";
+import { StaffMember } from "@/bookly/types/api.types";
+import { cn } from "@/bookly/lib/utils";
+import { getInitials } from "@/bookly/utils";
 
 interface StaffCardProps {
   staff: StaffMember;

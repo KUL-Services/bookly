@@ -1,4 +1,4 @@
-import { AppColor } from '@/types';
+import { AppColor } from '@/bookly/types';
 
 /**
  *

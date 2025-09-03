@@ -1,5 +1,5 @@
-import { AppColor } from '@/types';
-import { getColorCSS } from '@/utils';
+import { AppColor } from '@/bookly/types';
+import { getColorCSS } from '@/bookly/utils';
 
 const getIconColor = (iconColor?: AppColor) => {
   // if (!!iconColor) return  {color: getColorCSS(iconColor)};

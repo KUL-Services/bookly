@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import { TranslationsProvider } from '@/providers';
-import { PageProps } from '@/types';
+import { TranslationsProvider } from '@/bookly/providers';
+import { PageProps } from '@/bookly/types';
 import { ThemeProvider } from 'next-themes';
-import { ThemeChanger } from '@/components/temporary';
+import { ThemeChanger } from '@/bookly/components/temporary';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -28,7 +28,7 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: PageProps['params'];
 }>) {
-  const { locale } = await params;
+  const locale = (await params)?.locale ?? 'en';
   return (
     <html lang={locale} suppressHydrationWarning>
       <body

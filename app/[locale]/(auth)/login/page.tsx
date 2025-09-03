@@ -1,10 +1,10 @@
-import { AuthForm } from "@/components/molecules";
-import { PageProps } from "@/types";
+import { AuthForm } from "@/bookly/components/molecules";
+import { PageProps } from "@/bookly/types";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function LoginPage({ params }: PageProps) {
-  const { locale } = params;
+  // const { locale } = params;
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 relative">

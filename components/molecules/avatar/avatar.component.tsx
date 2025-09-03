@@ -1,8 +1,8 @@
 import React from "react";
 import AvatarProps from "./avatar.props";
-import KulIcon from "@/components/atoms/kul-icon/kul-icon.component";
-import { BaseImage, H6 } from "@/components/atoms";
-import { getInitials } from "@/utils";
+import KulIcon from "@/bookly/components/atoms/kul-icon/kul-icon.component";
+import { BaseImage, H6 } from "@/bookly/components/atoms";
+import { getInitials } from "@/bookly/utils";
 import getAvatarSize from "./avatar-size.util";
 import clsx from "clsx";
 

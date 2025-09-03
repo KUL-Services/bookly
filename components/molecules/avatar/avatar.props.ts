@@ -1,5 +1,5 @@
-import { KulIconProps } from '@/components/atoms/kul-icon/kul-icon.props';
-import ElementSize from '@/types/element-size.type';
+import { KulIconProps } from '@/bookly/components/atoms/kul-icon/kul-icon.props';
+import ElementSize from '@/bookly/types/element-size.type';
 
 type AvatarProps = {
   iconProps?: Omit<KulIconProps, 'testId'>;

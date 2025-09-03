@@ -1,6 +1,6 @@
-import { BaseCard } from "@/components/atoms/base-card/base-card.component";
-import { Service } from "@/types/api.types";
-import { cn } from "@/lib/utils";
+import { BaseCard } from "@/bookly/components/atoms/base-card/base-card.component";
+import { Service } from "@/bookly/types/api.types";
+import { cn } from "@/bookly/lib/utils";
 
 interface ServiceCardProps {
   service: Service;

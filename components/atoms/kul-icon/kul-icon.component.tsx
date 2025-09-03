@@ -6,7 +6,7 @@ import './kul-icon.styles.css';
 import { Icon } from '@iconify-icon/react';
 import { KulIconProps } from './kul-icon.props';
 import { getIconColor } from './utils';
-import { FontSize } from '@/constants/enums';
+import { FontSize } from '@/bookly/constants/enums';
 import clsx from 'clsx';
 
 const KulIcon = ({

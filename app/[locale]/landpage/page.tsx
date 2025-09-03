@@ -1,11 +1,11 @@
 "use client";
-import { H1 } from "@/components/atoms";
-import { SearchInput } from "@/components/atoms/search-input/search-input.component";
-import { Button } from "@/components/molecules";
-import { ExploreSection } from "@/components/organisms";
-import AppDownloadSection from "@/components/organisms/app-download-section/app-download-section";
-import { FeaturesSection } from "@/components/organisms/features-section/features-section.component";
-import FooterSection from "@/components/organisms/footer-section/footer-section";
+import { H1 } from "@/bookly/components/atoms";
+import { SearchInput } from "@/bookly/components/atoms/search-input/search-input.component";
+import { Button } from "@/bookly/components/molecules";
+import { ExploreSection } from "@/bookly/components/organisms";
+import AppDownloadSection from "@/bookly/components/organisms/app-download-section/app-download-section";
+import { FeaturesSection } from "@/bookly/components/organisms/features-section/features-section.component";
+import FooterSection from "@/bookly/components/organisms/footer-section/footer-section";
 import { t } from "i18next";
 import { MapPin } from "lucide-react";
 import { useState } from "react";

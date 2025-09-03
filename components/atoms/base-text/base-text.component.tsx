@@ -2,7 +2,7 @@ import React from "react";
 import { BaseTextProps, TextVariant } from "./base-text.props";
 import { ServerBaseText } from "./server-base-text.component";
 import { ClientBaseText } from "./client-base-text.component";
-import { cn } from "@/lib/utils";
+import { cn } from "@/bookly/lib/utils";
 
 // Utility to capitalize first letter
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);

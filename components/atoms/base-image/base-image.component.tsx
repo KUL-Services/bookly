@@ -1,7 +1,7 @@
 import Image from "next/image";
 import React from "react";
 import BaseImageProps from "./base-image.props";
-import { cn } from "@/lib/utils";
+import { cn } from "@/bookly/lib/utils";
 
 const BaseImage = ({
   src,

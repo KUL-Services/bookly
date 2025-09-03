@@ -4,10 +4,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/bookly/components/ui/select";
 import { Label, P } from "../base-text/base-text.component";
-import { StringProps } from "@/types";
-import { cn } from "@/lib/utils";
+import { StringProps } from "@/bookly/types";
+import { cn } from "@/bookly/lib/utils";
 import { i18n } from "i18next";
 
 export interface SelectOption {

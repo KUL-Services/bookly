@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { H1, P } from "@/components/atoms";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/bookly/components/ui/button";
+import { H1, P } from "@/bookly/components/atoms";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/bookly/components/ui/card";
 
 export default function DemoPage() {
   return (

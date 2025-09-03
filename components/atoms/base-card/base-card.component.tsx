@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/bookly/lib/utils";
 import {
   Card,
   CardContent,
@@ -6,9 +6,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/bookly/components/ui/card";
 import { H2, P as Description, H3 } from "../base-text/base-text.component";
-import { StringProps } from "@/types";
+import { StringProps } from "@/bookly/types";
 import { i18n } from "i18next";
 import BaseImage from "../base-image/base-image.component";
 

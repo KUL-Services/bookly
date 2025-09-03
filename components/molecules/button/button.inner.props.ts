@@ -1,4 +1,4 @@
-import PressableProps from '@/components/atoms/pressable/pressable.props';
+import PressableProps from '@/bookly/components/atoms/pressable/pressable.props';
 import { ReactElement } from 'react';
 import { ButtonProps } from './button.props';
 

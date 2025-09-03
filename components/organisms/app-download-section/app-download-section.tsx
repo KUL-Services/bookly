@@ -1,6 +1,6 @@
 "use client";
-import { H2, P } from "@/components/atoms";
-import { Button } from "@/components/molecules";
+import { H2, P } from "@/bookly/components/atoms";
+import { Button } from "@/bookly/components/molecules";
 
 function AppDownloadSection() {
   return (

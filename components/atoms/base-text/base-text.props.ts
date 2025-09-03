@@ -1,4 +1,4 @@
-import { FontSize, StringProps } from "@/types";
+import { FontSize, StringProps } from "@/bookly/types";
 import { i18n } from "i18next";
 import { ReactNode, HTMLAttributes } from "react";
 

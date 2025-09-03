@@ -1,8 +1,8 @@
-import { BaseCard } from "@/components/atoms/base-card/base-card.component";
-import { Business } from "@/types/api.types";
-import { cn } from "@/lib/utils";
+import { BaseCard } from "@/bookly/components/atoms/base-card/base-card.component";
+import { Business } from "@/bookly/types/api.types";
+import { cn } from "@/bookly/lib/utils";
 import Button from "../button/button.component";
-import { KulIcon } from "@/components/atoms";
+import { KulIcon } from "@/bookly/components/atoms";
 
 interface BusinessCardProps {
   business: Business;

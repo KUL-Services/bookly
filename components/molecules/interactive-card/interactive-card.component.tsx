@@ -1,8 +1,8 @@
 'use client';
 
-import { BaseCard, P } from "@/components/atoms";
-import { Button } from "@/components/molecules";
-import { StringProps } from "@/types";
+import { BaseCard, P } from "@/bookly/components/atoms";
+import { Button } from "@/bookly/components/molecules";
+import { StringProps } from "@/bookly/types";
 import { useTranslation } from "react-i18next";
 
 interface InteractiveCardProps {

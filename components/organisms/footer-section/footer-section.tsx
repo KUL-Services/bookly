@@ -1,4 +1,4 @@
-import { H3, P } from "@/components/atoms";
+import { H3, P } from "@/bookly/components/atoms";
 import Link from "next/link";
 
 function FooterSection() {

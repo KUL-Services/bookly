@@ -1,4 +1,4 @@
-import { AppClass } from '@/types';
+import { AppClass } from '@/bookly/types';
 
 /**
  * Takes two `AppClasses` and returns a combines string of both.

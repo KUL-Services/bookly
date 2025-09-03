@@ -5,7 +5,7 @@ import { BaseTextProps, TextVariant } from "./base-text.props";
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import { extractStringFromStringProps } from "./utils";
-import { cn } from "@/lib/utils";
+import { cn } from "@/bookly/lib/utils";
 
 /**
  * DO NOT IMPORT THIS UNLESS THIS IS A SPECIAL SPECIAL CASE!!!

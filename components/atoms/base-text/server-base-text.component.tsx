@@ -2,7 +2,7 @@ import React from "react";
 import { BaseTextProps, TextVariant } from "./base-text.props";
 import clsx from "clsx";
 import { extractStringFromStringProps } from "./utils";
-import { cn } from "@/lib/utils";
+import { cn } from "@/bookly/lib/utils";
 
 /**
  * DO NOT IMPORT THIS UNLESS THIS IS A SPECIAL SPECIAL CASE!!!

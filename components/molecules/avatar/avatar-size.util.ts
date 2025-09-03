@@ -1,4 +1,4 @@
-import ElementSize from '@/types/element-size.type';
+import ElementSize from '@/bookly/types/element-size.type';
 
 const getAvatarSize = (elementSize?: ElementSize) => {
   switch (elementSize) {

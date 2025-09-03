@@ -1,6 +1,6 @@
-import { BaseCard } from "@/components/atoms/base-card/base-card.component";
-import { Category } from "@/types/api.types";
-import { cn } from "@/lib/utils";
+import { BaseCard } from "@/bookly/components/atoms/base-card/base-card.component";
+import { Category } from "@/bookly/types/api.types";
+import { cn } from "@/bookly/lib/utils";
 
 interface CategoryCardProps {
   category: Category;

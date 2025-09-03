@@ -1,6 +1,6 @@
 'use client';
 
-import { Pressable } from '@/components/atoms';
+import { Pressable } from '@/bookly/components/atoms';
 import React from 'react';
 import { ButtonInnerProps } from './button.inner.props';
 

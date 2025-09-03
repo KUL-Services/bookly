@@ -1,8 +1,8 @@
-import { BaseCard } from "@/components/atoms/base-card/base-card.component";
-import BaseImage from "@/components/atoms/base-image/base-image.component";
-import { Review } from "@/types/api.types";
-import { cn } from "@/lib/utils";
-import { getInitials } from "@/utils";
+import { BaseCard } from "@/bookly/components/atoms/base-card/base-card.component";
+import BaseImage from "@/bookly/components/atoms/base-image/base-image.component";
+import { Review } from "@/bookly/types/api.types";
+import { cn } from "@/bookly/lib/utils";
+import { getInitials } from "@/bookly/utils";
 
 interface ReviewCardProps {
   review: Review;
