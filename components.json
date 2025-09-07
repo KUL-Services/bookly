@@ -5,17 +5,17 @@
   "tsx": true,
   "tailwind": {
     "config": "tailwind.config.ts",
-    "css": "app/[locale]/globals.css",
+    "css": "src/app/[lang]/(bookly)/globals.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
   },
   "aliases": {
-    "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
-    "lib": "@/lib",
-    "hooks": "@/hooks"
+    "components": "@/bookly/components",
+    "utils": "@/bookly/lib/utils",
+    "ui": "@/bookly/components/ui",
+    "lib": "@/bookly/lib",
+    "hooks": "@/bookly/hooks"
   },
   "iconLibrary": "lucide"
 }
