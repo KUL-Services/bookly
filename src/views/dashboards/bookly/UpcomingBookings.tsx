@@ -8,6 +8,7 @@ import TableCell from '@mui/material/TableCell'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Chip from '@mui/material/Chip'
+import Link from 'next/link'
 
 // Types
 import type { Booking } from '@/bookly/data/types'
@@ -19,15 +20,17 @@ const statusColor: Record<Booking['status'], 'success' | 'warning' | 'error' | '
   completed: 'default'
 }
 
-const UpcomingBookings = ({ rows }: { rows: Booking[] }) => {
+const UpcomingBookings = ({ rows, lang }: { rows: Booking[]; lang?: string }) => {
   return (
     <Card>
       <CardHeader title='Upcoming Bookings' subheader='Based on mock Bookly data' />
       <CardContent>
-        <Table size='small'>
+        <Table size='small' aria-label='Upcoming bookings table'>
+          <caption>Upcoming bookings with branch information</caption>
           <TableHead>
             <TableRow>
               <TableCell>Business</TableCell>
+              <TableCell>Branch</TableCell>
               <TableCell>Service</TableCell>
               <TableCell>Staff</TableCell>
               <TableCell>Date</TableCell>
@@ -40,6 +43,15 @@ const UpcomingBookings = ({ rows }: { rows: Booking[] }) => {
             {rows.map(row => (
               <TableRow key={row.id} hover>
                 <TableCell>{row.businessName}</TableCell>
+                <TableCell>
+                  {lang ? (
+                    <Link href={`/${lang}/apps/bookly/businesses/${row.businessId}/branches/${row.branchId}`} className='text-primary'>
+                      {row.branchName}
+                    </Link>
+                  ) : (
+                    row.branchName
+                  )}
+                </TableCell>
                 <TableCell>{row.serviceName}</TableCell>
                 <TableCell>{row.staffMemberName}</TableCell>
                 <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
@@ -58,4 +70,3 @@ const UpcomingBookings = ({ rows }: { rows: Booking[] }) => {
 }
 
 export default UpcomingBookings
-

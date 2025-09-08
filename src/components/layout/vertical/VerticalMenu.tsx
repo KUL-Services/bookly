@@ -151,6 +151,9 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           </SubMenu> */}
           <SubMenu label={dictionary['navigation'].bookly ?? 'Bookly'} icon={<i className='ri-scissors-2-line' />}>
             <MenuItem href={`/${locale}/apps/bookly/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
+            <MenuItem href={`/${locale}/apps/bookly/calendar`}>
+              {dictionary['navigation'].calendar ?? 'Calendar'}
+            </MenuItem>
             <MenuItem href={`/${locale}/apps/bookly/businesses`}>
               {dictionary['navigation'].businesses ?? 'Businesses'}
             </MenuItem>

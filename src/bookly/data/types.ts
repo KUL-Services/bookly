@@ -1,3 +1,14 @@
+export interface Branch {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
 export interface Business {
   id: string;
   name: string;
@@ -10,6 +21,7 @@ export interface Business {
     latitude: number;
     longitude: number;
   };
+  branches: Branch[];
   about: string;
   services: string[]; // Service IDs
   staff: string[]; // StaffMember IDs
@@ -37,6 +49,7 @@ export interface StaffMember {
   title: string;
   photo: string;
   businessId: string;
+  branchId: string;
 }
 
 export interface Review {
@@ -68,6 +81,8 @@ export interface SearchFilters {
 export interface Booking {
   id: string;
   businessId: string;
+  branchId: string;
+  branchName: string;
   businessName: string;
   businessImage: string;
   serviceName: string;

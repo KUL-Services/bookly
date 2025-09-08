@@ -31,7 +31,8 @@ const BooklyReviewsPage = async () => {
                     <Avatar alt={r.authorName} src={r.authorImage} />
                   </ListItemAvatar>
                   <ListItemText
-                    primary={`${r.authorName} • ${r.rating} ⭐`}
+                    disableTypography
+                    primary={<Typography>{`${r.authorName} • ${r.rating} ⭐`}</Typography>}
                     secondary={
                       <>
                         <Typography variant='body2' color='text.secondary'>

@@ -6,12 +6,13 @@ import CardStatWithImage from '@components/card-statistics/Character'
 
 type Props = {
   totalBusinesses: number
+  totalBranches: number
   totalServices: number
   upcomingCount: number
   completedCount: number
 }
 
-const BooklyStats = ({ totalBusinesses, totalServices, upcomingCount, completedCount }: Props) => {
+const BooklyStats = ({ totalBusinesses, totalBranches, totalServices, upcomingCount, completedCount }: Props) => {
   const year = new Date().getFullYear()
 
   return (
@@ -24,6 +25,16 @@ const BooklyStats = ({ totalBusinesses, totalServices, upcomingCount, completedC
           chipText={`Year ${year}`}
           chipColor='primary'
           src='/images/illustrations/characters/10.png'
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={3}>
+        <CardStatWithImage
+          title='Branches'
+          stats={`${totalBranches}`}
+          trendNumber=''
+          chipText='Locations'
+          chipColor='secondary'
+          src='/images/illustrations/characters/14.png'
         />
       </Grid>
       <Grid item xs={12} sm={6} md={3}>
@@ -61,4 +72,3 @@ const BooklyStats = ({ totalBusinesses, totalServices, upcomingCount, completedC
 }
 
 export default BooklyStats
-

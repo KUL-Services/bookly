@@ -117,6 +117,9 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
             </SubMenu>
           <SubMenu label={dictionary['navigation'].bookly ?? 'Bookly'} icon={<i className='ri-scissors-2-line' />}>
             <MenuItem href={`/${locale}/apps/bookly/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
+            <MenuItem href={`/${locale}/apps/bookly/calendar`}>
+              {dictionary['navigation'].calendar ?? 'Calendar'}
+            </MenuItem>
             <MenuItem href={`/${locale}/apps/bookly/businesses`}>{dictionary['navigation'].businesses ?? 'Businesses'}</MenuItem>
             <MenuItem href={`/${locale}/apps/bookly/services`}>{dictionary['navigation'].services ?? 'Services'}</MenuItem>
             <MenuItem href={`/${locale}/apps/bookly/categories`}>{dictionary['navigation'].categories ?? 'Categories'}</MenuItem>

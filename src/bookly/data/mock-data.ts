@@ -23,6 +23,29 @@ export const mockBusinesses: Business[] = [
     address: '123 Oxford Street',
     city: 'London',
     location: { latitude: 51.5074, longitude: -0.1278 },
+    branches: [
+      {
+        id: '1-1',
+        name: 'Luxe Hair Studio - Oxford',
+        address: '123 Oxford Street',
+        city: 'London',
+        location: { latitude: 51.5074, longitude: -0.1278 }
+      },
+      {
+        id: '1-2',
+        name: 'Luxe Hair Studio - Soho',
+        address: '50 Dean Street',
+        city: 'London',
+        location: { latitude: 51.5135, longitude: -0.1321 }
+      },
+      {
+        id: '1-3',
+        name: 'Luxe Hair Studio - Kensington',
+        address: '200 Kensington High Street',
+        city: 'London',
+        location: { latitude: 51.5009, longitude: -0.1995 }
+      }
+    ],
     about: 'Premium hair salon offering cutting-edge styles and treatments in the heart of London.',
     services: ['1', '2', '3'],
     staff: ['1', '2', '7'],
@@ -51,6 +74,22 @@ export const mockBusinesses: Business[] = [
     address: "456 King's Road",
     city: 'London',
     location: { latitude: 51.4875, longitude: -0.1687 },
+    branches: [
+      {
+        id: '2-1',
+        name: "Bliss Nail Bar - King's Road",
+        address: "456 King's Road",
+        city: 'London',
+        location: { latitude: 51.4875, longitude: -0.1687 }
+      },
+      {
+        id: '2-2',
+        name: 'Bliss Nail Bar - Camden',
+        address: '22 Camden High Street',
+        city: 'London',
+        location: { latitude: 51.5416, longitude: -0.1469 }
+      }
+    ],
     about: 'Modern nail salon specializing in gel manicures, nail art, and luxury pedicures.',
     services: ['4', '5'],
     staff: ['3', '4'],
@@ -79,6 +118,22 @@ export const mockBusinesses: Business[] = [
     address: '789 Shoreditch High Street',
     city: 'London',
     location: { latitude: 51.5223, longitude: -0.0813 },
+    branches: [
+      {
+        id: '3-1',
+        name: 'Urban Barber Co. - Shoreditch',
+        address: '789 Shoreditch High Street',
+        city: 'London',
+        location: { latitude: 51.5223, longitude: -0.0813 }
+      },
+      {
+        id: '3-2',
+        name: 'Urban Barber Co. - Brixton',
+        address: '332 Brixton Road',
+        city: 'London',
+        location: { latitude: 51.4635, longitude: -0.1062 }
+      }
+    ],
     about: 'Traditional barbering with a modern twist. Specialists in classic cuts and hot towel shaves.',
     services: ['6', '7'],
     staff: ['5', '6'],
@@ -169,49 +224,56 @@ export const mockStaff: StaffMember[] = [
     name: 'Emma Johnson',
     title: 'Senior Stylist',
     photo: 'https://images.unsplash.com/photo-1494790108755-2616b612b077?w=150&h=150&fit=crop&crop=face',
-    businessId: '1'
+    businessId: '1',
+    branchId: '1-1'
   },
   {
     id: '2',
     name: 'Sarah Williams',
     title: 'Color Specialist',
     photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-    businessId: '1'
+    businessId: '1',
+    branchId: '1-2'
   },
   {
     id: '3',
     name: 'Lisa Chen',
     title: 'Nail Artist',
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    businessId: '2'
+    businessId: '2',
+    branchId: '2-1'
   },
   {
     id: '4',
     name: 'Maria Garcia',
     title: 'Senior Nail Technician',
     photo: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=150&h=150&fit=crop&crop=face',
-    businessId: '2'
+    businessId: '2',
+    branchId: '2-2'
   },
   {
     id: '5',
     name: 'James Mitchell',
     title: 'Master Barber',
     photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    businessId: '3'
+    businessId: '3',
+    branchId: '3-1'
   },
   {
     id: '6',
     name: 'David Brown',
     title: 'Barber',
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-    businessId: '3'
+    businessId: '3',
+    branchId: '3-2'
   },
   {
     id: '7',
     name: 'Alex Thompson',
     title: 'Junior Stylist',
     photo: '', // Empty photo to demonstrate initials
-    businessId: '1'
+    businessId: '1',
+    branchId: '1-3'
   }
 ]
 
@@ -280,6 +342,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-1',
     businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
     businessName: 'Luxe Hair Studio',
     businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
     serviceName: 'Haircut & Style',
@@ -294,6 +358,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-2',
     businessId: '2',
+    branchId: '2-1',
+    branchName: "Bliss Nail Bar - King's Road",
     businessName: 'Bliss Nail Bar',
     businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
     serviceName: 'Gel Manicure',
@@ -307,6 +373,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-3',
     businessId: '3',
+    branchId: '3-1',
+    branchName: 'Urban Barber Co. - Shoreditch',
     businessName: 'Urban Barber Co.',
     businessImage: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&h=300&fit=crop',
     serviceName: 'Classic Cut',
@@ -322,6 +390,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-4',
     businessId: '1',
+    branchId: '1-2',
+    branchName: 'Luxe Hair Studio - Soho',
     businessName: 'Luxe Hair Studio',
     businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
     serviceName: 'Color Treatment',
@@ -336,6 +406,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-5',
     businessId: '2',
+    branchId: '2-2',
+    branchName: 'Bliss Nail Bar - Camden',
     businessName: 'Bliss Nail Bar',
     businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
     serviceName: 'Luxury Pedicure',
@@ -349,6 +421,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-6',
     businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
     businessName: 'Luxe Hair Studio',
     businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
     serviceName: 'Haircut & Style',
@@ -362,6 +436,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-7',
     businessId: '3',
+    branchId: '3-2',
+    branchName: 'Urban Barber Co. - Brixton',
     businessName: 'Urban Barber Co.',
     businessImage: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&h=300&fit=crop',
     serviceName: 'Hot Towel Shave',
@@ -375,6 +451,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-8',
     businessId: '2',
+    branchId: '2-1',
+    branchName: "Bliss Nail Bar - King's Road",
     businessName: 'Bliss Nail Bar',
     businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
     serviceName: 'Gel Manicure',
@@ -390,6 +468,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-9',
     businessId: '1',
+    branchId: '1-2',
+    branchName: 'Luxe Hair Studio - Soho',
     businessName: 'Luxe Hair Studio',
     businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
     serviceName: 'Highlights',
@@ -404,6 +484,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-10',
     businessId: '2',
+    branchId: '2-2',
+    branchName: 'Bliss Nail Bar - Camden',
     businessName: 'Bliss Nail Bar',
     businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
     serviceName: 'Luxury Pedicure',
@@ -417,6 +499,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-15',
     businessId: '2',
+    branchId: '2-1',
+    branchName: "Bliss Nail Bar - King's Road",
     businessName: 'Bliss Nail Bar',
     businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
     serviceName: 'Gel Manicure',
@@ -431,6 +515,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-19',
     businessId: '1',
+    branchId: '1-2',
+    branchName: 'Luxe Hair Studio - Soho',
     businessName: 'Luxe Hair Studio',
     businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
     serviceName: 'Highlights',
@@ -446,6 +532,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-11',
     businessId: '3',
+    branchId: '3-2',
+    branchName: 'Urban Barber Co. - Brixton',
     businessName: 'Urban Barber Co.',
     businessImage: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&h=300&fit=crop',
     serviceName: 'Hot Towel Shave',
@@ -460,6 +548,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-12',
     businessId: '2',
+    branchId: '2-1',
+    branchName: "Bliss Nail Bar - King's Road",
     businessName: 'Bliss Nail Bar',
     businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
     serviceName: 'Gel Manicure',
@@ -474,6 +564,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-17',
     businessId: '3',
+    branchId: '3-2',
+    branchName: 'Urban Barber Co. - Brixton',
     businessName: 'Urban Barber Co.',
     businessImage: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&h=300&fit=crop',
     serviceName: 'Hot Towel Shave',
@@ -489,6 +581,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-13',
     businessId: '1',
+    branchId: '1-2',
+    branchName: 'Luxe Hair Studio - Soho',
     businessName: 'Luxe Hair Studio',
     businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
     serviceName: 'Color Treatment',
@@ -503,6 +597,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-14',
     businessId: '3',
+    branchId: '3-1',
+    branchName: 'Urban Barber Co. - Shoreditch',
     businessName: 'Urban Barber Co.',
     businessImage: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&h=300&fit=crop',
     serviceName: 'Classic Cut',
@@ -516,6 +612,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-16',
     businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
     businessName: 'Luxe Hair Studio',
     businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
     serviceName: 'Haircut & Style',
@@ -530,6 +628,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-18',
     businessId: '2',
+    branchId: '2-2',
+    branchName: 'Bliss Nail Bar - Camden',
     businessName: 'Bliss Nail Bar',
     businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
     serviceName: 'Luxury Pedicure',
@@ -544,6 +644,8 @@ export const mockBookings: Booking[] = [
   {
     id: 'booking-20',
     businessId: '3',
+    branchId: '3-1',
+    branchName: 'Urban Barber Co. - Shoreditch',
     businessName: 'Urban Barber Co.',
     businessImage: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&h=300&fit=crop',
     serviceName: 'Classic Cut',
