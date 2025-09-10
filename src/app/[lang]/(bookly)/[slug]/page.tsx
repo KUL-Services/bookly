@@ -2,6 +2,7 @@
 import { H1, H2, H3, P } from '@/bookly/components/atoms'
 import { Badge } from '@/bookly/components/atoms/base-badge/badge'
 import { Button } from '@/bookly/components/molecules'
+import BookingModal from '@/bookly/components/organisms/booking-modal/booking-modal'
 import { Card, CardContent } from '@/bookly/components/ui/card'
 import { Clock, Globe, MapPin, Phone, Star } from 'lucide-react'
 import { useState } from 'react'
@@ -66,8 +67,26 @@ const reviews = [
   }
 ]
 
+interface Service {
+  name: string
+  price: string
+  duration: string
+}
+
 function businessDetailsPage() {
   const [activeTab, setActiveTab] = useState('services')
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
+  const [selectedService, setSelectedService] = useState<Service | null>(null)
+
+  const handelBookService = (service?: Service) => {
+    if (service) {
+      setSelectedService(service)
+    } else {
+      /* Alert you must choose a service */
+    }
+    setIsBookingModalOpen(true)
+    console.log(`Booking Modal is ${isBookingModalOpen}`)
+  }
   return (
     <div className='container mx-auto p-4 space-y-6 border border-red-500'>
       {/* Header Section */}
@@ -136,6 +155,7 @@ function businessDetailsPage() {
                 buttonText={{ plainText: 'Book Appointment' }}
                 variant='contained'
                 className=' bg-black hover:bg-gray-900 text-white'
+                /* oncLick: push client to book a promoted service */
               />
             </div>
           </div>
@@ -189,6 +209,9 @@ function businessDetailsPage() {
                           buttonText={{ plainText: 'Book Now' }}
                           variant='contained'
                           className='mt-2 bg-black hover:bg-gray-900 text-white'
+                          onClick={() =>
+                            handelBookService({ name: service.name, price: service.price, duration: service.duration })
+                          }
                         />
                       </div>
                     </div>
@@ -366,6 +389,15 @@ function businessDetailsPage() {
           </div>
         )}
       </div>
+
+      {/* Calling the BookingModal */}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        serviceName={selectedService?.name}
+        servicePrice={selectedService?.price}
+        serviceDuration={selectedService?.duration}
+      />
     </div>
   )
 }
