@@ -15,9 +15,11 @@ const getAvatarSize = (elementSize?: ElementSize) => {
     case '3XL':
       return 'w-14 h-14'
     case '4XL':
-      return 'w-15 h-15'
-    case '5XL':
       return 'w-16 h-16'
+    case '5XL':
+      return 'w-20 h-20'
+    case '6XL':
+      return 'w-24 h-24'
     default:
       return 'w-8 h-8'
   }
