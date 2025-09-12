@@ -60,7 +60,7 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
   const isLogin = type === 'login'
 
   return (
-    <Card className='w-full max-w-md'>
+    <Card className='w-full  border border-gray-300'>
       <CardHeader className='space-y-1'>
         <CardTitle className='text-2xl font-bold text-center'>
           {isLogin ? t('auth.login.title') : 'Create your account'}
@@ -188,11 +188,11 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
                       <div className='space-y-1 leading-none'>
                         <FormLabel>
                           I agree to the{' '}
-                          <Link href='/terms' className='text-primary hover:underline'>
+                          <Link href='/terms' className='text-teal-500 hover:underline'>
                             Terms of Service
                           </Link>{' '}
                           and{' '}
-                          <Link href='/privacy' className='text-primary hover:underline'>
+                          <Link href='/privacy' className='text-teal-500  hover:underline'>
                             Privacy Policy
                           </Link>
                         </FormLabel>
@@ -223,7 +223,7 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
               </div>
             )}
 
-            <Button type='submit' className='w-full'>
+            <Button type='submit' className='w-full text-teal-50 bg-teal-500 hover:bg-teal-600'>
               {isLogin ? 'Log in' : 'Create account'}
             </Button>
           </form>
@@ -239,11 +239,11 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
         </div>
 
         <div className='grid grid-cols-2 gap-4'>
-          <Button variant='outline' type='button' className='w-full'>
+          <Button variant='outline' type='button' className='w-full border border-gray-300'>
             <KulIcon icon='flat-color-icons:google' className='mr-2' />
             Google
           </Button>
-          <Button variant='outline' type='button' className='w-full'>
+          <Button variant='outline' type='button' className='w-full border border-gray-300'>
             <KulIcon icon='logos:facebook' className='mr-2' />
             Facebook
           </Button>
@@ -255,14 +255,14 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
           {isLogin ? (
             <>
               {t('auth.login.noAccount')}{' '}
-              <Link href='/register' className='text-primary hover:underline'>
+              <Link href='/customer/register' className='text-teal-500  hover:underline'>
                 {t('auth.login.createAccount')}
               </Link>
             </>
           ) : (
             <>
               Already have an account?{' '}
-              <Link href='/login' className='text-primary hover:underline'>
+              <Link href='/customer/login' className='text-teal-500 hover:underline'>
                 Log in
               </Link>
             </>
