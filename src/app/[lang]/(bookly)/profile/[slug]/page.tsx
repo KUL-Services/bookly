@@ -1,5 +1,6 @@
-import { ProfileHeader } from '@/bookly/components/molecules/profile-header/profileHeader'
-import ProfileInfo from '@/bookly/components/molecules/profile-info/ProfileInfo'
+import BookingsTabs from '@/bookly/components/molecules/bookings-tabs/bookings-tabs'
+import { ProfileHeader } from '@/bookly/components/molecules/profile-header/profile-header'
+import ProfileInfo from '@/bookly/components/molecules/profile-info/profile-info'
 
 function ProfilePage() {
   return (
@@ -7,7 +8,7 @@ function ProfilePage() {
       <ProfileHeader />
       <div className='max-w-4xl mx-auto px-4 py-8 space-y-8'>
         <ProfileInfo />
-        BookingsTabs
+        <BookingsTabs />
       </div>
     </div>
   )
