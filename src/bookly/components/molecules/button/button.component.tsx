@@ -13,6 +13,10 @@ const Button = ({
   disabled = false,
   fullWidth = false,
   className,
+  descriptionText,
+  descriptionTextProps,
+  buttonTextProps,
+  textContainerClassName,
   ...restProps
 }: ButtonProps) => {
   return (
@@ -28,13 +32,20 @@ const Button = ({
       disabled={disabled}
       {...restProps}
     >
-      <div className='inline-flex items-center justify-center gap-2'>
+      <div className='inline-flex items-center justify-center gap-2 '>
         {prefixIcon && <KulIcon {...prefixIcon} className={cn('h-4 w-4', prefixIcon.className)} />}
-        {buttonText && (
-          <span className='relative top-[0.5px]'>
-            <H5 stringProps={buttonText} className='font-medium' />
-          </span>
-        )}
+        <div className={textContainerClassName}>
+          {buttonText && (
+            <span className='relative top-[0.5px]'>
+              <H5 stringProps={buttonText} className='font-medium' {...buttonTextProps} />
+            </span>
+          )}
+          {descriptionText && (
+            <span className='relative top-[0.5px]'>
+              <H5 stringProps={descriptionText} className='font-medium' {...descriptionTextProps} />
+            </span>
+          )}
+        </div>
         {suffixIcon && <KulIcon {...suffixIcon} className={cn('h-4 w-4', suffixIcon.className)} />}
       </div>
     </Pressable>

@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { Button } from '../../molecules'
 import { H3, H4, KulIcon } from '../../atoms'
+import { Label } from '@/bookly/components/atoms/base-text/base-text.component'
 import { Card, CardContent } from '../../ui/card'
+import { Input } from '../../ui/input'
 
 interface BookingModalProops {
   isOpen: boolean
@@ -119,6 +121,16 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
 
   const handleTimeSelect = (time: string) => {
     setbookingData(prev => ({ ...prev, time }))
+  }
+
+  const handleCustomerInfoChange = (field: keyof CustomerInfo, value: string) => {
+    setbookingData(prev => ({
+      ...prev,
+      customerInfo: {
+        ...prev.customerInfo,
+        [field]: value
+      }
+    }))
   }
 
   const handleConfirmBooking = () => {}
@@ -287,9 +299,9 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
                             ? 'bg-teal-500 text-white border-teal-500'
                             : 'border-gray-200 hover:border-gray-300'
                       }`}
-                      buttonText={
-                        slot.available ? { plainText: slot.time } : { plainText: `${slot.time} \nUnavailable` }
-                      }
+                      buttonText={{ plainText: slot.time }}
+                      descriptionText={slot.available ? undefined : { plainText: `Unavailable` }}
+                      textContainerClassName='flex flex-col'
                     />
                     {/* <button>
                           {slot.time}
@@ -341,6 +353,48 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
             </Card>
 
             {/* Customer Information */}
+            <div className='space-y-4'>
+              <h4 className='font-medium'>Your Information</h4>
+
+              <div>
+                <Label stringProps={{ plainText: 'Full Name' }} {...{ htmlFor: 'name' }} />
+                <Input
+                  id='name'
+                  value={bookingData.customerInfo.name}
+                  onChange={e => handleCustomerInfoChange('name', e.target.value)}
+                  placeholder='Enter your full name'
+                />
+              </div>
+
+              <div>
+                <Label stringProps={{ plainText: 'Email Address' }} {...{ htmlFor: 'email' }} />
+                <Input
+                  id='email'
+                  type='email'
+                  value={bookingData.customerInfo.email}
+                  onChange={e => handleCustomerInfoChange('email', e.target.value)}
+                  placeholder='Enter your email address'
+                />
+              </div>
+
+              <div>
+                <Label stringProps={{ plainText: 'Phone Number' }} {...{ htmlFor: 'phone' }} />
+                <Input
+                  id='phone'
+                  type='tel'
+                  value={bookingData.customerInfo.phone}
+                  onChange={e => handleCustomerInfoChange('phone', e.target.value)}
+                  placeholder='Enter your phone number'
+                />
+              </div>
+
+              <div className='bg-gray-50 p-4 rounded-lg'>
+                <p className='text-sm text-gray-600'>
+                  <strong>Note:</strong> By confirming this booking, you agree to our terms and conditions. You'll
+                  receive a confirmation email with booking details.
+                </p>
+              </div>
+            </div>
           </div>
         )}
         {/* Footer */}
@@ -371,7 +425,7 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
             variant='contained'
             onClick={step === 3 ? handleConfirmBooking : handelNext}
             className='flex items-center gap-2  bg-black hover:bg-gray-900 text-white '
-            prefixIcon={step === 3 ? undefined : { icon: 'lucide:chevron-right' }}
+            suffixIcon={step === 3 ? undefined : { icon: 'lucide:chevron-right' }}
             buttonText={step === 3 ? { plainText: 'Confirm Booking' } : { plainText: 'Next' }}
           />
           {/*
