@@ -1,9 +1,11 @@
 'use client'
 import { H1, H2, H3, P } from '@/bookly/components/atoms'
 import { Badge } from '@/bookly/components/atoms/base-badge/badge'
-import { Button } from '@/bookly/components/molecules'
+import { Avatar, Button } from '@/bookly/components/molecules'
 import BookingModal from '@/bookly/components/organisms/booking-modal/booking-modal'
 import { Card, CardContent } from '@/bookly/components/ui/card'
+import { mockBusinesses, mockReviews, mockServices } from '@/bookly/data/mock-data'
+import { format } from 'date-fns'
 import { Clock, Globe, MapPin, Phone, Star } from 'lucide-react'
 import { useState } from 'react'
 
@@ -13,65 +15,110 @@ const tabs = [
   { id: 'about', label: 'About' }
 ]
 
-const services = [
-  {
-    name: 'Premium Haircut',
-    duration: '45 min',
-    price: '$45',
-    description: 'Professional haircut with wash and styling'
-  },
-  {
-    name: 'Beard Trim',
-    duration: '20 min',
-    price: '$25',
-    description: 'Precision beard trimming and shaping'
-  },
-  {
-    name: 'Hair Wash & Style',
-    duration: '30 min',
-    price: '$30',
-    description: 'Deep cleansing wash with professional styling'
-  },
-  {
-    name: 'Full Service Package',
-    duration: '90 min',
-    price: '$85',
-    description: 'Complete grooming package with haircut, beard trim, and styling'
-  }
-]
-
-const reviews = [
-  {
-    name: 'John Smith',
-    rating: 5,
-    date: '2 days ago',
-    comment: 'Excellent service! The barber was very professional and gave me exactly what I wanted. Highly recommend!'
-  },
-  {
-    name: 'Mike Johnson',
-    rating: 5,
-    date: '1 week ago',
-    comment: "Best haircut I've had in years. Great attention to detail and friendly staff."
-  },
-  {
-    name: 'David Wilson',
-    rating: 4,
-    date: '2 weeks ago',
-    comment: 'Good service and clean environment. Will definitely come back.'
-  },
-  {
-    name: 'Alex Brown',
-    rating: 5,
-    date: '3 weeks ago',
-    comment: "Amazing experience! The barber really knows what he's doing. Worth every penny."
-  }
-]
-
 interface Service {
+  id?: string
   name: string
+  description?: string
   price: string
   duration: string
+  category?: string
+  businessId?: string
 }
+
+interface Review {
+  authorName: string
+  rating: number
+  date: Date
+  comment: string
+  id?: string
+  authorImage?: string
+  businessId?: string
+}
+
+const business = mockBusinesses[0]
+const businesSservices = (): Service[] => {
+  const serviceIds = business.services
+  //Filter mockServices to only include services with matching IDs
+  return mockServices
+    .filter(service => serviceIds.includes(service.id))
+    .map(service => ({
+      name: service.name,
+      price: service.price.toString(),
+      duration: service.duration.toString(),
+      businessId: service.businessId,
+      description: service.description,
+      category: service.category,
+      id: service.id
+    }))
+}
+
+const businessReview = (): Review[] => {
+  const reviewIds = business.reviews
+  return mockReviews
+    .filter(review => reviewIds.includes(review.id))
+    .map(review => ({
+      id: review.id,
+      authorName: review.authorName,
+      authorImage: review.authorImage,
+      rating: review.rating,
+      comment: review.comment,
+      date: review.date,
+      businessId: review.businessId
+    }))
+}
+// const oldservices = [
+//   {
+//     name: 'Premium Haircut',
+//     duration: '45 min',
+//     price: '$45',
+//     description: 'Professional haircut with wash and styling'
+//   },
+//   {
+//     name: 'Beard Trim',
+//     duration: '20 min',
+//     price: '$25',
+//     description: 'Precision beard trimming and shaping'
+//   },
+//   {
+//     name: 'Hair Wash & Style',
+//     duration: '30 min',
+//     price: '$30',
+//     description: 'Deep cleansing wash with professional styling'
+//   },
+//   {
+//     name: 'Full Service Package',
+//     duration: '90 min',
+//     price: '$85',
+//     description: 'Complete grooming package with haircut, beard trim, and styling'
+//   }
+// ]
+
+// const reviews = [
+//   {
+//     name: 'John Smith',
+//     rating: 5,
+//     date: '2 days ago',
+//     comment: 'Excellent service! The barber was very professional and gave me exactly what I wanted. Highly recommend!'
+//   },
+//   {
+//     name: 'Mike Johnson',
+//     rating: 5,
+//     date: '1 week ago',
+//     comment: "Best haircut I've had in years. Great attention to detail and friendly staff."
+//   },
+//   {
+//     name: 'David Wilson',
+//     rating: 4,
+//     date: '2 weeks ago',
+//     comment: 'Good service and clean environment. Will definitely come back.'
+//   },
+//   {
+//     name: 'Alex Brown',
+//     rating: 5,
+//     date: '3 weeks ago',
+//     comment: "Amazing experience! The barber really knows what he's doing. Worth every penny."
+//   }
+// ]
 
 function businessDetailsPage() {
   const [activeTab, setActiveTab] = useState('services')
@@ -88,21 +135,21 @@ function businessDetailsPage() {
     console.log(`Booking Modal is ${isBookingModalOpen}`)
   }
   return (
-    <div className='container mx-auto p-4 space-y-6 border border-red-500'>
+    <div className='container mx-auto p-4 space-y-6'>
       {/* Header Section */}
       <Card>
         <CardContent className='p-6'>
           <div className='flex flex-col md:flex-row gap-6'>
             {/* Business Image */}
             <div className='w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden'>
-              <img src='/modern-barber-shop.png' alt='Elite Barber Shop' className='w-full h-full object-cover' />
+              <img src={`${mockBusinesses[0].coverImage}`} alt={business.name} className='w-full h-full object-cover' />
             </div>
 
             {/* Business Info */}
             <div className='flex-1 space-y-4'>
               <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4'>
                 <div>
-                  <H1 stringProps={{ plainText: 'Elite Barber Shop' }} className='text-3xl font-bold text-gray-900' />
+                  <H1 stringProps={{ plainText: `${business.name}` }} className='text-3xl font-bold text-gray-900' />
                   <div className='flex items-center gap-2 mt-2'>
                     <div className='flex items-center'>
                       {[...Array(5)].map((_, i) => (
@@ -111,9 +158,7 @@ function businessDetailsPage() {
                     </div>
                     <span className='text-sm text-gray-600'>4.8 (127 reviews)</span>
                   </div>
-                  <Badge variant='secondary' className='mt-2'>
-                    Open Now
-                  </Badge>
+                  <Badge className='mt-2 bg-teal-500 text-teal-50'>Open Now</Badge>
                 </div>
 
                 <div className='flex gap-2'>
@@ -136,7 +181,7 @@ function businessDetailsPage() {
               <div className='space-y-2 text-sm text-gray-600'>
                 <div className='flex items-center gap-2'>
                   <MapPin className='w-4 h-4' />
-                  <span>123 Main Street, Downtown, NY 10001</span>
+                  <span>{`${mockBusinesses[0].address}`}</span>
                 </div>
                 <div className='flex items-center gap-2'>
                   <Phone className='w-4 h-4' />
@@ -144,7 +189,10 @@ function businessDetailsPage() {
                 </div>
                 <div className='flex items-center gap-2'>
                   <Clock className='w-4 h-4' />
-                  <span>Mon-Sat: 9:00 AM - 8:00 PM, Sun: 10:00 AM - 6:00 PM</span>
+                  <span>
+                    Mon-Wed: {mockBusinesses[0].openingHours['Mon']} , Thu-Fri: {mockBusinesses[0].openingHours['Thu']},
+                    Sat: {mockBusinesses[0].openingHours['Sat']}, Sun:{mockBusinesses[0].openingHours['Sun']}
+                  </span>
                 </div>
                 <div className='flex items-center gap-2'>
                   <Globe className='w-4 h-4' />
@@ -163,14 +211,15 @@ function businessDetailsPage() {
       </Card>
 
       {/* Tabs Navigation */}
-      <div className='border-b border-gray-200 mx-auto max-w-4xl'>
-        <nav className='flex space-x-8'>
+      <div className='border-gray-300 border border-b-0 mx-auto max-w-4xl shadow-lg rounded-lg'>
+        <nav className='flex justify-center space-x-8'>
           {tabs.map(tab => (
             <Button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               variant='text'
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+              size='lg'
+              className={`w-full py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-200'
@@ -180,21 +229,24 @@ function businessDetailsPage() {
           ))}
         </nav>
       </div>
-
+      {/* mockServices[mockBusinesses[0].services] */}
       {/* Tab Content */}
       <div className='min-h-96 max-w-4xl mx-auto'>
         {activeTab === 'services' && (
           <div className='space-y-4'>
             <h2 className='text-2xl font-bold text-gray-900'>Our Services</h2>
             <div className='grid gap-4'>
-              {services.map((service, index) => (
+              {businesSservices().map((service, index) => (
                 <Card key={index}>
                   <CardContent className='p-4'>
                     <div className='flex justify-between items-start'>
                       <div className='flex-1'>
                         <H3 stringProps={{ plainText: service.name }} className='font-semibold text-lg text-gray-900' />
                         {/* <h3 className='font-semibold text-lg text-gray-900'>{service.name}</h3> */}
-                        <P stringProps={{ plainText: service.description }} className='text-gray-600 text-sm mt-1' />
+                        <P
+                          stringProps={{ plainText: service.description ?? '' }}
+                          className='text-gray-600 text-sm mt-1'
+                        />
                         {/* <p className=''>{service.description}</p> */}
                         <div className='flex items-center gap-4 mt-2 text-sm text-gray-500'>
                           <span className='flex items-center gap-1'>
@@ -204,7 +256,7 @@ function businessDetailsPage() {
                         </div>
                       </div>
                       <div className='text-right'>
-                        <div className='text-xl font-bold text-gray-900'>{service.price}</div>
+                        <div className='text-xl font-bold text-gray-900'>${service.price}</div>
                         <Button
                           buttonText={{ plainText: 'Book Now' }}
                           variant='contained'
@@ -234,7 +286,9 @@ function businessDetailsPage() {
                 className='bg-white text-gray-900 shadow-lg border-gray-400 hover:shadow-none hover: border-none hover:bg-transparent'
               />
             </div>
-
+            {/* {[...Array(5)].map((_, i) => (
+                        <Star key={i} className='w-4 h-4 fill-yellow-400 text-yellow-400' />
+                      ))} */}
             {/* Review Summary */}
             <Card>
               <CardContent className='p-6'>
@@ -244,9 +298,9 @@ function businessDetailsPage() {
                     <div className='flex items-center justify-center mt-1'>
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className='w-4 h-4 fill-yellow-400 text-yellow-400' />
-                      ))}
+                      ))}{' '}
                     </div>
-                    <div className='text-sm text-gray-600 mt-1'>127 reviews</div>
+                    <div className='text-sm text-gray-600 mt-1'>{business.totalRatings} reviews</div>
                   </div>
                   <div className='flex-1 space-y-2'>
                     {[5, 4, 3, 2, 1].map(rating => (
@@ -260,7 +314,8 @@ function businessDetailsPage() {
                           ></div>
                         </div>
                         <span className='text-sm text-gray-600 w-8'>
-                          {rating === 5 ? '108' : rating === 4 ? '15' : '4'}
+                          {/* {rating === 5 ? '108' : rating === 4 ? '15' : '4'} */}
+                          {business.averageRating}
                         </span>
                       </div>
                     ))}
@@ -271,32 +326,33 @@ function businessDetailsPage() {
 
             {/* Individual Reviews */}
             <div className='space-y-4'>
-              {reviews.map((review, index) => (
+              {businessReview().map((review, index) => (
                 <Card key={index}>
                   <CardContent className='p-4'>
                     <div className='flex items-start gap-3'>
-                      <div className='w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center'>
+                      {/* <div className='w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center'>
                         <span className='text-sm font-medium text-gray-700'>
-                          {review.name
+                          {review.authorName
                             .split(' ')
                             .map(n => n[0])
                             .join('')}
                         </span>
-                      </div>
+                      </div> */}
+                      <Avatar avatarTitle='Aly Lashin' imageUrl={review.authorImage} size='4XL' alt='Aly Lashin' />
                       <div className='flex-1'>
                         <div className='flex items-center gap-2 mb-1'>
-                          <span className='font-medium text-gray-900'>{review.name}</span>
-                          <span className='text-sm text-gray-500'>{review.date}</span>
-                        </div>
-                        <div className='flex items-center mb-2'>
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${
-                                i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
+                          <span className='font-medium text-gray-900'>{review.authorName}</span>
+                          <span className='text-sm text-gray-500'>{format(review.date, 'yyyy-MM-dd')}</span>
+                          <div className='flex items-center mb-2'>
+                            {[...Array(review.rating)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
                         </div>
                         <p className='text-gray-700 text-sm'>{review.comment}</p>
                       </div>
@@ -358,16 +414,16 @@ function businessDetailsPage() {
                   />
                   <div className='space-y-1 text-gray-700'>
                     <div className='flex justify-between'>
-                      <span>Monday - Friday</span>
-                      <span>9:00 AM - 8:00 PM</span>
+                      <span>Monday - Wensday</span>
+                      <span>{business.openingHours['Mon']}</span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span>Thursday - Friday</span>
+                      <span>{business.openingHours['Thu']}</span>
                     </div>
                     <div className='flex justify-between'>
                       <span>Saturday</span>
-                      <span>9:00 AM - 8:00 PM</span>
-                    </div>
-                    <div className='flex justify-between'>
-                      <span>Sunday</span>
-                      <span>10:00 AM - 6:00 PM</span>
+                      <span>{business.openingHours['Sat']}</span>
                     </div>
                   </div>
                 </div>
@@ -378,10 +434,10 @@ function businessDetailsPage() {
                     className='font-semibold text-lg text-gray-900 mb-2'
                   />
                   <div className='space-y-2 text-gray-700'>
-                    <p>123 Main Street, Downtown, NY 10001</p>
-                    <p>Phone: (555) 123-4567</p>
-                    <p>Email: info@elitebarbershop.com</p>
-                    <p>Website: www.elitebarbershop.com</p>
+                    <P stringProps={{ plainText: `Address: ${business.address}` }} />
+                    <P stringProps={{ plainText: 'Phone: (555) 123-4567' }} />
+                    <P stringProps={{ plainText: 'Email: info@elitebarbershop.com' }} />
+                    <P stringProps={{ plainText: 'Email: info@elitebarbershop.com' }} />
                   </div>
                 </div>
               </CardContent>
