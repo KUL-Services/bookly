@@ -4,8 +4,15 @@ import { useState } from 'react'
 import { Button } from '../../molecules'
 import { H3, H4, KulIcon } from '../../atoms'
 import { Label } from '@/bookly/components/atoms/base-text/base-text.component'
-import { Card, CardContent } from '../../ui/card'
 import { Input } from '../../ui/input'
+import { Calendar } from '../../ui/calendar'
+import { Card, CardContent } from '../../ui/card'
+import { format } from 'date-fns'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../../ui/form'
+import { RadioGroup, RadioGroupItem } from '../../ui/radio-group'
 
 interface BookingModalProops {
   isOpen: boolean
@@ -23,7 +30,7 @@ interface Professional {
   initials: string
 }
 
-interface CustomerInfo {
+interface Customer {
   name: string
   email: string
   phone: string
@@ -33,7 +40,12 @@ interface BookingData {
   professional: Professional | null
   date: Date | null
   time: string | null
-  customerInfo: CustomerInfo
+  service: {
+    name: string | undefined
+    price: string | undefined
+    duration: string | undefined
+  }
+  customer: Customer | null
 }
 
 const professionals: Professional[] = [
@@ -84,94 +96,133 @@ const timeSlots = [
   { time: '7:00 PM', available: true }
 ]
 
+const formSchema = {
+  professional: z.object({
+    professionalId: z.string().min(1, { message: 'Please select a professional.' })
+  }),
+
+  dateTime: z.object({
+    date: z.date({
+      error: issue => (issue.input === undefined ? 'Please select a date' : 'Invalid date')
+    }),
+    time: z.string().min(1, 'Please select an available time slot.')
+  }),
+
+  customer: z.object({
+    name: z.string().min(2, 'Name must be at least 2 characters.'),
+    email: z.email({ message: 'Please enter a valid email address.' }),
+    phone: z
+      .string()
+      .min(10, 'Phone number must be at least 10 digits.')
+      .max(15, 'Phone number must not exceed 15 digits.')
+      .regex(/^[0-9+\-\s()]*$/, 'Please enter a valid phone number.')
+  })
+}
+
+type ProfessionalFormValues = z.infer<typeof formSchema.professional>
+type DateTimeFormValues = z.infer<typeof formSchema.dateTime>
+type CustomerFormValues = z.infer<typeof formSchema.customer>
+
 function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDuration }: BookingModalProops) {
-  const [step, setstep] = useState(1)
-  const [bookingData, setbookingData] = useState<BookingData>({
-    professional: null,
-    date: null,
-    time: null,
-    customerInfo: {
+  const [step, setStep] = useState(1)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedTime, setSelectedTime] = useState<string | null>(null)
+  const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null)
+  const [bookingData, setbookingData] = useState<BookingData | null>(null) // for debug ONLY
+
+  // Forms
+  const professionalForm = useForm<ProfessionalFormValues>({
+    resolver: zodResolver(formSchema.professional),
+    defaultValues: {
+      professionalId: ''
+    }
+  })
+
+  const dateTimeForm = useForm<DateTimeFormValues>({
+    resolver: zodResolver(formSchema.dateTime),
+    defaultValues: {
+      date: undefined,
+      time: ''
+    }
+  })
+
+  const customerForm = useForm<CustomerFormValues>({
+    resolver: zodResolver(formSchema.customer),
+    defaultValues: {
       name: '',
       email: '',
       phone: ''
     }
   })
 
-  // Calendar state
-  const [currentMonth, setCurrentMonth] = useState(new Date(2025, 8))
-  const [selectedDate, setselectedDate] = useState<Date | null>(null)
+  function onProfessionalSubmit(data: ProfessionalFormValues) {
+    const professional = professionals.find(p => p.id === data.professionalId)
+
+    if (professional) {
+      setSelectedProfessional(professional)
+      handleNext()
+    }
+  }
+
+  function onDateTimeSubmit(data: DateTimeFormValues) {
+    handleDateSelect(data.date)
+    handleTimeSelect(data.time)
+    handleNext()
+  }
+
+  async function onCustomerSubmit(data: CustomerFormValues) {
+    try {
+      // If validation passes, create the booking data
+      const bookingData = {
+        professional: selectedProfessional,
+        date: selectedDate,
+        time: selectedTime,
+        service: {
+          name: serviceName,
+          price: servicePrice,
+          duration: serviceDuration
+        },
+        customer: data
+      }
+
+      // Here you would typically make an API call to submit the booking
+      console.log('Final Booking Data =>', bookingData)
+      setbookingData(bookingData)
+    } catch (error) {
+      customerForm.setError('root', {
+        type: 'manual',
+        message: 'Failed to submit booking. Please try again.'
+      })
+    }
+  }
 
   // Handles Functions
-  const handelNext = () => {
-    if (step < 3) setstep(step + 1)
+  const formatDate = (date: Date) => {
+    return format(date, 'PPP')
+  }
+
+  const handleNext = () => {
+    if (step < 3) setStep(step + 1)
   }
 
   const handleBack = () => {
-    if (step > 1) setstep(step - 1)
-  }
-
-  const handleProfessionalSelect = (professional: Professional) => {
-    setbookingData(prev => ({ ...prev, professional }))
+    if (step > 1) setStep(step - 1)
   }
 
   const handleDateSelect = (date: Date) => {
-    setselectedDate(date)
-    setbookingData(prev => ({ ...prev, date }))
+    setSelectedDate(date)
   }
 
   const handleTimeSelect = (time: string) => {
-    setbookingData(prev => ({ ...prev, time }))
+    setSelectedTime(time)
   }
 
-  const handleCustomerInfoChange = (field: keyof CustomerInfo, value: string) => {
-    setbookingData(prev => ({
-      ...prev,
-      customerInfo: {
-        ...prev.customerInfo,
-        [field]: value
-      }
-    }))
+  const handleConfirmBooking = () => {
+    console.log(
+      `Final Booking Data => ${bookingData?.customer?.name} - ${bookingData?.date?.getDate()} - ${bookingData?.time} - ${bookingData?.professional?.name} - ${bookingData?.service.name}`
+    )
+    onClose() // Close the modal using the provided onClose prop
   }
-
-  const handleConfirmBooking = () => {}
-
-  // Helper Functions
-  const getDaysInMonth = (date: Date) => {
-    const year = date.getFullYear()
-    const month = date.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const daysInMonth = lastDay.getDate()
-    const startingDayOfWeek = firstDay.getDay()
-
-    const days = []
-
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null)
-    }
-
-    // Add days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day))
-    }
-
-    return days
-  }
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
-  // Days / month variables
-
-  const days = getDaysInMonth(currentMonth)
-  const monthYear = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 
   if (!isOpen) return null
   return (
@@ -188,129 +239,158 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
         {/* Step 1: Choose Professional */}
         {step === 1 && (
           <div className='p-6'>
-            <H3 stringProps={{ plainText: 'Choose your professional' }} className='text-lg font-medium mb-6' />
-            <div className='space-y-3'>
-              {professionals.map(professional => (
-                <div
-                  key={professional.id}
-                  onClick={() => handleProfessionalSelect(professional)}
-                  className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-colors ${
-                    bookingData.professional?.id === professional.id
-                      ? 'border-teal-500 bg-teal-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
-                      professional.id === '1' ? 'bg-purple-500' : professional.id === '2' ? 'bg-blue-500' : 'bg-red-500'
-                    }`}
-                  >
-                    {professional.initials}
-                  </div>
-                  <div>
-                    <div className='font-medium'>{professional.name}</div>
-                    <div className='text-sm text-gray-500'>{professional.role}</div>
-                  </div>
+            <Form {...professionalForm}>
+              <form onSubmit={professionalForm.handleSubmit(onProfessionalSubmit)} className='space-y-6'>
+                <H3 stringProps={{ plainText: 'Choose your professional' }} className='text-lg font-medium mb-6' />
+
+                <FormField
+                  control={professionalForm.control}
+                  name='professionalId'
+                  render={({ field }) => (
+                    <FormItem className='space-y-3'>
+                      <FormControl>
+                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className='space-y-3'>
+                          {professionals.map(professional => (
+                            <FormItem
+                              key={professional.id}
+                              className={`flex items-center gap-3 p-4 rounded-lg border transition-colors ${
+                                field.value === professional.id
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-gray-200 hover:border-gray-300'
+                              }`}
+                            >
+                              <FormControl className='cursor-pointer'>
+                                <RadioGroupItem value={professional.id} className='' />
+                              </FormControl>
+                              <div
+                                className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
+                                  professional.id === '1'
+                                    ? 'bg-purple-500'
+                                    : professional.id === '2'
+                                      ? 'bg-blue-500'
+                                      : 'bg-red-500'
+                                }`}
+                              >
+                                {professional.initials}
+                              </div>
+                              <div>
+                                <div className='font-medium'>{professional.name}</div>
+                                <div className='text-sm text-gray-500'>{professional.role}</div>
+                              </div>
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage className='text-red-500' />
+                    </FormItem>
+                  )}
+                />
+                <div className=' flex items-center justify-end'>
+                  <Button
+                    type='submit'
+                    variant='text'
+                    className=' bg-teal-500 text-teal-50 shadow-lg border-teal-400 hover:shadow-none hover: border-none hover:bg-transparent'
+                    suffixIcon={{ icon: 'lucide:chevron-right' }}
+                    buttonText={{ plainText: 'Go' }}
+                  />
                 </div>
-              ))}
-            </div>
+              </form>
+            </Form>
           </div>
         )}
 
         {/* Step 2: Select Date and Time */}
         {step === 2 && (
           <div className='p-6'>
-            <H3 stringProps={{ plainText: 'Select a date and time' }} className='text-lg font-medium mb-6' />
+            <Form {...dateTimeForm}>
+              <form onSubmit={dateTimeForm.handleSubmit(onDateTimeSubmit)} className='space-y-6'>
+                <H3 stringProps={{ plainText: 'Select a date and time' }} className='text-lg font-medium mb-6' />
+                <FormMessage className='text-red-500' />
 
-            {/* Calendar */}
-            <div className='mb-6'>
-              <div className='flex items-center justify-between mb-4'>
-                <div className='font-medium flex items-center gap-2'>
-                  <KulIcon icon={'lucide:calendar'} />
-                  <H4 stringProps={{ plainText: 'Choose Date' }} />
-                </div>
-              </div>
-
-              <div className='border border-gray-300 rounded-lg p-4'>
-                <div className='flex items-center justify-between mb-4'>
-                  <Button
-                    variant='contained'
-                    size='sm'
-                    onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                    prefixIcon={{ icon: 'lucide:chevron-left' }}
+                {/* Calendar */}
+                <div className='mb-6'>
+                  <FormField
+                    control={dateTimeForm.control}
+                    name='date'
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className='flex items-center justify-between mb-4'>
+                          <FormLabel className='flex items-center gap-2'>
+                            <KulIcon icon={'lucide:calendar'} />
+                            <H4 stringProps={{ plainText: 'Choose Date' }} />
+                          </FormLabel>
+                          {field.value && <p className='text-sm text-muted-foreground'>{format(field.value, 'PPP')}</p>}
+                        </div>
+                        <FormControl>
+                          <div className='border border-gray-300 rounded-lg'>
+                            <Calendar
+                              mode='single'
+                              required={true}
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              className='w-full'
+                              initialFocus
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
+                </div>
 
-                  <h5 className='font-medium'>{monthYear}</h5>
+                {/* Time Slots */}
+                <FormField
+                  control={dateTimeForm.control}
+                  name='time'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className='flex items-center gap-2 mb-4'>
+                        <KulIcon icon={'lucide:clock'} />
+                        <H4 stringProps={{ plainText: 'Choose Time' }} />
+                      </FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className='grid grid-cols-2 sm:grid-cols-4 gap-2'
+                        >
+                          {timeSlots.map(slot => (
+                            <FormItem key={slot.time}>
+                              <FormControl>
+                                <RadioGroupItem value={slot.time} disabled={!slot.available} className='sr-only' />
+                              </FormControl>
+                              <Button
+                                type='button'
+                                variant={field.value === slot.time ? 'contained' : 'outlined'}
+                                size='sm'
+                                onClick={() => slot.available && field.onChange(slot.time)}
+                                disabled={!slot.available}
+                                className={`h-auto min-h-[3rem] w-full ${!slot.available ? 'opacity-50' : ''}`}
+                                buttonText={{ plainText: slot.time }}
+                                descriptionText={!slot.available ? { plainText: 'Unavailable' } : undefined}
+                                textContainerClassName='flex flex-col items-center justify-center gap-1'
+                              />
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className=' flex items-center justify-end'>
                   <Button
-                    variant='contained'
-                    size='sm'
-                    onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                    prefixIcon={{ icon: 'lucide:chevron-right' }}
+                    type='submit'
+                    variant='text'
+                    className=' bg-teal-500 text-teal-50 shadow-lg border border-teal-400 hover:shadow-none hover:bg-white'
+                    suffixIcon={{ icon: 'lucide:chevron-right' }}
+                    buttonText={{ plainText: 'Go' }}
                   />
                 </div>
-
-                <div className='grid grid-cols-7 gap-1 mb-2'>
-                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                    <div key={day} className='text-center text-sm font-medium text-gray-500 p-2'>
-                      {day}
-                    </div>
-                  ))}
-                </div>
-
-                <div className='grid grid-cols-7 gap-1'>
-                  {days.map((day, index) => (
-                    <button
-                      key={index}
-                      onClick={() => day && handleDateSelect(day)}
-                      disabled={!day}
-                      className={`p-2 text-sm rounded transition-colors ${
-                        !day
-                          ? 'invisible'
-                          : selectedDate && day.toDateString() === selectedDate.toDateString()
-                            ? 'bg-teal-500 text-white'
-                            : 'hover:bg-gray-100'
-                      }`}
-                    >
-                      {day?.getDate()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-            {/* Time Slots */}
-            <div>
-              <div className='font-medium flex items-center gap-2 mb-4'>
-                <KulIcon icon={'lucide:clock'} />
-                <H4 stringProps={{ plainText: 'Choose Time' }} />
-              </div>
-              <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
-                {timeSlots.map(slot => (
-                  <>
-                    <Button
-                      variant='text'
-                      size='sm'
-                      key={slot.time}
-                      onClick={() => slot.available && handleTimeSelect(slot.time)}
-                      disabled={!slot.available}
-                      className={` p-3 text-sm rounded border transition-colors ${
-                        !slot.available
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed text-xs mt-1'
-                          : bookingData.time === slot.time
-                            ? 'bg-teal-500 text-white border-teal-500'
-                            : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      buttonText={{ plainText: slot.time }}
-                      descriptionText={slot.available ? undefined : { plainText: `Unavailable` }}
-                      textContainerClassName='flex flex-col'
-                    />
-                    {/* <button>
-                          {slot.time}
-                          {!slot.available && <div className='text-xs mt-1'>Unavailable</div>}
-                        </button> */}
-                  </>
-                ))}
-              </div>
-            </div>
+              </form>
+            </Form>
           </div>
         )}
 
@@ -326,75 +406,106 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
                 <div className='space-y-2 text-sm'>
                   <div className='flex justify-between'>
                     <span className='text-gray-600'>Service:</span>
-                    <span>{serviceName}</span>
+                    <span>{serviceName ? serviceName : 'No Service'}</span>
                   </div>
                   <div className='flex justify-between'>
                     <span className='text-gray-600'>Professional:</span>
-                    <span>{bookingData.professional?.name}</span>
+                    <span>{selectedProfessional ? selectedProfessional.name : 'No Professional'}</span>
                   </div>
                   <div className='flex justify-between'>
                     <span className='text-gray-600'>Date:</span>
-                    <span>{bookingData.date ? formatDate(bookingData.date) : ''}</span>
+                    <span>{selectedDate ? formatDate(selectedDate) : ''}</span>
                   </div>
                   <div className='flex justify-between'>
                     <span className='text-gray-600'>Time:</span>
-                    <span>{bookingData.time}</span>
+                    <span>{selectedTime ? selectedTime : 'Not Selected'}</span>
                   </div>
                   <div className='flex justify-between'>
                     <span className='text-gray-600'>Duration:</span>
-                    <span>{serviceDuration}</span>
+                    <span>{serviceDuration ? serviceDuration : 'No Duration'}</span>
                   </div>
                   <div className='flex justify-between font-medium text-lg pt-2 border-t'>
                     <span>Total Price:</span>
-                    <span className='text-teal-600'>{servicePrice}</span>
+                    <span className='text-teal-600'>{servicePrice ? servicePrice : 'No Price'}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Customer Information */}
-            <div className='space-y-4'>
-              <h4 className='font-medium'>Your Information</h4>
+            <Form {...customerForm}>
+              <form onSubmit={customerForm.handleSubmit(onCustomerSubmit)} className='space-y-6'>
+                <h4 className='font-medium'>Your Information</h4>
+                <FormMessage className='text-red-500' />
 
-              <div>
-                <Label stringProps={{ plainText: 'Full Name' }} {...{ htmlFor: 'name' }} />
-                <Input
-                  id='name'
-                  value={bookingData.customerInfo.name}
-                  onChange={e => handleCustomerInfoChange('name', e.target.value)}
-                  placeholder='Enter your full name'
+                <FormField
+                  control={customerForm.control}
+                  name='name'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        <Label stringProps={{ plainText: 'Full Name' }} />
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder='Enter your full name' />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div>
-                <Label stringProps={{ plainText: 'Email Address' }} {...{ htmlFor: 'email' }} />
-                <Input
-                  id='email'
-                  type='email'
-                  value={bookingData.customerInfo.email}
-                  onChange={e => handleCustomerInfoChange('email', e.target.value)}
-                  placeholder='Enter your email address'
+                <FormField
+                  control={customerForm.control}
+                  name='email'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        <Label stringProps={{ plainText: 'Email Address' }} />
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} type='email' placeholder='Enter your email address' />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div>
-                <Label stringProps={{ plainText: 'Phone Number' }} {...{ htmlFor: 'phone' }} />
-                <Input
-                  id='phone'
-                  type='tel'
-                  value={bookingData.customerInfo.phone}
-                  onChange={e => handleCustomerInfoChange('phone', e.target.value)}
-                  placeholder='Enter your phone number'
+                <FormField
+                  control={customerForm.control}
+                  name='phone'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        <Label stringProps={{ plainText: 'Phone Number' }} />
+                      </FormLabel>
+                      <FormControl>
+                        <Input {...field} type='tel' placeholder='Enter your phone number' />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
 
-              <div className='bg-gray-50 p-4 rounded-lg'>
-                <p className='text-sm text-gray-600'>
-                  <strong>Note:</strong> By confirming this booking, you agree to our terms and conditions. You'll
-                  receive a confirmation email with booking details.
-                </p>
-              </div>
-            </div>
+                <div className='bg-gray-50 p-4 rounded-lg'>
+                  <p className='text-sm text-gray-600'>
+                    <strong>Note:</strong> By confirming this booking, you agree to our terms and conditions. You'll
+                    receive a confirmation email with booking details.
+                  </p>
+                </div>
+                {!bookingData ? (
+                  <div className='flex justify-end'>
+                    <Button
+                      type='submit'
+                      variant='contained'
+                      className=' bg-teal-500 text-teal-50 shadow-lg border border-teal-400 hover:shadow-none hover:bg-white hover:text-gray-900'
+                      buttonText={{ plainText: 'Finish' }}
+                    />
+                  </div>
+                ) : (
+                  <></>
+                )}
+              </form>
+            </Form>
           </div>
         )}
         {/* Footer */}
@@ -421,13 +532,16 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
             )}
           </Button> */}
 
-          <Button
-            variant='contained'
-            onClick={step === 3 ? handleConfirmBooking : handelNext}
-            className='flex items-center gap-2  bg-black hover:bg-gray-900 text-white '
-            suffixIcon={step === 3 ? undefined : { icon: 'lucide:chevron-right' }}
-            buttonText={step === 3 ? { plainText: 'Confirm Booking' } : { plainText: 'Next' }}
-          />
+          {step == 3 && (
+            <Button
+              variant='contained'
+              disabled={!bookingData}
+              onClick={() => handleConfirmBooking()}
+              className='flex items-center gap-2 bg-black hover:bg-gray-900 text-white'
+              // suffixIcon={{ icon: 'lucide:chevron-right' }}
+              buttonText={{ plainText: 'Confirm Booking' }}
+            />
+          )}
           {/*
           <Button onClick={step === 3 ? handleConfirmBooking : handleNext} className='flex items-center gap-2'>
             {step === 3 ? (

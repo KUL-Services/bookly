@@ -29,7 +29,7 @@ const ServerBaseText = <V extends TextVariant = 'p'>({
   ...restDefaultProps
 }: BaseTextProps<V>) => {
   const Component = variant
-  console.log('I am in server', stringProps)
+  // console.log('I am in server', stringProps)
   if (!i18nTFn && !('plainText' in stringProps)) throw 'Received undefined i18nTFn inside ServerBaseText'
 
   const { ...restProps } = restDefaultProps
