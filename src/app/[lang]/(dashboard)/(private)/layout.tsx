@@ -20,6 +20,7 @@ import HorizontalFooter from '@components/layout/horizontal/Footer'
 import Customizer from '@core/components/customizer'
 import ScrollToTop from '@core/components/scroll-to-top'
 import AuthGuard from '@/hocs/AuthGuard'
+import SessionToStoreBridge from '@/components/SessionToStoreBridge'
 
 // Config Imports
 import { i18n } from '@configs/i18n'
@@ -37,6 +38,7 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
 
   return (
     <Providers direction={direction}>
+      <SessionToStoreBridge />
       <AuthGuard locale={params.lang}>
         <LayoutWrapper
           systemMode={systemMode}

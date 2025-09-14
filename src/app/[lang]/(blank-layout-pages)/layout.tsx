@@ -4,6 +4,7 @@ import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import Providers from '@components/Providers'
+import SessionToStoreBridge from '@/components/SessionToStoreBridge'
 import BlankLayout from '@layouts/BlankLayout'
 
 // Config Imports
@@ -23,6 +24,7 @@ const Layout = ({ children, params }: Props) => {
 
   return (
     <Providers direction={direction}>
+      <SessionToStoreBridge />
       <BlankLayout systemMode={systemMode}>{children}</BlankLayout>
     </Providers>
   )

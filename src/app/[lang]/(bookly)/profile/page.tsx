@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { H1, H4, H5, H6, P, Strong, BaseImage } from '@/bookly/components/atoms'
 import Avatar from '@/bookly/components/molecules/avatar/avatar.component'
@@ -16,12 +16,25 @@ import {
 } from '@/bookly/components/ui/card'
 import KulIcon from '@/bookly/components/atoms/kul-icon/kul-icon.component'
 import { useParams, useRouter } from 'next/navigation'
+import { useAuthStore } from '@/stores/auth.store'
 
 function ProfilePage() {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming')
   const params = useParams<{ lang: string }>()
   const router = useRouter()
+  const booklyUser = useAuthStore(s => s.booklyUser)
+  const logoutCustomer = useAuthStore(s => s.logoutCustomer)
+  const [hydrated, setHydrated] = useState(false)
+
+  useEffect(() => setHydrated(true), [])
+
+  useEffect(() => {
+    if (!hydrated) return
+    if (!booklyUser) {
+      router.replace(`/${params?.lang}/customer/login`)
+    }
+  }, [hydrated, booklyUser, params?.lang, router])
   const goBack = () => router.push(`/${params?.lang}/landpage`)
 
   // Mocked user and booking data
@@ -75,6 +88,8 @@ function ProfilePage() {
     }
   ]
 
+  if (!hydrated || !booklyUser) return null
+
   return (
     <div
       className='min-h-screen w-full px-4 md:px-6 py-8 flex flex-col items-center'
@@ -82,11 +97,20 @@ function ProfilePage() {
     >
       <div className='w-full max-w-4xl space-y-6'>
         {/* Header */}
-        <div className='flex items-center gap-2 text-teal-600'>
+        <div className='flex items-center justify-between gap-2 text-teal-600'>
           <button onClick={goBack} className='inline-flex items-center text-teal-600 hover:text-teal-700'>
             <KulIcon icon='lucide:chevron-left' iconClass='w-5 h-5' />
           </button>
           <H1 i18nTFn={t} className='font-bold' stringProps={{ localeKey: 'profile.title' }} />
+          <button
+            onClick={() => {
+              logoutCustomer()
+              router.replace(`/${params?.lang}/customer/login`)
+            }}
+            className='text-sm text-red-600 hover:text-red-700'
+          >
+            Logout
+          </button>
         </div>
 
         {/* Profile Card */}
