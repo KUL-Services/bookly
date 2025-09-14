@@ -43,6 +43,7 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+import { useAuthStore } from '@/stores/auth.store'
 
 type ErrorType = {
   message: string[]
@@ -110,6 +111,8 @@ const Login = ({ mode }: { mode: Mode }) => {
     })
 
     if (res && res.ok && res.error === null) {
+      // Mark current auth domain as business in our Zustand store
+      useAuthStore.getState().setUserType('business')
       // Vars
       const redirectURL = searchParams.get('redirectTo') ?? '/'
 

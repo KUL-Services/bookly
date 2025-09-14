@@ -33,6 +33,7 @@ import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+import { useAuthStore } from '@/stores/auth.store'
 
 const Register = ({ mode }: { mode: Mode }) => {
   // States
@@ -60,6 +61,7 @@ const Register = ({ mode }: { mode: Mode }) => {
   )
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
+  const setUserType = useAuthStore(s => s.setUserType)
 
   return (
     <div className='flex bs-full justify-center'>
@@ -93,7 +95,16 @@ const Register = ({ mode }: { mode: Mode }) => {
             <Typography variant='h4'>Adventure starts here 🚀</Typography>
             <Typography className='mbs-1'>Make your app management easy and fun!</Typography>
           </div>
-          <form noValidate autoComplete='off' onSubmit={e => e.preventDefault()} className='flex flex-col gap-5'>
+          <form
+            noValidate
+            autoComplete='off'
+            onSubmit={e => {
+              e.preventDefault()
+              // For now, simply mark this path as business and route to login
+              setUserType('business')
+            }}
+            className='flex flex-col gap-5'
+          >
             <TextField autoFocus fullWidth label='Username' />
             <TextField fullWidth label='Email' />
             <TextField

@@ -2,12 +2,13 @@
 
 import { AuthForm, Button } from '@/bookly/components/molecules'
 import { PageProps } from '@/bookly/types'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/stores/auth.store'
 
 export default function RegisterPage({ params }: PageProps) {
   const { lang: locale } = params
   const router = useRouter()
+  const registerCustomer = useAuthStore(s => s.registerCustomer)
 
   return (
     <div className='min-h-screen'>
@@ -16,11 +17,9 @@ export default function RegisterPage({ params }: PageProps) {
           <AuthForm
             type='register'
             onSubmit={async values => {
-              // 'use server'
-              // Handle login submission here
-              console.log('Login values:', values)
-              // For demo purposes, redirect to demo page after login
-              router.push('/demo')
+              const { firstName, lastName, email, password } = values as any
+              await registerCustomer({ firstName, lastName, email, password })
+              router.push(`/${locale}/profile`)
             }}
           />
         </div>

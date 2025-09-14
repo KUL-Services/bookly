@@ -135,9 +135,10 @@ function businessDetailsPage() {
     console.log(`Booking Modal is ${isBookingModalOpen}`)
   }
   return (
-    <div className='container mx-auto p-4 space-y-6'>
+    <div className='min-h-screen flex flex-col bg-white'>
+      <div className='container mx-auto p-4 space-y-6 flex-none'>
       {/* Header Section */}
-      <Card>
+      <Card className='shadow-sm'>
         <CardContent className='p-6'>
           <div className='flex flex-col md:flex-row gap-6'>
             {/* Business Image */}
@@ -211,7 +212,7 @@ function businessDetailsPage() {
       </Card>
 
       {/* Tabs Navigation */}
-      <div className='border-gray-300 border border-b-0 mx-auto max-w-4xl shadow-lg rounded-lg'>
+      <div className='mx-auto max-w-4xl rounded-lg border border-gray-200 shadow-sm sticky top-0 z-30 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70'>
         <nav className='flex justify-center space-x-8'>
           {tabs.map(tab => (
             <Button
@@ -229,15 +230,17 @@ function businessDetailsPage() {
           ))}
         </nav>
       </div>
+      </div>
+      <div className='flex-1 overflow-y-auto'>
       {/* mockServices[mockBusinesses[0].services] */}
       {/* Tab Content */}
-      <div className='min-h-96 max-w-4xl mx-auto'>
+      <div className='min-h-96 max-w-4xl mx-auto px-4 pb-8'>
         {activeTab === 'services' && (
           <div className='space-y-4'>
             <h2 className='text-2xl font-bold text-gray-900'>Our Services</h2>
             <div className='grid gap-4'>
               {businesSservices().map((service, index) => (
-                <Card key={index}>
+                <Card key={index} className='shadow-sm hover:shadow-md transition-shadow'>
                   <CardContent className='p-4'>
                     <div className='flex justify-between items-start'>
                       <div className='flex-1'>
@@ -290,8 +293,8 @@ function businessDetailsPage() {
                         <Star key={i} className='w-4 h-4 fill-yellow-400 text-yellow-400' />
                       ))} */}
             {/* Review Summary */}
-            <Card>
-              <CardContent className='p-6'>
+            <Card className='shadow-sm'>
+        <CardContent className='p-6'>
                 <div className='flex items-center gap-6'>
                   <div className='text-center'>
                     <div className='text-4xl font-bold text-gray-900'>4.8</div>
@@ -327,7 +330,7 @@ function businessDetailsPage() {
             {/* Individual Reviews */}
             <div className='space-y-4'>
               {businessReview().map((review, index) => (
-                <Card key={index}>
+                <Card key={index} className='shadow-sm hover:shadow-md transition-shadow'>
                   <CardContent className='p-4'>
                     <div className='flex items-start gap-3'>
                       {/* <div className='w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center'>
@@ -368,8 +371,8 @@ function businessDetailsPage() {
           <div className='space-y-6'>
             <H2 stringProps={{ plainText: 'About Elite Barber Shop' }} className='text-2xl font-bold text-gray-900' />
 
-            <Card>
-              <CardContent className='p-6 space-y-4'>
+            <Card className='shadow-sm'>
+        <CardContent className='p-6 space-y-4'>
                 <div>
                   <H3 stringProps={{ plainText: 'Our Story' }} className='font-semibold text-lg text-gray-900 mb-2' />
 
@@ -445,6 +448,7 @@ function businessDetailsPage() {
           </div>
         )}
       </div>
+      </div>
 
       {/* Calling the BookingModal */}
       <BookingModal
@@ -459,3 +463,5 @@ function businessDetailsPage() {
 }
 
 export default businessDetailsPage
+
+
