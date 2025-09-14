@@ -24,7 +24,8 @@ const RecentReviews = ({ items }: { items: Review[] }) => {
                 <Avatar alt={r.authorName} src={r.authorImage} />
               </ListItemAvatar>
               <ListItemText
-                primary={r.authorName}
+                disableTypography
+                primary={<Typography>{r.authorName}</Typography>}
                 secondary={
                   <>
                     <Typography variant='body2' color='text.secondary'>

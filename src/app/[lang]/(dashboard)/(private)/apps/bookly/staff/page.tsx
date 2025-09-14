@@ -14,6 +14,9 @@ import Avatar from '@mui/material/Avatar'
 import { mockStaff, mockBusinesses } from '@/bookly/data/mock-data'
 
 const businessNameById = Object.fromEntries(mockBusinesses.map(b => [b.id, b.name]))
+const branchNameById = Object.fromEntries(
+  mockBusinesses.flatMap(b => b.branches.map(br => [br.id, br.name]))
+)
 
 const BooklyStaffPage = async () => {
   return (
@@ -28,6 +31,7 @@ const BooklyStaffPage = async () => {
                   <TableCell>Name</TableCell>
                   <TableCell>Title</TableCell>
                   <TableCell>Business</TableCell>
+                  <TableCell>Branch</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -39,6 +43,7 @@ const BooklyStaffPage = async () => {
                     </TableCell>
                     <TableCell>{s.title}</TableCell>
                     <TableCell>{businessNameById[s.businessId]}</TableCell>
+                    <TableCell>{branchNameById[s.branchId]}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

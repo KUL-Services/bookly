@@ -9,9 +9,13 @@ import FooterSection from '@/bookly/components/organisms/footer-section/footer-s
 import { t } from 'i18next'
 import { MapPin } from 'lucide-react'
 import { useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 
 function LandPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const params = useParams<{ lang: string }>()
+  const router = useRouter()
+  const goToProfile = () => router.push(`/${params?.lang}/profile`)
   return (
     <div className='min-h-screen'>
       <header className='flex items-center justify-between px-6 py-6 bg-white relative shadow-md'>
@@ -24,6 +28,7 @@ function LandPage() {
             buttonText={{ plainText: 'For Businesses' }}
           />
           <Button variant='text' size='md' buttonText={{ plainText: 'Help' }} />
+          <Button variant='text' size='md' onClick={goToProfile} buttonText={{ localeKey: 'nav.profile' }} />
         </nav>
         <div className='hidden md:flex items-center space-x-4'>
           <Button variant='outlined' size='md' buttonText={{ plainText: 'Sign In' }} />
@@ -46,6 +51,7 @@ function LandPage() {
                 buttonText={{ plainText: 'For Businesses' }}
               />
               <Button className='w-full text-start' variant='text' size='md' buttonText={{ plainText: 'Help' }} />
+              <Button className='w-full text-start' variant='text' size='md' onClick={goToProfile} buttonText={{ localeKey: 'nav.profile' }} />
               <div className=' w-full flex items-start space-x-3 pt-4 border-t border-gray-200 '>
                 <Button variant='outlined' size='md' buttonText={{ plainText: 'Sign In' }} />
                 <Button variant='contained' size='md' buttonText={{ plainText: 'Sign Up' }} />
