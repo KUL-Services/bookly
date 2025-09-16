@@ -8,6 +8,7 @@ import { ThemeProvider } from 'next-themes'
 import { TranslationsProvider } from '@/bookly/providers'
 import type { PageProps } from '@/bookly/types'
 import { ThemeChanger } from '@/bookly/components/temporary'
+import BooklyNavbar from '@/bookly/components/organisms/bookly-navbar/bookly-navbar'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -35,6 +36,7 @@ export default async function RootLayout({
           }}
           className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
         >
+          <BooklyNavbar />
           {children}
         </div>
       </ThemeProvider>

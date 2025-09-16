@@ -3,13 +3,14 @@
 import { BaseCard, H2 } from '@/bookly/components/atoms'
 import { CategoryCard, BusinessCard } from '@/bookly/components/molecules'
 import { categories, mockBusinesses } from '@/bookly/data/mock-data'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 export const ExploreSection = () => {
   const router = useRouter()
+  const params = useParams<{ lang: string }>()
 
   const handleCategoryClick = (slug: string) => {
-    router.push(`/category/${slug}`)
+    router.push(`/${params?.lang}/category/${slug}`)
   }
   return (
     <>
