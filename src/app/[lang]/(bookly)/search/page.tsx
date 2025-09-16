@@ -130,7 +130,7 @@ export default function SearchPage() {
   }, [categoryId, q, loc, priceMin, priceMax, sort, timeMorning, timeAfternoon, timeEvening])
 
   return (
-    <div className='min-h-screen w-full bg-gray-50'>
+    <div className='min-h-screen w-full surface-muted'>
       {/* Top search bar */}
       <div className='bg-white border-b'>
         <div className='mx-auto max-w-6xl px-4 py-4 flex flex-col sm:flex-row gap-3'>
@@ -152,7 +152,7 @@ export default function SearchPage() {
 
       <div className='mx-auto max-w-6xl px-4 py-6 grid grid-cols-1 md:grid-cols-[260px,1fr] gap-6'>
         {/* Filters */}
-        <aside className='bg-white border rounded-lg p-4 h-max'>
+        <aside className='surface-card border rounded-lg p-4 h-max'>
           <div className='mb-4'>
             <label className='block text-sm text-gray-700 mb-1'>Sort by</label>
             <select
@@ -227,7 +227,7 @@ export default function SearchPage() {
           <div className='text-sm text-gray-600'>Showing {filtered.length} results</div>
           <div className='space-y-4'>
             {filtered.map(b => (
-              <div key={b.id} className='bg-white border rounded-lg p-3'>
+              <div key={b.id} className='surface-card border rounded-lg p-3'>
                 <BusinessCard
                   business={b}
                   className='shadow-none border-none'
@@ -241,4 +241,3 @@ export default function SearchPage() {
     </div>
   )
 }
-

@@ -114,7 +114,7 @@ function ProfilePage() {
         </div>
 
         {/* Profile Card */}
-        <Card className='bg-white shadow-sm border border-gray-200'>
+        <Card className='surface-card shadow-sm border border-[var(--secondary-200)]'>
           <CardHeader className='flex flex-row items-start gap-4'>
             <CardTitle>
               <div className='flex items-center gap-4'>
@@ -178,7 +178,7 @@ function ProfilePage() {
         </Card>
 
         {/* Bookings Card */}
-        <Card className='bg-white shadow-sm border border-gray-200'>
+        <Card className='surface-card shadow-sm border border-[var(--secondary-200)]'>
           <CardHeader>
             <CardTitle>
               <H5 i18nTFn={t} className='text-gray-900' stringProps={{ localeKey: 'profile.bookings.title' }} />

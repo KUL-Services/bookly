@@ -7,11 +7,12 @@ export type PrimaryColorConfig = {
 
 // Primary color config object
 const primaryColorConfig: PrimaryColorConfig[] = [
+  // Bookly brand teal (Tailwind teal-600)
   {
-    name: 'primary-1',
-    light: '#8589FF',
-    main: '#666CFF',
-    dark: '#5C61E6'
+    name: 'bookly-teal',
+    light: '#2DD4BF', // teal-400
+    main: '#0D9488', // teal-600
+    dark: '#0F766E' // teal-700
   },
   {
     name: 'primary-2',

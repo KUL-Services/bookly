@@ -72,6 +72,27 @@ const ThemeProvider = (props: Props) => {
               main: settings.primaryColor,
               light: lighten(settings.primaryColor as string, 0.2),
               dark: darken(settings.primaryColor as string, 0.1)
+            },
+            // Bookly surfaces & greys (light)
+            background: {
+              default: '#F8FAFC', // slate-50
+              paper: '#FFFFFF'
+            },
+            text: {
+              primary: '#0F172A', // slate-900
+              secondary: '#475569' // slate-600
+            },
+            grey: {
+              50: '#F8FAFC',
+              100: '#F1F5F9',
+              200: '#E2E8F0',
+              300: '#CBD5E1',
+              400: '#94A3B8',
+              500: '#64748B',
+              600: '#475569',
+              700: '#334155',
+              800: '#1E293B',
+              900: '#0F172A'
             }
           }
         },
@@ -81,6 +102,27 @@ const ThemeProvider = (props: Props) => {
               main: settings.primaryColor,
               light: lighten(settings.primaryColor as string, 0.2),
               dark: darken(settings.primaryColor as string, 0.1)
+            },
+            // Bookly surfaces & greys (dark)
+            background: {
+              default: '#0F172A', // slate-900
+              paper: '#0B1220' // deep slate
+            },
+            text: {
+              primary: '#E2E8F0', // slate-200
+              secondary: '#94A3B8' // slate-400
+            },
+            grey: {
+              50: '#0B1220',
+              100: '#111827',
+              200: '#1F2937',
+              300: '#374151',
+              400: '#4B5563',
+              500: '#6B7280',
+              600: '#9CA3AF',
+              700: '#CBD5E1',
+              800: '#E5E7EB',
+              900: '#F3F4F6'
             }
           }
         }
