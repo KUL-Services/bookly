@@ -19,7 +19,7 @@ import VerticalFooter from '@components/layout/vertical/Footer'
 import HorizontalFooter from '@components/layout/horizontal/Footer'
 import Customizer from '@core/components/customizer'
 import ScrollToTop from '@core/components/scroll-to-top'
-import AuthGuard from '@/hocs/AuthGuard'
+import ClientAuthGuard from '@/components/ClientAuthGuard'
 import SessionToStoreBridge from '@/components/SessionToStoreBridge'
 
 // Config Imports
@@ -39,7 +39,7 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
   return (
     <Providers direction={direction}>
       <SessionToStoreBridge />
-      <AuthGuard locale={params.lang}>
+      <ClientAuthGuard locale={params.lang}>
         <LayoutWrapper
           systemMode={systemMode}
           verticalLayout={
@@ -66,7 +66,7 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
           </Button>
         </ScrollToTop>
         <Customizer dir={direction} />
-      </AuthGuard>
+      </ClientAuthGuard>
     </Providers>
   )
 }

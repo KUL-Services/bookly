@@ -533,7 +533,9 @@ function businessDetailsPage() {
                       className='font-semibold text-lg text-gray-900 mb-2'
                     />
                     <div className='space-y-2 text-gray-700'>
-                      <P stringProps={{ plainText: `Address: ${(business as any).address || 'No address provided'}` }} />
+                      <P
+                        stringProps={{ plainText: `Address: ${(business as any).address || 'No address provided'}` }}
+                      />
                       <P stringProps={{ plainText: 'Phone: (555) 123-4567' }} />
                       <P stringProps={{ plainText: 'Email: info@elitebarbershop.com' }} />
                       <P stringProps={{ plainText: 'Email: info@elitebarbershop.com' }} />

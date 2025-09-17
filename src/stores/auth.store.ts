@@ -132,12 +132,18 @@ export const useAuthStore = create<AuthState>()(
       async loginAdmin(payload) {
         set({ loading: true, error: null })
         try {
+          console.log('🔑 Attempting admin login for:', payload.email)
           const response = await AuthService.loginAdmin(payload)
+
+          console.log('📊 Login API Response:', response)
+
           if (response.error) {
+            console.error('❌ API returned error:', response.error)
             throw new Error(response.error)
           }
 
           if (response.data?.access_token) {
+            console.log('✅ Login successful, setting auth token')
             AuthService.setAuthToken(response.data.access_token)
             set({
               userType: 'business',
@@ -151,8 +157,12 @@ export const useAuthStore = create<AuthState>()(
               loading: false,
               error: null
             })
+          } else {
+            console.error('❌ No access token in response:', response)
+            throw new Error('No access token received from server')
           }
         } catch (e: any) {
+          console.error('❌ Admin login failed:', e)
           set({ loading: false, error: e?.message ?? 'Admin login failed' })
           throw e
         }

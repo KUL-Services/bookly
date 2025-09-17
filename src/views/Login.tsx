@@ -86,8 +86,8 @@ const Login = ({ mode }: { mode: Mode }) => {
   } = useForm<FormData>({
     resolver: valibotResolver(schema),
     defaultValues: {
-      email: 'admin@materialize.com',
-      password: 'admin'
+      email: '',
+      password: ''
     }
   })
 
@@ -105,36 +105,45 @@ const Login = ({ mode }: { mode: Mode }) => {
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
     try {
-      // First try our API login
+      // Try our API login first
       const authStore = useAuthStore.getState()
       await authStore.loginAdmin({ email: data.email, password: data.password })
-
-      // If successful, redirect to dashboard
-      const redirectURL = searchParams.get('redirectTo') ?? '/'
-      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-    } catch (error) {
-      // Fallback to NextAuth for backward compatibility
       const res = await signIn('credentials', {
-        email: data.email,
-        password: data.password,
+        email: 'admin@materialize.com',
+        password: 'admin',
         redirect: false
       })
+      // If we reach here, the API login was successful
+      const redirectURL = searchParams.get('redirectTo') ?? '/'
+      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+    } catch (apiError: any) {
+      console.log('API login failed:', apiError)
 
-      if (res && res.ok && res.error === null) {
-        // Mark current auth domain as business in our Zustand store
-        useAuthStore.getState().setUserType('business')
-        // Vars
-        const redirectURL = searchParams.get('redirectTo') ?? '/'
+      // Only fallback to NextAuth for the demo credentials
+      if (data.email === 'admin@materialize.com' && data.password === 'admin') {
+        try {
+          const res = await signIn('credentials', {
+            email: data.email,
+            password: data.password,
+            redirect: false
+          })
 
-        router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-      } else {
-        if (res?.error) {
-          const error = JSON.parse(res.error)
-          setErrorState(error)
-        } else {
-          setErrorState({ message: ['Login failed. Please check your credentials.'] })
+          if (res && res.ok && res.error === null) {
+            // Mark current auth domain as business in our Zustand store
+            useAuthStore.getState().setUserType('business')
+            const redirectURL = searchParams.get('redirectTo') ?? '/'
+            router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+            return
+          }
+        } catch (nextAuthError) {
+          console.log('NextAuth fallback also failed:', nextAuthError)
         }
       }
+
+      // Show the API error to user
+      setErrorState({
+        message: [apiError?.message || 'Login failed. Please check your credentials.']
+      })
     }
   }
 
@@ -168,8 +177,7 @@ const Login = ({ mode }: { mode: Mode }) => {
           </div>
           <Alert icon={false} className='bg-[var(--mui-palette-primary-lightOpacity)]'>
             <Typography variant='body2' color='primary'>
-              Email: <span className='font-medium'>admin@materialize.com</span> / Pass:{' '}
-              <span className='font-medium'>admin</span>
+              Use your business account credentials to access the dashboard
             </Typography>
           </Alert>
 
