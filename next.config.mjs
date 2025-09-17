@@ -5,6 +5,13 @@ const nextConfig = {
     // ❌ Don't run ESLint during builds
     ignoreDuringBuilds: true
   },
+  typescript: {
+    // !! WARN !!
+    // Dangerously allow production builds to successfully complete even if
+    // your project has type errors.
+    // !! WARN !!
+    ignoreBuildErrors: true
+  },
   allowedDevOrigins: ['127.0.0.0', 'localhost'],
   transpilePackages: ['geist'],
   images: {

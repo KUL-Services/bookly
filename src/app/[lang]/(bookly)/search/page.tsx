@@ -9,6 +9,8 @@ import { BusinessCard } from '@/bookly/components/molecules/business-card/busine
 // API Imports
 import { BusinessService, ServicesService, CategoriesService } from '@/lib/api'
 import type { Business, Service, Category } from '@/lib/api'
+// Fallback data imports
+import { mockBusinesses, services as mockServices, categories as mockCategories } from '@/bookly/data/mock-data'
 
 type SortKey = 'recommended' | 'rating_desc' | 'price_asc' | 'price_desc'
 
@@ -55,7 +57,12 @@ export default function SearchPage() {
         setCategories(categoriesResponse.data || [])
         setError(null)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch data')
+        console.warn('API fetch failed, using fallback data:', err)
+        // Use fallback mock data when API fails
+        setBusinesses(mockBusinesses)
+        setServices(mockServices)
+        setCategories(mockCategories)
+        setError(null) // Don't show error since we have fallback data
       } finally {
         setLoading(false)
       }

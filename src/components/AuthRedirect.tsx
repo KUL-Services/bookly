@@ -20,6 +20,19 @@ const AuthRedirect = ({ lang }: { lang: Locale }) => {
   const login = `/${lang}/login`
   const homePage = getLocalizedUrl(themeConfig.homePageUrl, lang)
 
+  // Don't redirect public bookly pages to login - only redirect dashboard pages
+  const isBooklyPublicPage = pathname.includes('/landpage') ||
+                            pathname.includes('/search') ||
+                            pathname.includes('/business/') ||
+                            pathname.includes('/service/') ||
+                            pathname.includes('/category/') ||
+                            pathname.includes('/customer/login') ||
+                            pathname.includes('/customer/register')
+
+  if (isBooklyPublicPage) {
+    return null
+  }
+
   return redirect(pathname === login ? login : pathname === homePage ? login : redirectUrl)
 }
 

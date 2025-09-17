@@ -1,0 +1,249 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+
+// MUI Imports
+import Grid from '@mui/material/Grid'
+import Card from '@mui/material/Card'
+import CardHeader from '@mui/material/CardHeader'
+import CardContent from '@mui/material/CardContent'
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button'
+import Avatar from '@mui/material/Avatar'
+import Typography from '@mui/material/Typography'
+import CircularProgress from '@mui/material/CircularProgress'
+import Alert from '@mui/material/Alert'
+import Divider from '@mui/material/Divider'
+import Box from '@mui/material/Box'
+
+// API Imports
+import { BusinessService } from '@/lib/api'
+import type { Business } from '@/lib/api'
+
+const BusinessProfile = () => {
+  const [business, setBusiness] = useState<Business | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    description: '',
+    logo: ''
+  })
+
+  const fetchBusinessProfile = async () => {
+    try {
+      setLoading(true)
+      // Note: This should fetch the current business's own profile
+      // For now, we'll use the first business as a placeholder
+      const response = await BusinessService.getApprovedBusinesses()
+
+      if (response.data && response.data.length > 0) {
+        const businessData = response.data[0] // In real implementation, this would be the current business
+        setBusiness(businessData)
+        setFormData({
+          name: businessData.name,
+          email: businessData.email || '',
+          description: businessData.description || '',
+          logo: businessData.logo || ''
+        })
+      }
+      setError(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch business profile')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchBusinessProfile()
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!business) return
+
+    try {
+      setSaving(true)
+      setError(null)
+      setSuccess(null)
+
+      // Submit change request
+      const response = await BusinessService.updateBusiness(business.id, formData)
+
+      if (response.error) {
+        throw new Error(response.error)
+      }
+
+      setSuccess('Change request submitted successfully! It will be reviewed by administrators.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit change request')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  if (loading) {
+    return (
+      <Grid container spacing={6}>
+        <Grid item xs={12}>
+          <Card>
+            <CardContent className='flex justify-center items-center py-12'>
+              <CircularProgress />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    )
+  }
+
+  if (!business) {
+    return (
+      <Grid container spacing={6}>
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Alert severity='error'>
+                No business profile found. Please contact support.
+              </Alert>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    )
+  }
+
+  return (
+    <Grid container spacing={6}>
+      <Grid item xs={12}>
+        <Card>
+          <CardHeader
+            title='Business Profile'
+            subheader='Manage your business information and submit change requests'
+          />
+          <CardContent>
+            {error && (
+              <Alert severity='error' className='mb-4'>
+                {error}
+              </Alert>
+            )}
+
+            {success && (
+              <Alert severity='success' className='mb-4'>
+                {success}
+              </Alert>
+            )}
+
+            {/* Current Business Info */}
+            <Box className='mb-6'>
+              <Typography variant='h6' className='mb-4'>Current Information</Typography>
+              <div className='flex items-center gap-4 mb-4'>
+                <Avatar
+                  src={business.logo}
+                  alt={business.name}
+                  className='w-16 h-16'
+                >
+                  {business.name.charAt(0).toUpperCase()}
+                </Avatar>
+                <div>
+                  <Typography variant='h6'>{business.name}</Typography>
+                  <Typography variant='body2' color='textSecondary'>
+                    {business.email || 'No email'}
+                  </Typography>
+                  <Typography variant='caption' color='textSecondary'>
+                    Created: {new Date(business.createdAt).toLocaleDateString()}
+                  </Typography>
+                </div>
+              </div>
+              {business.description && (
+                <Typography variant='body2' className='mb-2'>
+                  {business.description}
+                </Typography>
+              )}
+            </Box>
+
+            <Divider className='mb-6' />
+
+            {/* Change Request Form */}
+            <Typography variant='h6' className='mb-4'>Request Changes</Typography>
+            <form onSubmit={handleSubmit} className='space-y-4'>
+              <TextField
+                fullWidth
+                label='Business Name'
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                required
+              />
+
+              <TextField
+                fullWidth
+                label='Business Email'
+                type='email'
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+              />
+
+              <TextField
+                fullWidth
+                label='Business Description'
+                multiline
+                rows={4}
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+              />
+
+              <TextField
+                fullWidth
+                label='Logo URL'
+                value={formData.logo}
+                onChange={(e) => handleInputChange('logo', e.target.value)}
+                helperText='Enter a URL for your business logo'
+              />
+
+              <div className='flex gap-3 pt-4'>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  disabled={saving}
+                  startIcon={saving ? <CircularProgress size={16} /> : <i className='ri-save-line' />}
+                >
+                  {saving ? 'Submitting...' : 'Submit Change Request'}
+                </Button>
+
+                <Button
+                  variant='outlined'
+                  onClick={() => {
+                    setFormData({
+                      name: business.name,
+                      email: business.email || '',
+                      description: business.description || '',
+                      logo: business.logo || ''
+                    })
+                    setError(null)
+                    setSuccess(null)
+                  }}
+                >
+                  Reset
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </Grid>
+    </Grid>
+  )
+}
+
+export default BusinessProfile
