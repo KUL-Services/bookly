@@ -5,61 +5,64 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { SearchInput } from '@/bookly/components/atoms/search-input/search-input.component'
 import { Button } from '@/bookly/components/molecules'
 import { BusinessCard } from '@/bookly/components/molecules/business-card/business-card.component'
-import { categories as categoryList, mockBusinesses, mockServices } from '@/bookly/data/mock-data'
+
+// API Imports
+import { BusinessService, ServicesService, CategoriesService } from '@/lib/api'
+import type { Business, Service, Category } from '@/lib/api'
 
 type SortKey = 'recommended' | 'rating_desc' | 'price_asc' | 'price_desc'
-
-const getCategoryIdBySlug = (slug?: string | null) => {
-  if (!slug) return undefined
-  return categoryList.find(c => c.slug === slug)?.id
-}
-
-const businessMinPrice = (businessId: string) => {
-  const prices = mockServices.filter(s => s.businessId === businessId).map(s => s.price)
-  return prices.length ? Math.min(...prices) : undefined
-}
-
-const parseTime = (t: string) => {
-  // t like '9:00 AM'
-  const [time, mer] = t.trim().split(' ')
-  const [h, m] = time.split(':').map(Number)
-  const hour = (mer?.toLowerCase().startsWith('p') && h !== 12 ? h + 12 : h === 12 && mer?.toLowerCase().startsWith('a') ? 0 : h) || 0
-  return hour * 60 + (m || 0)
-}
-
-const overlaps = (open: number, close: number, from: number, to: number) => Math.max(open, from) < Math.min(close, to)
-
-const openTodayOverlaps = (rangeLabel: 'morning' | 'afternoon' | 'evening', hours?: string) => {
-  if (!hours) return true
-  const [openStr, closeStr] = hours.split('-').map(s => s.trim())
-  if (!openStr || !closeStr) return true
-  const open = parseTime(openStr)
-  const close = parseTime(closeStr)
-  const windows: Record<typeof rangeLabel, [number, number]> = {
-    morning: [8 * 60, 12 * 60],
-    afternoon: [12 * 60, 17 * 60],
-    evening: [17 * 60, 21 * 60]
-  }
-  const [from, to] = windows[rangeLabel]
-  return overlaps(open, close, from, to)
-}
 
 export default function SearchPage() {
   const router = useRouter()
   const params = useParams<{ lang: string }>()
   const searchParams = useSearchParams()
 
+  const [businesses, setBusinesses] = useState<Business[]>([])
+  const [services, setServices] = useState<Service[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   const [q, setQ] = useState<string>(searchParams.get('q') || '')
   const [loc, setLoc] = useState<string>(searchParams.get('loc') || '')
   const [priceMin, setPriceMin] = useState<number>(Number(searchParams.get('min') || 0))
   const [priceMax, setPriceMax] = useState<number>(Number(searchParams.get('max') || 9999))
   const [sort, setSort] = useState<SortKey>((searchParams.get('sort') as SortKey) || 'recommended')
-  const [timeMorning, setTimeMorning] = useState<boolean>(searchParams.get('tm') === '1')
-  const [timeAfternoon, setTimeAfternoon] = useState<boolean>(searchParams.get('ta') === '1')
-  const [timeEvening, setTimeEvening] = useState<boolean>(searchParams.get('te') === '1')
 
   const categorySlug = searchParams.get('category')
-  const categoryId = useMemo(() => getCategoryIdBySlug(categorySlug), [categorySlug])
+  const categoryId = useMemo(() => {
+    if (!categorySlug) return undefined
+    return categories.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === categorySlug)?.id
+  }, [categorySlug, categories])
+
+  // Fetch initial data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const [businessesResponse, servicesResponse, categoriesResponse] = await Promise.all([
+          BusinessService.getApprovedBusinesses(),
+          ServicesService.getServices(),
+          CategoriesService.getCategories()
+        ])
+
+        if (businessesResponse.error) throw new Error(businessesResponse.error)
+        if (servicesResponse.error) throw new Error(servicesResponse.error)
+        if (categoriesResponse.error) throw new Error(categoriesResponse.error)
+
+        setBusinesses(businessesResponse.data || [])
+        setServices(servicesResponse.data || [])
+        setCategories(categoriesResponse.data || [])
+        setError(null)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const applyToUrl = () => {
     const sp = new URLSearchParams()
@@ -69,44 +72,50 @@ export default function SearchPage() {
     if (priceMax !== 9999) sp.set('max', String(priceMax))
     if (categorySlug) sp.set('category', categorySlug)
     if (sort && sort !== 'recommended') sp.set('sort', sort)
-    if (timeMorning) sp.set('tm', '1')
-    if (timeAfternoon) sp.set('ta', '1')
-    if (timeEvening) sp.set('te', '1')
     router.push(`/${params?.lang}/search?` + sp.toString())
   }
 
+  const businessMinPrice = (businessId: string) => {
+    const businessServices = services.filter(s => s.businessId === businessId)
+    const prices = businessServices.map(s => s.price)
+    return prices.length ? Math.min(...prices) : undefined
+  }
+
   const filtered = useMemo(() => {
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
-    const todayKey = dayNames[new Date().getDay()]
-    let list = mockBusinesses.filter(b => {
+    let list = businesses.filter(business => {
       // Category filter
-      if (categoryId && !b.categories.includes(categoryId)) return false
+      if (categoryId) {
+        const businessServices = services.filter(s => s.businessId === business.id)
+        const hasCategory = businessServices.some(service =>
+          service.categories?.some(cat => cat.id === categoryId)
+        )
+        if (!hasCategory) return false
+      }
 
       // Query filter
-      const hay = (b.name + ' ' + b.about).toLowerCase()
-      const serviceHay = mockServices
-        .filter(s => s.businessId === b.id)
+      const businessText = (business.name + ' ' + (business.description || '')).toLowerCase()
+      const serviceText = services
+        .filter(s => s.businessId === business.id)
         .map(s => s.name.toLowerCase())
         .join(' ')
-      const matchesQ = q ? hay.includes(q.toLowerCase()) || serviceHay.includes(q.toLowerCase()) : true
+
+      const matchesQ = q ?
+        businessText.includes(q.toLowerCase()) || serviceText.includes(q.toLowerCase()) :
+        true
       if (!matchesQ) return false
 
-      // Location filter (simple city match)
-      const matchesLoc = loc ? b.city.toLowerCase().includes(loc.toLowerCase()) : true
+      // Location filter (simple name/description match)
+      const matchesLoc = loc ?
+        business.name.toLowerCase().includes(loc.toLowerCase()) ||
+        (business.description || '').toLowerCase().includes(loc.toLowerCase()) :
+        true
       if (!matchesLoc) return false
 
       // Price filter
-      const minPrice = businessMinPrice(b.id)
+      const minPrice = businessMinPrice(business.id)
       if (minPrice === undefined) return true
       if (minPrice < priceMin) return false
       if (minPrice > priceMax) return false
-
-      // Time of day filter (overlap windows using today's hours)
-      const hours = b.openingHours?.[todayKey]
-      const passesMorning = timeMorning ? openTodayOverlaps('morning', hours) : true
-      const passesAfternoon = timeAfternoon ? openTodayOverlaps('afternoon', hours) : true
-      const passesEvening = timeEvening ? openTodayOverlaps('evening', hours) : true
-      if (!(passesMorning && passesAfternoon && passesEvening)) return false
 
       return true
     })
@@ -115,7 +124,8 @@ export default function SearchPage() {
     const withPrice = list.map(b => ({ b, p: businessMinPrice(b.id) ?? 9999 }))
     switch (sort) {
       case 'rating_desc':
-        withPrice.sort((a, b) => b.b.averageRating - a.b.averageRating)
+        // Sort by creation date as proxy for rating since we don't have ratings yet
+        withPrice.sort((a, b) => new Date(b.b.createdAt).getTime() - new Date(a.b.createdAt).getTime())
         break
       case 'price_asc':
         withPrice.sort((a, b) => a.p - b.p)
@@ -124,10 +134,37 @@ export default function SearchPage() {
         withPrice.sort((a, b) => b.p - a.p)
         break
       default:
-        withPrice.sort((a, b) => b.b.totalRatings - a.b.totalRatings)
+        // Recommended - sort by creation date
+        withPrice.sort((a, b) => new Date(b.b.createdAt).getTime() - new Date(a.b.createdAt).getTime())
     }
     return withPrice.map(x => x.b)
-  }, [categoryId, q, loc, priceMin, priceMax, sort, timeMorning, timeAfternoon, timeEvening])
+  }, [businesses, services, categoryId, q, loc, priceMin, priceMax, sort])
+
+  if (loading) {
+    return (
+      <div className='min-h-screen w-full surface-muted flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600 mx-auto'></div>
+          <p className='mt-4 text-gray-600'>Loading businesses...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className='min-h-screen w-full surface-muted flex items-center justify-center'>
+        <div className='text-center'>
+          <h1 className='text-2xl font-bold text-gray-900 mb-4'>Something went wrong</h1>
+          <p className='text-gray-600 mb-6'>{error}</p>
+          <Button
+            buttonText={{ plainText: 'Try Again' }}
+            onClick={() => window.location.reload()}
+          />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className='min-h-screen w-full surface-muted'>
@@ -168,20 +205,6 @@ export default function SearchPage() {
           </div>
 
           <div className='mb-4'>
-            <div className='text-sm text-gray-700 mb-2'>Time of day</div>
-            <label className='flex items-center gap-2 mb-1'>
-              <input type='checkbox' checked={timeMorning} onChange={e => setTimeMorning(e.target.checked)} /> Morning
-            </label>
-            <label className='flex items-center gap-2 mb-1'>
-              <input type='checkbox' checked={timeAfternoon} onChange={e => setTimeAfternoon(e.target.checked)} />
-              Afternoon
-            </label>
-            <label className='flex items-center gap-2'>
-              <input type='checkbox' checked={timeEvening} onChange={e => setTimeEvening(e.target.checked)} /> Evening
-            </label>
-          </div>
-
-          <div className='mb-4'>
             <div className='text-sm text-gray-700 mb-2'>Price range</div>
             <div className='flex items-center gap-2'>
               <input
@@ -212,9 +235,6 @@ export default function SearchPage() {
                 setLoc('')
                 setPriceMin(0)
                 setPriceMax(9999)
-                setTimeMorning(false)
-                setTimeAfternoon(false)
-                setTimeEvening(false)
                 setSort('recommended')
                 router.push(`/${params?.lang}/search`)
               }}
@@ -225,17 +245,42 @@ export default function SearchPage() {
         {/* Results */}
         <section className='space-y-4'>
           <div className='text-sm text-gray-600'>Showing {filtered.length} results</div>
-          <div className='space-y-4'>
-            {filtered.map(b => (
-              <div key={b.id} className='surface-card border rounded-lg p-3'>
-                <BusinessCard
-                  business={b}
-                  className='shadow-none border-none'
-                  onClick={() => router.push(`/${params?.lang}/business/${encodeURIComponent(b.name.toLowerCase().replace(/\s+/g, '-'))}`)}
-                />
-              </div>
-            ))}
-          </div>
+
+          {filtered.length === 0 ? (
+            <div className='text-center py-12'>
+              <h3 className='text-lg font-semibold text-gray-900 mb-2'>No businesses found</h3>
+              <p className='text-gray-600'>Try adjusting your search criteria</p>
+            </div>
+          ) : (
+            <div className='space-y-4'>
+              {filtered.map(business => (
+                <div key={business.id} className='surface-card border rounded-lg p-3'>
+                  <div
+                    className='cursor-pointer'
+                    onClick={() => router.push(`/${params?.lang}/business/${encodeURIComponent(business.name.toLowerCase().replace(/\s+/g, '-'))}`)}
+                  >
+                    <div className='flex gap-4'>
+                      <div className='w-16 h-16 bg-gradient-to-br from-teal-100 to-teal-200 rounded-lg flex items-center justify-center'>
+                        <span className='text-xl font-bold text-teal-600'>
+                          {business.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div className='flex-1'>
+                        <h3 className='font-semibold text-gray-900'>{business.name}</h3>
+                        {business.description && (
+                          <p className='text-gray-600 text-sm mt-1 line-clamp-2'>{business.description}</p>
+                        )}
+                        <div className='flex items-center gap-4 mt-2 text-sm text-gray-500'>
+                          <span>📧 {business.email || 'No email'}</span>
+                          <span>🕒 {new Date(business.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>

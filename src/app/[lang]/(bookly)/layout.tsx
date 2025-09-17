@@ -9,6 +9,7 @@ import { TranslationsProvider } from '@/bookly/providers'
 import type { PageProps } from '@/bookly/types'
 import { ThemeChanger } from '@/bookly/components/temporary'
 import BooklyNavbar from '@/bookly/components/organisms/bookly-navbar/bookly-navbar'
+import AuthInitializer from '@/components/AuthInitializer'
 
 export const metadata: Metadata = {
   title: 'Create Next App',
@@ -27,6 +28,7 @@ export default async function RootLayout({
   return (
     <TranslationsProvider locale={locale}>
       <ThemeProvider attribute='class' enableSystem>
+        <AuthInitializer />
         <ThemeChanger />
         <div
           style={{

@@ -238,7 +238,7 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
           </div>
         </div>
 
-        <div className='grid grid-cols-2 gap-4'>
+        {/* <div className='grid grid-cols-2 gap-4'>
           <Button variant='outline' type='button' className='w-full border border-gray-300'>
             <KulIcon icon='flat-color-icons:google' className='mr-2' />
             Google
@@ -247,7 +247,7 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
             <KulIcon icon='logos:facebook' className='mr-2' />
             Facebook
           </Button>
-        </div>
+        </div> */}
       </CardContent>
 
       <CardFooter>

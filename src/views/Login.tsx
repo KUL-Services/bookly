@@ -104,24 +104,36 @@ const Login = ({ mode }: { mode: Mode }) => {
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
-    const res = await signIn('credentials', {
-      email: data.email,
-      password: data.password,
-      redirect: false
-    })
+    try {
+      // First try our API login
+      const authStore = useAuthStore.getState()
+      await authStore.loginAdmin({ email: data.email, password: data.password })
 
-    if (res && res.ok && res.error === null) {
-      // Mark current auth domain as business in our Zustand store
-      useAuthStore.getState().setUserType('business')
-      // Vars
+      // If successful, redirect to dashboard
       const redirectURL = searchParams.get('redirectTo') ?? '/'
-
       router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-    } else {
-      if (res?.error) {
-        const error = JSON.parse(res.error)
+    } catch (error) {
+      // Fallback to NextAuth for backward compatibility
+      const res = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false
+      })
 
-        setErrorState(error)
+      if (res && res.ok && res.error === null) {
+        // Mark current auth domain as business in our Zustand store
+        useAuthStore.getState().setUserType('business')
+        // Vars
+        const redirectURL = searchParams.get('redirectTo') ?? '/'
+
+        router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+      } else {
+        if (res?.error) {
+          const error = JSON.parse(res.error)
+          setErrorState(error)
+        } else {
+          setErrorState({ message: ['Login failed. Please check your credentials.'] })
+        }
       }
     }
   }

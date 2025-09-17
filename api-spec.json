@@ -1,0 +1,1557 @@
+{
+  "apiName": "Bookly Backend",
+  "generatedAt": "2025-09-17T20:20:49Z",
+  "baseUrl": "/",
+  "endpoints": [
+    {
+      "group": "Media Library",
+      "name": "Create asset placeholder",
+      "method": "POST",
+      "path": "/media-lib",
+      "description": "Creates an asset record and returns a signed S3 URL for uploading media.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN",
+          "SUPER_ADMIN",
+          "USER"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "fileName",
+            "mimeType",
+            "size"
+          ],
+          "properties": {
+            "fileName": {
+              "type": "string",
+              "description": "Original file name including extension."
+            },
+            "mimeType": {
+              "type": "string",
+              "description": "MIME type of the file."
+            },
+            "size": {
+              "type": "number",
+              "description": "File size in bytes."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "description": "Signed upload URL for the asset file.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "assetFileId": {
+                "type": "string"
+              },
+              "uploadUrl": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Media Library",
+      "name": "Update asset placeholder",
+      "method": "PATCH",
+      "path": "/media-lib/:id",
+      "description": "Updates metadata for an existing asset and returns a refreshed signed upload URL.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN",
+          "SUPER_ADMIN",
+          "USER"
+        ]
+      },
+      "params": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Asset file ID."
+        }
+      ],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "fileName": {
+              "type": "string",
+              "description": "Updated file name including extension."
+            },
+            "mimeType": {
+              "type": "string",
+              "description": "Updated MIME type."
+            },
+            "size": {
+              "type": "number",
+              "description": "Updated file size in bytes."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Signed upload URL for the updated asset.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "assetFileId": {
+                "type": "string"
+              },
+              "uploadUrl": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Media Library",
+      "name": "Delete asset",
+      "method": "DELETE",
+      "path": "/media-lib/:id",
+      "description": "Deletes an asset file and removes it from S3.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN",
+          "SUPER_ADMIN",
+          "USER"
+        ]
+      },
+      "params": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Asset file ID."
+        }
+      ],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Asset deleted successfully.",
+          "body": null
+        }
+      ]
+    },
+    {
+      "group": "Categories",
+      "name": "Create category",
+      "method": "POST",
+      "path": "/categories",
+      "description": "Creates a service category.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "SUPER_ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Category name."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "description": "The created category record.",
+          "body": {
+            "type": "object",
+            "description": "Prisma category object."
+          }
+        }
+      ]
+    },
+    {
+      "group": "Categories",
+      "name": "List categories",
+      "method": "GET",
+      "path": "/categories",
+      "description": "Returns all categories.",
+      "auth": null,
+      "params": [],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Array of categories.",
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Categories",
+      "name": "Update category",
+      "method": "PATCH",
+      "path": "/categories/:id",
+      "description": "Updates category properties.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "SUPER_ADMIN"
+        ]
+      },
+      "params": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Category ID."
+        }
+      ],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Category ID (must match path)."
+            },
+            "name": {
+              "type": "string",
+              "description": "Updated category name."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Updated category record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Categories",
+      "name": "Delete category",
+      "method": "DELETE",
+      "path": "/categories/:id",
+      "description": "Deletes a category.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "SUPER_ADMIN"
+        ]
+      },
+      "params": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Category ID."
+        }
+      ],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Deleted category record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Staff",
+      "name": "Create staff",
+      "method": "POST",
+      "path": "/staff",
+      "description": "Creates a new staff member for the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Staff full name."
+            },
+            "mobile": {
+              "type": "string",
+              "description": "Staff phone number.",
+              "nullable": true
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "description": "Created staff record.",
+          "body": {
+            "type": "object",
+            "description": "Prisma staff object."
+          }
+        }
+      ]
+    },
+    {
+      "group": "Staff",
+      "name": "List staff",
+      "method": "GET",
+      "path": "/staff",
+      "description": "Returns staff members belonging to the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Array of staff records.",
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Staff",
+      "name": "Update staff",
+      "method": "PATCH",
+      "path": "/staff",
+      "description": "Updates staff details.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Staff ID."
+            },
+            "name": {
+              "type": "string",
+              "description": "Updated staff name."
+            },
+            "mobile": {
+              "type": "string",
+              "description": "Updated staff mobile.",
+              "nullable": true
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Updated staff record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Staff",
+      "name": "Delete staff",
+      "method": "DELETE",
+      "path": "/staff/:id",
+      "description": "Deletes a staff member.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Staff ID."
+        }
+      ],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Deleted staff record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Business",
+      "name": "Register business",
+      "method": "POST",
+      "path": "/business/register",
+      "description": "Registers a new business and its owner admin.",
+      "auth": null,
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "name",
+            "owner"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Business name."
+            },
+            "email": {
+              "type": "string",
+              "description": "Business email.",
+              "format": "email",
+              "nullable": true
+            },
+            "description": {
+              "type": "string",
+              "description": "Business description.",
+              "nullable": true
+            },
+            "socialLinks": {
+              "type": "array",
+              "description": "Social media links.",
+              "items": {
+                "type": "object",
+                "required": [
+                  "platform",
+                  "url"
+                ],
+                "properties": {
+                  "platform": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                }
+              },
+              "nullable": true
+            },
+            "owner": {
+              "type": "object",
+              "required": [
+                "name",
+                "email",
+                "password"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "password": {
+                  "type": "string",
+                  "minLength": 8
+                }
+              }
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "description": "Created business including owner verification token.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Business",
+      "name": "Approve business",
+      "method": "POST",
+      "path": "/business/approve",
+      "description": "Marks a business as approved.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "SUPER_ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Business ID."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Updated business record or error info.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Business",
+      "name": "Approve business change request",
+      "method": "POST",
+      "path": "/business/approve-request",
+      "description": "Applies a pending business change request.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "SUPER_ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Change request ID."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Updated business record or info message.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Business",
+      "name": "Reject business",
+      "method": "POST",
+      "path": "/business/reject",
+      "description": "Rejects and deletes a business registration.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "SUPER_ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Business ID."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Confirmation message or deleted record.",
+          "body": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "Business",
+      "name": "Reject business change request",
+      "method": "POST",
+      "path": "/business/reject-request",
+      "description": "Rejects and removes a pending business change request.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "SUPER_ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Change request ID."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Confirmation message or deleted request record.",
+          "body": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      ]
+    },
+    {
+      "group": "Business",
+      "name": "List pending businesses",
+      "method": "GET",
+      "path": "/business/pending",
+      "description": "Returns businesses awaiting approval.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "SUPER_ADMIN"
+        ]
+      },
+      "params": [],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Array of pending businesses with owner info and social links.",
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Business",
+      "name": "List pending change requests",
+      "method": "GET",
+      "path": "/business/pending-requests",
+      "description": "Returns pending change requests for businesses.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "SUPER_ADMIN"
+        ]
+      },
+      "params": [],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Array of business change requests.",
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Business",
+      "name": "List approved businesses",
+      "method": "GET",
+      "path": "/business",
+      "description": "Returns approved businesses with their social links.",
+      "auth": null,
+      "params": [],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Array of approved businesses.",
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Business",
+      "name": "Submit business update request",
+      "method": "PATCH",
+      "path": "/business",
+      "description": "Creates or updates a pending business change request for the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Business ID to update."
+            },
+            "name": {
+              "type": "string",
+              "description": "Updated business name.",
+              "nullable": true
+            },
+            "email": {
+              "type": "string",
+              "description": "Updated business email.",
+              "format": "email",
+              "nullable": true
+            },
+            "description": {
+              "type": "string",
+              "description": "Updated description.",
+              "nullable": true
+            },
+            "socialLinks": {
+              "type": "array",
+              "description": "Replacement social links.",
+              "items": {
+                "type": "object",
+                "required": [
+                  "platform",
+                  "url"
+                ],
+                "properties": {
+                  "platform": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                }
+              },
+              "nullable": true
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Business change request record (created or updated).",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Services",
+      "name": "Create service",
+      "method": "POST",
+      "path": "/service",
+      "description": "Creates a service for the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "name",
+            "location",
+            "price",
+            "duration"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "location": {
+              "type": "string"
+            },
+            "price": {
+              "type": "number",
+              "minimum": 0
+            },
+            "duration": {
+              "type": "number",
+              "minimum": 1
+            },
+            "categoryIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true,
+              "description": "IDs of categories to link."
+            },
+            "branchIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true,
+              "description": "IDs of branches to connect."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "description": "Created service record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Services",
+      "name": "List services",
+      "method": "GET",
+      "path": "/service",
+      "description": "Returns services with categories and branches.",
+      "auth": null,
+      "params": [],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Array of services with relations.",
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Services",
+      "name": "Get service",
+      "method": "GET",
+      "path": "/service/:id",
+      "description": "Returns a specific service including categories, branches, business, and reviews.",
+      "auth": null,
+      "params": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Service ID."
+        }
+      ],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Service record with relations.",
+          "body": {
+            "type": "object"
+          }
+        },
+        {
+          "status": 404,
+          "description": "Service not found.",
+          "body": {
+            "type": "object",
+            "description": "Error response."
+          }
+        }
+      ]
+    },
+    {
+      "group": "Services",
+      "name": "Update service",
+      "method": "PATCH",
+      "path": "/service",
+      "description": "Updates service details for the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "nullable": true
+            },
+            "description": {
+              "type": "string",
+              "nullable": true
+            },
+            "location": {
+              "type": "string",
+              "nullable": true
+            },
+            "price": {
+              "type": "number",
+              "minimum": 0,
+              "nullable": true
+            },
+            "duration": {
+              "type": "number",
+              "minimum": 1,
+              "nullable": true
+            },
+            "categoryIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            },
+            "branchIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Updated service record with relations.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Services",
+      "name": "Delete service",
+      "method": "DELETE",
+      "path": "/service/:id",
+      "description": "Deletes a service belonging to the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Service ID."
+        }
+      ],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Deleted service record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Branches",
+      "name": "Create branch",
+      "method": "POST",
+      "path": "/branches",
+      "description": "Creates a branch for the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string",
+              "nullable": true
+            },
+            "mobile": {
+              "type": "string",
+              "nullable": true
+            },
+            "serviceIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true,
+              "description": "Service IDs to link to the branch."
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "description": "Created branch record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Branches",
+      "name": "List branches",
+      "method": "GET",
+      "path": "/branches",
+      "description": "Returns branches for the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Array of branch records.",
+          "body": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Branches",
+      "name": "Update branch",
+      "method": "PATCH",
+      "path": "/branches",
+      "description": "Updates a branch linked to the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "id",
+            "name"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "type": "string",
+              "nullable": true
+            },
+            "mobile": {
+              "type": "string",
+              "nullable": true
+            },
+            "serviceIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "nullable": true
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Updated branch record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Branches",
+      "name": "Delete branch",
+      "method": "DELETE",
+      "path": "/branches/:id",
+      "description": "Deletes a branch linked to the admin's business.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string",
+          "description": "Branch ID."
+        }
+      ],
+      "body": null,
+      "responses": [
+        {
+          "status": 200,
+          "description": "Deleted branch record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "User Auth",
+      "name": "Register user",
+      "method": "POST",
+      "path": "/auth/user/register",
+      "description": "Registers an end user account and returns a verification code.",
+      "auth": null,
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "firstName",
+            "lastName",
+            "email",
+            "password"
+          ],
+          "properties": {
+            "firstName": {
+              "type": "string"
+            },
+            "lastName": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "password": {
+              "type": "string",
+              "minLength": 8
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "description": "Verification token for the new user.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "verificationToken": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "User Auth",
+      "name": "Verify user account",
+      "method": "POST",
+      "path": "/auth/user/verify",
+      "description": "Verifies a user account using the emailed code.",
+      "auth": null,
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "email",
+            "code"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "code": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Updated user record or success message.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "User Auth",
+      "name": "User login",
+      "method": "POST",
+      "path": "/auth/user/login",
+      "description": "Authenticates a user with email and password.",
+      "auth": {
+        "type": "Local Strategy",
+        "provider": "user-local"
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/x-www-form-urlencoded",
+        "schema": {
+          "type": "object",
+          "required": [
+            "email",
+            "password"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "JWT access token for the authenticated user.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Admin Auth",
+      "name": "Register admin",
+      "method": "POST",
+      "path": "/auth/admin/register",
+      "description": "Registers a new admin under the current owner.",
+      "auth": {
+        "type": "Bearer JWT",
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "name",
+            "email",
+            "password"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "password": {
+              "type": "string",
+              "minLength": 8
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 201,
+          "description": "Created admin record.",
+          "body": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "group": "Admin Auth",
+      "name": "Verify admin account",
+      "method": "POST",
+      "path": "/auth/admin/verify",
+      "description": "Verifies an admin account using the emailed code.",
+      "auth": null,
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "email",
+            "code"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "code": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Success message.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Admin Auth",
+      "name": "Admin login",
+      "method": "POST",
+      "path": "/auth/admin/login",
+      "description": "Authenticates an admin and returns a JWT.",
+      "auth": {
+        "type": "Local Strategy",
+        "provider": "admin-local"
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/x-www-form-urlencoded",
+        "schema": {
+          "type": "object",
+          "required": [
+            "email",
+            "password"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "JWT access token for the admin.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Super Admin Auth",
+      "name": "Super admin login",
+      "method": "POST",
+      "path": "/auth/super-admin/login",
+      "description": "Authenticates the super admin and issues a JWT.",
+      "auth": {
+        "type": "Local Strategy",
+        "provider": "super-admin-local"
+      },
+      "params": [],
+      "body": {
+        "contentType": "application/x-www-form-urlencoded",
+        "schema": {
+          "type": "object",
+          "required": [
+            "email",
+            "password"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "password": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "JWT access token for the super admin.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
