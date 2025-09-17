@@ -1,5 +1,5 @@
 // API Client configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://46.101.97.43'
+const API_BASE_URL = '/api/proxy'
 
 export interface ApiResponse<T = any> {
   data?: T
@@ -26,8 +26,6 @@ class ApiClient {
       const url = `${this.baseURL}${endpoint}`
       const config: RequestInit = {
         ...options,
-        mode: 'cors',
-        credentials: 'omit',
         headers: {
           ...this.defaultHeaders,
           ...options.headers,

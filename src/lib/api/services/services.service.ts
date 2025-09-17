@@ -7,6 +7,11 @@ export class ServicesService {
     return apiClient.get<Service[]>('/service')
   }
 
+  // Public - Get services by business ID
+  static async getServicesByBusiness(businessId: string) {
+    return apiClient.get<Service[]>(`/service/business/${businessId}`)
+  }
+
   // Public - Get specific service by ID
   static async getService(id: string) {
     return apiClient.get<Service>(`/service/${id}`)

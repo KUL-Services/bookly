@@ -24,10 +24,10 @@ import { BusinessService, ServicesService, BranchesService, StaffService } from 
 import type { Business, Service, Branch, Staff } from '@/lib/api'
 
 // Fallback Imports
-import { mockBusinesses, mockServices, mockBookings, mockReviews } from '@/bookly/data/mock-data'
+import { mockServices, mockBookings, mockReviews } from '@/bookly/data/mock-data'
 
 interface DashboardData {
-  businesses: Business[]
+  business: Business | null
   services: Service[]
   branches: Branch[]
   staff: Staff[]
@@ -35,7 +35,7 @@ interface DashboardData {
 
 const DashboardBookly = ({ lang }: { lang: string }) => {
   const [dashboardData, setDashboardData] = useState<DashboardData>({
-    businesses: [],
+    business: null,
     services: [],
     branches: [],
     staff: []
@@ -46,21 +46,25 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      const [businessesResponse, servicesResponse, branchesResponse, staffResponse] = await Promise.all([
-        BusinessService.getApprovedBusinesses(),
-        ServicesService.getServices(),
-        BranchesService.getBranches(),
-        StaffService.getStaff()
+      // For business owner dashboard, we'll fetch current business data
+      // In a real app, this would use the authenticated user's business ID
+      const businessId = '1' // This should come from auth context
+
+      const [businessResponse, servicesResponse, branchesResponse, staffResponse] = await Promise.all([
+        BusinessService.getBusiness(businessId),
+        ServicesService.getServicesByBusiness(businessId),
+        BranchesService.getBranchesByBusiness(businessId),
+        StaffService.getStaffByBusiness(businessId)
       ])
 
       // Use API data if available, otherwise fallback to mock data
-      const businesses = businessesResponse.data || mockBusinesses
+      const business = businessResponse.data || null
       const services = servicesResponse.data || mockServices
       const branches = branchesResponse.data || []
       const staff = staffResponse.data || []
 
       setDashboardData({
-        businesses,
+        business,
         services,
         branches,
         staff
@@ -70,7 +74,7 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
       console.warn('Dashboard API fetch failed, using fallback data:', err)
       // Use mock data as fallback
       setDashboardData({
-        businesses: mockBusinesses,
+        business: null,
         services: mockServices,
         branches: [],
         staff: []
@@ -106,10 +110,6 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
     .slice(0, 6)
   const completedCount = mockBookings.filter(b => b.status === 'completed').length
 
-  const topBusinesses = [...dashboardData.businesses]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 5)
-
   const recentReviews = [...mockReviews]
     .sort((a, b) => +new Date(b.date) - +new Date(a.date))
     .slice(0, 6)
@@ -126,7 +126,7 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
 
       <Grid item xs={12}>
         <BooklyStats
-          totalBusinesses={dashboardData.businesses.length}
+          totalBusinesses={dashboardData.business ? 1 : 0}
           totalBranches={dashboardData.branches.length}
           totalServices={dashboardData.services.length}
           upcomingCount={upcoming.length}
@@ -138,7 +138,7 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
         <RevenueOverview />
       </Grid>
       <Grid item xs={12} md={4}>
-        <TopBusinesses items={topBusinesses} />
+        <TopServices />
       </Grid>
 
       <Grid item xs={12} md={8}>
@@ -148,11 +148,8 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
         <ClientsActivity />
       </Grid>
 
-      <Grid item xs={12} md={8}>
+      <Grid item xs={12}>
         <StaffPerformance />
-      </Grid>
-      <Grid item xs={12} md={4}>
-        <TopServices />
       </Grid>
 
       <Grid item xs={12}>

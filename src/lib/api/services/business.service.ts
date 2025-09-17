@@ -14,6 +14,11 @@ export class BusinessService {
     return apiClient.get<Business[]>('/business')
   }
 
+  // Public - Get single business by ID
+  static async getBusiness(id: string) {
+    return apiClient.get<Business>(`/business/${id}`)
+  }
+
   // Public - Register new business
   static async registerBusiness(data: RegisterBusinessRequest) {
     return apiClient.post<Business>('/business/register', data)

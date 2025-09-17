@@ -7,6 +7,11 @@ export class StaffService {
     return apiClient.get<Staff[]>('/staff')
   }
 
+  // Public - Get staff by business ID
+  static async getStaffByBusiness(businessId: string) {
+    return apiClient.get<Staff[]>(`/staff/business/${businessId}`)
+  }
+
   // Admin only - Create staff member
   static async createStaff(data: CreateStaffRequest) {
     return apiClient.post<Staff>('/staff', data)

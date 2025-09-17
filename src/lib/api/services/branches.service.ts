@@ -7,6 +7,11 @@ export class BranchesService {
     return apiClient.get<Branch[]>('/branches')
   }
 
+  // Public - Get branches by business ID
+  static async getBranchesByBusiness(businessId: string) {
+    return apiClient.get<Branch[]>(`/branches/business/${businessId}`)
+  }
+
   // Admin only - Create branch
   static async createBranch(data: CreateBranchRequest) {
     return apiClient.post<Branch>('/branches', data)
