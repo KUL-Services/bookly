@@ -69,8 +69,7 @@ export interface Staff {
   name: string
   mobile?: string
   businessId: string
-  branchIds?: string[]
-  branches?: Branch[]
+  branchId?: string
   createdAt: string
   updatedAt: string
 }
@@ -209,14 +208,14 @@ export interface UpdateServiceRequest {
 export interface CreateStaffRequest {
   name: string
   mobile?: string
-  branchIds?: string[]
+  branchId: string
 }
 
 export interface UpdateStaffRequest {
   id: string
   name: string
   mobile?: string
-  branchIds?: string[]
+  branchId?: string
 }
 
 export interface CreateBranchRequest {

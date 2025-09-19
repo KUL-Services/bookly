@@ -1,7 +1,9 @@
 'use client'
 import { H1, H2, H3, P } from '@/bookly/components/atoms'
 import { Badge } from '@/bookly/components/atoms/base-badge/badge'
+import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
 import { Avatar, Button } from '@/bookly/components/molecules'
+import { BranchDetailsModal } from '@/bookly/components/molecules/branch-details-modal/branch-details-modal.component'
 import BookingModal from '@/bookly/components/organisms/booking-modal/booking-modal'
 import { Card, CardContent } from '@/bookly/components/ui/card'
 import { mockBusinesses, mockReviews, mockServices } from '@/bookly/data/mock-data'
@@ -9,11 +11,12 @@ import { format } from 'date-fns'
 import { Clock, Globe, MapPin, Phone, Star } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
-import { BusinessService, ServicesService } from '@/lib/api'
-import type { Business, Service as ApiService } from '@/lib/api'
+import { BusinessService, ServicesService, BranchesService, StaffService } from '@/lib/api'
+import type { Business, Service as ApiService, Branch, Staff } from '@/lib/api'
 
 const tabs = [
   { id: 'services', label: 'Services' },
+  { id: 'branches', label: 'Branches' },
   { id: 'reviews', label: 'Reviews' },
   { id: 'about', label: 'About' }
 ]
@@ -32,6 +35,8 @@ function businessDetailsPage() {
   const params = useParams<{ slug: string }>()
   const [business, setBusiness] = useState<Business | null>(null)
   const [services, setServices] = useState<ApiService[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [staff, setStaff] = useState<Staff[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,16 +56,45 @@ function businessDetailsPage() {
           if (foundBusiness) {
             setBusiness(foundBusiness)
 
-            // Fetch services for this business
-            const servicesResponse = await ServicesService.getServices()
+            // Fetch all related data in parallel
+            const [servicesResponse, branchesResponse, staffResponse] = await Promise.all([
+              ServicesService.getServices(),
+              BranchesService.getBranches(),
+              StaffService.getStaff()
+            ])
+
+            // Filter services for this business
             if (servicesResponse.data) {
               const businessServices = servicesResponse.data.filter(s => s.businessId === foundBusiness.id)
               setServices(businessServices)
             }
+
+            // Filter branches for this business
+            if (branchesResponse.data) {
+              const businessBranches = branchesResponse.data.filter(b => b.businessId === foundBusiness.id)
+              setBranches(businessBranches)
+            } else {
+              // Fallback to mock branches if API fails
+              setBranches((mockBusinesses[0] as any).branches || [])
+            }
+
+            // Filter staff for this business
+            if (staffResponse.data) {
+              const businessStaff = staffResponse.data.filter(s => s.businessId === foundBusiness.id)
+              setStaff(businessStaff)
+            } else {
+              // Fallback to empty staff if API fails
+              setStaff([])
+            }
+
           } else {
             // Fallback to mock data if business not found
-            setBusiness(mockBusinesses[0] as any)
-            const serviceIds = (mockBusinesses[0] as any).services
+            const mockBusiness = mockBusinesses[0] as any
+            setBusiness(mockBusiness)
+            setBranches(mockBusiness.branches || [])
+            setStaff([])
+
+            const serviceIds = mockBusiness.services
             const mockServicesForBusiness = mockServices
               .filter(service => serviceIds.includes(service.id))
               .map(service => ({
@@ -83,8 +117,12 @@ function businessDetailsPage() {
         }
       } catch (err) {
         console.warn('Failed to fetch business data, using fallback:', err)
-        setBusiness(mockBusinesses[0] as any)
-        const serviceIds = (mockBusinesses[0] as any).services
+        const mockBusiness = mockBusinesses[0] as any
+        setBusiness(mockBusiness)
+        setBranches(mockBusiness.branches || [])
+        setStaff([])
+
+        const serviceIds = mockBusiness.services
         const mockServicesForBusiness = mockServices
           .filter(service => serviceIds.includes(service.id))
           .map(service => ({
@@ -181,6 +219,8 @@ function businessDetailsPage() {
   const [activeTab, setActiveTab] = useState('services')
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<any>(null)
+  const [selectedBranch, setSelectedBranch] = useState<any>(null)
+  const [branchModalOpen, setBranchModalOpen] = useState(false)
 
   const handelBookService = (service?: { name: string; price: string; duration: string }) => {
     if (service) {
@@ -373,6 +413,72 @@ function businessDetailsPage() {
             </div>
           )}
 
+          {activeTab === 'branches' && (
+            <div className='space-y-4'>
+              <h2 className='text-2xl font-bold text-gray-900'>Our Locations</h2>
+              {branches && branches.length > 0 ? (
+                <div className='grid gap-4 md:grid-cols-2'>
+                  {branches.map((branch, index) => (
+                    <Card key={branch.id || index} className='shadow-sm hover:shadow-md transition-shadow cursor-pointer'
+                      onClick={() => {
+                        setSelectedBranch(branch)
+                        setBranchModalOpen(true)
+                      }}
+                    >
+                      <CardContent className='p-6'>
+                        <div className='flex items-start gap-4'>
+                          <BusinessAvatar
+                            businessName={branch.name}
+                            className='w-16 h-16 rounded-lg flex-shrink-0'
+                            size='lg'
+                          />
+                          <div className='flex-1 min-w-0'>
+                            <h3 className='text-lg font-semibold text-gray-900 mb-1'>{branch.name}</h3>
+                            <div className='space-y-2 text-sm text-gray-600'>
+                              <div className='flex items-center gap-2'>
+                                <MapPin className='w-4 h-4 flex-shrink-0' />
+                                <span className='truncate'>{branch.address}</span>
+                              </div>
+                              {branch.mobile && (
+                                <div className='flex items-center gap-2'>
+                                  <Phone className='w-4 h-4 flex-shrink-0' />
+                                  <span>{branch.mobile}</span>
+                                </div>
+                              )}
+                              <div className='flex items-center gap-2'>
+                                <Clock className='w-4 h-4 flex-shrink-0' />
+                                <span>Open today: 9AM-6PM</span>
+                              </div>
+                            </div>
+                            <div className='mt-3 flex items-center justify-between'>
+                              <span className='text-sm text-teal-600 font-medium'>View Details →</span>
+                              <div className='flex gap-1'>
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} className='w-3 h-3 fill-yellow-400 text-yellow-400' />
+                                ))}
+                                <span className='text-xs text-gray-500 ml-1'>4.8</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card className='shadow-sm'>
+                  <CardContent className='p-8 text-center'>
+                    <div className='text-gray-400 mb-3'>
+                      <MapPin className='w-12 h-12 mx-auto' />
+                    </div>
+                    <h3 className='text-lg font-medium text-gray-900 mb-2'>No branches available</h3>
+                    <p className='text-gray-600'>This business operates from a single location.</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
           {activeTab === 'reviews' && (
             <div className='space-y-4'>
               <div className='flex items-center justify-between'>
@@ -556,6 +662,31 @@ function businessDetailsPage() {
         servicePrice={selectedService?.price}
         serviceDuration={selectedService?.duration}
       />
+
+      {/* Branch Details Modal */}
+      {selectedBranch && business && (
+        <BranchDetailsModal
+          isOpen={branchModalOpen}
+          onClose={() => {
+            setBranchModalOpen(false)
+            setSelectedBranch(null)
+          }}
+          branch={selectedBranch}
+          businessName={business.name}
+          businessImage={(business as any).logo || (business as any).coverImage}
+          services={services}
+          staff={staff}
+          allBranches={branches}
+          onBranchChange={(newBranch) => {
+            setSelectedBranch(newBranch)
+          }}
+          onBookService={(serviceId) => {
+            console.log('Booking service:', serviceId)
+            setBranchModalOpen(false)
+            // TODO: Implement booking logic or open booking modal
+          }}
+        />
+      )}
     </div>
   )
 }

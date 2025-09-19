@@ -16,6 +16,7 @@ interface BaseCardProps {
   footerContent?: React.ReactNode
   imageSrc?: string
   imageAlt?: string
+  customImageComponent?: React.ReactNode
   i18nTFn?: i18n['t']
 }
 
@@ -30,15 +31,18 @@ export const BaseCard = ({
   footerContent,
   imageSrc,
   imageAlt,
+  customImageComponent,
   i18nTFn
 }: BaseCardProps) => {
   return (
     <Card className={cn('w-full', className)}>
-      {(titleProps || descriptionProps || imageSrc) && (
+      {(titleProps || descriptionProps || imageSrc || customImageComponent) && (
         <CardHeader className={headerClassName}>
-          {imageSrc && (
+          {(customImageComponent || imageSrc) && (
             <div className='relative w-full h-48 object-cover'>
-              <BaseImage src={imageSrc} alt={imageAlt || ''} className='rounded-t-lg' />
+              {customImageComponent || (
+                <BaseImage src={imageSrc!} alt={imageAlt || ''} className='rounded-t-lg' />
+              )}
             </div>
           )}
           {titleProps && (

@@ -23,17 +23,17 @@ import type { Staff, UpdateStaffRequest, Branch } from '@/lib/api'
 interface Props {
   open: boolean
   onClose: () => void
-  onSubmit: (data: UpdateStaffRequest & { branchIds: string[] }) => void
+  onSubmit: (data: UpdateStaffRequest) => void
   staff: Staff
   branches: Branch[]
 }
 
 const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches }: Props) => {
-  const [formData, setFormData] = useState<UpdateStaffRequest & { branchIds: string[] }>({
+  const [formData, setFormData] = useState<UpdateStaffRequest>({
     id: staff.id,
     name: staff.name,
     mobile: staff.mobile || '',
-    branchIds: staff.branchIds || []
+    branchId: staff.branchId || ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -42,7 +42,7 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches }: Props) =>
       id: staff.id,
       name: staff.name,
       mobile: staff.mobile || '',
-      branchIds: staff.branchIds || []
+      branchId: staff.branchId || ''
     })
   }, [staff])
 
@@ -95,21 +95,10 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches }: Props) =>
             </Grid>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Assign to Branches</InputLabel>
+                <InputLabel>Assign to Branch</InputLabel>
                 <Select
-                  multiple
-                  value={formData.branchIds}
-                  onChange={(e) => setFormData(prev => ({ ...prev, branchIds: e.target.value as string[] }))}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((branchId) => {
-                        const branch = branches.find(b => b.id === branchId)
-                        return (
-                          <Chip key={branchId} label={branch?.name || branchId} size="small" />
-                        )
-                      })}
-                    </Box>
-                  )}
+                  value={formData.branchId}
+                  onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value as string }))}
                 >
                   {branches.map((branch) => (
                     <MenuItem key={branch.id} value={branch.id}>

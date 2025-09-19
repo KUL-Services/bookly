@@ -5,6 +5,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { SearchInput } from '@/bookly/components/atoms/search-input/search-input.component'
 import { Button } from '@/bookly/components/molecules'
 import { BusinessCard } from '@/bookly/components/molecules/business-card/business-card.component'
+import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
+import { BranchDetailsModal } from '@/bookly/components/molecules/branch-details-modal/branch-details-modal.component'
 
 // API Imports
 import { BusinessService, ServicesService, CategoriesService } from '@/lib/api'
@@ -33,6 +35,9 @@ export default function SearchPage() {
   const [sort, setSort] = useState<SortKey>((searchParams.get('sort') as SortKey) || 'recommended')
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<TimeOfDay[]>([])
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  const [selectedBranch, setSelectedBranch] = useState<any>(null)
+  const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
+  const [branchModalOpen, setBranchModalOpen] = useState(false)
 
   const categorySlug = searchParams.get('category')
   const categoryId = useMemo(() => {
@@ -254,6 +259,43 @@ export default function SearchPage() {
           </div>
 
           <div className='mb-6'>
+            <h4 className='text-sm font-medium text-gray-700 mb-3'>Categories</h4>
+            <div className='space-y-2 max-h-48 overflow-y-auto'>
+              <label className='flex items-center gap-2'>
+                <input
+                  type='radio'
+                  name='category'
+                  checked={!categoryId}
+                  onChange={() => {
+                    const sp = new URLSearchParams(searchParams.toString())
+                    sp.delete('category')
+                    router.push(`/${params?.lang}/search?` + sp.toString())
+                  }}
+                  className='w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500'
+                />
+                <span className='text-sm text-gray-700'>All Categories</span>
+              </label>
+              {categoriesData.map(category => (
+                <label key={category.id} className='flex items-center gap-2'>
+                  <input
+                    type='radio'
+                    name='category'
+                    checked={categoryId === category.id}
+                    onChange={() => {
+                      const sp = new URLSearchParams(searchParams.toString())
+                      const slug = category.name.toLowerCase().replace(/\s+/g, '-')
+                      sp.set('category', slug)
+                      router.push(`/${params?.lang}/search?` + sp.toString())
+                    }}
+                    className='w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500'
+                  />
+                  <span className='text-sm text-gray-700'>{category.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className='mb-6'>
             <h4 className='text-sm font-medium text-gray-700 mb-3'>Price range</h4>
             <div className='flex items-center gap-2'>
               <input
@@ -297,7 +339,27 @@ export default function SearchPage() {
         {/* Results */}
         <section>
           <div className='flex items-center justify-between mb-4'>
-            <div className='text-sm text-gray-600'>Showing {filtered.length} face services</div>
+            <div className='text-sm text-gray-600'>
+              Showing {filtered.length} {categoryId ?
+                categoriesData.find(c => c.id === categoryId)?.name.toLowerCase() + ' services' :
+                'businesses'
+              }
+              {categoryId && (
+                <span className='ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-teal-100 text-teal-800'>
+                  {categoriesData.find(c => c.id === categoryId)?.name}
+                  <button
+                    onClick={() => {
+                      const sp = new URLSearchParams(searchParams.toString())
+                      sp.delete('category')
+                      router.push(`/${params?.lang}/search?` + sp.toString())
+                    }}
+                    className='ml-1 text-teal-600 hover:text-teal-800'
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+            </div>
             <div className='flex items-center gap-2'>
               <button
                 onClick={() => setViewMode('list')}
@@ -346,10 +408,12 @@ export default function SearchPage() {
                     >
                       <div className='flex gap-4 p-4'>
                         <div className='w-32 h-24 flex-shrink-0'>
-                          <img
-                            src={business.coverImage}
-                            alt={business.name}
-                            className='w-full h-full object-cover rounded-lg'
+                          <BusinessAvatar
+                            businessName={business.name}
+                            imageSrc={business.coverImage}
+                            imageAlt={business.name}
+                            className='w-full h-full rounded-lg'
+                            size='xl'
                           />
                         </div>
                         <div className='flex-1 min-w-0'>
@@ -400,10 +464,23 @@ export default function SearchPage() {
                                 Open today: 8:00 AM - 7:00 PM
                               </div>
                             </div>
-                            <div className='text-right ml-4'>
+                            <div className='text-right ml-4 flex flex-col gap-2'>
                               <button className='bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors'>
                                 Book Now
                               </button>
+                              {business.branches && business.branches.length > 0 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setSelectedBusiness(business)
+                                    setSelectedBranch(business.branches[0])
+                                    setBranchModalOpen(true)
+                                  }}
+                                  className='bg-white border border-teal-500 text-teal-500 hover:bg-teal-50 px-4 py-2 rounded-md text-sm font-medium transition-colors'
+                                >
+                                  View Branches ({business.branches.length})
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -416,6 +493,31 @@ export default function SearchPage() {
           )}
         </section>
       </div>
+
+      {/* Branch Details Modal */}
+      {selectedBranch && selectedBusiness && (
+        <BranchDetailsModal
+          isOpen={branchModalOpen}
+          onClose={() => {
+            setBranchModalOpen(false)
+            setSelectedBranch(null)
+            setSelectedBusiness(null)
+          }}
+          branch={selectedBranch}
+          businessName={selectedBusiness.name}
+          businessImage={selectedBusiness.coverImage}
+          services={servicesData.filter(s => s.businessId === selectedBusiness.id)}
+          staff={[]} // TODO: Add staff data if available
+          allBranches={selectedBusiness.branches || []}
+          onBranchChange={(newBranch) => {
+            setSelectedBranch(newBranch)
+          }}
+          onBookService={(serviceId) => {
+            console.log('Booking service:', serviceId)
+            // TODO: Implement booking logic
+          }}
+        />
+      )}
     </div>
   )
 }

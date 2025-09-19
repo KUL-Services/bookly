@@ -1,6 +1,6 @@
 {
   "apiName": "Bookly Backend",
-  "generatedAt": "2025-09-17T20:20:49Z",
+  "generatedAt": "2025-09-19T22:10:18Z",
   "baseUrl": "/",
   "endpoints": [
     {
@@ -315,6 +315,7 @@
         "schema": {
           "type": "object",
           "required": [
+            "branchId",
             "name"
           ],
           "properties": {
@@ -326,6 +327,10 @@
               "type": "string",
               "description": "Staff phone number.",
               "nullable": true
+            },
+            "branchId": {
+              "type": "string",
+              "description": "Branch ID to link the staff member to."
             }
           }
         }
@@ -386,6 +391,7 @@
         "schema": {
           "type": "object",
           "required": [
+            "branchId",
             "id",
             "name"
           ],
@@ -402,6 +408,10 @@
               "type": "string",
               "description": "Updated staff mobile.",
               "nullable": true
+            },
+            "branchId": {
+              "type": "string",
+              "description": "Branch ID to link the staff member to."
             }
           }
         }
@@ -441,9 +451,15 @@
       "responses": [
         {
           "status": 200,
-          "description": "Deleted staff record.",
+          "description": "Staff deletion confirmation.",
           "body": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Staff member deleted successfully"
+              }
+            }
           }
         }
       ]
@@ -528,9 +544,40 @@
       "responses": [
         {
           "status": 201,
-          "description": "Created business including owner verification token.",
+          "description": "Created business with owner admin verification token.",
           "body": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "nullable": true
+              },
+              "description": {
+                "type": "string",
+                "nullable": true
+              },
+              "approved": {
+                "type": "boolean"
+              },
+              "admins": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "verificationToken": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       ]
@@ -566,9 +613,15 @@
       "responses": [
         {
           "status": 200,
-          "description": "Updated business record or error info.",
+          "description": "Business approval confirmation.",
           "body": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Business successfully approved"
+              }
+            }
           }
         }
       ]
@@ -604,9 +657,15 @@
       "responses": [
         {
           "status": 200,
-          "description": "Updated business record or info message.",
+          "description": "Business change request approval confirmation.",
           "body": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Business successfully approved"
+              }
+            }
           }
         }
       ]
@@ -642,10 +701,15 @@
       "responses": [
         {
           "status": 200,
-          "description": "Confirmation message or deleted record.",
+          "description": "Business rejection confirmation.",
           "body": {
             "type": "object",
-            "nullable": true
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Business successfully rejected and deleted"
+              }
+            }
           }
         }
       ]
@@ -681,10 +745,15 @@
       "responses": [
         {
           "status": 200,
-          "description": "Confirmation message or deleted request record.",
+          "description": "Business change request rejection confirmation.",
           "body": {
             "type": "object",
-            "nullable": true
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Business successfully rejected and deleted"
+              }
+            }
           }
         }
       ]
@@ -1242,7 +1311,7 @@
       ]
     },
     {
-      "group": "User Auth",
+      "group": "User Authentication",
       "name": "Register user",
       "method": "POST",
       "path": "/auth/user/register",
@@ -1293,7 +1362,7 @@
       ]
     },
     {
-      "group": "User Auth",
+      "group": "User Authentication",
       "name": "Verify user account",
       "method": "POST",
       "path": "/auth/user/verify",
@@ -1322,19 +1391,111 @@
       "responses": [
         {
           "status": 200,
-          "description": "Updated user record or success message.",
+          "description": "Account verification confirmation.",
           "body": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Account successfully verified"
+              }
+            }
           }
         }
       ]
     },
     {
-      "group": "User Auth",
+      "group": "User Authentication",
+      "name": "Send user reset code",
+      "method": "POST",
+      "path": "/auth/user/forget-password",
+      "description": "Generates and emails a user password reset code.",
+      "auth": null,
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "email"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Verification token persisted for reset.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "verificationToken": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "User Authentication",
+      "name": "Reset user password",
+      "method": "POST",
+      "path": "/auth/user/reset-password",
+      "description": "Validates the reset code and updates the user password.",
+      "auth": null,
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "email",
+            "code",
+            "password"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "code": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string",
+              "minLength": 8
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Password reset confirmation.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Password successfully reset"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "User Authentication",
       "name": "User login",
       "method": "POST",
       "path": "/auth/user/login",
-      "description": "Authenticates a user with email and password.",
+      "description": "Authenticates a user and returns profile plus JWT.",
       "auth": {
         "type": "Local Strategy",
         "provider": "user-local"
@@ -1362,10 +1523,28 @@
       "responses": [
         {
           "status": 200,
-          "description": "JWT access token for the authenticated user.",
+          "description": "Authenticated user profile and JWT.",
           "body": {
             "type": "object",
             "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                }
+              },
               "access_token": {
                 "type": "string"
               }
@@ -1375,7 +1554,7 @@
       ]
     },
     {
-      "group": "Admin Auth",
+      "group": "Admin Authentication",
       "name": "Register admin",
       "method": "POST",
       "path": "/auth/admin/register",
@@ -1422,7 +1601,7 @@
       ]
     },
     {
-      "group": "Admin Auth",
+      "group": "Admin Authentication",
       "name": "Verify admin account",
       "method": "POST",
       "path": "/auth/admin/verify",
@@ -1464,11 +1643,97 @@
       ]
     },
     {
-      "group": "Admin Auth",
+      "group": "Admin Authentication",
+      "name": "Send admin reset code",
+      "method": "POST",
+      "path": "/auth/admin/forget-password",
+      "description": "Generates and emails an admin password reset code.",
+      "auth": null,
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "email"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Verification token persisted for reset.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "verificationToken": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Admin Authentication",
+      "name": "Reset admin password",
+      "method": "POST",
+      "path": "/auth/admin/reset-password",
+      "description": "Validates the reset code and updates the admin password.",
+      "auth": null,
+      "params": [],
+      "body": {
+        "contentType": "application/json",
+        "schema": {
+          "type": "object",
+          "required": [
+            "email",
+            "code",
+            "password"
+          ],
+          "properties": {
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "code": {
+              "type": "string"
+            },
+            "password": {
+              "type": "string",
+              "minLength": 8
+            }
+          }
+        }
+      },
+      "responses": [
+        {
+          "status": 200,
+          "description": "Password reset confirmation.",
+          "body": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Password successfully reset"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "group": "Admin Authentication",
       "name": "Admin login",
       "method": "POST",
       "path": "/auth/admin/login",
-      "description": "Authenticates an admin and returns a JWT.",
+      "description": "Authenticates an admin and returns profile plus JWT.",
       "auth": {
         "type": "Local Strategy",
         "provider": "admin-local"
@@ -1496,10 +1761,32 @@
       "responses": [
         {
           "status": 200,
-          "description": "JWT access token for the admin.",
+          "description": "Authenticated admin profile and JWT.",
           "body": {
             "type": "object",
             "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "isOwner": {
+                    "type": "boolean"
+                  },
+                  "business": {
+                    "type": "object",
+                    "description": "Owning business details."
+                  }
+                }
+              },
               "access_token": {
                 "type": "string"
               }
@@ -1509,7 +1796,7 @@
       ]
     },
     {
-      "group": "Super Admin Auth",
+      "group": "SuperAdmin Authentication",
       "name": "Super admin login",
       "method": "POST",
       "path": "/auth/super-admin/login",

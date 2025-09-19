@@ -1,4 +1,5 @@
 import { BaseCard } from '@/bookly/components/atoms/base-card/base-card.component'
+import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
 import { Business } from '@/bookly/types/api.types'
 import { cn } from '@/bookly/lib/utils'
 import Button from '../button/button.component'
@@ -15,8 +16,15 @@ export const BusinessCard = ({ business, className, onClick }: BusinessCardProps
     <div onClick={onClick}>
       <BaseCard
         className={cn('overflow-hidden', className)}
-        imageSrc={business.coverImage}
-        imageAlt={business.name}
+        customImageComponent={
+          <BusinessAvatar
+            businessName={business.name}
+            imageSrc={business.coverImage}
+            imageAlt={business.name}
+            className='w-full h-full rounded-t-lg'
+            size='xl'
+          />
+        }
         titleProps={{ plainText: business.name }}
         headerClassName='space-y-3'
         footerClassName='flex flex-col items-start gap-2'

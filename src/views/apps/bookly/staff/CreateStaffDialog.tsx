@@ -23,15 +23,15 @@ import type { CreateStaffRequest, Branch } from '@/lib/api'
 interface Props {
   open: boolean
   onClose: () => void
-  onSubmit: (data: CreateStaffRequest & { branchIds: string[] }) => void
+  onSubmit: (data: CreateStaffRequest) => void
   branches: Branch[]
 }
 
 const CreateStaffDialog = ({ open, onClose, onSubmit, branches }: Props) => {
-  const [formData, setFormData] = useState<CreateStaffRequest & { branchIds: string[] }>({
+  const [formData, setFormData] = useState<CreateStaffRequest>({
     name: '',
     mobile: '',
-    branchIds: []
+    branchId: ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -55,7 +55,7 @@ const CreateStaffDialog = ({ open, onClose, onSubmit, branches }: Props) => {
     setFormData({
       name: '',
       mobile: '',
-      branchIds: []
+      branchId: ''
     })
     setErrors({})
     onClose()
@@ -89,21 +89,10 @@ const CreateStaffDialog = ({ open, onClose, onSubmit, branches }: Props) => {
             </Grid>
             <Grid item xs={12}>
               <FormControl fullWidth>
-                <InputLabel>Assign to Branches</InputLabel>
+                <InputLabel>Assign to Branch</InputLabel>
                 <Select
-                  multiple
-                  value={formData.branchIds}
-                  onChange={(e) => setFormData(prev => ({ ...prev, branchIds: e.target.value as string[] }))}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((branchId) => {
-                        const branch = branches.find(b => b.id === branchId)
-                        return (
-                          <Chip key={branchId} label={branch?.name || branchId} size="small" />
-                        )
-                      })}
-                    </Box>
-                  )}
+                  value={formData.branchId}
+                  onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value as string }))}
                 >
                   {branches.map((branch) => (
                     <MenuItem key={branch.id} value={branch.id}>

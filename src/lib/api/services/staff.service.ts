@@ -7,18 +7,14 @@ export class StaffService {
     return apiClient.get<Staff[]>('/staff')
   }
 
-  // Admin only - Create staff member (API spec only supports name and mobile)
+  // Admin only - Create staff member
   static async createStaff(data: CreateStaffRequest) {
-    // Remove branchIds as it's not supported by API spec
-    const { branchIds, ...staffData } = data
-    return apiClient.post<Staff>('/staff', staffData)
+    return apiClient.post<Staff>('/staff', data)
   }
 
-  // Admin only - Update staff member (API spec only supports id, name and mobile)
+  // Admin only - Update staff member
   static async updateStaff(data: UpdateStaffRequest) {
-    // Remove branchIds as it's not supported by API spec
-    const { branchIds, ...staffData } = data
-    return apiClient.patch<Staff>('/staff', staffData)
+    return apiClient.patch<Staff>('/staff', data)
   }
 
   // Admin only - Delete staff member

@@ -78,8 +78,7 @@ const StaffManagement = () => {
             name: 'Maria Rodriguez',
             mobile: '+1 (555) 111-1111',
             businessId: 'business1',
-            branchIds: ['1'],
-            branches: [mockBranches[0]],
+            branchId: '1',
             createdAt: new Date('2024-01-10').toISOString(),
             updatedAt: new Date('2024-01-10').toISOString()
           },
@@ -88,8 +87,7 @@ const StaffManagement = () => {
             name: 'Carlos Mendez',
             mobile: '+1 (555) 222-2222',
             businessId: 'business1',
-            branchIds: ['1'],
-            branches: [mockBranches[0]],
+            branchId: '1',
             createdAt: new Date('2024-01-12').toISOString(),
             updatedAt: new Date('2024-01-12').toISOString()
           },
@@ -98,8 +96,7 @@ const StaffManagement = () => {
             name: 'Sofia Gonzalez',
             mobile: '+1 (555) 333-3333',
             businessId: 'business1',
-            branchIds: ['2'],
-            branches: [mockBranches[1]],
+            branchId: '2',
             createdAt: new Date('2024-01-15').toISOString(),
             updatedAt: new Date('2024-01-15').toISOString()
           },
@@ -108,8 +105,7 @@ const StaffManagement = () => {
             name: 'Ana Martinez',
             mobile: '+1 (555) 444-4444',
             businessId: 'business1',
-            branchIds: ['1', '2'],
-            branches: mockBranches,
+            branchId: '1',
             createdAt: new Date('2024-01-18').toISOString(),
             updatedAt: new Date('2024-01-18').toISOString()
           },
@@ -118,8 +114,7 @@ const StaffManagement = () => {
             name: 'Isabel Lopez',
             mobile: '+1 (555) 555-5555',
             businessId: 'business1',
-            branchIds: ['2'],
-            branches: [mockBranches[1]],
+            branchId: '2',
             createdAt: new Date('2024-01-20').toISOString(),
             updatedAt: new Date('2024-01-20').toISOString()
           }
@@ -154,18 +149,15 @@ const StaffManagement = () => {
 
   const handleCreateStaff = async (staffData: any) => {
     try {
-      // For now, store branch assignments in local state/mock data
-      // The API call will only send name and mobile as per API spec
       const response = await StaffService.createStaff({
         name: staffData.name,
-        mobile: staffData.mobile
+        mobile: staffData.mobile,
+        branchId: staffData.branchId
       })
       if (response.error) {
         throw new Error(response.error)
       }
 
-      // In a real app, you would handle branch assignments via a separate API
-      // For now, we'll refresh to show updated mock data
       await fetchData()
       setCreateDialogOpen(false)
     } catch (err) {
@@ -175,19 +167,16 @@ const StaffManagement = () => {
 
   const handleEditStaff = async (staffData: any) => {
     try {
-      // For now, store branch assignments in local state/mock data
-      // The API call will only send id, name and mobile as per API spec
       const response = await StaffService.updateStaff({
         id: staffData.id,
         name: staffData.name,
-        mobile: staffData.mobile
+        mobile: staffData.mobile,
+        branchId: staffData.branchId
       })
       if (response.error) {
         throw new Error(response.error)
       }
 
-      // In a real app, you would handle branch assignments via a separate API
-      // For now, we'll refresh to show updated mock data
       await fetchData()
       setEditDialogOpen(false)
       setSelectedStaff(null)
@@ -286,13 +275,20 @@ const StaffManagement = () => {
                       </TableCell>
                       <TableCell>
                         <div className='flex flex-wrap gap-1'>
-                          {member.branches?.length ? (
-                            member.branches.map((branch) => (
-                              <Chip key={branch.id} label={branch.name} size='small' color='secondary' variant='outlined' />
-                            ))
+                          {member.branchId ? (
+                            (() => {
+                              const branch = branches.find(b => b.id === member.branchId)
+                              return branch ? (
+                                <Chip key={branch.id} label={branch.name} size='small' color='secondary' variant='outlined' />
+                              ) : (
+                                <Typography variant='body2' color='textSecondary'>
+                                  Branch not found
+                                </Typography>
+                              )
+                            })()
                           ) : (
                             <Typography variant='body2' color='textSecondary'>
-                              No branches assigned
+                              No branch assigned
                             </Typography>
                           )}
                         </div>
