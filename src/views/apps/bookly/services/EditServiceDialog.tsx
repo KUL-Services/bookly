@@ -71,7 +71,11 @@ const EditServiceDialog = ({ open, onClose, onSubmit, service, categories, branc
       return
     }
 
-    onSubmit(formData)
+    onSubmit({
+      ...formData,
+      price: formData.price || 0,
+      duration: formData.duration || 0
+    })
     setErrors({})
   }
 
@@ -123,10 +127,11 @@ const EditServiceDialog = ({ open, onClose, onSubmit, service, categories, branc
                 fullWidth
                 label='Price'
                 type='number'
-                value={formData.price || 0}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                value={formData.price || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value ? Number(e.target.value) : undefined }))}
                 error={!!errors.price}
                 helperText={errors.price}
+                placeholder='Enter price (e.g., 25.00)'
                 InputProps={{
                   startAdornment: <InputAdornment position='start'>$</InputAdornment>
                 }}
@@ -138,10 +143,11 @@ const EditServiceDialog = ({ open, onClose, onSubmit, service, categories, branc
                 fullWidth
                 label='Duration'
                 type='number'
-                value={formData.duration || 0}
-                onChange={(e) => setFormData(prev => ({ ...prev, duration: Number(e.target.value) }))}
+                value={formData.duration || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value ? Number(e.target.value) : undefined }))}
                 error={!!errors.duration}
                 helperText={errors.duration}
+                placeholder='Enter duration (e.g., 30)'
                 InputProps={{
                   endAdornment: <InputAdornment position='end'>minutes</InputAdornment>
                 }}

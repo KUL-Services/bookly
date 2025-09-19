@@ -25,8 +25,13 @@ export interface Business {
   name: string
   email?: string
   description?: string
-  isApproved: boolean
+  isApproved?: boolean
+  status?: 'pending' | 'approved' | 'rejected'
   socialLinks?: SocialLink[]
+  owner?: {
+    name: string
+    email: string
+  }
   createdAt: string
   updatedAt: string
 }
@@ -64,6 +69,8 @@ export interface Staff {
   name: string
   mobile?: string
   businessId: string
+  branchIds?: string[]
+  branches?: Branch[]
   createdAt: string
   updatedAt: string
 }
@@ -75,6 +82,7 @@ export interface Branch {
   mobile?: string
   businessId: string
   services?: Service[]
+  staff?: Staff[]
   createdAt: string
   updatedAt: string
 }
@@ -201,12 +209,14 @@ export interface UpdateServiceRequest {
 export interface CreateStaffRequest {
   name: string
   mobile?: string
+  branchIds?: string[]
 }
 
 export interface UpdateStaffRequest {
   id: string
   name: string
   mobile?: string
+  branchIds?: string[]
 }
 
 export interface CreateBranchRequest {

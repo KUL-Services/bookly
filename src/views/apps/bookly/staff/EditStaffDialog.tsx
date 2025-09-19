@@ -10,22 +10,30 @@ import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import Chip from '@mui/material/Chip'
+import Box from '@mui/material/Box'
 
 // Types
-import type { Staff, UpdateStaffRequest } from '@/lib/api'
+import type { Staff, UpdateStaffRequest, Branch } from '@/lib/api'
 
 interface Props {
   open: boolean
   onClose: () => void
-  onSubmit: (data: UpdateStaffRequest) => void
+  onSubmit: (data: UpdateStaffRequest & { branchIds: string[] }) => void
   staff: Staff
+  branches: Branch[]
 }
 
-const EditStaffDialog = ({ open, onClose, onSubmit, staff }: Props) => {
-  const [formData, setFormData] = useState<UpdateStaffRequest>({
+const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches }: Props) => {
+  const [formData, setFormData] = useState<UpdateStaffRequest & { branchIds: string[] }>({
     id: staff.id,
     name: staff.name,
-    mobile: staff.mobile || ''
+    mobile: staff.mobile || '',
+    branchIds: staff.branchIds || []
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -33,7 +41,8 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff }: Props) => {
     setFormData({
       id: staff.id,
       name: staff.name,
-      mobile: staff.mobile || ''
+      mobile: staff.mobile || '',
+      branchIds: staff.branchIds || []
     })
   }, [staff])
 
@@ -83,6 +92,32 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff }: Props) => {
                 onChange={(e) => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
                 placeholder='e.g., +1234567890'
               />
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Assign to Branches</InputLabel>
+                <Select
+                  multiple
+                  value={formData.branchIds}
+                  onChange={(e) => setFormData(prev => ({ ...prev, branchIds: e.target.value as string[] }))}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((branchId) => {
+                        const branch = branches.find(b => b.id === branchId)
+                        return (
+                          <Chip key={branchId} label={branch?.name || branchId} size="small" />
+                        )
+                      })}
+                    </Box>
+                  )}
+                >
+                  {branches.map((branch) => (
+                    <MenuItem key={branch.id} value={branch.id}>
+                      {branch.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Grid>
           </Grid>
         </DialogContent>

@@ -34,8 +34,8 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
     name: '',
     description: '',
     location: '',
-    price: 0,
-    duration: 0,
+    price: '' as any, // Use empty string to avoid 0 placeholder issue
+    duration: '' as any, // Use empty string to avoid 0 placeholder issue
     categoryIds: [],
     branchIds: []
   })
@@ -48,15 +48,19 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
     const newErrors: Record<string, string> = {}
     if (!formData.name.trim()) newErrors.name = 'Service name is required'
     if (!formData.location.trim()) newErrors.location = 'Location is required'
-    if (formData.price <= 0) newErrors.price = 'Price must be greater than 0'
-    if (formData.duration <= 0) newErrors.duration = 'Duration must be greater than 0'
+    if (!formData.price || Number(formData.price) <= 0) newErrors.price = 'Price must be greater than 0'
+    if (!formData.duration || Number(formData.duration) <= 0) newErrors.duration = 'Duration must be greater than 0'
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
     }
 
-    onSubmit(formData)
+    onSubmit({
+      ...formData,
+      price: Number(formData.price),
+      duration: Number(formData.duration)
+    })
     handleClose()
   }
 
@@ -65,8 +69,8 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
       name: '',
       description: '',
       location: '',
-      price: 0,
-      duration: 0,
+      price: '' as any,
+      duration: '' as any,
       categoryIds: [],
       branchIds: []
     })
@@ -118,9 +122,10 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
                 label='Price'
                 type='number'
                 value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                 error={!!errors.price}
                 helperText={errors.price}
+                placeholder='Enter price (e.g., 25.00)'
                 InputProps={{
                   startAdornment: <InputAdornment position='start'>$</InputAdornment>
                 }}
@@ -133,9 +138,10 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
                 label='Duration'
                 type='number'
                 value={formData.duration}
-                onChange={(e) => setFormData(prev => ({ ...prev, duration: Number(e.target.value) }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
                 error={!!errors.duration}
                 helperText={errors.duration}
+                placeholder='Enter duration (e.g., 30)'
                 InputProps={{
                   endAdornment: <InputAdornment position='end'>minutes</InputAdornment>
                 }}

@@ -7,19 +7,18 @@ export class BranchesService {
     return apiClient.get<Branch[]>('/branches')
   }
 
-  // Public - Get branches by business ID
-  static async getBranchesByBusiness(businessId: string) {
-    return apiClient.get<Branch[]>(`/branches/business/${businessId}`)
-  }
-
-  // Admin only - Create branch
+  // Admin only - Create branch (API spec supports name, address, mobile, serviceIds)
   static async createBranch(data: CreateBranchRequest) {
-    return apiClient.post<Branch>('/branches', data)
+    // Remove any unsupported fields like staff assignments
+    const { staff, ...branchData } = data as any
+    return apiClient.post<Branch>('/branches', branchData)
   }
 
-  // Admin only - Update branch
+  // Admin only - Update branch (API spec requires id, name and supports address, mobile, serviceIds)
   static async updateBranch(data: UpdateBranchRequest) {
-    return apiClient.patch<Branch>('/branches', data)
+    // Remove any unsupported fields like staff assignments
+    const { staff, ...branchData } = data as any
+    return apiClient.patch<Branch>('/branches', branchData)
   }
 
   // Admin only - Delete branch

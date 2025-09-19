@@ -7,19 +7,18 @@ export class StaffService {
     return apiClient.get<Staff[]>('/staff')
   }
 
-  // Public - Get staff by business ID
-  static async getStaffByBusiness(businessId: string) {
-    return apiClient.get<Staff[]>(`/staff/business/${businessId}`)
-  }
-
-  // Admin only - Create staff member
+  // Admin only - Create staff member (API spec only supports name and mobile)
   static async createStaff(data: CreateStaffRequest) {
-    return apiClient.post<Staff>('/staff', data)
+    // Remove branchIds as it's not supported by API spec
+    const { branchIds, ...staffData } = data
+    return apiClient.post<Staff>('/staff', staffData)
   }
 
-  // Admin only - Update staff member
+  // Admin only - Update staff member (API spec only supports id, name and mobile)
   static async updateStaff(data: UpdateStaffRequest) {
-    return apiClient.patch<Staff>('/staff', data)
+    // Remove branchIds as it's not supported by API spec
+    const { branchIds, ...staffData } = data
+    return apiClient.patch<Staff>('/staff', staffData)
   }
 
   // Admin only - Delete staff member

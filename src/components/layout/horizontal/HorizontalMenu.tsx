@@ -115,18 +115,31 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
                 {dictionary['navigation'].category}
               </MenuItem>
             </SubMenu>
-          <SubMenu label={dictionary['navigation'].bookly ?? 'Bookly'} icon={<i className='ri-scissors-2-line' />}>
-            <MenuItem href={`/${locale}/apps/bookly/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
-            <MenuItem href={`/${locale}/apps/bookly/calendar`}>
-              {dictionary['navigation'].calendar ?? 'Calendar'}
-            </MenuItem>
-            <MenuItem href={`/${locale}/apps/bookly/businesses`}>{dictionary['navigation'].businesses ?? 'Businesses'}</MenuItem>
-            <MenuItem href={`/${locale}/apps/bookly/services`}>{dictionary['navigation'].services ?? 'Services'}</MenuItem>
-            <MenuItem href={`/${locale}/apps/bookly/categories`}>{dictionary['navigation'].categories ?? 'Categories'}</MenuItem>
-            <MenuItem href={`/${locale}/apps/bookly/bookings`}>{dictionary['navigation'].bookings ?? 'Bookings'}</MenuItem>
-            <MenuItem href={`/${locale}/apps/bookly/staff`}>{dictionary['navigation'].staff ?? 'Staff'}</MenuItem>
-            <MenuItem href={`/${locale}/apps/bookly/reviews`}>{dictionary['navigation'].reviews ?? 'Reviews'}</MenuItem>
-          </SubMenu>
+            <SubMenu label={dictionary['navigation'].bookly ?? 'Bookly'} icon={<i className='ri-scissors-2-line' />}>
+              <MenuItem href={`/${locale}/apps/bookly/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
+              <MenuItem href={`/${locale}/apps/bookly/calendar`}>
+                {dictionary['navigation'].calendar ?? 'Calendar'}
+              </MenuItem>
+              {/* <MenuItem href={`/${locale}/apps/bookly/businesses`}>
+                {dictionary['navigation'].businesses ?? 'Businesses'}
+              </MenuItem> */}
+              <MenuItem href={`/${locale}/apps/bookly/services`}>
+                {dictionary['navigation'].services ?? 'Services'}
+              </MenuItem>
+              <MenuItem href={`/${locale}/apps/bookly/categories`}>
+                {dictionary['navigation'].categories ?? 'Categories'}
+              </MenuItem>
+              <MenuItem href={`/${locale}/apps/bookly/bookings`}>
+                {dictionary['navigation'].bookings ?? 'Bookings'}
+              </MenuItem>
+              <MenuItem href={`/${locale}/apps/bookly/branches`}>
+                {dictionary['navigation'].branches ?? 'Branches'}
+              </MenuItem>
+              <MenuItem href={`/${locale}/apps/bookly/staff`}>{dictionary['navigation'].staff ?? 'Staff'}</MenuItem>
+              <MenuItem href={`/${locale}/apps/bookly/reviews`}>
+                {dictionary['navigation'].reviews ?? 'Reviews'}
+              </MenuItem>
+            </SubMenu>
             <SubMenu label={dictionary['navigation'].orders}>
               <MenuItem href={`/${locale}/apps/ecommerce/orders/list`}>{dictionary['navigation'].list}</MenuItem>
               <MenuItem

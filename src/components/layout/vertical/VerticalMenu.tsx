@@ -154,9 +154,9 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             <MenuItem href={`/${locale}/apps/bookly/calendar`}>
               {dictionary['navigation'].calendar ?? 'Calendar'}
             </MenuItem>
-            <MenuItem href={`/${locale}/apps/bookly/businesses`}>
+            {/* <MenuItem href={`/${locale}/apps/bookly/businesses`}>
               {dictionary['navigation'].businesses ?? 'Businesses'}
-            </MenuItem>
+            </MenuItem> */}
             <MenuItem href={`/${locale}/apps/bookly/services`}>
               {dictionary['navigation'].services ?? 'Services'}
             </MenuItem>
@@ -165,6 +165,9 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             </MenuItem>
             <MenuItem href={`/${locale}/apps/bookly/bookings`}>
               {dictionary['navigation'].bookings ?? 'Bookings'}
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/bookly/branches`}>
+              {dictionary['navigation'].branches ?? 'Branches'}
             </MenuItem>
             <MenuItem href={`/${locale}/apps/bookly/staff`}>{dictionary['navigation'].staff ?? 'Staff'}</MenuItem>
             <MenuItem href={`/${locale}/apps/bookly/reviews`}>{dictionary['navigation'].reviews ?? 'Reviews'}</MenuItem>
