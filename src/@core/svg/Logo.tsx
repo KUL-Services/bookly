@@ -3,73 +3,111 @@ import type { SVGAttributes } from 'react'
 
 const Logo = (props: SVGAttributes<SVGElement>) => {
   return (
-    <svg width='40' height='22' viewBox='0 0 40 22' fill='none' xmlns='http://www.w3.org/2000/svg' {...props}>
+    <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg' {...props}>
+      {/* Letter B design for Bookly */}
+      {/* Vertical left bar */}
       <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(-0.865206 0.501417 0.498585 0.866841 28.4115 0)'
+        x='4'
+        y='4'
+        width='4'
+        height='24'
+        rx='2'
         fill='var(--mui-palette-primary-main)'
       />
+
+      {/* Top horizontal bar */}
       <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(-0.865206 0.501417 0.498585 0.866841 28.4869 0)'
-        fill='url(#paint0_linear_448_114254)'
-        fillOpacity='0.4'
-      />
-      <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(0.865206 0.501417 -0.498585 0.866841 25.6563 0)'
+        x='8'
+        y='4'
+        width='12'
+        height='4'
+        rx='2'
         fill='var(--mui-palette-primary-main)'
       />
+
+      {/* Middle horizontal bar */}
       <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(-0.865206 0.501417 0.498585 0.866841 14.3293 0)'
+        x='8'
+        y='14'
+        width='10'
+        height='4'
+        rx='2'
         fill='var(--mui-palette-primary-main)'
       />
+
+      {/* Bottom horizontal bar */}
       <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(-0.865206 0.501417 0.498585 0.866841 14.3293 0)'
-        fill='url(#paint1_linear_448_114254)'
-        fillOpacity='0.4'
-      />
-      <rect
-        width='7.37565'
-        height='21.1131'
-        rx='3.68783'
-        transform='matrix(0.865206 0.501417 -0.498585 0.866841 11.5132 0)'
+        x='8'
+        y='24'
+        width='14'
+        height='4'
+        rx='2'
         fill='var(--mui-palette-primary-main)'
       />
+
+      {/* Top right vertical bar */}
+      <rect
+        x='20'
+        y='8'
+        width='4'
+        height='6'
+        rx='2'
+        fill='var(--mui-palette-primary-main)'
+      />
+
+      {/* Bottom right vertical bar */}
+      <rect
+        x='22'
+        y='18'
+        width='4'
+        height='6'
+        rx='2'
+        fill='var(--mui-palette-primary-main)'
+      />
+
+      {/* Gradient overlays for depth */}
+      <rect
+        x='4'
+        y='4'
+        width='4'
+        height='24'
+        rx='2'
+        fill='url(#paint0_linear_bookly)'
+        fillOpacity='0.3'
+      />
+
+      <rect
+        x='8'
+        y='14'
+        width='10'
+        height='4'
+        rx='2'
+        fill='url(#paint1_linear_bookly)'
+        fillOpacity='0.3'
+      />
+
       <defs>
         <linearGradient
-          id='paint0_linear_448_114254'
-          x1='3.68783'
-          y1='0'
-          x2='3.68783'
-          y2='21.1131'
+          id='paint0_linear_bookly'
+          x1='6'
+          y1='4'
+          x2='6'
+          y2='28'
           gradientUnits='userSpaceOnUse'
         >
-          <stop />
-          <stop offset='1' stopOpacity='0' />
+          <stop stopColor='white' />
+          <stop offset='1' stopColor='white' stopOpacity='0' />
         </linearGradient>
         <linearGradient
-          id='paint1_linear_448_114254'
-          x1='3.68783'
-          y1='0'
-          x2='3.68783'
-          y2='21.1131'
+          id='paint1_linear_bookly'
+          x1='13'
+          y1='14'
+          x2='13'
+          y2='18'
           gradientUnits='userSpaceOnUse'
         >
-          <stop />
-          <stop offset='1' stopOpacity='0' />
+          <stop stopColor='white' />
+          <stop offset='1' stopColor='white' stopOpacity='0' />
         </linearGradient>
       </defs>
     </svg>
