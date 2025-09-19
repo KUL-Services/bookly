@@ -32,17 +32,14 @@ const BooklyNavbar = () => {
           >
             <i className='ri-arrow-left-line' />
           </button>
-          <button
-            onClick={() => to('/landpage')}
-            className='text-xl font-semibold text-teal-600 hover:text-teal-700'
-          >
+          <button onClick={() => to('/landpage')} className='text-xl font-semibold text-teal-600 hover:text-teal-700'>
             Bookly
           </button>
         </div>
 
         <nav className='hidden md:flex items-center gap-4'>
           <button
-            onClick={() => to('/login')}
+            onClick={() => to('/apps/bookly/dashboard')}
             className='text-gray-700 hover:text-gray-900'
             aria-label='For Businesses'
           >
@@ -93,4 +90,3 @@ const BooklyNavbar = () => {
 }
 
 export default BooklyNavbar
-
