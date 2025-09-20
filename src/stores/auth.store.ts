@@ -29,9 +29,17 @@ interface AuthState {
   token: string | null
   loading: boolean
   error: string | null
+  lastActivity: number | null
+  sessionExpiry: number | null
 
   // Actions
   setUserType: (type: UserType | null) => void
+
+  // Utility methods
+  isAuthenticated: () => boolean
+  isSessionValid: () => boolean
+  refreshSession: () => void
+  clearError: () => void
 
   // Bookly
   loginCustomer: (payload: LoginRequest) => Promise<void>
@@ -54,8 +62,43 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       loading: false,
       error: null,
+      lastActivity: null,
+      sessionExpiry: null,
 
       setUserType: type => set({ userType: type }),
+
+      // Utility methods
+      isAuthenticated: () => {
+        const state = get()
+        return !!(state.booklyUser && state.token) || !!(state.materializeUser && state.token)
+      },
+
+      isSessionValid: () => {
+        const state = get()
+        const now = Date.now()
+
+        // Check if session has expired
+        if (state.sessionExpiry && now > state.sessionExpiry) {
+          return false
+        }
+
+        // Check if last activity was too long ago (24 hours)
+        if (state.lastActivity && now - state.lastActivity > 24 * 60 * 60 * 1000) {
+          return false
+        }
+
+        return true
+      },
+
+      refreshSession: () => {
+        const now = Date.now()
+        set({
+          lastActivity: now,
+          sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours from now
+        })
+      },
+
+      clearError: () => set({ error: null }),
 
       // Customer auth with real API calls
       async loginCustomer(payload) {
@@ -68,6 +111,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (response.data?.access_token) {
             AuthService.setAuthToken(response.data.access_token)
+            const now = Date.now()
             set({
               userType: 'customer',
               booklyUser: {
@@ -77,7 +121,9 @@ export const useAuthStore = create<AuthState>()(
               },
               token: response.data.access_token,
               loading: false,
-              error: null
+              error: null,
+              lastActivity: now,
+              sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours
             })
           }
         } catch (e: any) {
@@ -125,7 +171,14 @@ export const useAuthStore = create<AuthState>()(
       logoutCustomer() {
         const { userType } = get()
         AuthService.clearAuthToken()
-        set({ booklyUser: null, token: null, error: null, ...(userType === 'customer' ? { userType: null } : {}) })
+        set({
+          booklyUser: null,
+          token: null,
+          error: null,
+          lastActivity: null,
+          sessionExpiry: null,
+          ...(userType === 'customer' ? { userType: null } : {})
+        })
       },
 
       // Admin login for business dashboard
@@ -145,6 +198,7 @@ export const useAuthStore = create<AuthState>()(
           if (response.data?.access_token) {
             console.log('✅ Login successful, setting auth token')
             AuthService.setAuthToken(response.data.access_token)
+            const now = Date.now()
             set({
               userType: 'business',
               materializeUser: {
@@ -155,7 +209,9 @@ export const useAuthStore = create<AuthState>()(
               },
               token: response.data.access_token,
               loading: false,
-              error: null
+              error: null,
+              lastActivity: now,
+              sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours
             })
           } else {
             console.error('❌ No access token in response:', response)
@@ -176,7 +232,14 @@ export const useAuthStore = create<AuthState>()(
       logoutBusiness() {
         const { userType } = get()
         AuthService.clearAuthToken()
-        set({ materializeUser: null, token: null, error: null, ...(userType === 'business' ? { userType: null } : {}) })
+        set({
+          materializeUser: null,
+          token: null,
+          error: null,
+          lastActivity: null,
+          sessionExpiry: null,
+          ...(userType === 'business' ? { userType: null } : {})
+        })
       }
     }),
     {

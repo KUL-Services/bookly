@@ -72,7 +72,8 @@ function businessDetailsPage() {
             // Filter branches for this business
             if (branchesResponse.data) {
               const businessBranches = branchesResponse.data.filter(b => b.businessId === foundBusiness.id)
-              setBranches(businessBranches)
+              // setBranches(businessBranches)
+              setBranches((mockBusinesses[0] as any).branches || [])
             } else {
               // Fallback to mock branches if API fails
               setBranches((mockBusinesses[0] as any).branches || [])
@@ -86,7 +87,6 @@ function businessDetailsPage() {
               // Fallback to empty staff if API fails
               setStaff([])
             }
-
           } else {
             // Fallback to mock data if business not found
             const mockBusiness = mockBusinesses[0] as any
@@ -234,10 +234,28 @@ function businessDetailsPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600 mx-auto'></div>
-          <p className='mt-4 text-gray-600'>Loading business...</p>
+      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 relative overflow-hidden'>
+        {/* Animated background */}
+        <div className='absolute inset-0 overflow-hidden pointer-events-none'>
+          <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 rounded-full blur-3xl animate-pulse' />
+          <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 rounded-full blur-3xl animate-pulse animation-delay-1000' />
+        </div>
+
+        <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
+          <div className='relative'>
+            <div className='animate-spin rounded-full h-24 w-24 border-4 border-teal-200 border-t-teal-600 mx-auto shadow-lg'></div>
+            <div className='absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-cyan-400 animate-ping mx-auto'></div>
+          </div>
+          <div className='mt-6 space-y-2'>
+            <p className='text-xl font-semibold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent'>
+              Loading business details...
+            </p>
+            <div className='flex justify-center space-x-1'>
+              <div className='w-2 h-2 bg-teal-500 rounded-full animate-bounce'></div>
+              <div className='w-2 h-2 bg-teal-500 rounded-full animate-bounce animation-delay-200'></div>
+              <div className='w-2 h-2 bg-teal-500 rounded-full animate-bounce animation-delay-400'></div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -245,29 +263,56 @@ function businessDetailsPage() {
 
   if (!business) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='text-center'>
-          <h1 className='text-2xl font-bold text-gray-900 mb-4'>Business not found</h1>
-          <p className='text-gray-600'>The business you're looking for doesn't exist.</p>
+      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 relative overflow-hidden'>
+        {/* Animated background */}
+        <div className='absolute inset-0 overflow-hidden pointer-events-none'>
+          <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 rounded-full blur-3xl animate-pulse' />
+          <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 rounded-full blur-3xl animate-pulse animation-delay-1000' />
+        </div>
+
+        <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
+          <div className='mb-6'>
+            <div className='w-24 h-24 mx-auto bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center shadow-lg'>
+              <div className='text-3xl'>🏪</div>
+            </div>
+          </div>
+          <h1 className='text-3xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 bg-clip-text text-transparent mb-4'>
+            Business not found
+          </h1>
+          <p className='text-gray-600 text-lg max-w-md mx-auto leading-relaxed'>
+            The business you're looking for doesn't exist or may have been removed.
+          </p>
+          <div className='mt-8'>
+            <button className='px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'>
+              Browse Other Businesses
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className='min-h-screen flex flex-col bg-white'>
-      <div className='container mx-auto p-4 space-y-6 flex-none'>
+    <div className='min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 relative overflow-hidden'>
+      {/* Animated background elements */}
+      <div className='absolute inset-0 overflow-hidden pointer-events-none'>
+        <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 rounded-full blur-3xl animate-pulse' />
+        <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 rounded-full blur-3xl animate-pulse animation-delay-1000' />
+        <div className='absolute top-1/2 right-20 w-32 h-32 bg-gradient-to-br from-teal-300/30 to-cyan-300/20 rounded-full blur-2xl animate-float' />
+      </div>
+      <div className='container mx-auto p-4 space-y-8 flex-none relative z-10'>
         {/* Header Section */}
-        <Card className='shadow-sm'>
+        <Card className='bg-white/80 backdrop-blur-sm shadow-xl border border-teal-100/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700'>
           <CardContent className='p-6'>
             <div className='flex flex-col md:flex-row gap-6'>
               {/* Business Image */}
-              <div className='w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden'>
+              <div className='group w-full md:w-52 h-52 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'>
                 <img
                   src={(business as any).logo || (business as any).coverImage || '/images/business-placeholder.jpg'}
                   alt={business.name}
-                  className='w-full h-full object-cover'
+                  className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
                 />
+                <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
               </div>
 
               {/* Business Info */}
@@ -283,7 +328,12 @@ function businessDetailsPage() {
                       </div>
                       <span className='text-sm text-gray-600'>4.8 (127 reviews)</span>
                     </div>
-                    <Badge className='mt-2 bg-teal-500 text-teal-50'>Open Now</Badge>
+                    <Badge className='mt-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full shadow-md animate-pulse'>
+                      <div className='flex items-center gap-2'>
+                        <div className='w-2 h-2 bg-white rounded-full animate-ping' />
+                        Open Now
+                      </div>
+                    </Badge>
                   </div>
 
                   <div className='flex gap-2'>
@@ -334,7 +384,7 @@ function businessDetailsPage() {
                 <Button
                   buttonText={{ plainText: 'Book Appointment' }}
                   variant='contained'
-                  className=' bg-black hover:bg-gray-900 text-white'
+                  className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 animate-glow'
                   /* oncLick: push client to book a promoted service */
                 />
               </div>
@@ -343,59 +393,69 @@ function businessDetailsPage() {
         </Card>
 
         {/* Tabs Navigation */}
-        <div className='mx-auto max-w-4xl rounded-lg border border-gray-200 shadow-sm sticky top-0 z-30 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70'>
-          <nav className='flex justify-center space-x-8'>
-            {tabs.map(tab => (
-              <Button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                variant='text'
-                size='lg'
-                className={`w-full py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 hover:bg-gray-200'
-                }`}
-                buttonText={{ plainText: tab.label }}
-              />
-            ))}
+        <div className='mx-auto max-w-4xl rounded-xl border border-teal-100/50 shadow-lg sticky top-4 z-30 bg-white/90 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
+          <nav className='flex justify-center p-2'>
+            <div className='flex bg-gray-100 rounded-lg p-1 gap-1'>
+              {tabs.map(tab => (
+                <Button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  variant='text'
+                  size='lg'
+                  className={`relative px-6 py-3 font-medium text-sm transition-all duration-300 rounded-lg ${
+                    activeTab === tab.id
+                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg transform scale-105'
+                      : 'text-gray-600 hover:text-teal-600 hover:bg-white/50 hover:scale-105'
+                  }`}
+                  buttonText={{ plainText: tab.label }}
+                />
+              ))}
+            </div>
           </nav>
         </div>
       </div>
       <div className='flex-1 overflow-y-auto'>
         {/* mockServices[mockBusinesses[0].services] */}
         {/* Tab Content */}
-        <div className='min-h-96 max-w-4xl mx-auto px-4 pb-8'>
+        <div className='min-h-96 max-w-4xl mx-auto px-4 pb-8 relative z-10'>
           {activeTab === 'services' && (
-            <div className='space-y-4'>
-              <h2 className='text-2xl font-bold text-gray-900'>Our Services</h2>
-              <div className='grid gap-4'>
+            <div className='space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700'>
+              <h2 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'>
+                Our Services
+              </h2>
+              <div className='grid gap-6'>
                 {services.map((service, index) => (
-                  <Card key={service.id || index} className='shadow-sm hover:shadow-md transition-shadow'>
-                    <CardContent className='p-4'>
+                  <Card
+                    key={service.id || index}
+                    className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4 duration-500'
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <CardContent className='p-6'>
                       <div className='flex justify-between items-start'>
-                        <div className='flex-1'>
+                        <div className='flex-1 space-y-3'>
                           <H3
                             stringProps={{ plainText: service.name }}
-                            className='font-semibold text-lg text-gray-900'
+                            className='font-bold text-xl text-gray-900 group-hover:text-teal-700 transition-colors duration-300'
                           />
                           <P
                             stringProps={{ plainText: service.description || '' }}
-                            className='text-gray-600 text-sm mt-1'
+                            className='text-gray-600 leading-relaxed'
                           />
-                          <div className='flex items-center gap-4 mt-2 text-sm text-gray-500'>
-                            <span className='flex items-center gap-1'>
+                          <div className='flex items-center gap-4 text-sm text-gray-500'>
+                            <span className='flex items-center gap-2 bg-teal-50 text-teal-700 px-3 py-1 rounded-full'>
                               <Clock className='w-4 h-4' />
                               {service.duration} min
                             </span>
                           </div>
                         </div>
-                        <div className='text-right'>
-                          <div className='text-xl font-bold text-gray-900'>${service.price}</div>
+                        <div className='text-right space-y-3'>
+                          <div className='text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent'>
+                            ${service.price}
+                          </div>
                           <Button
                             buttonText={{ plainText: 'Book Now' }}
                             variant='contained'
-                            className='mt-2 bg-black hover:bg-gray-900 text-white'
+                            className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'
                             onClick={() =>
                               handelBookService({
                                 name: service.name,
@@ -414,12 +474,17 @@ function businessDetailsPage() {
           )}
 
           {activeTab === 'branches' && (
-            <div className='space-y-4'>
-              <h2 className='text-2xl font-bold text-gray-900'>Our Locations</h2>
+            <div className='space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700'>
+              <h2 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'>
+                Our Locations
+              </h2>
               {branches && branches.length > 0 ? (
-                <div className='grid gap-4 md:grid-cols-2'>
+                <div className='grid gap-6 md:grid-cols-2'>
                   {branches.map((branch, index) => (
-                    <Card key={branch.id || index} className='shadow-sm hover:shadow-md transition-shadow cursor-pointer'
+                    <Card
+                      key={branch.id || index}
+                      className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-teal-100/50 hover:border-teal-200 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4 duration-500'
+                      style={{ animationDelay: `${index * 150}ms` }}
                       onClick={() => {
                         setSelectedBranch(branch)
                         setBranchModalOpen(true)
@@ -480,9 +545,12 @@ function businessDetailsPage() {
           )}
 
           {activeTab === 'reviews' && (
-            <div className='space-y-4'>
+            <div className='space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700'>
               <div className='flex items-center justify-between'>
-                <H2 stringProps={{ plainText: 'Customer Reviews' }} className='text-2xl font-bold text-gray-900' />
+                <H2
+                  stringProps={{ plainText: 'Customer Reviews' }}
+                  className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'
+                />
                 {/* <h2 className='text-2xl font-bold text-gray-900'>Customer Reviews</h2> */}
 
                 <Button
@@ -495,7 +563,7 @@ function businessDetailsPage() {
                         <Star key={i} className='w-4 h-4 fill-yellow-400 text-yellow-400' />
                       ))} */}
               {/* Review Summary */}
-              <Card className='shadow-sm'>
+              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-teal-100/50 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
                 <CardContent className='p-6'>
                   <div className='flex items-center gap-6'>
                     <div className='text-center'>
@@ -530,9 +598,13 @@ function businessDetailsPage() {
               </Card>
 
               {/* Individual Reviews */}
-              <div className='space-y-4'>
+              <div className='space-y-6'>
                 {businessReview().map((review, index) => (
-                  <Card key={index} className='shadow-sm hover:shadow-md transition-shadow'>
+                  <Card
+                    key={index}
+                    className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-500 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4 duration-500'
+                    style={{ animationDelay: `${index * 100 + 600}ms` }}
+                  >
                     <CardContent className='p-4'>
                       <div className='flex items-start gap-3'>
                         {/* <div className='w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center'>
@@ -570,10 +642,13 @@ function businessDetailsPage() {
           )}
 
           {activeTab === 'about' && (
-            <div className='space-y-6'>
-              <H2 stringProps={{ plainText: 'About Elite Barber Shop' }} className='text-2xl font-bold text-gray-900' />
+            <div className='space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700'>
+              <H2
+                stringProps={{ plainText: 'About Elite Barber Shop' }}
+                className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'
+              />
 
-              <Card className='shadow-sm'>
+              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-teal-100/50 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
                 <CardContent className='p-6 space-y-4'>
                   <div>
                     <H3 stringProps={{ plainText: 'Our Story' }} className='font-semibold text-lg text-gray-900 mb-2' />
@@ -677,10 +752,10 @@ function businessDetailsPage() {
           services={services}
           staff={staff}
           allBranches={branches}
-          onBranchChange={(newBranch) => {
+          onBranchChange={newBranch => {
             setSelectedBranch(newBranch)
           }}
-          onBookService={(serviceId) => {
+          onBookService={serviceId => {
             console.log('Booking service:', serviceId)
             setBranchModalOpen(false)
             // TODO: Implement booking logic or open booking modal

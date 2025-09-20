@@ -19,7 +19,7 @@ export default function LoginPage({ params }: PageProps) {
             onSubmit={async (values: any) => {
               const { email, password } = values
               await loginCustomer({ email, password })
-              router.push(`/${locale}/profile`)
+              router.push(`/${locale}/landpage`)
             }}
           />
         </div>
