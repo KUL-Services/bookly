@@ -34,110 +34,98 @@ interface Review {
 function businessDetailsPage() {
   const params = useParams<{ slug: string }>()
   const [business, setBusiness] = useState<Business | null>(null)
-  const [services, setServices] = useState<ApiService[]>([])
-  const [branches, setBranches] = useState<Branch[]>([])
-  const [staff, setStaff] = useState<Staff[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Extract services, branches, and staff from business data
+  const services = business?.services || []
+  const branches = business?.branches || []
+  const staff = branches.flatMap(branch => branch.staff || [])
 
   useEffect(() => {
     const fetchBusinessData = async () => {
       try {
         setLoading(true)
-        // Try to fetch business by slug/name
-        const businessesResponse = await BusinessService.getApprovedBusinesses()
+        console.log('🔍 Fetching business data for ID:', params.slug)
 
-        if (businessesResponse.data) {
-          // Find business by slug (convert name to slug format)
-          const foundBusiness = businessesResponse.data.find(
-            b => b.name.toLowerCase().replace(/\s+/g, '-') === params.slug
-          )
+        // Use the single business API endpoint that returns everything
+        const businessResponse = await BusinessService.getBusiness(params.slug)
 
-          if (foundBusiness) {
-            setBusiness(foundBusiness)
+        if (businessResponse.error) {
+          throw new Error(businessResponse.error)
+        }
 
-            // Fetch all related data in parallel
-            const [servicesResponse, branchesResponse, staffResponse] = await Promise.all([
-              ServicesService.getServices(),
-              BranchesService.getBranches(),
-              StaffService.getStaff()
-            ])
-
-            // Filter services for this business
-            if (servicesResponse.data) {
-              const businessServices = servicesResponse.data.filter(s => s.businessId === foundBusiness.id)
-              setServices(businessServices)
-            }
-
-            // Filter branches for this business
-            if (branchesResponse.data) {
-              const businessBranches = branchesResponse.data.filter(b => b.businessId === foundBusiness.id)
-              setBranches(businessBranches)
-            } else {
-              // Fallback to mock branches if API fails
-              setBranches((mockBusinesses[0] as any).branches || [])
-            }
-
-            // Filter staff for this business
-            if (staffResponse.data) {
-              const businessStaff = staffResponse.data.filter(s => s.businessId === foundBusiness.id)
-              setStaff(businessStaff)
-            } else {
-              // Fallback to empty staff if API fails
-              setStaff([])
-            }
-          } else {
-            // Fallback to mock data if business not found
-            const mockBusiness = mockBusinesses[0] as any
-            setBusiness(mockBusiness)
-            setBranches(mockBusiness.branches || [])
-            setStaff([])
-
-            const serviceIds = mockBusiness.services
-            const mockServicesForBusiness = mockServices
-              .filter(service => serviceIds.includes(service.id))
-              .map(service => ({
-                id: service.id,
-                name: service.name,
-                description: service.description,
-                location: service.location || 'Main Location',
-                price: service.price,
-                duration: service.duration,
-                businessId: service.businessId,
-                categories: [],
-                branches: [],
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-              }))
-            setServices(mockServicesForBusiness)
-          }
+        if (businessResponse.data) {
+          console.log('✅ Business data received:', businessResponse.data)
+          setBusiness(businessResponse.data)
         } else {
-          throw new Error('Failed to fetch businesses')
+          throw new Error('No business data received')
         }
       } catch (err) {
         console.warn('Failed to fetch business data, using fallback:', err)
-        const mockBusiness = mockBusinesses[0] as any
-        setBusiness(mockBusiness)
-        setBranches(mockBusiness.branches || [])
-        setStaff([])
 
-        const serviceIds = mockBusiness.services
-        const mockServicesForBusiness = mockServices
-          .filter(service => serviceIds.includes(service.id))
-          .map(service => ({
-            id: service.id,
-            name: service.name,
-            description: service.description,
-            location: service.location || 'Main Location',
-            price: service.price,
-            duration: service.duration,
-            businessId: service.businessId,
-            categories: [],
-            branches: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }))
-        setServices(mockServicesForBusiness)
+        // Use mock business data
+        const mockBusiness: Business = {
+          id: params.slug,
+          name: 'Demo Beauty Salon',
+          email: 'demo@bookly.com',
+          description: 'A modern beauty salon offering hair and spa services.',
+          approved: true,
+          rating: 4.8,
+          socialLinks: [
+            { platform: 'facebook', url: 'https://facebook.com/bookly' },
+            { platform: 'instagram', url: 'https://instagram.com/bookly' }
+          ],
+          services: [
+            {
+              id: 'service-1',
+              name: 'Massage',
+              description: 'Relaxing full body massage',
+              location: '11 Omar Tosson',
+              price: 20,
+              duration: 60,
+              businessId: params.slug,
+              createdAt: '',
+              updatedAt: ''
+            },
+            {
+              id: 'service-2',
+              name: 'Facial Treatment',
+              description: 'Facial Treatment and Facial Skin Care',
+              location: 'Spa',
+              price: 33,
+              duration: 90,
+              businessId: params.slug,
+              createdAt: '',
+              updatedAt: ''
+            }
+          ],
+          branches: [
+            {
+              id: 'branch-1',
+              name: 'Mohandeseen',
+              address: '11 Mohandeseen',
+              mobile: '0232323232',
+              businessId: params.slug,
+              staff: [
+                {
+                  id: 'staff-1',
+                  name: 'Mohsen Hendawy',
+                  mobile: '01010012212',
+                  branchId: 'branch-1',
+                  businessId: params.slug,
+                  createdAt: '',
+                  updatedAt: ''
+                }
+              ],
+              createdAt: '',
+              updatedAt: ''
+            }
+          ]
+        }
+
+        setBusiness(mockBusiness)
+        setError(null) // Don't show error since we have fallback data
       } finally {
         setLoading(false)
       }
@@ -147,19 +135,18 @@ function businessDetailsPage() {
   }, [params.slug])
 
   const businessReview = (): Review[] => {
-    if (!business) return []
-    const reviewIds = (business as any).reviews || []
-    return mockReviews
-      .filter(review => reviewIds.includes(review.id))
-      .map(review => ({
-        id: review.id,
-        authorName: review.authorName,
-        authorImage: review.authorImage,
-        rating: review.rating,
-        comment: review.comment,
-        date: review.date,
-        businessId: review.businessId
-      }))
+    if (!business?.reviews) return []
+
+    // Convert API reviews to local Review format
+    return business.reviews.map(review => ({
+      id: review.id,
+      authorName: review.user?.firstName + ' ' + review.user?.lastName || 'Anonymous',
+      authorImage: undefined, // No avatar in API response
+      rating: review.rating,
+      comment: review.comment || '',
+      date: new Date(review.createdAt),
+      businessId: review.businessId || business.id
+    }))
   }
   // const oldservices = [
   //   {
@@ -325,10 +312,10 @@ function businessDetailsPage() {
                     <div className='flex items-center gap-2 mt-2'>
                       <div className='flex items-center'>
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className='w-4 h-4 fill-yellow-400 text-yellow-400' />
+                          <Star key={i} className={`w-4 h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                         ))}
                       </div>
-                      <span className='text-sm text-gray-600'>4.8 (127 reviews)</span>
+                      <span className='text-sm text-gray-600'>{business.rating || 0} ({business.reviews?.length || 0} reviews)</span>
                     </div>
                     <Badge className='mt-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full shadow-md animate-pulse'>
                       <div className='flex items-center gap-2'>
@@ -376,10 +363,16 @@ function businessDetailsPage() {
                         : 'Mon-Sat: 9AM-6PM, Sun: Closed'}
                     </span>
                   </div>
-                  {(business as any).website && (
+                  {business.socialLinks && business.socialLinks.length > 0 && (
                     <div className='flex items-center gap-2'>
                       <Globe className='w-4 h-4' />
-                      <span>{(business as any).website}</span>
+                      <div className='flex gap-2'>
+                        {business.socialLinks.map((link, index) => (
+                          <a key={index} href={link.url} target='_blank' rel='noopener noreferrer' className='text-teal-600 hover:text-teal-700 capitalize'>
+                            {link.platform}
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -575,13 +568,13 @@ function businessDetailsPage() {
                 <CardContent className='p-6'>
                   <div className='flex items-center gap-6'>
                     <div className='text-center'>
-                      <div className='text-4xl font-bold text-gray-900'>4.8</div>
+                      <div className='text-4xl font-bold text-gray-900'>{business.rating || 0}</div>
                       <div className='flex items-center justify-center mt-1'>
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className='w-4 h-4 fill-yellow-400 text-yellow-400' />
+                          <Star key={i} className={`w-4 h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                         ))}{' '}
                       </div>
-                      <div className='text-sm text-gray-600 mt-1'>{(business as any).totalRatings || 0} reviews</div>
+                      <div className='text-sm text-gray-600 mt-1'>{business.reviews?.length || 0} review{(business.reviews?.length || 0) !== 1 ? 's' : ''}</div>
                     </div>
                     <div className='flex-1 space-y-2'>
                       {[5, 4, 3, 2, 1].map(rating => (
@@ -595,8 +588,7 @@ function businessDetailsPage() {
                             ></div>
                           </div>
                           <span className='text-sm text-gray-600 w-8'>
-                            {/* {rating === 5 ? '108' : rating === 4 ? '15' : '4'} */}
-                            {(business as any).averageRating || '0'}
+                            {business.reviews ? business.reviews.filter(r => r.rating === rating).length : 0}
                           </span>
                         </div>
                       ))}
@@ -607,9 +599,9 @@ function businessDetailsPage() {
 
               {/* Individual Reviews */}
               <div className='space-y-6'>
-                {businessReview().map((review, index) => (
+                {businessReview().length > 0 ? businessReview().map((review, index) => (
                   <Card
-                    key={index}
+                    key={review.id || index}
                     className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
                     style={{
                       animationDelay: `${0.4 + index * 0.1}s`,
@@ -618,36 +610,46 @@ function businessDetailsPage() {
                   >
                     <CardContent className='p-4'>
                       <div className='flex items-start gap-3'>
-                        {/* <div className='w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center'>
-                        <span className='text-sm font-medium text-gray-700'>
-                          {review.authorName
-                            .split(' ')
-                            .map(n => n[0])
-                            .join('')}
-                        </span>
-                      </div> */}
-                        <Avatar avatarTitle='Aly Lashin' imageUrl={review.authorImage} size='4XL' alt='Aly Lashin' />
+                        <div className='w-10 h-10 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full flex items-center justify-center'>
+                          <span className='text-sm font-medium text-teal-700'>
+                            {review.authorName
+                              .split(' ')
+                              .map(n => n[0])
+                              .join('')}
+                          </span>
+                        </div>
                         <div className='flex-1'>
-                          <div className='flex items-center gap-2 mb-1'>
+                          <div className='flex items-center gap-2 mb-2'>
                             <span className='font-medium text-gray-900'>{review.authorName}</span>
-                            <span className='text-sm text-gray-500'>{format(review.date, 'yyyy-MM-dd')}</span>
-                            <div className='flex items-center mb-2'>
-                              {[...Array(review.rating)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
+                            <span className='text-sm text-gray-500'>{format(review.date, 'MMM dd, yyyy')}</span>
                           </div>
-                          <p className='text-gray-700 text-sm'>{review.comment}</p>
+                          <div className='flex items-center mb-2'>
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                            <span className='ml-2 text-sm text-gray-600'>{review.rating}/5</span>
+                          </div>
+                          <p className='text-gray-700 text-sm leading-relaxed'>{review.comment}</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                )) : (
+                  <Card className='shadow-sm opacity-0 animate-[fadeInUp_0.6s_ease-out_0.4s_forwards]'>
+                    <CardContent className='p-8 text-center'>
+                      <div className='text-gray-400 mb-3'>
+                        <Star className='w-12 h-12 mx-auto' />
+                      </div>
+                      <h3 className='text-lg font-medium text-gray-900 mb-2'>No reviews yet</h3>
+                      <p className='text-gray-600'>Be the first to leave a review for this business!</p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           )}
@@ -655,7 +657,7 @@ function businessDetailsPage() {
           {activeTab === 'about' && (
             <div className='space-y-6'>
               <H2
-                stringProps={{ plainText: 'About Elite Barber Shop' }}
+                stringProps={{ plainText: `About ${business.name}` }}
                 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'
               />
 
@@ -666,8 +668,7 @@ function businessDetailsPage() {
 
                     <P
                       stringProps={{
-                        plainText:
-                          ' Elite Barber Shop has been serving the downtown community for over 15 years. We pride ourselves on providing exceptional grooming services  in a welcoming, professional environment. Our experience barbers are passionate about their craft and committed to helping every client look and feel their best.'
+                        plainText: business.description || `${business.name} is committed to providing exceptional services in a welcoming, professional environment. Our experienced team is passionate about their craft and dedicated to helping every client look and feel their best.`
                       }}
                       className='text-gray-700 leading-relaxed'
                     />
@@ -725,12 +726,31 @@ function businessDetailsPage() {
                       className='font-semibold text-lg text-gray-900 mb-2'
                     />
                     <div className='space-y-2 text-gray-700'>
-                      <P
-                        stringProps={{ plainText: `Address: ${(business as any).address || 'No address provided'}` }}
-                      />
-                      <P stringProps={{ plainText: 'Phone: (555) 123-4567' }} />
-                      <P stringProps={{ plainText: 'Email: info@elitebarbershop.com' }} />
-                      <P stringProps={{ plainText: 'Email: info@elitebarbershop.com' }} />
+                      {branches.length > 0 && branches[0].address && (
+                        <P stringProps={{ plainText: `Address: ${branches[0].address}` }} />
+                      )}
+                      {branches.length > 0 && branches[0].mobile && (
+                        <P stringProps={{ plainText: `Phone: ${branches[0].mobile}` }} />
+                      )}
+                      {business.email && (
+                        <P stringProps={{ plainText: `Email: ${business.email}` }} />
+                      )}
+                      {business.socialLinks && business.socialLinks.length > 0 && (
+                        <div className='flex items-center gap-4 mt-3'>
+                          <span className='font-medium'>Follow us:</span>
+                          {business.socialLinks.map((link, index) => (
+                            <a
+                              key={index}
+                              href={link.url}
+                              target='_blank'
+                              rel='noopener noreferrer'
+                              className='text-teal-600 hover:text-teal-700 capitalize underline'
+                            >
+                              {link.platform}
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

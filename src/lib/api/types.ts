@@ -26,11 +26,12 @@ export interface Business {
   email?: string
   description?: string
   approved?: boolean
-  logo?: string
+  logo?: string | null
   rating?: number
   socialLinks?: SocialLink[]
   services?: Service[] // Services offered by this business
   branches?: Branch[] // Branches of this business
+  reviews?: Review[] // Reviews for this business
   owner?: {
     name: string
     email: string
@@ -59,6 +60,7 @@ export interface Service {
   price: number
   duration: number
   businessId: string
+  gallery?: string[]
   business?: Business
   categories?: Category[]
   branches?: Branch[]
@@ -71,8 +73,10 @@ export interface Staff {
   id: string
   name: string
   mobile?: string
-  businessId: string
-  branchId?: string
+  businessId?: string
+  branchId: string
+  profilePhoto?: string | null
+  services?: Service[]
   createdAt: string
   updatedAt: string
 }
@@ -83,6 +87,7 @@ export interface Branch {
   address?: string
   mobile?: string
   businessId: string
+  gallery?: string[]
   services?: Service[]
   staff?: Staff[]
   createdAt: string
