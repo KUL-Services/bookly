@@ -8,14 +8,19 @@ import { FeaturesSection } from '@/bookly/components/organisms/features-section/
 import FooterSection from '@/bookly/components/organisms/footer-section/footer-section'
 import { t } from 'i18next'
 import { MapPin } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
 function LandPage() {
   const [q, setQ] = useState('')
   const [loc, setLoc] = useState('')
+  const [mounted, setMounted] = useState(false)
   const params = useParams<{ lang: string }>()
   const router = useRouter()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   const goSearch = () => {
     const sp = new URLSearchParams()
     if (q) sp.set('q', q)
@@ -50,7 +55,7 @@ function LandPage() {
             <div className='absolute bottom-20 right-10 w-2 h-2 bg-teal-500 rounded-full animate-bounce animation-delay-4000' />
           </div>
           <div className='relative max-w-6xl mx-auto px-6'>
-            <div className='text-center space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
+            <div className={`text-center space-y-8 ${mounted ? 'opacity-0 animate-[fadeInUp_1s_ease-out_forwards]' : 'opacity-0'}`}>
               <H1
                 stringProps={{
                   plainText: 'Find and book beauty & wellness services'
@@ -62,7 +67,7 @@ function LandPage() {
                 Discover and book appointments with top-rated salons, spas, and wellness professionals in your area
               </p>
               {/* Search Bar */}
-              <div className='max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-1000 animation-delay-500'>
+              <div className={`max-w-4xl mx-auto ${mounted ? 'opacity-0 animate-[fadeInUp_0.8s_ease-out_0.3s_forwards]' : 'opacity-0'}`}>
                 <div className='p-2 bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/50 hover:shadow-3xl transition-all duration-300'>
                   <div className='flex flex-col md:flex-row gap-3 p-4'>
                     <div className='flex-1'>
@@ -98,7 +103,7 @@ function LandPage() {
               </div>
 
               {/* Trust indicators */}
-              <div className='flex flex-wrap justify-center items-center gap-8 pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 animation-delay-1000'>
+              <div className={`flex flex-wrap justify-center items-center gap-8 pt-8 ${mounted ? 'opacity-0 animate-[fadeInUp_0.6s_ease-out_0.6s_forwards]' : 'opacity-0'}`}>
                 <div className='flex items-center gap-2 text-gray-600'>
                   <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
                   <span className='text-sm font-medium'>1000+ Verified Businesses</span>
@@ -118,25 +123,25 @@ function LandPage() {
 
         {/* Categories Section */}
         <div className='relative bg-gradient-to-b from-transparent via-white/80 to-white'>
-          <div className='animate-in fade-in slide-in-from-bottom-8 duration-1000 animation-delay-1500'>
+          <div className={`${mounted ? 'opacity-0 animate-[fadeInUp_0.8s_ease-out_0.9s_forwards]' : 'opacity-0'}`}>
             <ExploreSection />
           </div>
         </div>
 
         {/* Features Section */}
         <div className='relative bg-gradient-to-b from-white to-gray-50/50'>
-          <div className='animate-in fade-in slide-in-from-bottom-8 duration-1000 animation-delay-2000'>
+          <div className={`${mounted ? 'opacity-0 animate-[fadeInUp_0.8s_ease-out_1.2s_forwards]' : 'opacity-0'}`}>
             <FeaturesSection />
           </div>
         </div>
 
         {/* App Download Section */}
-        <div className='relative bg-gradient-to-b from-gray-50/50 to-white animate-in fade-in slide-in-from-bottom-8 duration-1000 animation-delay-2500'>
+        <div className={`relative bg-gradient-to-b from-gray-50/50 to-white ${mounted ? 'opacity-0 animate-[fadeInUp_0.8s_ease-out_1.5s_forwards]' : 'opacity-0'}`}>
           <AppDownloadSection />
         </div>
 
         {/* Footer */}
-        <div className='relative bg-gradient-to-t from-gray-900 to-gray-800 animate-in fade-in slide-in-from-bottom-8 duration-1000 animation-delay-3000'>
+        <div className={`relative bg-gradient-to-t from-gray-900 to-gray-800 ${mounted ? 'opacity-0 animate-[fadeInUp_0.8s_ease-out_1.8s_forwards]' : 'opacity-0'}`}>
           <FooterSection />
         </div>
       </main>

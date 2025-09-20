@@ -72,8 +72,7 @@ function businessDetailsPage() {
             // Filter branches for this business
             if (branchesResponse.data) {
               const businessBranches = branchesResponse.data.filter(b => b.businessId === foundBusiness.id)
-              // setBranches(businessBranches)
-              setBranches((mockBusinesses[0] as any).branches || [])
+              setBranches(businessBranches)
             } else {
               // Fallback to mock branches if API fails
               setBranches((mockBusinesses[0] as any).branches || [])
@@ -300,13 +299,13 @@ function businessDetailsPage() {
         <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 rounded-full blur-3xl animate-pulse animation-delay-1000' />
         <div className='absolute top-1/2 right-20 w-32 h-32 bg-gradient-to-br from-teal-300/30 to-cyan-300/20 rounded-full blur-2xl animate-float' />
       </div>
-      <div className='container mx-auto p-4 space-y-8 flex-none relative z-10'>
+      <div className='container mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8 flex-none relative z-10'>
         {/* Header Section */}
         <Card className='bg-white/80 backdrop-blur-sm shadow-xl border border-teal-100/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700'>
-          <CardContent className='p-6'>
-            <div className='flex flex-col md:flex-row gap-6'>
+          <CardContent className='p-4 sm:p-6'>
+            <div className='flex flex-col md:flex-row gap-4 sm:gap-6'>
               {/* Business Image */}
-              <div className='group w-full md:w-52 h-52 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'>
+              <div className='group w-full md:w-52 h-48 sm:h-52 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'>
                 <img
                   src={(business as any).logo || (business as any).coverImage || '/images/business-placeholder.jpg'}
                   alt={business.name}
@@ -316,10 +315,13 @@ function businessDetailsPage() {
               </div>
 
               {/* Business Info */}
-              <div className='flex-1 space-y-4'>
-                <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4'>
+              <div className='flex-1 space-y-3 sm:space-y-4'>
+                <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4'>
                   <div>
-                    <H1 stringProps={{ plainText: `${business.name}` }} className='text-3xl font-bold text-gray-900' />
+                    <H1
+                      stringProps={{ plainText: `${business.name}` }}
+                      className='text-2xl sm:text-3xl font-bold text-gray-900'
+                    />
                     <div className='flex items-center gap-2 mt-2'>
                       <div className='flex items-center'>
                         {[...Array(5)].map((_, i) => (
@@ -341,13 +343,13 @@ function businessDetailsPage() {
                       buttonText={{ plainText: 'Save' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:heart' }}
-                      className='w-full bg-white text-gray-900 shadow-lg border-gray-400 hover:shadow-none hover: border-none hover:bg-transparent'
+                      className='flex-1 sm:w-auto bg-white text-gray-900 shadow-lg border-gray-400 hover:shadow-none hover: border-none hover:bg-transparent text-sm py-2'
                     />
                     <Button
                       buttonText={{ plainText: 'Share' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:share' }}
-                      className='w-full bg-white text-gray-900 shadow-lg border-gray-400 hover:shadow-none hover: border-none hover:bg-transparent'
+                      className='flex-1 sm:w-auto bg-white text-gray-900 shadow-lg border-gray-400 hover:shadow-none hover: border-none hover:bg-transparent text-sm py-2'
                     />
                   </div>
                 </div>
@@ -393,16 +395,16 @@ function businessDetailsPage() {
         </Card>
 
         {/* Tabs Navigation */}
-        <div className='mx-auto max-w-4xl rounded-xl border border-teal-100/50 shadow-lg sticky top-4 z-30 bg-white/90 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
-          <nav className='flex justify-center p-2'>
-            <div className='flex bg-gray-100 rounded-lg p-1 gap-1'>
+        <div className='mx-auto max-w-4xl rounded-xl border border-teal-100/50 shadow-lg sticky top-0 sm:top-4 z-30 bg-white/90 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
+          <nav className='flex justify-center p-1 sm:p-2'>
+            <div className='flex w-full sm:w-auto bg-gray-100 rounded-lg p-1 gap-1 overflow-x-auto'>
               {tabs.map(tab => (
                 <Button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   variant='text'
                   size='lg'
-                  className={`relative px-6 py-3 font-medium text-sm transition-all duration-300 rounded-lg ${
+                  className={`relative px-4 sm:px-6 py-2 sm:py-3 font-medium text-xs sm:text-sm transition-all duration-300 rounded-lg whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg transform scale-105'
                       : 'text-gray-600 hover:text-teal-600 hover:bg-white/50 hover:scale-105'
@@ -417,18 +419,21 @@ function businessDetailsPage() {
       <div className='flex-1 overflow-y-auto'>
         {/* mockServices[mockBusinesses[0].services] */}
         {/* Tab Content */}
-        <div className='min-h-96 max-w-4xl mx-auto px-4 pb-8 relative z-10'>
+        <div className='min-h-96 max-w-4xl mx-auto px-4 sm:px-6 pb-6 sm:pb-8 relative z-10'>
           {activeTab === 'services' && (
-            <div className='space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700'>
-              <h2 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'>
+            <div className='space-y-6'>
+              <h2 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
                 Our Services
               </h2>
               <div className='grid gap-6'>
                 {services.map((service, index) => (
                   <Card
                     key={service.id || index}
-                    className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4 duration-500'
-                    style={{ animationDelay: `${index * 100}ms` }}
+                    className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.02] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                    style={{
+                      animationDelay: `${0.2 + index * 0.1}s`,
+                      animationFillMode: 'forwards'
+                    }}
                   >
                     <CardContent className='p-6'>
                       <div className='flex justify-between items-start'>
@@ -474,8 +479,8 @@ function businessDetailsPage() {
           )}
 
           {activeTab === 'branches' && (
-            <div className='space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700'>
-              <h2 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'>
+            <div className='space-y-6'>
+              <h2 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
                 Our Locations
               </h2>
               {branches && branches.length > 0 ? (
@@ -483,8 +488,11 @@ function businessDetailsPage() {
                   {branches.map((branch, index) => (
                     <Card
                       key={branch.id || index}
-                      className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer border border-teal-100/50 hover:border-teal-200 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4 duration-500'
-                      style={{ animationDelay: `${index * 150}ms` }}
+                      className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-teal-100/50 hover:border-teal-200 hover:scale-[1.02] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                      style={{
+                        animationDelay: `${0.2 + index * 0.1}s`,
+                        animationFillMode: 'forwards'
+                      }}
                       onClick={() => {
                         setSelectedBranch(branch)
                         setBranchModalOpen(true)
@@ -531,7 +539,7 @@ function businessDetailsPage() {
                   ))}
                 </div>
               ) : (
-                <Card className='shadow-sm'>
+                <Card className='shadow-sm opacity-0 animate-[fadeInUp_0.6s_ease-out_0.3s_forwards]'>
                   <CardContent className='p-8 text-center'>
                     <div className='text-gray-400 mb-3'>
                       <MapPin className='w-12 h-12 mx-auto' />
@@ -545,8 +553,8 @@ function businessDetailsPage() {
           )}
 
           {activeTab === 'reviews' && (
-            <div className='space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700'>
-              <div className='flex items-center justify-between'>
+            <div className='space-y-6'>
+              <div className='flex items-center justify-between opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
                 <H2
                   stringProps={{ plainText: 'Customer Reviews' }}
                   className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'
@@ -563,7 +571,7 @@ function businessDetailsPage() {
                         <Star key={i} className='w-4 h-4 fill-yellow-400 text-yellow-400' />
                       ))} */}
               {/* Review Summary */}
-              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-teal-100/50 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-teal-100/50 opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]'>
                 <CardContent className='p-6'>
                   <div className='flex items-center gap-6'>
                     <div className='text-center'>
@@ -602,8 +610,11 @@ function businessDetailsPage() {
                 {businessReview().map((review, index) => (
                   <Card
                     key={index}
-                    className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-500 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4 duration-500'
-                    style={{ animationDelay: `${index * 100 + 600}ms` }}
+                    className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                    style={{
+                      animationDelay: `${0.4 + index * 0.1}s`,
+                      animationFillMode: 'forwards'
+                    }}
                   >
                     <CardContent className='p-4'>
                       <div className='flex items-start gap-3'>
@@ -642,13 +653,13 @@ function businessDetailsPage() {
           )}
 
           {activeTab === 'about' && (
-            <div className='space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700'>
+            <div className='space-y-6'>
               <H2
                 stringProps={{ plainText: 'About Elite Barber Shop' }}
-                className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'
+                className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'
               />
 
-              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-teal-100/50 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-teal-100/50 opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]'>
                 <CardContent className='p-6 space-y-4'>
                   <div>
                     <H3 stringProps={{ plainText: 'Our Story' }} className='font-semibold text-lg text-gray-900 mb-2' />

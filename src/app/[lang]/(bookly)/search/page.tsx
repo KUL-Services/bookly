@@ -180,29 +180,35 @@ export default function SearchPage() {
   }
 
   return (
-    <div className='min-h-screen w-full bg-gray-50'>
-      {/* Top search bar */}
-      <div className='bg-white border-b'>
-        <div className='mx-auto max-w-6xl px-4 py-4 flex flex-col sm:flex-row gap-3'>
-          <SearchInput
-            value={q}
-            onChange={e => setQ(e.target.value)}
-            placeholderProps={{ plainText: 'What are you looking for? (e.g. haircut, nails)' }}
-            className='flex-1'
-          />
-          <SearchInput
-            value={loc}
-            onChange={e => setLoc(e.target.value)}
-            placeholderProps={{ plainText: 'Location' }}
-            className='flex-1'
-          />
-          <Button onClick={applyToUrl} buttonText={{ plainText: 'Search' }} />
+    <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5'>
+      {/* Top search bar - mobile optimized */}
+      <div className='bg-white/90 backdrop-blur-sm border-b border-teal-100/50 sticky top-0 z-40'>
+        <div className='mx-auto max-w-6xl px-4 sm:px-6 py-3 sm:py-4'>
+          <div className='flex flex-col sm:flex-row gap-3'>
+            <SearchInput
+              value={q}
+              onChange={e => setQ(e.target.value)}
+              placeholderProps={{ plainText: 'What are you looking for? (e.g. haircut, nails)' }}
+              className='flex-1 text-sm sm:text-base'
+            />
+            <SearchInput
+              value={loc}
+              onChange={e => setLoc(e.target.value)}
+              placeholderProps={{ plainText: 'Location' }}
+              className='flex-1 text-sm sm:text-base'
+            />
+            <Button
+              onClick={applyToUrl}
+              buttonText={{ plainText: 'Search' }}
+              className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'
+            />
+          </div>
         </div>
       </div>
 
-      <div className='mx-auto max-w-6xl px-4 py-6 grid grid-cols-1 md:grid-cols-[280px,1fr] gap-6'>
-        {/* Filters */}
-        <aside className='bg-white border rounded-lg p-6 h-fit'>
+      <div className='mx-auto max-w-6xl px-4 sm:px-6 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-4 sm:gap-6'>
+        {/* Filters - mobile optimized */}
+        <aside className='bg-white/80 backdrop-blur-sm border border-teal-100/50 rounded-xl p-4 sm:p-6 h-fit shadow-lg lg:sticky lg:top-24'>
           <div className='flex items-center gap-2 mb-6'>
             <svg className='w-5 h-5 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
               <path
@@ -216,9 +222,9 @@ export default function SearchPage() {
           </div>
 
           <div className='mb-6'>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>Sort by</label>
+            <label className='block text-sm font-medium text-gray-700 mb-3'>Sort by</label>
             <select
-              className='w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+              className='w-full border border-teal-200 rounded-lg px-3 py-3 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
               value={sort}
               onChange={e => setSort(e.target.value as SortKey)}
             >
@@ -237,7 +243,7 @@ export default function SearchPage() {
                 { value: 'afternoon', label: 'Afternoon' },
                 { value: 'evening', label: 'Evening' }
               ].map(time => (
-                <label key={time.value} className='flex items-center gap-2'>
+                <label key={time.value} className='flex items-center gap-3 cursor-pointer hover:bg-teal-50 p-2 rounded-lg transition-colors duration-200'>
                   <input
                     type='checkbox'
                     checked={selectedTimeOfDay.includes(time.value as TimeOfDay)}
@@ -248,9 +254,9 @@ export default function SearchPage() {
                         setSelectedTimeOfDay(selectedTimeOfDay.filter(t => t !== time.value))
                       }
                     }}
-                    className='w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500'
+                    className='w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500 focus:ring-2'
                   />
-                  <span className='text-sm text-gray-700'>{time.label}</span>
+                  <span className='text-sm text-gray-700 font-medium'>{time.label}</span>
                 </label>
               ))}
             </div>
@@ -258,8 +264,8 @@ export default function SearchPage() {
 
           <div className='mb-6'>
             <h4 className='text-sm font-medium text-gray-700 mb-3'>Categories</h4>
-            <div className='space-y-2 max-h-48 overflow-y-auto'>
-              <label className='flex items-center gap-2'>
+            <div className='space-y-1 max-h-48 overflow-y-auto'>
+              <label className='flex items-center gap-3 cursor-pointer hover:bg-teal-50 p-2 rounded-lg transition-colors duration-200'>
                 <input
                   type='radio'
                   name='category'
@@ -269,12 +275,12 @@ export default function SearchPage() {
                     sp.delete('category')
                     router.push(`/${params?.lang}/search?` + sp.toString())
                   }}
-                  className='w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500'
+                  className='w-5 h-5 text-teal-600 border-gray-300 focus:ring-teal-500 focus:ring-2'
                 />
-                <span className='text-sm text-gray-700'>All Categories</span>
+                <span className='text-sm text-gray-700 font-medium'>All Categories</span>
               </label>
               {categoriesData.map(category => (
-                <label key={category.id} className='flex items-center gap-2'>
+                <label key={category.id} className='flex items-center gap-3 cursor-pointer hover:bg-teal-50 p-2 rounded-lg transition-colors duration-200'>
                   <input
                     type='radio'
                     name='category'
@@ -285,42 +291,79 @@ export default function SearchPage() {
                       sp.set('category', slug)
                       router.push(`/${params?.lang}/search?` + sp.toString())
                     }}
-                    className='w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500'
+                    className='w-5 h-5 text-teal-600 border-gray-300 focus:ring-teal-500 focus:ring-2'
                   />
-                  <span className='text-sm text-gray-700'>{category.name}</span>
+                  <span className='text-sm text-gray-700 font-medium'>{category.name}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div className='mb-6'>
-            <h4 className='text-sm font-medium text-gray-700 mb-3'>Price range</h4>
-            <div className='flex items-center gap-2'>
-              <input
-                type='number'
-                value={priceMin}
-                onChange={e => setPriceMin(Number(e.target.value || 0))}
-                className='w-20 border border-gray-300 rounded-md px-2 py-1 text-sm'
-                min={0}
-                placeholder='0'
-              />
-              <span className='text-gray-400'>-</span>
-              <input
-                type='number'
-                value={priceMax}
-                onChange={e => setPriceMax(Number(e.target.value || 200))}
-                className='w-20 border border-gray-300 rounded-md px-2 py-1 text-sm'
-                min={0}
-                placeholder='200'
-              />
+            <h4 className='text-sm font-medium text-gray-700 mb-3'>Price Range</h4>
+            <div className='space-y-3'>
+              {/* Mobile: Stacked Layout */}
+              <div className='block md:hidden space-y-2'>
+                <input
+                  type='number'
+                  value={priceMin}
+                  onChange={e => setPriceMin(Number(e.target.value || 0))}
+                  className='w-full border border-teal-200 rounded-lg px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
+                  min={0}
+                  placeholder='Minimum price'
+                />
+                <input
+                  type='number'
+                  value={priceMax}
+                  onChange={e => setPriceMax(Number(e.target.value || 200))}
+                  className='w-full border border-teal-200 rounded-lg px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
+                  min={0}
+                  placeholder='Maximum price'
+                />
+              </div>
+
+              {/* Desktop: Side by Side Layout */}
+              <div className='hidden md:flex items-center gap-3'>
+                <div className='flex-1'>
+                  <input
+                    type='number'
+                    value={priceMin}
+                    onChange={e => setPriceMin(Number(e.target.value || 0))}
+                    className='w-full border border-teal-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
+                    min={0}
+                    placeholder='Min'
+                  />
+                </div>
+                <span className='text-gray-400 font-medium text-sm flex-shrink-0'>to</span>
+                <div className='flex-1'>
+                  <input
+                    type='number'
+                    value={priceMax}
+                    onChange={e => setPriceMax(Number(e.target.value || 200))}
+                    className='w-full border border-teal-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
+                    min={0}
+                    placeholder='Max'
+                  />
+                </div>
+              </div>
+
+              <div className='text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2'>
+                Range: ${priceMin} - ${priceMax === 0 ? '∞' : `$${priceMax}`}
+              </div>
             </div>
           </div>
 
-          <div className='flex gap-2'>
-            <Button onClick={applyToUrl} variant='contained' buttonText={{ plainText: 'Apply' }} />
+          <div className='flex gap-3'>
+            <Button
+              onClick={applyToUrl}
+              variant='contained'
+              buttonText={{ plainText: 'Apply' }}
+              className='flex-1 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold py-2 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'
+            />
             <Button
               variant='outlined'
               buttonText={{ plainText: 'Reset' }}
+              className='flex-1 border-teal-200 text-teal-600 hover:bg-teal-50 py-2 rounded-lg transition-all duration-200'
               onClick={() => {
                 setQ('')
                 setLoc('')
@@ -334,16 +377,18 @@ export default function SearchPage() {
           </div>
         </aside>
 
-        {/* Results */}
+        {/* Results - mobile optimized */}
         <section>
-          <div className='flex items-center justify-between mb-4'>
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6'>
             <div className='text-sm text-gray-600'>
-              Showing {filtered.length}{' '}
-              {categoryId
-                ? categoriesData.find(c => c.id === categoryId)?.name.toLowerCase() + ' services'
-                : 'businesses'}
+              <span className='font-medium text-gray-900'>
+                Showing {filtered.length}{' '}
+                {categoryId
+                  ? categoriesData.find(c => c.id === categoryId)?.name.toLowerCase() + ' services'
+                  : 'businesses'}
+              </span>
               {categoryId && (
-                <span className='ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs bg-teal-100 text-teal-800'>
+                <span className='ml-2 inline-flex items-center px-3 py-1 rounded-full text-xs bg-teal-100 text-teal-800 font-medium'>
                   {categoriesData.find(c => c.id === categoryId)?.name}
                   <button
                     onClick={() => {
@@ -351,7 +396,7 @@ export default function SearchPage() {
                       sp.delete('category')
                       router.push(`/${params?.lang}/search?` + sp.toString())
                     }}
-                    className='ml-1 text-teal-600 hover:text-teal-800'
+                    className='ml-2 text-teal-600 hover:text-teal-800 font-bold'
                   >
                     ×
                   </button>
@@ -361,10 +406,10 @@ export default function SearchPage() {
             <div className='flex items-center gap-2'>
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-2 text-sm rounded-md flex items-center gap-2 ${
+                className={`px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
                   viewMode === 'list'
-                    ? 'bg-teal-500 text-white'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
+                    : 'bg-white border border-teal-200 text-gray-700 hover:bg-teal-50 hover:border-teal-300'
                 }`}
               >
                 <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -375,14 +420,14 @@ export default function SearchPage() {
                     d='M4 6h16M4 10h16M4 14h16M4 18h16'
                   />
                 </svg>
-                List
+                <span className='hidden sm:inline'>List</span>
               </button>
               <button
                 onClick={() => setViewMode('map')}
-                className={`px-3 py-2 text-sm rounded-md flex items-center gap-2 ${
+                className={`px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
                   viewMode === 'map'
-                    ? 'bg-teal-500 text-white'
-                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
+                    : 'bg-white border border-teal-200 text-gray-700 hover:bg-teal-50 hover:border-teal-300'
                 }`}
               >
                 <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -393,7 +438,7 @@ export default function SearchPage() {
                     d='M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7'
                   />
                 </svg>
-                Map
+                <span className='hidden sm:inline'>Map</span>
               </button>
             </div>
           </div>
@@ -404,14 +449,15 @@ export default function SearchPage() {
               <p className='text-gray-600'>Try adjusting your search criteria</p>
             </div>
           ) : (
-            <div className='space-y-4'>
-              {filtered.map(business => {
+            <div className='space-y-4 sm:space-y-6'>
+              {filtered.map((business, index) => {
                 const businessServices = getBusinessServices(business.id)
                 const minPrice = businessMinPrice(business.id)
                 return (
                   <div
                     key={business.id}
-                    className='bg-white border rounded-lg overflow-hidden hover:shadow-md transition-shadow'
+                    className='group bg-white/80 backdrop-blur-sm border border-teal-100/50 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4 duration-500'
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div
                       className='cursor-pointer'
@@ -421,18 +467,18 @@ export default function SearchPage() {
                         )
                       }
                     >
-                      <div className='flex gap-4 p-4'>
-                        <div className='w-32 h-24 flex-shrink-0'>
+                      <div className='flex flex-col sm:flex-row gap-4 p-4 sm:p-6'>
+                        <div className='w-full sm:w-32 h-48 sm:h-24 flex-shrink-0'>
                           <BusinessAvatar
                             businessName={business.name}
                             imageSrc={business.coverImage}
                             imageAlt={business.name}
-                            className='w-full h-full rounded-lg'
+                            className='w-full h-full rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105'
                             size='xl'
                           />
                         </div>
                         <div className='flex-1 min-w-0'>
-                          <div className='flex items-start justify-between'>
+                          <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4'>
                             <div className='flex-1'>
                               <h3 className='text-lg font-semibold text-gray-900'>{business.name}</h3>
                               <div className='text-sm text-gray-600 mb-2'>{business.categories?.[0] || 'Service'}</div>
@@ -490,8 +536,8 @@ export default function SearchPage() {
 
                               <div className='text-sm text-gray-600 mt-2'>Open today: 8:00 AM - 7:00 PM</div>
                             </div>
-                            <div className='text-right ml-4 flex flex-col gap-2'>
-                              <button className='bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors'>
+                            <div className='flex sm:flex-col gap-2 sm:ml-4'>
+                              <button className='flex-1 sm:flex-none bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-4 py-2 sm:py-3 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'>
                                 Book Now
                               </button>
                               {business.branches && business.branches.length > 0 && (
@@ -502,9 +548,10 @@ export default function SearchPage() {
                                     setSelectedBranch(business.branches[0])
                                     setBranchModalOpen(true)
                                   }}
-                                  className='bg-white border border-teal-500 text-teal-500 hover:bg-teal-50 px-4 py-2 rounded-md text-sm font-medium transition-colors'
+                                  className='flex-1 sm:flex-none bg-white border border-teal-200 text-teal-600 hover:bg-teal-50 hover:border-teal-300 px-4 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-200'
                                 >
-                                  View Branches ({business.branches.length})
+                                  <span className='hidden sm:inline'>View Branches ({business.branches.length})</span>
+                                  <span className='sm:hidden'>Branches ({business.branches.length})</span>
                                 </button>
                               )}
                             </div>

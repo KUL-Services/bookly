@@ -91,15 +91,15 @@ function ProfilePage() {
   if (!hydrated || !booklyUser) return null
 
   return (
-    <div className='min-h-screen w-full px-4 md:px-6 py-8 flex flex-col items-center bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 relative overflow-hidden'>
+    <div className='min-h-screen w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col items-center bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 relative overflow-hidden'>
       {/* Animated background elements */}
       <div className='absolute inset-0 overflow-hidden pointer-events-none'>
         <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 rounded-full blur-3xl animate-pulse' />
         <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 rounded-full blur-3xl animate-pulse animation-delay-1000' />
       </div>
-      <div className='w-full max-w-4xl space-y-8 relative z-10'>
+      <div className='w-full max-w-4xl space-y-6 sm:space-y-8 relative z-10'>
         {/* Header */}
-        <div className='flex items-center justify-between gap-2 animate-in fade-in slide-in-from-top-4 duration-700'>
+        <div className='flex items-center justify-between gap-3 sm:gap-2 animate-in fade-in slide-in-from-top-4 duration-700'>
           <button
             onClick={goBack}
             className='inline-flex items-center p-2 rounded-full text-teal-600 hover:text-teal-700 hover:bg-teal-50 transition-all duration-200 hover:scale-110 active:scale-95'
@@ -108,7 +108,7 @@ function ProfilePage() {
           </button>
           <H1
             i18nTFn={t}
-            className='font-bold text-3xl bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'
+            className='font-bold text-2xl sm:text-3xl bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'
             stringProps={{ localeKey: 'profile.title' }}
           />
           <button
@@ -116,7 +116,7 @@ function ProfilePage() {
               logoutCustomer()
               router.replace(`/${params?.lang}/customer/login`)
             }}
-            className='px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium'
+            className='px-3 sm:px-4 py-2 text-xs sm:text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium'
           >
             Logout
           </button>
@@ -124,9 +124,9 @@ function ProfilePage() {
 
         {/* Profile Card */}
         <Card className='bg-white/80 backdrop-blur-sm shadow-xl border border-teal-100/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
-          <CardHeader className='flex flex-row items-start gap-4'>
+          <CardHeader className='flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6'>
             <CardTitle>
-              <div className='flex items-center gap-4'>
+              <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6'>
                 <div className='relative group'>
                   <Avatar
                     size='5XL'
@@ -137,9 +137,9 @@ function ProfilePage() {
                   />
                   <div className='absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg animate-pulse' />
                 </div>
-                <div>
-                  <H4 className='text-gray-900' stringProps={{ plainText: user.name }} />
-                  <div className='mt-1 flex flex-col sm:flex-row sm:items-center sm:gap-6 text-gray-600'>
+                <div className='text-center sm:text-left'>
+                  <H4 className='text-gray-900 text-xl sm:text-2xl' stringProps={{ plainText: user.name }} />
+                  <div className='mt-2 flex flex-col sm:flex-row sm:items-center sm:gap-6 text-gray-600 space-y-1 sm:space-y-0'>
                     <div className='flex items-center gap-2'>
                       <KulIcon icon='lucide:mail' iconClass='w-4 h-4 text-gray-500' />
                       <P stringProps={{ plainText: user.email }} />
@@ -170,7 +170,7 @@ function ProfilePage() {
             <CardDescription className='sr-only'>Profile overview</CardDescription>
           </CardHeader>
           <CardContent className='pt-0'>
-            <div className='mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6'>
+            <div className='mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6'>
               <div className='group rounded-xl border border-teal-100 p-6 bg-gradient-to-br from-teal-50 to-cyan-50 hover:from-teal-100 hover:to-cyan-100 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <H6 className='text-2xl font-bold text-teal-600 mb-1' stringProps={{ plainText: String(user.stats.totalBookings) }} />
                 <P i18nTFn={t} className='text-gray-700 font-medium' stringProps={{ localeKey: 'profile.totalBookings' }} />
@@ -200,7 +200,7 @@ function ProfilePage() {
               <H5 i18nTFn={t} className='text-gray-900' stringProps={{ localeKey: 'profile.bookings.title' }} />
             </CardTitle>
             <CardDescription className='w-full'>
-              <div className='mt-4 p-1 bg-gray-100 rounded-xl grid grid-cols-2 gap-1'>
+              <div className='mt-4 p-1 bg-gray-100 rounded-xl grid grid-cols-2 gap-1 touch-manipulation'>
                 <button
                   onClick={() => setActiveTab('upcoming')}
                   className={

@@ -6,7 +6,8 @@
       "Bash(npm run:*)",
       "Bash(ls:*)",
       "Bash(findstr:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

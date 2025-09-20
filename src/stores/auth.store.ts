@@ -243,9 +243,16 @@ export const useAuthStore = create<AuthState>()(
       }
     }),
     {
-      name: 'auth-store',
-      skipHydration: true,
-      storage: createJSONStorage(() => localStorage)
+      name: 'bookly-auth-store',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        booklyUser: state.booklyUser,
+        materializeUser: state.materializeUser,
+        userType: state.userType,
+        token: state.token,
+        lastActivity: state.lastActivity,
+        sessionExpiry: state.sessionExpiry
+      })
     }
   )
 )
