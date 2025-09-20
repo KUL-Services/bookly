@@ -217,7 +217,7 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
                     </FormItem>
                   )}
                 />
-                <Link href='/forgot-password' className='text-sm text-primary hover:underline'>
+                <Link href='/customer/forgot-password' className='text-sm text-primary hover:underline'>
                   Forgot your password?
                 </Link>
               </div>

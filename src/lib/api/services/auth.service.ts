@@ -30,6 +30,14 @@ export class AuthService {
     })
   }
 
+  static async forgotPasswordUser(email: string) {
+    return apiClient.post<{ verificationToken: string }>('/auth/user/forget-password', { email })
+  }
+
+  static async resetPasswordUser(data: { email: string; code: string; password: string }) {
+    return apiClient.post('/auth/user/reset-password', data)
+  }
+
   // Admin Authentication
   static async registerAdmin(data: RegisterAdminRequest) {
     return apiClient.post('/auth/admin/register', data)
@@ -49,6 +57,14 @@ export class AuthService {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     })
+  }
+
+  static async forgotPasswordAdmin(email: string) {
+    return apiClient.post<{ verificationToken: string }>('/auth/admin/forget-password', { email })
+  }
+
+  static async resetPasswordAdmin(data: { email: string; code: string; password: string }) {
+    return apiClient.post('/auth/admin/reset-password', data)
   }
 
   // Super Admin Authentication

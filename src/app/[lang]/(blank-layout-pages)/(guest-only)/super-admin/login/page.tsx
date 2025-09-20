@@ -3,7 +3,7 @@
 import SuperAdminLogin from '@/views/auth/SuperAdminLogin'
 
 const SuperAdminLoginPage = () => {
-  return <SuperAdminLogin />
+  return <SuperAdminLogin mode={'system'} />
 }
 
 export default SuperAdminLoginPage

@@ -1,3 +1,4 @@
+'use client'
 import { useState } from 'react'
 import { cn } from '@/bookly/lib/utils'
 
@@ -16,13 +17,7 @@ const sizeClasses = {
   xl: 'w-24 h-24 text-lg'
 }
 
-export const BusinessAvatar = ({
-  businessName,
-  imageSrc,
-  imageAlt,
-  className,
-  size = 'md'
-}: BusinessAvatarProps) => {
+export const BusinessAvatar = ({ businessName, imageSrc, imageAlt, className, size = 'md' }: BusinessAvatarProps) => {
   const [imageError, setImageError] = useState(false)
   const [isLoading, setIsLoading] = useState(!!imageSrc)
 
@@ -70,25 +65,29 @@ export const BusinessAvatar = ({
   const shouldShowFallback = !imageSrc || imageError
 
   return (
-    <div className={cn(
-      'relative flex items-center justify-center rounded-lg overflow-hidden',
-      sizeClasses[size],
-      className
-    )}>
+    <div
+      className={cn(
+        'relative flex items-center justify-center rounded-lg overflow-hidden',
+        sizeClasses[size],
+        className
+      )}
+    >
       {!shouldShowFallback && (
         <>
           {isLoading && (
-            <div className={cn(
-              'absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center',
-              sizeClasses[size]
-            )}>
-              <div className="w-1/3 h-1/3 bg-gray-300 rounded"></div>
+            <div
+              className={cn(
+                'absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center',
+                sizeClasses[size]
+              )}
+            >
+              <div className='w-1/3 h-1/3 bg-gray-300 rounded'></div>
             </div>
           )}
           <img
             src={imageSrc}
             alt={imageAlt || businessName}
-            className="w-full h-full object-cover"
+            className='w-full h-full object-cover'
             onLoad={handleImageLoad}
             onError={handleImageError}
             style={{ display: isLoading ? 'none' : 'block' }}
@@ -97,10 +96,12 @@ export const BusinessAvatar = ({
       )}
 
       {shouldShowFallback && (
-        <div className={cn(
-          'w-full h-full flex items-center justify-center text-white font-semibold',
-          generateColorFromName(businessName)
-        )}>
+        <div
+          className={cn(
+            'w-full h-full flex items-center justify-center text-white font-semibold',
+            generateColorFromName(businessName)
+          )}
+        >
           {getInitials(businessName)}
         </div>
       )}
