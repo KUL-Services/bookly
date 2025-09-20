@@ -36,6 +36,8 @@
           "lastName": { "type": "string" },
           "email": { "type": "string", "format": "email" },
           "verified": { "type": "boolean" },
+          "profilePhoto": { "type": "string", "format": "uuid", "nullable": true },
+          "profileComplete": { "type": "boolean", "default": false },
           "createdAt": { "type": "string", "format": "date-time" }
         }
       },
@@ -57,8 +59,11 @@
           "email": { "type": "string", "format": "email", "nullable": true },
           "description": { "type": "string", "nullable": true },
           "approved": { "type": "boolean" },
+          "logo": { "type": "string", "format": "uuid", "nullable": true },
+          "rating": { "type": "number", "format": "float", "minimum": 0, "maximum": 5, "default": 0 },
           "socialLinks": {
             "type": "array",
+            "maxItems": 10,
             "items": { "$ref": "#/components/schemas/SocialLink" }
           }
         }
@@ -86,6 +91,11 @@
           "location": { "type": "string" },
           "price": { "type": "number", "minimum": 0 },
           "duration": { "type": "number", "minimum": 1 },
+          "gallery": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "description": "Array of asset UUIDs for service images"
+          },
           "business": { "$ref": "#/components/schemas/Business" },
           "categories": {
             "type": "array",
@@ -94,6 +104,10 @@
           "branches": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/Branch" }
+          },
+          "staff": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Staff" }
           }
         }
       },
@@ -103,7 +117,12 @@
           "id": { "type": "string", "format": "uuid" },
           "name": { "type": "string" },
           "address": { "type": "string", "nullable": true },
-          "mobile": { "type": "string", "nullable": true }
+          "mobile": { "type": "string", "nullable": true },
+          "gallery": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "description": "Array of asset UUIDs for branch images"
+          }
         }
       },
       "Staff": {
@@ -112,7 +131,13 @@
           "id": { "type": "string", "format": "uuid" },
           "name": { "type": "string" },
           "mobile": { "type": "string", "nullable": true },
-          "branchId": { "type": "string", "format": "uuid" }
+          "branchId": { "type": "string", "format": "uuid" },
+          "profilePhoto": { "type": "string", "format": "uuid", "nullable": true },
+          "serviceIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "description": "Array of service UUIDs that staff can provide"
+          }
         }
       },
       "AssetFile": {
@@ -157,6 +182,31 @@
             }
           }
         ]
+      },
+      "Review": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+          "comment": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "userId": { "type": "string", "format": "uuid" },
+          "businessId": { "type": "string", "format": "uuid" },
+          "user": { "$ref": "#/components/schemas/User" },
+          "business": { "$ref": "#/components/schemas/Business" }
+        }
+      },
+      "Appointment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "date": { "type": "string", "format": "date-time" },
+          "status": { "type": "string", "enum": ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"] },
+          "userId": { "type": "string", "format": "uuid" },
+          "serviceId": { "type": "string", "format": "uuid" },
+          "user": { "$ref": "#/components/schemas/User" },
+          "service": { "$ref": "#/components/schemas/Service" }
+        }
       }
     }
   },
@@ -482,6 +532,18 @@
                     "type": "string",
                     "description": "Branch ID to link the staff member to",
                     "format": "uuid"
+                  },
+                  "profilePhoto": {
+                    "type": "string",
+                    "description": "Asset UUID for staff profile picture",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "serviceIds": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" },
+                    "description": "Array of service UUIDs that staff can provide",
+                    "nullable": true
                   }
                 }
               }
@@ -565,6 +627,18 @@
                     "type": "string",
                     "description": "Branch ID to link the staff member to",
                     "format": "uuid"
+                  },
+                  "profilePhoto": {
+                    "type": "string",
+                    "description": "Asset UUID for staff profile picture",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "serviceIds": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" },
+                    "description": "Array of service UUIDs that staff can provide",
+                    "nullable": true
                   }
                 }
               }
@@ -669,6 +743,7 @@
                     "type": "array",
                     "description": "Social media links",
                     "nullable": true,
+                    "maxItems": 10,
                     "items": {
                       "type": "object",
                       "required": ["platform", "url"],
@@ -968,6 +1043,41 @@
             "required": false,
             "schema": { "type": "string" },
             "description": "Filter businesses by name"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1 },
+            "description": "Page number for pagination"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "description": "Items per page"
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "Filter by category UUID"
+          },
+          {
+            "name": "priceFrom",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "number", "minimum": 0, "default": 0 },
+            "description": "Minimum price filter"
+          },
+          {
+            "name": "priceTo",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "number", "minimum": 0, "default": 999999 },
+            "description": "Maximum price filter"
           }
         ],
         "responses": {
@@ -1022,6 +1132,7 @@
                     "type": "array",
                     "description": "Replacement social links",
                     "nullable": true,
+                    "maxItems": 10,
                     "items": {
                       "type": "object",
                       "required": ["platform", "url"],
@@ -1030,6 +1141,12 @@
                         "url": { "type": "string", "format": "uri" }
                       }
                     }
+                  },
+                  "logo": {
+                    "type": "string",
+                    "description": "Asset UUID for business logo",
+                    "format": "uuid",
+                    "nullable": true
                   }
                 }
               }
@@ -1130,6 +1247,12 @@
                     "items": { "type": "string" },
                     "nullable": true,
                     "description": "IDs of branches to connect"
+                  },
+                  "gallery": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" },
+                    "nullable": true,
+                    "description": "Array of asset UUIDs for service images"
                   }
                 }
               }
@@ -1193,6 +1316,12 @@
                     "type": "array",
                     "items": { "type": "string" },
                     "nullable": true
+                  },
+                  "gallery": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" },
+                    "nullable": true,
+                    "description": "Array of asset UUIDs for service images"
                   }
                 }
               }
@@ -1311,6 +1440,12 @@
                     "items": { "type": "string" },
                     "nullable": true,
                     "description": "Service IDs to link to the branch"
+                  },
+                  "gallery": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" },
+                    "nullable": true,
+                    "description": "Array of asset UUIDs for branch images"
                   }
                 }
               }
@@ -1368,6 +1503,12 @@
                     "type": "array",
                     "items": { "type": "string" },
                     "nullable": true
+                  },
+                  "gallery": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" },
+                    "nullable": true,
+                    "description": "Array of asset UUIDs for branch images"
                   }
                 }
               }

@@ -25,15 +25,18 @@ export interface Business {
   name: string
   email?: string
   description?: string
-  isApproved?: boolean
-  status?: 'pending' | 'approved' | 'rejected'
+  approved?: boolean
+  logo?: string
+  rating?: number
   socialLinks?: SocialLink[]
+  services?: Service[] // Services offered by this business
+  branches?: Branch[] // Branches of this business
   owner?: {
     name: string
     email: string
   }
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface SocialLink {

@@ -7,154 +7,251 @@ import { Button } from '@/bookly/components/molecules'
 import { BusinessCard } from '@/bookly/components/molecules/business-card/business-card.component'
 import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
 import { BranchDetailsModal } from '@/bookly/components/molecules/branch-details-modal/branch-details-modal.component'
+import { SearchFilters, type FilterState, type FilterOptions } from '@/bookly/components/organisms/search-filters/search-filters.component'
+import { Pagination, PaginationInfo } from '@/bookly/components/ui/pagination'
 
 // API Imports
-import { BusinessService, ServicesService, CategoriesService } from '@/lib/api'
-import type { Business, Service, Category } from '@/lib/api'
+import { BusinessService, CategoriesService } from '@/lib/api'
+import type { Business, Category } from '@/lib/api'
 // Fallback data imports
-import { mockBusinesses, mockServices as services, categories } from '@/bookly/data/mock-data'
+import { mockServices as services, categories } from '@/bookly/data/mock-data'
 
 type SortKey = 'recommended' | 'rating_desc' | 'price_asc' | 'price_desc'
 type TimeOfDay = 'morning' | 'afternoon' | 'evening'
+
+interface SearchResponse {
+  data: Business[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+}
 
 export default function SearchPage() {
   const router = useRouter()
   const params = useParams<{ lang: string }>()
   const searchParams = useSearchParams()
 
-  const [businesses, setBusinesses] = useState<Business[]>([])
-  const [servicesData, setServicesData] = useState<Service[]>([])
+  const [businessesData, setBusinessesData] = useState<Business[]>([])
   const [categoriesData, setCategoriesData] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [filtersLoading, setFiltersLoading] = useState(false)
 
-  const [q, setQ] = useState<string>(searchParams.get('q') || '')
-  const [loc, setLoc] = useState<string>(searchParams.get('loc') || '')
-  const [priceMin, setPriceMin] = useState<number>(Number(searchParams.get('min') || 0))
-  const [priceMax, setPriceMax] = useState<number>(Number(searchParams.get('max') || 200))
-  const [sort, setSort] = useState<SortKey>((searchParams.get('sort') as SortKey) || 'recommended')
-  const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<TimeOfDay[]>([])
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(10)
+  const [totalResults, setTotalResults] = useState(0)
+
+  // Filter state using the new FilterState interface
+  const [filters, setFilters] = useState<FilterState>({
+    q: searchParams.get('name') || searchParams.get('q') || '',
+    location: searchParams.get('loc') || '',
+    category: searchParams.get('categoryId') ? [searchParams.get('categoryId')!] : [],
+    priceMin: searchParams.get('priceFrom') ? Number(searchParams.get('priceFrom')) : undefined,
+    priceMax: searchParams.get('priceTo') ? Number(searchParams.get('priceTo')) : undefined,
+    rating: Number(searchParams.get('rating') || 0),
+    sort: (searchParams.get('sort') as string) || 'recommended',
+    available: true,
+    timeOfDay: []
+  })
+
+  // Update current page from URL
+  useEffect(() => {
+    const pageParam = searchParams.get('page')
+    if (pageParam) {
+      setCurrentPage(Number(pageParam))
+    }
+  }, [searchParams])
+
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [selectedBranch, setSelectedBranch] = useState<any>(null)
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
   const [branchModalOpen, setBranchModalOpen] = useState(false)
 
-  const categorySlug = searchParams.get('category')
-  const categoryId = useMemo(() => {
-    if (!categorySlug) return undefined
-    return categoriesData.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === categorySlug)?.id
-  }, [categorySlug, categoriesData])
+  // Convert category names to IDs for filtering
+  const selectedCategoryIds = useMemo(() => {
+    return filters.category
+      .map(categoryName => categoriesData.find(c => c.name.toLowerCase().replace(/\s+/g, '-') === categoryName)?.id)
+      .filter(Boolean) as string[]
+  }, [filters.category, categoriesData])
+
+  // Fetch data with filters and pagination
+  const fetchData = async (applyFilters = false) => {
+    try {
+      if (applyFilters) {
+        setFiltersLoading(true)
+      } else {
+        setLoading(true)
+      }
+
+      // Build query parameters for Business API according to spec
+      const queryParams: any = {
+        page: currentPage,
+        pageSize: itemsPerPage
+      }
+
+      // Add optional parameters only if they have values
+      if (filters.q) queryParams.name = filters.q
+      if (selectedCategoryIds.length > 0) queryParams.categoryId = selectedCategoryIds[0] // API supports single categoryId
+
+      // API requires price parameters to always be sent
+      // Send actual values or defaults (0 for min, 999999 for max)
+      queryParams.priceFrom = (filters.priceMin !== undefined && filters.priceMin > 0) ? filters.priceMin : 0
+      queryParams.priceTo = (filters.priceMax !== undefined && filters.priceMax > 0) ? filters.priceMax : 999999
+
+      console.log('🔍 Price params:', { priceFrom: queryParams.priceFrom, priceTo: queryParams.priceTo })
+
+      console.log('🔍 Search page - Building query params:', {
+        filters: filters,
+        selectedCategoryIds,
+        queryParams
+      })
+
+      const [businessResponse, categoriesResponse] = await Promise.all([
+        BusinessService.getApprovedBusinesses(queryParams),
+        CategoriesService.getCategories()
+      ])
+
+      if (businessResponse.error) throw new Error(businessResponse.error)
+      if (categoriesResponse.error) throw new Error(categoriesResponse.error)
+
+      // Handle business response
+      const businessData = businessResponse.data || []
+
+      // API returns array of businesses directly
+      setBusinessesData(businessData)
+      setTotalResults(businessData.length) // TODO: API should return total count
+
+      setCategoriesData(categoriesResponse.data || [])
+
+      setError(null)
+    } catch (err) {
+      console.warn('API fetch failed, using fallback data:', err)
+      // Use fallback mock data when API fails - convert services to businesses format
+      const mockBusinesses = services.map(service => ({
+        id: service.businessId || service.id,
+        name: service.name,
+        email: null,
+        description: service.description,
+        approved: true,
+        logo: null,
+        rating: 0,
+        socialLinks: []
+      }))
+      setBusinessesData(mockBusinesses)
+      setCategoriesData(categories)
+      setTotalResults(mockBusinesses.length)
+      setError(null) // Don't show error since we have fallback data
+    } finally {
+      setLoading(false)
+      setFiltersLoading(false)
+    }
+  }
 
   // Fetch initial data
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        const [businessesResponse, servicesResponse, categoriesResponse] = await Promise.all([
-          BusinessService.getApprovedBusinesses(),
-          ServicesService.getServices(),
-          CategoriesService.getCategories()
-        ])
-
-        if (businessesResponse.error) throw new Error(businessesResponse.error)
-        if (servicesResponse.error) throw new Error(servicesResponse.error)
-        if (categoriesResponse.error) throw new Error(categoriesResponse.error)
-
-        setBusinesses(businessesResponse.data || [])
-        setServicesData(servicesResponse.data || [])
-        setCategoriesData(categoriesResponse.data || [])
-        setError(null)
-      } catch (err) {
-        console.warn('API fetch failed, using fallback data:', err)
-        // Use fallback mock data when API fails
-        setBusinesses(mockBusinesses)
-        setServicesData(services)
-        setCategoriesData(categories)
-        setError(null) // Don't show error since we have fallback data
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchData()
-  }, [])
+  }, [currentPage])
+
+  // Fetch data when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1) // Reset to first page when filters change
+    } else {
+      fetchData(true)
+    }
+  }, [filters])
 
   const applyToUrl = () => {
     const sp = new URLSearchParams()
-    if (q) sp.set('q', q)
-    if (loc) sp.set('loc', loc)
-    if (priceMin) sp.set('min', String(priceMin))
-    if (priceMax !== 9999) sp.set('max', String(priceMax))
-    if (categorySlug) sp.set('category', categorySlug)
-    if (sort && sort !== 'recommended') sp.set('sort', sort)
+    if (filters.q) sp.set('name', filters.q)
+    if (filters.location) sp.set('loc', filters.location)
+    if (filters.priceMin !== undefined && filters.priceMin > 0) sp.set('priceFrom', String(filters.priceMin))
+    if (filters.priceMax !== undefined && filters.priceMax > 0) sp.set('priceTo', String(filters.priceMax))
+    if (selectedCategoryIds.length > 0) sp.set('categoryId', selectedCategoryIds[0])
+    if (filters.rating > 0) sp.set('rating', String(filters.rating))
+    if (filters.sort && filters.sort !== 'recommended') sp.set('sort', filters.sort)
+    if (currentPage > 1) sp.set('page', String(currentPage))
     router.push(`/${params?.lang}/search?` + sp.toString())
   }
 
-  const businessMinPrice = (businessId: string) => {
-    const businessServices = servicesData.filter(s => s.businessId === businessId)
-    const prices = businessServices.map(s => s.price)
-    return prices.length ? Math.min(...prices) : undefined
+  // Filter options for the SearchFilters component
+  const filterOptions: FilterOptions = {
+    categories: categoriesData.map(cat => ({
+      id: cat.name.toLowerCase().replace(/\s+/g, '-'),
+      name: cat.name,
+      count: undefined // TODO: Add count from API
+    })),
+    locations: [
+      { value: 'london', label: 'London', count: undefined },
+      { value: 'manchester', label: 'Manchester', count: undefined },
+      { value: 'birmingham', label: 'Birmingham', count: undefined },
+      { value: 'glasgow', label: 'Glasgow', count: undefined }
+    ],
+    priceRange: { min: 0, max: 1000 },
+    sortOptions: [
+      { value: 'recommended', label: 'Recommended' },
+      { value: 'rating:desc', label: 'Rating: High to Low' },
+      { value: 'price:asc', label: 'Price: Low to High' },
+      { value: 'price:desc', label: 'Price: High to Low' },
+      { value: 'name:asc', label: 'Name: A to Z' }
+    ],
+    timeSlots: [
+      { value: 'morning', label: 'Morning (6AM - 12PM)' },
+      { value: 'afternoon', label: 'Afternoon (12PM - 6PM)' },
+      { value: 'evening', label: 'Evening (6PM - 12AM)' }
+    ],
+    durationOptions: [
+      { value: 30, label: '30 minutes' },
+      { value: 60, label: '1 hour' },
+      { value: 90, label: '1.5 hours' },
+      { value: 120, label: '2 hours' },
+      { value: 180, label: '3+ hours' }
+    ]
   }
 
-  const getBusinessServices = (businessId: string) => {
-    return servicesData.filter(s => s.businessId === businessId)
+  const handleFiltersChange = (newFilters: FilterState) => {
+    setFilters(newFilters)
   }
 
-  const filtered = useMemo(() => {
-    let list = businesses.filter(business => {
-      // Category filter
-      if (categoryId) {
-        const businessServices = servicesData.filter(s => s.businessId === business.id)
-        const hasCategory = businessServices.some(service => service.categories?.some(cat => cat.id === categoryId))
-        if (!hasCategory) return false
-      }
+  const handleApplyFilters = () => {
+    applyToUrl()
+    fetchData(true)
+  }
 
-      // Query filter
-      const businessText = (business.name + ' ' + (business.about || '')).toLowerCase()
-      const serviceText = servicesData
-        .filter(s => s.businessId === business.id)
-        .map(s => s.name.toLowerCase())
-        .join(' ')
-
-      const matchesQ = q ? businessText.includes(q.toLowerCase()) || serviceText.includes(q.toLowerCase()) : true
-      if (!matchesQ) return false
-
-      // Location filter (simple name/city match)
-      const matchesLoc = loc
-        ? business.name.toLowerCase().includes(loc.toLowerCase()) ||
-          business.city.toLowerCase().includes(loc.toLowerCase()) ||
-          business.address.toLowerCase().includes(loc.toLowerCase())
-        : true
-      if (!matchesLoc) return false
-
-      // Price filter
-      const minPrice = businessMinPrice(business.id)
-      if (minPrice === undefined) return true
-      if (minPrice < priceMin) return false
-      if (minPrice > priceMax) return false
-
-      return true
-    })
-
-    // Sorting
-    const withPrice = list.map(b => ({ b, p: businessMinPrice(b.id) ?? 9999 }))
-    switch (sort) {
-      case 'rating_desc':
-        // Sort by creation date as proxy for rating since we don't have ratings yet
-        withPrice.sort((a, b) => new Date(b.b.createdAt).getTime() - new Date(a.b.createdAt).getTime())
-        break
-      case 'price_asc':
-        withPrice.sort((a, b) => a.p - b.p)
-        break
-      case 'price_desc':
-        withPrice.sort((a, b) => b.p - a.p)
-        break
-      default:
-        // Recommended - sort by creation date
-        withPrice.sort((a, b) => new Date(b.b.createdAt).getTime() - new Date(a.b.createdAt).getTime())
+  const handleResetFilters = () => {
+    const resetFilters: FilterState = {
+      q: '',
+      location: '',
+      category: [],
+      priceMin: undefined,
+      priceMax: undefined,
+      rating: 0,
+      sort: 'recommended',
+      available: true,
+      timeOfDay: []
     }
-    return withPrice.map(x => x.b)
-  }, [businesses, servicesData, categoryId, q, loc, priceMin, priceMax, sort])
+    setFilters(resetFilters)
+    setCurrentPage(1)
+    router.push(`/${params?.lang}/search`)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+    applyToUrl()
+  }
+
+  // Use businesses data directly since API handles filtering
+  const filteredBusinesses = useMemo(() => {
+    return businessesData
+  }, [businessesData])
+
+  const totalPages = Math.ceil(totalResults / itemsPerPage)
 
   if (loading) {
     return (
@@ -186,19 +283,19 @@ export default function SearchPage() {
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-3 sm:py-4'>
           <div className='flex flex-col sm:flex-row gap-3'>
             <SearchInput
-              value={q}
-              onChange={e => setQ(e.target.value)}
+              value={filters.q}
+              onChange={e => setFilters({ ...filters, q: e.target.value })}
               placeholderProps={{ plainText: 'What are you looking for? (e.g. haircut, nails)' }}
               className='flex-1 text-sm sm:text-base'
             />
             <SearchInput
-              value={loc}
-              onChange={e => setLoc(e.target.value)}
+              value={filters.location}
+              onChange={e => setFilters({ ...filters, location: e.target.value })}
               placeholderProps={{ plainText: 'Location' }}
               className='flex-1 text-sm sm:text-base'
             />
             <Button
-              onClick={applyToUrl}
+              onClick={handleApplyFilters}
               buttonText={{ plainText: 'Search' }}
               className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'
             />
@@ -206,203 +303,29 @@ export default function SearchPage() {
         </div>
       </div>
 
-      <div className='mx-auto max-w-6xl px-4 sm:px-6 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-[280px,1fr] gap-4 sm:gap-6'>
-        {/* Filters - mobile optimized */}
-        <aside className='bg-white/80 backdrop-blur-sm border border-teal-100/50 rounded-xl p-4 sm:p-6 h-fit shadow-lg lg:sticky lg:top-24'>
-          <div className='flex items-center gap-2 mb-6'>
-            <svg className='w-5 h-5 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z'
-              />
-            </svg>
-            <h3 className='font-semibold text-gray-900'>Filters</h3>
-          </div>
-
-          <div className='mb-6'>
-            <label className='block text-sm font-medium text-gray-700 mb-3'>Sort by</label>
-            <select
-              className='w-full border border-teal-200 rounded-lg px-3 py-3 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
-              value={sort}
-              onChange={e => setSort(e.target.value as SortKey)}
-            >
-              <option value='recommended'>Recommended</option>
-              <option value='rating_desc'>Rating: High to Low</option>
-              <option value='price_asc'>Price: Low to High</option>
-              <option value='price_desc'>Price: High to Low</option>
-            </select>
-          </div>
-
-          <div className='mb-6'>
-            <h4 className='text-sm font-medium text-gray-700 mb-3'>Time of day</h4>
-            <div className='space-y-2'>
-              {[
-                { value: 'morning', label: 'Morning' },
-                { value: 'afternoon', label: 'Afternoon' },
-                { value: 'evening', label: 'Evening' }
-              ].map(time => (
-                <label key={time.value} className='flex items-center gap-3 cursor-pointer hover:bg-teal-50 p-2 rounded-lg transition-colors duration-200'>
-                  <input
-                    type='checkbox'
-                    checked={selectedTimeOfDay.includes(time.value as TimeOfDay)}
-                    onChange={e => {
-                      if (e.target.checked) {
-                        setSelectedTimeOfDay([...selectedTimeOfDay, time.value as TimeOfDay])
-                      } else {
-                        setSelectedTimeOfDay(selectedTimeOfDay.filter(t => t !== time.value))
-                      }
-                    }}
-                    className='w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500 focus:ring-2'
-                  />
-                  <span className='text-sm text-gray-700 font-medium'>{time.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className='mb-6'>
-            <h4 className='text-sm font-medium text-gray-700 mb-3'>Categories</h4>
-            <div className='space-y-1 max-h-48 overflow-y-auto'>
-              <label className='flex items-center gap-3 cursor-pointer hover:bg-teal-50 p-2 rounded-lg transition-colors duration-200'>
-                <input
-                  type='radio'
-                  name='category'
-                  checked={!categoryId}
-                  onChange={() => {
-                    const sp = new URLSearchParams(searchParams.toString())
-                    sp.delete('category')
-                    router.push(`/${params?.lang}/search?` + sp.toString())
-                  }}
-                  className='w-5 h-5 text-teal-600 border-gray-300 focus:ring-teal-500 focus:ring-2'
-                />
-                <span className='text-sm text-gray-700 font-medium'>All Categories</span>
-              </label>
-              {categoriesData.map(category => (
-                <label key={category.id} className='flex items-center gap-3 cursor-pointer hover:bg-teal-50 p-2 rounded-lg transition-colors duration-200'>
-                  <input
-                    type='radio'
-                    name='category'
-                    checked={categoryId === category.id}
-                    onChange={() => {
-                      const sp = new URLSearchParams(searchParams.toString())
-                      const slug = category.name.toLowerCase().replace(/\s+/g, '-')
-                      sp.set('category', slug)
-                      router.push(`/${params?.lang}/search?` + sp.toString())
-                    }}
-                    className='w-5 h-5 text-teal-600 border-gray-300 focus:ring-teal-500 focus:ring-2'
-                  />
-                  <span className='text-sm text-gray-700 font-medium'>{category.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className='mb-6'>
-            <h4 className='text-sm font-medium text-gray-700 mb-3'>Price Range</h4>
-            <div className='space-y-3'>
-              {/* Mobile: Stacked Layout */}
-              <div className='block md:hidden space-y-2'>
-                <input
-                  type='number'
-                  value={priceMin}
-                  onChange={e => setPriceMin(Number(e.target.value || 0))}
-                  className='w-full border border-teal-200 rounded-lg px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
-                  min={0}
-                  placeholder='Minimum price'
-                />
-                <input
-                  type='number'
-                  value={priceMax}
-                  onChange={e => setPriceMax(Number(e.target.value || 200))}
-                  className='w-full border border-teal-200 rounded-lg px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
-                  min={0}
-                  placeholder='Maximum price'
-                />
-              </div>
-
-              {/* Desktop: Side by Side Layout */}
-              <div className='hidden md:flex items-center gap-3'>
-                <div className='flex-1'>
-                  <input
-                    type='number'
-                    value={priceMin}
-                    onChange={e => setPriceMin(Number(e.target.value || 0))}
-                    className='w-full border border-teal-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
-                    min={0}
-                    placeholder='Min'
-                  />
-                </div>
-                <span className='text-gray-400 font-medium text-sm flex-shrink-0'>to</span>
-                <div className='flex-1'>
-                  <input
-                    type='number'
-                    value={priceMax}
-                    onChange={e => setPriceMax(Number(e.target.value || 200))}
-                    className='w-full border border-teal-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all duration-200'
-                    min={0}
-                    placeholder='Max'
-                  />
-                </div>
-              </div>
-
-              <div className='text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2'>
-                Range: ${priceMin} - ${priceMax === 0 ? '∞' : `$${priceMax}`}
-              </div>
-            </div>
-          </div>
-
-          <div className='flex gap-3'>
-            <Button
-              onClick={applyToUrl}
-              variant='contained'
-              buttonText={{ plainText: 'Apply' }}
-              className='flex-1 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold py-2 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'
-            />
-            <Button
-              variant='outlined'
-              buttonText={{ plainText: 'Reset' }}
-              className='flex-1 border-teal-200 text-teal-600 hover:bg-teal-50 py-2 rounded-lg transition-all duration-200'
-              onClick={() => {
-                setQ('')
-                setLoc('')
-                setPriceMin(0)
-                setPriceMax(200)
-                setSort('recommended')
-                setSelectedTimeOfDay([])
-                router.push(`/${params?.lang}/search`)
-              }}
-            />
-          </div>
-        </aside>
+      <div className='mx-auto max-w-6xl px-4 sm:px-6 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-4 sm:gap-6'>
+        {/* Enhanced Filters */}
+        <SearchFilters
+          filters={filters}
+          options={filterOptions}
+          onFiltersChange={handleFiltersChange}
+          onApplyFilters={handleApplyFilters}
+          onResetFilters={handleResetFilters}
+          loading={filtersLoading}
+          className='lg:sticky lg:top-24'
+        />
 
         {/* Results - mobile optimized */}
         <section>
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6'>
-            <div className='text-sm text-gray-600'>
-              <span className='font-medium text-gray-900'>
-                Showing {filtered.length}{' '}
-                {categoryId
-                  ? categoriesData.find(c => c.id === categoryId)?.name.toLowerCase() + ' services'
-                  : 'businesses'}
-              </span>
-              {categoryId && (
-                <span className='ml-2 inline-flex items-center px-3 py-1 rounded-full text-xs bg-teal-100 text-teal-800 font-medium'>
-                  {categoriesData.find(c => c.id === categoryId)?.name}
-                  <button
-                    onClick={() => {
-                      const sp = new URLSearchParams(searchParams.toString())
-                      sp.delete('category')
-                      router.push(`/${params?.lang}/search?` + sp.toString())
-                    }}
-                    className='ml-2 text-teal-600 hover:text-teal-800 font-bold'
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-            </div>
+            <PaginationInfo
+              page={currentPage}
+              limit={itemsPerPage}
+              total={totalResults}
+              totalPages={totalPages}
+              hasNext={currentPage < totalPages}
+              hasPrev={currentPage > 1}
+            />
             <div className='flex items-center gap-2'>
               <button
                 onClick={() => setViewMode('list')}
@@ -443,16 +366,19 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {filtered.length === 0 ? (
+          {filteredBusinesses.length === 0 ? (
             <div className='text-center py-12'>
               <h3 className='text-lg font-semibold text-gray-900 mb-2'>No businesses found</h3>
               <p className='text-gray-600'>Try adjusting your search criteria</p>
             </div>
           ) : (
             <div className='space-y-4 sm:space-y-6'>
-              {filtered.map((business, index) => {
-                const businessServices = getBusinessServices(business.id)
-                const minPrice = businessMinPrice(business.id)
+              {filteredBusinesses.map((business, index) => {
+                const minPrice = business.services && business.services.length > 0
+                  ? Math.min(...business.services.map(s => s.price))
+                  : null
+                const serviceCount = business.services?.length || 0
+
                 return (
                   <div
                     key={business.id}
@@ -463,95 +389,107 @@ export default function SearchPage() {
                       className='cursor-pointer'
                       onClick={() =>
                         router.push(
-                          `/${params?.lang}/business/${encodeURIComponent(business.name.toLowerCase().replace(/\s+/g, '-'))}`
+                          `/${params?.lang}/business/${business.id}`
                         )
                       }
                     >
                       <div className='flex flex-col sm:flex-row gap-4 p-4 sm:p-6'>
                         <div className='w-full sm:w-32 h-48 sm:h-24 flex-shrink-0'>
-                          <BusinessAvatar
-                            businessName={business.name}
-                            imageSrc={business.coverImage}
-                            imageAlt={business.name}
-                            className='w-full h-full rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105'
-                            size='xl'
-                          />
+                          <div className='w-full h-full bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 flex items-center justify-center'>
+                            <div className='text-center'>
+                              <div className='text-lg font-bold text-teal-600'>{business.name}</div>
+                              <div className='text-xs text-teal-500'>★ {business.rating || 0}/5</div>
+                              {minPrice && (
+                                <div className='text-xs text-teal-500'>From ${minPrice}</div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                         <div className='flex-1 min-w-0'>
                           <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4'>
                             <div className='flex-1'>
                               <h3 className='text-lg font-semibold text-gray-900'>{business.name}</h3>
-                              <div className='text-sm text-gray-600 mb-2'>{business.categories?.[0] || 'Service'}</div>
+                              <div className='text-sm text-gray-600 mb-2'>
+                                {serviceCount > 0 ? `${serviceCount} services available` : 'Business'}
+                              </div>
 
                               <div className='flex items-center gap-2 mb-2'>
                                 <div className='flex items-center'>
-                                  {[...Array(5)].map((_, i) => (
-                                    <span key={i} className='text-yellow-400 text-sm'>
-                                      {i < Math.floor(business.averageRating) ? '★' : '☆'}
-                                    </span>
-                                  ))}
+                                  <span className='text-sm font-medium text-teal-600'>★ {business.rating || 0}/5</span>
+                                  {business.email && (
+                                    <>
+                                      <span className='text-sm text-gray-500 mx-2'>•</span>
+                                      <span className='text-sm text-gray-500'>{business.email}</span>
+                                    </>
+                                  )}
+                                  {minPrice && (
+                                    <>
+                                      <span className='text-sm text-gray-500 mx-2'>•</span>
+                                      <span className='text-sm font-medium text-teal-600'>From ${minPrice}</span>
+                                    </>
+                                  )}
                                 </div>
-                                <span className='text-sm font-medium'>{business.averageRating}</span>
-                                <span className='text-sm text-gray-500'>({business.totalRatings} reviews)</span>
                               </div>
 
-                              <div className='flex items-center gap-1 text-sm text-gray-500 mb-3'>
-                                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                  <path
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                    strokeWidth={2}
-                                    d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z'
-                                  />
-                                  <path
-                                    strokeLinecap='round'
-                                    strokeLinejoin='round'
-                                    strokeWidth={2}
-                                    d='M15 11a3 3 0 11-6 0 3 3 0 016 0z'
-                                  />
-                                </svg>
-                                {business.address}, {business.city}
-                              </div>
+                              <p className='text-sm text-gray-600 line-clamp-2 mb-3'>{business.description}</p>
 
-                              <p className='text-sm text-gray-600 line-clamp-2'>{business.about}</p>
-
-                              {businessServices.length > 0 && (
+                              {/* Display services */}
+                              {business.services && business.services.length > 0 && (
                                 <div className='mt-3'>
-                                  <div className='text-xs text-gray-500 mb-1'>Services offered:</div>
-                                  <div className='flex flex-wrap gap-1'>
-                                    {businessServices.slice(0, 3).map(service => (
-                                      <span
+                                  <div className='text-xs text-gray-500 mb-2'>Popular Services:</div>
+                                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+                                    {business.services.slice(0, 4).map(service => (
+                                      <div
                                         key={service.id}
-                                        className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800'
+                                        className='bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors'
                                       >
-                                        {service.name} - £{service.price}
-                                      </span>
+                                        <div className='flex items-center justify-between'>
+                                          <span className='text-sm font-medium text-gray-900'>{service.name}</span>
+                                          <span className='text-sm font-bold text-teal-600'>${service.price}</span>
+                                        </div>
+                                        <div className='text-xs text-gray-500'>{service.duration}min</div>
+                                      </div>
                                     ))}
-                                    {businessServices.length > 3 && (
-                                      <span className='text-xs text-gray-500'>+{businessServices.length - 3} more</span>
-                                    )}
                                   </div>
+                                  {business.services.length > 4 && (
+                                    <div className='text-xs text-gray-500 mt-2'>
+                                      +{business.services.length - 4} more services
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
-                              <div className='text-sm text-gray-600 mt-2'>Open today: 8:00 AM - 7:00 PM</div>
+                              {business.socialLinks && business.socialLinks.length > 0 && (
+                                <div className='mt-3'>
+                                  <div className='text-xs text-gray-500 mb-1'>Social Links:</div>
+                                  <div className='flex flex-wrap gap-1'>
+                                    {business.socialLinks.map((link, linkIndex) => (
+                                      <span
+                                        key={linkIndex}
+                                        className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-teal-100 text-teal-800'
+                                      >
+                                        {link.platform}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             <div className='flex sm:flex-col gap-2 sm:ml-4'>
                               <button className='flex-1 sm:flex-none bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-4 py-2 sm:py-3 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'>
-                                Book Now
+                                View Business
                               </button>
-                              {business.branches && business.branches.length > 0 && (
+                              {serviceCount > 0 && (
                                 <button
                                   onClick={e => {
                                     e.stopPropagation()
-                                    setSelectedBusiness(business)
-                                    setSelectedBranch(business.branches[0])
-                                    setBranchModalOpen(true)
+                                    // Navigate to services or show services modal
+                                    router.push(`/${params?.lang}/business/${business.id}#services`)
                                   }}
                                   className='flex-1 sm:flex-none bg-white border border-teal-200 text-teal-600 hover:bg-teal-50 hover:border-teal-300 px-4 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-200'
                                 >
-                                  <span className='hidden sm:inline'>View Branches ({business.branches.length})</span>
-                                  <span className='sm:hidden'>Branches ({business.branches.length})</span>
+                                  <span className='hidden sm:inline'>View Services ({serviceCount})</span>
+                                  <span className='sm:hidden'>Services ({serviceCount})</span>
                                 </button>
                               )}
                             </div>
@@ -564,33 +502,22 @@ export default function SearchPage() {
               })}
             </div>
           )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className='mt-8 flex justify-center'>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                disabled={filtersLoading}
+              />
+            </div>
+          )}
         </section>
       </div>
 
-      {/* Branch Details Modal */}
-      {selectedBranch && selectedBusiness && (
-        <BranchDetailsModal
-          isOpen={branchModalOpen}
-          onClose={() => {
-            setBranchModalOpen(false)
-            setSelectedBranch(null)
-            setSelectedBusiness(null)
-          }}
-          branch={selectedBranch}
-          businessName={selectedBusiness.name}
-          businessImage={selectedBusiness.coverImage}
-          services={servicesData.filter(s => s.businessId === selectedBusiness.id)}
-          staff={[]} // TODO: Add staff data if available
-          allBranches={selectedBusiness.branches || []}
-          onBranchChange={newBranch => {
-            setSelectedBranch(newBranch)
-          }}
-          onBookService={serviceId => {
-            console.log('Booking service:', serviceId)
-            // TODO: Implement booking logic
-          }}
-        />
-      )}
+      {/* Branch Details Modal - Removed since we're showing businesses now */}
     </div>
   )
 }

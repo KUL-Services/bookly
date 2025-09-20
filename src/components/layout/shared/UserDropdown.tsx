@@ -24,6 +24,9 @@ import Button from '@mui/material/Button'
 // Third-party Imports
 import { signOut, useSession } from 'next-auth/react'
 
+// Store Imports
+import { useAuthStore } from '@/stores/auth.store'
+
 // Type Imports
 import type { Locale } from '@configs/i18n'
 
@@ -55,6 +58,7 @@ const UserDropdown = () => {
   const { data: session } = useSession()
   const { settings } = useSettings()
   const { lang: locale } = useParams()
+  const { logoutBusiness, userType, materializeUser } = useAuthStore()
 
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
@@ -74,8 +78,15 @@ const UserDropdown = () => {
 
   const handleUserLogout = async () => {
     try {
-      // Sign out from the app
-      await signOut({ callbackUrl: process.env.NEXT_PUBLIC_APP_URL })
+      // Check if user is using custom auth store (business user)
+      if (userType === 'business' && materializeUser) {
+        // Custom logout for business users
+        logoutBusiness()
+        router.push(getLocalizedUrl('/login', locale as Locale))
+      } else {
+        // NextAuth logout for other users
+        await signOut({ callbackUrl: process.env.NEXT_PUBLIC_APP_URL })
+      }
     } catch (error) {
       console.error(error)
 
@@ -95,7 +106,7 @@ const UserDropdown = () => {
       >
         <Avatar
           ref={anchorRef}
-          alt={session?.user?.name || ''}
+          alt={materializeUser?.name || session?.user?.name || ''}
           src={session?.user?.image || ''}
           onClick={handleDropdownOpen}
           className='cursor-pointer bs-[38px] is-[38px]'
@@ -123,12 +134,12 @@ const UserDropdown = () => {
               <ClickAwayListener onClickAway={e => handleDropdownClose(e as MouseEvent | TouchEvent)}>
                 <MenuList>
                   <div className='flex items-center plb-2 pli-4 gap-2' tabIndex={-1}>
-                    <Avatar alt={session?.user?.name || ''} src={session?.user?.image || ''} />
+                    <Avatar alt={materializeUser?.name || session?.user?.name || ''} src={session?.user?.image || ''} />
                     <div className='flex items-start flex-col'>
                       <Typography variant='body2' className='font-medium' color='text.primary'>
-                        {session?.user?.name || ''}
+                        {materializeUser?.name || session?.user?.name || ''}
                       </Typography>
-                      <Typography variant='caption'>{session?.user?.email || ''}</Typography>
+                      <Typography variant='caption'>{materializeUser?.email || session?.user?.email || ''}</Typography>
                     </div>
                   </div>
                   <Divider className='mlb-1' />

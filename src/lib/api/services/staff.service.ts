@@ -19,6 +19,6 @@ export class StaffService {
 
   // Admin only - Delete staff member
   static async deleteStaff(id: string) {
-    return apiClient.delete<Staff>(`/staff/${id}`)
+    return apiClient.delete<{ message: string }>(`/staff/${id}`)
   }
 }

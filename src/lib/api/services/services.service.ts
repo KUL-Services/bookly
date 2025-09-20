@@ -1,8 +1,15 @@
 import { apiClient } from '../api-client'
 import type { Service, CreateServiceRequest, UpdateServiceRequest } from '../types'
 
+// Note: API spec currently doesn't expose query parameters for services
+// UI should handle filtering client-side as per api-flow-map.md
+interface ServiceQueryParams {
+  // Currently no query params supported by API spec
+  // Client-side filtering should be used instead
+}
+
 export class ServicesService {
-  // Public - Get all services (returns services with categories and branches)
+  // Public - Get all services (no query parameters supported by API)
   static async getServices() {
     return apiClient.get<Service[]>('/service')
   }
