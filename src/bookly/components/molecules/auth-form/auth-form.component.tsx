@@ -13,21 +13,26 @@ import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
 import KulIcon from '@/bookly/components/atoms/kul-icon/kul-icon.component'
 import { FontSize } from '@/bookly/constants/enums'
+import { Alert, AlertDescription } from '@/bookly/components/ui/alert'
+import { AlertCircle, CheckCircle } from 'lucide-react'
+import { suppressZodConsoleErrors, restoreConsoleErrors } from '@/bookly/lib/suppress-console-errors'
 
 const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required').min(8, 'Password must be at least 8 characters'),
   rememberMe: z.boolean().optional()
 })
 
 const registerSchema = z
   .object({
-    firstName: z.string().min(2, 'First name must be at least 2 characters'),
-    lastName: z.string().min(2, 'Last name must be at least 2 characters'),
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
-    terms: z.boolean().refine(value => value, 'You must accept the terms and conditions')
+    firstName: z.string().min(1, 'First name is required').min(2, 'First name must be at least 2 characters'),
+    lastName: z.string().min(1, 'Last name is required').min(2, 'Last name must be at least 2 characters'),
+    email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
+    password: z.string().min(1, 'Password is required').min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+    terms: z.boolean().refine(value => value === true, {
+      message: 'You must accept the terms and conditions'
+    })
   })
   .refine(data => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -37,16 +42,30 @@ const registerSchema = z
 type AuthFormProps = {
   type: 'login' | 'register'
   onSubmit: (values: z.infer<typeof loginSchema> | z.infer<typeof registerSchema>) => void
+  loading?: boolean
+  error?: string | null
+  successMessage?: string | null
+  onClearError?: () => void
 }
 
-export function AuthForm({ type, onSubmit }: AuthFormProps) {
+
+export function AuthForm({ type, onSubmit, loading = false, error, successMessage, onClearError }: AuthFormProps) {
   const { t } = useTranslation()
   const schema = type === 'login' ? loginSchema : registerSchema
   const [showPassword, setShowPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
 
+  // Suppress Zod console errors
+  React.useEffect(() => {
+    suppressZodConsoleErrors()
+    return () => {
+      restoreConsoleErrors()
+    }
+  }, [])
+
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
+    mode: 'onTouched',
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -56,6 +75,17 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
       ...(type === 'register' ? { confirmPassword: '' } : {})
     }
   })
+
+  const handleSubmit = async (values: any) => {
+    try {
+      await onSubmit(values)
+    } catch (error) {
+      // Handle only non-validation errors
+      if (error instanceof Error && !error.message.includes('validation')) {
+        console.error('Form submission error:', error)
+      }
+    }
+  }
 
   const isLogin = type === 'login'
 
@@ -70,8 +100,33 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error}
+              {onClearError && (
+                <button
+                  type="button"
+                  onClick={onClearError}
+                  className="ml-2 text-sm underline hover:no-underline"
+                >
+                  Dismiss
+                </button>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {successMessage && (
+          <Alert variant="success" className="mb-4">
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>{successMessage}</AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4'>
             {!isLogin && (
               <div className='grid grid-cols-2 gap-4'>
                 <FormField
@@ -223,8 +278,19 @@ export function AuthForm({ type, onSubmit }: AuthFormProps) {
               </div>
             )}
 
-            <Button type='submit' className='w-full text-teal-50 bg-teal-500 hover:bg-teal-600'>
-              {isLogin ? 'Log in' : 'Create account'}
+            <Button
+              type='submit'
+              className='w-full text-teal-50 bg-teal-500 hover:bg-teal-600'
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  {isLogin ? 'Signing in...' : 'Creating account...'}
+                </>
+              ) : (
+                isLogin ? 'Log in' : 'Create account'
+              )}
             </Button>
           </form>
         </Form>

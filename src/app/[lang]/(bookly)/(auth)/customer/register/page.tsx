@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { AuthForm, Button } from '@/bookly/components/molecules'
 import { PageProps } from '@/bookly/types'
 import { useRouter } from 'next/navigation'
@@ -8,7 +9,11 @@ import { useAuthStore } from '@/stores/auth.store'
 export default function RegisterPage({ params }: PageProps) {
   const { lang: locale } = params
   const router = useRouter()
-  const registerCustomer = useAuthStore(s => s.registerCustomer)
+  const registerCustomer = useAuthStore(state => state.registerCustomer)
+  const loading = useAuthStore(state => state.loading)
+  const error = useAuthStore(state => state.error)
+  const clearError = useAuthStore(state => state.clearError)
+  const [registrationSuccess, setRegistrationSuccess] = React.useState(false)
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 relative overflow-hidden'>
@@ -32,10 +37,21 @@ export default function RegisterPage({ params }: PageProps) {
           <div className='bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-teal-100/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
             <AuthForm
               type='register'
+              loading={loading}
+              error={error}
+              onClearError={clearError}
+              successMessage={registrationSuccess ? 'Registration successful! Please check your email to verify your account before logging in.' : null}
               onSubmit={async values => {
-                const { firstName, lastName, email, password } = values as any
-                await registerCustomer({ firstName, lastName, email, password })
-                router.push(`/${locale}/landpage`)
+                try {
+                  const { firstName, lastName, email, password } = values as any
+                  await registerCustomer({ firstName, lastName, email, password })
+                  setRegistrationSuccess(true)
+                  // Don't auto-redirect for registration - user needs to verify email first
+                } catch (err) {
+                  // Error is already handled by the auth store
+                  console.error('Registration failed:', err)
+                  setRegistrationSuccess(false)
+                }
               }}
             />
           </div>

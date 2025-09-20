@@ -8,7 +8,10 @@ import { useAuthStore } from '@/stores/auth.store'
 export default function LoginPage({ params }: PageProps) {
   const router = useRouter()
   const { lang: locale } = params
-  const loginCustomer = useAuthStore(s => s.loginCustomer)
+  const loginCustomer = useAuthStore(state => state.loginCustomer)
+  const loading = useAuthStore(state => state.loading)
+  const error = useAuthStore(state => state.error)
+  const clearError = useAuthStore(state => state.clearError)
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 relative overflow-hidden'>
@@ -32,10 +35,18 @@ export default function LoginPage({ params }: PageProps) {
           <div className='bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-teal-100/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
             <AuthForm
               type='login'
+              loading={loading}
+              error={error}
+              onClearError={clearError}
               onSubmit={async (values: any) => {
-                const { email, password } = values
-                await loginCustomer({ email, password })
-                router.push(`/${locale}/landpage`)
+                try {
+                  const { email, password } = values
+                  await loginCustomer({ email, password })
+                  router.push(`/${locale}/landpage`)
+                } catch (err) {
+                  // Error is already handled by the auth store
+                  console.error('Login failed:', err)
+                }
               }}
             />
           </div>
