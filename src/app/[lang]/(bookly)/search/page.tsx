@@ -19,6 +19,211 @@ import { mockServices as services, categories } from '@/bookly/data/mock-data'
 type SortKey = 'recommended' | 'rating_desc' | 'price_asc' | 'price_desc'
 type TimeOfDay = 'morning' | 'afternoon' | 'evening'
 
+// Mock business data generator
+const generateMockBusinesses = (): Business[] => {
+  return [
+    {
+      id: 'business-1',
+      name: 'Elegant Beauty Salon',
+      email: 'info@elegantbeauty.com',
+      description: 'Premium beauty salon offering hair styling, nail care, and spa treatments',
+      approved: true,
+      rating: 4.8,
+      socialLinks: [
+        { platform: 'Instagram', url: 'https://instagram.com/elegantbeauty' },
+        { platform: 'Facebook', url: 'https://facebook.com/elegantbeauty' }
+      ],
+      services: [
+        {
+          id: 'service-1',
+          name: 'Hair Cut & Style',
+          description: 'Professional haircut and styling service',
+          location: 'Downtown',
+          price: 65,
+          duration: 60,
+          businessId: 'business-1',
+          categories: [{ id: 'cat-1', name: 'Hair Care', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        },
+        {
+          id: 'service-2',
+          name: 'Hair Color',
+          description: 'Full hair coloring service with premium products',
+          location: 'Downtown',
+          price: 120,
+          duration: 120,
+          businessId: 'business-1',
+          categories: [{ id: 'cat-1', name: 'Hair Care', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        },
+        {
+          id: 'service-3',
+          name: 'Manicure',
+          description: 'Classic manicure with nail polish',
+          location: 'Downtown',
+          price: 35,
+          duration: 45,
+          businessId: 'business-1',
+          categories: [{ id: 'cat-2', name: 'Nail Care', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        }
+      ]
+    },
+    {
+      id: 'business-2',
+      name: 'Wellness Spa & Massage',
+      email: 'contact@wellnessspa.com',
+      description: 'Relaxing spa treatments and therapeutic massage services',
+      approved: true,
+      rating: 4.6,
+      socialLinks: [
+        { platform: 'Instagram', url: 'https://instagram.com/wellnessspa' }
+      ],
+      services: [
+        {
+          id: 'service-4',
+          name: 'Deep Tissue Massage',
+          description: '60-minute therapeutic deep tissue massage',
+          location: 'Midtown',
+          price: 90,
+          duration: 60,
+          businessId: 'business-2',
+          categories: [{ id: 'cat-3', name: 'Spa & Wellness', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        },
+        {
+          id: 'service-5',
+          name: 'Facial Treatment',
+          description: 'Rejuvenating facial with organic products',
+          location: 'Midtown',
+          price: 75,
+          duration: 75,
+          businessId: 'business-2',
+          categories: [{ id: 'cat-3', name: 'Spa & Wellness', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        }
+      ]
+    },
+    {
+      id: 'business-3',
+      name: 'Fit Life Gym',
+      email: 'hello@fitlifegym.com',
+      description: 'Modern fitness center with personal training and group classes',
+      approved: true,
+      rating: 4.4,
+      socialLinks: [
+        { platform: 'Facebook', url: 'https://facebook.com/fitlifegym' },
+        { platform: 'Instagram', url: 'https://instagram.com/fitlifegym' }
+      ],
+      services: [
+        {
+          id: 'service-6',
+          name: 'Personal Training Session',
+          description: 'One-on-one personal training session',
+          location: 'Uptown',
+          price: 80,
+          duration: 60,
+          businessId: 'business-3',
+          categories: [{ id: 'cat-4', name: 'Fitness', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        },
+        {
+          id: 'service-7',
+          name: 'Group Fitness Class',
+          description: 'High-energy group fitness class',
+          location: 'Uptown',
+          price: 25,
+          duration: 45,
+          businessId: 'business-3',
+          categories: [{ id: 'cat-4', name: 'Fitness', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        }
+      ]
+    },
+    {
+      id: 'business-4',
+      name: 'The Barber Shop',
+      email: 'info@thebarbershop.com',
+      description: 'Traditional barbershop with modern styling techniques',
+      approved: true,
+      rating: 4.7,
+      socialLinks: [
+        { platform: 'Instagram', url: 'https://instagram.com/thebarbershop' }
+      ],
+      services: [
+        {
+          id: 'service-8',
+          name: 'Classic Haircut',
+          description: 'Traditional mens haircut and styling',
+          location: 'Downtown',
+          price: 45,
+          duration: 30,
+          businessId: 'business-4',
+          categories: [{ id: 'cat-1', name: 'Hair Care', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        },
+        {
+          id: 'service-9',
+          name: 'Beard Trim',
+          description: 'Professional beard trimming and shaping',
+          location: 'Downtown',
+          price: 25,
+          duration: 20,
+          businessId: 'business-4',
+          categories: [{ id: 'cat-1', name: 'Hair Care', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        }
+      ]
+    },
+    {
+      id: 'business-5',
+      name: 'Dental Care Plus',
+      email: 'appointments@dentalcareplus.com',
+      description: 'Comprehensive dental care with modern technology',
+      approved: true,
+      rating: 4.9,
+      socialLinks: [
+        { platform: 'Facebook', url: 'https://facebook.com/dentalcareplus' }
+      ],
+      services: [
+        {
+          id: 'service-10',
+          name: 'Dental Cleaning',
+          description: 'Professional dental cleaning and examination',
+          location: 'Medical District',
+          price: 150,
+          duration: 60,
+          businessId: 'business-5',
+          categories: [{ id: 'cat-5', name: 'Healthcare', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        },
+        {
+          id: 'service-11',
+          name: 'Teeth Whitening',
+          description: 'Professional teeth whitening treatment',
+          location: 'Medical District',
+          price: 300,
+          duration: 90,
+          businessId: 'business-5',
+          categories: [{ id: 'cat-5', name: 'Healthcare', createdAt: '', updatedAt: '' }],
+          createdAt: '',
+          updatedAt: ''
+        }
+      ]
+    }
+  ]
+}
+
 interface SearchResponse {
   data: Business[]
   pagination: {
@@ -123,26 +328,25 @@ export default function SearchPage() {
       // Handle business response
       const businessData = businessResponse.data || []
 
-      // API returns array of businesses directly
-      setBusinessesData(businessData)
-      setTotalResults(businessData.length) // TODO: API should return total count
+      // If API returns empty results, use mock data
+      if (businessData.length === 0) {
+        console.log('📋 API returned empty results, using mock businesses')
+        const mockBusinesses = generateMockBusinesses()
+        setBusinessesData(mockBusinesses)
+        setTotalResults(mockBusinesses.length)
+      } else {
+        // API returns array of businesses directly
+        setBusinessesData(businessData)
+        setTotalResults(businessData.length) // TODO: API should return total count
+      }
 
       setCategoriesData(categoriesResponse.data || [])
 
       setError(null)
     } catch (err) {
       console.warn('API fetch failed, using fallback data:', err)
-      // Use fallback mock data when API fails - convert services to businesses format
-      const mockBusinesses = services.map(service => ({
-        id: service.businessId || service.id,
-        name: service.name,
-        email: null,
-        description: service.description,
-        approved: true,
-        logo: null,
-        rating: 0,
-        socialLinks: []
-      }))
+      // Use fallback mock business data when API fails
+      const mockBusinesses = generateMockBusinesses()
       setBusinessesData(mockBusinesses)
       setCategoriesData(categories)
       setTotalResults(mockBusinesses.length)
