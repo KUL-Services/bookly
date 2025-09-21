@@ -372,7 +372,7 @@ export default function SearchPage() {
   const applyToUrl = () => {
     const sp = new URLSearchParams()
     if (filters.q) sp.set('search', filters.q) // Use 'search' parameter as per API spec
-    if (filters.location) sp.set('loc', filters.location)
+    // if (filters.location) sp.set('loc', filters.location) // Location temporarily disabled
     if (filters.priceMin !== undefined && filters.priceMin > 0) sp.set('priceFrom', String(filters.priceMin))
     if (filters.priceMax !== undefined && filters.priceMax > 0) sp.set('priceTo', String(filters.priceMax))
     if (selectedCategoryIds.length > 0) sp.set('categoryId', selectedCategoryIds[0])
@@ -389,12 +389,14 @@ export default function SearchPage() {
       name: cat.name,
       count: undefined // TODO: Add count from API
     })),
-    locations: [
-      { value: 'london', label: 'London', count: undefined },
-      { value: 'manchester', label: 'Manchester', count: undefined },
-      { value: 'birmingham', label: 'Birmingham', count: undefined },
-      { value: 'glasgow', label: 'Glasgow', count: undefined }
-    ],
+    // Location filtering temporarily disabled
+    // locations: [
+    //   { value: 'london', label: 'London', count: undefined },
+    //   { value: 'manchester', label: 'Manchester', count: undefined },
+    //   { value: 'birmingham', label: 'Birmingham', count: undefined },
+    //   { value: 'glasgow', label: 'Glasgow', count: undefined }
+    // ],
+    locations: [], // Empty array for now
     priceRange: { min: 0, max: 1000 },
     sortOptions: [
       { value: 'recommended', label: 'Recommended' },
@@ -491,12 +493,13 @@ export default function SearchPage() {
               placeholderProps={{ plainText: 'Search businesses or services (e.g. haircut, spa, dental)' }}
               className='flex-1 text-sm sm:text-base'
             />
-            <SearchInput
+            {/* Location search temporarily disabled */}
+            {/* <SearchInput
               value={filters.location}
               onChange={e => setFilters({ ...filters, location: e.target.value })}
               placeholderProps={{ plainText: 'Location' }}
               className='flex-1 text-sm sm:text-base'
-            />
+            /> */}
             <Button
               onClick={handleApplyFilters}
               buttonText={{ plainText: 'Search' }}
