@@ -6,8 +6,8 @@ Aligned with `api-spec.json` (Bookly Backend API v1.0.0). Use this as the source
 
 | Flow | Route | Primary file | API calls |
 | --- | --- | --- | --- |
-| Landing catalog & spotlight | /{lang}/landpage | src/app/[lang]/(bookly)/landpage/page.tsx | GET /categories<br>GET /business (optional query: name, categoryId, page, pageSize, priceFrom, priceTo) |
-| Search results | /{lang}/search | src/app/[lang]/(bookly)/search/page.tsx | GET /business (same optional query as above; UI applies keyword filters)<br>GET /service (public list; client-side filtering until API exposes search params) |
+| Landing catalog & spotlight | /{lang}/landpage | src/app/[lang]/(bookly)/landpage/page.tsx | GET /categories<br>GET /business (optional query: name, categoryId, page, pageSize, priceFrom, priceTo, search) |
+| Search results | /{lang}/search | src/app/[lang]/(bookly)/search/page.tsx | GET /business (query params: name, page, pageSize, categoryId, priceFrom, priceTo, search)<br>GET /service (public list; UI may apply additional client-side filtering) |
 | Service detail | /{lang}/service/[id] | src/app/[lang]/(bookly)/service/[id]/page.tsx | GET /service/{id} |
 | Business profile | /{lang}/business/[slug] | src/app/[lang]/(bookly)/business/[slug]/page.tsx | GET /business/{id}<br>GET /service (front-end filters by business) |
 | Category spotlight | /{lang}/category/[slug] | src/app/[lang]/(bookly)/category/[slug]/page.tsx | GET /categories (resolve slug)<br>GET /service (filter client-side by category) |
@@ -41,7 +41,7 @@ Aligned with `api-spec.json` (Bookly Backend API v1.0.0). Use this as the source
 | Super admin login | /{lang}/(blank-layout-pages)/(guest-only)/super-admin/login | src/app/[lang]/(blank-layout-pages)/(guest-only)/super-admin/login/page.tsx | POST /auth/super-admin/login (x-www-form-urlencoded) |
 | Pending business approvals | /{lang}/(dashboard)/(private)/apps/bookly/approvals | src/app/[lang]/(dashboard)/(private)/apps/bookly/approvals/page.tsx | GET /business/pending<br>POST /business/approve<br>POST /business/reject |
 | Pending change requests | /{lang}/(dashboard)/(private)/apps/bookly/change-requests | src/app/[lang]/(dashboard)/(private)/apps/bookly/change-requests/page.tsx | GET /business/pending-requests<br>POST /business/approve-request<br>POST /business/reject-request |
-| Approved business directory | /{lang}/(dashboard)/(private)/apps/bookly/businesses | src/app/[lang]/(dashboard)/(private)/apps/bookly/businesses/page.tsx | GET /business (optional query: name, categoryId, page, pageSize, priceFrom, priceTo)<br>GET /business/{id} for detail views |
+| Approved business directory | /{lang}/(dashboard)/(private)/apps/bookly/businesses | src/app/[lang]/(dashboard)/(private)/apps/bookly/businesses/page.tsx | GET /business (optional query: name, categoryId, page, pageSize, priceFrom, priceTo, search)<br>GET /business/{id} for detail views |
 
 ## Client Service Wrappers
 
@@ -55,7 +55,7 @@ Aligned with `api-spec.json` (Bookly Backend API v1.0.0). Use this as the source
 
 ## Key Payloads & Parameters
 
-- GET /business: optional query params `name`, `categoryId`, `page`, `pageSize`, `priceFrom`, `priceTo`. Returns approved businesses (public).
+- GET /business: optional query params `name`, `categoryId`, `page`, `pageSize`, `priceFrom`, `priceTo`, `search`. Returns approved businesses (public).
 - GET /service: public list of services. Spec currently exposes no query params; UI filters locally.
 - POST /business/register: requires `name`, `owner.name`, `owner.email`, `owner.password`; supports optional `email`, `description`, up to 10 `socialLinks`, optional `logo`.
 - PATCH /business: requires `id`; accepts optional `name`, `email`, `description`, `socialLinks`, `logo` to create/update change request.
@@ -72,7 +72,7 @@ Aligned with `api-spec.json` (Bookly Backend API v1.0.0). Use this as the source
 - Customer profile and admin bookings views reference booking data, but the spec has no `/bookings` endpoints yet.
 - Media library grid expects a listing endpoint; `/media-lib` currently supports create/update/delete only.
 - Analytics, reporting, and admin management features referenced in earlier docs are absent from the spec (no `/analytics`, `/admin`, or metric endpoints).
-- Public discovery flows previously relied on `q`, `location`, `featured`, or `sort` parameters; the updated spec only exposes `name`, `categoryId`, `page`, `pageSize`, `priceFrom`, `priceTo`.
+- Public discovery flows previously relied on `q`, `location`, `featured`, or `sort` parameters; the updated spec exposes `name`, `categoryId`, `page`, `pageSize`, `priceFrom`, `priceTo`, `search`.
 - Branch detail routes under `apps/bookly/businesses/[businessId]/branches/[branchId]` have no dedicated endpoints beyond the generic `/branches` list.
 
 Keep this document synchronized with `api-spec.json` when new endpoints or parameters are added.

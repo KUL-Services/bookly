@@ -1078,6 +1078,13 @@
             "required": false,
             "schema": { "type": "number", "minimum": 0, "default": 999999 },
             "description": "Maximum price filter"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" },
+            "description": "Search term for business name or service name"
           }
         ],
         "responses": {

@@ -15,6 +15,7 @@ interface BusinessQueryParams {
   categoryId?: string
   priceFrom?: number
   priceTo?: number
+  search?: string
 }
 
 export class BusinessService {
@@ -34,6 +35,9 @@ export class BusinessService {
       }
       if (params.name) {
         queryParams.append('name', params.name)
+      }
+      if (params.search) {
+        queryParams.append('search', params.search)
       }
       if (params.categoryId) {
         queryParams.append('categoryId', params.categoryId)

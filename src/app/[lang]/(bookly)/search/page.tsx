@@ -254,7 +254,7 @@ export default function SearchPage() {
 
   // Filter state using the new FilterState interface
   const [filters, setFilters] = useState<FilterState>({
-    q: searchParams.get('name') || searchParams.get('q') || '',
+    q: searchParams.get('search') || searchParams.get('name') || searchParams.get('q') || '',
     location: searchParams.get('loc') || '',
     category: searchParams.get('categoryId') ? [searchParams.get('categoryId')!] : [],
     priceMin: searchParams.get('priceFrom') ? Number(searchParams.get('priceFrom')) : undefined,
@@ -301,15 +301,19 @@ export default function SearchPage() {
       }
 
       // Add optional parameters only if they have values
-      if (filters.q) queryParams.name = filters.q
+      if (filters.q) {
+        // Use 'search' parameter for general search term as per API spec
+        queryParams.search = filters.q
+      }
       if (selectedCategoryIds.length > 0) queryParams.categoryId = selectedCategoryIds[0] // API supports single categoryId
 
-      // API requires price parameters to always be sent
-      // Send actual values or defaults (0 for min, 999999 for max)
-      queryParams.priceFrom = (filters.priceMin !== undefined && filters.priceMin > 0) ? filters.priceMin : 0
-      queryParams.priceTo = (filters.priceMax !== undefined && filters.priceMax > 0) ? filters.priceMax : 999999
-
-      console.log('🔍 Price params:', { priceFrom: queryParams.priceFrom, priceTo: queryParams.priceTo })
+      // Add price filters only if they have meaningful values
+      if (filters.priceMin !== undefined && filters.priceMin > 0) {
+        queryParams.priceFrom = filters.priceMin
+      }
+      if (filters.priceMax !== undefined && filters.priceMax > 0) {
+        queryParams.priceTo = filters.priceMax
+      }
 
       console.log('🔍 Search page - Building query params:', {
         filters: filters,
@@ -362,18 +366,12 @@ export default function SearchPage() {
     fetchData()
   }, [currentPage])
 
-  // Fetch data when filters change
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1) // Reset to first page when filters change
-    } else {
-      fetchData(true)
-    }
-  }, [filters])
+  // Note: Removed automatic filtering on filter changes
+  // Users must click "Search" or "Apply Filters" to trigger search
 
   const applyToUrl = () => {
     const sp = new URLSearchParams()
-    if (filters.q) sp.set('name', filters.q)
+    if (filters.q) sp.set('search', filters.q) // Use 'search' parameter as per API spec
     if (filters.location) sp.set('loc', filters.location)
     if (filters.priceMin !== undefined && filters.priceMin > 0) sp.set('priceFrom', String(filters.priceMin))
     if (filters.priceMax !== undefined && filters.priceMax > 0) sp.set('priceTo', String(filters.priceMax))
@@ -424,6 +422,7 @@ export default function SearchPage() {
   }
 
   const handleApplyFilters = () => {
+    setCurrentPage(1) // Reset to first page when applying new filters
     applyToUrl()
     fetchData(true)
   }
@@ -489,7 +488,7 @@ export default function SearchPage() {
             <SearchInput
               value={filters.q}
               onChange={e => setFilters({ ...filters, q: e.target.value })}
-              placeholderProps={{ plainText: 'What are you looking for? (e.g. haircut, nails)' }}
+              placeholderProps={{ plainText: 'Search businesses or services (e.g. haircut, spa, dental)' }}
               className='flex-1 text-sm sm:text-base'
             />
             <SearchInput
