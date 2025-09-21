@@ -13,6 +13,18 @@ export interface AuthUser {
   name?: string
   avatar?: string
   role?: string
+  isOwner?: boolean
+  business?: {
+    id: string
+    name: string
+    email: string | null
+    description: string | null
+    logo: string | null
+    approved: boolean
+    createdAt: string
+    updatedAt: string
+    rating: number
+  }
 }
 
 interface AuthState {
@@ -195,17 +207,19 @@ export const useAuthStore = create<AuthState>()(
             throw new Error(response.error)
           }
 
-          if (response.data?.access_token) {
+          if (response.data?.access_token && response.data?.user) {
             console.log('✅ Login successful, setting auth token')
             AuthService.setAuthToken(response.data.access_token)
             const now = Date.now()
             set({
               userType: 'business',
               materializeUser: {
-                id: 'admin_' + payload.email,
-                email: payload.email,
-                name: payload.email.split('@')[0],
-                role: 'admin'
+                id: response.data.user.id,
+                email: response.data.user.email,
+                name: response.data.user.name,
+                role: 'admin',
+                isOwner: response.data.user.isOwner,
+                business: response.data.user.business
               },
               token: response.data.access_token,
               loading: false,

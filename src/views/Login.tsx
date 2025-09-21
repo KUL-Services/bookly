@@ -108,13 +108,9 @@ const Login = ({ mode }: { mode: Mode }) => {
       // Try our API login first
       const authStore = useAuthStore.getState()
       await authStore.loginAdmin({ email: data.email, password: data.password })
-      const res = await signIn('credentials', {
-        email: 'admin@materialize.com',
-        password: 'admin',
-        redirect: false
-      })
-      // If we reach here, the API login was successful
-      const redirectURL = searchParams.get('redirectTo') ?? '/'
+
+      // If we reach here, the API login was successful - redirect to bookly dashboard
+      const redirectURL = searchParams.get('redirectTo') ?? '/apps/bookly/dashboard'
       router.replace(getLocalizedUrl(redirectURL, locale as Locale))
     } catch (apiError: any) {
       console.log('API login failed:', apiError)
@@ -131,7 +127,7 @@ const Login = ({ mode }: { mode: Mode }) => {
           if (res && res.ok && res.error === null) {
             // Mark current auth domain as business in our Zustand store
             useAuthStore.getState().setUserType('business')
-            const redirectURL = searchParams.get('redirectTo') ?? '/'
+            const redirectURL = searchParams.get('redirectTo') ?? '/apps/bookly/dashboard'
             router.replace(getLocalizedUrl(redirectURL, locale as Locale))
             return
           }

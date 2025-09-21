@@ -6,9 +6,14 @@ import { useAuthStore } from '@/stores/auth.store'
 
 export default function SessionToStoreBridge() {
   const { data } = useSession()
-  const setMaterializeUser = useAuthStore(s => s.setMaterializeUser)
+  const { materializeUser, setMaterializeUser } = useAuthStore()
 
   useEffect(() => {
+    // If we already have API auth with business data, don't interfere
+    if (materializeUser?.business) {
+      return
+    }
+
     if (data?.user) {
       setMaterializeUser({
         id: (data.user as any).id ?? data.user.email ?? 'business',
@@ -19,7 +24,7 @@ export default function SessionToStoreBridge() {
     } else {
       setMaterializeUser(null)
     }
-  }, [data, setMaterializeUser])
+  }, [data]) // Only depend on NextAuth session changes
 
   return null
 }

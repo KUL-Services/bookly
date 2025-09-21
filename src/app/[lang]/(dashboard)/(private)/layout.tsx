@@ -21,6 +21,7 @@ import Customizer from '@core/components/customizer'
 import ScrollToTop from '@core/components/scroll-to-top'
 import ClientAuthGuard from '@/components/ClientAuthGuard'
 import SessionToStoreBridge from '@/components/SessionToStoreBridge'
+import { ApprovalBanner } from '@/components/ApprovalBanner'
 
 // Config Imports
 import { i18n } from '@configs/i18n'
@@ -48,11 +49,13 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
               navbar={<Navbar />}
               footer={<VerticalFooter />}
             >
+              <ApprovalBanner />
               {children}
             </VerticalLayout>
           }
           horizontalLayout={
             <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
+              <ApprovalBanner />
               {children}
             </HorizontalLayout>
           }
