@@ -23,6 +23,8 @@ import ClientsActivity from '@views/dashboards/bookly/ClientsActivity'
 import { BusinessService, ServicesService, BranchesService, StaffService } from '@/lib/api'
 import type { Business, Service, Branch, Staff } from '@/lib/api'
 
+// Component Imports
+import { PageLoader, CardSkeleton, StatsSkeleton } from '@/components/LoadingStates'
 
 // Fallback Imports
 import { mockServices, mockBookings, mockReviews } from '@/bookly/data/mock-data'
@@ -94,11 +96,25 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
+          <StatsSkeleton />
+        </Grid>
+        <Grid item xs={12} md={8}>
+          <CardSkeleton height="400px" />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <CardSkeleton height="400px" />
+        </Grid>
+        <Grid item xs={12} md={8}>
+          <CardSkeleton height="300px" />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <CardSkeleton height="300px" />
+        </Grid>
+        <Grid item xs={12}>
+          <CardSkeleton height="200px" />
+        </Grid>
+        <Grid item xs={12}>
+          <CardSkeleton height="300px" />
         </Grid>
       </Grid>
     )

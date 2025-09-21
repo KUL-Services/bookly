@@ -20,6 +20,9 @@ import Box from '@mui/material/Box'
 import { BusinessService } from '@/lib/api'
 import type { Business } from '@/lib/api'
 
+// Component Imports
+import { FormSkeleton, ButtonLoader } from '@/components/LoadingStates'
+
 const BusinessProfile = () => {
   const [business, setBusiness] = useState<Business | null>(null)
   const [loading, setLoading] = useState(true)
@@ -100,8 +103,9 @@ const BusinessProfile = () => {
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
+            <CardHeader title="Business Profile" subheader="Manage your business information" />
+            <CardContent>
+              <FormSkeleton fields={5} />
             </CardContent>
           </Card>
         </Grid>

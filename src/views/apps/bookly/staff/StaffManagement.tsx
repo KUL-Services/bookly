@@ -29,6 +29,7 @@ import type { Staff, Branch } from '@/lib/api'
 // Component Imports
 import CreateStaffDialog from './CreateStaffDialog'
 import EditStaffDialog from './EditStaffDialog'
+import { TableSkeleton } from '@/components/LoadingStates'
 
 const StaffManagement = () => {
   const [staff, setStaff] = useState<Staff[]>([])
@@ -205,11 +206,7 @@ const StaffManagement = () => {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
+          <TableSkeleton rows={5} columns={4} />
         </Grid>
       </Grid>
     )

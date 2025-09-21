@@ -26,6 +26,7 @@ import type { Branch, Service } from '@/lib/api'
 // Component Imports
 import CreateBranchDialog from './CreateBranchDialog'
 import EditBranchDialog from './EditBranchDialog'
+import { TableSkeleton } from '@/components/LoadingStates'
 
 const BranchesManagement = () => {
   const [branches, setBranches] = useState<Branch[]>([])
@@ -171,11 +172,7 @@ const BranchesManagement = () => {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
+          <TableSkeleton rows={4} columns={4} />
         </Grid>
       </Grid>
     )

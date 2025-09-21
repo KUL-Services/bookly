@@ -13,6 +13,9 @@ import { Pagination, PaginationInfo } from '@/bookly/components/ui/pagination'
 // API Imports
 import { BusinessService, CategoriesService } from '@/lib/api'
 import type { Business, Category } from '@/lib/api'
+// Component Imports
+import { SearchResultsSkeleton, ButtonLoader } from '@/components/LoadingStates'
+
 // Fallback data imports
 import { mockServices as services, categories } from '@/bookly/data/mock-data'
 
@@ -460,10 +463,36 @@ export default function SearchPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen w-full surface-muted flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600 mx-auto'></div>
-          <p className='mt-4 text-gray-600'>Loading businesses...</p>
+      <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5'>
+        {/* Top search bar - skeleton */}
+        <div className='bg-white/90 backdrop-blur-sm border-b border-teal-100/50 sticky top-0 z-40'>
+          <div className='mx-auto max-w-6xl px-4 sm:px-6 py-3 sm:py-4'>
+            <div className='flex flex-col sm:flex-row gap-3'>
+              <div className='flex-1 h-12 bg-gray-200 rounded-lg animate-pulse'></div>
+              <div className='w-32 h-12 bg-teal-200 rounded-lg animate-pulse'></div>
+            </div>
+          </div>
+        </div>
+
+        <div className='mx-auto max-w-6xl px-4 sm:px-6 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-4 sm:gap-6'>
+          {/* Filters skeleton */}
+          <div className='lg:sticky lg:top-24 space-y-4'>
+            <div className='h-80 bg-white rounded-lg shadow-sm p-4'>
+              <div className='space-y-4'>
+                <div className='h-6 bg-gray-200 rounded animate-pulse'></div>
+                <div className='space-y-2'>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className='h-4 bg-gray-100 rounded animate-pulse'></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Results skeleton */}
+          <section>
+            <SearchResultsSkeleton items={8} />
+          </section>
         </div>
       </div>
     )
@@ -502,8 +531,12 @@ export default function SearchPage() {
             /> */}
             <Button
               onClick={handleApplyFilters}
-              buttonText={{ plainText: 'Search' }}
-              className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'
+              buttonText={{
+                plainText: filtersLoading ? '' : 'Search',
+                startIcon: filtersLoading ? <ButtonLoader size={16} /> : undefined
+              }}
+              disabled={filtersLoading}
+              className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
             />
           </div>
         </div>
@@ -522,7 +555,16 @@ export default function SearchPage() {
         />
 
         {/* Results - mobile optimized */}
-        <section>
+        <section className="relative">
+          {filtersLoading && (
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+              <div className="flex flex-col items-center space-y-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+                <p className="text-gray-600 text-sm font-medium">Searching...</p>
+              </div>
+            </div>
+          )}
+
           <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6'>
             <PaginationInfo
               page={currentPage}

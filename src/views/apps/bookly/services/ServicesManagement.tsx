@@ -26,6 +26,7 @@ import type { Service, Category, Branch } from '@/lib/api'
 // Component Imports
 import CreateServiceDialog from './CreateServiceDialog'
 import EditServiceDialog from './EditServiceDialog'
+import { TableSkeleton, LoadingOverlay } from '@/components/LoadingStates'
 
 const ServicesManagement = () => {
   const [services, setServices] = useState<Service[]>([])
@@ -36,6 +37,7 @@ const ServicesManagement = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const fetchData = async () => {
     try {
@@ -104,6 +106,7 @@ const ServicesManagement = () => {
     }
 
     try {
+      setActionLoading(`delete-${serviceId}`)
       const response = await ServicesService.deleteService(serviceId)
       if (response.error) {
         throw new Error(response.error)
@@ -111,6 +114,8 @@ const ServicesManagement = () => {
       await fetchData() // Refresh the list
     } catch (err) {
       console.error('Failed to delete service:', err)
+    } finally {
+      setActionLoading(null)
     }
   }
 
@@ -134,11 +139,7 @@ const ServicesManagement = () => {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
+          <TableSkeleton rows={6} columns={5} />
         </Grid>
       </Grid>
     )
@@ -233,8 +234,13 @@ const ServicesManagement = () => {
                           size='small'
                           color='error'
                           onClick={() => handleDeleteService(service.id)}
+                          disabled={actionLoading === `delete-${service.id}`}
                         >
-                          <i className='ri-delete-bin-line' />
+                          {actionLoading === `delete-${service.id}` ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <i className='ri-delete-bin-line' />
+                          )}
                         </IconButton>
                       </TableCell>
                     </TableRow>
