@@ -27,21 +27,27 @@ import type { Service, Category, Branch } from '@/lib/api'
 import CreateServiceDialog from './CreateServiceDialog'
 import EditServiceDialog from './EditServiceDialog'
 import { TableSkeleton, LoadingOverlay } from '@/components/LoadingStates'
+import { ErrorDisplay } from '@/components/ErrorComponents'
+
+// Utils
+import { extractErrorMessage, logError, withErrorHandling } from '@/utils/errorHandling'
 
 const ServicesManagement = () => {
   const [services, setServices] = useState<Service[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<any>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   const fetchData = async () => {
-    try {
+    await withErrorHandling(async () => {
       setLoading(true)
+      setError(null)
+
       const [servicesResponse, categoriesResponse, branchesResponse] = await Promise.all([
         ServicesService.getServices(),
         CategoriesService.getCategories(),
@@ -61,12 +67,12 @@ const ServicesManagement = () => {
       setServices(servicesResponse.data || [])
       setCategories(categoriesResponse.data || [])
       setBranches(branchesResponse.data || [])
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data')
-    } finally {
+    }, 'Failed to fetch services data').catch((err) => {
+      logError(err, 'ServicesManagement.fetchData')
+      setError(err)
+    }).finally(() => {
       setLoading(false)
-    }
+    })
   }
 
   useEffect(() => {
@@ -74,30 +80,32 @@ const ServicesManagement = () => {
   }, [])
 
   const handleCreateService = async (serviceData: any) => {
-    try {
+    await withErrorHandling(async () => {
       const response = await ServicesService.createService(serviceData)
       if (response.error) {
         throw new Error(response.error)
       }
-      await fetchData() // Refresh the list
+      await fetchData()
       setCreateDialogOpen(false)
-    } catch (err) {
-      console.error('Failed to create service:', err)
-    }
+    }, 'Failed to create service').catch((err) => {
+      logError(err, 'ServicesManagement.handleCreateService', { serviceData })
+      setError(err)
+    })
   }
 
   const handleEditService = async (serviceData: any) => {
-    try {
+    await withErrorHandling(async () => {
       const response = await ServicesService.updateService(serviceData)
       if (response.error) {
         throw new Error(response.error)
       }
-      await fetchData() // Refresh the list
+      await fetchData()
       setEditDialogOpen(false)
       setSelectedService(null)
-    } catch (err) {
-      console.error('Failed to update service:', err)
-    }
+    }, 'Failed to update service').catch((err) => {
+      logError(err, 'ServicesManagement.handleEditService', { serviceData })
+      setError(err)
+    })
   }
 
   const handleDeleteService = async (serviceId: string) => {
@@ -105,18 +113,19 @@ const ServicesManagement = () => {
       return
     }
 
-    try {
-      setActionLoading(`delete-${serviceId}`)
+    setActionLoading(`delete-${serviceId}`)
+    await withErrorHandling(async () => {
       const response = await ServicesService.deleteService(serviceId)
       if (response.error) {
         throw new Error(response.error)
       }
-      await fetchData() // Refresh the list
-    } catch (err) {
-      console.error('Failed to delete service:', err)
-    } finally {
+      await fetchData()
+    }, 'Failed to delete service').catch((err) => {
+      logError(err, 'ServicesManagement.handleDeleteService', { serviceId })
+      setError(err)
+    }).finally(() => {
       setActionLoading(null)
-    }
+    })
   }
 
   const getCategoryNames = (categoryIds?: string[]) => {
@@ -164,9 +173,12 @@ const ServicesManagement = () => {
           />
           <CardContent>
             {error && (
-              <Alert severity='error' className='mb-4'>
-                {error}
-              </Alert>
+              <ErrorDisplay
+                error={error}
+                onRetry={fetchData}
+                context="Services Management"
+                showDetails={false}
+              />
             )}
 
             {services.length === 0 ? (

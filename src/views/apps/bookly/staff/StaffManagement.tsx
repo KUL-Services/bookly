@@ -30,19 +30,26 @@ import type { Staff, Branch } from '@/lib/api'
 import CreateStaffDialog from './CreateStaffDialog'
 import EditStaffDialog from './EditStaffDialog'
 import { TableSkeleton } from '@/components/LoadingStates'
+import { ErrorDisplay } from '@/components/ErrorComponents'
+
+// Utils
+import { extractErrorMessage, logError, withErrorHandling } from '@/utils/errorHandling'
 
 const StaffManagement = () => {
   const [staff, setStaff] = useState<Staff[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<any>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null)
 
   const fetchData = async () => {
-    try {
+    await withErrorHandling(async () => {
       setLoading(true)
+      setError(null)
+
       const [staffResponse, branchesResponse] = await Promise.all([
         StaffService.getStaff(),
         BranchesService.getBranches()
@@ -123,7 +130,6 @@ const StaffManagement = () => {
 
         setStaff(mockStaff)
         setBranches(mockBranches)
-        setError(null)
       } else {
         // Use API data if available
         if (staffResponse.error) {
@@ -135,13 +141,13 @@ const StaffManagement = () => {
 
         setStaff(staffResponse.data || [])
         setBranches(branchesResponse.data || [])
-        setError(null)
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data')
-    } finally {
+    }, 'Failed to fetch staff data').catch((err) => {
+      logError(err, 'StaffManagement.fetchData')
+      setError(err)
+    }).finally(() => {
       setLoading(false)
-    }
+    })
   }
 
   useEffect(() => {
@@ -149,7 +155,7 @@ const StaffManagement = () => {
   }, [])
 
   const handleCreateStaff = async (staffData: any) => {
-    try {
+    await withErrorHandling(async () => {
       const response = await StaffService.createStaff({
         name: staffData.name,
         mobile: staffData.mobile,
@@ -161,13 +167,14 @@ const StaffManagement = () => {
 
       await fetchData()
       setCreateDialogOpen(false)
-    } catch (err) {
-      console.error('Failed to create staff:', err)
-    }
+    }, 'Failed to create staff member').catch((err) => {
+      logError(err, 'StaffManagement.handleCreateStaff', { staffData })
+      setError(err)
+    })
   }
 
   const handleEditStaff = async (staffData: any) => {
-    try {
+    await withErrorHandling(async () => {
       const response = await StaffService.updateStaff({
         id: staffData.id,
         name: staffData.name,
@@ -181,9 +188,10 @@ const StaffManagement = () => {
       await fetchData()
       setEditDialogOpen(false)
       setSelectedStaff(null)
-    } catch (err) {
-      console.error('Failed to update staff:', err)
-    }
+    }, 'Failed to update staff member').catch((err) => {
+      logError(err, 'StaffManagement.handleEditStaff', { staffData })
+      setError(err)
+    })
   }
 
   const handleDeleteStaff = async (staffId: string) => {
@@ -191,15 +199,19 @@ const StaffManagement = () => {
       return
     }
 
-    try {
+    setActionLoading(`delete-${staffId}`)
+    await withErrorHandling(async () => {
       const response = await StaffService.deleteStaff(staffId)
       if (response.error) {
         throw new Error(response.error)
       }
-      await fetchData() // Refresh the list
-    } catch (err) {
-      console.error('Failed to delete staff:', err)
-    }
+      await fetchData()
+    }, 'Failed to delete staff member').catch((err) => {
+      logError(err, 'StaffManagement.handleDeleteStaff', { staffId })
+      setError(err)
+    }).finally(() => {
+      setActionLoading(null)
+    })
   }
 
   if (loading) {
@@ -231,9 +243,12 @@ const StaffManagement = () => {
           />
           <CardContent>
             {error && (
-              <Alert severity='error' className='mb-4'>
-                {error}
-              </Alert>
+              <ErrorDisplay
+                error={error}
+                onRetry={fetchData}
+                context="Staff Management"
+                showDetails={false}
+              />
             )}
 
             {staff.length === 0 ? (
@@ -307,8 +322,13 @@ const StaffManagement = () => {
                           size='small'
                           color='error'
                           onClick={() => handleDeleteStaff(member.id)}
+                          disabled={actionLoading === `delete-${member.id}`}
                         >
-                          <i className='ri-delete-bin-line' />
+                          {actionLoading === `delete-${member.id}` ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <i className='ri-delete-bin-line' />
+                          )}
                         </IconButton>
                       </TableCell>
                     </TableRow>

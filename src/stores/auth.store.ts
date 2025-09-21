@@ -52,6 +52,7 @@ interface AuthState {
   isSessionValid: () => boolean
   refreshSession: () => void
   clearError: () => void
+  checkAndCleanupExpiredSession: () => void
 
   // Bookly
   loginCustomer: (payload: LoginRequest) => Promise<void>
@@ -103,14 +104,38 @@ export const useAuthStore = create<AuthState>()(
       },
 
       refreshSession: () => {
+        const state = get()
         const now = Date.now()
-        set({
-          lastActivity: now,
-          sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours from now
-        })
+
+        // Only refresh if we have an authenticated user
+        if (state.materializeUser || state.booklyUser) {
+          set({
+            lastActivity: now,
+            sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours from now
+          })
+        }
       },
 
       clearError: () => set({ error: null }),
+
+      checkAndCleanupExpiredSession: () => {
+        const state = get()
+
+        // If session is invalid, clean up auth state
+        if (!state.isSessionValid() && (state.materializeUser || state.booklyUser)) {
+          console.log('🧹 Session expired, cleaning up auth state')
+          AuthService.clearAuthToken()
+          set({
+            userType: null,
+            booklyUser: null,
+            materializeUser: null,
+            token: null,
+            error: null,
+            lastActivity: null,
+            sessionExpiry: null
+          })
+        }
+      },
 
       // Customer auth with real API calls
       async loginCustomer(payload) {

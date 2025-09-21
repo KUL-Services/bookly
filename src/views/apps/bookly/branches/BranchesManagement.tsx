@@ -27,19 +27,26 @@ import type { Branch, Service } from '@/lib/api'
 import CreateBranchDialog from './CreateBranchDialog'
 import EditBranchDialog from './EditBranchDialog'
 import { TableSkeleton } from '@/components/LoadingStates'
+import { ErrorDisplay } from '@/components/ErrorComponents'
+
+// Utils
+import { extractErrorMessage, logError, withErrorHandling } from '@/utils/errorHandling'
 
 const BranchesManagement = () => {
   const [branches, setBranches] = useState<Branch[]>([])
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<any>(null)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null)
 
   const fetchData = async () => {
-    try {
+    await withErrorHandling(async () => {
       setLoading(true)
+      setError(null)
+
       const [branchesResponse, servicesResponse] = await Promise.all([
         BranchesService.getBranches(),
         ServicesService.getServices()
@@ -100,7 +107,6 @@ const BranchesManagement = () => {
 
         setBranches(mockBranches)
         setServices(mockServices)
-        setError(null)
       } else {
         // Use API data if available
         if (branchesResponse.error) {
@@ -112,13 +118,13 @@ const BranchesManagement = () => {
 
         setBranches(branchesResponse.data || [])
         setServices(servicesResponse.data || [])
-        setError(null)
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch data')
-    } finally {
+    }, 'Failed to fetch branches data').catch((err) => {
+      logError(err, 'BranchesManagement.fetchData')
+      setError(err)
+    }).finally(() => {
       setLoading(false)
-    }
+    })
   }
 
   useEffect(() => {
@@ -126,30 +132,32 @@ const BranchesManagement = () => {
   }, [])
 
   const handleCreateBranch = async (branchData: any) => {
-    try {
+    await withErrorHandling(async () => {
       const response = await BranchesService.createBranch(branchData)
       if (response.error) {
         throw new Error(response.error)
       }
-      await fetchData() // Refresh the list
+      await fetchData()
       setCreateDialogOpen(false)
-    } catch (err) {
-      console.error('Failed to create branch:', err)
-    }
+    }, 'Failed to create branch').catch((err) => {
+      logError(err, 'BranchesManagement.handleCreateBranch', { branchData })
+      setError(err)
+    })
   }
 
   const handleEditBranch = async (branchData: any) => {
-    try {
+    await withErrorHandling(async () => {
       const response = await BranchesService.updateBranch(branchData)
       if (response.error) {
         throw new Error(response.error)
       }
-      await fetchData() // Refresh the list
+      await fetchData()
       setEditDialogOpen(false)
       setSelectedBranch(null)
-    } catch (err) {
-      console.error('Failed to update branch:', err)
-    }
+    }, 'Failed to update branch').catch((err) => {
+      logError(err, 'BranchesManagement.handleEditBranch', { branchData })
+      setError(err)
+    })
   }
 
   const handleDeleteBranch = async (branchId: string) => {
@@ -157,15 +165,19 @@ const BranchesManagement = () => {
       return
     }
 
-    try {
+    setActionLoading(`delete-${branchId}`)
+    await withErrorHandling(async () => {
       const response = await BranchesService.deleteBranch(branchId)
       if (response.error) {
         throw new Error(response.error)
       }
-      await fetchData() // Refresh the list
-    } catch (err) {
-      console.error('Failed to delete branch:', err)
-    }
+      await fetchData()
+    }, 'Failed to delete branch').catch((err) => {
+      logError(err, 'BranchesManagement.handleDeleteBranch', { branchId })
+      setError(err)
+    }).finally(() => {
+      setActionLoading(null)
+    })
   }
 
   if (loading) {
@@ -197,9 +209,12 @@ const BranchesManagement = () => {
           />
           <CardContent>
             {error && (
-              <Alert severity='error' className='mb-4'>
-                {error}
-              </Alert>
+              <ErrorDisplay
+                error={error}
+                onRetry={fetchData}
+                context="Branches Management"
+                showDetails={false}
+              />
             )}
 
             {branches.length === 0 ? (
@@ -279,8 +294,13 @@ const BranchesManagement = () => {
                           size='small'
                           color='error'
                           onClick={() => handleDeleteBranch(branch.id)}
+                          disabled={actionLoading === `delete-${branch.id}`}
                         >
-                          <i className='ri-delete-bin-line' />
+                          {actionLoading === `delete-${branch.id}` ? (
+                            <CircularProgress size={16} />
+                          ) : (
+                            <i className='ri-delete-bin-line' />
+                          )}
                         </IconButton>
                       </TableCell>
                     </TableRow>
