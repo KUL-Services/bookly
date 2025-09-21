@@ -230,16 +230,43 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logoutBusiness() {
+        console.log('🧹 Clearing business auth state...')
         const { userType } = get()
         AuthService.clearAuthToken()
+
+        // Clear localStorage to ensure complete logout
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('bookly-auth-store')
+          // Also clear any nextauth items
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('nextauth')) {
+              localStorage.removeItem(key)
+            }
+          })
+        }
+
+        // Reset to initial state
         set({
+          userType: null,
+          booklyUser: null,
           materializeUser: null,
           token: null,
+          loading: false,
           error: null,
           lastActivity: null,
-          sessionExpiry: null,
-          ...(userType === 'business' ? { userType: null } : {})
+          sessionExpiry: null
         })
+
+        // Force persistence to sync immediately
+        if (typeof window !== 'undefined') {
+          // Double-check that localStorage is cleared
+          setTimeout(() => {
+            localStorage.removeItem('bookly-auth-store')
+          }, 50)
+        }
+
+        console.log('✅ Business auth state cleared')
       }
     }),
     {

@@ -78,20 +78,50 @@ const UserDropdown = () => {
 
   const handleUserLogout = async () => {
     try {
-      // Check if user is using custom auth store (business user)
-      if (userType === 'business' && materializeUser) {
-        // Custom logout for business users
-        logoutBusiness()
-        router.push(getLocalizedUrl('/login', locale as Locale))
-      } else {
-        // NextAuth logout for other users
-        await signOut({ callbackUrl: process.env.NEXT_PUBLIC_APP_URL })
-      }
-    } catch (error) {
-      console.error(error)
+      // Close the dropdown first
+      setOpen(false)
 
-      // Show above error in a toast like following
-      // toastService.error((err as Error).message)
+      console.log('🔓 Starting logout process...')
+      console.log('Current auth state:', { userType, materializeUser: !!materializeUser, session: !!session })
+
+      // Always clear custom auth store if business user
+      if (userType === 'business' && materializeUser) {
+        console.log('🧹 Clearing business auth store...')
+        logoutBusiness()
+      }
+
+      // Always clear NextAuth session if it exists
+      if (session) {
+        console.log('🧹 Clearing NextAuth session...')
+        await signOut({ redirect: false })
+      }
+
+      // Clear any remaining localStorage items
+      if (typeof window !== 'undefined') {
+        console.log('🧹 Clearing all localStorage...')
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('bookly-auth-store')
+        localStorage.removeItem('nextauth.message')
+        // Clear all nextauth related items
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('nextauth')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
+
+      // Small delay to ensure everything is cleared
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      console.log('✅ Logout complete, redirecting to login...')
+      // Force complete page reload to login
+      window.location.href = getLocalizedUrl('/login', locale as Locale)
+
+    } catch (error) {
+      console.error('❌ Logout error:', error)
+
+      // Force redirect even if there's an error
+      window.location.href = getLocalizedUrl('/login', locale as Locale)
     }
   }
 

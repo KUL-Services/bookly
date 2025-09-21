@@ -26,6 +26,8 @@ export default function ClientAuthGuard({ children, locale }: ChildrenType & { l
         // Initialize API client with stored token
         AuthService.initializeAuth()
         console.log('🔄 Initialized auth with stored token')
+      } else {
+        console.log('❌ No stored token found')
       }
 
       // Wait a bit for Zustand hydration

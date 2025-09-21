@@ -112,6 +112,11 @@ class ApiClient {
   clearAuthToken() {
     const { Authorization, ...headers } = this.defaultHeaders as any
     this.defaultHeaders = headers
+
+    // Also clear from localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_token')
+    }
   }
 }
 

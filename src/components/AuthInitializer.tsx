@@ -13,20 +13,25 @@ const AuthInitializer = () => {
   const materializeUser = useAuthStore(s => s.materializeUser)
 
   useEffect(() => {
-    // Initialize auth token from localStorage on app start
-    AuthService.initializeAuth()
-
-    // Check session validity
-    if ((booklyUser || materializeUser) && !isSessionValid()) {
-      console.log('Session expired, logging out')
-      if (booklyUser) logoutCustomer()
-      if (materializeUser) logoutBusiness()
-      return
-    }
-
-    // Refresh session if valid
+    // Only initialize auth token if we have a user in the store
+    // This prevents re-initializing after logout
     if (booklyUser || materializeUser) {
+      AuthService.initializeAuth()
+
+      // Check session validity
+      if (!isSessionValid()) {
+        console.log('Session expired, logging out')
+        if (booklyUser) logoutCustomer()
+        if (materializeUser) logoutBusiness()
+        return
+      }
+
+      // Refresh session if valid
       refreshSession()
+    } else {
+      // If no user in store, make sure no token is set in API client
+      console.log('No user in store, clearing any lingering API tokens')
+      AuthService.clearAuthToken()
     }
 
     // Set up activity tracking
