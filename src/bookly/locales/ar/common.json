@@ -138,6 +138,24 @@
       "created": "تم الإنشاء:",
       "successMessage": "تم تقديم طلب التغيير بنجاح! سيتم مراجعته من قبل المديرين.",
       "noProfile": "لم يتم العثور على ملف المتجر. يرجى التواصل مع الدعم."
+    },
+    "branchDetails": {
+      "overview": "نظرة عامة",
+      "services": "الخدمات",
+      "staff": "الفريق",
+      "location": "الموقع",
+      "contact": "التواصل",
+      "quickInfo": "معلومات سريعة",
+      "availableServices": "الخدمات المتاحة",
+      "ourTeam": "فريقنا",
+      "viewOnGoogleMaps": "عرض في خرائط جوجل",
+      "noServicesTitle": "لا توجد خدمات متاحة في هذا الفرع",
+      "noStaffTitle": "لا يوجد فريق عمل في هذا الفرع",
+      "bookNow": "احجز الآن",
+      "servicesCount": "خدمات",
+      "staffMembersCount": "أعضاء الفريق",
+      "ratingLabel": "التقييم",
+      "duration": "دقيقة"
     }
   },
   "auth": {

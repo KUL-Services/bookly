@@ -133,6 +133,24 @@
       "created": "Créé:",
       "successMessage": "Demande de modification soumise avec succès! Elle sera examinée par les administrateurs.",
       "noProfile": "Aucun profil d'entreprise trouvé. Veuillez contacter le support."
+    },
+    "branchDetails": {
+      "overview": "Aperçu",
+      "services": "Services",
+      "staff": "Équipe",
+      "location": "Localisation",
+      "contact": "Contact",
+      "quickInfo": "Info Rapide",
+      "availableServices": "Services Disponibles",
+      "ourTeam": "Notre Équipe",
+      "viewOnGoogleMaps": "Voir sur Google Maps",
+      "noServicesTitle": "Aucun service disponible dans cette succursale",
+      "noStaffTitle": "Aucun personnel assigné à cette succursale",
+      "bookNow": "Réserver Maintenant",
+      "servicesCount": "Services",
+      "staffMembersCount": "Membres de l'Équipe",
+      "ratingLabel": "Note",
+      "duration": "min"
     }
   },
   "auth": {
