@@ -21,6 +21,9 @@ import InputAdornment from '@mui/material/InputAdornment'
 // Types
 import type { Category, Branch, CreateServiceRequest } from '@/lib/api'
 
+// Components
+import GalleryUpload from '@/components/media/GalleryUpload'
+
 interface Props {
   open: boolean
   onClose: () => void
@@ -37,7 +40,8 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
     price: '' as any, // Use empty string to avoid 0 placeholder issue
     duration: '' as any, // Use empty string to avoid 0 placeholder issue
     categoryIds: [],
-    branchIds: []
+    branchIds: [],
+    gallery: []
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -72,10 +76,22 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
       price: '' as any,
       duration: '' as any,
       categoryIds: [],
-      branchIds: []
+      branchIds: [],
+      gallery: []
     })
     setErrors({})
     onClose()
+  }
+
+  const handleGalleryChange = (imageIds: string[]) => {
+    setFormData(prev => ({ ...prev, gallery: imageIds }))
+  }
+
+  const handleImageDeleted = (imageId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      gallery: prev.gallery?.filter(id => id !== imageId) || []
+    }))
   }
 
   return (
@@ -207,6 +223,17 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <GalleryUpload
+                currentImageIds={formData.gallery || []}
+                onImagesUploaded={handleGalleryChange}
+                onImageDeleted={handleImageDeleted}
+                label="Service Gallery"
+                description="Upload images showcasing your service"
+                maxImages={8}
+                maxSizeMB={5}
+              />
             </Grid>
           </Grid>
         </DialogContent>

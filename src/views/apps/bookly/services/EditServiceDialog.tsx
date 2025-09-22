@@ -21,6 +21,9 @@ import InputAdornment from '@mui/material/InputAdornment'
 // Types
 import type { Service, Category, Branch, UpdateServiceRequest } from '@/lib/api'
 
+// Components
+import GalleryUpload from '@/components/media/GalleryUpload'
+
 interface Props {
   open: boolean
   onClose: () => void
@@ -39,7 +42,8 @@ const EditServiceDialog = ({ open, onClose, onSubmit, service, categories, branc
     price: service.price,
     duration: service.duration,
     categoryIds: service.categories?.map(cat => cat.id) || [],
-    branchIds: service.branches?.map(branch => branch.id) || []
+    branchIds: service.branches?.map(branch => branch.id) || [],
+    gallery: service.gallery || []
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -52,7 +56,8 @@ const EditServiceDialog = ({ open, onClose, onSubmit, service, categories, branc
       price: service.price,
       duration: service.duration,
       categoryIds: service.categories?.map(cat => cat.id) || [],
-      branchIds: service.branches?.map(branch => branch.id) || []
+      branchIds: service.branches?.map(branch => branch.id) || [],
+      gallery: service.gallery || []
     })
   }, [service])
 
@@ -82,6 +87,17 @@ const EditServiceDialog = ({ open, onClose, onSubmit, service, categories, branc
   const handleClose = () => {
     setErrors({})
     onClose()
+  }
+
+  const handleGalleryChange = (imageIds: string[]) => {
+    setFormData(prev => ({ ...prev, gallery: imageIds }))
+  }
+
+  const handleImageDeleted = (imageId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      gallery: prev.gallery?.filter(id => id !== imageId) || []
+    }))
   }
 
   return (
@@ -213,6 +229,17 @@ const EditServiceDialog = ({ open, onClose, onSubmit, service, categories, branc
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <GalleryUpload
+                currentImageIds={formData.gallery || []}
+                onImagesUploaded={handleGalleryChange}
+                onImageDeleted={handleImageDeleted}
+                label="Service Gallery"
+                description="Upload images showcasing your service"
+                maxImages={8}
+                maxSizeMB={5}
+              />
             </Grid>
           </Grid>
         </DialogContent>

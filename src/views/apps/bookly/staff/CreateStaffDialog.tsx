@@ -18,20 +18,26 @@ import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 
 // Types
-import type { CreateStaffRequest, Branch } from '@/lib/api'
+import type { CreateStaffRequest, Branch, Service } from '@/lib/api'
+
+// Components
+import ImageUpload from '@/components/media/ImageUpload'
 
 interface Props {
   open: boolean
   onClose: () => void
   onSubmit: (data: CreateStaffRequest) => void
   branches: Branch[]
+  services?: Service[]
 }
 
-const CreateStaffDialog = ({ open, onClose, onSubmit, branches }: Props) => {
+const CreateStaffDialog = ({ open, onClose, onSubmit, branches, services = [] }: Props) => {
   const [formData, setFormData] = useState<CreateStaffRequest>({
     name: '',
     mobile: '',
-    branchId: ''
+    branchId: '',
+    serviceIds: [],
+    profilePhoto: null
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -47,6 +53,7 @@ const CreateStaffDialog = ({ open, onClose, onSubmit, branches }: Props) => {
       return
     }
 
+    console.log('🚀 CreateStaffDialog - Submitting formData:', formData)
     onSubmit(formData)
     handleClose()
   }
@@ -55,10 +62,20 @@ const CreateStaffDialog = ({ open, onClose, onSubmit, branches }: Props) => {
     setFormData({
       name: '',
       mobile: '',
-      branchId: ''
+      branchId: '',
+      serviceIds: [],
+      profilePhoto: null
     })
     setErrors({})
     onClose()
+  }
+
+  const handleProfilePhotoUploaded = (imageId: string) => {
+    setFormData(prev => ({ ...prev, profilePhoto: imageId }))
+  }
+
+  const handleProfilePhotoDeleted = () => {
+    setFormData(prev => ({ ...prev, profilePhoto: null }))
   }
 
   return (
@@ -101,6 +118,44 @@ const CreateStaffDialog = ({ open, onClose, onSubmit, branches }: Props) => {
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Assign Services</InputLabel>
+                <Select
+                  multiple
+                  value={formData.serviceIds || []}
+                  onChange={(e) => setFormData(prev => ({ ...prev, serviceIds: e.target.value as string[] }))}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                      {selected.map((value) => {
+                        const service = services.find(s => s.id === value)
+                        return (
+                          <Chip key={value} label={service?.name || value} size="small" />
+                        )
+                      })}
+                    </Box>
+                  )}
+                >
+                  {services.map((service) => (
+                    <MenuItem key={service.id} value={service.id}>
+                      {service.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <ImageUpload
+                currentImageId={formData.profilePhoto}
+                onImageUploaded={handleProfilePhotoUploaded}
+                onImageDeleted={handleProfilePhotoDeleted}
+                label="Profile Photo"
+                description="Upload staff member's profile picture"
+                maxSizeMB={3}
+                width={150}
+                height={150}
+              />
             </Grid>
           </Grid>
         </DialogContent>

@@ -23,8 +23,8 @@ import Avatar from '@mui/material/Avatar'
 import Chip from '@mui/material/Chip'
 
 // API Imports
-import { StaffService, BranchesService } from '@/lib/api'
-import type { Staff, Branch } from '@/lib/api'
+import { StaffService, BranchesService, ServicesService } from '@/lib/api'
+import type { Staff, Branch, Service } from '@/lib/api'
 
 // Component Imports
 import CreateStaffDialog from './CreateStaffDialog'
@@ -38,6 +38,7 @@ import { extractErrorMessage, logError, withErrorHandling } from '@/utils/errorH
 const StaffManagement = () => {
   const [staff, setStaff] = useState<Staff[]>([])
   const [branches, setBranches] = useState<Branch[]>([])
+  const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<any>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -50,13 +51,14 @@ const StaffManagement = () => {
       setLoading(true)
       setError(null)
 
-      const [staffResponse, branchesResponse] = await Promise.all([
+      const [staffResponse, branchesResponse, servicesResponse] = await Promise.all([
         StaffService.getStaff(),
-        BranchesService.getBranches()
+        BranchesService.getBranches(),
+        ServicesService.getServices()
       ])
 
       // Check if API calls succeeded, otherwise use fallback mock data
-      if (staffResponse.error && branchesResponse.error) {
+      if (staffResponse.error && branchesResponse.error && servicesResponse.error) {
         console.log('API unavailable, using mock data')
 
         // Mock branches data
@@ -79,6 +81,43 @@ const StaffManagement = () => {
           }
         ]
 
+        // Mock services data
+        const mockServices: Service[] = [
+          {
+            id: 'service1',
+            name: 'Hair Cut',
+            description: 'Professional hair cutting service',
+            location: 'Downtown',
+            price: 50,
+            duration: 60,
+            businessId: 'business1',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          {
+            id: 'service2',
+            name: 'Hair Styling',
+            description: 'Hair styling and blowdry',
+            location: 'Downtown',
+            price: 75,
+            duration: 90,
+            businessId: 'business1',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          {
+            id: 'service3',
+            name: 'Facial Treatment',
+            description: 'Relaxing facial treatment',
+            location: 'Westside',
+            price: 100,
+            duration: 120,
+            businessId: 'business1',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          }
+        ]
+
         // Mock staff data with branch assignments
         const mockStaff: Staff[] = [
           {
@@ -87,6 +126,7 @@ const StaffManagement = () => {
             mobile: '+1 (555) 111-1111',
             businessId: 'business1',
             branchId: '1',
+            services: [mockServices[0], mockServices[1]], // Hair Cut & Hair Styling
             createdAt: new Date('2024-01-10').toISOString(),
             updatedAt: new Date('2024-01-10').toISOString()
           },
@@ -96,6 +136,7 @@ const StaffManagement = () => {
             mobile: '+1 (555) 222-2222',
             businessId: 'business1',
             branchId: '1',
+            services: [mockServices[0]], // Hair Cut only
             createdAt: new Date('2024-01-12').toISOString(),
             updatedAt: new Date('2024-01-12').toISOString()
           },
@@ -105,6 +146,7 @@ const StaffManagement = () => {
             mobile: '+1 (555) 333-3333',
             businessId: 'business1',
             branchId: '2',
+            services: [mockServices[2]], // Facial Treatment
             createdAt: new Date('2024-01-15').toISOString(),
             updatedAt: new Date('2024-01-15').toISOString()
           },
@@ -114,6 +156,7 @@ const StaffManagement = () => {
             mobile: '+1 (555) 444-4444',
             businessId: 'business1',
             branchId: '1',
+            services: [mockServices[1], mockServices[0]], // Hair Styling & Hair Cut
             createdAt: new Date('2024-01-18').toISOString(),
             updatedAt: new Date('2024-01-18').toISOString()
           },
@@ -123,6 +166,7 @@ const StaffManagement = () => {
             mobile: '+1 (555) 555-5555',
             businessId: 'business1',
             branchId: '2',
+            services: [mockServices[2]], // Facial Treatment
             createdAt: new Date('2024-01-20').toISOString(),
             updatedAt: new Date('2024-01-20').toISOString()
           }
@@ -130,6 +174,7 @@ const StaffManagement = () => {
 
         setStaff(mockStaff)
         setBranches(mockBranches)
+        setServices(mockServices)
       } else {
         // Use API data if available
         if (staffResponse.error) {
@@ -138,9 +183,13 @@ const StaffManagement = () => {
         if (branchesResponse.error) {
           throw new Error(branchesResponse.error)
         }
+        if (servicesResponse.error) {
+          throw new Error(servicesResponse.error)
+        }
 
         setStaff(staffResponse.data || [])
         setBranches(branchesResponse.data || [])
+        setServices(servicesResponse.data || [])
       }
     }, 'Failed to fetch staff data').catch((err) => {
       logError(err, 'StaffManagement.fetchData')
@@ -159,7 +208,9 @@ const StaffManagement = () => {
       const response = await StaffService.createStaff({
         name: staffData.name,
         mobile: staffData.mobile,
-        branchId: staffData.branchId
+        branchId: staffData.branchId,
+        serviceIds: staffData.serviceIds,
+        profilePhoto: staffData.profilePhoto
       })
       if (response.error) {
         throw new Error(response.error)
@@ -179,7 +230,9 @@ const StaffManagement = () => {
         id: staffData.id,
         name: staffData.name,
         mobile: staffData.mobile,
-        branchId: staffData.branchId
+        branchId: staffData.branchId,
+        serviceIds: staffData.serviceIds,
+        profilePhoto: staffData.profilePhoto
       })
       if (response.error) {
         throw new Error(response.error)
@@ -267,6 +320,7 @@ const StaffManagement = () => {
                     <TableCell>Name</TableCell>
                     <TableCell>Mobile</TableCell>
                     <TableCell>Assigned Branches</TableCell>
+                    <TableCell>Assigned Services</TableCell>
                     <TableCell>Member Since</TableCell>
                     <TableCell align='center'>Actions</TableCell>
                   </TableRow>
@@ -301,6 +355,19 @@ const StaffManagement = () => {
                           ) : (
                             <Typography variant='body2' color='textSecondary'>
                               No branch assigned
+                            </Typography>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className='flex flex-wrap gap-1'>
+                          {member.services && member.services.length > 0 ? (
+                            member.services.map(service => (
+                              <Chip key={service.id} label={service.name} size='small' color='primary' variant='outlined' />
+                            ))
+                          ) : (
+                            <Typography variant='body2' color='textSecondary'>
+                              No services assigned
                             </Typography>
                           )}
                         </div>
@@ -346,6 +413,7 @@ const StaffManagement = () => {
         onClose={() => setCreateDialogOpen(false)}
         onSubmit={handleCreateStaff}
         branches={branches}
+        services={services}
       />
 
       {/* Edit Staff Dialog */}
@@ -359,6 +427,7 @@ const StaffManagement = () => {
           onSubmit={handleEditStaff}
           staff={selectedStaff}
           branches={branches}
+          services={services}
         />
       )}
     </Grid>

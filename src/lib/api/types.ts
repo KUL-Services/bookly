@@ -5,9 +5,10 @@ export interface User {
   firstName: string
   lastName: string
   email: string
-  isVerified: boolean
+  verified: boolean
+  profilePhoto?: string | null // URL in responses, UUID in requests
+  profileComplete?: boolean
   createdAt: string
-  updatedAt: string
 }
 
 export interface Admin {
@@ -26,7 +27,7 @@ export interface Business {
   email?: string
   description?: string
   approved?: boolean
-  logo?: string | null
+  logo?: string | null // URL in responses, UUID in requests
   rating?: number
   socialLinks?: SocialLink[]
   services?: Service[] // Services offered by this business
@@ -60,7 +61,7 @@ export interface Service {
   price: number
   duration: number
   businessId: string
-  gallery?: string[]
+  gallery?: string[] // URLs in responses, UUIDs in requests
   business?: Business
   categories?: Category[]
   branches?: Branch[]
@@ -75,7 +76,7 @@ export interface Staff {
   mobile?: string
   businessId?: string
   branchId: string
-  profilePhoto?: string | null
+  profilePhoto?: string | null // URL in responses, UUID in requests
   services?: Service[]
   createdAt: string
   updatedAt: string
@@ -87,7 +88,7 @@ export interface Branch {
   address?: string
   mobile?: string
   businessId: string
-  gallery?: string[]
+  gallery?: string[] // URLs in responses, UUIDs in requests
   services?: Service[]
   staff?: Staff[]
   createdAt: string
@@ -200,6 +201,7 @@ export interface CreateServiceRequest {
   duration: number
   categoryIds?: string[]
   branchIds?: string[]
+  gallery?: string[] // Array of asset UUIDs
 }
 
 export interface UpdateServiceRequest {
@@ -211,12 +213,15 @@ export interface UpdateServiceRequest {
   duration?: number
   categoryIds?: string[]
   branchIds?: string[]
+  gallery?: string[] // Array of asset UUIDs
 }
 
 export interface CreateStaffRequest {
   name: string
   mobile?: string
   branchId: string
+  serviceIds?: string[] // Array of service UUIDs that staff can provide
+  profilePhoto?: string | null // Asset UUID
 }
 
 export interface UpdateStaffRequest {
@@ -224,6 +229,8 @@ export interface UpdateStaffRequest {
   name: string
   mobile?: string
   branchId?: string
+  serviceIds?: string[] // Array of service UUIDs that staff can provide
+  profilePhoto?: string | null // Asset UUID
 }
 
 export interface CreateBranchRequest {
@@ -231,6 +238,7 @@ export interface CreateBranchRequest {
   address?: string
   mobile?: string
   serviceIds?: string[]
+  gallery?: string[] // Array of asset UUIDs
 }
 
 export interface UpdateBranchRequest {
@@ -239,6 +247,7 @@ export interface UpdateBranchRequest {
   address?: string
   mobile?: string
   serviceIds?: string[]
+  gallery?: string[] // Array of asset UUIDs
 }
 
 export interface UpdateBusinessRequest {
@@ -247,6 +256,7 @@ export interface UpdateBusinessRequest {
   email?: string
   description?: string
   socialLinks?: SocialLink[]
+  logo?: string | null // Asset UUID
 }
 
 export interface ApproveBusinessRequest {

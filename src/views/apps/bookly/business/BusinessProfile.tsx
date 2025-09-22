@@ -22,6 +22,7 @@ import type { Business } from '@/lib/api'
 
 // Component Imports
 import { FormSkeleton, ButtonLoader } from '@/components/LoadingStates'
+import ImageUpload from '@/components/media/ImageUpload'
 
 const BusinessProfile = () => {
   const [business, setBusiness] = useState<Business | null>(null)
@@ -96,6 +97,14 @@ const BusinessProfile = () => {
       ...prev,
       [field]: value
     }))
+  }
+
+  const handleLogoUploaded = (imageId: string) => {
+    setFormData(prev => ({ ...prev, logo: imageId }))
+  }
+
+  const handleLogoDeleted = () => {
+    setFormData(prev => ({ ...prev, logo: '' }))
   }
 
   if (loading) {
@@ -208,13 +217,19 @@ const BusinessProfile = () => {
                 onChange={(e) => handleInputChange('description', e.target.value)}
               />
 
-              <TextField
-                fullWidth
-                label='Logo URL'
-                value={formData.logo}
-                onChange={(e) => handleInputChange('logo', e.target.value)}
-                helperText='Enter a URL for your business logo'
-              />
+              <Box>
+                <Typography variant='subtitle2' className='mb-2'>Business Logo</Typography>
+                <ImageUpload
+                  currentImageId={formData.logo || null}
+                  onImageUploaded={handleLogoUploaded}
+                  onImageDeleted={handleLogoDeleted}
+                  label="Upload Business Logo"
+                  description="Upload your business logo"
+                  maxSizeMB={2}
+                  width={200}
+                  height={200}
+                />
+              </Box>
 
               <div className='flex gap-3 pt-4'>
                 <Button

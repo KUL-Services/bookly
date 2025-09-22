@@ -18,6 +18,9 @@ import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
 import type { SelectChangeEvent } from '@mui/material/Select'
 
+// Components
+import ImageUpload from '@/components/media/ImageUpload'
+
 type Data = {
   firstName: string
   lastName: string
@@ -31,6 +34,7 @@ type Data = {
   language: string
   timezone: string
   currency: string
+  profilePhoto: string | null
 }
 
 // Vars
@@ -46,7 +50,8 @@ const initialData: Data = {
   country: 'usa',
   language: 'arabic',
   timezone: 'gmt-12',
-  currency: 'usd'
+  currency: 'usd',
+  profilePhoto: null
 }
 
 const languageData = ['English', 'Arabic', 'French', 'German', 'Portuguese']
@@ -89,29 +94,36 @@ const AccountDetails = () => {
     setImgSrc('/images/avatars/1.png')
   }
 
+  const handleProfilePhotoUploaded = (imageId: string) => {
+    setFormData(prev => ({ ...prev, profilePhoto: imageId }))
+  }
+
+  const handleProfilePhotoDeleted = () => {
+    setFormData(prev => ({ ...prev, profilePhoto: null }))
+  }
+
   return (
     <Card>
       <CardContent className='mbe-5'>
         <div className='flex max-sm:flex-col items-center gap-6'>
-          <img height={100} width={100} className='rounded' src={imgSrc} alt='Profile' />
-          <div className='flex flex-grow flex-col gap-4'>
-            <div className='flex flex-col sm:flex-row gap-4'>
-              <Button component='label' variant='contained' htmlFor='account-settings-upload-image'>
-                Upload New Photo
-                <input
-                  hidden
-                  type='file'
-                  value={fileInput}
-                  accept='image/png, image/jpeg'
-                  onChange={handleFileInputChange}
-                  id='account-settings-upload-image'
-                />
-              </Button>
-              <Button variant='outlined' color='error' onClick={handleFileInputReset}>
-                Reset
-              </Button>
-            </div>
-            <Typography>Allowed JPG, GIF or PNG. Max size of 800K</Typography>
+          <ImageUpload
+            currentImageId={formData.profilePhoto}
+            onImageUploaded={handleProfilePhotoUploaded}
+            onImageDeleted={handleProfilePhotoDeleted}
+            label="Upload Profile Photo"
+            description="Click to upload your profile picture"
+            maxSizeMB={3}
+            width={120}
+            height={120}
+          />
+          <div className='flex flex-grow flex-col gap-2'>
+            <Typography variant='h6'>Profile Picture</Typography>
+            <Typography variant='body2' color='textSecondary'>
+              Upload a professional profile picture. This will be visible to customers and other users.
+            </Typography>
+            <Typography variant='caption' color='textSecondary'>
+              Recommended size: 400x400px. Max file size: 3MB. Supported formats: JPG, PNG, WebP, GIF
+            </Typography>
           </div>
         </div>
       </CardContent>
