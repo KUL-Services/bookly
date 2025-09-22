@@ -17,6 +17,7 @@ const Button = ({
   descriptionTextProps,
   buttonTextProps,
   textContainerClassName,
+  i18nTFn,
   ...restProps
 }: ButtonProps) => {
   return (
@@ -37,12 +38,12 @@ const Button = ({
         <div className={textContainerClassName}>
           {buttonText && (
             <span className='relative top-[0.5px]'>
-              <H5 stringProps={buttonText} className='font-medium' {...buttonTextProps} />
+              <H5 stringProps={buttonText} i18nTFn={i18nTFn} className='font-medium' {...buttonTextProps} />
             </span>
           )}
           {descriptionText && (
             <span className='relative top-[0.5px]'>
-              <H5 stringProps={descriptionText} className='font-medium' {...descriptionTextProps} />
+              <H5 stringProps={descriptionText} i18nTFn={i18nTFn} className='font-medium' {...descriptionTextProps} />
             </span>
           )}
         </div>

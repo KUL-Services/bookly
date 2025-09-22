@@ -48,7 +48,8 @@ export const BusinessCard = ({ business, className, onClick, i18nTFn }: Business
               {business.city}
             </div>
             <Button
-              buttonText={i18nTFn ? { i18nKey: 'business.book', i18nTFn } : { plainText: 'Book' }}
+              buttonText={i18nTFn ? { localeKey: 'business.book' } : { plainText: 'Book' }}
+              i18nTFn={i18nTFn}
               variant='contained'
               className='w-full bg-teal-500 hover:bg-teal-600 text-white'
             />
