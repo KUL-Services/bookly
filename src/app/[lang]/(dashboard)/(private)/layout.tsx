@@ -22,6 +22,8 @@ import ScrollToTop from '@core/components/scroll-to-top'
 import ClientAuthGuard from '@/components/ClientAuthGuard'
 import SessionToStoreBridge from '@/components/SessionToStoreBridge'
 import { ApprovalBanner } from '@/components/ApprovalBanner'
+import AggressiveLanguageGuard from '@/components/AggressiveLanguageGuard'
+import UltimateLanguageProtector from '@/components/UltimateLanguageProtector'
 
 // Config Imports
 import { i18n } from '@configs/i18n'
@@ -39,7 +41,9 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
 
   return (
     <Providers direction={direction}>
+      <UltimateLanguageProtector />
       <SessionToStoreBridge />
+      <AggressiveLanguageGuard />
       <ClientAuthGuard locale={params.lang}>
         <LayoutWrapper
           systemMode={systemMode}

@@ -68,6 +68,11 @@ const LanguageDropdown = () => {
   }
 
   const handleLanguageChange = (locale: string) => {
+    // Update ultimate language protector preference
+    if ((window as any).updateUltimateLanguagePreference) {
+      (window as any).updateUltimateLanguagePreference(locale)
+    }
+
     const newPath = getLocalePath(pathName, locale)
     router.push(newPath)
     handleClose()
