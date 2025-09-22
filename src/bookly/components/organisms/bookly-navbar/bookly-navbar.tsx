@@ -65,7 +65,7 @@ const BooklyNavbar = () => {
         <div className='flex items-center justify-between h-16'>
           {/* Left Section */}
           <div className='flex items-center gap-4'>
-            {!isLandingPage && (
+            {/* {!isLandingPage && (
               <button
                 aria-label='Go Back'
                 onClick={goBack}
@@ -73,7 +73,7 @@ const BooklyNavbar = () => {
               >
                 <ChevronIcon className='w-5 h-5' />
               </button>
-            )}
+            )} */}
 
             <button
               onClick={() => to('/landpage')}
@@ -123,7 +123,9 @@ const BooklyNavbar = () => {
                   <span className='hidden sm:block text-gray-700 dark:text-gray-200 font-medium group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors duration-200 text-sm sm:text-base'>
                     {booklyUser.name || 'User'}
                   </span>
-                  <ChevronIcon className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : (isRTL ? '-rotate-90' : 'rotate-90')}`} />
+                  <ChevronIcon
+                    className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${userDropdownOpen ? 'rotate-180' : isRTL ? '-rotate-90' : 'rotate-90'}`}
+                  />
                 </button>
 
                 {/* User Dropdown */}
@@ -184,7 +186,7 @@ const BooklyNavbar = () => {
           <div className='md:hidden border-t border-gray-200/50 dark:border-gray-700/50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md animate-in slide-in-from-top-2 duration-200 relative z-50'>
             <div className='px-4 py-4 space-y-3 relative z-50'>
               <button
-                onClick={(e) => {
+                onClick={e => {
                   e.preventDefault()
                   e.stopPropagation()
                   console.log('For Businesses clicked', { userType, materializeUser })
@@ -209,7 +211,7 @@ const BooklyNavbar = () => {
               {!booklyUser && (
                 <div className='pt-2 border-t border-gray-200/50 dark:border-gray-700/50 space-y-2'>
                   <button
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault()
                       e.stopPropagation()
                       console.log('Log In clicked')
@@ -223,7 +225,7 @@ const BooklyNavbar = () => {
                     {t('nav.login')}
                   </button>
                   <button
-                    onClick={(e) => {
+                    onClick={e => {
                       e.preventDefault()
                       e.stopPropagation()
                       console.log('Sign Up clicked')

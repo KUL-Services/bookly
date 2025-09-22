@@ -69,8 +69,8 @@ export class BusinessService {
     return apiClient.post<Business>('/business/register', data)
   }
 
-  // Admin only - Submit business update request
-  static async submitBusinessUpdateRequest(data: UpdateBusinessRequest) {
+  // Admin only - Update business profile (business ID identified from authenticated user)
+  static async updateBusiness(data: Omit<UpdateBusinessRequest, 'id'>) {
     return apiClient.patch<BusinessChangeRequest>('/business', data)
   }
 

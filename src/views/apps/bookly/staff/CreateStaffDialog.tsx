@@ -147,7 +147,7 @@ const CreateStaffDialog = ({ open, onClose, onSubmit, branches, services = [] }:
             </Grid>
             <Grid item xs={12}>
               <ImageUpload
-                currentImageId={formData.profilePhoto}
+                currentImageUrl={formData.profilePhoto}
                 onImageUploaded={handleProfilePhotoUploaded}
                 onImageDeleted={handleProfilePhotoDeleted}
                 label="Profile Photo"

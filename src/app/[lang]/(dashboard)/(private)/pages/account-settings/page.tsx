@@ -12,10 +12,12 @@ const SecurityTab = dynamic(() => import('@views/pages/account-settings/security
 const BillingPlansTab = dynamic(() => import('@views/pages/account-settings/billing-plans'))
 const NotificationsTab = dynamic(() => import('@views/pages/account-settings/notifications'))
 const ConnectionsTab = dynamic(() => import('@views/pages/account-settings/connections'))
+const BusinessTab = dynamic(() => import('@views/pages/account-settings/business'))
 
 // Vars
 const tabContentList = (): { [key: string]: ReactElement } => ({
   account: <AccountTab />,
+  business: <BusinessTab />,
   security: <SecurityTab />,
   'billing-plans': <BillingPlansTab />,
   notifications: <NotificationsTab />,

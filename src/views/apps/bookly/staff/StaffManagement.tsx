@@ -191,12 +191,14 @@ const StaffManagement = () => {
         setBranches(branchesResponse.data || [])
         setServices(servicesResponse.data || [])
       }
-    }, 'Failed to fetch staff data').catch((err) => {
-      logError(err, 'StaffManagement.fetchData')
-      setError(err)
-    }).finally(() => {
-      setLoading(false)
-    })
+    }, 'Failed to fetch staff data')
+      .catch(err => {
+        logError(err, 'StaffManagement.fetchData')
+        setError(err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
   useEffect(() => {
@@ -218,7 +220,7 @@ const StaffManagement = () => {
 
       await fetchData()
       setCreateDialogOpen(false)
-    }, 'Failed to create staff member').catch((err) => {
+    }, 'Failed to create staff member').catch(err => {
       logError(err, 'StaffManagement.handleCreateStaff', { staffData })
       setError(err)
     })
@@ -241,7 +243,7 @@ const StaffManagement = () => {
       await fetchData()
       setEditDialogOpen(false)
       setSelectedStaff(null)
-    }, 'Failed to update staff member').catch((err) => {
+    }, 'Failed to update staff member').catch(err => {
       logError(err, 'StaffManagement.handleEditStaff', { staffData })
       setError(err)
     })
@@ -259,12 +261,14 @@ const StaffManagement = () => {
         throw new Error(response.error)
       }
       await fetchData()
-    }, 'Failed to delete staff member').catch((err) => {
-      logError(err, 'StaffManagement.handleDeleteStaff', { staffId })
-      setError(err)
-    }).finally(() => {
-      setActionLoading(null)
-    })
+    }, 'Failed to delete staff member')
+      .catch(err => {
+        logError(err, 'StaffManagement.handleDeleteStaff', { staffId })
+        setError(err)
+      })
+      .finally(() => {
+        setActionLoading(null)
+      })
   }
 
   if (loading) {
@@ -295,14 +299,7 @@ const StaffManagement = () => {
             }
           />
           <CardContent>
-            {error && (
-              <ErrorDisplay
-                error={error}
-                onRetry={fetchData}
-                context="Staff Management"
-                showDetails={false}
-              />
-            )}
+            {error && <ErrorDisplay error={error} onRetry={fetchData} context='Staff Management' showDetails={false} />}
 
             {staff.length === 0 ? (
               <div className='text-center py-8'>
@@ -326,26 +323,34 @@ const StaffManagement = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {staff.map((member) => (
+                  {staff.map(member => (
                     <TableRow key={member.id} hover>
                       <TableCell>
                         <div className='flex items-center gap-3'>
                           <Avatar>
-                            {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            {member?.name
+                              ?.split(' ')
+                              .map(n => n[0])
+                              .join('')
+                              .toUpperCase()}
                           </Avatar>
                           <Typography variant='subtitle2'>{member.name}</Typography>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {member.mobile || 'No mobile number'}
-                      </TableCell>
+                      <TableCell>{member.mobile || 'No mobile number'}</TableCell>
                       <TableCell>
                         <div className='flex flex-wrap gap-1'>
                           {member.branchId ? (
                             (() => {
                               const branch = branches.find(b => b.id === member.branchId)
                               return branch ? (
-                                <Chip key={branch.id} label={branch.name} size='small' color='secondary' variant='outlined' />
+                                <Chip
+                                  key={branch.id}
+                                  label={branch.name}
+                                  size='small'
+                                  color='secondary'
+                                  variant='outlined'
+                                />
                               ) : (
                                 <Typography variant='body2' color='textSecondary'>
                                   Branch not found
@@ -363,7 +368,13 @@ const StaffManagement = () => {
                         <div className='flex flex-wrap gap-1'>
                           {member.services && member.services.length > 0 ? (
                             member.services.map(service => (
-                              <Chip key={service.id} label={service.name} size='small' color='primary' variant='outlined' />
+                              <Chip
+                                key={service.id}
+                                label={service.name}
+                                size='small'
+                                color='primary'
+                                variant='outlined'
+                              />
                             ))
                           ) : (
                             <Typography variant='body2' color='textSecondary'>
@@ -372,9 +383,7 @@ const StaffManagement = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {new Date(member.createdAt).toLocaleDateString()}
-                      </TableCell>
+                      <TableCell>{new Date(member.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell align='center'>
                         <IconButton
                           size='small'

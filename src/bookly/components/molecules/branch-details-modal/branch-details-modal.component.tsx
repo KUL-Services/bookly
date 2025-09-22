@@ -56,12 +56,9 @@ export const BranchDetailsModal = ({
 
   return (
     <div className='fixed inset-0 z-50 overflow-hidden'>
-      {/* Backdrop */}
-      <div className='absolute inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70' onClick={onClose} />
-
-      {/* Modal */}
-      <div className='relative h-full flex items-center justify-center p-4'>
-        <div className='bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl'>
+      {/* Modal Container with Backdrop Click */}
+      <div className='absolute inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center p-4' onClick={onClose}>
+        <div className='bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl' onClick={(e) => e.stopPropagation()}>
           {/* Header */}
           <div className='relative'>
             <div className='bg-gradient-to-r from-teal-500 to-blue-600 p-6 text-white'>

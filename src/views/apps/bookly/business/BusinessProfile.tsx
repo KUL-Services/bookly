@@ -234,7 +234,7 @@ const BusinessProfile = () => {
               <Box>
                 <Typography variant='subtitle2' className='mb-2'>{t('business.profile.businessLogo')}</Typography>
                 <ImageUpload
-                  currentImageId={formData.logo || null}
+                  currentImageUrl={formData.logo || null}
                   onImageUploaded={handleLogoUploaded}
                   onImageDeleted={handleLogoDeleted}
                   label={t('business.profile.uploadLogo')}

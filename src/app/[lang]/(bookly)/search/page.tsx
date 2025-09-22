@@ -7,7 +7,11 @@ import { Button } from '@/bookly/components/molecules'
 import { BusinessCard } from '@/bookly/components/molecules/business-card/business-card.component'
 import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
 import { BranchDetailsModal } from '@/bookly/components/molecules/branch-details-modal/branch-details-modal.component'
-import { SearchFilters, type FilterState, type FilterOptions } from '@/bookly/components/organisms/search-filters/search-filters.component'
+import {
+  SearchFilters,
+  type FilterState,
+  type FilterOptions
+} from '@/bookly/components/organisms/search-filters/search-filters.component'
 import { Pagination, PaginationInfo } from '@/bookly/components/ui/pagination'
 
 // API Imports
@@ -82,9 +86,7 @@ const generateMockBusinesses = (): Business[] => {
       description: 'Relaxing spa treatments and therapeutic massage services',
       approved: true,
       rating: 4.6,
-      socialLinks: [
-        { platform: 'Instagram', url: 'https://instagram.com/wellnessspa' }
-      ],
+      socialLinks: [{ platform: 'Instagram', url: 'https://instagram.com/wellnessspa' }],
       services: [
         {
           id: 'service-4',
@@ -157,9 +159,7 @@ const generateMockBusinesses = (): Business[] => {
       description: 'Traditional barbershop with modern styling techniques',
       approved: true,
       rating: 4.7,
-      socialLinks: [
-        { platform: 'Instagram', url: 'https://instagram.com/thebarbershop' }
-      ],
+      socialLinks: [{ platform: 'Instagram', url: 'https://instagram.com/thebarbershop' }],
       services: [
         {
           id: 'service-8',
@@ -194,9 +194,7 @@ const generateMockBusinesses = (): Business[] => {
       description: 'Comprehensive dental care with modern technology',
       approved: true,
       rating: 4.9,
-      socialLinks: [
-        { platform: 'Facebook', url: 'https://facebook.com/dentalcareplus' }
-      ],
+      socialLinks: [{ platform: 'Facebook', url: 'https://facebook.com/dentalcareplus' }],
       services: [
         {
           id: 'service-10',
@@ -559,12 +557,12 @@ export default function SearchPage() {
         />
 
         {/* Results - mobile optimized */}
-        <section className="relative">
+        <section className='relative'>
           {filtersLoading && (
-            <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center">
-              <div className="flex flex-col items-center space-y-3">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
-                <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">Searching...</p>
+            <div className='absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center'>
+              <div className='flex flex-col items-center space-y-3'>
+                <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600'></div>
+                <p className='text-gray-600 dark:text-gray-300 text-sm font-medium'>Searching...</p>
               </div>
             </div>
           )}
@@ -597,7 +595,7 @@ export default function SearchPage() {
                 </svg>
                 <span className='hidden sm:inline'>List</span>
               </button>
-              <button
+              {/* <button
                 onClick={() => setViewMode('map')}
                 className={`px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
                   viewMode === 'map'
@@ -614,7 +612,7 @@ export default function SearchPage() {
                   />
                 </svg>
                 <span className='hidden sm:inline'>Map</span>
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -626,9 +624,10 @@ export default function SearchPage() {
           ) : (
             <div className='space-y-4 sm:space-y-6'>
               {filteredBusinesses.map((business, index) => {
-                const minPrice = business.services && business.services.length > 0
-                  ? Math.min(...business.services.map(s => s.price))
-                  : null
+                const minPrice =
+                  business.services && business.services.length > 0
+                    ? Math.min(...business.services.map(s => s.price))
+                    : null
                 const serviceCount = business.services?.length || 0
 
                 return (
@@ -639,11 +638,7 @@ export default function SearchPage() {
                   >
                     <div
                       className='cursor-pointer'
-                      onClick={() =>
-                        router.push(
-                          `/${params?.lang}/business/${business.id}`
-                        )
-                      }
+                      onClick={() => router.push(`/${params?.lang}/business/${business.id}`)}
                     >
                       <div className='flex flex-col sm:flex-row gap-4 p-4 sm:p-6'>
                         <div className='w-full sm:w-32 h-48 sm:h-24 flex-shrink-0'>
@@ -667,7 +662,9 @@ export default function SearchPage() {
 
                               <div className='flex items-center gap-2 mb-2'>
                                 <div className='flex items-center'>
-                                  <span className='text-sm font-medium text-teal-600 dark:text-teal-400'>★ {business.rating || 0}/5</span>
+                                  <span className='text-sm font-medium text-teal-600 dark:text-teal-400'>
+                                    ★ {business.rating || 0}/5
+                                  </span>
                                   {business.email && (
                                     <>
                                       <span className='text-sm text-gray-500 dark:text-gray-400 mx-2'>•</span>
@@ -677,13 +674,17 @@ export default function SearchPage() {
                                   {minPrice && (
                                     <>
                                       <span className='text-sm text-gray-500 dark:text-gray-400 mx-2'>•</span>
-                                      <span className='text-sm font-medium text-teal-600 dark:text-teal-400'>From ${minPrice}</span>
+                                      <span className='text-sm font-medium text-teal-600 dark:text-teal-400'>
+                                        From ${minPrice}
+                                      </span>
                                     </>
                                   )}
                                 </div>
                               </div>
 
-                              <p className='text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3'>{business.description}</p>
+                              <p className='text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3'>
+                                {business.description}
+                              </p>
 
                               {/* Display services */}
                               {business.services && business.services.length > 0 && (
@@ -696,10 +697,16 @@ export default function SearchPage() {
                                         className='bg-gray-50 dark:bg-gray-700 rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors'
                                       >
                                         <div className='flex items-center justify-between'>
-                                          <span className='text-sm font-medium text-gray-900 dark:text-white'>{service.name}</span>
-                                          <span className='text-sm font-bold text-teal-600 dark:text-teal-400'>${service.price}</span>
+                                          <span className='text-sm font-medium text-gray-900 dark:text-white'>
+                                            {service.name}
+                                          </span>
+                                          <span className='text-sm font-bold text-teal-600 dark:text-teal-400'>
+                                            ${service.price}
+                                          </span>
                                         </div>
-                                        <div className='text-xs text-gray-500 dark:text-gray-400'>{service.duration}min</div>
+                                        <div className='text-xs text-gray-500 dark:text-gray-400'>
+                                          {service.duration}min
+                                        </div>
                                       </div>
                                     ))}
                                   </div>

@@ -15,7 +15,7 @@ import { CloudUpload, Delete, Edit } from '@mui/icons-material'
 import { MediaService } from '@/lib/api'
 
 interface ImageUploadProps {
-  currentImageId?: string | null
+  currentImageUrl?: string | null // Changed from currentImageId to currentImageUrl
   onImageUploaded: (imageId: string) => void
   onImageDeleted?: () => void
   label?: string
@@ -28,7 +28,7 @@ interface ImageUploadProps {
 }
 
 export const ImageUpload = ({
-  currentImageId,
+  currentImageUrl,
   onImageUploaded,
   onImageDeleted,
   label = "Upload Image",
@@ -109,15 +109,11 @@ export const ImageUpload = ({
   }
 
   const handleDelete = async () => {
-    if (!currentImageId || disabled) return
+    if (!currentImageUrl || disabled) return
 
-    try {
-      await MediaService.deleteAsset(currentImageId)
-      onImageDeleted?.()
-    } catch (err) {
-      console.error('Delete error:', err)
-      setError('Failed to delete image')
-    }
+    // Since we're working with URLs now, we just call the delete callback
+    // The parent component should handle the actual deletion logic
+    onImageDeleted?.()
   }
 
   const openFileDialog = () => {
@@ -138,14 +134,14 @@ export const ImageUpload = ({
       />
 
       <Card
-        onClick={currentImageId ? undefined : openFileDialog}
+        onClick={currentImageUrl ? undefined : openFileDialog}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         sx={{
           width: width,
           height: height,
-          cursor: disabled ? 'not-allowed' : (currentImageId ? 'default' : 'pointer'),
+          cursor: disabled ? 'not-allowed' : (currentImageUrl ? 'default' : 'pointer'),
           border: dragOver ? '2px dashed #1976d2' : '2px dashed #ccc',
           backgroundColor: dragOver ? '#f5f5f5' : 'transparent',
           opacity: disabled ? 0.6 : 1,
@@ -169,22 +165,40 @@ export const ImageUpload = ({
                 Uploading...
               </Typography>
             </Box>
-          ) : currentImageId ? (
+          ) : currentImageUrl ? (
             <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
-              {/* TODO: Replace with actual image once we have asset URL endpoint */}
+              <img
+                src={currentImageUrl}
+                alt="Current image"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  borderRadius: '8px'
+                }}
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  target.nextElementSibling?.removeAttribute('style')
+                }}
+              />
               <Box
                 sx={{
                   width: '100%',
                   height: '100%',
                   backgroundColor: '#f0f0f0',
-                  display: 'flex',
+                  display: 'none', // Hidden by default, shown if image fails to load
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: 1
+                  borderRadius: 1,
+                  position: 'absolute',
+                  top: 0,
+                  left: 0
                 }}
               >
                 <Typography variant="body2" color="text.secondary">
-                  Image ID: {currentImageId.slice(0, 8)}...
+                  Failed to load image
                 </Typography>
               </Box>
 

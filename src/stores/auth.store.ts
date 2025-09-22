@@ -24,6 +24,7 @@ export interface AuthUser {
     createdAt: string
     updatedAt: string
     rating: number
+    socialLinks?: Array<{ platform: string; url: string }>
   }
 }
 

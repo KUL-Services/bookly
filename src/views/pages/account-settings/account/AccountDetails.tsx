@@ -107,7 +107,7 @@ const AccountDetails = () => {
       <CardContent className='mbe-5'>
         <div className='flex max-sm:flex-col items-center gap-6'>
           <ImageUpload
-            currentImageId={formData.profilePhoto}
+            currentImageUrl={formData.profilePhoto}
             onImageUploaded={handleProfilePhotoUploaded}
             onImageDeleted={handleProfilePhotoDeleted}
             label="Upload Profile Photo"
