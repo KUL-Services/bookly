@@ -463,13 +463,13 @@ export default function SearchPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5'>
+      <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900'>
         {/* Top search bar - skeleton */}
-        <div className='bg-white/90 backdrop-blur-sm border-b border-teal-100/50 sticky top-0 z-40'>
+        <div className='bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-teal-100/50 dark:border-gray-700/50 sticky top-0 z-40'>
           <div className='mx-auto max-w-6xl px-4 sm:px-6 py-3 sm:py-4'>
             <div className='flex flex-col sm:flex-row gap-3'>
-              <div className='flex-1 h-12 bg-gray-200 rounded-lg animate-pulse'></div>
-              <div className='w-32 h-12 bg-teal-200 rounded-lg animate-pulse'></div>
+              <div className='flex-1 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse'></div>
+              <div className='w-32 h-12 bg-teal-200 dark:bg-teal-700 rounded-lg animate-pulse'></div>
             </div>
           </div>
         </div>
@@ -477,12 +477,12 @@ export default function SearchPage() {
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-[320px,1fr] gap-4 sm:gap-6'>
           {/* Filters skeleton */}
           <div className='lg:sticky lg:top-24 space-y-4'>
-            <div className='h-80 bg-white rounded-lg shadow-sm p-4'>
+            <div className='h-80 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4'>
               <div className='space-y-4'>
-                <div className='h-6 bg-gray-200 rounded animate-pulse'></div>
+                <div className='h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse'></div>
                 <div className='space-y-2'>
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className='h-4 bg-gray-100 rounded animate-pulse'></div>
+                    <div key={i} className='h-4 bg-gray-100 dark:bg-gray-600 rounded animate-pulse'></div>
                   ))}
                 </div>
               </div>
@@ -500,10 +500,10 @@ export default function SearchPage() {
 
   if (error) {
     return (
-      <div className='min-h-screen w-full surface-muted flex items-center justify-center'>
+      <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900 flex items-center justify-center'>
         <div className='text-center'>
-          <h1 className='text-2xl font-bold text-gray-900 mb-4'>Something went wrong</h1>
-          <p className='text-gray-600 mb-6'>{error}</p>
+          <h1 className='text-2xl font-bold text-gray-900 dark:text-white mb-4'>Something went wrong</h1>
+          <p className='text-gray-600 dark:text-gray-300 mb-6'>{error}</p>
           <Button buttonText={{ plainText: 'Try Again' }} onClick={() => window.location.reload()} />
         </div>
       </div>
@@ -511,16 +511,16 @@ export default function SearchPage() {
   }
 
   return (
-    <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5'>
+    <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900'>
       {/* Top search bar - mobile optimized */}
-      <div className='bg-white/90 backdrop-blur-sm border-b border-teal-100/50 sticky top-0 z-40'>
+      <div className='bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-teal-100/50 dark:border-gray-700/50 sticky top-0 z-40'>
         <div className='mx-auto max-w-6xl px-4 sm:px-6 py-3 sm:py-4'>
           <div className='flex flex-col sm:flex-row gap-3'>
             <SearchInput
               value={filters.q}
               onChange={e => setFilters({ ...filters, q: e.target.value })}
               placeholderProps={{ plainText: 'Search businesses or services (e.g. haircut, spa, dental)' }}
-              className='flex-1 text-sm sm:text-base'
+              className='flex-1 text-sm sm:text-base dark:bg-gray-700/50 dark:text-white dark:border-gray-600'
             />
             {/* Location search temporarily disabled */}
             {/* <SearchInput
@@ -557,10 +557,10 @@ export default function SearchPage() {
         {/* Results - mobile optimized */}
         <section className="relative">
           {filtersLoading && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+            <div className="absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center">
               <div className="flex flex-col items-center space-y-3">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
-                <p className="text-gray-600 text-sm font-medium">Searching...</p>
+                <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">Searching...</p>
               </div>
             </div>
           )}
@@ -580,7 +580,7 @@ export default function SearchPage() {
                 className={`px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
                   viewMode === 'list'
                     ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
-                    : 'bg-white border border-teal-200 text-gray-700 hover:bg-teal-50 hover:border-teal-300'
+                    : 'bg-white dark:bg-gray-800 border border-teal-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-gray-700 hover:border-teal-300 dark:hover:border-gray-500'
                 }`}
               >
                 <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -598,7 +598,7 @@ export default function SearchPage() {
                 className={`px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
                   viewMode === 'map'
                     ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
-                    : 'bg-white border border-teal-200 text-gray-700 hover:bg-teal-50 hover:border-teal-300'
+                    : 'bg-white dark:bg-gray-800 border border-teal-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-gray-700 hover:border-teal-300 dark:hover:border-gray-500'
                 }`}
               >
                 <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -616,8 +616,8 @@ export default function SearchPage() {
 
           {filteredBusinesses.length === 0 ? (
             <div className='text-center py-12'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-2'>No businesses found</h3>
-              <p className='text-gray-600'>Try adjusting your search criteria</p>
+              <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-2'>No businesses found</h3>
+              <p className='text-gray-600 dark:text-gray-300'>Try adjusting your search criteria</p>
             </div>
           ) : (
             <div className='space-y-4 sm:space-y-6'>
@@ -630,7 +630,7 @@ export default function SearchPage() {
                 return (
                   <div
                     key={business.id}
-                    className='group bg-white/80 backdrop-blur-sm border border-teal-100/50 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4 duration-500'
+                    className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-teal-100/50 dark:border-gray-700/50 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4 duration-500'
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div
@@ -643,12 +643,12 @@ export default function SearchPage() {
                     >
                       <div className='flex flex-col sm:flex-row gap-4 p-4 sm:p-6'>
                         <div className='w-full sm:w-32 h-48 sm:h-24 flex-shrink-0'>
-                          <div className='w-full h-full bg-gradient-to-br from-teal-100 to-cyan-100 rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 flex items-center justify-center'>
+                          <div className='w-full h-full bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 flex items-center justify-center'>
                             <div className='text-center'>
-                              <div className='text-lg font-bold text-teal-600'>{business.name}</div>
-                              <div className='text-xs text-teal-500'>★ {business.rating || 0}/5</div>
+                              <div className='text-lg font-bold text-teal-600 dark:text-teal-300'>{business.name}</div>
+                              <div className='text-xs text-teal-500 dark:text-teal-400'>★ {business.rating || 0}/5</div>
                               {minPrice && (
-                                <div className='text-xs text-teal-500'>From ${minPrice}</div>
+                                <div className='text-xs text-teal-500 dark:text-teal-400'>From ${minPrice}</div>
                               )}
                             </div>
                           </div>
@@ -656,51 +656,51 @@ export default function SearchPage() {
                         <div className='flex-1 min-w-0'>
                           <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4'>
                             <div className='flex-1'>
-                              <h3 className='text-lg font-semibold text-gray-900'>{business.name}</h3>
-                              <div className='text-sm text-gray-600 mb-2'>
+                              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>{business.name}</h3>
+                              <div className='text-sm text-gray-600 dark:text-gray-300 mb-2'>
                                 {serviceCount > 0 ? `${serviceCount} services available` : 'Business'}
                               </div>
 
                               <div className='flex items-center gap-2 mb-2'>
                                 <div className='flex items-center'>
-                                  <span className='text-sm font-medium text-teal-600'>★ {business.rating || 0}/5</span>
+                                  <span className='text-sm font-medium text-teal-600 dark:text-teal-400'>★ {business.rating || 0}/5</span>
                                   {business.email && (
                                     <>
-                                      <span className='text-sm text-gray-500 mx-2'>•</span>
-                                      <span className='text-sm text-gray-500'>{business.email}</span>
+                                      <span className='text-sm text-gray-500 dark:text-gray-400 mx-2'>•</span>
+                                      <span className='text-sm text-gray-500 dark:text-gray-400'>{business.email}</span>
                                     </>
                                   )}
                                   {minPrice && (
                                     <>
-                                      <span className='text-sm text-gray-500 mx-2'>•</span>
-                                      <span className='text-sm font-medium text-teal-600'>From ${minPrice}</span>
+                                      <span className='text-sm text-gray-500 dark:text-gray-400 mx-2'>•</span>
+                                      <span className='text-sm font-medium text-teal-600 dark:text-teal-400'>From ${minPrice}</span>
                                     </>
                                   )}
                                 </div>
                               </div>
 
-                              <p className='text-sm text-gray-600 line-clamp-2 mb-3'>{business.description}</p>
+                              <p className='text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3'>{business.description}</p>
 
                               {/* Display services */}
                               {business.services && business.services.length > 0 && (
                                 <div className='mt-3'>
-                                  <div className='text-xs text-gray-500 mb-2'>Popular Services:</div>
+                                  <div className='text-xs text-gray-500 dark:text-gray-400 mb-2'>Popular Services:</div>
                                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
                                     {business.services.slice(0, 4).map(service => (
                                       <div
                                         key={service.id}
-                                        className='bg-gray-50 rounded-lg p-2 hover:bg-gray-100 transition-colors'
+                                        className='bg-gray-50 dark:bg-gray-700 rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors'
                                       >
                                         <div className='flex items-center justify-between'>
-                                          <span className='text-sm font-medium text-gray-900'>{service.name}</span>
-                                          <span className='text-sm font-bold text-teal-600'>${service.price}</span>
+                                          <span className='text-sm font-medium text-gray-900 dark:text-white'>{service.name}</span>
+                                          <span className='text-sm font-bold text-teal-600 dark:text-teal-400'>${service.price}</span>
                                         </div>
-                                        <div className='text-xs text-gray-500'>{service.duration}min</div>
+                                        <div className='text-xs text-gray-500 dark:text-gray-400'>{service.duration}min</div>
                                       </div>
                                     ))}
                                   </div>
                                   {business.services.length > 4 && (
-                                    <div className='text-xs text-gray-500 mt-2'>
+                                    <div className='text-xs text-gray-500 dark:text-gray-400 mt-2'>
                                       +{business.services.length - 4} more services
                                     </div>
                                   )}
@@ -709,12 +709,12 @@ export default function SearchPage() {
 
                               {business.socialLinks && business.socialLinks.length > 0 && (
                                 <div className='mt-3'>
-                                  <div className='text-xs text-gray-500 mb-1'>Social Links:</div>
+                                  <div className='text-xs text-gray-500 dark:text-gray-400 mb-1'>Social Links:</div>
                                   <div className='flex flex-wrap gap-1'>
                                     {business.socialLinks.map((link, linkIndex) => (
                                       <span
                                         key={linkIndex}
-                                        className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-teal-100 text-teal-800'
+                                        className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-teal-100 dark:bg-teal-800/50 text-teal-800 dark:text-teal-200'
                                       >
                                         {link.platform}
                                       </span>
@@ -734,7 +734,7 @@ export default function SearchPage() {
                                     // Navigate to services or show services modal
                                     router.push(`/${params?.lang}/business/${business.id}#services`)
                                   }}
-                                  className='flex-1 sm:flex-none bg-white border border-teal-200 text-teal-600 hover:bg-teal-50 hover:border-teal-300 px-4 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-200'
+                                  className='flex-1 sm:flex-none bg-white dark:bg-gray-700 border border-teal-200 dark:border-teal-600/50 text-teal-600 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-800/30 hover:border-teal-300 dark:hover:border-teal-500 px-4 py-2 sm:py-3 rounded-lg text-sm font-semibold transition-all duration-200'
                                 >
                                   <span className='hidden sm:inline'>View Services ({serviceCount})</span>
                                   <span className='sm:hidden'>Services ({serviceCount})</span>

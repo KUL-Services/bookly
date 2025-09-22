@@ -90,12 +90,12 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
   const isLogin = type === 'login'
 
   return (
-    <Card className='w-full  border border-gray-300'>
+    <Card className='w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'>
       <CardHeader className='space-y-1'>
-        <CardTitle className='text-2xl font-bold text-center'>
+        <CardTitle className='text-2xl font-bold text-center text-gray-900 dark:text-white'>
           {isLogin ? t('auth.login.title') : 'Create your account'}
         </CardTitle>
-        <CardDescription className='text-center'>
+        <CardDescription className='text-center text-gray-600 dark:text-gray-300'>
           {isLogin ? t('auth.login.description') : 'Join Bookly and start booking services'}
         </CardDescription>
       </CardHeader>
@@ -184,7 +184,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                       <button
                         type='button'
                         onClick={() => setShowPassword(!showPassword)}
-                        className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700'
+                        className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                       >
                         {showPassword ? (
                           <KulIcon icon='lucide:eye-off' fontSize={FontSize.L} />
@@ -217,7 +217,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                           <button
                             type='button'
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700'
+                            className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                           >
                             {showConfirmPassword ? (
                               <KulIcon icon='lucide:eye-off' fontSize={FontSize.L} />
@@ -243,11 +243,11 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                       <div className='space-y-1 leading-none'>
                         <FormLabel>
                           I agree to the{' '}
-                          <Link href='/terms' className='text-teal-500 hover:underline'>
+                          <Link href='/terms' className='text-teal-500 dark:text-teal-400 hover:underline'>
                             Terms of Service
                           </Link>{' '}
                           and{' '}
-                          <Link href='/privacy' className='text-teal-500  hover:underline'>
+                          <Link href='/privacy' className='text-teal-500 dark:text-teal-400 hover:underline'>
                             Privacy Policy
                           </Link>
                         </FormLabel>
@@ -272,7 +272,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                     </FormItem>
                   )}
                 />
-                <Link href='/customer/forgot-password' className='text-sm text-primary hover:underline'>
+                <Link href='/customer/forgot-password' className='text-sm text-teal-500 dark:text-teal-400 hover:underline'>
                   Forgot your password?
                 </Link>
               </div>
@@ -297,10 +297,10 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
 
         <div className='relative my-6'>
           <div className='absolute inset-0 flex items-center'>
-            <div className='w-full border-t border-gray-300' />
+            <div className='w-full border-t border-gray-300 dark:border-gray-600' />
           </div>
           <div className='relative flex justify-center text-sm'>
-            <span className='bg-background px-2 text-muted-foreground'>Or continue with</span>
+            <span className='bg-white dark:bg-gray-800 px-2 text-gray-600 dark:text-gray-300'>Or continue with</span>
           </div>
         </div>
 
@@ -317,18 +317,18 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
       </CardContent>
 
       <CardFooter>
-        <div className='text-sm text-muted-foreground text-center w-full'>
+        <div className='text-sm text-gray-600 dark:text-gray-300 text-center w-full'>
           {isLogin ? (
             <>
               {t('auth.login.noAccount')}{' '}
-              <Link href='/customer/register' className='text-teal-500  hover:underline'>
+              <Link href='/customer/register' className='text-teal-500 dark:text-teal-400 hover:underline'>
                 {t('auth.login.createAccount')}
               </Link>
             </>
           ) : (
             <>
               Already have an account?{' '}
-              <Link href='/customer/login' className='text-teal-500 hover:underline'>
+              <Link href='/customer/login' className='text-teal-500 dark:text-teal-400 hover:underline'>
                 Log in
               </Link>
             </>

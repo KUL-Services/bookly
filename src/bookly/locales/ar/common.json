@@ -2,6 +2,101 @@
   "footerTemp": "هذا تذييل مؤقت",
   "headerTemp": "هذا عنوان مؤقت",
   "helloPerson": "مرحبًا، {{userName}}.",
+  "nav": {
+    "profile": "الملف الشخصي",
+    "forBusinesses": "للشركات",
+    "login": "تسجيل الدخول",
+    "signUp": "إنشاء حساب",
+    "join": "انضم",
+    "logout": "تسجيل الخروج"
+  },
+  "profile": {
+    "title": "بوكلي",
+    "editProfile": "تعديل الملف الشخصي",
+    "memberSince": "عضو منذ {{date}}",
+    "totalBookings": "إجمالي الحجوزات",
+    "favorites": "المفضلة",
+    "avgRating": "متوسط التقييم",
+    "bookings": {
+      "title": "حجوزاتك",
+      "upcomingWithCount": "القادمة ({{count}})",
+      "pastWithCount": "السابقة ({{count}})",
+      "confirmed": "مؤكدة",
+      "completed": "مكتملة",
+      "canceled": "ملغية",
+      "withStaff": "مع {{staff}}",
+      "timeWithDuration": "{{time}} ({{duration}})",
+      "viewBusiness": "عرض المتجر",
+      "cancel": "إلغاء",
+      "rebook": "إعادة الحجز",
+      "empty": "لا توجد حجوزات لعرضها"
+    }
+  },
+  "landing": {
+    "hero": {
+      "title": "اعثر على واحجز خدمات الجمال والعافية",
+      "subtitle": "اكتشف واحجز مواعيد مع أفضل صالونات وسبا ومتخصصي العافية في منطقتك"
+    },
+    "search": {
+      "servicePlaceholder": "مثلاً: قص شعر، تنظيف بشرة، مساج",
+      "locationPlaceholder": "الموقع",
+      "button": "بحث"
+    },
+    "stats": {
+      "businesses": "أكثر من 1000 شركة معتمدة",
+      "customers": "أكثر من 50,000 عميل راضٍ",
+      "rating": "★4.9 متوسط التقييم"
+    }
+  },
+  "categories": {
+    "title": "استكشف حسب الفئة"
+  },
+  "search": {
+    "loading": "جار البحث...",
+    "noResults": "لم يتم العثور على نتائج",
+    "viewBusiness": "عرض المتجر",
+    "viewServices": "عرض الخدمات",
+    "services": "خدمات",
+    "popularServices": "الخدمات الشائعة",
+    "socialLinks": "الروابط الاجتماعية",
+    "moreServices": "خدمات إضافية"
+  },
+  "business": {
+    "loading": "جار تحميل تفاصيل المتجر...",
+    "notFound": "المتجر غير موجود",
+    "tabs": {
+      "services": "الخدمات",
+      "branches": "الفروع",
+      "reviews": "التقييمات",
+      "about": "حول المتجر"
+    },
+    "sections": {
+      "services": "خدماتنا",
+      "locations": "مواقعنا",
+      "reviews": "تقييمات العملاء"
+    },
+    "writeReview": "اكتب تقييماً",
+    "bookNow": "احجز الآن",
+    "bookAppointment": "احجز موعداً",
+    "save": "حفظ",
+    "share": "مشاركة",
+    "openNow": "مفتوح الآن",
+    "viewDetails": "عرض التفاصيل ←",
+    "noBranches": {
+      "title": "لا توجد فروع متاحة",
+      "description": "يعمل هذا المتجر من موقع واحد فقط."
+    },
+    "noReviews": {
+      "title": "لا توجد تقييمات بعد",
+      "description": "كن أول من يترك تقييماً لهذا المتجر!"
+    },
+    "about": {
+      "story": "قصتنا",
+      "specialties": "ما يميزنا",
+      "hours": "ساعات العمل",
+      "contact": "الموقع والتواصل"
+    }
+  },
   "auth": {
     "login": {
       "title": "مرحباً بعودتك",

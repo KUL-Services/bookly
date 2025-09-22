@@ -37,11 +37,11 @@ export const BusinessCard = ({ business, className, onClick }: BusinessCardProps
                     ⭐
                   </span>
                 ))}
-                <span className='font-medium'>{business.averageRating}</span>
-                <span className='text-gray-500'>({business.totalRatings})</span>
+                <span className='font-medium dark:text-white'>{business.averageRating}</span>
+                <span className='text-gray-500 dark:text-gray-400'>({business.totalRatings})</span>
               </div>
             </div>
-            <div className='flex items-center gap-1 text-gray-500 mb-2'>
+            <div className='flex items-center gap-1 text-gray-500 dark:text-gray-400 mb-2'>
               <KulIcon icon={'lucide:map-pin'} />
               {business.city}
             </div>

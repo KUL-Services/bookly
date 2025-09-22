@@ -47,7 +47,7 @@ export const BaseCard = ({
           )}
           {titleProps && (
             <CardTitle>
-              <H3 stringProps={titleProps} i18nTFn={i18nTFn} className='font-bold text-gray-900 mb-2' />
+              <H3 stringProps={titleProps} i18nTFn={i18nTFn} className='font-bold text-gray-900 dark:text-white mb-2' />
             </CardTitle>
           )}
           {descriptionProps && (

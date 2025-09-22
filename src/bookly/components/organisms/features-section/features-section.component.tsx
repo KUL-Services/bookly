@@ -19,7 +19,7 @@ export const FeaturesSection = () => {
         <div className='max-w-6xl mx-auto px-6'>
           <H2
             stringProps={{ plainText: 'Check out top businesses ' }}
-            className='text-2xl font-bold text-center text-gray-900 mb-12'
+            className='text-2xl font-bold text-center text-gray-900 dark:text-white mb-12'
           />
         </div>
 
@@ -28,7 +28,7 @@ export const FeaturesSection = () => {
             <BusinessCard
               key={business.id}
               business={business}
-              className='bg-white rounded-2xl shadow-md overflow-hidden border-none'
+              className='bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden border-none'
               onClick={() => handleBusinessClick(business.id)}
             />
           ))}

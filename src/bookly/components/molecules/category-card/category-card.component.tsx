@@ -17,7 +17,7 @@ export const CategoryCard = ({ category, onClick, className }: CategoryCardProps
         contentClassName='flex flex-col items-center justify-center p-6 space-y-2'
       >
         <span className='text-2xl'>{category.icon}</span>
-        <h3 className='text-gray-700 font-medium'>{category.name}</h3>
+        <h3 className='text-gray-700 dark:text-gray-300 font-medium'>{category.name}</h3>
       </BaseCard>
     </div>
   )

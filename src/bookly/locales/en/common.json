@@ -3,7 +3,12 @@
   "headerTemp": "This is a temporary header",
   "helloPerson": "Hello, {{userName}}.",
   "nav": {
-    "profile": "Profile"
+    "profile": "Profile",
+    "forBusinesses": "For Businesses",
+    "login": "Log In",
+    "signUp": "Sign Up",
+    "join": "Join",
+    "logout": "Logout"
   },
   "profile": {
     "title": "Bookly",
@@ -25,6 +30,71 @@
       "cancel": "Cancel",
       "rebook": "Rebook",
       "empty": "No bookings to show"
+    }
+  },
+  "landing": {
+    "hero": {
+      "title": "Find and book beauty & wellness services",
+      "subtitle": "Discover and book appointments with top-rated salons, spas, and wellness professionals in your area"
+    },
+    "search": {
+      "servicePlaceholder": "e.g. haircut, facial, massage",
+      "locationPlaceholder": "Location",
+      "button": "Search"
+    },
+    "stats": {
+      "businesses": "1000+ Verified Businesses",
+      "customers": "50,000+ Happy Customers",
+      "rating": "4.9★ Average Rating"
+    }
+  },
+  "categories": {
+    "title": "Explore by category"
+  },
+  "search": {
+    "loading": "Searching...",
+    "noResults": "No results found",
+    "viewBusiness": "View Business",
+    "viewServices": "View Services",
+    "services": "Services",
+    "popularServices": "Popular Services",
+    "socialLinks": "Social Links",
+    "moreServices": "more services"
+  },
+  "business": {
+    "loading": "Loading business details...",
+    "notFound": "Business not found",
+    "tabs": {
+      "services": "Services",
+      "branches": "Branches",
+      "reviews": "Reviews",
+      "about": "About"
+    },
+    "sections": {
+      "services": "Our Services",
+      "locations": "Our Locations",
+      "reviews": "Customer Reviews"
+    },
+    "writeReview": "Write a Review",
+    "bookNow": "Book Now",
+    "bookAppointment": "Book Appointment",
+    "save": "Save",
+    "share": "Share",
+    "openNow": "Open Now",
+    "viewDetails": "View Details →",
+    "noBranches": {
+      "title": "No branches available",
+      "description": "This business operates from a single location."
+    },
+    "noReviews": {
+      "title": "No reviews yet",
+      "description": "Be the first to leave a review for this business!"
+    },
+    "about": {
+      "story": "Our Story",
+      "specialties": "What Makes Us Special",
+      "hours": "Hours of Operation",
+      "contact": "Location & Contact"
     }
   },
   "auth": {
