@@ -6,7 +6,8 @@ export interface User {
   lastName: string
   email: string
   verified: boolean
-  profilePhoto?: string | null // URL in responses, UUID in requests
+  profilePhoto?: string | null // UUID in requests
+  profilePhotoUrl?: string | null // URL in responses
   profileComplete?: boolean
   createdAt: string
 }
@@ -27,7 +28,8 @@ export interface Business {
   email?: string
   description?: string
   approved?: boolean
-  logo?: string | null // URL in responses, UUID in requests
+  logo?: string | null // UUID in requests
+  logoUrl?: string | null // URL in responses
   rating?: number
   socialLinks?: SocialLink[]
   services?: Service[] // Services offered by this business
@@ -61,7 +63,8 @@ export interface Service {
   price: number
   duration: number
   businessId: string
-  gallery?: string[] // URLs in responses, UUIDs in requests
+  gallery?: string[] // UUIDs in requests
+  galleryUrls?: string[] // URLs in responses
   business?: Business
   categories?: Category[]
   branches?: Branch[]
@@ -76,7 +79,8 @@ export interface Staff {
   mobile?: string
   businessId?: string
   branchId: string
-  profilePhoto?: string | null // URL in responses, UUID in requests
+  profilePhoto?: string | null // UUID in requests
+  profilePhotoUrl?: string | null // URL in responses
   services?: Service[]
   createdAt: string
   updatedAt: string
@@ -88,7 +92,8 @@ export interface Branch {
   address?: string
   mobile?: string
   businessId: string
-  gallery?: string[] // URLs in responses, UUIDs in requests
+  gallery?: string[] // UUIDs in requests
+  galleryUrls?: string[] // URLs in responses
   services?: Service[]
   staff?: Staff[]
   createdAt: string

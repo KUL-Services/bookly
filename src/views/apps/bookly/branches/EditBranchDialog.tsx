@@ -155,6 +155,7 @@ const EditBranchDialog = ({ open, onClose, onSubmit, branch, services }: Props) 
             <Grid item xs={12}>
               <GalleryUpload
                 currentImageIds={formData.gallery || []}
+                currentImageUrls={branch.galleryUrls || []}
                 onImagesUploaded={handleGalleryChange}
                 onImageDeleted={handleImageDeleted}
                 label="Branch Gallery"

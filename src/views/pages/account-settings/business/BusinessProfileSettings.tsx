@@ -251,6 +251,7 @@ const BusinessProfileSettings = () => {
 
       // Prepare update data
       const updateData = {
+        id: formData.id,
         name: formData.name.trim(),
         email: formData.email.trim() || undefined,
         description: formData.description.trim() || undefined,
@@ -336,7 +337,7 @@ const BusinessProfileSettings = () => {
         {/* Business Logo */}
         <div className="flex max-sm:flex-col items-start gap-6 mb-6">
           <ImageUpload
-            currentImageUrl={formData.logo}
+            currentImageUrl={materializeUser?.business?.logoUrl || null}
             onImageUploaded={handleLogoUploaded}
             onImageDeleted={handleLogoDeleted}
             label="Upload Business Logo"

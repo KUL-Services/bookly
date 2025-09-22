@@ -178,7 +178,7 @@ export default function ServiceDetailPage() {
           <Card className='shadow-sm'>
             <CardContent className='p-6'>
               <H2 stringProps={{ plainText: 'About This Service' }} className='text-2xl font-bold text-gray-900 mb-4' />
-              <P stringProps={{ plainText: service.description }} className='text-gray-700 leading-relaxed' />
+              <P stringProps={{ plainText: service.description }} className='text-gray-700 dark:[color:rgb(55_65_81)] leading-relaxed' />
             </CardContent>
           </Card>
         )}
@@ -245,7 +245,7 @@ export default function ServiceDetailPage() {
                           </div>
                         </div>
                         {review.comment && (
-                          <p className='text-gray-700 text-sm'>{review.comment}</p>
+                          <p className='text-gray-700 dark:[color:rgb(55_65_81)] text-sm'>{review.comment}</p>
                         )}
                       </div>
                     </div>

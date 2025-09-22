@@ -646,7 +646,7 @@ function businessDetailsPage() {
                             ))}
                             <span className='ml-2 text-sm text-gray-600'>{review.rating}/5</span>
                           </div>
-                          <p className='text-gray-700 text-sm leading-relaxed'>{review.comment}</p>
+                          <p className='text-gray-700 dark:[color:rgb(55_65_81)] text-sm leading-relaxed'>{review.comment}</p>
                         </div>
                       </div>
                     </CardContent>

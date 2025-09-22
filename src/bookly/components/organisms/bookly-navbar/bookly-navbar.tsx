@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/stores/auth.store'
 import { ChevronLeft, ChevronRight, Menu, X, User, LogOut, Building2, Star, Sparkles } from 'lucide-react'
 import initTranslations from '@/app/i18n/i18n'
+import BooklyLanguageDropdown from '../../atoms/language-dropdown/language-dropdown.component'
+import BooklyThemeToggle from '../../atoms/theme-toggle/theme-toggle.component'
 
 const BooklyNavbar = () => {
   const router = useRouter()
@@ -101,7 +103,7 @@ const BooklyNavbar = () => {
                   router.push(`/${params?.lang}/login`)
                 }
               }}
-              className='group flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 rounded-lg hover:bg-teal-50/50 dark:hover:bg-teal-900/30 transition-all duration-200'
+              className='group flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-200 hover:text-teal-600 dark:hover:text-teal-300 rounded-lg hover:bg-gray-100/70 dark:hover:bg-gray-700/60 transition-all duration-200'
               aria-label='For Businesses'
             >
               <Building2 className='w-4 h-4 group-hover:scale-110 transition-transform duration-200' />
@@ -111,6 +113,12 @@ const BooklyNavbar = () => {
 
           {/* Right Section */}
           <div className='flex items-center gap-3'>
+            {/* Language and Theme Toggles */}
+            <div className='hidden sm:flex items-center gap-1'>
+              <BooklyLanguageDropdown />
+              <BooklyThemeToggle />
+            </div>
+
             {booklyUser ? (
               <div className='relative'>
                 <button
@@ -156,13 +164,13 @@ const BooklyNavbar = () => {
               <div className='flex items-center gap-3'>
                 <button
                   onClick={() => router.push(`/${params?.lang}/customer/login`)}
-                  className='hidden sm:block px-4 py-2 rounded-lg border border-teal-600/20 dark:border-teal-400/30 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:border-teal-600/40 dark:hover:border-teal-400/50 transition-all duration-200 font-medium touch-manipulation'
+                  className='hidden sm:block px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 font-medium touch-manipulation'
                 >
                   {t('nav.login')}
                 </button>
                 <button
                   onClick={() => router.push(`/${params?.lang}/customer/register`)}
-                  className='px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation text-sm sm:text-base'
+                  className='px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-500 dark:to-cyan-500 text-white hover:from-teal-700 hover:to-cyan-700 dark:hover:from-teal-600 dark:hover:to-cyan-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation text-sm sm:text-base'
                 >
                   <span className='hidden sm:inline'>{t('nav.signUp')}</span>
                   <span className='sm:hidden'>{t('nav.join')}</span>
@@ -185,6 +193,16 @@ const BooklyNavbar = () => {
         {mobileMenuOpen && (
           <div className='md:hidden border-t border-gray-200/50 dark:border-gray-700/50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md animate-in slide-in-from-top-2 duration-200 relative z-50'>
             <div className='px-4 py-4 space-y-3 relative z-50'>
+              {/* Mobile Language and Theme Toggles */}
+              <div className='flex items-center justify-between gap-3 px-4 py-2'>
+                <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>Preferences</span>
+                <div className='flex items-center gap-2'>
+                  <BooklyLanguageDropdown />
+                  <BooklyThemeToggle />
+                </div>
+              </div>
+              <hr className='border-gray-200/50 dark:border-gray-700/50' />
+
               <button
                 onClick={e => {
                   e.preventDefault()
@@ -202,7 +220,7 @@ const BooklyNavbar = () => {
                     }
                   }, 100)
                 }}
-                className='flex items-center gap-3 w-full px-4 py-4 text-left text-gray-700 dark:text-gray-200 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 rounded-lg transition-all duration-200 touch-manipulation text-base'
+                className='flex items-center gap-3 w-full px-4 py-4 text-left text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-gray-700/60 hover:text-teal-600 dark:hover:text-teal-300 rounded-lg transition-all duration-200 touch-manipulation text-base'
               >
                 <Building2 className='w-5 h-5' />
                 {t('nav.forBusinesses')}
@@ -220,7 +238,7 @@ const BooklyNavbar = () => {
                         router.push(`/${params?.lang}/customer/login`)
                       }, 100)
                     }}
-                    className='w-full px-4 py-4 text-center border border-teal-600/20 dark:border-teal-400/30 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/30 rounded-lg transition-all duration-200 font-medium touch-manipulation text-base'
+                    className='w-full px-4 py-4 text-center border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 rounded-lg transition-all duration-200 font-medium touch-manipulation text-base'
                   >
                     {t('nav.login')}
                   </button>
@@ -234,7 +252,7 @@ const BooklyNavbar = () => {
                         router.push(`/${params?.lang}/customer/register`)
                       }, 100)
                     }}
-                    className='w-full px-4 py-4 text-center bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-lg font-medium touch-manipulation text-base'
+                    className='w-full px-4 py-4 text-center bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-500 dark:to-cyan-500 text-white hover:from-teal-700 hover:to-cyan-700 dark:hover:from-teal-600 dark:hover:to-cyan-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] rounded-lg touch-manipulation text-base'
                   >
                     {t('nav.signUp')}
                   </button>

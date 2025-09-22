@@ -29,7 +29,7 @@ export default async function RootLayout({
     <TranslationsProvider locale={locale}>
       <ThemeProvider attribute='class' enableSystem>
         <AuthInitializer />
-        <ThemeChanger />
+        {/* <ThemeChanger /> */}
         <div
           style={{
             background: 'var(--background)',

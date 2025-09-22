@@ -1,0 +1,1 @@
+export { default as BooklyThemeToggle } from './theme-toggle.component'

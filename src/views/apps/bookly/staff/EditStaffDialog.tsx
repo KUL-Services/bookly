@@ -152,7 +152,7 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches, services = 
             </Grid>
             <Grid item xs={12}>
               <ImageUpload
-                currentImageUrl={formData.profilePhoto}
+                currentImageUrl={staff.profilePhotoUrl || null}
                 onImageUploaded={handleProfilePhotoUploaded}
                 onImageDeleted={handleProfilePhotoDeleted}
                 label="Profile Photo"

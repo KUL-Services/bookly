@@ -582,7 +582,7 @@ export default function SearchPage() {
                 className={`px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
                   viewMode === 'list'
                     ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
-                    : 'bg-white dark:bg-gray-800 border border-teal-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-gray-700 hover:border-teal-300 dark:hover:border-gray-500'
+                    : 'bg-white dark:bg-gray-800 border border-teal-200 dark:border-gray-600 text-gray-700 dark:[color:rgb(55_65_81)] hover:bg-teal-50 dark:hover:bg-gray-700 hover:border-teal-300 dark:hover:border-gray-500'
                 }`}
               >
                 <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -600,7 +600,7 @@ export default function SearchPage() {
                 className={`px-3 py-2 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
                   viewMode === 'map'
                     ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
-                    : 'bg-white dark:bg-gray-800 border border-teal-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-gray-700 hover:border-teal-300 dark:hover:border-gray-500'
+                    : 'bg-white dark:bg-gray-800 border border-teal-200 dark:border-gray-600 text-gray-700 dark:[color:rgb(55_65_81)] hover:bg-teal-50 dark:hover:bg-gray-700 hover:border-teal-300 dark:hover:border-gray-500'
                 }`}
               >
                 <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

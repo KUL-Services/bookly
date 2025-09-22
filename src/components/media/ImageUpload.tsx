@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   Button,
   Card,
@@ -42,7 +42,17 @@ export const ImageUpload = ({
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Cleanup preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    }
+  }, [previewUrl])
 
   const handleFileSelect = (file: File) => {
     if (disabled) return
@@ -55,6 +65,10 @@ export const ImageUpload = ({
       setError(validation.error!)
       return
     }
+
+    // Create preview URL immediately
+    const fileUrl = URL.createObjectURL(file)
+    setPreviewUrl(fileUrl)
 
     uploadFile(file)
   }
@@ -109,7 +123,13 @@ export const ImageUpload = ({
   }
 
   const handleDelete = async () => {
-    if (!currentImageUrl || disabled) return
+    if ((!currentImageUrl && !previewUrl) || disabled) return
+
+    // Clean up preview URL if it exists
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(null)
+    }
 
     // Since we're working with URLs now, we just call the delete callback
     // The parent component should handle the actual deletion logic
@@ -134,14 +154,14 @@ export const ImageUpload = ({
       />
 
       <Card
-        onClick={currentImageUrl ? undefined : openFileDialog}
+        onClick={currentImageUrl || previewUrl ? undefined : openFileDialog}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         sx={{
           width: width,
           height: height,
-          cursor: disabled ? 'not-allowed' : (currentImageUrl ? 'default' : 'pointer'),
+          cursor: disabled ? 'not-allowed' : (currentImageUrl || previewUrl ? 'default' : 'pointer'),
           border: dragOver ? '2px dashed #1976d2' : '2px dashed #ccc',
           backgroundColor: dragOver ? '#f5f5f5' : 'transparent',
           opacity: disabled ? 0.6 : 1,
@@ -165,10 +185,10 @@ export const ImageUpload = ({
                 Uploading...
               </Typography>
             </Box>
-          ) : currentImageUrl ? (
+          ) : currentImageUrl || previewUrl ? (
             <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
               <img
-                src={currentImageUrl}
+                src={previewUrl || currentImageUrl}
                 alt="Current image"
                 style={{
                   width: '100%',

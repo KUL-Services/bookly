@@ -233,6 +233,7 @@ const EditServiceDialog = ({ open, onClose, onSubmit, service, categories, branc
             <Grid item xs={12}>
               <GalleryUpload
                 currentImageIds={formData.gallery || []}
+                currentImageUrls={service.galleryUrls || []}
                 onImagesUploaded={handleGalleryChange}
                 onImageDeleted={handleImageDeleted}
                 label="Service Gallery"

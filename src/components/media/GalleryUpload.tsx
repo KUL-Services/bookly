@@ -18,6 +18,7 @@ import { MediaService } from '@/lib/api'
 
 interface GalleryUploadProps {
   currentImageIds?: string[]
+  currentImageUrls?: string[]
   onImagesUploaded: (imageIds: string[]) => void
   onImageDeleted?: (imageId: string) => void
   label?: string
@@ -32,6 +33,7 @@ interface GalleryUploadProps {
 
 export const GalleryUpload = ({
   currentImageIds = [],
+  currentImageUrls = [],
   onImagesUploaded,
   onImageDeleted,
   label = "Upload Gallery Images",
@@ -53,7 +55,7 @@ export const GalleryUpload = ({
     if (disabled) return
 
     const fileArray = Array.from(files)
-    const availableSlots = maxImages - currentImageIds.length
+    const availableSlots = maxImages - currentImageUrls.length
 
     if (fileArray.length > availableSlots) {
       setError(`You can only upload ${availableSlots} more image(s). Maximum ${maxImages} images allowed.`)
@@ -143,7 +145,7 @@ export const GalleryUpload = ({
     }
   }
 
-  const canAddMore = currentImageIds.length < maxImages
+  const canAddMore = currentImageUrls.length < maxImages
 
   return (
     <div className={className}>
@@ -166,9 +168,9 @@ export const GalleryUpload = ({
         </Typography>
         <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
           <Chip
-            label={`${currentImageIds.length}/${maxImages} images`}
+            label={`${currentImageUrls.length}/${maxImages} images`}
             size="small"
-            color={currentImageIds.length >= maxImages ? "error" : "default"}
+            color={currentImageUrls.length >= maxImages ? "error" : "default"}
           />
           <Chip label={`Max ${maxSizeMB}MB each`} size="small" variant="outlined" />
         </Box>
@@ -176,64 +178,67 @@ export const GalleryUpload = ({
 
       <Grid container spacing={2}>
         {/* Existing Images */}
-        {currentImageIds.map((imageId, index) => (
-          <Grid item key={imageId}>
-            <Card
-              sx={{
-                width: imageWidth,
-                height: imageHeight,
-                position: 'relative',
-                overflow: 'hidden'
-              }}
-            >
-              <CardContent sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                p: 1,
-                '&:last-child': { pb: 1 }
-              }}>
-                {/* TODO: Replace with actual image once we have asset URL endpoint */}
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: '#f0f0f0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 1,
-                    position: 'relative'
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary" textAlign="center">
-                    Image {index + 1}<br />
-                    {imageId.slice(0, 8)}...
-                  </Typography>
-
-                  {!disabled && onImageDeleted && (
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDelete(imageId)}
-                      color="error"
-                      sx={{
-                        position: 'absolute',
-                        top: 4,
-                        right: 4,
-                        backgroundColor: 'rgba(255,255,255,0.9)',
-                        '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
+        {currentImageUrls.map((imageUrl, index) => {
+          const imageId = currentImageIds[index]
+          return (
+            <Grid item key={imageId || index}>
+              <Card
+                sx={{
+                  width: imageWidth,
+                  height: imageHeight,
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                <CardContent sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  p: 0,
+                  '&:last-child': { pb: 0 }
+                }}>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={`Gallery image ${index + 1}`}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
                       }}
-                    >
-                      <Delete fontSize="small" />
-                    </IconButton>
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+                    />
+
+                    {!disabled && onImageDeleted && imageId && (
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(imageId)}
+                        color="error"
+                        sx={{
+                          position: 'absolute',
+                          top: 4,
+                          right: 4,
+                          backgroundColor: 'rgba(255,255,255,0.9)',
+                          '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
+                        }}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          )
+        })}
 
         {/* Add More Button */}
         {canAddMore && (

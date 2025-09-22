@@ -173,12 +173,12 @@ function ProfilePage() {
             <div className='mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6'>
               <div className='group rounded-xl border border-teal-100 dark:border-teal-700/50 p-6 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30 hover:from-teal-100 hover:to-cyan-100 dark:hover:from-teal-800/40 dark:hover:to-cyan-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <H6 className='text-2xl font-bold text-teal-600 dark:text-teal-400 mb-1' stringProps={{ plainText: String(user.stats.totalBookings) }} />
-                <P i18nTFn={t} className='text-gray-700 dark:text-gray-300 font-medium' stringProps={{ localeKey: 'profile.totalBookings' }} />
+                <P i18nTFn={t} className='text-gray-700 dark:[color:rgb(55_65_81)] font-medium' stringProps={{ localeKey: 'profile.totalBookings' }} />
                 <div className='mt-2 w-8 h-1 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-full' />
               </div>
               <div className='group rounded-xl border border-emerald-100 dark:border-emerald-700/50 p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-800/40 dark:hover:to-teal-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <H6 className='text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1' stringProps={{ plainText: String(user.stats.favorites) }} />
-                <P i18nTFn={t} className='text-gray-700 dark:text-gray-300 font-medium' stringProps={{ localeKey: 'profile.favorites' }} />
+                <P i18nTFn={t} className='text-gray-700 dark:[color:rgb(55_65_81)] font-medium' stringProps={{ localeKey: 'profile.favorites' }} />
                 <div className='mt-2 w-8 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full' />
               </div>
               <div className='group rounded-xl border border-yellow-100 dark:border-yellow-700/50 p-6 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/30 dark:to-orange-900/30 hover:from-yellow-100 hover:to-orange-100 dark:hover:from-yellow-800/40 dark:hover:to-orange-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
@@ -186,7 +186,7 @@ function ProfilePage() {
                   <H6 className='text-2xl font-bold text-yellow-600 dark:text-yellow-400' stringProps={{ plainText: String(user.stats.avgRating) }} />
                   <KulIcon icon='lucide:star' iconClass='w-6 h-6 text-yellow-500 dark:text-yellow-400 group-hover:animate-pulse' />
                 </div>
-                <P i18nTFn={t} className='text-gray-700 dark:text-gray-300 font-medium' stringProps={{ localeKey: 'profile.avgRating' }} />
+                <P i18nTFn={t} className='text-gray-700 dark:[color:rgb(55_65_81)] font-medium' stringProps={{ localeKey: 'profile.avgRating' }} />
                 <div className='mt-2 w-8 h-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full' />
               </div>
             </div>
@@ -211,7 +211,7 @@ function ProfilePage() {
                 >
                   <P
                     i18nTFn={t}
-                    className={activeTab === 'upcoming' ? 'text-white' : 'text-gray-700 dark:text-gray-300'}
+                    className={activeTab === 'upcoming' ? 'text-white' : 'text-gray-700 dark:[color:rgb(55_65_81)]'}
                     stringProps={{
                       localeKey: 'profile.bookings.upcomingWithCount',
                       localeProps: { count: upcomingBookings.length }
@@ -228,7 +228,7 @@ function ProfilePage() {
                 >
                   <P
                     i18nTFn={t}
-                    className={activeTab === 'past' ? 'text-white' : 'text-gray-700 dark:text-gray-300'}
+                    className={activeTab === 'past' ? 'text-white' : 'text-gray-700 dark:[color:rgb(55_65_81)]'}
                     stringProps={{
                       localeKey: 'profile.bookings.pastWithCount',
                       localeProps: { count: pastBookings.length }

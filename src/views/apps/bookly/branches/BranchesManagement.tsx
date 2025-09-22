@@ -233,6 +233,7 @@ const BranchesManagement = () => {
                     <TableCell>Branch Name</TableCell>
                     <TableCell>Address</TableCell>
                     <TableCell>Mobile</TableCell>
+                    <TableCell>Gallery</TableCell>
                     <TableCell>Services</TableCell>
                     <TableCell>Staff</TableCell>
                     <TableCell>Created</TableCell>
@@ -250,6 +251,31 @@ const BranchesManagement = () => {
                       </TableCell>
                       <TableCell>
                         {branch.mobile || 'No mobile number'}
+                      </TableCell>
+                      <TableCell>
+                        <div className='flex flex-wrap gap-1'>
+                          {branch.galleryUrls?.length ? (
+                            <div className='flex gap-1 max-w-[200px] overflow-x-auto'>
+                              {branch.galleryUrls.slice(0, 3).map((imageUrl, index) => (
+                                <img
+                                  key={index}
+                                  src={imageUrl}
+                                  alt={`Branch ${branch.name} - Image ${index + 1}`}
+                                  className='w-12 h-12 object-cover rounded-md border'
+                                />
+                              ))}
+                              {branch.galleryUrls.length > 3 && (
+                                <div className='w-12 h-12 bg-gray-100 rounded-md border flex items-center justify-center text-xs text-gray-600'>
+                                  +{branch.galleryUrls.length - 3}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <Typography variant='body2' color='textSecondary'>
+                              No images
+                            </Typography>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className='flex flex-wrap gap-1'>
