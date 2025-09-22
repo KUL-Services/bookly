@@ -24,7 +24,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import ImageUpload from '@/components/media/ImageUpload'
 
 // API
-import { BusinessService } from '@/lib/api'
+import { BusinessService, AuthService } from '@/lib/api'
 import type { Business, SocialLink, BusinessChangeRequest } from '@/lib/api'
 
 // Store
@@ -81,7 +81,33 @@ const BusinessProfileSettings = () => {
       setLoading(true)
       setError(null)
 
-      // Get business data from authenticated admin
+      // First try to get updated business data from API
+      try {
+        const response = await AuthService.getAdminDetails()
+        if (response.data && !response.error) {
+          const adminDetails = response.data
+          const business = adminDetails.business
+
+          if (business) {
+            const businessData: BusinessFormData = {
+              id: business.id,
+              name: business.name,
+              email: business.email || '',
+              description: business.description || '',
+              socialLinks: business.socialLinks || [],
+              logo: business.logo || null
+            }
+
+            setFormData(businessData)
+            setOriginalData(businessData)
+            return
+          }
+        }
+      } catch (apiError) {
+        console.warn('Failed to fetch from API, falling back to auth store data:', apiError)
+      }
+
+      // Fallback to auth store data if API fails
       if (!materializeUser?.business) {
         throw new Error('No business profile found. Please ensure you are logged in as a business admin.')
       }

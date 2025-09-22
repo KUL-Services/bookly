@@ -58,8 +58,8 @@ export default function RegisterPage({ params }: PageProps) {
               }
               onSubmit={async values => {
                 try {
-                  const { firstName, lastName, email, password } = values as any
-                  await registerCustomer({ firstName, lastName, email, password })
+                  const { firstName, lastName, mobile, email, password } = values as any
+                  await registerCustomer({ firstName, lastName, mobile, email, password })
                   setRegistrationSuccess(true)
                   // Don't auto-redirect for registration - user needs to verify email first
                 } catch (err) {

@@ -37,6 +37,7 @@ class ApiClient {
         method: config.method || 'GET',
         headers: config.headers,
         body: config.body,
+        hasAuthHeader: !!(config.headers as any)?.Authorization,
       })
 
       const response = await fetch(url, config)
@@ -49,7 +50,18 @@ class ApiClient {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('❌ API Error Response:', errorText)
+        console.error('❌ API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          url
+        })
+
+        // Check if this is an auth error that might cause token clearing
+        if (response.status === 401 || response.status === 403) {
+          console.warn('🔒 Authentication error detected, but NOT clearing token from API client')
+        }
+
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
       }
 

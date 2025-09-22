@@ -157,6 +157,7 @@ export interface CreateAssetResponse {
 export interface RegisterUserRequest {
   firstName: string
   lastName: string
+  mobile: string
   email: string
   password: string
 }
@@ -270,4 +271,11 @@ export interface ApproveBusinessRequest {
 
 export interface RejectBusinessRequest {
   id: string
+}
+
+export interface UpdateUserRequest {
+  firstName: string
+  lastName: string
+  mobile: string
+  profilePhoto?: string | null // Asset UUID
 }

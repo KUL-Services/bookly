@@ -164,7 +164,7 @@ function ProfilePage() {
                 size='md'
                 variant='contained'
                 buttonText={{ localeKey: 'profile.editProfile' }}
-                onClick={() => alert('Edit profile clicked (mock)')}
+                onClick={() => router.push(`/${params?.lang}/profile/settings`)}
               />
             </CardAction>
             <CardDescription className='sr-only'>Profile overview</CardDescription>

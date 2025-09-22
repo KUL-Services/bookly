@@ -38,6 +38,7 @@ const ServicesManagement = () => {
   const [branches, setBranches] = useState<Branch[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<any>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
@@ -47,6 +48,7 @@ const ServicesManagement = () => {
     await withErrorHandling(async () => {
       setLoading(true)
       setError(null)
+      setSuccess(null)
 
       const [servicesResponse, categoriesResponse, branchesResponse] = await Promise.all([
         ServicesService.getServices(),
@@ -87,6 +89,7 @@ const ServicesManagement = () => {
       }
       await fetchData()
       setCreateDialogOpen(false)
+      setSuccess('Service created successfully!')
     }, 'Failed to create service').catch((err) => {
       logError(err, 'ServicesManagement.handleCreateService', { serviceData })
       setError(err)
@@ -102,6 +105,7 @@ const ServicesManagement = () => {
       await fetchData()
       setEditDialogOpen(false)
       setSelectedService(null)
+      setSuccess('Service updated successfully!')
     }, 'Failed to update service').catch((err) => {
       logError(err, 'ServicesManagement.handleEditService', { serviceData })
       setError(err)
@@ -120,6 +124,7 @@ const ServicesManagement = () => {
         throw new Error(response.error)
       }
       await fetchData()
+      setSuccess('Service deleted successfully!')
     }, 'Failed to delete service').catch((err) => {
       logError(err, 'ServicesManagement.handleDeleteService', { serviceId })
       setError(err)
@@ -179,6 +184,12 @@ const ServicesManagement = () => {
                 context="Services Management"
                 showDetails={false}
               />
+            )}
+
+            {success && (
+              <Alert severity="success" className="mb-4" onClose={() => setSuccess(null)}>
+                {success}
+              </Alert>
             )}
 
             {services.length === 0 ? (

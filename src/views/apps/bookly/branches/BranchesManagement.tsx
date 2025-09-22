@@ -37,6 +37,7 @@ const BranchesManagement = () => {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<any>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -46,6 +47,7 @@ const BranchesManagement = () => {
     await withErrorHandling(async () => {
       setLoading(true)
       setError(null)
+      setSuccess(null)
 
       const [branchesResponse, servicesResponse] = await Promise.all([
         BranchesService.getBranches(),
@@ -139,6 +141,7 @@ const BranchesManagement = () => {
       }
       await fetchData()
       setCreateDialogOpen(false)
+      setSuccess('Branch created successfully!')
     }, 'Failed to create branch').catch((err) => {
       logError(err, 'BranchesManagement.handleCreateBranch', { branchData })
       setError(err)
@@ -154,6 +157,7 @@ const BranchesManagement = () => {
       await fetchData()
       setEditDialogOpen(false)
       setSelectedBranch(null)
+      setSuccess('Branch updated successfully!')
     }, 'Failed to update branch').catch((err) => {
       logError(err, 'BranchesManagement.handleEditBranch', { branchData })
       setError(err)
@@ -172,6 +176,7 @@ const BranchesManagement = () => {
         throw new Error(response.error)
       }
       await fetchData()
+      setSuccess('Branch deleted successfully!')
     }, 'Failed to delete branch').catch((err) => {
       logError(err, 'BranchesManagement.handleDeleteBranch', { branchId })
       setError(err)
@@ -215,6 +220,12 @@ const BranchesManagement = () => {
                 context="Branches Management"
                 showDetails={false}
               />
+            )}
+
+            {success && (
+              <Alert severity="success" className="mb-4" onClose={() => setSuccess(null)}>
+                {success}
+              </Alert>
             )}
 
             {branches.length === 0 ? (

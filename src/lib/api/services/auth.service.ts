@@ -6,6 +6,7 @@ import type {
   RegisterAdminRequest,
   VerifyAccountRequest,
   VerificationResponse,
+  UpdateUserRequest,
 } from '../types'
 
 export class AuthService {
@@ -38,6 +39,14 @@ export class AuthService {
     return apiClient.post('/auth/user/reset-password', data)
   }
 
+  static async updateUser(data: UpdateUserRequest) {
+    return apiClient.patch('/auth/user', data)
+  }
+
+  static async getUserDetails() {
+    return apiClient.get('/auth/user/details')
+  }
+
   // Admin Authentication
   static async registerAdmin(data: RegisterAdminRequest) {
     return apiClient.post('/auth/admin/register', data)
@@ -65,6 +74,10 @@ export class AuthService {
 
   static async resetPasswordAdmin(data: { email: string; code: string; password: string }) {
     return apiClient.post('/auth/admin/reset-password', data)
+  }
+
+  static async getAdminDetails() {
+    return apiClient.get('/auth/admin/details')
   }
 
   // Super Admin Authentication

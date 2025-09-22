@@ -41,6 +41,7 @@ const StaffManagement = () => {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<any>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -50,6 +51,7 @@ const StaffManagement = () => {
     await withErrorHandling(async () => {
       setLoading(true)
       setError(null)
+      setSuccess(null)
 
       const [staffResponse, branchesResponse, servicesResponse] = await Promise.all([
         StaffService.getStaff(),
@@ -220,6 +222,7 @@ const StaffManagement = () => {
 
       await fetchData()
       setCreateDialogOpen(false)
+      setSuccess('Staff member created successfully!')
     }, 'Failed to create staff member').catch(err => {
       logError(err, 'StaffManagement.handleCreateStaff', { staffData })
       setError(err)
@@ -243,6 +246,7 @@ const StaffManagement = () => {
       await fetchData()
       setEditDialogOpen(false)
       setSelectedStaff(null)
+      setSuccess('Staff member updated successfully!')
     }, 'Failed to update staff member').catch(err => {
       logError(err, 'StaffManagement.handleEditStaff', { staffData })
       setError(err)
@@ -261,6 +265,7 @@ const StaffManagement = () => {
         throw new Error(response.error)
       }
       await fetchData()
+      setSuccess('Staff member deleted successfully!')
     }, 'Failed to delete staff member')
       .catch(err => {
         logError(err, 'StaffManagement.handleDeleteStaff', { staffId })
@@ -300,6 +305,12 @@ const StaffManagement = () => {
           />
           <CardContent>
             {error && <ErrorDisplay error={error} onRetry={fetchData} context='Staff Management' showDetails={false} />}
+
+            {success && (
+              <Alert severity="success" className="mb-4" onClose={() => setSuccess(null)}>
+                {success}
+              </Alert>
+            )}
 
             {staff.length === 0 ? (
               <div className='text-center py-8'>
