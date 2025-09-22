@@ -39,10 +39,10 @@ export class MediaService {
     }
   }
 
-  // Complete upload flow: create asset placeholder, return assetFileId immediately
+  // Complete upload flow: create asset placeholder, upload to S3, return assetFileId
   static async uploadFile(file: File) {
     try {
-      // Create asset placeholder and get assetFileId
+      // Step 1: Create asset placeholder and get uploadUrl
       const assetResponse = await this.createAsset({
         fileName: file.name,
         mimeType: file.type,
@@ -53,10 +53,31 @@ export class MediaService {
         return { error: assetResponse.error || 'Failed to create asset' }
       }
 
-      // Return assetFileId immediately without using uploadUrl
+      const { assetFileId, uploadUrl } = assetResponse.data
+
+      // Step 2: Upload file to the signed S3 URL
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type,
+        },
+      })
+
+      if (!uploadResponse.ok) {
+        // Clean up the asset placeholder if upload fails
+        try {
+          await this.deleteAsset(assetFileId)
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup asset after upload failure:', cleanupError)
+        }
+        return { error: `Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}` }
+      }
+
+      // Step 3: Return assetFileId for use in business/service records
       return {
         success: true,
-        assetFileId: assetResponse.data.assetFileId
+        assetFileId
       }
     } catch (error) {
       console.error('Upload failed:', error)
