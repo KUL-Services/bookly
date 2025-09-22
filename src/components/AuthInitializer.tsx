@@ -16,6 +16,7 @@ const AuthInitializer = () => {
     // Only initialize auth token if we have a user in the store
     // This prevents re-initializing after logout
     if (booklyUser || materializeUser) {
+      console.log('🔧 Initializing auth for user:', booklyUser ? 'customer' : 'business')
       AuthService.initializeAuth()
 
       // Check session validity
@@ -29,8 +30,16 @@ const AuthInitializer = () => {
       // Refresh session if valid
       refreshSession()
     } else {
-      // If no user in store, make sure no token is set in API client
-      console.log('No user in store, clearing any lingering API tokens')
+      // Check if there's a stored token but no user in memory (race condition)
+      const storedToken = AuthService.getStoredToken()
+      if (storedToken) {
+        console.log('⚠️ Found stored token but no user in store - possible race condition')
+        // Don't clear the token immediately, let the store rehydrate first
+        return
+      }
+
+      // Only clear if there's truly no token and no user
+      console.log('No user in store and no stored token, clearing any lingering API tokens')
       AuthService.clearAuthToken()
     }
 

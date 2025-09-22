@@ -50,6 +50,17 @@ export default function ProfileSettingsPage() {
       setFetchingDetails(true)
       setError(null)
 
+      // Ensure we have a token before making the API call
+      const storedToken = AuthService.getStoredToken()
+      if (!storedToken) {
+        console.warn('No auth token found, skipping user details fetch')
+        setFetchingDetails(false)
+        return
+      }
+
+      // Ensure the API client has the token
+      AuthService.initializeAuth()
+
       console.log('Fetching user details...')
       const response = await AuthService.getUserDetails()
       console.log('User details response:', response)
@@ -89,7 +100,12 @@ export default function ProfileSettingsPage() {
       return
     }
 
-    fetchUserDetails()
+    // Add a small delay to ensure store has fully rehydrated
+    const timer = setTimeout(() => {
+      fetchUserDetails()
+    }, 100)
+
+    return () => clearTimeout(timer)
   }, [hydrated, booklyUser, params?.lang, router])
 
   const handleInputChange = (field: string, value: string) => {

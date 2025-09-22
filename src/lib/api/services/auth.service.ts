@@ -102,7 +102,7 @@ export class AuthService {
   }
 
   static clearAuthToken() {
-    apiClient.clearAuthToken()
+    apiClient.forceCleanupToken()
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
     }

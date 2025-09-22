@@ -319,7 +319,14 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         lastActivity: state.lastActivity,
         sessionExpiry: state.sessionExpiry
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        // Restore token to API client after rehydration
+        if (state?.token && (state?.booklyUser || state?.materializeUser)) {
+          console.log('🔄 Restoring token to API client after store rehydration')
+          AuthService.setAuthToken(state.token)
+        }
+      }
     }
   )
 )

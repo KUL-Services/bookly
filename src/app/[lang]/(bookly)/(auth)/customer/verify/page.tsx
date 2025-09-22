@@ -23,7 +23,7 @@ export default function VerifyPage({ params }: PageProps) {
     try {
       await verifyCustomer({ email, code })
       // Redirect to login after successful verification
-      router.push(`/${locale}/(auth)/customer/login`)
+      router.push(`/${locale}/customer/login`)
     } catch (error) {
       console.error('Verification failed:', error)
     }
@@ -76,7 +76,7 @@ export default function VerifyPage({ params }: PageProps) {
                 <Button
                   buttonText={{ plainText: 'Back to Login' }}
                   variant='text'
-                  onClick={() => router.push(`/${locale}/(auth)/customer/login`)}
+                  onClick={() => router.push(`/${locale}/customer/login`)}
                   className='text-gray-600 hover:text-gray-900'
                 />
               </div>

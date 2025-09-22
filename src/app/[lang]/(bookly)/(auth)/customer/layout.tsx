@@ -1,6 +1,6 @@
 'use client'
 import { Button } from '@/bookly/components/molecules'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useState } from 'react'
 
 export default function AuthLayout({
@@ -10,6 +10,7 @@ export default function AuthLayout({
 }>) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const router = useRouter()
+  const params = useParams<{ lang: string }>()
   return (
     <div className='min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-950 dark:to-secondary-950'>
       {/* <header className='  bg-white relative shadow-md '> */}
@@ -22,13 +23,13 @@ export default function AuthLayout({
               className='bg-transparent border-e'
               size='md'
               buttonText={{ plainText: 'Sign In' }}
-              onClick={() => router.push('/en/customer/login')}
+              onClick={() => router.push(`/${params?.lang || 'en'}/customer/login`)}
             />
             <Button
               variant='contained'
               size='md'
               buttonText={{ plainText: 'Sign Up' }}
-              onClick={() => router.push('/en/customer/register')}
+              onClick={() => router.push(`/${params?.lang || 'en'}/customer/register`)}
             />
           </div> */}
         <Button

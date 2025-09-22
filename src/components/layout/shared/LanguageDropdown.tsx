@@ -69,7 +69,7 @@ const LanguageDropdown = () => {
 
   const handleLanguageChange = (locale: string) => {
     const newPath = getLocalePath(pathName, locale)
-    router.replace(newPath)
+    router.push(newPath)
     handleClose()
   }
 

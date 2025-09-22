@@ -57,9 +57,36 @@ class ApiClient {
           url
         })
 
-        // Check if this is an auth error that might cause token clearing
-        if (response.status === 401 || response.status === 403) {
-          console.warn('🔒 Authentication error detected, but NOT clearing token from API client')
+        // Check if this is an auth error that should trigger logout
+        if (response.status === 401) {
+          console.warn('🔒 401 Unauthorized - Token may be invalid or expired')
+
+          // Import auth store dynamically to avoid circular dependencies
+          const { useAuthStore } = await import('@/stores/auth.store')
+          const store = useAuthStore.getState()
+
+          // Check which user type is logged in and logout accordingly
+          if (store.booklyUser && store.userType === 'customer') {
+            console.log('🚪 Logging out customer user due to 401')
+            store.logoutCustomer()
+
+            // Redirect to customer login
+            if (typeof window !== 'undefined') {
+              // Get current language from URL
+              const path = window.location.pathname
+              const langMatch = path.match(/^\/([a-z]{2})\//)
+              const lang = langMatch ? langMatch[1] : 'en'
+              window.location.href = `/${lang}/customer/login`
+            }
+          } else if (store.materializeUser && store.userType === 'business') {
+            console.log('🚪 Logging out business user due to 401')
+            store.logoutBusiness()
+
+            // Redirect to business login
+            if (typeof window !== 'undefined') {
+              window.location.href = '/admin/login'
+            }
+          }
         }
 
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
@@ -120,12 +147,17 @@ class ApiClient {
     }
   }
 
-  // Remove authorization header
+  // Remove authorization header (only clears from API client, not localStorage)
   clearAuthToken() {
     const { Authorization, ...headers } = this.defaultHeaders as any
     this.defaultHeaders = headers
+  }
 
-    // Also clear from localStorage
+  // Force clear token from both API client and localStorage (used during logout)
+  forceCleanupToken() {
+    const { Authorization, ...headers } = this.defaultHeaders as any
+    this.defaultHeaders = headers
+
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
     }
