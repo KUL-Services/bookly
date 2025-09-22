@@ -4,8 +4,7 @@
 import { useRef, useState } from 'react'
 
 // Next Imports
-import Link from 'next/link'
-import { useParams, usePathname } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 
 // MUI Imports
 import IconButton from '@mui/material/IconButton'
@@ -59,12 +58,19 @@ const LanguageDropdown = () => {
   const anchorRef = useRef<HTMLButtonElement>(null)
 
   // Hooks
+  const router = useRouter()
   const pathName = usePathname()
   const { settings } = useSettings()
   const { lang } = useParams()
 
   const handleClose = () => {
     setOpen(false)
+  }
+
+  const handleLanguageChange = (locale: string) => {
+    const newPath = getLocalePath(pathName, locale)
+    router.replace(newPath)
+    handleClose()
   }
 
   const handleToggle = () => {
@@ -95,9 +101,7 @@ const LanguageDropdown = () => {
                   {languageData.map(locale => (
                     <MenuItem
                       key={locale.langCode}
-                      component={Link}
-                      href={getLocalePath(pathName, locale.langCode)}
-                      onClick={handleClose}
+                      onClick={() => handleLanguageChange(locale.langCode)}
                       selected={lang === locale.langCode}
                       className='pli-4'
                     >

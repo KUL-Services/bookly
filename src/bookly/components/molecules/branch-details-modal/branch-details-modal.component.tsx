@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useTheme } from 'next-themes'
 import { useParams } from 'next/navigation'
 import initTranslations from '@/app/i18n/i18n'
 import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
@@ -33,13 +32,12 @@ export const BranchDetailsModal = ({
   onBookService
 }: BranchDetailsModalProps) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'staff'>('overview')
-  const { theme } = useTheme()
   const params = useParams<{ lang: string }>()
   const [t, setT] = useState<any>(() => (key: string) => key)
 
   useEffect(() => {
     const initializeTranslations = async () => {
-      const { t: tFn } = await initTranslations(params?.lang || 'en', ['common'])
+      const { t: tFn } = await initTranslations((params?.lang || 'en') as 'en' | 'ar' | 'fr', ['common'])
       setT(() => tFn)
     }
     initializeTranslations()
@@ -132,7 +130,7 @@ export const BranchDetailsModal = ({
                     className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                       activeTab === tab.id
                         ? 'text-teal-600 border-teal-600 bg-white dark:bg-gray-800 dark:text-teal-400 dark:border-teal-400'
-                        : 'bg-teal-900 dark:text-white border-transparent hover:text-gray-800 dark:hover:text-teal-300 hover:border-gray-300 dark:hover:border-teal-400 hover:bg-gray-100 dark:hover:bg-gray-600'
+                        : 'text-gray-600 dark:text-white border-transparent hover:text-gray-800 dark:hover:text-teal-300 hover:border-gray-300 dark:hover:border-teal-400 hover:bg-gray-100 dark:hover:bg-gray-600'
                     }`}
                   >
                     <KulIcon icon={tab.icon} className='w-4 h-4' />
@@ -155,7 +153,7 @@ export const BranchDetailsModal = ({
                   <div className='bg-gray-50 dark:bg-gray-700 rounded-lg p-4'>
                     <p className='text-gray-700 dark:text-gray-300 mb-2'>{branch.address}</p>
                     <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.address)}`}
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.address || '')}`}
                       target='_blank'
                       rel='noopener noreferrer'
                       className='inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 text-sm'

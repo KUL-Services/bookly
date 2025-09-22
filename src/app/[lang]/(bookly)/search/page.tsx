@@ -249,6 +249,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filtersLoading, setFiltersLoading] = useState(false)
+  const [hasAnimated, setHasAnimated] = useState(false)
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -361,6 +362,9 @@ export default function SearchPage() {
     } finally {
       setLoading(false)
       setFiltersLoading(false)
+      if (!hasAnimated) {
+        setHasAnimated(true)
+      }
     }
   }
 
@@ -630,7 +634,7 @@ export default function SearchPage() {
                 return (
                   <div
                     key={business.id}
-                    className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-teal-100/50 dark:border-gray-700/50 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4 duration-500'
+                    className={`group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-teal-100/50 dark:border-gray-700/50 rounded-xl overflow-hidden hover:shadow-xl transition-all duration-500 hover:scale-[1.01] ${hasAnimated ? '' : 'animate-in fade-in slide-in-from-bottom-4 duration-500'}`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div

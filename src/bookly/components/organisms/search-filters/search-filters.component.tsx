@@ -111,7 +111,7 @@ export function SearchFilters({
         key: 'price',
         label: t('search.filters.priceRange', {
           min: filters.priceMin || 0,
-          max: filters.priceMax === undefined ? '∞' : `$${filters.priceMax}`
+          max: filters.priceMax === undefined ? 'Any' : filters.priceMax
         }),
         value: 'price'
       })
@@ -300,7 +300,7 @@ export function SearchFilters({
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded px-3 py-2">
           {t('search.filters.priceRange', {
             min: filters.priceMin || 0,
-            max: filters.priceMax === undefined ? '∞' : `$${filters.priceMax}`
+            max: filters.priceMax === undefined ? 'Any' : filters.priceMax
           })}
         </div>
       </div>

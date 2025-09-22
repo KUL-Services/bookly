@@ -340,13 +340,13 @@ function businessDetailsPage() {
                       buttonText={{ plainText: 'Save' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:heart' }}
-                      className='flex-1 sm:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover: border-none hover:bg-transparent text-sm py-2'
+                      className='flex-1 sm:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover:border-none hover:bg-transparent text-sm py-2'
                     />
                     <Button
                       buttonText={{ plainText: 'Share' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:share' }}
-                      className='flex-1 sm:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover: border-none hover:bg-transparent text-sm py-2'
+                      className='flex-1 sm:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover:border-none hover:bg-transparent text-sm py-2'
                     />
                   </div>
                 </div>
@@ -361,7 +361,7 @@ function businessDetailsPage() {
                   )}
                   {business.email && (
                     <div className='flex items-center gap-2'>
-                      <Phone className='w-4 h-4' />
+                      <Globe className='w-4 h-4' />
                       <span>{business.email}</span>
                     </div>
                   )}
@@ -369,8 +369,8 @@ function businessDetailsPage() {
                     <Clock className='w-4 h-4' />
                     <span>
                       {(business as any).openingHours
-                        ? `Mon-Wed: ${(business as any).openingHours['Mon'] || '9AM-6PM'} , Thu-Fri: ${(business as any).openingHours['Thu'] || '9AM-6PM'}, Sat: ${(business as any).openingHours['Sat'] || '10AM-4PM'}, Sun: ${(business as any).openingHours['Sun'] || 'Closed'}`
-                        : 'Mon-Sat: 9AM-6PM, Sun: Closed'}
+                        ? `Monday-Wednesday: ${(business as any).openingHours['Mon'] || '9AM-6PM'}, Thursday-Friday: ${(business as any).openingHours['Thu'] || '9AM-6PM'}, Saturday: ${(business as any).openingHours['Sat'] || '10AM-4PM'}, Sunday: ${(business as any).openingHours['Sun'] || 'Closed'}`
+                        : 'Monday-Saturday: 9AM-6PM, Sunday: Closed'}
                     </span>
                   </div>
                   {business.socialLinks && business.socialLinks.length > 0 && (
@@ -569,7 +569,7 @@ function businessDetailsPage() {
                   variant='outlined'
                   buttonText={{ localeKey: 'business.writeReview' }}
                   i18nTFn={t}
-                  className='bg-white text-gray-900 shadow-lg border-gray-400 hover:shadow-none hover: border-none hover:bg-transparent'
+                  className='bg-white text-gray-900 shadow-lg border-gray-400 hover:shadow-none hover:border-none hover:bg-transparent'
                 />
               </div>
               {/* {[...Array(5)].map((_, i) => (
@@ -718,7 +718,7 @@ function businessDetailsPage() {
                     />
                     <div className='space-y-1 text-gray-700'>
                       <div className='flex justify-between'>
-                        <span>Monday - Wensday</span>
+                        <span>Monday - Wednesday</span>
                         <span>{(business as any).openingHours?.['Mon'] || '9AM-6PM'}</span>
                       </div>
                       <div className='flex justify-between'>
