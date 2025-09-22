@@ -27,6 +27,114 @@
       "empty": "No bookings to show"
     }
   },
+  "landing": {
+    "hero": {
+      "title": "Trouvez et réservez des services de beauté et bien-être",
+      "subtitle": "Découvrez et réservez des rendez-vous avec les meilleurs salons, spas et professionnels du bien-être de votre région"
+    },
+    "search": {
+      "servicePlaceholder": "ex: coupe de cheveux, soin du visage, massage",
+      "locationPlaceholder": "Localisation",
+      "button": "Rechercher"
+    },
+    "stats": {
+      "businesses": "1000+ Entreprises Vérifiées",
+      "customers": "50,000+ Clients Satisfaits",
+      "rating": "4.9★ Note Moyenne"
+    }
+  },
+  "categories": {
+    "title": "Explorer par catégorie"
+  },
+  "search": {
+    "loading": "Recherche en cours...",
+    "noResults": "Aucun résultat trouvé",
+    "viewBusiness": "Voir l'Entreprise",
+    "viewServices": "Voir les Services",
+    "services": "Services",
+    "popularServices": "Services Populaires",
+    "socialLinks": "Liens Sociaux",
+    "moreServices": "plus de services",
+    "placeholder": "Rechercher...",
+    "filters": {
+      "appliedFilters": "Filtres Appliqués",
+      "clearAll": "Tout effacer",
+      "searchLabel": "Rechercher",
+      "searchPlaceholder": "Rechercher des services, entreprises...",
+      "locationLabel": "Localisation",
+      "locationPlaceholder": "Entrez une ville ou une zone",
+      "categoriesLabel": "Catégories",
+      "priceRangeLabel": "Gamme de Prix",
+      "minLabel": "Min",
+      "maxLabel": "Max",
+      "minPricePlaceholder": "Prix minimum",
+      "maxPricePlaceholder": "Prix maximum",
+      "ratingLabel": "Note Minimum",
+      "anyRating": "Toute note",
+      "preferredTimeLabel": "Heure Préférée",
+      "sortByLabel": "Trier par",
+      "applyFilters": "Appliquer les Filtres",
+      "applying": "Application...",
+      "reset": "Réinitialiser",
+      "priceRange": "Gamme: {{min}}€ - {{max}}€"
+    }
+  },
+  "business": {
+    "loading": "Chargement des détails de l'entreprise...",
+    "notFound": "Entreprise non trouvée",
+    "tabs": {
+      "services": "Services",
+      "branches": "Succursales",
+      "reviews": "Avis",
+      "about": "À propos"
+    },
+    "sections": {
+      "services": "Nos Services",
+      "locations": "Nos Emplacements",
+      "reviews": "Avis des Clients"
+    },
+    "writeReview": "Écrire un Avis",
+    "bookNow": "Réserver Maintenant",
+    "bookAppointment": "Prendre Rendez-vous",
+    "book": "Réserver",
+    "save": "Sauvegarder",
+    "share": "Partager",
+    "openNow": "Ouvert Maintenant",
+    "viewDetails": "Voir les Détails →",
+    "noBranches": {
+      "title": "Aucune succursale disponible",
+      "description": "Cette entreprise opère depuis un seul emplacement."
+    },
+    "noReviews": {
+      "title": "Aucun avis pour le moment",
+      "description": "Soyez le premier à laisser un avis pour cette entreprise!"
+    },
+    "about": {
+      "story": "Notre Histoire",
+      "specialties": "Ce qui Nous Rend Spéciaux",
+      "hours": "Heures d'Ouverture",
+      "contact": "Localisation et Contact"
+    },
+    "profile": {
+      "title": "Profil d'Entreprise",
+      "subtitle": "Gérez les informations de votre entreprise et soumettez des demandes de modification",
+      "currentInfo": "Informations Actuelles",
+      "requestChanges": "Demander des Modifications",
+      "businessName": "Nom de l'Entreprise",
+      "businessEmail": "Email de l'Entreprise",
+      "businessDescription": "Description de l'Entreprise",
+      "businessLogo": "Logo de l'Entreprise",
+      "uploadLogo": "Télécharger le Logo de l'Entreprise",
+      "logoDescription": "Téléchargez le logo de votre entreprise",
+      "submitRequest": "Soumettre la Demande de Modification",
+      "submitting": "Soumission...",
+      "reset": "Réinitialiser",
+      "noEmail": "Aucun email",
+      "created": "Créé:",
+      "successMessage": "Demande de modification soumise avec succès! Elle sera examinée par les administrateurs.",
+      "noProfile": "Aucun profil d'entreprise trouvé. Veuillez contacter le support."
+    }
+  },
   "auth": {
     "login": {
       "title": "Welcome back",

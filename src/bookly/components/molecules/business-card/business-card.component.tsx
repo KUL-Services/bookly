@@ -4,14 +4,16 @@ import { Business } from '@/bookly/types/api.types'
 import { cn } from '@/bookly/lib/utils'
 import Button from '../button/button.component'
 import { KulIcon } from '@/bookly/components/atoms'
+import { i18n } from 'i18next'
 
 interface BusinessCardProps {
   business: Business
   className?: string
   onClick?: () => void
+  i18nTFn?: i18n['t']
 }
 
-export const BusinessCard = ({ business, className, onClick }: BusinessCardProps) => {
+export const BusinessCard = ({ business, className, onClick, i18nTFn }: BusinessCardProps) => {
   return (
     <div onClick={onClick}>
       <BaseCard
@@ -46,7 +48,7 @@ export const BusinessCard = ({ business, className, onClick }: BusinessCardProps
               {business.city}
             </div>
             <Button
-              buttonText={{ plainText: 'Book' }}
+              buttonText={i18nTFn ? { i18nKey: 'business.book', i18nTFn } : { plainText: 'Book' }}
               variant='contained'
               className='w-full bg-teal-500 hover:bg-teal-600 text-white'
             />

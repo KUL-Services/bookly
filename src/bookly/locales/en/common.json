@@ -59,7 +59,30 @@
     "services": "Services",
     "popularServices": "Popular Services",
     "socialLinks": "Social Links",
-    "moreServices": "more services"
+    "moreServices": "more services",
+    "placeholder": "Search...",
+    "filters": {
+      "appliedFilters": "Applied Filters",
+      "clearAll": "Clear all",
+      "searchLabel": "Search",
+      "searchPlaceholder": "Search services, businesses...",
+      "locationLabel": "Location",
+      "locationPlaceholder": "Enter city or area",
+      "categoriesLabel": "Categories",
+      "priceRangeLabel": "Price Range",
+      "minLabel": "Min",
+      "maxLabel": "Max",
+      "minPricePlaceholder": "Min price",
+      "maxPricePlaceholder": "Max price",
+      "ratingLabel": "Minimum Rating",
+      "anyRating": "Any",
+      "preferredTimeLabel": "Preferred Time",
+      "sortByLabel": "Sort by",
+      "applyFilters": "Apply Filters",
+      "applying": "Applying...",
+      "reset": "Reset",
+      "priceRange": "Range: ${{min}} - ${{max}}"
+    }
   },
   "business": {
     "loading": "Loading business details...",
@@ -78,6 +101,7 @@
     "writeReview": "Write a Review",
     "bookNow": "Book Now",
     "bookAppointment": "Book Appointment",
+    "book": "Book",
     "save": "Save",
     "share": "Share",
     "openNow": "Open Now",
@@ -95,6 +119,25 @@
       "specialties": "What Makes Us Special",
       "hours": "Hours of Operation",
       "contact": "Location & Contact"
+    },
+    "profile": {
+      "title": "Business Profile",
+      "subtitle": "Manage your business information and submit change requests",
+      "currentInfo": "Current Information",
+      "requestChanges": "Request Changes",
+      "businessName": "Business Name",
+      "businessEmail": "Business Email",
+      "businessDescription": "Business Description",
+      "businessLogo": "Business Logo",
+      "uploadLogo": "Upload Business Logo",
+      "logoDescription": "Upload your business logo",
+      "submitRequest": "Submit Change Request",
+      "submitting": "Submitting...",
+      "reset": "Reset",
+      "noEmail": "No email",
+      "created": "Created:",
+      "successMessage": "Change request submitted successfully! It will be reviewed by administrators.",
+      "noProfile": "No business profile found. Please contact support."
     }
   },
   "auth": {

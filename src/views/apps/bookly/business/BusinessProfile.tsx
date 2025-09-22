@@ -24,7 +24,13 @@ import type { Business } from '@/lib/api'
 import { FormSkeleton, ButtonLoader } from '@/components/LoadingStates'
 import ImageUpload from '@/components/media/ImageUpload'
 
+// i18n Imports
+import { useParams } from 'next/navigation'
+import initTranslations from '@/app/i18n/i18n'
+
 const BusinessProfile = () => {
+  const params = useParams<{ lang: string }>()
+  const [t, setT] = useState<any>(() => (key: string) => key)
   const [business, setBusiness] = useState<Business | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -64,6 +70,14 @@ const BusinessProfile = () => {
   }
 
   useEffect(() => {
+    const initializeTranslations = async () => {
+      const { t: tFn } = await initTranslations(params?.lang || 'en', ['common'])
+      setT(() => tFn)
+    }
+    initializeTranslations()
+  }, [params?.lang])
+
+  useEffect(() => {
     fetchBusinessProfile()
   }, [])
 
@@ -84,7 +98,7 @@ const BusinessProfile = () => {
         throw new Error(response.error)
       }
 
-      setSuccess('Change request submitted successfully! It will be reviewed by administrators.')
+      setSuccess(t('business.profile.successMessage'))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit change request')
     } finally {
@@ -112,7 +126,7 @@ const BusinessProfile = () => {
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Card>
-            <CardHeader title="Business Profile" subheader="Manage your business information" />
+            <CardHeader title={t('business.profile.title')} subheader={t('business.profile.subtitle')} />
             <CardContent>
               <FormSkeleton fields={5} />
             </CardContent>
@@ -129,7 +143,7 @@ const BusinessProfile = () => {
           <Card>
             <CardContent>
               <Alert severity='error'>
-                No business profile found. Please contact support.
+                {t('business.profile.noProfile')}
               </Alert>
             </CardContent>
           </Card>
@@ -143,8 +157,8 @@ const BusinessProfile = () => {
       <Grid item xs={12}>
         <Card>
           <CardHeader
-            title='Business Profile'
-            subheader='Manage your business information and submit change requests'
+            title={t('business.profile.title')}
+            subheader={t('business.profile.subtitle')}
           />
           <CardContent>
             {error && (
@@ -161,7 +175,7 @@ const BusinessProfile = () => {
 
             {/* Current Business Info */}
             <Box className='mb-6'>
-              <Typography variant='h6' className='mb-4'>Current Information</Typography>
+              <Typography variant='h6' className='mb-4'>{t('business.profile.currentInfo')}</Typography>
               <div className='flex items-center gap-4 mb-4'>
                 <Avatar
                   src={business.logo}
@@ -173,10 +187,10 @@ const BusinessProfile = () => {
                 <div>
                   <Typography variant='h6'>{business.name}</Typography>
                   <Typography variant='body2' color='textSecondary'>
-                    {business.email || 'No email'}
+                    {business.email || t('business.profile.noEmail')}
                   </Typography>
                   <Typography variant='caption' color='textSecondary'>
-                    Created: {new Date(business.createdAt).toLocaleDateString()}
+                    {t('business.profile.created')} {new Date(business.createdAt).toLocaleDateString()}
                   </Typography>
                 </div>
               </div>
@@ -190,11 +204,11 @@ const BusinessProfile = () => {
             <Divider className='mb-6' />
 
             {/* Change Request Form */}
-            <Typography variant='h6' className='mb-4'>Request Changes</Typography>
+            <Typography variant='h6' className='mb-4'>{t('business.profile.requestChanges')}</Typography>
             <form onSubmit={handleSubmit} className='space-y-4'>
               <TextField
                 fullWidth
-                label='Business Name'
+                label={t('business.profile.businessName')}
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 required
@@ -202,7 +216,7 @@ const BusinessProfile = () => {
 
               <TextField
                 fullWidth
-                label='Business Email'
+                label={t('business.profile.businessEmail')}
                 type='email'
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
@@ -210,7 +224,7 @@ const BusinessProfile = () => {
 
               <TextField
                 fullWidth
-                label='Business Description'
+                label={t('business.profile.businessDescription')}
                 multiline
                 rows={4}
                 value={formData.description}
@@ -218,13 +232,13 @@ const BusinessProfile = () => {
               />
 
               <Box>
-                <Typography variant='subtitle2' className='mb-2'>Business Logo</Typography>
+                <Typography variant='subtitle2' className='mb-2'>{t('business.profile.businessLogo')}</Typography>
                 <ImageUpload
                   currentImageId={formData.logo || null}
                   onImageUploaded={handleLogoUploaded}
                   onImageDeleted={handleLogoDeleted}
-                  label="Upload Business Logo"
-                  description="Upload your business logo"
+                  label={t('business.profile.uploadLogo')}
+                  description={t('business.profile.logoDescription')}
                   maxSizeMB={2}
                   width={200}
                   height={200}
@@ -238,7 +252,7 @@ const BusinessProfile = () => {
                   disabled={saving}
                   startIcon={saving ? <CircularProgress size={16} /> : <i className='ri-save-line' />}
                 >
-                  {saving ? 'Submitting...' : 'Submit Change Request'}
+                  {saving ? t('business.profile.submitting') : t('business.profile.submitRequest')}
                 </Button>
 
                 <Button
@@ -254,7 +268,7 @@ const BusinessProfile = () => {
                     setSuccess(null)
                   }}
                 >
-                  Reset
+                  {t('business.profile.reset')}
                 </Button>
               </div>
             </form>

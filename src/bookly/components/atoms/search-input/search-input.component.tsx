@@ -11,12 +11,15 @@ interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEleme
   leadingIcon?: LucideIcon
 }
 
-export const SearchInput = ({ className, placeholderProps, leadingIcon, ...props }: SearchInputProps) => {
+export const SearchInput = ({ className, placeholderProps, leadingIcon, i18nTFn, ...props }: SearchInputProps) => {
+  const defaultPlaceholder = i18nTFn ? { localeKey: 'search.placeholder' } : { plainText: 'Search...' }
+
   return (
     <BaseInput
       LeadingIcon={leadingIcon || Search}
       type='search'
-      placeholderProps={placeholderProps || { plainText: 'Search...' }}
+      placeholderProps={placeholderProps || defaultPlaceholder}
+      i18nTFn={i18nTFn}
       className={className}
       {...props}
     />

@@ -59,7 +59,30 @@
     "services": "خدمات",
     "popularServices": "الخدمات الشائعة",
     "socialLinks": "الروابط الاجتماعية",
-    "moreServices": "خدمات إضافية"
+    "moreServices": "خدمات إضافية",
+    "placeholder": "بحث...",
+    "filters": {
+      "appliedFilters": "الفلاتر المطبقة",
+      "clearAll": "مسح الكل",
+      "searchLabel": "بحث",
+      "searchPlaceholder": "البحث في الخدمات والمتاجر...",
+      "locationLabel": "الموقع",
+      "locationPlaceholder": "أدخل المدينة أو المنطقة",
+      "categoriesLabel": "الفئات",
+      "priceRangeLabel": "نطاق السعر",
+      "minLabel": "الحد الأدنى",
+      "maxLabel": "الحد الأقصى",
+      "minPricePlaceholder": "أقل سعر",
+      "maxPricePlaceholder": "أعلى سعر",
+      "ratingLabel": "الحد الأدنى للتقييم",
+      "anyRating": "أي تقييم",
+      "preferredTimeLabel": "الوقت المفضل",
+      "sortByLabel": "ترتيب حسب",
+      "applyFilters": "تطبيق الفلاتر",
+      "applying": "جار التطبيق...",
+      "reset": "إعادة تعيين",
+      "priceRange": "النطاق: {{min}}$ - {{max}}$"
+    }
   },
   "business": {
     "loading": "جار تحميل تفاصيل المتجر...",
@@ -78,6 +101,7 @@
     "writeReview": "اكتب تقييماً",
     "bookNow": "احجز الآن",
     "bookAppointment": "احجز موعداً",
+    "book": "احجز",
     "save": "حفظ",
     "share": "مشاركة",
     "openNow": "مفتوح الآن",
@@ -95,6 +119,25 @@
       "specialties": "ما يميزنا",
       "hours": "ساعات العمل",
       "contact": "الموقع والتواصل"
+    },
+    "profile": {
+      "title": "ملف المتجر",
+      "subtitle": "إدارة معلومات متجرك وتقديم طلبات التغيير",
+      "currentInfo": "المعلومات الحالية",
+      "requestChanges": "طلب تغييرات",
+      "businessName": "اسم المتجر",
+      "businessEmail": "بريد المتجر الإلكتروني",
+      "businessDescription": "وصف المتجر",
+      "businessLogo": "شعار المتجر",
+      "uploadLogo": "رفع شعار المتجر",
+      "logoDescription": "رفع شعار متجرك",
+      "submitRequest": "تقديم طلب التغيير",
+      "submitting": "جار التقديم...",
+      "reset": "إعادة تعيين",
+      "noEmail": "لا يوجد بريد إلكتروني",
+      "created": "تم الإنشاء:",
+      "successMessage": "تم تقديم طلب التغيير بنجاح! سيتم مراجعته من قبل المديرين.",
+      "noProfile": "لم يتم العثور على ملف المتجر. يرجى التواصل مع الدعم."
     }
   },
   "auth": {
