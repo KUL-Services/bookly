@@ -57,8 +57,14 @@ export const BranchDetailsModal = ({
   return (
     <div className='fixed inset-0 z-50 overflow-hidden'>
       {/* Modal Container with Backdrop Click */}
-      <div className='absolute inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center p-4' onClick={onClose}>
-        <div className='bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl' onClick={(e) => e.stopPropagation()}>
+      <div
+        className='absolute inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center p-4'
+        onClick={onClose}
+      >
+        <div
+          className='bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl'
+          onClick={e => e.stopPropagation()}
+        >
           {/* Header */}
           <div className='relative'>
             <div className='bg-gradient-to-r from-teal-500 to-blue-600 p-6 text-white'>
@@ -177,6 +183,34 @@ export const BranchDetailsModal = ({
                           {branch.mobile}
                         </a>
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Gallery */}
+                {branch.galleryUrls && branch.galleryUrls.length > 0 && (
+                  <div>
+                    <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3'>
+                      {t('business.branchDetails.gallery') || 'Gallery'}
+                    </h3>
+
+                    <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3'>
+                      {branch.galleryUrls.map((imageUrl, index) => (
+                        <div key={index} className='relative group'>
+                          <div className='aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700'>
+                            <img
+                              src={imageUrl}
+                              alt={`${branch.name} ${t('business.branchDetails.galleryImageAlt') || 'gallery image'} ${index + 1}`}
+                              className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-300'
+                              onError={e => {
+                                const target = e.target as HTMLImageElement
+                                target.src = '/images/placeholder-image.jpg'
+                              }}
+                            />
+                            <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300' />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

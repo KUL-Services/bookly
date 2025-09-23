@@ -502,40 +502,72 @@ function businessDetailsPage() {
                       }}
                     >
                       <CardContent className='p-6'>
-                        <div className='flex items-start gap-4'>
-                          <BusinessAvatar
-                            businessName={branch.name}
-                            className='w-16 h-16 rounded-lg flex-shrink-0'
-                            size='lg'
-                          />
-                          <div className='flex-1 min-w-0'>
-                            <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-1'>{branch.name}</h3>
-                            <div className='space-y-2 text-sm text-gray-600 dark:text-gray-300'>
-                              <div className='flex items-center gap-2'>
-                                <MapPin className='w-4 h-4 flex-shrink-0' />
-                                <span className='truncate text-gray-600 dark:text-gray-300'>{branch.address}</span>
-                              </div>
-                              {branch.mobile && (
+                        <div className='flex flex-col gap-4'>
+                          <div className='flex items-start gap-4'>
+                            <BusinessAvatar
+                              businessName={branch.name}
+                              className='w-16 h-16 rounded-lg flex-shrink-0'
+                              size='lg'
+                            />
+                            <div className='flex-1 min-w-0'>
+                              <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-1'>{branch.name}</h3>
+                              <div className='space-y-2 text-sm text-gray-600 dark:text-gray-300'>
                                 <div className='flex items-center gap-2'>
-                                  <Phone className='w-4 h-4 flex-shrink-0' />
-                                  <span className='text-gray-600 dark:text-gray-300'>{branch.mobile}</span>
+                                  <MapPin className='w-4 h-4 flex-shrink-0' />
+                                  <span className='truncate text-gray-600 dark:text-gray-300'>{branch.address}</span>
                                 </div>
-                              )}
-                              <div className='flex items-center gap-2'>
-                                <Clock className='w-4 h-4 flex-shrink-0' />
-                                <span className='text-gray-600 dark:text-gray-300'>Open today: 9AM-6PM</span>
+                                {branch.mobile && (
+                                  <div className='flex items-center gap-2'>
+                                    <Phone className='w-4 h-4 flex-shrink-0' />
+                                    <span className='text-gray-600 dark:text-gray-300'>{branch.mobile}</span>
+                                  </div>
+                                )}
+                                <div className='flex items-center gap-2'>
+                                  <Clock className='w-4 h-4 flex-shrink-0' />
+                                  <span className='text-gray-600 dark:text-gray-300'>Open today: 9AM-6PM</span>
+                                </div>
                               </div>
-                            </div>
-                            <div className='mt-3 flex items-center justify-between'>
-                              <span className='text-sm text-teal-600 dark:text-teal-400 font-medium'>View Details →</span>
-                              <div className='flex gap-1'>
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} className='w-3 h-3 fill-yellow-400 text-yellow-400' />
-                                ))}
-                                <span className='text-xs text-gray-500 ml-1'>4.8</span>
+                              <div className='mt-3 flex items-center justify-between'>
+                                <span className='text-sm text-teal-600 dark:text-teal-400 font-medium'>View Details →</span>
+                                <div className='flex gap-1'>
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className='w-3 h-3 fill-yellow-400 text-yellow-400' />
+                                  ))}
+                                  <span className='text-xs text-gray-500 ml-1'>4.8</span>
+                                </div>
                               </div>
                             </div>
                           </div>
+
+                          {/* Branch Gallery Preview */}
+                          {branch.galleryUrls && branch.galleryUrls.length > 0 && (
+                            <div>
+                              <div className='flex gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600'>
+                                {branch.galleryUrls.slice(0, 4).map((imageUrl, imageIndex) => (
+                                  <div key={imageIndex} className='relative flex-shrink-0'>
+                                    <div className='w-20 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700'>
+                                      <img
+                                        src={imageUrl}
+                                        alt={`${branch.name} preview ${imageIndex + 1}`}
+                                        className='w-full h-full object-cover'
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement
+                                          target.src = '/images/placeholder-image.jpg'
+                                        }}
+                                      />
+                                    </div>
+                                    {imageIndex === 3 && branch.galleryUrls.length > 4 && (
+                                      <div className='absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center'>
+                                        <span className='text-white text-xs font-medium'>
+                                          +{branch.galleryUrls.length - 4}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
