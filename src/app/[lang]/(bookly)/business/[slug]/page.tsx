@@ -304,7 +304,7 @@ function businessDetailsPage() {
               {/* Business Image */}
               <div className='group w-full md:w-52 h-48 sm:h-52 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'>
                 <img
-                  src={(business as any).logo || (business as any).coverImage || '/images/business-placeholder.jpg'}
+                  src={(business as any).logoUrl || (business as any).coverImageUrl || '/images/business-placeholder.jpg'}
                   alt={business.name}
                   className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
                 />

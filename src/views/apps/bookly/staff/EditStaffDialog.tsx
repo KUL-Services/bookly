@@ -22,6 +22,7 @@ import type { Staff, UpdateStaffRequest, Branch, Service } from '@/lib/api'
 
 // Components
 import ImageUpload from '@/components/media/ImageUpload'
+import { MediaService } from '@/lib/api'
 
 interface Props {
   open: boolean
@@ -79,7 +80,16 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches, services = 
     setFormData(prev => ({ ...prev, profilePhoto: imageId }))
   }
 
-  const handleProfilePhotoDeleted = () => {
+  const handleProfilePhotoDeleted = async () => {
+    if (formData.profilePhoto) {
+      try {
+        await MediaService.deleteAsset(formData.profilePhoto)
+        console.log('✅ Deleted staff profile image:', formData.profilePhoto)
+      } catch (error) {
+        console.warn('Failed to delete staff profile image:', error)
+        // Don't block the UI, just log the warning
+      }
+    }
     setFormData(prev => ({ ...prev, profilePhoto: null }))
   }
 

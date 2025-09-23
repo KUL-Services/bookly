@@ -21,6 +21,9 @@ import type { SelectChangeEvent } from '@mui/material/Select'
 // Components
 import ImageUpload from '@/components/media/ImageUpload'
 
+// API
+import { MediaService } from '@/lib/api'
+
 type Data = {
   firstName: string
   lastName: string
@@ -98,7 +101,16 @@ const AccountDetails = () => {
     setFormData(prev => ({ ...prev, profilePhoto: imageId }))
   }
 
-  const handleProfilePhotoDeleted = () => {
+  const handleProfilePhotoDeleted = async () => {
+    if (formData?.profilePhoto) {
+      try {
+        await MediaService.deleteAsset(formData.profilePhoto)
+        console.log('✅ Deleted profile photo:', formData.profilePhoto)
+      } catch (error) {
+        console.warn('Failed to delete profile photo:', error)
+        // Don't block the UI, just log the warning
+      }
+    }
     setFormData(prev => ({ ...prev, profilePhoto: null }))
   }
 

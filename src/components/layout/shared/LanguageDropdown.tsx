@@ -53,6 +53,7 @@ const languageData: LanguageDataType[] = [
 const LanguageDropdown = () => {
   // States
   const [open, setOpen] = useState(false)
+  const [isChangingLanguage, setIsChangingLanguage] = useState(false)
 
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
@@ -67,15 +68,23 @@ const LanguageDropdown = () => {
     setOpen(false)
   }
 
-  const handleLanguageChange = (locale: string) => {
+  const handleLanguageChange = async (locale: string) => {
+    setIsChangingLanguage(true)
+
     // Update ultimate language protector preference
     if ((window as any).updateUltimateLanguagePreference) {
       (window as any).updateUltimateLanguagePreference(locale)
     }
 
     const newPath = getLocalePath(pathName, locale)
-    router.push(newPath)
-    handleClose()
+
+    // Add a small delay to show the loading state
+    setTimeout(() => {
+      router.push(newPath)
+      handleClose()
+      // Reset loading state after navigation
+      setTimeout(() => setIsChangingLanguage(false), 1000)
+    }, 150)
   }
 
   const handleToggle = () => {
@@ -84,8 +93,17 @@ const LanguageDropdown = () => {
 
   return (
     <>
-      <IconButton ref={anchorRef} onClick={handleToggle} className='text-textPrimary'>
-        <i className='ri-translate-2' />
+      <IconButton
+        ref={anchorRef}
+        onClick={handleToggle}
+        className='text-textPrimary'
+        disabled={isChangingLanguage}
+      >
+        {isChangingLanguage ? (
+          <div className="animate-spin rounded-full h-5 w-5 border-2 border-textPrimary border-t-transparent" />
+        ) : (
+          <i className='ri-translate-2' />
+        )}
       </IconButton>
       <Popper
         open={open}
@@ -108,9 +126,15 @@ const LanguageDropdown = () => {
                       key={locale.langCode}
                       onClick={() => handleLanguageChange(locale.langCode)}
                       selected={lang === locale.langCode}
+                      disabled={isChangingLanguage}
                       className='pli-4'
                     >
-                      {locale.langName}
+                      <div className='flex items-center justify-between w-full'>
+                        <span>{locale.langName}</span>
+                        {isChangingLanguage && lang === locale.langCode && (
+                          <div className="ml-2 animate-spin rounded-full h-4 w-4 border-2 border-textPrimary border-t-transparent" />
+                        )}
+                      </div>
                     </MenuItem>
                   ))}
                 </MenuList>

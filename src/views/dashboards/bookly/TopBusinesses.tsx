@@ -40,7 +40,7 @@ const TopBusinesses = ({ items }: { items: Business[] }) => {
           {items.map(b => (
             <ListItemButton key={b.id} className='gap-4' onClick={() => handleOpen(b)}>
               <ListItemAvatar>
-                <Avatar alt={b.name} src={b.coverImage} />
+                <Avatar alt={b.name} src={b.coverImageUrl || b.logoUrl} />
               </ListItemAvatar>
               <ListItemText
                 disableTypography

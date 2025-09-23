@@ -317,7 +317,14 @@ const Register = ({ mode }: { mode: Mode }) => {
                 type='submit'
                 disabled={loading}
               >
-                {loading ? 'Registering...' : 'Register Business'}
+                {loading ? (
+                  <>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Registering...
+                  </>
+                ) : (
+                  'Register Business'
+                )}
               </Button>
 
               <div className='flex justify-center items-center flex-wrap gap-2'>

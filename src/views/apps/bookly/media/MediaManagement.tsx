@@ -17,24 +17,31 @@ import CardMedia from '@mui/material/CardMedia'
 
 // API Imports
 import { MediaService } from '@/lib/api'
-import type { MediaFile } from '@/lib/api'
+import type { AssetFile } from '@/lib/api'
 
 const MediaManagement = () => {
-  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([])
+  const [mediaFiles, setMediaFiles] = useState<AssetFile[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const fetchMedia = async () => {
     try {
       setLoading(true)
-      // Note: This endpoint might not exist yet, so we'll show placeholder
-      // const response = await MediaService.getMediaFiles()
-      // setMediaFiles(response.data || [])
-      setMediaFiles([])
+      const response = await MediaService.getMediaFiles()
+
+      if (response.error) {
+        throw new Error(response.error)
+      }
+
+      setMediaFiles(response.data || [])
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch media')
+      console.warn('Failed to fetch media files, showing empty state:', err)
+      // Don't show error to user since media library might be empty
+      setMediaFiles([])
+      setError(null)
     } finally {
       setLoading(false)
     }
@@ -50,10 +57,14 @@ const MediaManagement = () => {
 
     try {
       setUploading(true)
-      const formData = new FormData()
-      formData.append('file', file)
 
-      const response = await MediaService.uploadMedia(formData)
+      // Validate file first
+      const validation = MediaService.validateImageFile(file)
+      if (!validation.isValid) {
+        throw new Error(validation.error)
+      }
+
+      const response = await MediaService.uploadFile(file)
       if (response.error) {
         throw new Error(response.error)
       }
@@ -72,13 +83,27 @@ const MediaManagement = () => {
     }
 
     try {
-      const response = await MediaService.deleteMedia(id)
+      setDeletingId(id)
+      const response = await MediaService.deleteAsset(id)
       if (response.error) {
         throw new Error(response.error)
       }
-      await fetchMedia() // Refresh the list
+
+      // Immediately update UI by removing the deleted item
+      setMediaFiles(prev => prev.filter(media => media.id !== id))
+      console.log('✅ Successfully deleted media file and updated UI:', id)
+
+      // Also try to refresh the full list (optional, for data consistency)
+      try {
+        await fetchMedia()
+      } catch (refreshError) {
+        console.warn('Failed to refresh media list after deletion, but UI was updated locally:', refreshError)
+      }
     } catch (err) {
+      console.error('Failed to delete media:', err)
       setError(err instanceof Error ? err.message : 'Failed to delete media')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -144,16 +169,19 @@ const MediaManagement = () => {
                       <CardMedia
                         component='img'
                         height='200'
-                        image={media.url}
-                        alt={media.filename}
+                        image={media.uploadUrl}
+                        alt={media.fileName}
                         className='object-cover'
                       />
                       <CardContent>
                         <Typography variant='subtitle2' className='truncate'>
-                          {media.filename}
+                          {media.fileName}
                         </Typography>
                         <Typography variant='caption' color='textSecondary'>
-                          {media.fileSize ? `${(media.fileSize / 1024).toFixed(1)} KB` : 'Unknown size'}
+                          {media.size ? `${(media.size / 1024).toFixed(1)} KB` : 'Unknown size'}
+                        </Typography>
+                        <Typography variant='caption' color='textSecondary' display='block'>
+                          {media.mimeType}
                         </Typography>
                       </CardContent>
                       <Box className='absolute top-2 right-2'>
@@ -161,9 +189,14 @@ const MediaManagement = () => {
                           size='small'
                           color='error'
                           onClick={() => handleDeleteMedia(media.id)}
+                          disabled={deletingId === media.id}
                           className='bg-white/80 hover:bg-white'
                         >
-                          <i className='ri-delete-bin-line' />
+                          {deletingId === media.id ? (
+                            <CircularProgress size={16} color='error' />
+                          ) : (
+                            <i className='ri-delete-bin-line' />
+                          )}
                         </IconButton>
                       </Box>
                     </Card>

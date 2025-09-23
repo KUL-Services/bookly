@@ -2,6 +2,11 @@ import { apiClient } from '../api-client'
 import type { AssetFile, CreateAssetRequest, CreateAssetResponse } from '../types'
 
 export class MediaService {
+  // Get all media files/assets
+  static async getMediaFiles() {
+    return apiClient.get<AssetFile[]>('/media-lib')
+  }
+
   // Admin/User - Create asset and upload file directly
   static async createAsset(data: CreateAssetRequest) {
     return apiClient.post<CreateAssetResponse>('/media-lib', data)
@@ -15,6 +20,11 @@ export class MediaService {
   // Admin/User - Delete asset
   static async deleteAsset(id: string) {
     return apiClient.delete(`/media-lib/${id}`)
+  }
+
+  // Alias for backward compatibility
+  static async deleteMedia(id: string) {
+    return this.deleteAsset(id)
   }
 
   // Get asset URL by ID

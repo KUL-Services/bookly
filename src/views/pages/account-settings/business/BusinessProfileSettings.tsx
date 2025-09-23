@@ -24,7 +24,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import ImageUpload from '@/components/media/ImageUpload'
 
 // API
-import { BusinessService, AuthService } from '@/lib/api'
+import { BusinessService, AuthService, MediaService } from '@/lib/api'
 import type { Business, SocialLink, BusinessChangeRequest } from '@/lib/api'
 
 // Store
@@ -192,7 +192,16 @@ const BusinessProfileSettings = () => {
     handleInputChange('logo', imageId)
   }
 
-  const handleLogoDeleted = () => {
+  const handleLogoDeleted = async () => {
+    if (formData?.logo) {
+      try {
+        await MediaService.deleteAsset(formData.logo)
+        console.log('✅ Deleted business logo:', formData.logo)
+      } catch (error) {
+        console.warn('Failed to delete business logo:', error)
+        // Don't block the UI, just log the warning
+      }
+    }
     handleInputChange('logo', null)
   }
 

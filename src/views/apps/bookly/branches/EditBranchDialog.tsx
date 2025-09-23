@@ -20,6 +20,9 @@ import Grid from '@mui/material/Grid'
 // Types
 import type { Branch, Service, UpdateBranchRequest } from '@/lib/api'
 
+// API Imports
+import { MediaService } from '@/lib/api'
+
 // Components
 import GalleryUpload from '@/components/media/GalleryUpload'
 
@@ -78,7 +81,15 @@ const EditBranchDialog = ({ open, onClose, onSubmit, branch, services }: Props) 
     setFormData(prev => ({ ...prev, gallery: imageIds }))
   }
 
-  const handleImageDeleted = (imageId: string) => {
+  const handleImageDeleted = async (imageId: string) => {
+    try {
+      await MediaService.deleteAsset(imageId)
+      console.log('✅ Deleted branch gallery image:', imageId)
+    } catch (error) {
+      console.warn('Failed to delete branch gallery image:', error)
+      // Don't block the UI, just log the warning
+    }
+
     setFormData(prev => ({
       ...prev,
       gallery: prev.gallery?.filter(id => id !== imageId) || []

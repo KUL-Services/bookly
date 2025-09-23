@@ -17,7 +17,7 @@ import Divider from '@mui/material/Divider'
 import Box from '@mui/material/Box'
 
 // API Imports
-import { BusinessService } from '@/lib/api'
+import { BusinessService, MediaService } from '@/lib/api'
 import type { Business } from '@/lib/api'
 
 // Component Imports
@@ -117,7 +117,16 @@ const BusinessProfile = () => {
     setFormData(prev => ({ ...prev, logo: imageId }))
   }
 
-  const handleLogoDeleted = () => {
+  const handleLogoDeleted = async () => {
+    if (formData.logo) {
+      try {
+        await MediaService.deleteAsset(formData.logo)
+        console.log('✅ Deleted business logo:', formData.logo)
+      } catch (error) {
+        console.warn('Failed to delete business logo:', error)
+        // Don't block the UI, just log the warning
+      }
+    }
     setFormData(prev => ({ ...prev, logo: '' }))
   }
 
@@ -178,7 +187,7 @@ const BusinessProfile = () => {
               <Typography variant='h6' className='mb-4'>{t('business.profile.currentInfo')}</Typography>
               <div className='flex items-center gap-4 mb-4'>
                 <Avatar
-                  src={business.logo}
+                  src={business.logoUrl}
                   alt={business.name}
                   className='w-16 h-16'
                 >
@@ -234,7 +243,7 @@ const BusinessProfile = () => {
               <Box>
                 <Typography variant='subtitle2' className='mb-2'>{t('business.profile.businessLogo')}</Typography>
                 <ImageUpload
-                  currentImageUrl={formData.logo || null}
+                  currentImageUrl={business.logoUrl || null}
                   onImageUploaded={handleLogoUploaded}
                   onImageDeleted={handleLogoDeleted}
                   label={t('business.profile.uploadLogo')}

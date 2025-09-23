@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
-import { AuthService } from '@/lib/api'
+import { AuthService, MediaService } from '@/lib/api'
 import type { UpdateUserRequest } from '@/lib/api'
 import { H1, H2, P } from '@/bookly/components/atoms'
 import { Card, CardContent, CardHeader, CardTitle } from '@/bookly/components/ui/card'
@@ -118,7 +118,16 @@ export default function ProfileSettingsPage() {
     setFormData(prev => ({ ...prev, profilePhoto: imageId }))
   }
 
-  const handleProfilePhotoDeleted = () => {
+  const handleProfilePhotoDeleted = async () => {
+    if (formData.profilePhoto) {
+      try {
+        await MediaService.deleteAsset(formData.profilePhoto)
+        console.log('✅ Deleted profile photo:', formData.profilePhoto)
+      } catch (error) {
+        console.warn('Failed to delete profile photo:', error)
+        // Don't block the UI, just log the warning
+      }
+    }
     setFormData(prev => ({ ...prev, profilePhoto: null }))
   }
 

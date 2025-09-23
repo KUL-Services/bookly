@@ -117,7 +117,7 @@ const BusinessManagement = () => {
                       <TableCell className='flex items-center gap-3'>
                         <Avatar
                           alt={business.name}
-                          src={business.logo}
+                          src={business.logoUrl}
                           className='w-10 h-10'
                         >
                           {business.name.charAt(0).toUpperCase()}

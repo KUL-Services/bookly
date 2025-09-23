@@ -21,6 +21,9 @@ import InputAdornment from '@mui/material/InputAdornment'
 // Types
 import type { Category, Branch, CreateServiceRequest } from '@/lib/api'
 
+// API Imports
+import { MediaService } from '@/lib/api'
+
 // Components
 import GalleryUpload from '@/components/media/GalleryUpload'
 
@@ -87,7 +90,15 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
     setFormData(prev => ({ ...prev, gallery: imageIds }))
   }
 
-  const handleImageDeleted = (imageId: string) => {
+  const handleImageDeleted = async (imageId: string) => {
+    try {
+      await MediaService.deleteAsset(imageId)
+      console.log('✅ Deleted service gallery image:', imageId)
+    } catch (error) {
+      console.warn('Failed to delete service gallery image:', error)
+      // Don't block the UI, just log the warning
+    }
+
     setFormData(prev => ({
       ...prev,
       gallery: prev.gallery?.filter(id => id !== imageId) || []

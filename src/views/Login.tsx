@@ -63,6 +63,7 @@ const schema = object({
 const Login = ({ mode }: { mode: Mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
 
   // Vars
@@ -104,6 +105,9 @@ const Login = ({ mode }: { mode: Mode }) => {
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
+    setLoading(true)
+    setErrorState(null)
+
     try {
       // Try our API login first
       const authStore = useAuthStore.getState()
@@ -140,6 +144,8 @@ const Login = ({ mode }: { mode: Mode }) => {
       setErrorState({
         message: [apiError?.message || 'Login failed. Please check your credentials.']
       })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -250,8 +256,15 @@ const Login = ({ mode }: { mode: Mode }) => {
                 Forgot password?
               </Typography>
             </div>
-            <Button fullWidth variant='contained' type='submit'>
-              Log In
+            <Button fullWidth variant='contained' type='submit' disabled={loading}>
+              {loading ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Signing in...
+                </>
+              ) : (
+                'Log In'
+              )}
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
               <Typography>New on our platform?</Typography>
