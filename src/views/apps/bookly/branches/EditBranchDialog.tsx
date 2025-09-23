@@ -167,9 +167,12 @@ const EditBranchDialog = ({ open, onClose, onSubmit, branch, services }: Props) 
               <GalleryUpload
                 currentImageIds={formData.gallery || []}
                 currentImageUrls={
-                  (branch.galleryUrls || []).filter((_, index) =>
-                    (formData.gallery || []).includes((branch.gallery || [])[index])
-                  )
+                  (formData.gallery || []).map(imageId => {
+                    // Find the index of this imageId in the original branch.gallery
+                    const originalIndex = (branch.gallery || []).indexOf(imageId)
+                    // If found, return the corresponding URL, otherwise return empty string for new uploads
+                    return originalIndex >= 0 ? (branch.galleryUrls || [])[originalIndex] : ''
+                  }).filter(url => url !== null && url !== undefined && url !== '') as string[]
                 }
                 onImagesUploaded={handleGalleryChange}
                 onImageDeleted={handleImageDeleted}

@@ -245,9 +245,12 @@ const EditServiceDialog = ({ open, onClose, onSubmit, service, categories, branc
               <GalleryUpload
                 currentImageIds={formData.gallery || []}
                 currentImageUrls={
-                  (service.galleryUrls || []).filter((_, index) =>
-                    (formData.gallery || []).includes((service.gallery || [])[index])
-                  )
+                  (formData.gallery || []).map(imageId => {
+                    // Find the index of this imageId in the original service.gallery
+                    const originalIndex = (service.gallery || []).indexOf(imageId)
+                    // If found, return the corresponding URL, otherwise return empty string for new uploads
+                    return originalIndex >= 0 ? (service.galleryUrls || [])[originalIndex] : ''
+                  }).filter(url => url !== null && url !== undefined && url !== '') as string[]
                 }
                 onImagesUploaded={handleGalleryChange}
                 onImageDeleted={handleImageDeleted}

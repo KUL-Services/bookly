@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   Button,
   Card,
@@ -49,13 +49,22 @@ export const GalleryUpload = ({
   const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string | null>(null)
+  const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Cleanup preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url))
+    }
+  }, [previewUrls])
 
   const handleFilesSelect = (files: FileList) => {
     if (disabled) return
 
     const fileArray = Array.from(files)
-    const availableSlots = maxImages - currentImageUrls.length
+    const totalCurrentImages = currentImageUrls.length + previewUrls.length
+    const availableSlots = maxImages - totalCurrentImages
 
     if (fileArray.length > availableSlots) {
       setError(`You can only upload ${availableSlots} more image(s). Maximum ${maxImages} images allowed.`)
@@ -71,6 +80,10 @@ export const GalleryUpload = ({
       return
     }
 
+    // Create preview URLs immediately
+    const newPreviewUrls = fileArray.map(file => URL.createObjectURL(file))
+    setPreviewUrls(prev => [...prev, ...newPreviewUrls])
+
     uploadFiles(fileArray)
   }
 
@@ -85,14 +98,27 @@ export const GalleryUpload = ({
       if (result.success) {
         const newImageIds = [...currentImageIds, ...result.assetFileIds]
         onImagesUploaded(newImageIds)
+
+        // Don't clear preview URLs immediately - keep them visible
+        // They will be cleared when the dialog is closed or on unmount
+        // This way users can see their uploaded images until real URLs are available
+
         setUploadProgress(`Successfully uploaded ${result.assetFileIds.length} image(s)`)
         setTimeout(() => setUploadProgress(null), 2000)
       } else {
         setError(result.errors?.join('\n') || 'Upload failed')
+
+        // Clear preview URLs on error too
+        previewUrls.forEach(url => URL.revokeObjectURL(url))
+        setPreviewUrls([])
       }
     } catch (err) {
       console.error('Upload error:', err)
       setError('Upload failed. Please try again.')
+
+      // Clear preview URLs on error
+      previewUrls.forEach(url => URL.revokeObjectURL(url))
+      setPreviewUrls([])
     } finally {
       setUploading(false)
     }
@@ -139,13 +165,23 @@ export const GalleryUpload = ({
     }
   }
 
+  const handleDeletePreview = (previewIndex: number) => {
+    if (disabled) return
+
+    // Clean up the object URL
+    URL.revokeObjectURL(previewUrls[previewIndex])
+
+    // Remove from preview URLs
+    setPreviewUrls(prev => prev.filter((_, index) => index !== previewIndex))
+  }
+
   const openFileDialog = () => {
     if (!disabled) {
       fileInputRef.current?.click()
     }
   }
 
-  const canAddMore = currentImageUrls.length < maxImages
+  const canAddMore = (currentImageUrls.length + previewUrls.length) < maxImages
 
   return (
     <div className={className}>
@@ -168,9 +204,9 @@ export const GalleryUpload = ({
         </Typography>
         <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
           <Chip
-            label={`${currentImageUrls.length}/${maxImages} images`}
+            label={`${currentImageUrls.length + previewUrls.length}/${maxImages} images`}
             size="small"
-            color={currentImageUrls.length >= maxImages ? "error" : "default"}
+            color={(currentImageUrls.length + previewUrls.length) >= maxImages ? "error" : "default"}
           />
           <Chip label={`Max ${maxSizeMB}MB each`} size="small" variant="outlined" />
         </Box>
@@ -239,6 +275,89 @@ export const GalleryUpload = ({
             </Grid>
           )
         })}
+
+        {/* Preview Images (newly uploaded) */}
+        {previewUrls.map((previewUrl, index) => (
+          <Grid item key={`preview-${index}`}>
+            <Card
+              sx={{
+                width: imageWidth,
+                height: imageHeight,
+                position: 'relative',
+                overflow: 'hidden',
+                opacity: uploading ? 0.7 : 1
+              }}
+            >
+              <CardContent sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                p: 0,
+                '&:last-child': { pb: 0 }
+              }}>
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                >
+                  <img
+                    src={previewUrl}
+                    alt={`Uploading image ${index + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+
+                  {/* Show upload progress overlay */}
+                  {uploading && (
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexDirection: 'column',
+                        color: 'white'
+                      }}
+                    >
+                      <CircularProgress size={24} sx={{ color: 'white', mb: 1 }} />
+                      <Typography variant="caption">Uploading...</Typography>
+                    </Box>
+                  )}
+
+                  {!disabled && !uploading && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeletePreview(index)}
+                      color="error"
+                      sx={{
+                        position: 'absolute',
+                        top: 4,
+                        right: 4,
+                        backgroundColor: 'rgba(255,255,255,0.9)',
+                        '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
+                      }}
+                    >
+                      <Delete fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
 
         {/* Add More Button */}
         {canAddMore && (
