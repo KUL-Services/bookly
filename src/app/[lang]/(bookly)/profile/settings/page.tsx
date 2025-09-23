@@ -278,7 +278,7 @@ export default function ProfileSettingsPage() {
                     stringProps={{ localeKey: 'profile.settings.profilePhoto' }}
                   />
                   <ImageUpload
-                    currentImageUrl={userDetails?.profilePhotoUrl || null}
+                    currentImageUrl={formData.profilePhoto ? userDetails?.profilePhotoUrl : null}
                     onImageUploaded={handleProfilePhotoUploaded}
                     onImageDeleted={handleProfilePhotoDeleted}
                     label='Upload Profile Photo'

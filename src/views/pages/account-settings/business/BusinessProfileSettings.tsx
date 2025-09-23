@@ -372,7 +372,7 @@ const BusinessProfileSettings = () => {
         {/* Business Logo */}
         <div className="flex max-sm:flex-col items-start gap-6 mb-6">
           <ImageUpload
-            currentImageUrl={materializeUser?.business?.logoUrl || null}
+            currentImageUrl={formData?.logo ? materializeUser?.business?.logoUrl : null}
             onImageUploaded={handleLogoUploaded}
             onImageDeleted={handleLogoDeleted}
             label="Upload Business Logo"
