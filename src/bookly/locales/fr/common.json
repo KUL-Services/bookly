@@ -7,24 +7,35 @@
   },
   "profile": {
     "title": "Bookly",
-    "editProfile": "Edit Profile",
-    "memberSince": "Member since {{date}}",
-    "totalBookings": "Total Bookings",
-    "favorites": "Favorites",
-    "avgRating": "Avg Rating",
+    "editProfile": "Modifier le Profil",
+    "memberSince": "Membre depuis {{date}}",
+    "totalBookings": "Total des Réservations",
+    "favorites": "Favoris",
+    "avgRating": "Note Moyenne",
     "bookings": {
-      "title": "Your Bookings",
-      "upcomingWithCount": "Upcoming ({{count}})",
-      "pastWithCount": "Past ({{count}})",
-      "confirmed": "Confirmed",
-      "completed": "Completed",
-      "canceled": "Canceled",
-      "withStaff": "with {{staff}}",
+      "title": "Vos Réservations",
+      "upcomingWithCount": "À venir ({{count}})",
+      "pastWithCount": "Passées ({{count}})",
+      "confirmed": "Confirmée",
+      "completed": "Terminée",
+      "canceled": "Annulée",
+      "withStaff": "avec {{staff}}",
       "timeWithDuration": "{{time}} ({{duration}})",
-      "viewBusiness": "View Business",
-      "cancel": "Cancel",
-      "rebook": "Rebook",
-      "empty": "No bookings to show"
+      "viewBusiness": "Voir l'Entreprise",
+      "cancel": "Annuler",
+      "rebook": "Réserver à Nouveau",
+      "empty": "Aucune réservation à afficher"
+    },
+    "settings": {
+      "title": "Paramètres du Profil",
+      "description": "Gérez vos informations personnelles et vos préférences de compte",
+      "personalInfo": "Informations Personnelles",
+      "profilePhoto": "Photo de Profil",
+      "firstName": "Prénom",
+      "lastName": "Nom de Famille",
+      "mobile": "Numéro de Téléphone",
+      "email": "Adresse E-mail",
+      "emailNote": "L'e-mail ne peut pas être modifié. Contactez le support si vous devez mettre à jour votre adresse e-mail."
     }
   },
   "landing": {
@@ -155,38 +166,43 @@
   },
   "auth": {
     "login": {
-      "title": "Welcome back",
-      "description": "Log in to your Bookly account",
-      "emailLabel": "Email address",
-      "emailPlaceholder": "Enter your email",
-      "passwordLabel": "Password",
-      "passwordPlaceholder": "Enter your password",
-      "rememberMe": "Remember me",
-      "forgotPassword": "Forgot your password?",
-      "submitButton": "Log in",
-      "noAccount": "Don't have an account?",
-      "createAccount": "Create one"
+      "title": "Bon retour",
+      "description": "Connectez-vous à votre compte Bookly",
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "Entrez votre e-mail",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublié ?",
+      "submitButton": "Se connecter",
+      "noAccount": "Vous n'avez pas de compte ?",
+      "createAccount": "Créer un compte"
     },
     "register": {
-      "title": "Create an account",
-      "description": "Enter your information to create a Bookly account",
-      "emailLabel": "Email address",
-      "emailPlaceholder": "Enter your email",
-      "passwordLabel": "Password",
-      "passwordPlaceholder": "Enter your password",
-      "confirmPasswordLabel": "Confirm Password",
-      "confirmPasswordPlaceholder": "Confirm your password",
-      "submitButton": "Create account",
-      "haveAccount": "Already have an account?",
-      "login": "Log in"
+      "title": "Créer un compte",
+      "description": "Entrez vos informations pour créer un compte Bookly",
+      "emailLabel": "Adresse e-mail",
+      "emailPlaceholder": "Entrez votre e-mail",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
+      "confirmPasswordLabel": "Confirmer le Mot de Passe",
+      "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+      "submitButton": "Créer un compte",
+      "haveAccount": "Vous avez déjà un compte ?",
+      "login": "Se connecter"
     },
     "validation": {
-      "emailRequired": "Email is required",
-      "emailInvalid": "Please enter a valid email",
-      "passwordRequired": "Password is required",
-      "passwordMinLength": "Password must be at least 8 characters",
-      "passwordsDoNotMatch": "Passwords do not match",
-      "confirmPasswordRequired": "Please confirm your password"
+      "emailRequired": "L'e-mail est requis",
+      "emailInvalid": "Veuillez entrer un e-mail valide",
+      "passwordRequired": "Le mot de passe est requis",
+      "passwordMinLength": "Le mot de passe doit contenir au moins 8 caractères",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
+      "confirmPasswordRequired": "Veuillez confirmer votre mot de passe"
     }
+  },
+  "common": {
+    "save": "Enregistrer les Modifications",
+    "cancel": "Annuler",
+    "saving": "Enregistrement..."
   }
 }

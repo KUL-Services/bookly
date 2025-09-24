@@ -30,6 +30,17 @@
       "cancel": "Cancel",
       "rebook": "Rebook",
       "empty": "No bookings to show"
+    },
+    "settings": {
+      "title": "Profile Settings",
+      "description": "Manage your personal information and account preferences",
+      "personalInfo": "Personal Information",
+      "profilePhoto": "Profile Photo",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "mobile": "Mobile Number",
+      "email": "Email Address",
+      "emailNote": "Email cannot be changed. Contact support if you need to update your email address."
     }
   },
   "landing": {
@@ -193,5 +204,10 @@
       "passwordsDoNotMatch": "Passwords do not match",
       "confirmPasswordRequired": "Please confirm your password"
     }
+  },
+  "common": {
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "saving": "Saving..."
   }
 }
