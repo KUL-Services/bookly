@@ -64,7 +64,7 @@ const BooklyLanguageDropdown = () => {
       <button
         ref={anchorRef}
         onClick={handleToggle}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 transition-all duration-200 touch-manipulation"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-teal-50/60 dark:bg-teal-900/40 hover:bg-teal-100/80 dark:hover:bg-teal-800/50 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-all duration-200 touch-manipulation border border-teal-200/50 dark:border-teal-700/50"
         aria-label="Change language"
       >
         <span className="text-lg">{currentLanguage.flag}</span>
@@ -81,21 +81,21 @@ const BooklyLanguageDropdown = () => {
           />
 
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
+          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-teal-200/60 dark:border-teal-700/60 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
             {languageData.map(language => (
               <button
                 key={language.langCode}
                 onClick={() => handleLanguageChange(language.langCode)}
-                className={`flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 touch-manipulation ${
+                className={`flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-teal-50/80 dark:hover:bg-teal-900/40 transition-colors duration-200 touch-manipulation ${
                   lang === language.langCode
-                    ? 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300'
-                    : 'text-gray-700 dark:text-gray-200'
+                    ? 'bg-teal-100/90 dark:bg-teal-800/60 text-teal-800 dark:text-teal-200 font-semibold'
+                    : 'text-slate-700 dark:text-slate-200 hover:text-teal-700 dark:hover:text-teal-300'
                 }`}
               >
                 <span className="text-lg">{language.flag}</span>
                 <span className="text-sm font-medium">{language.langName}</span>
                 {lang === language.langCode && (
-                  <div className="ml-auto w-2 h-2 bg-teal-500 rounded-full"></div>
+                  <div className="ml-auto w-2 h-2 bg-teal-600 rounded-full shadow-sm"></div>
                 )}
               </button>
             ))}
