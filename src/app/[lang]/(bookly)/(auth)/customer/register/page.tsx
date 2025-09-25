@@ -63,9 +63,11 @@ export default function RegisterPage({ params }: PageProps) {
                   setRegistrationSuccess(true)
                   // Don't auto-redirect for registration - user needs to verify email first
                 } catch (err) {
-                  // Error is already handled by the auth store
+                  // Error handling is now managed by the AuthForm component
+                  // It will either show field-specific errors or let the general error through
                   console.error('Registration failed:', err)
                   setRegistrationSuccess(false)
+                  throw err // Re-throw to let AuthForm handle it
                 }
               }}
             />

@@ -53,6 +53,7 @@ const Register = ({ mode }: { mode: Mode }) => {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({})
   const [success, setSuccess] = useState(false)
 
   // Vars
@@ -90,6 +91,7 @@ const Register = ({ mode }: { mode: Mode }) => {
 
     setLoading(true)
     setError(null)
+    setFieldErrors({})
 
     try {
       // Filter out empty social links
@@ -122,7 +124,29 @@ const Register = ({ mode }: { mode: Mode }) => {
       }, 2000)
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed')
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed'
+      const errorMessageLower = errorMessage.toLowerCase()
+
+      // Map API errors to field-specific errors
+      if (errorMessageLower.includes('email already exists') ||
+          errorMessageLower.includes('email already taken') ||
+          errorMessageLower.includes('email is already in use') ||
+          errorMessageLower.includes('user already exists')) {
+        setFieldErrors({ ownerEmail: errorMessage })
+      } else if (errorMessageLower.includes('invalid email') ||
+                 errorMessageLower.includes('email format') ||
+                 errorMessageLower.includes('please enter a valid email')) {
+        setFieldErrors({ ownerEmail: errorMessage })
+      } else if (errorMessageLower.includes('password')) {
+        setFieldErrors({ password: errorMessage })
+      } else if (errorMessageLower.includes('business name') ||
+                 errorMessageLower.includes('name is required') ||
+                 errorMessageLower.includes('business already exists')) {
+        setFieldErrors({ businessName: errorMessage })
+      } else {
+        // General error for other cases
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
     }
@@ -184,8 +208,17 @@ const Register = ({ mode }: { mode: Mode }) => {
                 fullWidth
                 label='Business Name *'
                 value={formData.businessName}
-                onChange={e => setFormData(prev => ({ ...prev, businessName: e.target.value }))}
+                onChange={e => {
+                  setFormData(prev => ({ ...prev, businessName: e.target.value }))
+                  if (fieldErrors.businessName) {
+                    setFieldErrors(prev => ({ ...prev, businessName: '' }))
+                  }
+                }}
                 required
+                {...(fieldErrors.businessName && {
+                  error: true,
+                  helperText: fieldErrors.businessName
+                })}
               />
 
               <TextField
@@ -269,8 +302,17 @@ const Register = ({ mode }: { mode: Mode }) => {
                 label='Owner Email *'
                 type='email'
                 value={formData.ownerEmail}
-                onChange={e => setFormData(prev => ({ ...prev, ownerEmail: e.target.value }))}
+                onChange={e => {
+                  setFormData(prev => ({ ...prev, ownerEmail: e.target.value }))
+                  if (fieldErrors.ownerEmail) {
+                    setFieldErrors(prev => ({ ...prev, ownerEmail: '' }))
+                  }
+                }}
                 required
+                {...(fieldErrors.ownerEmail && {
+                  error: true,
+                  helperText: fieldErrors.ownerEmail
+                })}
               />
 
               <TextField
@@ -278,7 +320,12 @@ const Register = ({ mode }: { mode: Mode }) => {
                 label='Password *'
                 type={isPasswordShown ? 'text' : 'password'}
                 value={formData.password}
-                onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                onChange={e => {
+                  setFormData(prev => ({ ...prev, password: e.target.value }))
+                  if (fieldErrors.password) {
+                    setFieldErrors(prev => ({ ...prev, password: '' }))
+                  }
+                }}
                 required
                 InputProps={{
                   endAdornment: (
@@ -289,9 +336,13 @@ const Register = ({ mode }: { mode: Mode }) => {
                     </InputAdornment>
                   )
                 }}
+                {...(fieldErrors.password && {
+                  error: true,
+                  helperText: fieldErrors.password
+                })}
               />
 
-              {error && (
+              {error && !Object.values(fieldErrors).some(err => err) && (
                 <Typography color='error' variant='body2' className='text-center'>
                   {error}
                 </Typography>

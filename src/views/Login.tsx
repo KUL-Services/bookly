@@ -140,7 +140,7 @@ const Login = ({ mode }: { mode: Mode }) => {
         }
       }
 
-      // Show the API error to user
+      // Show the exact API error message to user
       setErrorState({
         message: [apiError?.message || 'Login failed. Please check your credentials.']
       })
@@ -205,9 +205,9 @@ const Login = ({ mode }: { mode: Mode }) => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
                   }}
-                  {...((errors.email || errorState !== null) && {
+                  {...(errors.email && {
                     error: true,
-                    helperText: errors?.email?.message || errorState?.message[0]
+                    helperText: errors?.email?.message
                   })}
                 />
               )}
@@ -241,7 +241,10 @@ const Login = ({ mode }: { mode: Mode }) => {
                       </InputAdornment>
                     )
                   }}
-                  {...(errors.password && { error: true, helperText: errors.password.message })}
+                  {...((errors.password || errorState !== null) && {
+                    error: true,
+                    helperText: errors?.password?.message || errorState?.message[0]
+                  })}
                 />
               )}
             />

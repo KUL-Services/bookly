@@ -17,9 +17,10 @@ import { Alert, AlertDescription } from '@/bookly/components/ui/alert'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 import { suppressZodConsoleErrors, restoreConsoleErrors } from '@/bookly/lib/suppress-console-errors'
 
+// More lenient client-side validation - only check for required fields
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required').min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(1, 'Password is required'), // Remove min length for client validation
   rememberMe: z.boolean().optional()
 })
 
@@ -65,8 +66,9 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
   }, [])
 
   const form = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
-    mode: 'onTouched',
+    resolver: type === 'login' ? undefined : zodResolver(schema), // Disable Zod for login
+    mode: 'onSubmit', // Changed from 'onTouched' to 'onSubmit' to prevent validation on every change
+    reValidateMode: 'onSubmit', // Only revalidate on submit
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -78,12 +80,120 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
     }
   })
 
+  // Clear server errors when user starts typing
+  React.useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name && form.formState.errors[name]?.type === 'server') {
+        form.clearErrors(name as keyof typeof value)
+        // Also clear general error when user starts fixing field errors
+        if (onClearError) {
+          onClearError()
+        }
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form.watch, form.clearErrors, onClearError])
+
   const handleSubmit = async (values: any) => {
     try {
+      // Clear any existing errors before submission
+      if (onClearError) {
+        onClearError()
+      }
+
+      // Perform additional client-side validation for login only
+      if (type === 'login') {
+        const errors: { [key: string]: string } = {}
+
+        if (!values.email || !values.email.trim()) {
+          errors.email = 'Email is required'
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+          errors.email = 'Please enter a valid email address'
+        }
+
+        if (!values.password || !values.password.trim()) {
+          errors.password = 'Password is required'
+        } else if (values.password.length < 8) {
+          errors.password = 'Password must be at least 8 characters'
+        }
+
+        // Set field errors if any
+        Object.keys(errors).forEach(field => {
+          form.setError(field as keyof typeof values, {
+            type: 'manual',
+            message: errors[field]
+          })
+        })
+
+        // Don't proceed if there are validation errors
+        if (Object.keys(errors).length > 0) {
+          return
+        }
+      }
+
       await onSubmit(values)
     } catch (error) {
-      // Handle only non-validation errors
-      if (error instanceof Error && !error.message.includes('validation')) {
+      // Handle server-side validation errors
+      if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase()
+
+        // Map common server errors to field-specific validation errors
+        if (errorMessage.includes('invalid email or password') ||
+            errorMessage.includes('invalid credentials') ||
+            errorMessage.includes('incorrect password') ||
+            errorMessage.includes('wrong password') ||
+            errorMessage.includes('password is incorrect') ||
+            errorMessage.includes('authentication failed')) {
+          // For "Invalid email or password" - show on password field to be consistent
+          form.setError('password', {
+            type: 'server',
+            message: error.message // Use the exact API message
+          })
+          return // Don't show general error if we have field-specific error
+        }
+
+        if (errorMessage.includes('user not found') ||
+            errorMessage.includes('email not found') ||
+            errorMessage.includes('no account found') ||
+            errorMessage.includes('invalid email')) {
+          form.setError('email', {
+            type: 'server',
+            message: 'No account found with this email address.'
+          })
+          return // Don't show general error if we have field-specific error
+        }
+
+        if (errorMessage.includes('account not verified') ||
+            errorMessage.includes('please verify') ||
+            errorMessage.includes('email not verified')) {
+          form.setError('email', {
+            type: 'server',
+            message: 'Please verify your email address before logging in.'
+          })
+          return // Don't show general error if we have field-specific error
+        }
+
+        if (errorMessage.includes('account locked') ||
+            errorMessage.includes('account disabled') ||
+            errorMessage.includes('account suspended')) {
+          form.setError('email', {
+            type: 'server',
+            message: 'This account has been locked or disabled. Please contact support.'
+          })
+          return // Don't show general error if we have field-specific error
+        }
+
+        // For registration-specific errors
+        if (errorMessage.includes('email already exists') ||
+            errorMessage.includes('email already taken') ||
+            errorMessage.includes('user already exists')) {
+          form.setError('email', {
+            type: 'server',
+            message: 'An account with this email already exists. Try logging in instead.'
+          })
+          return // Don't show general error if we have field-specific error
+        }
+
         console.error('Form submission error:', error)
       }
     }
@@ -102,7 +212,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {error && (
+        {error && !form.formState.errors.email && !form.formState.errors.password && (
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -128,7 +238,10 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
         )}
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-4'>
+          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => {
+            console.log('Form validation errors:', errors)
+            // Handle form validation errors here if needed
+          })} className='space-y-4'>
             {!isLogin && (
               <div className='grid grid-cols-2 gap-4'>
                 <FormField
@@ -179,13 +292,20 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
             <FormField
               control={form.control}
               name='email'
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
-                  <FormLabel>Email address</FormLabel>
+                  <FormLabel className={fieldState.error ? 'text-red-600 dark:text-red-400' : ''}>
+                    Email address
+                  </FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter your email' type='email' {...field} />
+                    <Input
+                      placeholder='Enter your email'
+                      type='email'
+                      {...field}
+                      className={fieldState.error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+                    />
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-red-600 dark:text-red-400 text-sm mt-1" />
                 </FormItem>
               )}
             />
@@ -193,12 +313,19 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
             <FormField
               control={form.control}
               name='password'
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel className={fieldState.error ? 'text-red-600 dark:text-red-400' : ''}>
+                    Password
+                  </FormLabel>
                   <FormControl>
                     <div className='relative'>
-                      <Input type={showPassword ? 'text' : 'password'} placeholder='Create a password' {...field} />
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder={isLogin ? 'Enter your password' : 'Create a password'}
+                        {...field}
+                        className={fieldState.error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+                      />
                       <button
                         type='button'
                         onClick={() => setShowPassword(!showPassword)}
@@ -212,7 +339,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                       </button>
                     </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-red-600 dark:text-red-400 text-sm mt-1" />
                 </FormItem>
               )}
             />

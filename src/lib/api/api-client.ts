@@ -50,10 +50,24 @@ class ApiClient {
 
       if (!response.ok) {
         const errorText = await response.text()
+        let errorMessage = errorText
+
+        // Try to parse JSON error response to get the actual message
+        try {
+          const errorData = JSON.parse(errorText)
+          if (errorData.message) {
+            errorMessage = errorData.message
+          }
+        } catch (parseError) {
+          // If parsing fails, use the raw text
+          console.warn('Could not parse error response as JSON:', parseError)
+        }
+
         console.error('❌ API Error Response:', {
           status: response.status,
           statusText: response.statusText,
           errorText,
+          errorMessage,
           url
         })
 
@@ -89,7 +103,7 @@ class ApiClient {
           }
         }
 
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()

@@ -55,8 +55,10 @@ export default function LoginPage({ params }: PageProps) {
                   await loginCustomer({ email, password })
                   router.push(`/${locale}/landpage`)
                 } catch (err) {
-                  // Error is already handled by the auth store
+                  // Error handling is now managed by the AuthForm component
+                  // It will either show field-specific errors or let the general error through
                   console.error('Login failed:', err)
+                  throw err // Re-throw to let AuthForm handle it
                 }
               }}
             />
