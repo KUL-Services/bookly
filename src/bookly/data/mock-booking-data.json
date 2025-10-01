@@ -1,0 +1,265 @@
+{
+  "services": [
+    {
+      "id": "1",
+      "name": "Eyebrows And Upperlip",
+      "description": "Professional eyebrow shaping and upper lip threading/waxing",
+      "price": 700,
+      "duration": 20,
+      "category": "Eyebrows & Eyelashes",
+      "businessId": "1",
+      "location": "Le Visage Beauty Salon",
+      "branchIds": ["1-1", "1-2"]
+    },
+    {
+      "id": "2",
+      "name": "Eyebrow Waxing/Threading (Ladies)",
+      "description": "Expert eyebrow waxing or threading service",
+      "price": 450,
+      "duration": 10,
+      "category": "Eyebrows & Eyelashes",
+      "businessId": "1",
+      "location": "Le Visage Beauty Salon",
+      "branchIds": ["1-1"]
+    },
+    {
+      "id": "3",
+      "name": "Upper Lip Threading/Waxing",
+      "description": "Quick and gentle upper lip hair removal",
+      "price": 210,
+      "duration": 5,
+      "category": "Eyebrows & Eyelashes",
+      "businessId": "1",
+      "location": "Le Visage Beauty Salon",
+      "branchIds": ["1-1", "1-2"]
+    },
+    {
+      "id": "4",
+      "name": "Eyebrows, Upper lip And Chin",
+      "description": "Complete facial hair grooming package",
+      "price": 1000,
+      "duration": 20,
+      "category": "Eyebrows & Eyelashes",
+      "businessId": "1",
+      "location": "Le Visage Beauty Salon",
+      "branchIds": ["1-1"]
+    },
+    {
+      "id": "5",
+      "name": "Eyebrow Waxing/threading",
+      "description": "Professional eyebrow shaping",
+      "price": 550,
+      "duration": 10,
+      "category": "Eyebrows & Eyelashes",
+      "businessId": "1",
+      "location": "Le Visage Beauty Salon",
+      "branchIds": ["1-2"]
+    }
+  ],
+  "staff": [
+    {
+      "id": "staff-1",
+      "name": "Rima",
+      "title": "Beauty Specialist",
+      "photo": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face",
+      "businessId": "1",
+      "branchId": "1-1",
+      "serviceIds": ["1", "2", "3", "4", "5"],
+      "availability": "Available"
+    },
+    {
+      "id": "staff-2",
+      "name": "Cristalina",
+      "title": "Senior Beautician",
+      "photo": "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face",
+      "businessId": "1",
+      "branchId": "1-1",
+      "serviceIds": ["1", "2", "3"],
+      "availability": "Available at 11:50 AM",
+      "isStaff": true
+    },
+    {
+      "id": "staff-3",
+      "name": "Jelvy",
+      "title": "Beauty Specialist",
+      "photo": "https://images.unsplash.com/photo-1488716820095-cbe80883c496?w=150&h=150&fit=crop&crop=face",
+      "businessId": "1",
+      "branchId": "1-1",
+      "serviceIds": ["1", "3", "5"],
+      "availability": "Staffer has other appointments on selected time"
+    },
+    {
+      "id": "staff-4",
+      "name": "Laura",
+      "title": "Beauty Therapist",
+      "photo": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
+      "businessId": "1",
+      "branchId": "1-2",
+      "serviceIds": ["1", "3", "5"],
+      "availability": "Not working on selected date"
+    },
+    {
+      "id": "staff-5",
+      "name": "Arati",
+      "title": "Senior Therapist",
+      "photo": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+      "businessId": "1",
+      "branchId": "1-2",
+      "serviceIds": ["2", "4", "5"],
+      "availability": "Not working on selected date"
+    }
+  ],
+  "businesses": [
+    {
+      "id": "1",
+      "name": "Le Visage Beauty Salon",
+      "email": "info@levisagebeauty.com",
+      "description": "Premium beauty salon offering expert eyebrow and facial treatments in the heart of Harrow",
+      "approved": true,
+      "logoUrl": "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=200&h=200&fit=crop",
+      "rating": 4.8,
+      "totalRatings": 256,
+      "address": "419 Alexandra Avenue, HA2 9SG, Harrow, Harrow",
+      "city": "Harrow",
+      "location": {
+        "latitude": 51.5589,
+        "longitude": -0.3362
+      },
+      "socialLinks": [
+        {
+          "platform": "instagram",
+          "url": "https://instagram.com/levisagebeauty"
+        },
+        {
+          "platform": "facebook",
+          "url": "https://facebook.com/levisagebeauty"
+        }
+      ],
+      "openingHours": {
+        "Mon": "9:00 AM - 7:00 PM",
+        "Tue": "9:00 AM - 7:00 PM",
+        "Wed": "9:00 AM - 7:00 PM",
+        "Thu": "9:00 AM - 8:00 PM",
+        "Fri": "9:00 AM - 8:00 PM",
+        "Sat": "8:00 AM - 6:00 PM",
+        "Sun": "10:00 AM - 5:00 PM"
+      }
+    }
+  ],
+  "branches": [
+    {
+      "id": "1-1",
+      "name": "Le Visage Beauty Salon - Main Branch",
+      "address": "419 Alexandra Avenue, HA2 9SG",
+      "city": "Harrow",
+      "mobile": "+44 20 8422 1234",
+      "businessId": "1",
+      "serviceIds": ["1", "2", "3", "4"],
+      "galleryUrls": [
+        "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=400&fit=crop",
+        "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=600&h=400&fit=crop"
+      ]
+    },
+    {
+      "id": "1-2",
+      "name": "Le Visage Beauty Salon - Second Branch",
+      "address": "125 Station Road, HA1 2TX",
+      "city": "Harrow",
+      "mobile": "+44 20 8422 5678",
+      "businessId": "1",
+      "serviceIds": ["1", "3", "5"],
+      "galleryUrls": [
+        "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=400&fit=crop"
+      ]
+    }
+  ],
+  "addons": [
+    {
+      "id": "addon-1",
+      "name": "Eyebrow Tinting",
+      "priceCents": 500,
+      "maxQty": 1
+    },
+    {
+      "id": "addon-2",
+      "name": "Eyelash Tinting",
+      "priceCents": 800,
+      "maxQty": 1
+    },
+    {
+      "id": "addon-3",
+      "name": "Aftercare Kit",
+      "priceCents": 1200,
+      "maxQty": 3
+    }
+  ],
+  "timeSlots": {
+    "2025-09-29": [
+      { "time": "09:00", "available": true, "providerId": "staff-1" },
+      { "time": "09:30", "available": true, "providerId": "staff-1" },
+      { "time": "10:00", "available": false, "providerId": "staff-1" },
+      { "time": "10:30", "available": false, "providerId": "staff-1" },
+      { "time": "11:00", "available": false, "providerId": "staff-1" },
+      { "time": "11:20", "available": true, "providerId": "staff-1" },
+      { "time": "11:40", "available": true, "providerId": "staff-1" },
+      { "time": "12:00", "available": false, "providerId": "staff-1" },
+      { "time": "12:30", "available": false, "providerId": "staff-1" },
+      { "time": "12:55", "available": true, "providerId": "staff-1" },
+      { "time": "13:10", "available": true, "providerId": "staff-1" },
+      { "time": "13:30", "available": false, "providerId": "staff-1" },
+      { "time": "14:00", "available": false, "providerId": "staff-1" },
+      { "time": "14:30", "available": true, "providerId": "staff-1" },
+      { "time": "14:45", "available": true, "providerId": "staff-1" },
+      { "time": "15:00", "available": false, "providerId": "staff-1" },
+      { "time": "15:30", "available": false, "providerId": "staff-1" },
+      { "time": "16:00", "available": true, "providerId": "staff-1" },
+      { "time": "16:30", "available": false, "providerId": "staff-1" },
+      { "time": "17:00", "available": true, "providerId": "staff-1" },
+      { "time": "17:30", "available": true, "providerId": "staff-1" },
+      { "time": "18:00", "available": false, "providerId": "staff-1" }
+    ],
+    "2025-09-30": [
+      { "time": "09:00", "available": true, "providerId": "staff-1" },
+      { "time": "09:30", "available": true, "providerId": "staff-1" },
+      { "time": "10:00", "available": true, "providerId": "staff-1" },
+      { "time": "10:30", "available": false, "providerId": "staff-1" },
+      { "time": "11:00", "available": true, "providerId": "staff-1" },
+      { "time": "11:30", "available": true, "providerId": "staff-1" },
+      { "time": "12:00", "available": true, "providerId": "staff-1" },
+      { "time": "12:30", "available": false, "providerId": "staff-1" },
+      { "time": "13:00", "available": true, "providerId": "staff-1" },
+      { "time": "13:30", "available": true, "providerId": "staff-1" },
+      { "time": "14:00", "available": true, "providerId": "staff-1" },
+      { "time": "14:30", "available": false, "providerId": "staff-1" },
+      { "time": "15:00", "available": true, "providerId": "staff-1" },
+      { "time": "15:30", "available": true, "providerId": "staff-1" },
+      { "time": "16:00", "available": true, "providerId": "staff-1" },
+      { "time": "16:30", "available": true, "providerId": "staff-1" },
+      { "time": "17:00", "available": false, "providerId": "staff-1" },
+      { "time": "17:30", "available": true, "providerId": "staff-1" },
+      { "time": "18:00", "available": true, "providerId": "staff-1" }
+    ]
+  },
+  "coupons": {
+    "SAVE10": {
+      "code": "SAVE10",
+      "discountPercent": 10,
+      "description": "10% off your booking"
+    },
+    "SAVE20": {
+      "code": "SAVE20",
+      "discountPercent": 20,
+      "description": "20% off your booking"
+    },
+    "FIRST50": {
+      "code": "FIRST50",
+      "discountPercent": 50,
+      "description": "50% off your first booking"
+    },
+    "WELCOME30": {
+      "code": "WELCOME30",
+      "discountPercent": 30,
+      "description": "30% off welcome discount"
+    }
+  }
+}

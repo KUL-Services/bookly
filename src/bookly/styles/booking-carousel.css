@@ -1,0 +1,14 @@
+/* Scrollbar hide utility for smooth carousels */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scroll for carousels */
+.carousel-scroll {
+  scroll-behavior: smooth;
+}

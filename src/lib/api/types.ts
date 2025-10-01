@@ -279,3 +279,79 @@ export interface UpdateUserRequest {
   mobile: string
   profilePhoto?: string | null // Asset UUID
 }
+
+// Booking related types
+export interface Addon {
+  id: string
+  name: string
+  priceCents: number
+  maxQty?: number
+}
+
+export interface TimeSlot {
+  time: string
+  available: boolean
+}
+
+export interface AvailabilityResponse {
+  slots: TimeSlot[]
+}
+
+export interface Booking {
+  id: string
+  serviceId: string
+  providerId: string
+  startsAtUtc: string
+  customer: {
+    name: string
+    email: string
+    phone?: string
+  }
+  addons?: Array<{
+    id: string
+    quantity: number
+  }>
+  totalCents: number
+  status: 'pending' | 'confirmed' | 'cancelled'
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateBookingRequest {
+  serviceId: string
+  providerId: string
+  startsAtUtc: string
+  customer: {
+    name: string
+    email: string
+    phone?: string
+  }
+  addons?: Array<{
+    id: string
+    quantity: number
+  }>
+  notes?: string
+  couponCode?: string
+}
+
+export interface ValidateCouponRequest {
+  code: string
+  serviceId: string
+}
+
+export interface ValidateCouponResponse {
+  valid: boolean
+  discountPercent?: number
+  discountAmount?: number
+}
+
+export interface MockPaymentRequest {
+  bookingId: string
+  amount: number
+}
+
+export interface MockPaymentResponse {
+  success: boolean
+  transactionId: string
+}
