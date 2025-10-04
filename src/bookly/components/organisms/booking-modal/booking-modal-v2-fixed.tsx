@@ -18,6 +18,7 @@ interface BookingModalV2FixedProps {
   isOpen: boolean
   onClose: () => void
   initialService?: Service
+  initialTime?: string
   branchId?: string
 }
 
@@ -41,7 +42,7 @@ const detailsFormSchema = z.object({
 
 type DetailsFormValues = z.infer<typeof detailsFormSchema>
 
-function BookingModalV2Fixed({ isOpen, onClose, initialService, branchId }: BookingModalV2FixedProps) {
+function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, branchId }: BookingModalV2FixedProps) {
   const [currentStep, setCurrentStep] = useState<'selection' | 'details' | 'success'>('selection')
   const [selectedDate, setSelectedDate] = useState<Date>(new Date(2025, 8, 29))
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('Afternoon')
@@ -55,6 +56,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, branchId }: Book
   const [showServiceSelector, setShowServiceSelector] = useState(false)
   const [loading, setLoading] = useState(false)
   const [bookingReference, setBookingReference] = useState<string | null>(null)
+  const hasAutoAddedInitialService = useRef(false)
 
   const daysScrollRef = useRef<HTMLDivElement>(null)
   const timesScrollRef = useRef<HTMLDivElement>(null)
@@ -85,18 +87,56 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, branchId }: Book
   }
 
   const scrollTimes = (direction: 'left' | 'right') => {
-    if (timesScrollRef.current) {
-      const scrollAmount = direction === 'left' ? -200 : 200
-      timesScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+    const periods: Period[] = ['Morning', 'Afternoon', 'Evening']
+    const currentIndex = periods.indexOf(selectedPeriod)
+
+    if (direction === 'left') {
+      const newIndex = currentIndex > 0 ? currentIndex - 1 : periods.length - 1
+      setSelectedPeriod(periods[newIndex])
+    } else {
+      const newIndex = currentIndex < periods.length - 1 ? currentIndex + 1 : 0
+      setSelectedPeriod(periods[newIndex])
     }
   }
 
-  // Load mock data
+  // Load mock data and set initial time
   useEffect(() => {
     if (isOpen) {
       loadMockData()
+      if (initialTime) {
+        setSelectedTime(initialTime)
+      }
+    } else {
+      // Reset state when modal closes
+      setSelectedTime(null)
+      setSelectedServices([])
+      setCurrentStep('selection')
     }
-  }, [isOpen])
+  }, [isOpen, initialTime])
+
+  // Auto-add initial service with selected time (only once when modal opens)
+  useEffect(() => {
+    // If we have an initialService and user selected a time (or we have initialTime from props)
+    const timeToUse = initialTime || selectedTime
+
+    if (
+      isOpen &&
+      initialService &&
+      timeToUse &&
+      selectedServices.length === 0 &&
+      availableStaff.length > 0 &&
+      !hasAutoAddedInitialService.current
+    ) {
+      // Don't clear selectedTime so the time button stays highlighted
+      handleAddServiceWithTime(initialService, timeToUse, 'no-preference', false)
+      hasAutoAddedInitialService.current = true
+    }
+
+    // Reset flag when modal closes
+    if (!isOpen) {
+      hasAutoAddedInitialService.current = false
+    }
+  }, [isOpen, initialService, initialTime, selectedTime, availableStaff])
 
   const loadMockData = async () => {
     const mockData = await import('@/bookly/data/mock-booking-data.json')
@@ -160,9 +200,28 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, branchId }: Book
 
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time)
+
+    // If we have one service already (from initialService) and user selects a new time, update it
+    if (selectedServices.length === 1 && initialService) {
+      const existingService = selectedServices[0]
+      const endTime = format(addMinutes(new Date(`2000-01-01T${time}`), existingService.service.duration), 'HH:mm')
+
+      setSelectedServices([
+        {
+          ...existingService,
+          time,
+          endTime
+        }
+      ])
+    }
   }
 
-  const handleAddServiceWithTime = (service: Service, time: string, providerId: string = 'no-preference') => {
+  const handleAddServiceWithTime = (
+    service: Service,
+    time: string,
+    providerId: string = 'no-preference',
+    clearSelectedTime: boolean = true
+  ) => {
     const provider = availableStaff.find(s => s.id === providerId)
     const endTime = format(addMinutes(new Date(`2000-01-01T${time}`), service.duration), 'HH:mm')
 
@@ -177,7 +236,9 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, branchId }: Book
 
     setSelectedServices([...selectedServices, newService])
     setShowServiceSelector(false)
-    setSelectedTime(null)
+    if (clearSelectedTime) {
+      setSelectedTime(null)
+    }
   }
 
   const handleQuickAddCurrentSelection = () => {
@@ -305,7 +366,6 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, branchId }: Book
                     >
                       <span className='text-sm'>{weekdays[date.getDay() === 0 ? 6 : date.getDay() - 1]}</span>
                       <span className='text-2xl font-bold mt-1'>{format(date, 'd')}</span>
-                      {isSelected && <div className='w-8 h-1 bg-yellow-400 rounded-full mt-2' />}
                     </button>
                   )
                 })}
@@ -375,8 +435,8 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, branchId }: Book
               </button>
             </div>
 
-            {/* Quick Add Button (when time selected but no service added yet) */}
-            {selectedTime && selectedServices.length === 0 && availableServices.length > 0 && (
+            {/* Quick Add Button (when time selected but no service added yet, and no initial service) */}
+            {selectedTime && selectedServices.length === 0 && availableServices.length > 0 && !initialService && (
               <div className='bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4'>
                 <div className='text-sm text-teal-700 dark:text-teal-300 mb-2'>
                   Time {selectedTime} selected. Choose a service to continue:
