@@ -5,6 +5,18 @@ import { format, addMinutes, addDays } from 'date-fns'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Button } from '../../molecules'
 import { KulIcon } from '../../atoms'
 import { Input } from '../../ui/input'
@@ -29,9 +41,64 @@ interface SelectedService {
   providerName: string
   time: string
   endTime: string
+  sequence: number
 }
 
 type Period = 'Morning' | 'Afternoon' | 'Evening'
+
+// Period time bounds (HH:mm format)
+const PERIOD_BOUNDS = {
+  Morning: { start: '08:00', end: '11:59' },
+  Afternoon: { start: '12:00', end: '16:59' },
+  Evening: { start: '17:00', end: '21:00' }
+} as const
+
+const CLOSING_TIME = '21:00'
+
+/**
+ * Pure function to recalculate chained service times from an anchor start time
+ * @param anchorStartHHmm - Starting time in HH:mm format (e.g., "16:00")
+ * @param services - Array of selected services with durations
+ * @returns New array with recalculated time and endTime for each service
+ */
+function recalcChainedTimes(anchorStartHHmm: string, services: SelectedService[]): SelectedService[] {
+  if (!anchorStartHHmm || services.length === 0) return services
+
+  // Sort by sequence to ensure correct order
+  const sorted = [...services].sort((a, b) => a.sequence - b.sequence)
+
+  let currentTime = anchorStartHHmm
+
+  return sorted.map(service => {
+    const startTime = currentTime
+    const endDate = addMinutes(new Date(`2000-01-01T${currentTime}`), service.service.duration)
+    const endTime = format(endDate, 'HH:mm')
+
+    // Update current time for next service
+    currentTime = endTime
+
+    return {
+      ...service,
+      time: startTime,
+      endTime
+    }
+  })
+}
+
+/**
+ * Check if time string is within period bounds
+ */
+function isTimeInPeriod(timeHHmm: string, period: Period): boolean {
+  const bounds = PERIOD_BOUNDS[period]
+  return timeHHmm >= bounds.start && timeHHmm <= bounds.end
+}
+
+/**
+ * Compare two time strings (HH:mm format)
+ */
+function compareTime(time1: string, time2: string): number {
+  return time1.localeCompare(time2)
+}
 
 const detailsFormSchema = z.object({
   name: z.string().min(2, 'Name required'),
@@ -42,12 +109,102 @@ const detailsFormSchema = z.object({
 
 type DetailsFormValues = z.infer<typeof detailsFormSchema>
 
+// Sortable Service Card Component
+interface SortableServiceCardProps {
+  selected: SelectedService
+  showStaffSelector: boolean
+  availableStaff: Staff[]
+  onRemove: () => void
+  onToggleStaffSelector: () => void
+  onChangeStaff: (providerId: string) => void
+}
+
+function SortableServiceCard({
+  selected,
+  showStaffSelector,
+  availableStaff,
+  onRemove,
+  onToggleStaffSelector,
+  onChangeStaff
+}: SortableServiceCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: selected.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className='bg-slate-700 dark:bg-slate-700 rounded-xl p-4 relative border-2 border-slate-600'>
+      {/* Drag Handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className='absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-2 hover:bg-slate-600 dark:hover:bg-slate-600 rounded-lg transition-colors'
+      >
+        <KulIcon icon='lucide:grip-vertical' className='w-5 h-5 text-slate-400 hover:text-teal-400' />
+      </div>
+
+      <button
+        onClick={onRemove}
+        className='absolute top-2 right-2 p-1.5 bg-red-500/20 dark:bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 hover:text-red-300 transition-all'
+      >
+        <KulIcon icon='lucide:x' className='w-4 h-4' />
+      </button>
+
+      <div className='flex items-start justify-between mb-3 pr-8 pl-10'>
+        <div className='flex-1'>
+          <div className='font-semibold text-lg text-white'>{selected.service.name}</div>
+          <div className='text-sm text-teal-400'>
+            {selected.time && selected.endTime ? `${selected.time} - ${selected.endTime}` : 'Time pending - select start time'}
+          </div>
+        </div>
+        <div className='text-xl font-bold text-teal-400'>£{(selected.service.price / 100).toFixed(2)}</div>
+      </div>
+
+      <div className='flex items-center justify-between pt-3 border-t border-slate-600 dark:border-slate-600 pl-10'>
+        <div className='text-sm text-slate-300 dark:text-slate-300'>Staff: {selected.providerName}</div>
+        <button onClick={onToggleStaffSelector} className='text-teal-400 hover:text-teal-300 font-semibold text-sm px-3 py-1.5 rounded-lg hover:bg-teal-500/10 transition-all'>
+          Change
+        </button>
+      </div>
+
+      {/* Staff Selector Dropdown */}
+      {showStaffSelector && (
+        <div className='mt-3 p-3 bg-slate-800 dark:bg-slate-800 rounded-lg border border-slate-600 space-y-2 max-h-60 overflow-y-auto ml-10'>
+          {availableStaff.map(staff => (
+            <button
+              key={staff.id}
+              onClick={() => onChangeStaff(staff.id)}
+              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+                selected.providerId === staff.id
+                  ? 'bg-teal-500/20 border-2 border-teal-500 shadow-md'
+                  : 'bg-slate-700 border-2 border-transparent hover:bg-slate-600 hover:border-teal-500/50'
+              }`}
+            >
+              {staff.profilePhotoUrl ? (
+                <img src={staff.profilePhotoUrl} alt={staff.name} className='w-10 h-10 rounded-full object-cover' />
+              ) : (
+                <div className='w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-semibold'>
+                  {staff.name.charAt(0)}
+                </div>
+              )}
+              <span className='font-semibold text-white'>{staff.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, branchId }: BookingModalV2FixedProps) {
   const [currentStep, setCurrentStep] = useState<'selection' | 'details' | 'success'>('selection')
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(2025, 8, 29))
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('Afternoon')
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
-  const [weekStartDate, setWeekStartDate] = useState<Date>(new Date(2025, 8, 29))
+  const [weekStartDate, setWeekStartDate] = useState<Date>(new Date())
   const [availableServices, setAvailableServices] = useState<Service[]>([])
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([])
   const [availableStaff, setAvailableStaff] = useState<Staff[]>([])
@@ -56,7 +213,16 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
   const [showServiceSelector, setShowServiceSelector] = useState(false)
   const [loading, setLoading] = useState(false)
   const [bookingReference, setBookingReference] = useState<string | null>(null)
+  const [timeWarning, setTimeWarning] = useState<string | null>(null)
   const hasAutoAddedInitialService = useRef(false)
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  )
 
   const daysScrollRef = useRef<HTMLDivElement>(null)
   const timesScrollRef = useRef<HTMLDivElement>(null)
@@ -86,6 +252,26 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
     }
   }
 
+  const goToToday = () => {
+    const today = new Date()
+    setSelectedDate(today)
+    const dayOfWeek = today.getDay()
+    // Saturday is 6, so if it's Saturday use current date, otherwise go back to previous Saturday
+    const saturday = dayOfWeek === 6 ? today : addDays(today, -(dayOfWeek + 1))
+    setWeekStartDate(saturday)
+  }
+
+  const goToNextAvailable = async () => {
+    const nextAvailable = await findNextAvailableDate()
+    if (nextAvailable) {
+      setSelectedDate(nextAvailable)
+      const dayOfWeek = nextAvailable.getDay()
+      // Saturday is 6, so if it's Saturday use current date, otherwise go back to previous Saturday
+      const saturday = dayOfWeek === 6 ? nextAvailable : addDays(nextAvailable, -(dayOfWeek + 1))
+      setWeekStartDate(saturday)
+    }
+  }
+
   const scrollTimes = (direction: 'left' | 'right') => {
     const periods: Period[] = ['Morning', 'Afternoon', 'Evening']
     const currentIndex = periods.indexOf(selectedPeriod)
@@ -99,10 +285,41 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
     }
   }
 
-  // Load mock data and set initial time
+  // Helper to find first available date in next 14 days
+  const findNextAvailableDate = async (): Promise<Date | null> => {
+    const mockData = await import('@/bookly/data/mock-booking-data.json')
+    const today = new Date()
+
+    for (let i = 0; i < 14; i++) {
+      const checkDate = addDays(today, i)
+      const dateStr = format(checkDate, 'yyyy-MM-dd')
+      const slots = mockData.default.timeSlots[dateStr as keyof typeof mockData.default.timeSlots] || []
+      const hasAvailableSlots = slots.some((slot: any) => slot.available)
+
+      if (hasAvailableSlots) {
+        return checkDate
+      }
+    }
+
+    return null
+  }
+
+  // Load mock data and set initial time + default date
   useEffect(() => {
     if (isOpen) {
       loadMockData()
+
+      // Set default date to first available in next 14 days
+      findNextAvailableDate().then(availableDate => {
+        if (availableDate) {
+          setSelectedDate(availableDate)
+          // Set week to include this date (Saturday to Friday)
+          const dayOfWeek = availableDate.getDay()
+          const saturday = dayOfWeek === 6 ? availableDate : addDays(availableDate, -(dayOfWeek + 1))
+          setWeekStartDate(saturday)
+        }
+      })
+
       if (initialTime) {
         setSelectedTime(initialTime)
       }
@@ -111,6 +328,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
       setSelectedTime(null)
       setSelectedServices([])
       setCurrentStep('selection')
+      setTimeWarning(null)
     }
   }, [isOpen, initialTime])
 
@@ -185,13 +403,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
     const slots = mockData.default.timeSlots[dateStr as keyof typeof mockData.default.timeSlots] || []
 
     const periodSlots = slots
-      .filter((slot: any) => {
-        const hour = parseInt(slot.time.split(':')[0])
-        if (selectedPeriod === 'Morning') return hour < 12
-        if (selectedPeriod === 'Afternoon') return hour >= 12 && hour < 17
-        if (selectedPeriod === 'Evening') return hour >= 17
-        return false
-      })
+      .filter((slot: any) => isTimeInPeriod(slot.time, selectedPeriod))
       .filter((slot: any) => slot.available)
       .map((slot: any) => slot.time)
 
@@ -201,18 +413,18 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time)
 
-    // If we have one service already (from initialService) and user selects a new time, update it
-    if (selectedServices.length === 1 && initialService) {
-      const existingService = selectedServices[0]
-      const endTime = format(addMinutes(new Date(`2000-01-01T${time}`), existingService.service.duration), 'HH:mm')
+    // Recalculate all service times from new anchor
+    if (selectedServices.length > 0) {
+      const recalculated = recalcChainedTimes(time, selectedServices)
+      setSelectedServices(recalculated)
 
-      setSelectedServices([
-        {
-          ...existingService,
-          time,
-          endTime
-        }
-      ])
+      // Check if end time exceeds closing time
+      const lastService = recalculated[recalculated.length - 1]
+      if (compareTime(lastService.endTime, CLOSING_TIME) > 0) {
+        setTimeWarning('Selected start pushes end past closing; consider earlier time.')
+      } else {
+        setTimeWarning(null)
+      }
     }
   }
 
@@ -223,18 +435,40 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
     clearSelectedTime: boolean = true
   ) => {
     const provider = availableStaff.find(s => s.id === providerId)
-    const endTime = format(addMinutes(new Date(`2000-01-01T${time}`), service.duration), 'HH:mm')
+
+    // Get next sequence number
+    const nextSequence = selectedServices.length > 0 ? Math.max(...selectedServices.map(s => s.sequence)) + 1 : 0
 
     const newService: SelectedService = {
       id: `${service.id}-${Date.now()}`,
       service,
       providerId,
       providerName: provider?.name || 'No preference',
-      time,
-      endTime
+      time: '', // Will be calculated by chain
+      endTime: '', // Will be calculated by chain
+      sequence: nextSequence
     }
 
-    setSelectedServices([...selectedServices, newService])
+    const updatedServices = [...selectedServices, newService]
+
+    // Use anchor time if available, otherwise use the time passed in
+    const anchorTime = selectedTime || time
+    const recalculated = recalcChainedTimes(anchorTime, updatedServices)
+    setSelectedServices(recalculated)
+
+    // Set anchor time if not already set
+    if (!selectedTime) {
+      setSelectedTime(anchorTime)
+    }
+
+    // Check time warning
+    const lastService = recalculated[recalculated.length - 1]
+    if (compareTime(lastService.endTime, CLOSING_TIME) > 0) {
+      setTimeWarning('Selected start pushes end past closing; consider earlier time.')
+    } else {
+      setTimeWarning(null)
+    }
+
     setShowServiceSelector(false)
     if (clearSelectedTime) {
       setSelectedTime(null)
@@ -249,7 +483,24 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
   }
 
   const handleRemoveService = (id: string) => {
-    setSelectedServices(selectedServices.filter(s => s.id !== id))
+    const remaining = selectedServices.filter(s => s.id !== id)
+
+    if (remaining.length > 0 && selectedTime) {
+      // Recalculate times for remaining services
+      const recalculated = recalcChainedTimes(selectedTime, remaining)
+      setSelectedServices(recalculated)
+
+      // Check time warning
+      const lastService = recalculated[recalculated.length - 1]
+      if (compareTime(lastService.endTime, CLOSING_TIME) > 0) {
+        setTimeWarning('Selected start pushes end past closing; consider earlier time.')
+      } else {
+        setTimeWarning(null)
+      }
+    } else {
+      setSelectedServices(remaining)
+      setTimeWarning(null)
+    }
   }
 
   const handleChangeStaff = (serviceId: string, providerId: string) => {
@@ -260,6 +511,38 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
       )
     )
     setShowStaffSelector(null)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const oldIndex = selectedServices.findIndex(s => s.id === active.id)
+      const newIndex = selectedServices.findIndex(s => s.id === over.id)
+
+      const reordered = arrayMove(selectedServices, oldIndex, newIndex)
+
+      // Update sequences and recalculate times
+      const withNewSequences = reordered.map((service, index) => ({
+        ...service,
+        sequence: index
+      }))
+
+      if (selectedTime) {
+        const recalculated = recalcChainedTimes(selectedTime, withNewSequences)
+        setSelectedServices(recalculated)
+
+        // Check time warning
+        const lastService = recalculated[recalculated.length - 1]
+        if (compareTime(lastService.endTime, CLOSING_TIME) > 0) {
+          setTimeWarning('Selected start pushes end past closing; consider earlier time.')
+        } else {
+          setTimeWarning(null)
+        }
+      } else {
+        setSelectedServices(withNewSequences)
+      }
+    }
   }
 
   const calculateTotal = () => {
@@ -275,7 +558,10 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
 
-      for (const selected of selectedServices) {
+      // Sort by sequence to ensure correct booking order
+      const sortedServices = [...selectedServices].sort((a, b) => a.sequence - b.sequence)
+
+      for (const selected of sortedServices) {
         const startsAtUtc = combineDateTimeToUTC(dateStr, selected.time)
         await BookingService.createBooking({
           serviceId: selected.service.id,
@@ -303,15 +589,19 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
     if (selectedServices.length === 0) return
 
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
-    const firstService = selectedServices[0]
+
+    // Sort by sequence to get correct first and last services
+    const sortedServices = [...selectedServices].sort((a, b) => a.sequence - b.sequence)
+    const firstService = sortedServices[0]
+    const lastService = sortedServices[sortedServices.length - 1]
+
     const startTime = new Date(combineDateTimeToUTC(dateStr, firstService.time))
-    const lastService = selectedServices[selectedServices.length - 1]
     const endTime = new Date(combineDateTimeToUTC(dateStr, lastService.endTime))
 
     downloadICS(
       {
-        title: `Booking - ${selectedServices.map(s => s.service.name).join(', ')}`,
-        description: `Services: ${selectedServices.map(s => s.service.name).join(', ')}`,
+        title: `Booking - ${sortedServices.map(s => s.service.name).join(', ')}`,
+        description: `Services: ${sortedServices.map(s => s.service.name).join(', ')}`,
         location: firstService.service.location,
         startTime,
         endTime,
@@ -332,7 +622,10 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
         {/* Header */}
         <div className='sticky top-0 bg-white dark:bg-gray-900 z-10 flex items-center justify-between p-4 border-b'>
           <h2 className='text-xl font-semibold'>Book Appointment</h2>
-          <button onClick={onClose} className='p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full'>
+          <button
+            onClick={onClose}
+            className='p-2 hover:bg-teal-50 dark:hover:bg-teal-900/20 text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 rounded-full transition-colors'
+          >
             <KulIcon icon='lucide:x' />
           </button>
         </div>
@@ -340,11 +633,27 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
         {/* STEP 1: Selection */}
         {currentStep === 'selection' && (
           <div className='p-4 space-y-4'>
+            {/* Quick Navigation Buttons */}
+            <div className='flex gap-2 justify-end'>
+              <button
+                onClick={goToToday}
+                className='px-3 py-1.5 text-sm bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/40 rounded-lg font-medium transition-colors border border-teal-200 dark:border-teal-800'
+              >
+                Today
+              </button>
+              <button
+                onClick={goToNextAvailable}
+                className='px-3 py-1.5 text-sm bg-teal-500 text-white hover:bg-teal-600 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md'
+              >
+                Next Available
+              </button>
+            </div>
+
             {/* Days Carousel */}
             <div className='flex items-center gap-2'>
               <button
                 onClick={() => scrollDays('left')}
-                className='p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full flex-shrink-0'
+                className='p-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-full flex-shrink-0 transition-colors'
               >
                 <KulIcon icon='lucide:chevron-left' />
               </button>
@@ -352,7 +661,8 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
               <div ref={daysScrollRef} className='flex-1 flex gap-2 overflow-x-auto scrollbar-hide'>
                 {weekDates.map((date, idx) => {
                   const isSelected = format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
-                  const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+                  // Week starts Saturday (6), ends Friday (5): Sat, Sun, Mon, Tue, Wed, Thu, Fri
+                  const weekdays = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
                   return (
                     <button
@@ -360,11 +670,11 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                       onClick={() => setSelectedDate(date)}
                       className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[80px] h-24 rounded-2xl border-2 transition-all ${
                         isSelected
-                          ? 'border-teal-500 bg-teal-500 text-white'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                          ? 'border-teal-500 bg-teal-500 text-white shadow-lg'
+                          : 'border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 hover:border-teal-400 hover:bg-slate-600'
                       }`}
                     >
-                      <span className='text-sm'>{weekdays[date.getDay() === 0 ? 6 : date.getDay() - 1]}</span>
+                      <span className='text-sm'>{weekdays[idx]}</span>
                       <span className='text-2xl font-bold mt-1'>{format(date, 'd')}</span>
                     </button>
                   )
@@ -373,22 +683,22 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
               <button
                 onClick={() => scrollDays('right')}
-                className='p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full flex-shrink-0'
+                className='p-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-full flex-shrink-0 transition-colors'
               >
                 <KulIcon icon='lucide:chevron-right' />
               </button>
             </div>
 
             {/* Period Tabs */}
-            <div className='flex gap-2 bg-gray-100 dark:bg-gray-800 rounded-xl p-1'>
+            <div className='flex gap-2 bg-slate-800/50 dark:bg-slate-800/50 rounded-xl p-1.5 border border-slate-700 dark:border-slate-700'>
               {(['Morning', 'Afternoon', 'Evening'] as Period[]).map(period => (
                 <button
                   key={period}
                   onClick={() => setSelectedPeriod(period)}
-                  className={`flex-1 py-2 px-4 rounded-lg transition-all ${
+                  className={`flex-1 py-2.5 px-4 rounded-lg transition-all font-medium ${
                     selectedPeriod === period
-                      ? 'bg-white dark:bg-gray-700 shadow-sm font-semibold'
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                      ? 'bg-teal-500 text-white shadow-lg scale-[1.02]'
+                      : 'bg-slate-700 dark:bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'
                   }`}
                 >
                   {period}
@@ -400,7 +710,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
             <div className='flex items-center gap-2'>
               <button
                 onClick={() => scrollTimes('left')}
-                className='p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full flex-shrink-0'
+                className='p-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-full flex-shrink-0 transition-colors'
               >
                 <KulIcon icon='lucide:chevron-left' />
               </button>
@@ -411,10 +721,10 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                     <button
                       key={time}
                       onClick={() => handleTimeSelect(time)}
-                      className={`flex-shrink-0 min-w-[100px] py-3 px-4 rounded-xl border-2 transition-all ${
+                      className={`flex-shrink-0 min-w-[100px] py-3 px-4 rounded-xl border-2 transition-all font-medium ${
                         selectedTime === time
-                          ? 'border-teal-500 bg-teal-500 text-white'
-                          : 'border-gray-300 dark:border-gray-600 hover:border-teal-400'
+                          ? 'border-teal-500 bg-teal-500 text-white shadow-lg'
+                          : 'border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 hover:border-teal-400 hover:bg-slate-600'
                       }`}
                     >
                       {time}
@@ -429,7 +739,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
               <button
                 onClick={() => scrollTimes('right')}
-                className='p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full flex-shrink-0'
+                className='p-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-full flex-shrink-0 transition-colors'
               >
                 <KulIcon icon='lucide:chevron-right' />
               </button>
@@ -450,78 +760,55 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
               </div>
             )}
 
-            {/* Selected Services Cards */}
-            <div className='space-y-3'>
-              {selectedServices.map(selected => (
-                <div key={selected.id} className='bg-gray-50 dark:bg-gray-800 rounded-xl p-4 relative'>
-                  <button
-                    onClick={() => handleRemoveService(selected.id)}
-                    className='absolute top-2 right-2 p-1 bg-gray-300 dark:bg-gray-700 rounded-full hover:bg-gray-400'
-                  >
-                    <KulIcon icon='lucide:x' className='w-4 h-4' />
-                  </button>
-
-                  <div className='flex items-start justify-between mb-3 pr-8'>
-                    <div className='flex-1'>
-                      <div className='font-semibold text-lg'>{selected.service.name}</div>
-                      <div className='text-sm text-gray-500'>
-                        {selected.time} - {selected.endTime}
-                      </div>
-                    </div>
-                    <div className='text-xl font-bold'>£{(selected.service.price / 100).toFixed(2)}</div>
-                  </div>
-
-                  <div className='flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700'>
-                    <div className='text-sm text-gray-600 dark:text-gray-400'>Staff: {selected.providerName}</div>
-                    <button
-                      onClick={() =>
-                        setShowStaffSelector(showStaffSelector === selected.id ? null : selected.id)
-                      }
-                      className='text-teal-600 hover:text-teal-700 font-medium text-sm'
-                    >
-                      Change
-                    </button>
-                  </div>
-
-                  {/* Staff Selector Dropdown */}
-                  {showStaffSelector === selected.id && (
-                    <div className='mt-3 p-3 bg-white dark:bg-gray-900 rounded-lg border space-y-2 max-h-60 overflow-y-auto'>
-                      {availableStaff.map(staff => (
-                        <button
-                          key={staff.id}
-                          onClick={() => handleChangeStaff(selected.id, staff.id)}
-                          className={`w-full flex items-center gap-3 p-2 rounded-lg ${
-                            selected.providerId === staff.id
-                              ? 'bg-teal-50 dark:bg-teal-900/20 border border-teal-200'
-                              : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-                          }`}
-                        >
-                          {staff.profilePhotoUrl ? (
-                            <img
-                              src={staff.profilePhotoUrl}
-                              alt={staff.name}
-                              className='w-10 h-10 rounded-full object-cover'
-                            />
-                          ) : (
-                            <div className='w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-semibold'>
-                              {staff.name.charAt(0)}
-                            </div>
-                          )}
-                          <span className='font-medium'>{staff.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+            {/* Time Warning */}
+            {timeWarning && (
+              <div className='bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-3'>
+                <div className='flex items-center gap-2 text-sm text-orange-700 dark:text-orange-300'>
+                  <KulIcon icon='lucide:alert-triangle' className='w-4 h-4' />
+                  {timeWarning}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {/* Prompt to select time if no anchor */}
+            {!selectedTime && selectedServices.length > 0 && (
+              <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3'>
+                <div className='flex items-center gap-2 text-sm text-red-700 dark:text-red-300 font-medium'>
+                  <KulIcon icon='lucide:alert-circle' className='w-4 h-4' />
+                  Please select a start time above to schedule your services
+                </div>
+              </div>
+            )}
+
+            {/* Selected Services Cards with Drag-and-Drop */}
+            {selectedServices.length > 0 && (
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={selectedServices.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                  <div className='space-y-3'>
+                    {selectedServices.map(selected => (
+                      <SortableServiceCard
+                        key={selected.id}
+                        selected={selected}
+                        showStaffSelector={showStaffSelector === selected.id}
+                        availableStaff={availableStaff}
+                        onRemove={() => handleRemoveService(selected.id)}
+                        onToggleStaffSelector={() =>
+                          setShowStaffSelector(showStaffSelector === selected.id ? null : selected.id)
+                        }
+                        onChangeStaff={providerId => handleChangeStaff(selected.id, providerId)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
 
             {/* Add Another Service */}
             <button
               onClick={() => setShowServiceSelector(true)}
-              className='w-full py-3 border-2 border-dashed border-teal-500 rounded-xl text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 flex items-center justify-center gap-2 font-medium'
+              className='w-full py-4 border-2 border-dashed border-teal-500/60 dark:border-teal-500/60 bg-slate-700/50 dark:bg-slate-700/50 rounded-xl text-teal-400 hover:bg-teal-500/10 hover:border-teal-400 dark:hover:bg-teal-900/30 dark:hover:border-teal-400 flex items-center justify-center gap-2 font-semibold transition-all shadow-sm hover:shadow-md'
             >
-              <KulIcon icon='lucide:plus' />
+              <KulIcon icon='lucide:plus' className='w-5 h-5' />
               Add another service
             </button>
 
@@ -533,37 +820,27 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                     <h3 className='text-xl font-bold'>Select Service</h3>
                     <button
                       onClick={() => setShowServiceSelector(false)}
-                      className='p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full'
+                      className='p-2 hover:bg-teal-50 dark:hover:bg-teal-900/20 text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 rounded-full transition-colors'
                     >
                       <KulIcon icon='lucide:x' />
                     </button>
                   </div>
                   <div className='space-y-3'>
                     {availableServices.map(service => (
-                      <div
+                      <button
                         key={service.id}
-                        className='border border-gray-300 dark:border-gray-700 rounded-lg p-4 hover:border-teal-500 transition-all'
+                        onClick={() => handleAddServiceWithTime(service, selectedTime || '00:00', 'no-preference', false)}
+                        className='w-full border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 rounded-xl p-5 hover:border-teal-500 hover:bg-slate-600 dark:hover:bg-slate-600 hover:shadow-lg transition-all text-left group'
                       >
                         <div className='flex justify-between items-start mb-2'>
-                          <div>
-                            <div className='font-semibold text-lg'>{service.name}</div>
-                            <div className='text-sm text-gray-500'>{service.description}</div>
+                          <div className='flex-1'>
+                            <div className='font-bold text-lg text-white group-hover:text-teal-400 transition-colors'>{service.name}</div>
+                            <div className='text-sm text-slate-400 mt-1'>{service.description}</div>
                           </div>
-                          <div className='text-lg font-bold'>£{(service.price / 100).toFixed(2)}</div>
+                          <div className='text-xl font-bold text-teal-400 ml-4'>£{(service.price / 100).toFixed(2)}</div>
                         </div>
-                        <div className='text-sm text-gray-500 mb-3'>{service.duration}min</div>
-                        <div className='flex gap-2 flex-wrap'>
-                          {availableTimeSlots.slice(0, 6).map(time => (
-                            <button
-                              key={time}
-                              onClick={() => handleAddServiceWithTime(service, time)}
-                              className='px-4 py-2 bg-teal-500 text-white rounded-lg text-sm hover:bg-teal-600 transition-all'
-                            >
-                              {time}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                        <div className='text-sm text-slate-300 bg-slate-800 px-3 py-1 rounded-full inline-block'>{service.duration}min</div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -581,7 +858,8 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                   </div>
                   <button
                     onClick={() => setCurrentStep('details')}
-                    className='bg-teal-500 hover:bg-teal-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold transition-all'
+                    disabled={!selectedTime}
+                    className='bg-teal-500 hover:bg-teal-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed'
                   >
                     Continue
                   </button>
@@ -678,14 +956,14 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                   <button
                     type='button'
                     onClick={() => setCurrentStep('selection')}
-                    className='flex-1 border-2 border-gray-300 dark:border-gray-600 py-3 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-800'
+                    className='flex-1 border-2 border-teal-500 dark:border-teal-600 text-teal-600 dark:text-teal-400 py-3 rounded-xl font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors'
                   >
                     Back
                   </button>
                   <button
                     type='submit'
                     disabled={loading}
-                    className='flex-1 bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-xl font-semibold disabled:opacity-50'
+                    className='flex-1 bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-xl font-semibold disabled:opacity-50 shadow-md hover:shadow-lg transition-all'
                   >
                     {loading ? 'Processing...' : 'Confirm & Book'}
                   </button>
@@ -719,7 +997,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
             <button
               onClick={onClose}
-              className='w-full max-w-md mx-auto border-2 border-gray-300 py-3 rounded-xl font-semibold hover:bg-gray-50'
+              className='w-full max-w-md mx-auto border-2 border-teal-500 dark:border-teal-600 text-teal-600 dark:text-teal-400 py-3 rounded-xl font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors'
             >
               Close
             </button>

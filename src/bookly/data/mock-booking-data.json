@@ -9,7 +9,10 @@
       "category": "Eyebrows & Eyelashes",
       "businessId": "1",
       "location": "Le Visage Beauty Salon",
-      "branchIds": ["1-1", "1-2"]
+      "branchIds": [
+        "1-1",
+        "1-2"
+      ]
     },
     {
       "id": "2",
@@ -20,7 +23,9 @@
       "category": "Eyebrows & Eyelashes",
       "businessId": "1",
       "location": "Le Visage Beauty Salon",
-      "branchIds": ["1-1"]
+      "branchIds": [
+        "1-1"
+      ]
     },
     {
       "id": "3",
@@ -31,7 +36,10 @@
       "category": "Eyebrows & Eyelashes",
       "businessId": "1",
       "location": "Le Visage Beauty Salon",
-      "branchIds": ["1-1", "1-2"]
+      "branchIds": [
+        "1-1",
+        "1-2"
+      ]
     },
     {
       "id": "4",
@@ -42,7 +50,9 @@
       "category": "Eyebrows & Eyelashes",
       "businessId": "1",
       "location": "Le Visage Beauty Salon",
-      "branchIds": ["1-1"]
+      "branchIds": [
+        "1-1"
+      ]
     },
     {
       "id": "5",
@@ -53,7 +63,9 @@
       "category": "Eyebrows & Eyelashes",
       "businessId": "1",
       "location": "Le Visage Beauty Salon",
-      "branchIds": ["1-2"]
+      "branchIds": [
+        "1-2"
+      ]
     }
   ],
   "staff": [
@@ -64,7 +76,13 @@
       "photo": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face",
       "businessId": "1",
       "branchId": "1-1",
-      "serviceIds": ["1", "2", "3", "4", "5"],
+      "serviceIds": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
       "availability": "Available"
     },
     {
@@ -74,7 +92,11 @@
       "photo": "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face",
       "businessId": "1",
       "branchId": "1-1",
-      "serviceIds": ["1", "2", "3"],
+      "serviceIds": [
+        "1",
+        "2",
+        "3"
+      ],
       "availability": "Available at 11:50 AM",
       "isStaff": true
     },
@@ -85,7 +107,11 @@
       "photo": "https://images.unsplash.com/photo-1488716820095-cbe80883c496?w=150&h=150&fit=crop&crop=face",
       "businessId": "1",
       "branchId": "1-1",
-      "serviceIds": ["1", "3", "5"],
+      "serviceIds": [
+        "1",
+        "3",
+        "5"
+      ],
       "availability": "Staffer has other appointments on selected time"
     },
     {
@@ -95,7 +121,11 @@
       "photo": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
       "businessId": "1",
       "branchId": "1-2",
-      "serviceIds": ["1", "3", "5"],
+      "serviceIds": [
+        "1",
+        "3",
+        "5"
+      ],
       "availability": "Not working on selected date"
     },
     {
@@ -105,7 +135,11 @@
       "photo": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
       "businessId": "1",
       "branchId": "1-2",
-      "serviceIds": ["2", "4", "5"],
+      "serviceIds": [
+        "2",
+        "4",
+        "5"
+      ],
       "availability": "Not working on selected date"
     }
   ],
@@ -154,7 +188,12 @@
       "city": "Harrow",
       "mobile": "+44 20 8422 1234",
       "businessId": "1",
-      "serviceIds": ["1", "2", "3", "4"],
+      "serviceIds": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
       "galleryUrls": [
         "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=400&fit=crop",
         "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=600&h=400&fit=crop"
@@ -167,7 +206,11 @@
       "city": "Harrow",
       "mobile": "+44 20 8422 5678",
       "businessId": "1",
-      "serviceIds": ["1", "3", "5"],
+      "serviceIds": [
+        "1",
+        "3",
+        "5"
+      ],
       "galleryUrls": [
         "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=400&fit=crop"
       ]
@@ -194,50 +237,2063 @@
     }
   ],
   "timeSlots": {
-    "2025-09-29": [
-      { "time": "09:00", "available": true, "providerId": "staff-1" },
-      { "time": "09:30", "available": true, "providerId": "staff-1" },
-      { "time": "10:00", "available": false, "providerId": "staff-1" },
-      { "time": "10:30", "available": false, "providerId": "staff-1" },
-      { "time": "11:00", "available": false, "providerId": "staff-1" },
-      { "time": "11:20", "available": true, "providerId": "staff-1" },
-      { "time": "11:40", "available": true, "providerId": "staff-1" },
-      { "time": "12:00", "available": false, "providerId": "staff-1" },
-      { "time": "12:30", "available": false, "providerId": "staff-1" },
-      { "time": "12:55", "available": true, "providerId": "staff-1" },
-      { "time": "13:10", "available": true, "providerId": "staff-1" },
-      { "time": "13:30", "available": false, "providerId": "staff-1" },
-      { "time": "14:00", "available": false, "providerId": "staff-1" },
-      { "time": "14:30", "available": true, "providerId": "staff-1" },
-      { "time": "14:45", "available": true, "providerId": "staff-1" },
-      { "time": "15:00", "available": false, "providerId": "staff-1" },
-      { "time": "15:30", "available": false, "providerId": "staff-1" },
-      { "time": "16:00", "available": true, "providerId": "staff-1" },
-      { "time": "16:30", "available": false, "providerId": "staff-1" },
-      { "time": "17:00", "available": true, "providerId": "staff-1" },
-      { "time": "17:30", "available": true, "providerId": "staff-1" },
-      { "time": "18:00", "available": false, "providerId": "staff-1" }
+    "2025-10-06": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
     ],
-    "2025-09-30": [
-      { "time": "09:00", "available": true, "providerId": "staff-1" },
-      { "time": "09:30", "available": true, "providerId": "staff-1" },
-      { "time": "10:00", "available": true, "providerId": "staff-1" },
-      { "time": "10:30", "available": false, "providerId": "staff-1" },
-      { "time": "11:00", "available": true, "providerId": "staff-1" },
-      { "time": "11:30", "available": true, "providerId": "staff-1" },
-      { "time": "12:00", "available": true, "providerId": "staff-1" },
-      { "time": "12:30", "available": false, "providerId": "staff-1" },
-      { "time": "13:00", "available": true, "providerId": "staff-1" },
-      { "time": "13:30", "available": true, "providerId": "staff-1" },
-      { "time": "14:00", "available": true, "providerId": "staff-1" },
-      { "time": "14:30", "available": false, "providerId": "staff-1" },
-      { "time": "15:00", "available": true, "providerId": "staff-1" },
-      { "time": "15:30", "available": true, "providerId": "staff-1" },
-      { "time": "16:00", "available": true, "providerId": "staff-1" },
-      { "time": "16:30", "available": true, "providerId": "staff-1" },
-      { "time": "17:00", "available": false, "providerId": "staff-1" },
-      { "time": "17:30", "available": true, "providerId": "staff-1" },
-      { "time": "18:00", "available": true, "providerId": "staff-1" }
+    "2025-10-07": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-08": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-09": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-10": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-11": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-12": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-13": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-14": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-15": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-16": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-17": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-18": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
+    ],
+    "2025-10-19": [
+      {
+        "time": "08:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "08:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "09:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "10:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:20",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "11:40",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "12:55",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:10",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "13:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "14:45",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "15:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "16:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "17:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:00",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "18:30",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "19:30",
+        "available": false,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:00",
+        "available": true,
+        "providerId": "staff-1"
+      },
+      {
+        "time": "20:30",
+        "available": true,
+        "providerId": "staff-1"
+      }
     ]
   },
   "coupons": {

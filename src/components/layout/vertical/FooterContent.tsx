@@ -25,7 +25,7 @@ const FooterContent = () => {
         <span>{`❤️`}</span>
         <span className='text-textSecondary'>{` For `}</span>
         <Link href='https://bookly.com' target='_blank' className='text-primary capitalize'>
-          Bookly
+          Zerv
         </Link>
       </p>
       {!isBreakpointReached && (

@@ -34,7 +34,7 @@ const BooklyThemeToggle = () => {
     setMounted(true)
 
     // Get theme from localStorage or default to system
-    const savedTheme = localStorage.getItem('theme') as Theme || 'system'
+    const savedTheme = (localStorage.getItem('theme') as Theme) || 'system'
     setTheme(savedTheme)
     applyTheme(savedTheme)
   }, [])
@@ -86,8 +86,8 @@ const BooklyThemeToggle = () => {
   if (!mounted) {
     // Return a placeholder during SSR to avoid hydration mismatch
     return (
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg opacity-50">
-        <Monitor className="w-4 h-4" />
+      <div className='flex items-center gap-2 px-3 py-2 rounded-lg opacity-50'>
+        <Monitor className='w-4 h-4' />
       </div>
     )
   }
@@ -96,45 +96,40 @@ const BooklyThemeToggle = () => {
   const currentTheme = getCurrentTheme()
 
   return (
-    <div className="relative">
+    <div className='relative'>
       <button
         ref={anchorRef}
         onClick={handleToggle}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-teal-50/60 dark:bg-teal-900/40 hover:bg-teal-100/80 dark:hover:bg-teal-800/50 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-all duration-200 touch-manipulation border border-teal-200/50 dark:border-teal-700/50"
-        aria-label="Change theme"
+        className='flex items-center gap-2 px-3 py-2 rounded-lg bg-teal-50/60 dark:bg-teal-900/40 hover:bg-teal-100/80 dark:hover:bg-teal-800/50 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-all duration-200 touch-manipulation border border-teal-200/50 dark:border-teal-700/50'
+        aria-label='Change theme'
       >
-        <CurrentIcon className="w-4 h-4" />
-        <span className="hidden sm:block text-sm font-medium capitalize">{currentTheme.label}</span>
+        <CurrentIcon className='w-4 h-4' />
+        <span className='hidden sm:block text-sm font-medium capitalize'>{currentTheme.label}</span>
         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
         <>
           {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={handleClose}
-          />
+          <div className='fixed inset-0 z-40' onClick={handleClose} />
 
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-teal-200/60 dark:border-teal-700/60 py-2 z-50 animate-in slide-in-from-top-2 duration-200">
+          <div className='absolute right-0 mt-2 w-40 bg-slate-800 dark:bg-slate-800 rounded-xl shadow-xl border border-slate-600 dark:border-slate-600 p-1 z-50 animate-in slide-in-from-top-2 duration-200'>
             {themeOptions.map(option => {
               const IconComponent = option.icon
               return (
                 <button
                   key={option.value}
                   onClick={() => handleThemeChange(option.value)}
-                  className={`flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-teal-50/80 dark:hover:bg-teal-900/40 transition-colors duration-200 touch-manipulation ${
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 text-left transition-all duration-200 touch-manipulation rounded-lg ${
                     theme === option.value
-                      ? 'bg-teal-100/90 dark:bg-teal-800/60 text-teal-800 dark:text-teal-200 font-semibold'
-                      : 'text-slate-700 dark:text-slate-200 hover:text-teal-700 dark:hover:text-teal-300'
+                      ? 'bg-teal-500 text-white shadow-md font-semibold'
+                      : 'bg-transparent text-slate-300 hover:bg-slate-700 hover:text-white'
                   }`}
                 >
-                  <IconComponent className="w-4 h-4" />
-                  <span className="text-sm font-medium">{option.label}</span>
-                  {theme === option.value && (
-                    <div className="ml-auto w-2 h-2 bg-teal-600 rounded-full shadow-sm"></div>
-                  )}
+                  <IconComponent className='w-4 h-4' />
+                  <span className='text-sm font-medium'>{option.label}</span>
+                  {theme === option.value && <div className='ml-auto w-1.5 h-1.5 bg-white rounded-full'></div>}
                 </button>
               )
             })}
