@@ -100,7 +100,7 @@ const BooklyThemeToggle = () => {
       <button
         ref={anchorRef}
         onClick={handleToggle}
-        className='flex items-center gap-2 px-3 py-2 rounded-lg bg-teal-50/60 dark:bg-teal-900/40 hover:bg-teal-100/80 dark:hover:bg-teal-800/50 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-all duration-200 touch-manipulation border border-teal-200/50 dark:border-teal-700/50'
+        className='flex items-center gap-2 px-3 py-2.5 h-10 rounded-lg bg-teal-50/60 dark:bg-teal-900/40 hover:bg-teal-100/80 dark:hover:bg-teal-800/50 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-all duration-200 touch-manipulation border border-teal-200/50 dark:border-teal-700/50'
         aria-label='Change theme'
       >
         <CurrentIcon className='w-4 h-4' />

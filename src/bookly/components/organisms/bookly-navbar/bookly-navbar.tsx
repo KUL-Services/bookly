@@ -100,7 +100,7 @@ const BooklyNavbar = () => {
                   router.push(`/${params?.lang}/login`)
                 }
               }}
-              className='flex items-center gap-2 px-4 py-2 bg-slate-700 dark:bg-slate-700 text-slate-200 dark:text-slate-200 hover:bg-slate-600 dark:hover:bg-slate-600 hover:text-white dark:hover:text-white rounded-lg transition-all duration-200 border border-slate-600 dark:border-slate-600'
+              className='flex items-center gap-2 px-4 py-2.5 bg-slate-700 dark:bg-slate-700 text-slate-200 dark:text-slate-200 hover:bg-slate-600 dark:hover:bg-slate-600 hover:text-white dark:hover:text-white rounded-lg transition-all duration-200 border border-slate-600 dark:border-slate-600 h-10'
               aria-label='For Businesses'
             >
               <Building2 className='w-4 h-4' />
@@ -161,13 +161,13 @@ const BooklyNavbar = () => {
               <div className='flex items-center gap-3'>
                 <button
                   onClick={() => router.push(`/${params?.lang}/customer/login`)}
-                  className='hidden sm:block px-4 py-2 rounded-lg border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 dark:text-slate-200 hover:bg-slate-600 dark:hover:bg-slate-600 hover:border-teal-500 dark:hover:border-teal-500 hover:text-white dark:hover:text-white transition-all duration-200 font-medium touch-manipulation'
+                  className='hidden sm:flex items-center px-4 py-2.5 h-10 rounded-lg border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 dark:text-slate-200 hover:bg-slate-600 dark:hover:bg-slate-600 hover:border-teal-500 dark:hover:border-teal-500 hover:text-white dark:hover:text-white transition-all duration-200 font-medium touch-manipulation'
                 >
                   {t('nav.login')}
                 </button>
                 <button
                   onClick={() => router.push(`/${params?.lang}/customer/register`)}
-                  className='px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-500 dark:to-cyan-500 text-white hover:from-teal-700 hover:to-cyan-700 dark:hover:from-teal-600 dark:hover:to-cyan-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation text-sm sm:text-base'
+                  className='flex items-center px-3 sm:px-4 py-2.5 h-10 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-500 dark:to-cyan-500 text-white hover:from-teal-700 hover:to-cyan-700 dark:hover:from-teal-600 dark:hover:to-cyan-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation text-sm sm:text-base'
                 >
                   <span className='hidden sm:inline'>{t('nav.signUp')}</span>
                   <span className='sm:hidden'>{t('nav.join')}</span>
