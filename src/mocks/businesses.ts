@@ -1,3 +1,5 @@
+import type { Service, Branch, Staff } from '@/lib/api'
+
 export interface BusinessLocation {
   id: string
   name: string
@@ -11,6 +13,8 @@ export interface BusinessLocation {
   address: string
   rating: number
   imageUrl?: string
+  logoUrl?: string
+  coverImageUrl?: string
   categories: string[]
   description: string
   email: string
@@ -20,6 +24,17 @@ export interface BusinessLocation {
     max: number
   }
   servicesCount: number
+  approved?: boolean
+  socialLinks?: Array<{ platform: string; url: string }>
+  services?: Service[]
+  branches?: Branch[]
+  reviews?: Array<{
+    id: string
+    rating: number
+    comment: string
+    user: { firstName: string; lastName: string }
+    createdAt: string
+  }>
 }
 
 export interface City {
@@ -115,7 +130,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 25.2048, lng: 55.2708 },
     address: 'Dubai Mall, Downtown Dubai',
     rating: 4.8,
-    imageUrl: '/images/spa-dubai.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1200',
     categories: ['Spa & Wellness', 'Massage'],
     description: 'Premium spa services in the heart of Dubai with world-class therapists',
     email: 'info@luxuryspadubai.ae',
@@ -132,7 +149,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 25.1972, lng: 55.2744 },
     address: 'Jumeirah Beach Road',
     rating: 4.6,
-    imageUrl: '/images/hair-dubai.jpg',
+    imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=1200',
     categories: ['Hair Care', 'Beauty'],
     description: 'Cutting-edge hair styling and coloring by international stylists',
     email: 'book@elitehairstudio.ae',
@@ -149,6 +168,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 25.2182, lng: 55.2756 },
     address: 'Business Bay',
     rating: 4.9,
+    imageUrl: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1200',
     categories: ['Healthcare', 'Dental'],
     description: 'State-of-the-art dental clinic with latest technology',
     email: 'appointments@dubaidental.ae',
@@ -165,6 +187,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 25.0772, lng: 55.1377 },
     address: 'Dubai Marina Walk',
     rating: 4.5,
+    imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=1200',
     categories: ['Fitness', 'Personal Training'],
     description: 'Premium fitness center with personal trainers and group classes',
     email: 'hello@fitzonedubai.ae',
@@ -293,6 +318,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0444, lng: 31.2357 },
     address: 'Tahrir Square, Downtown Cairo',
     rating: 4.6,
+    imageUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200',
     categories: ['Spa & Wellness', 'Massage'],
     description: 'Relaxation and wellness in the heart of Cairo',
     email: 'info@cairowellness.eg',
@@ -308,6 +336,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0489, lng: 31.2421 },
     address: 'Talaat Harb Street',
     rating: 4.5,
+    imageUrl: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200',
     categories: ['Hair Care', 'Beauty', 'Nail Care'],
     description: 'Modern beauty salon in historic downtown',
     email: 'book@downtownbeauty.eg',
@@ -323,6 +354,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0515, lng: 31.2405 },
     address: 'Abdel Khalek Sarwat Street',
     rating: 4.7,
+    imageUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=1200',
     categories: ['Healthcare', 'Dental'],
     description: 'Comprehensive dental services with modern equipment',
     email: 'appointments@cairodental.eg',
@@ -340,6 +374,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0626, lng: 31.3497 },
     address: 'Abbas El Akkad Street, Nasr City',
     rating: 4.6,
+    imageUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200',
     categories: ['Hair Care', 'Beauty'],
     description: 'Professional hair care and styling services in Nasr City',
     email: 'book@nasrhair.eg',
@@ -355,6 +392,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0731, lng: 31.3439 },
     address: 'City Stars Mall, Nasr City',
     rating: 4.8,
+    imageUrl: 'https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200',
     categories: ['Spa & Wellness', 'Massage'],
     description: 'Luxurious spa experience in Cairo\'s premier mall',
     email: 'info@citystarsspa.eg',
@@ -370,6 +410,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0583, lng: 31.3356 },
     address: 'Makram Ebeid, Nasr City',
     rating: 4.4,
+    imageUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200',
     categories: ['Fitness', 'Personal Training'],
     description: 'Modern fitness center with certified trainers',
     email: 'join@nasrfitness.eg',
@@ -434,6 +477,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0381, lng: 31.2109 },
     address: 'Dokki Square, Dokki',
     rating: 4.5,
+    imageUrl: 'https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1600334129128-685c5582fd35?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1200',
     categories: ['Spa & Wellness'],
     description: 'Tranquil spa with Egyptian-inspired treatments in Dokki',
     email: 'info@dokkispa.eg',
@@ -449,6 +495,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0425, lng: 31.2089 },
     address: 'Mesaha Square, Dokki',
     rating: 4.4,
+    imageUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200',
     categories: ['Hair Care', 'Beauty'],
     description: 'Professional hair salon in the heart of Dokki',
     email: 'book@dokkihair.eg',
@@ -464,6 +513,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0365, lng: 31.2135 },
     address: 'Tahrir Street, Dokki',
     rating: 4.7,
+    imageUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=1200',
     categories: ['Healthcare', 'Dental'],
     description: 'Modern dental clinic with experienced dentists',
     email: 'appointments@dokkidental.eg',
@@ -481,6 +533,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0626, lng: 31.2009 },
     address: 'Arab League Street, Mohandeseen',
     rating: 4.8,
+    imageUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200',
     categories: ['Spa & Wellness', 'Massage'],
     description: 'Upscale spa with luxury treatments in Mohandeseen',
     email: 'info@mohandeseenspa.eg',
@@ -496,6 +551,9 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     coordinates: { lat: 30.0586, lng: 31.1985 },
     address: 'Gameat El Dewal Street',
     rating: 4.6,
+    imageUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+    logoUrl: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=200',
+    coverImageUrl: 'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=1200',
     categories: ['Hair Care', 'Beauty', 'Nail Care'],
     description: 'Elite beauty salon in Mohandeseen',
     email: 'book@mohandeseenbeauty.eg',
@@ -755,3 +813,310 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     servicesCount: 9
   }
 ]
+
+// Helper function to enrich business with full details (services, branches, staff)
+export function getBusinessWithDetails(businessId: string): BusinessLocation | null {
+  const business = MOCK_BUSINESSES.find(b => b.id === businessId)
+  if (!business) return null
+
+  // Generate services based on categories
+  const services: Service[] = []
+  const serviceCategories = business.categories
+
+  if (serviceCategories.includes('Spa & Wellness') || serviceCategories.includes('Massage')) {
+    services.push(
+      {
+        id: `${businessId}-service-1`,
+        name: 'Full Body Massage',
+        description: 'Relaxing full body massage with aromatherapy',
+        location: business.name,
+        price: Math.round(business.priceRange.min * 1.2),
+        duration: 60,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: `${businessId}-service-2`,
+        name: 'Deep Tissue Massage',
+        description: 'Therapeutic deep tissue massage',
+        location: business.name,
+        price: Math.round(business.priceRange.min * 1.5),
+        duration: 90,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: `${businessId}-service-3`,
+        name: 'Hot Stone Therapy',
+        description: 'Relaxing hot stone massage therapy',
+        location: business.name,
+        price: Math.round(business.priceRange.max * 0.7),
+        duration: 75,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    )
+  }
+
+  if (serviceCategories.includes('Hair Care')) {
+    services.push(
+      {
+        id: `${businessId}-service-4`,
+        name: 'Haircut & Styling',
+        description: 'Professional haircut with styling',
+        location: business.name,
+        price: Math.round(business.priceRange.min * 1.3),
+        duration: 45,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: `${businessId}-service-5`,
+        name: 'Hair Coloring',
+        description: 'Professional hair coloring service',
+        location: business.name,
+        price: Math.round(business.priceRange.max * 0.6),
+        duration: 120,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: `${businessId}-service-6`,
+        name: 'Hair Treatment',
+        description: 'Deep conditioning hair treatment',
+        location: business.name,
+        price: Math.round(business.priceRange.min * 1.4),
+        duration: 60,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    )
+  }
+
+  if (serviceCategories.includes('Beauty')) {
+    services.push(
+      {
+        id: `${businessId}-service-7`,
+        name: 'Facial Treatment',
+        description: 'Rejuvenating facial treatment',
+        location: business.name,
+        price: Math.round(business.priceRange.min * 1.6),
+        duration: 60,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: `${businessId}-service-8`,
+        name: 'Makeup Service',
+        description: 'Professional makeup application',
+        location: business.name,
+        price: Math.round(business.priceRange.max * 0.5),
+        duration: 45,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    )
+  }
+
+  if (serviceCategories.includes('Nail Care')) {
+    services.push(
+      {
+        id: `${businessId}-service-9`,
+        name: 'Manicure',
+        description: 'Professional manicure service',
+        location: business.name,
+        price: Math.round(business.priceRange.min),
+        duration: 30,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: `${businessId}-service-10`,
+        name: 'Pedicure',
+        description: 'Professional pedicure service',
+        location: business.name,
+        price: Math.round(business.priceRange.min * 1.1),
+        duration: 45,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    )
+  }
+
+  if (serviceCategories.includes('Dental') || serviceCategories.includes('Healthcare')) {
+    services.push(
+      {
+        id: `${businessId}-service-11`,
+        name: 'Dental Checkup',
+        description: 'Comprehensive dental examination',
+        location: business.name,
+        price: Math.round(business.priceRange.min),
+        duration: 30,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: `${businessId}-service-12`,
+        name: 'Teeth Cleaning',
+        description: 'Professional teeth cleaning',
+        location: business.name,
+        price: Math.round(business.priceRange.min * 1.5),
+        duration: 45,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: `${businessId}-service-13`,
+        name: 'Teeth Whitening',
+        description: 'Professional teeth whitening treatment',
+        location: business.name,
+        price: Math.round(business.priceRange.max * 0.4),
+        duration: 60,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    )
+  }
+
+  if (serviceCategories.includes('Fitness') || serviceCategories.includes('Personal Training')) {
+    services.push(
+      {
+        id: `${businessId}-service-14`,
+        name: 'Personal Training Session',
+        description: 'One-on-one personal training',
+        location: business.name,
+        price: Math.round(business.priceRange.min * 1.5),
+        duration: 60,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: `${businessId}-service-15`,
+        name: 'Group Fitness Class',
+        description: 'High-energy group fitness class',
+        location: business.name,
+        price: Math.round(business.priceRange.min),
+        duration: 45,
+        businessId: businessId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    )
+  }
+
+  // Generate branches (1-3 per business)
+  const branches: Branch[] = [
+    {
+      id: `${businessId}-branch-1`,
+      name: `${business.region} - Main Branch`,
+      address: business.address,
+      mobile: business.phone || '+20-123-456-7890',
+      businessId: businessId,
+      latitude: business.coordinates.lat,
+      longitude: business.coordinates.lng,
+      staff: [
+        {
+          id: `${businessId}-staff-1`,
+          name: 'Ahmed Hassan',
+          mobile: '+20-111-111-1111',
+          branchId: `${businessId}-branch-1`,
+          businessId: businessId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: `${businessId}-staff-2`,
+          name: 'Sara Mohamed',
+          mobile: '+20-222-222-2222',
+          branchId: `${businessId}-branch-1`,
+          businessId: businessId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ]
+
+  // Add second branch for larger businesses
+  if (business.servicesCount > 15) {
+    branches.push({
+      id: `${businessId}-branch-2`,
+      name: `${business.region} - Branch 2`,
+      address: `${business.address} - Branch 2`,
+      mobile: business.phone?.replace(/\d$/, '1') || '+20-123-456-7891',
+      businessId: businessId,
+      latitude: business.coordinates.lat + 0.01,
+      longitude: business.coordinates.lng + 0.01,
+      staff: [
+        {
+          id: `${businessId}-staff-3`,
+          name: 'Mona Ali',
+          mobile: '+20-333-333-3333',
+          branchId: `${businessId}-branch-2`,
+          businessId: businessId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ],
+      galleryUrls: [
+        'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400',
+        'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=400'
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    })
+  }
+
+  // Generate reviews
+  const reviews = [
+    {
+      id: `${businessId}-review-1`,
+      rating: 5,
+      comment: 'Excellent service! Very professional and welcoming staff.',
+      user: { firstName: 'John', lastName: 'Smith' },
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: `${businessId}-review-2`,
+      rating: 4,
+      comment: 'Great experience overall. Will definitely come back.',
+      user: { firstName: 'Emma', lastName: 'Johnson' },
+      createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: `${businessId}-review-3`,
+      rating: 5,
+      comment: 'Outstanding quality and attention to detail. Highly recommend!',
+      user: { firstName: 'Michael', lastName: 'Brown' },
+      createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString()
+    }
+  ]
+
+  return {
+    ...business,
+    approved: true,
+    socialLinks: [
+      { platform: 'facebook', url: `https://facebook.com/${business.name.toLowerCase().replace(/\s+/g, '')}` },
+      { platform: 'instagram', url: `https://instagram.com/${business.name.toLowerCase().replace(/\s+/g, '')}` }
+    ],
+    services,
+    branches,
+    reviews
+  }
+}

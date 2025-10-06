@@ -10,10 +10,11 @@ import { mockBusinesses, mockReviews, mockServices } from '@/bookly/data/mock-da
 import { format } from 'date-fns'
 import { Clock, Globe, MapPin, Phone, Star } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { BusinessService, ServicesService, BranchesService, StaffService } from '@/lib/api'
 import type { Business, Service as ApiService, Branch, Staff } from '@/lib/api'
 import initTranslations from '@/app/i18n/i18n'
+import { getBusinessWithDetails } from '@/mocks/businesses'
 
 const getTabsWithTranslation = (t: any) => [
   { id: 'services', label: t('business.tabs.services') },
@@ -58,7 +59,33 @@ function businessDetailsPage() {
         setLoading(true)
         console.log('🔍 Fetching business data for ID:', params.slug)
 
-        // Use the single business API endpoint that returns everything
+        // Try to get business with full details from mock data first
+        const mockBusinessData = getBusinessWithDetails(params.slug)
+
+        if (mockBusinessData) {
+          console.log('✅ Using mock business data with full details')
+          // Convert BusinessLocation to Business type
+          const business: Business = {
+            id: mockBusinessData.id,
+            name: mockBusinessData.name,
+            email: mockBusinessData.email,
+            description: mockBusinessData.description,
+            approved: mockBusinessData.approved || true,
+            rating: mockBusinessData.rating,
+            socialLinks: mockBusinessData.socialLinks,
+            services: mockBusinessData.services,
+            branches: mockBusinessData.branches,
+            reviews: mockBusinessData.reviews as any,
+            logoUrl: mockBusinessData.logoUrl,
+            coverImageUrl: mockBusinessData.coverImageUrl
+          }
+          setBusiness(business)
+          setError(null)
+          setLoading(false)
+          return
+        }
+
+        // Fall back to API call
         const businessResponse = await BusinessService.getBusiness(params.slug)
 
         if (businessResponse.error) {
@@ -66,15 +93,15 @@ function businessDetailsPage() {
         }
 
         if (businessResponse.data) {
-          console.log('✅ Business data received:', businessResponse.data)
+          console.log('✅ Business data received from API:', businessResponse.data)
           setBusiness(businessResponse.data)
         } else {
           throw new Error('No business data received')
         }
       } catch (err) {
-        console.warn('Failed to fetch business data, using fallback:', err)
+        console.warn('Failed to fetch business data, using generic fallback:', err)
 
-        // Use mock business data
+        // Generic fallback for unknown businesses
         const mockBusiness: Business = {
           id: params.slug,
           name: 'Demo Beauty Salon',
@@ -91,7 +118,7 @@ function businessDetailsPage() {
               id: 'service-1',
               name: 'Massage',
               description: 'Relaxing full body massage',
-              location: '11 Omar Tosson',
+              location: 'Main Location',
               price: 20,
               duration: 60,
               businessId: params.slug,
@@ -102,7 +129,7 @@ function businessDetailsPage() {
               id: 'service-2',
               name: 'Facial Treatment',
               description: 'Facial Treatment and Facial Skin Care',
-              location: 'Spa',
+              location: 'Main Location',
               price: 33,
               duration: 90,
               businessId: params.slug,
@@ -113,16 +140,16 @@ function businessDetailsPage() {
           branches: [
             {
               id: 'branch-1',
-              name: 'Mohandeseen',
-              address: '11 Mohandeseen, Giza, Egypt',
+              name: 'Main Branch',
+              address: 'Downtown Cairo, Egypt',
               mobile: '0232323232',
               businessId: params.slug,
-              latitude: 30.0626,
-              longitude: 31.2003,
+              latitude: 30.0444,
+              longitude: 31.2357,
               staff: [
                 {
                   id: 'staff-1',
-                  name: 'Mohsen Hendawy',
+                  name: 'Staff Member 1',
                   mobile: '01010012212',
                   branchId: 'branch-1',
                   businessId: params.slug,
@@ -132,63 +159,12 @@ function businessDetailsPage() {
               ],
               createdAt: '',
               updatedAt: ''
-            },
-            {
-              id: 'branch-2',
-              name: 'Nasr City',
-              address: 'Abbas El Akkad St, Nasr City, Cairo, Egypt',
-              mobile: '0222222222',
-              businessId: params.slug,
-              latitude: 30.0626,
-              longitude: 31.3351,
-              staff: [
-                {
-                  id: 'staff-2',
-                  name: 'Ahmed Ali',
-                  mobile: '01111111111',
-                  branchId: 'branch-2',
-                  businessId: params.slug,
-                  createdAt: '',
-                  updatedAt: ''
-                }
-              ],
-              createdAt: '',
-              updatedAt: ''
-            },
-            {
-              id: 'branch-3',
-              name: 'Dokki',
-              address: 'Mesaha Square, Dokki, Giza, Egypt',
-              mobile: '0233333333',
-              businessId: params.slug,
-              latitude: 30.0382,
-              longitude: 31.2125,
-              staff: [
-                {
-                  id: 'staff-3',
-                  name: 'Sara Mohamed',
-                  mobile: '01222222222',
-                  branchId: 'branch-3',
-                  businessId: params.slug,
-                  createdAt: '',
-                  updatedAt: ''
-                }
-              ],
-              galleryUrls: [
-                'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400',
-                'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=400',
-                'https://images.unsplash.com/photo-1559599101-f09722fb4948?w=400',
-                'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400',
-                'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=400'
-              ],
-              createdAt: '',
-              updatedAt: ''
             }
           ]
         }
 
         setBusiness(mockBusiness)
-        setError(null) // Don't show error since we have fallback data
+        setError(null)
       } finally {
         setLoading(false)
       }

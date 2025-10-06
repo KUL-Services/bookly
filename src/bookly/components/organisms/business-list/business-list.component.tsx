@@ -91,23 +91,54 @@ export function BusinessList({
             <div className='flex flex-col sm:flex-row gap-4'>
               {/* Business Image/Avatar */}
               <div className='w-full sm:w-24 h-32 sm:h-24 flex-shrink-0'>
-                <div
-                  className={`
-                  w-full h-full rounded-xl shadow-md flex items-center justify-center
-                  transition-all duration-300
-                  ${isSelected || isHovered ? 'scale-105 shadow-lg' : ''}
-                  bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50
-                `}
-                >
-                  <div className='text-center p-2'>
-                    <div className='text-sm font-bold text-teal-700 dark:text-teal-300 line-clamp-2'>
-                      {business.name}
-                    </div>
-                    <div className='text-xs text-teal-600 dark:text-teal-400 mt-1'>
-                      ★ {business.rating}/5
+                {business.imageUrl ? (
+                  <div
+                    className={`
+                    w-full h-full rounded-xl shadow-md overflow-hidden
+                    transition-all duration-300
+                    ${isSelected || isHovered ? 'scale-105 shadow-lg ring-2 ring-teal-500' : ''}
+                  `}
+                  >
+                    <img
+                      src={business.imageUrl}
+                      alt={business.name}
+                      className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-300'
+                      onError={(e) => {
+                        // Fallback to gradient if image fails to load
+                        const target = e.target as HTMLImageElement
+                        target.style.display = 'none'
+                        const parent = target.parentElement
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="w-full h-full bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 flex items-center justify-center">
+                              <div class="text-center p-2">
+                                <div class="text-sm font-bold text-teal-700 dark:text-teal-300 line-clamp-2">${business.name}</div>
+                              </div>
+                            </div>
+                          `
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className={`
+                    w-full h-full rounded-xl shadow-md flex items-center justify-center
+                    transition-all duration-300
+                    ${isSelected || isHovered ? 'scale-105 shadow-lg' : ''}
+                    bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50
+                  `}
+                  >
+                    <div className='text-center p-2'>
+                      <div className='text-sm font-bold text-teal-700 dark:text-teal-300 line-clamp-2'>
+                        {business.name}
+                      </div>
+                      <div className='text-xs text-teal-600 dark:text-teal-400 mt-1'>
+                        ★ {business.rating}/5
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Business Info */}
