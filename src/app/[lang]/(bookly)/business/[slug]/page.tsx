@@ -114,9 +114,11 @@ function businessDetailsPage() {
             {
               id: 'branch-1',
               name: 'Mohandeseen',
-              address: '11 Mohandeseen',
+              address: '11 Mohandeseen, Giza, Egypt',
               mobile: '0232323232',
               businessId: params.slug,
+              latitude: 30.0626,
+              longitude: 31.2003,
               staff: [
                 {
                   id: 'staff-1',
@@ -127,6 +129,57 @@ function businessDetailsPage() {
                   createdAt: '',
                   updatedAt: ''
                 }
+              ],
+              createdAt: '',
+              updatedAt: ''
+            },
+            {
+              id: 'branch-2',
+              name: 'Nasr City',
+              address: 'Abbas El Akkad St, Nasr City, Cairo, Egypt',
+              mobile: '0222222222',
+              businessId: params.slug,
+              latitude: 30.0626,
+              longitude: 31.3351,
+              staff: [
+                {
+                  id: 'staff-2',
+                  name: 'Ahmed Ali',
+                  mobile: '01111111111',
+                  branchId: 'branch-2',
+                  businessId: params.slug,
+                  createdAt: '',
+                  updatedAt: ''
+                }
+              ],
+              createdAt: '',
+              updatedAt: ''
+            },
+            {
+              id: 'branch-3',
+              name: 'Dokki',
+              address: 'Mesaha Square, Dokki, Giza, Egypt',
+              mobile: '0233333333',
+              businessId: params.slug,
+              latitude: 30.0382,
+              longitude: 31.2125,
+              staff: [
+                {
+                  id: 'staff-3',
+                  name: 'Sara Mohamed',
+                  mobile: '01222222222',
+                  branchId: 'branch-3',
+                  businessId: params.slug,
+                  createdAt: '',
+                  updatedAt: ''
+                }
+              ],
+              galleryUrls: [
+                'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400',
+                'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?w=400',
+                'https://images.unsplash.com/photo-1559599101-f09722fb4948?w=400',
+                'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400',
+                'https://images.unsplash.com/photo-1519415510236-718bdfcd89c8?w=400'
               ],
               createdAt: '',
               updatedAt: ''

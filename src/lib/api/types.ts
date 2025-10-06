@@ -92,6 +92,8 @@ export interface Branch {
   address?: string
   mobile?: string
   businessId: string
+  latitude?: number
+  longitude?: number
   gallery?: string[] // UUIDs in requests
   galleryUrls?: string[] // URLs in responses
   services?: Service[]

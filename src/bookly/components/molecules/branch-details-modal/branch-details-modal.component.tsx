@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import initTranslations from '@/app/i18n/i18n'
 import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
 import { Button } from '@/bookly/components/molecules'
 import { KulIcon } from '@/bookly/components/atoms'
 import type { Branch, Service, Staff } from '@/lib/api'
+
+// Dynamically import map component to avoid SSR issues
+const BranchMapView = dynamic(() => import('./branch-map-view'), {
+  ssr: false,
+  loading: () => (
+    <div className='bg-gray-100 dark:bg-gray-700 rounded-lg h-64 flex items-center justify-center'>
+      <div className='text-gray-500 dark:text-gray-400'>Loading map...</div>
+    </div>
+  )
+})
 
 interface BranchDetailsModalProps {
   isOpen: boolean
@@ -153,7 +164,7 @@ export const BranchDetailsModal = ({
                   <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3'>
                     {t('business.branchDetails.location')}
                   </h3>
-                  <div className='bg-gray-50 dark:bg-gray-700 rounded-lg p-4'>
+                  <div className='bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4'>
                     <p className='text-gray-700 dark:text-gray-300 mb-2'>{branch.address}</p>
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.address || '')}`}
@@ -164,6 +175,10 @@ export const BranchDetailsModal = ({
                       <KulIcon icon='lucide:external-link' className='w-4 h-4' />
                       {t('business.branchDetails.viewOnGoogleMaps')}
                     </a>
+                  </div>
+                  {/* Map View */}
+                  <div className='rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600'>
+                    <BranchMapView branch={branch} />
                   </div>
                 </div>
 

@@ -63,6 +63,31 @@ function MapBoundsUpdater({ businesses }: { businesses: BusinessLocation[] }) {
   return null
 }
 
+// Component to handle selected business centering
+function SelectedBusinessCenterer({
+  businesses,
+  selectedBusinessId
+}: {
+  businesses: BusinessLocation[]
+  selectedBusinessId?: string | null
+}) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (selectedBusinessId) {
+      const selectedBusiness = businesses.find(b => b.id === selectedBusinessId)
+      if (selectedBusiness) {
+        map.setView([selectedBusiness.coordinates.lat, selectedBusiness.coordinates.lng], 15, {
+          animate: true,
+          duration: 0.5
+        })
+      }
+    }
+  }, [selectedBusinessId, businesses, map])
+
+  return null
+}
+
 export interface BusinessMapImplProps {
   businesses: BusinessLocation[]
   selectedBusinessId?: string | null
@@ -83,6 +108,14 @@ export function BusinessMapImpl({
   className = ''
 }: BusinessMapImplProps) {
   const mapRef = useRef<L.Map | null>(null)
+  const markerRefs = useRef<{ [key: string]: L.Marker }>({})
+
+  // Open popup for selected business
+  useEffect(() => {
+    if (selectedBusinessId && markerRefs.current[selectedBusinessId]) {
+      markerRefs.current[selectedBusinessId].openPopup()
+    }
+  }, [selectedBusinessId])
 
   // Calculate center and zoom based on businesses
   const { center, zoom } = useMemo(() => {
@@ -119,6 +152,7 @@ export function BusinessMapImpl({
         />
 
         <MapBoundsUpdater businesses={businesses} />
+        <SelectedBusinessCenterer businesses={businesses} selectedBusinessId={selectedBusinessId} />
 
         {businesses.map(business => {
           const isSelected = business.id === selectedBusinessId
@@ -129,6 +163,11 @@ export function BusinessMapImpl({
               key={business.id}
               position={[business.coordinates.lat, business.coordinates.lng]}
               icon={createCustomIcon(isSelected, isHovered)}
+              ref={(ref) => {
+                if (ref) {
+                  markerRefs.current[business.id] = ref
+                }
+              }}
               eventHandlers={{
                 click: () => onMarkerClick?.(business.id),
                 mouseover: () => onMarkerHover?.(business.id),
