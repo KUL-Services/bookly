@@ -1022,14 +1022,14 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
             <button
               onClick={handleDownloadICS}
-              className='w-full max-w-md mx-auto bg-teal-500 hover:bg-teal-600 text-white py-4 rounded-2xl text-lg font-semibold'
+              className='w-full max-w-md mx-auto bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-xl font-semibold transition-colors shadow-md'
             >
               Download Calendar Event
             </button>
 
             <button
               onClick={onClose}
-              className='w-full max-w-md mx-auto border-2 border-teal-500 dark:border-teal-600 text-teal-600 dark:text-teal-400 py-3 rounded-xl font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors'
+              className='w-full max-w-md mx-auto bg-slate-700 hover:bg-slate-600 dark:bg-slate-700 dark:hover:bg-slate-600 text-white py-3 rounded-xl font-semibold transition-colors shadow-md'
             >
               Close
             </button>
