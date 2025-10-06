@@ -71,7 +71,27 @@ function recalcChainedTimes(anchorStartHHmm: string, services: SelectedService[]
 
   return sorted.map(service => {
     const startTime = currentTime
-    const endDate = addMinutes(new Date(`2000-01-01T${currentTime}`), service.service.duration)
+
+    // Create a valid date object with today's date + current time
+    const [hours, minutes] = currentTime.split(':').map(Number)
+
+    // Validate hours and minutes
+    if (isNaN(hours) || isNaN(minutes)) {
+      console.error('Invalid time format:', currentTime)
+      return service
+    }
+
+    const baseDate = new Date()
+    baseDate.setHours(hours, minutes, 0, 0)
+
+    // Validate duration
+    const duration = service.service?.duration || 0
+    if (duration === 0) {
+      console.error('Invalid service duration:', service.service)
+      return service
+    }
+
+    const endDate = addMinutes(baseDate, duration)
     const endTime = format(endDate, 'HH:mm')
 
     // Update current time for next service
@@ -362,10 +382,13 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
     const services = mockData.default.services.map((s: any) => ({
       id: s.id,
       name: s.name,
-      description: s.description,
+      description: s.description || '',
       price: s.price,
       duration: s.duration,
       location: s.location,
+      businessId: s.businessId || '1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       business: { name: s.location }
     }))
     setAvailableServices(services)
@@ -434,6 +457,14 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
     providerId: string = 'no-preference',
     clearSelectedTime: boolean = true
   ) => {
+    // Validate service has required fields
+    if (!service || !service.duration) {
+      console.error('Invalid service object:', service)
+      return
+    }
+
+    console.log('Adding service:', service, 'with time:', time)
+
     const provider = availableStaff.find(s => s.id === providerId)
 
     // Get next sequence number
@@ -453,6 +484,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
     // Use anchor time if available, otherwise use the time passed in
     const anchorTime = selectedTime || time
+    console.log('Recalculating times with anchor:', anchorTime, 'for services:', updatedServices.length)
     const recalculated = recalcChainedTimes(anchorTime, updatedServices)
     setSelectedServices(recalculated)
 

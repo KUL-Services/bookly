@@ -4,7 +4,7 @@ import { Badge } from '@/bookly/components/atoms/base-badge/badge'
 import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
 import { Avatar, Button } from '@/bookly/components/molecules'
 import { BranchDetailsModal } from '@/bookly/components/molecules/branch-details-modal/branch-details-modal.component'
-import BookingModal from '@/bookly/components/organisms/booking-modal/booking-modal'
+import BookingModalV2Fixed from '@/bookly/components/organisms/booking-modal/booking-modal-v2-fixed'
 import { Card, CardContent } from '@/bookly/components/ui/card'
 import { mockBusinesses, mockReviews, mockServices } from '@/bookly/data/mock-data'
 import { format } from 'date-fns'
@@ -214,11 +214,11 @@ function businessDetailsPage() {
 
   const [activeTab, setActiveTab] = useState('services')
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
-  const [selectedService, setSelectedService] = useState<any>(null)
+  const [selectedService, setSelectedService] = useState<ApiService | null>(null)
   const [selectedBranch, setSelectedBranch] = useState<any>(null)
   const [branchModalOpen, setBranchModalOpen] = useState(false)
 
-  const handelBookService = (service?: { name: string; price: string; duration: string }) => {
+  const handelBookService = (service?: ApiService) => {
     if (service) {
       setSelectedService(service)
     } else {
@@ -464,13 +464,7 @@ function businessDetailsPage() {
                             buttonText={{ plainText: 'Book Now' }}
                             variant='contained'
                             className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'
-                            onClick={() =>
-                              handelBookService({
-                                name: service.name,
-                                price: service.price.toString(),
-                                duration: `${service.duration} min`
-                              })
-                            }
+                            onClick={() => handelBookService(service)}
                           />
                         </div>
                       </div>
@@ -805,12 +799,11 @@ function businessDetailsPage() {
       </div>
 
       {/* Calling the BookingModal */}
-      <BookingModal
+      <BookingModalV2Fixed
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
-        serviceName={selectedService?.name}
-        servicePrice={selectedService?.price}
-        serviceDuration={selectedService?.duration}
+        initialService={selectedService || undefined}
+        branchId={selectedBranch?.id}
       />
 
       {/* Branch Details Modal */}
