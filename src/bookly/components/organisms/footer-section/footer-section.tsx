@@ -105,7 +105,7 @@ function FooterSection() {
           </div>
         </div>
         <div className='border-t border-gray-800 mt-8 pt-8 text-center text-gray-400'>
-          <P stringProps={{ plainText: '© 2025 Bookly. All rights reserved.' }} />
+          <P stringProps={{ plainText: '© 2025 Zerv. All rights reserved.' }} />
         </div>
       </div>
     </footer>

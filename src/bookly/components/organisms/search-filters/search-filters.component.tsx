@@ -333,13 +333,13 @@ export function SearchFilters({
         <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
           {t('search.filters.ratingLabel')}
         </label>
-        <div className='flex space-x-2'>
+        <div className='flex flex-wrap gap-2'>
           {[0, 1, 2, 3, 4, 5].map(rating => (
             <button
               key={rating}
               onClick={() => updateFilter('rating', rating)}
               className={cn(
-                'px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
                 filters.rating === rating
                   ? 'bg-teal-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
