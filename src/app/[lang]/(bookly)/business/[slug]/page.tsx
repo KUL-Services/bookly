@@ -833,6 +833,7 @@ function businessDetailsPage() {
         onClose={() => setIsBookingModalOpen(false)}
         initialService={selectedService || undefined}
         branchId={selectedBranch?.id}
+        businessId={params.slug}
       />
 
       {/* Branch Details Modal */}

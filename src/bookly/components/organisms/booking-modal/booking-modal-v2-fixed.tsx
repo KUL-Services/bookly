@@ -25,6 +25,7 @@ import { combineDateTimeToUTC } from '@/bookly/utils/timezone.util'
 import { downloadICS } from '@/bookly/utils/ics-generator.util'
 import { BookingService } from '@/lib/api'
 import type { Service, Staff } from '@/lib/api/types'
+import { getBusinessWithDetails } from '@/mocks/businesses'
 
 interface BookingModalV2FixedProps {
   isOpen: boolean
@@ -32,6 +33,7 @@ interface BookingModalV2FixedProps {
   initialService?: Service
   initialTime?: string
   branchId?: string
+  businessId?: string
 }
 
 interface SelectedService {
@@ -219,7 +221,7 @@ function SortableServiceCard({
   )
 }
 
-function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, branchId }: BookingModalV2FixedProps) {
+function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, branchId, businessId }: BookingModalV2FixedProps) {
   const [currentStep, setCurrentStep] = useState<'selection' | 'details' | 'success'>('selection')
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('Afternoon')
@@ -377,6 +379,42 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
   }, [isOpen, initialService, initialTime, selectedTime, availableStaff])
 
   const loadMockData = async () => {
+    // Try to get business data from businessId
+    if (businessId) {
+      const businessData = getBusinessWithDetails(businessId)
+
+      if (businessData && businessData.services) {
+        // Use services from business details
+        setAvailableServices(businessData.services)
+
+        // Get staff from the specific branch or all branches
+        const allStaff: Staff[] = []
+        if (businessData.branches) {
+          businessData.branches.forEach(branch => {
+            if (!branchId || branch.id === branchId) {
+              if (branch.staff) {
+                allStaff.push(...branch.staff)
+              }
+            }
+          })
+        }
+
+        setAvailableStaff([
+          {
+            id: 'no-preference',
+            name: 'No preference',
+            branchId: branchId || '',
+            businessId: businessId,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          },
+          ...allStaff
+        ])
+        return
+      }
+    }
+
+    // Fallback to mock-booking-data.json if no businessId or business not found
     const mockData = await import('@/bookly/data/mock-booking-data.json')
 
     const services = mockData.default.services.map((s: any) => ({
@@ -397,6 +435,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
       id: s.id,
       name: s.name,
       branchId: s.branchId,
+      businessId: s.businessId || '1',
       profilePhotoUrl: s.photo,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -406,6 +445,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
         id: 'no-preference',
         name: 'No preference',
         branchId: branchId || '',
+        businessId: businessId || '1',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       },
