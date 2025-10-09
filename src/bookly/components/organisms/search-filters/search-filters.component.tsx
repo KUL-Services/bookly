@@ -9,6 +9,116 @@ import { Badge } from '@/bookly/components/ui/badge'
 import { useParams } from 'next/navigation'
 import initTranslations from '@/app/i18n/i18n'
 
+// Category Multi-Select Component
+interface CategoryMultiSelectProps {
+  categories: Array<{ id: string; name: string; count?: number }>
+  selectedCategories: string[]
+  onToggleCategory: (categoryId: string) => void
+  placeholder?: string
+}
+
+function CategoryMultiSelect({
+  categories,
+  selectedCategories,
+  onToggleCategory,
+  placeholder = 'Select categories...'
+}: CategoryMultiSelectProps) {
+  const [isOpen, setIsOpen] = React.useState(false)
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const selectedCategoryNames = categories
+    .filter(cat => selectedCategories.includes(cat.id))
+    .map(cat => cat.name)
+
+  return (
+    <div className='relative' ref={dropdownRef}>
+      {/* Dropdown Trigger */}
+      <button
+        type='button'
+        onClick={() => setIsOpen(!isOpen)}
+        className='w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors'
+      >
+        <span className='text-gray-700 dark:text-gray-300 truncate'>
+          {selectedCategories.length === 0 ? (
+            <span className='text-gray-400 dark:text-gray-500'>{placeholder}</span>
+          ) : selectedCategories.length === 1 ? (
+            selectedCategoryNames[0]
+          ) : (
+            `${selectedCategories.length} categories selected`
+          )}
+        </span>
+        <svg
+          className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+        </svg>
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className='absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto'>
+          {categories.length === 0 ? (
+            <div className='px-3 py-2 text-sm text-gray-500 dark:text-gray-400'>No categories available</div>
+          ) : (
+            <div className='py-1'>
+              {categories.map(category => (
+                <label
+                  key={category.id}
+                  className='flex items-center px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors'
+                >
+                  <Checkbox
+                    checked={selectedCategories.includes(category.id)}
+                    onCheckedChange={() => onToggleCategory(category.id)}
+                    className='mr-3'
+                  />
+                  <span className='flex-1 text-sm text-gray-700 dark:text-gray-300'>
+                    {category.name}
+                    {category.count && <span className='text-gray-400 dark:text-gray-500 ml-1'>({category.count})</span>}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Selected Categories Pills (below dropdown) */}
+      {selectedCategories.length > 0 && (
+        <div className='flex flex-wrap gap-1.5 mt-2'>
+          {selectedCategoryNames.map((name, index) => (
+            <Badge
+              key={selectedCategories[index]}
+              variant='secondary'
+              className='bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 text-xs px-2 py-0.5 cursor-pointer hover:bg-teal-200 dark:hover:bg-teal-800/40'
+              onClick={() => onToggleCategory(selectedCategories[index])}
+            >
+              {name}
+              <svg className='w-3 h-3 ml-1 inline' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+              </svg>
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export interface FilterState {
   q: string
   category: string[]
@@ -258,27 +368,15 @@ export function SearchFilters({
 
       {/* Categories */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
           {t('search.filters.categoriesLabel')}
         </label>
-        <div className='space-y-3 max-h-48 overflow-y-auto'>
-          {options.categories.map(category => (
-            <div key={category.id} className='flex items-center space-x-3'>
-              <Checkbox
-                id={`category-${category.id}`}
-                checked={filters.category.includes(category.id)}
-                onCheckedChange={() => toggleArrayFilter('category', category.id)}
-              />
-              <label
-                htmlFor={`category-${category.id}`}
-                className='flex-1 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer'
-              >
-                {category.name}
-                {category.count && <span className='text-gray-400 dark:text-gray-500 ml-1'>({category.count})</span>}
-              </label>
-            </div>
-          ))}
-        </div>
+        <CategoryMultiSelect
+          categories={options.categories}
+          selectedCategories={filters.category}
+          onToggleCategory={(categoryId) => toggleArrayFilter('category', categoryId)}
+          placeholder={t('search.filters.selectCategories') || 'Select categories...'}
+        />
       </div>
 
       {/* Price Range */}
