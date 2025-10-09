@@ -172,9 +172,13 @@ export default function SearchPage() {
     setSelectedRegion(region)
   }
 
-  const handleBusinessClick = (businessId: string) => {
+  const handleBusinessClick = (businessId: string | null) => {
     // Just highlight the business, don't navigate
-    setSelectedBusinessId(businessId === selectedBusinessId ? null : businessId)
+    if (businessId === null) {
+      setSelectedBusinessId(null)
+    } else {
+      setSelectedBusinessId(businessId === selectedBusinessId ? null : businessId)
+    }
   }
 
   const handleBusinessHover = (businessId: string | null) => {

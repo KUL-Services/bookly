@@ -7,7 +7,7 @@ export interface BusinessListProps {
   businesses: BusinessLocation[]
   selectedBusinessId?: string | null
   hoveredBusinessId?: string | null
-  onBusinessClick?: (businessId: string) => void
+  onBusinessClick?: (businessId: string | null) => void
   onBusinessHover?: (businessId: string | null) => void
   onBookNow?: (businessId: string) => void
   className?: string

@@ -10,7 +10,9 @@
       "Bash(find:*)",
       "Bash(npx tsc:*)",
       "Bash(timeout 10 npm run dev)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(cat:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []
