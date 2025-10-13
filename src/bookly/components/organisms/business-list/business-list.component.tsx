@@ -7,6 +7,7 @@ export interface BusinessListProps {
   businesses: BusinessLocation[]
   selectedBusinessId?: string | null
   hoveredBusinessId?: string | null
+  selectionSource?: 'map' | 'list' | null
   onBusinessClick?: (businessId: string | null) => void
   onBusinessHover?: (businessId: string | null) => void
   onBookNow?: (businessId: string) => void
@@ -17,6 +18,7 @@ export function BusinessList({
   businesses,
   selectedBusinessId,
   hoveredBusinessId,
+  selectionSource,
   onBusinessClick,
   onBusinessHover,
   onBookNow,
@@ -25,15 +27,15 @@ export function BusinessList({
   const listRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
-  // Scroll to selected business
+  // Scroll to selected business only when selection comes from map
   useEffect(() => {
-    if (selectedBusinessId && itemRefs.current[selectedBusinessId]) {
+    if (selectedBusinessId && selectionSource === 'map' && itemRefs.current[selectedBusinessId]) {
       itemRefs.current[selectedBusinessId]?.scrollIntoView({
         behavior: 'smooth',
         block: 'center'
       })
     }
-  }, [selectedBusinessId])
+  }, [selectedBusinessId, selectionSource])
 
   if (businesses.length === 0) {
     return (

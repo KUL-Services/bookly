@@ -46,6 +46,7 @@ export default function SearchPage() {
   // Business interaction state
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
   const [hoveredBusinessId, setHoveredBusinessId] = useState<string | null>(null)
+  const [selectionSource, setSelectionSource] = useState<'map' | 'list' | null>(null)
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -172,12 +173,14 @@ export default function SearchPage() {
     setSelectedRegion(region)
   }
 
-  const handleBusinessClick = (businessId: string | null) => {
+  const handleBusinessClick = (businessId: string | null, source: 'map' | 'list' = 'list') => {
     // Just highlight the business, don't navigate
     if (businessId === null) {
       setSelectedBusinessId(null)
+      setSelectionSource(null)
     } else {
       setSelectedBusinessId(businessId === selectedBusinessId ? null : businessId)
+      setSelectionSource(source)
     }
   }
 
@@ -331,6 +334,7 @@ export default function SearchPage() {
                   businesses={paginatedBusinesses}
                   selectedBusinessId={selectedBusinessId}
                   hoveredBusinessId={hoveredBusinessId}
+                  selectionSource={selectionSource}
                   onBusinessClick={handleBusinessClick}
                   onBusinessHover={handleBusinessHover}
                   onBookNow={handleBookNow}
@@ -357,6 +361,7 @@ export default function SearchPage() {
                       businesses={businesses}
                       selectedBusinessId={selectedBusinessId}
                       hoveredBusinessId={hoveredBusinessId}
+                      selectionSource={selectionSource}
                       onBusinessClick={handleBusinessClick}
                       onBusinessHover={handleBusinessHover}
                       onBookNow={handleBookNow}
@@ -367,7 +372,7 @@ export default function SearchPage() {
                       businesses={businesses}
                       selectedBusinessId={selectedBusinessId}
                       hoveredBusinessId={hoveredBusinessId}
-                      onMarkerClick={handleBusinessClick}
+                      onMarkerClick={(businessId) => handleBusinessClick(businessId, 'map')}
                       onMarkerHover={handleBusinessHover}
                       onBookNow={handleBookNow}
                       className='h-full'
@@ -405,7 +410,7 @@ export default function SearchPage() {
                       businesses={businesses}
                       selectedBusinessId={selectedBusinessId}
                       hoveredBusinessId={hoveredBusinessId}
-                      onMarkerClick={handleBusinessClick}
+                      onMarkerClick={(businessId) => handleBusinessClick(businessId, 'map')}
                       onMarkerHover={handleBusinessHover}
                       onBookNow={handleBookNow}
                       className='h-[600px]'
@@ -415,6 +420,7 @@ export default function SearchPage() {
                       businesses={paginatedBusinesses}
                       selectedBusinessId={selectedBusinessId}
                       hoveredBusinessId={hoveredBusinessId}
+                      selectionSource={selectionSource}
                       onBusinessClick={handleBusinessClick}
                       onBusinessHover={handleBusinessHover}
                       onBookNow={handleBookNow}
