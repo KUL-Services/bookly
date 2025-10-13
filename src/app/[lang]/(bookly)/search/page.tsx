@@ -45,8 +45,14 @@ export default function SearchPage() {
 
   // Business interaction state
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
   const [hoveredBusinessId, setHoveredBusinessId] = useState<string | null>(null)
+  const [hoveredBranchId, setHoveredBranchId] = useState<string | null>(null)
   const [selectionSource, setSelectionSource] = useState<'map' | 'list' | null>(null)
+
+  // Branch selection modal state
+  const [showBranchModal, setShowBranchModal] = useState(false)
+  const [branchModalBusinessId, setBranchModalBusinessId] = useState<string | null>(null)
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -174,18 +180,53 @@ export default function SearchPage() {
   }
 
   const handleBusinessClick = (businessId: string | null, source: 'map' | 'list' = 'list') => {
-    // Just highlight the business, don't navigate
     if (businessId === null) {
       setSelectedBusinessId(null)
+      setSelectedBranchId(null)
       setSelectionSource(null)
     } else {
-      setSelectedBusinessId(businessId === selectedBusinessId ? null : businessId)
-      setSelectionSource(source)
+      // If clicking from list, show branch selection modal
+      if (source === 'list') {
+        setBranchModalBusinessId(businessId)
+        setShowBranchModal(true)
+      } else {
+        // If clicking from map, just select the business
+        setSelectedBusinessId(businessId === selectedBusinessId ? null : businessId)
+        setSelectionSource(source)
+      }
+    }
+  }
+
+  const handleBranchClick = (branchId: string) => {
+    const business = businesses.find(b => b.branches.some(br => br.id === branchId))
+    if (business) {
+      setSelectedBusinessId(business.id)
+      setSelectedBranchId(branchId)
+      setSelectionSource('list')
+      setShowBranchModal(false)
+    }
+  }
+
+  const handleMarkerClick = (businessId: string | null, branchId?: string) => {
+    if (businessId === null) {
+      setSelectedBusinessId(null)
+      setSelectedBranchId(null)
+      setSelectionSource(null)
+    } else {
+      setSelectedBusinessId(businessId)
+      setSelectedBranchId(branchId || null)
+      setSelectionSource('map')
     }
   }
 
   const handleBusinessHover = (businessId: string | null) => {
     setHoveredBusinessId(businessId)
+    setHoveredBranchId(null)
+  }
+
+  const handleMarkerHover = (businessId: string | null, branchId?: string) => {
+    setHoveredBusinessId(businessId)
+    setHoveredBranchId(branchId || null)
   }
 
   const handleBookNow = (businessId: string) => {
@@ -371,9 +412,11 @@ export default function SearchPage() {
                     <BusinessMap
                       businesses={businesses}
                       selectedBusinessId={selectedBusinessId}
+                      selectedBranchId={selectedBranchId}
                       hoveredBusinessId={hoveredBusinessId}
-                      onMarkerClick={(businessId) => handleBusinessClick(businessId, 'map')}
-                      onMarkerHover={handleBusinessHover}
+                      hoveredBranchId={hoveredBranchId}
+                      onMarkerClick={handleMarkerClick}
+                      onMarkerHover={handleMarkerHover}
                       onBookNow={handleBookNow}
                       className='h-full'
                     />
@@ -409,9 +452,11 @@ export default function SearchPage() {
                     <BusinessMap
                       businesses={businesses}
                       selectedBusinessId={selectedBusinessId}
+                      selectedBranchId={selectedBranchId}
                       hoveredBusinessId={hoveredBusinessId}
-                      onMarkerClick={(businessId) => handleBusinessClick(businessId, 'map')}
-                      onMarkerHover={handleBusinessHover}
+                      hoveredBranchId={hoveredBranchId}
+                      onMarkerClick={handleMarkerClick}
+                      onMarkerHover={handleMarkerHover}
                       onBookNow={handleBookNow}
                       className='h-[600px]'
                     />
@@ -432,6 +477,66 @@ export default function SearchPage() {
           </main>
         </div>
       </div>
+
+      {/* Branch Selection Modal */}
+      {showBranchModal && branchModalBusinessId && (
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
+          <div className='bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto'>
+            <div className='p-6'>
+              <div className='flex items-center justify-between mb-4'>
+                <h3 className='text-xl font-bold text-gray-900 dark:text-white'>Select a Branch</h3>
+                <button
+                  onClick={() => setShowBranchModal(false)}
+                  className='text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors'
+                >
+                  <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                  </svg>
+                </button>
+              </div>
+
+              {businesses
+                .find(b => b.id === branchModalBusinessId)
+                ?.branches.map((branch, index) => (
+                  <button
+                    key={branch.id}
+                    onClick={() => handleBranchClick(branch.id)}
+                    className='w-full text-left p-4 mb-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-teal-500 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all'
+                  >
+                    <div className='flex items-start gap-3'>
+                      <div className='flex-shrink-0 w-8 h-8 bg-teal-100 dark:bg-teal-900/50 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 font-semibold'>
+                        {index + 1}
+                      </div>
+                      <div className='flex-1'>
+                        <h4 className='font-semibold text-gray-900 dark:text-white mb-1'>{branch.branchName}</h4>
+                        <div className='flex items-start gap-1 text-sm text-gray-600 dark:text-gray-400'>
+                          <svg className='w-4 h-4 flex-shrink-0 mt-0.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z'
+                            />
+                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
+                          </svg>
+                          <span>{branch.address}</span>
+                        </div>
+                        {branch.phone && (
+                          <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mt-1'>
+                            <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
+                            </svg>
+                            <span>{branch.phone}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

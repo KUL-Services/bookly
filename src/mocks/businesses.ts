@@ -1,5 +1,14 @@
 import type { Service, Branch, Staff } from '@/lib/api'
 
+export interface BusinessBranch {
+  id: string
+  branchName: string
+  latitude: number
+  longitude: number
+  address: string
+  phone?: string
+}
+
 export interface BusinessLocation {
   id: string
   name: string
@@ -24,10 +33,11 @@ export interface BusinessLocation {
     max: number
   }
   servicesCount: number
+  branches: BusinessBranch[]
   approved?: boolean
   socialLinks?: Array<{ platform: string; url: string }>
   services?: Service[]
-  branches?: Branch[]
+  fullBranches?: Branch[]
   reviews?: Array<{
     id: string
     rating: number
@@ -119,6 +129,36 @@ export const COUNTRIES: Record<string, Country> = {
   }
 }
 
+// Helper function to generate branches for a business
+function generateBranches(businessId: string, businessName: string, baseLat: number, baseLng: number, region: string, address: string, phone?: string): BusinessBranch[] {
+  const branches: BusinessBranch[] = [
+    {
+      id: `${businessId}-branch-1`,
+      branchName: `${businessName} - ${region} Main`,
+      latitude: baseLat,
+      longitude: baseLng,
+      address: address,
+      phone: phone
+    }
+  ]
+
+  // Add 1-2 additional branches with slight coordinate variations
+  const numAdditionalBranches = Math.random() > 0.5 ? 1 : 2
+
+  for (let i = 2; i <= numAdditionalBranches + 1; i++) {
+    branches.push({
+      id: `${businessId}-branch-${i}`,
+      branchName: `${businessName} - Branch ${i}`,
+      latitude: baseLat + (Math.random() * 0.02 - 0.01), // Random offset within ~1km
+      longitude: baseLng + (Math.random() * 0.02 - 0.01),
+      address: `${address} - Branch ${i}`,
+      phone: phone
+    })
+  }
+
+  return branches
+}
+
 export const MOCK_BUSINESSES: BusinessLocation[] = [
   // UAE - Dubai
   {
@@ -138,7 +178,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     email: 'info@luxuryspadubai.ae',
     phone: '+971-4-123-4567',
     priceRange: { min: 200, max: 800 },
-    servicesCount: 15
+    servicesCount: 15,
+    branches: generateBranches('biz-1', 'Luxury Spa Dubai', 25.2048, 55.2708, 'Downtown', 'Dubai Mall, Downtown Dubai', '+971-4-123-4567')
   },
   {
     id: 'biz-2',
@@ -157,7 +198,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     email: 'book@elitehairstudio.ae',
     phone: '+971-4-234-5678',
     priceRange: { min: 150, max: 600 },
-    servicesCount: 12
+    servicesCount: 12,
+    branches: generateBranches('biz-2', 'Elite Hair Studio Dubai', 25.1972, 55.2744, 'Downtown', 'Jumeirah Beach Road', '+971-4-234-5678')
   },
   {
     id: 'biz-3',
@@ -176,7 +218,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     email: 'appointments@dubaidental.ae',
     phone: '+971-4-345-6789',
     priceRange: { min: 300, max: 2000 },
-    servicesCount: 18
+    servicesCount: 18,
+    branches: generateBranches('biz-3', 'Dubai Dental Excellence', 25.2182, 55.2756, 'Downtown', 'Business Bay', '+971-4-345-6789')
   },
   {
     id: 'biz-4',
@@ -194,7 +237,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Premium fitness center with personal trainers and group classes',
     email: 'hello@fitzonedubai.ae',
     priceRange: { min: 100, max: 500 },
-    servicesCount: 20
+    servicesCount: 20,
+    branches: generateBranches('biz-4', 'FitZone Dubai Marina', 25.0772, 55.1377, 'Downtown', 'Dubai Marina Walk', undefined)
   },
 
   // UAE - Abu Dhabi
@@ -211,7 +255,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Luxurious spa treatments with Arabian hospitality',
     email: 'info@royalspaad.ae',
     priceRange: { min: 180, max: 700 },
-    servicesCount: 14
+    servicesCount: 14,
+    branches: generateBranches('biz-5', 'Royal Spa Abu Dhabi', 24.4539, 54.3773, 'Corniche', 'Corniche Road', undefined)
   },
   {
     id: 'biz-6',
@@ -226,7 +271,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Modern hair salon with expert stylists',
     email: 'book@adhairlounge.ae',
     priceRange: { min: 120, max: 500 },
-    servicesCount: 10
+    servicesCount: 10,
+    branches: generateBranches('biz-6', 'Abu Dhabi Hair Lounge', 24.4667, 54.3667, 'Corniche', 'Al Markaziyah', undefined)
   },
 
   // Saudi Arabia - Riyadh
@@ -243,7 +289,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Exclusive wellness center in Riyadh',
     email: 'contact@riyadhwellness.sa',
     priceRange: { min: 250, max: 900 },
-    servicesCount: 16
+    servicesCount: 16,
+    branches: generateBranches('biz-7', 'Riyadh Premium Wellness', 24.7136, 46.6753, 'Olaya', 'King Fahd Road', undefined)
   },
   {
     id: 'biz-8',
@@ -258,7 +305,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Modern dental clinic with experienced dentists',
     email: 'info@riyadhdental.sa',
     priceRange: { min: 200, max: 1800 },
-    servicesCount: 15
+    servicesCount: 15,
+    branches: generateBranches('biz-8', 'Riyadh Dental Care', 24.7243, 46.6544, 'Olaya', 'Olaya District', undefined)
   },
   {
     id: 'biz-9',
@@ -273,7 +321,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'High-end fitness facility with latest equipment',
     email: 'membership@elitefitness.sa',
     priceRange: { min: 150, max: 600 },
-    servicesCount: 18
+    servicesCount: 18,
+    branches: generateBranches('biz-9', 'Elite Fitness Riyadh', 24.7353, 46.6722, 'Olaya', 'Kingdom Centre', undefined)
   },
 
   // Saudi Arabia - Jeddah
@@ -290,7 +339,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Seaside spa with relaxing treatments',
     email: 'book@jeddahspa.sa',
     priceRange: { min: 200, max: 750 },
-    servicesCount: 13
+    servicesCount: 13,
+    branches: generateBranches('biz-10', 'Jeddah Spa Retreat', 21.4858, 39.1925, 'Al Hamra', 'Corniche, Jeddah', undefined)
   },
   {
     id: 'biz-11',
@@ -305,7 +355,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Full-service beauty salon for modern women',
     email: 'info@jeddahbeauty.sa',
     priceRange: { min: 100, max: 550 },
-    servicesCount: 14
+    servicesCount: 14,
+    branches: generateBranches('biz-11', 'Jeddah Beauty Studio', 21.5169, 39.2192, 'Al Hamra', 'Al Hamra District', undefined)
   },
 
   // Egypt - Cairo Downtown
@@ -325,7 +376,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Relaxation and wellness in the heart of Cairo',
     email: 'info@cairowellness.eg',
     priceRange: { min: 80, max: 400 },
-    servicesCount: 12
+    servicesCount: 12,
+    branches: generateBranches('biz-12', 'Cairo Downtown Wellness', 30.0444, 31.2357, 'Downtown', 'Tahrir Square, Downtown Cairo', undefined)
   },
   {
     id: 'biz-13',
@@ -343,7 +395,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Modern beauty salon in historic downtown',
     email: 'book@downtownbeauty.eg',
     priceRange: { min: 60, max: 350 },
-    servicesCount: 14
+    servicesCount: 14,
+    branches: generateBranches('biz-13', 'Downtown Beauty Studio', 30.0489, 31.2421, 'Downtown', 'Talaat Harb Street', undefined)
   },
   {
     id: 'biz-14',
@@ -361,7 +414,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Comprehensive dental services with modern equipment',
     email: 'appointments@cairodental.eg',
     priceRange: { min: 100, max: 1200 },
-    servicesCount: 16
+    servicesCount: 16,
+    branches: generateBranches('biz-14', 'Cairo Central Dental', 30.0515, 31.2405, 'Downtown', 'Abdel Khalek Sarwat Street', undefined)
   },
 
   // Egypt - Cairo Nasr City
@@ -381,7 +435,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Professional hair care and styling services in Nasr City',
     email: 'book@nasrhair.eg',
     priceRange: { min: 70, max: 400 },
-    servicesCount: 13
+    servicesCount: 13,
+    branches: generateBranches('biz-13a', 'Nasr City Hair Lounge', 30.0626, 31.3497, 'Nasr City', 'Abbas El Akkad Street, Nasr City', undefined)
   },
   {
     id: 'biz-13b',
@@ -399,7 +454,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Luxurious spa experience in Cairo\'s premier mall',
     email: 'info@citystarsspa.eg',
     priceRange: { min: 120, max: 550 },
-    servicesCount: 18
+    servicesCount: 18,
+    branches: generateBranches('biz-13b', 'City Stars Spa', 30.0731, 31.3439, 'Nasr City', 'City Stars Mall, Nasr City', undefined)
   },
   {
     id: 'biz-13c',
@@ -417,7 +473,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Modern fitness center with certified trainers',
     email: 'join@nasrfitness.eg',
     priceRange: { min: 80, max: 450 },
-    servicesCount: 20
+    servicesCount: 20,
+    branches: generateBranches('biz-13c', 'Nasr City Fitness Hub', 30.0583, 31.3356, 'Nasr City', 'Makram Ebeid, Nasr City', undefined)
   },
 
   // Egypt - Giza October
@@ -434,7 +491,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Modern spa with premium services in October City',
     email: 'info@octoberplazaspa.eg',
     priceRange: { min: 90, max: 450 },
-    servicesCount: 15
+    servicesCount: 15,
+    branches: generateBranches('biz-15', 'October Plaza Spa', 29.9870, 30.9370, 'October', 'Mall of Arabia, 6th October', undefined)
   },
   {
     id: 'biz-16',
@@ -449,7 +507,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'State-of-the-art gym with certified trainers',
     email: 'join@octoberfitness.eg',
     priceRange: { min: 70, max: 350 },
-    servicesCount: 18
+    servicesCount: 18,
+    branches: generateBranches('biz-16', 'October Fitness Club', 29.9796, 30.9321, 'October', 'Sheikh Zayed, 6th October', undefined)
   },
   {
     id: 'biz-16a',
@@ -464,7 +523,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Full-service beauty salon in October City',
     email: 'book@octoberbeauty.eg',
     priceRange: { min: 65, max: 380 },
-    servicesCount: 16
+    servicesCount: 16,
+    branches: generateBranches('biz-16a', 'October Beauty Center', 29.9725, 30.9448, 'October', 'Americana Plaza, 6th October', undefined)
   },
 
   // Egypt - Giza Dokki
@@ -484,7 +544,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Tranquil spa with Egyptian-inspired treatments in Dokki',
     email: 'info@dokkispa.eg',
     priceRange: { min: 75, max: 380 },
-    servicesCount: 12
+    servicesCount: 12,
+    branches: generateBranches('biz-16b', 'Dokki Wellness Spa', 30.0381, 31.2109, 'Dokki', 'Dokki Square, Dokki', undefined)
   },
   {
     id: 'biz-16c',
@@ -502,7 +563,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Professional hair salon in the heart of Dokki',
     email: 'book@dokkihair.eg',
     priceRange: { min: 55, max: 320 },
-    servicesCount: 11
+    servicesCount: 11,
+    branches: generateBranches('biz-16c', 'Dokki Hair Studio', 30.0425, 31.2089, 'Dokki', 'Mesaha Square, Dokki', undefined)
   },
   {
     id: 'biz-16d',
@@ -520,7 +582,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Modern dental clinic with experienced dentists',
     email: 'appointments@dokkidental.eg',
     priceRange: { min: 90, max: 1100 },
-    servicesCount: 14
+    servicesCount: 14,
+    branches: generateBranches('biz-16d', 'Dokki Dental Care', 30.0365, 31.2135, 'Dokki', 'Tahrir Street, Dokki', undefined)
   },
 
   // Egypt - Giza Mohandeseen
@@ -540,7 +603,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Upscale spa with luxury treatments in Mohandeseen',
     email: 'info@mohandeseenspa.eg',
     priceRange: { min: 100, max: 500 },
-    servicesCount: 16
+    servicesCount: 16,
+    branches: generateBranches('biz-16e', 'Mohandeseen Premium Spa', 30.0626, 31.2009, 'Mohandeseen', 'Arab League Street, Mohandeseen', undefined)
   },
   {
     id: 'biz-16f',
@@ -558,7 +622,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Elite beauty salon in Mohandeseen',
     email: 'book@mohandeseenbeauty.eg',
     priceRange: { min: 70, max: 400 },
-    servicesCount: 15
+    servicesCount: 15,
+    branches: generateBranches('biz-16f', 'Mohandeseen Hair & Beauty', 30.0586, 31.1985, 'Mohandeseen', 'Gameat El Dewal Street', undefined)
   },
 
   // Egypt - Alexandria
@@ -575,7 +640,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Seaside beauty salon with comprehensive services',
     email: 'book@alexbeauty.eg',
     priceRange: { min: 55, max: 320 },
-    servicesCount: 13
+    servicesCount: 13,
+    branches: generateBranches('biz-17', 'Alexandria Beauty Lounge', 31.2001, 29.9187, 'Smouha', 'Corniche, Alexandria', undefined)
   },
 
   // UK - London
@@ -592,7 +658,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Five-star spa experience in central London',
     email: 'reservations@londonluxuryspa.co.uk',
     priceRange: { min: 250, max: 1000 },
-    servicesCount: 20
+    servicesCount: 20,
+    branches: generateBranches('biz-18', 'London Luxury Spa', 51.5074, -0.1278, 'Mayfair', 'Mayfair, London', undefined)
   },
   {
     id: 'biz-19',
@@ -607,7 +674,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Trendy hair salon with celebrity stylists',
     email: 'book@chelseahair.co.uk',
     priceRange: { min: 180, max: 700 },
-    servicesCount: 14
+    servicesCount: 14,
+    branches: generateBranches('biz-19', 'Chelsea Hair Studio', 51.4875, -0.1687, 'Mayfair', 'Kings Road, Chelsea', undefined)
   },
   {
     id: 'biz-20',
@@ -622,7 +690,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Premier dental practice on famous Harley Street',
     email: 'appointments@londondental.co.uk',
     priceRange: { min: 300, max: 2500 },
-    servicesCount: 22
+    servicesCount: 22,
+    branches: generateBranches('biz-20', 'London Dental Excellence', 51.5152, -0.1426, 'Mayfair', 'Harley Street', undefined)
   },
   {
     id: 'biz-21',
@@ -637,7 +706,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Executive fitness club with premium facilities',
     email: 'membership@canaryfitness.co.uk',
     priceRange: { min: 200, max: 800 },
-    servicesCount: 25
+    servicesCount: 25,
+    branches: generateBranches('biz-21', 'Canary Wharf Fitness', 51.5054, -0.0235, 'Mayfair', 'Canary Wharf', undefined)
   },
 
   // UK - Manchester
@@ -654,7 +724,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Urban spa sanctuary in Manchester city center',
     email: 'info@manchesterspa.co.uk',
     priceRange: { min: 150, max: 600 },
-    servicesCount: 16
+    servicesCount: 16,
+    branches: generateBranches('biz-22', 'Manchester Spa Retreat', 53.4808, -2.2426, 'Deansgate', 'Deansgate, Manchester', undefined)
   },
   {
     id: 'biz-23',
@@ -669,7 +740,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Edgy hair salon in Manchester\'s creative district',
     email: 'book@nqhair.co.uk',
     priceRange: { min: 120, max: 450 },
-    servicesCount: 12
+    servicesCount: 12,
+    branches: generateBranches('biz-23', 'Northern Quarter Hair', 53.4839, -2.2364, 'Deansgate', 'Northern Quarter', undefined)
   },
 
   // UK - Birmingham
@@ -686,7 +758,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'One-stop beauty destination in Birmingham',
     email: 'hello@bhambeauty.co.uk',
     priceRange: { min: 90, max: 400 },
-    servicesCount: 17
+    servicesCount: 17,
+    branches: generateBranches('biz-24', 'Birmingham Beauty Hub', 52.4862, -1.8904, 'Bullring', 'Bullring, Birmingham', undefined)
   },
   {
     id: 'biz-25',
@@ -701,7 +774,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Holistic wellness treatments in peaceful setting',
     email: 'wellness@bhamwellness.co.uk',
     priceRange: { min: 100, max: 500 },
-    servicesCount: 14
+    servicesCount: 14,
+    branches: generateBranches('biz-25', 'Birmingham Wellness Center', 52.4796, -1.9026, 'Bullring', 'Edgbaston', undefined)
   },
 
   // UK - Edinburgh
@@ -718,7 +792,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Historic spa with Scottish hospitality',
     email: 'bookings@edinburghspa.co.uk',
     priceRange: { min: 140, max: 650 },
-    servicesCount: 15
+    servicesCount: 15,
+    branches: generateBranches('biz-26', 'Edinburgh Royal Spa', 55.9533, -3.1883, 'Princes Street', 'Princes Street', undefined)
   },
   {
     id: 'biz-27',
@@ -733,7 +808,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Traditional and modern hair services',
     email: 'book@oldtownhair.co.uk',
     priceRange: { min: 110, max: 420 },
-    servicesCount: 11
+    servicesCount: 11,
+    branches: generateBranches('biz-27', 'Old Town Hair Studio', 55.9486, -3.1878, 'Princes Street', 'Royal Mile', undefined)
   },
 
   // Additional businesses for diversity
@@ -750,7 +826,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Peaceful wellness retreat in Sharjah',
     email: 'info@sharjahwellness.ae',
     priceRange: { min: 130, max: 550 },
-    servicesCount: 13
+    servicesCount: 13,
+    branches: generateBranches('biz-28', 'Sharjah Wellness Oasis', 25.3463, 55.4209, 'Al Majaz', 'Al Majaz, Sharjah', undefined)
   },
   {
     id: 'biz-29',
@@ -765,7 +842,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Beachfront spa with ocean views',
     email: 'relax@ajmanbeachspa.ae',
     priceRange: { min: 120, max: 500 },
-    servicesCount: 12
+    servicesCount: 12,
+    branches: generateBranches('biz-29', 'Ajman Beach Spa', 25.4052, 55.5136, 'Corniche', 'Ajman Corniche', undefined)
   },
   {
     id: 'biz-30',
@@ -780,7 +858,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Advanced dental care in Eastern Province',
     email: 'appointments@dammamdental.sa',
     priceRange: { min: 180, max: 1600 },
-    servicesCount: 17
+    servicesCount: 17,
+    branches: generateBranches('biz-30', 'Dammam Dental Center', 26.4207, 50.0888, 'Al Shati', 'King Fahd Road, Dammam', undefined)
   },
   {
     id: 'biz-31',
@@ -795,7 +874,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Rejuvenating spa treatments in the holy city',
     email: 'info@meccawellness.sa',
     priceRange: { min: 150, max: 600 },
-    servicesCount: 11
+    servicesCount: 11,
+    branches: generateBranches('biz-31', 'Mecca Wellness Spa', 21.3891, 39.8579, 'Aziziyah', 'Aziziyah, Mecca', undefined)
   },
   {
     id: 'biz-32',
@@ -810,7 +890,8 @@ export const MOCK_BUSINESSES: BusinessLocation[] = [
     description: 'Beauty services in the historic city of Luxor',
     email: 'book@luxorbeauty.eg',
     priceRange: { min: 45, max: 280 },
-    servicesCount: 9
+    servicesCount: 9,
+    branches: generateBranches('biz-32', 'Luxor Beauty Palace', 25.6872, 32.6396, 'East Bank', 'Corniche Road, Luxor', undefined)
   }
 ]
 
@@ -1116,7 +1197,7 @@ export function getBusinessWithDetails(businessId: string): BusinessLocation | n
       { platform: 'instagram', url: `https://instagram.com/${business.name.toLowerCase().replace(/\s+/g, '')}` }
     ],
     services,
-    branches,
+    fullBranches: branches,
     reviews
   }
 }

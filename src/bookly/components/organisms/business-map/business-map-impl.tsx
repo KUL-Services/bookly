@@ -1,17 +1,24 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useCallback } from 'react'
 import { GoogleMap, MarkerF, InfoWindowF, useJsApiLoader } from '@react-google-maps/api'
-import type { BusinessLocation } from '@/mocks/businesses'
+import type { BusinessLocation, BusinessBranch } from '@/mocks/businesses'
 
 export interface BusinessMapImplProps {
   businesses: BusinessLocation[]
   selectedBusinessId?: string | null
+  selectedBranchId?: string | null
   hoveredBusinessId?: string | null
-  onMarkerClick?: (businessId: string | null) => void
-  onMarkerHover?: (businessId: string | null) => void
+  hoveredBranchId?: string | null
+  onMarkerClick?: (businessId: string | null, branchId?: string) => void
+  onMarkerHover?: (businessId: string | null, branchId?: string) => void
   onBookNow?: (businessId: string) => void
   className?: string
+}
+
+// Interface for branch markers with business info
+interface BranchMarker extends BusinessBranch {
+  business: BusinessLocation
 }
 
 // Custom marker SVG path for pin icon (similar to previous implementation)
@@ -31,7 +38,9 @@ const createMarkerIcon = (isSelected: boolean, isHovered: boolean) => {
 export function BusinessMapImpl({
   businesses,
   selectedBusinessId,
+  selectedBranchId,
   hoveredBusinessId,
+  hoveredBranchId,
   onMarkerClick,
   onMarkerHover,
   onBookNow,
@@ -45,25 +54,35 @@ export function BusinessMapImpl({
     id: 'google-map-script'
   })
 
-  // Calculate center and zoom based on businesses
+  // Flatten all branches from all businesses
+  const branchMarkers = useMemo<BranchMarker[]>(() => {
+    return businesses.flatMap(business =>
+      business.branches.map(branch => ({
+        ...branch,
+        business
+      }))
+    )
+  }, [businesses])
+
+  // Calculate center and zoom based on all branch markers
   const { center, zoom } = useMemo(() => {
-    if (businesses.length === 0) {
+    if (branchMarkers.length === 0) {
       return { center: { lat: 25.2048, lng: 55.2708 }, zoom: 5 } // Dubai as default
     }
 
-    if (businesses.length === 1) {
+    if (branchMarkers.length === 1) {
       return {
-        center: { lat: businesses[0].coordinates.lat, lng: businesses[0].coordinates.lng },
+        center: { lat: branchMarkers[0].latitude, lng: branchMarkers[0].longitude },
         zoom: 12
       }
     }
 
-    // Calculate center from all businesses
-    const avgLat = businesses.reduce((sum, b) => sum + b.coordinates.lat, 0) / businesses.length
-    const avgLng = businesses.reduce((sum, b) => sum + b.coordinates.lng, 0) / businesses.length
+    // Calculate center from all branch markers
+    const avgLat = branchMarkers.reduce((sum, b) => sum + b.latitude, 0) / branchMarkers.length
+    const avgLng = branchMarkers.reduce((sum, b) => sum + b.longitude, 0) / branchMarkers.length
 
     return { center: { lat: avgLat, lng: avgLng }, zoom: 8 }
-  }, [businesses])
+  }, [branchMarkers])
 
   // Map options
   const mapOptions: google.maps.MapOptions = useMemo(
@@ -80,24 +99,24 @@ export function BusinessMapImpl({
 
   // Fit bounds to show all markers
   const fitBounds = useCallback(() => {
-    if (!mapRef.current || businesses.length === 0) return
+    if (!mapRef.current || branchMarkers.length === 0) return
 
     const bounds = new google.maps.LatLngBounds()
-    businesses.forEach(business => {
-      bounds.extend({ lat: business.coordinates.lat, lng: business.coordinates.lng })
+    branchMarkers.forEach(marker => {
+      bounds.extend({ lat: marker.latitude, lng: marker.longitude })
     })
 
     mapRef.current.fitBounds(bounds, { top: 50, bottom: 50, left: 50, right: 50 })
 
     // Don't zoom in too much for single marker
-    if (businesses.length === 1) {
+    if (branchMarkers.length === 1) {
       const listener = google.maps.event.addListenerOnce(mapRef.current, 'bounds_changed', () => {
         if (mapRef.current && mapRef.current.getZoom()! > 13) {
           mapRef.current.setZoom(13)
         }
       })
     }
-  }, [businesses])
+  }, [branchMarkers])
 
   // Handle map load
   const onMapLoad = useCallback(
@@ -108,26 +127,26 @@ export function BusinessMapImpl({
     [fitBounds]
   )
 
-  // Center on selected business
+  // Center on selected branch
   useEffect(() => {
-    if (selectedBusinessId && mapRef.current) {
-      const selectedBusiness = businesses.find(b => b.id === selectedBusinessId)
-      if (selectedBusiness) {
+    if (selectedBranchId && mapRef.current) {
+      const selectedBranch = branchMarkers.find(m => m.id === selectedBranchId)
+      if (selectedBranch) {
         mapRef.current.panTo({
-          lat: selectedBusiness.coordinates.lat,
-          lng: selectedBusiness.coordinates.lng
+          lat: selectedBranch.latitude,
+          lng: selectedBranch.longitude
         })
         mapRef.current.setZoom(15)
       }
     }
-  }, [selectedBusinessId, businesses])
+  }, [selectedBranchId, branchMarkers])
 
-  // Update bounds when businesses change
+  // Update bounds when branch markers change
   useEffect(() => {
-    if (mapRef.current && businesses.length > 0) {
+    if (mapRef.current && branchMarkers.length > 0) {
       fitBounds()
     }
-  }, [businesses, fitBounds])
+  }, [branchMarkers, fitBounds])
 
   if (loadError) {
     return (
@@ -158,35 +177,38 @@ export function BusinessMapImpl({
         onLoad={onMapLoad}
         onClick={() => onMarkerClick?.(null)}
       >
-        {businesses.map(business => {
-          const isSelected = business.id === selectedBusinessId
-          const isHovered = business.id === hoveredBusinessId
+        {branchMarkers.map(marker => {
+          const business = marker.business
+          // Only highlight this specific branch if it's selected or hovered
+          const isSelected = selectedBranchId ? marker.id === selectedBranchId : false
+          const isHovered = hoveredBranchId ? marker.id === hoveredBranchId : false
           const showInfoWindow = isSelected || isHovered
 
           return (
             <MarkerF
-              key={business.id}
-              position={{ lat: business.coordinates.lat, lng: business.coordinates.lng }}
+              key={marker.id}
+              position={{ lat: marker.latitude, lng: marker.longitude }}
               icon={createMarkerIcon(isSelected, isHovered)}
               onClick={(e) => {
                 if (e.domEvent) {
                   e.domEvent.stopPropagation()
                 }
-                onMarkerClick?.(business.id)
+                onMarkerClick?.(business.id, marker.id)
               }}
-              onMouseOver={() => onMarkerHover?.(business.id)}
+              onMouseOver={() => onMarkerHover?.(business.id, marker.id)}
               onMouseOut={() => onMarkerHover?.(null)}
               animation={isSelected ? google.maps.Animation.BOUNCE : undefined}
             >
               {showInfoWindow && (
                 <InfoWindowF
-                  position={{ lat: business.coordinates.lat, lng: business.coordinates.lng }}
+                  position={{ lat: marker.latitude, lng: marker.longitude }}
                   options={{ maxWidth: 300, minWidth: 280, disableAutoPan: false }}
                 >
                   <div className='p-3'>
-                    {/* Business Header */}
+                    {/* Branch & Business Header */}
                     <div className='mb-3'>
                       <h3 className='font-bold text-lg text-gray-900 mb-1'>{business.name}</h3>
+                      <p className='text-sm text-teal-600 font-semibold mb-2'>{marker.branchName}</p>
                       <div className='flex items-center gap-2 text-sm text-gray-600 mb-2'>
                         <div className='flex items-center gap-1'>
                           <span className='text-yellow-500'>★</span>
@@ -200,7 +222,7 @@ export function BusinessMapImpl({
                     {/* Description */}
                     <p className='text-sm text-gray-600 mb-3 line-clamp-2'>{business.description}</p>
 
-                    {/* Location */}
+                    {/* Branch Address */}
                     <div className='flex items-start gap-1 text-xs text-gray-500 mb-2'>
                       <svg className='w-4 h-4 flex-shrink-0 mt-0.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                         <path
@@ -211,8 +233,18 @@ export function BusinessMapImpl({
                         />
                         <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
                       </svg>
-                      <span>{business.address}</span>
+                      <span>{marker.address}</span>
                     </div>
+
+                    {/* Phone */}
+                    {marker.phone && (
+                      <div className='flex items-center gap-1 text-xs text-gray-500 mb-2'>
+                        <svg className='w-4 h-4 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
+                        </svg>
+                        <span>{marker.phone}</span>
+                      </div>
+                    )}
 
                     {/* Price Range */}
                     <div className='text-sm font-semibold text-teal-600 mb-3'>

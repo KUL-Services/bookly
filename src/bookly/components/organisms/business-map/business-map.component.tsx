@@ -6,9 +6,11 @@ import type { BusinessLocation } from '@/mocks/businesses'
 export interface BusinessMapProps {
   businesses: BusinessLocation[]
   selectedBusinessId?: string | null
+  selectedBranchId?: string | null
   hoveredBusinessId?: string | null
-  onMarkerClick?: (businessId: string) => void
-  onMarkerHover?: (businessId: string | null) => void
+  hoveredBranchId?: string | null
+  onMarkerClick?: (businessId: string | null, branchId?: string) => void
+  onMarkerHover?: (businessId: string | null, branchId?: string) => void
   onBookNow?: (businessId: string) => void
   className?: string
 }
