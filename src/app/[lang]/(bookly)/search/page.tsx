@@ -54,6 +54,9 @@ export default function SearchPage() {
   const [showBranchModal, setShowBranchModal] = useState(false)
   const [branchModalBusinessId, setBranchModalBusinessId] = useState<string | null>(null)
 
+  // Mobile filter drawer state
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(20)
@@ -317,12 +320,12 @@ export default function SearchPage() {
       </div>
 
       <div className='mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-6'>
-        <div className='grid grid-cols-1 lg:grid-cols-[300px,1fr] gap-6'>
-          {/* Sidebar Filters */}
-          <aside className='space-y-4'>
+        <div className='grid grid-cols-1 lg:grid-cols-[280px,1fr] xl:grid-cols-[300px,1fr] gap-4 lg:gap-6'>
+          {/* Sidebar Filters - Hidden on mobile, show as drawer or modal */}
+          <aside className='hidden lg:block space-y-4'>
             {/* Location Filters */}
-            <div className='bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700'>
-              <h3 className='font-semibold text-gray-900 dark:text-white mb-4'>Location</h3>
+            <div className='bg-white dark:bg-gray-800 rounded-xl p-3 lg:p-4 shadow-sm border border-gray-200 dark:border-gray-700'>
+              <h3 className='font-semibold text-sm lg:text-base text-gray-900 dark:text-white mb-3 lg:mb-4'>Location</h3>
               <LocationFilters
                 selectedCountry={selectedCountry}
                 selectedCity={selectedCity}
@@ -357,6 +360,16 @@ export default function SearchPage() {
 
             {/* Header with view toggle */}
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4'>
+              {/* Mobile Filter Button */}
+              <button
+                onClick={() => setShowMobileFilters(true)}
+                className='lg:hidden flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors touch-manipulation'
+              >
+                <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z' />
+                </svg>
+                Filters
+              </button>
               <PaginationInfo
                 page={currentPage}
                 limit={itemsPerPage}
@@ -478,16 +491,75 @@ export default function SearchPage() {
         </div>
       </div>
 
+      {/* Mobile Filters Drawer */}
+      {showMobileFilters && (
+        <div className='fixed inset-0 z-50 lg:hidden'>
+          {/* Backdrop */}
+          <div
+            className='absolute inset-0 bg-black/50 backdrop-blur-sm'
+            onClick={() => setShowMobileFilters(false)}
+          />
+
+          {/* Drawer */}
+          <div className='absolute right-0 top-0 bottom-0 w-full sm:w-96 bg-white dark:bg-gray-800 shadow-2xl overflow-y-auto animate-slide-in-right'>
+            {/* Header */}
+            <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between z-10'>
+              <h2 className='text-lg font-bold text-gray-900 dark:text-white'>Filters</h2>
+              <button
+                onClick={() => setShowMobileFilters(false)}
+                className='p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors touch-manipulation'
+              >
+                <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
+                </svg>
+              </button>
+            </div>
+
+            {/* Filter Content */}
+            <div className='p-4 space-y-4'>
+              {/* Location Filters */}
+              <div className='bg-gray-50 dark:bg-gray-900 rounded-xl p-4'>
+                <h3 className='font-semibold text-base text-gray-900 dark:text-white mb-4'>Location</h3>
+                <LocationFilters
+                  selectedCountry={selectedCountry}
+                  selectedCity={selectedCity}
+                  selectedRegion={selectedRegion}
+                  onCountryChange={handleCountryChange}
+                  onCityChange={handleCityChange}
+                  onRegionChange={handleRegionChange}
+                />
+              </div>
+
+              {/* Other Filters */}
+              <SearchFilters
+                filters={filters}
+                options={filterOptions}
+                onFiltersChange={setFilters}
+                onApplyFilters={() => {
+                  handleApplyFilters()
+                  setShowMobileFilters(false)
+                }}
+                onResetFilters={() => {
+                  handleResetFilters()
+                  setShowMobileFilters(false)
+                }}
+                loading={filtersLoading}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Branch Selection Modal */}
       {showBranchModal && branchModalBusinessId && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
-          <div className='bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4 max-h-[80vh] overflow-y-auto'>
-            <div className='p-6'>
-              <div className='flex items-center justify-between mb-4'>
-                <h3 className='text-xl font-bold text-gray-900 dark:text-white'>Select a Branch</h3>
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4'>
+          <div className='bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md mx-auto h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto'>
+            <div className='p-4 sm:p-6'>
+              <div className='flex items-center justify-between mb-4 sm:mb-6'>
+                <h3 className='text-lg sm:text-xl font-bold text-gray-900 dark:text-white'>Select a Branch</h3>
                 <button
                   onClick={() => setShowBranchModal(false)}
-                  className='text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors'
+                  className='p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors touch-manipulation'
                 >
                   <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M6 18L18 6M6 6l12 12' />
@@ -501,15 +573,15 @@ export default function SearchPage() {
                   <button
                     key={branch.id}
                     onClick={() => handleBranchClick(branch.id)}
-                    className='w-full text-left p-4 mb-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-teal-500 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all'
+                    className='w-full text-left p-3 sm:p-4 mb-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-teal-500 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all touch-manipulation'
                   >
                     <div className='flex items-start gap-3'>
-                      <div className='flex-shrink-0 w-8 h-8 bg-teal-100 dark:bg-teal-900/50 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 font-semibold'>
+                      <div className='flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-teal-100 dark:bg-teal-900/50 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 font-semibold text-sm sm:text-base'>
                         {index + 1}
                       </div>
-                      <div className='flex-1'>
-                        <h4 className='font-semibold text-gray-900 dark:text-white mb-1'>{branch.branchName}</h4>
-                        <div className='flex items-start gap-1 text-sm text-gray-600 dark:text-gray-400'>
+                      <div className='flex-1 min-w-0'>
+                        <h4 className='font-semibold text-base sm:text-lg text-gray-900 dark:text-white mb-1'>{branch.branchName}</h4>
+                        <div className='flex items-start gap-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400'>
                           <svg className='w-4 h-4 flex-shrink-0 mt-0.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                             <path
                               strokeLinecap='round'
@@ -519,11 +591,11 @@ export default function SearchPage() {
                             />
                             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
                           </svg>
-                          <span>{branch.address}</span>
+                          <span className='break-words'>{branch.address}</span>
                         </div>
                         {branch.phone && (
-                          <div className='flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mt-1'>
-                            <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <div className='flex items-center gap-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1'>
+                            <svg className='w-4 h-4 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
                             </svg>
                             <span>{branch.phone}</span>

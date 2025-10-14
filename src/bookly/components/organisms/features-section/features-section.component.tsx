@@ -15,15 +15,15 @@ export const FeaturesSection = () => {
   return (
     <>
       {/* Featured Businesses Section */}
-      <section className='py-16 container mx-auto'>
-        <div className='max-w-6xl mx-auto px-6'>
+      <section className='py-8 sm:py-12 lg:py-16 container mx-auto'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6'>
           <H2
             stringProps={{ plainText: 'Check out top businesses ' }}
-            className='text-2xl font-bold text-center text-gray-900 dark:text-white mb-12'
+            className='text-xl sm:text-2xl lg:text-3xl font-bold text-center text-gray-900 dark:text-white mb-6 sm:mb-8 lg:mb-12'
           />
         </div>
 
-        <div className='mx-auto max-w-10/12 md:max-w-full grid md:grid-cols-2 lg:grid-cols-3 gap-8'>
+        <div className='mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8'>
           {mockBusinesses.map(business => (
             <BusinessCard
               key={business.id}

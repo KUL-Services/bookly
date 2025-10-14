@@ -46,20 +46,20 @@ export const ExploreSection = () => {
   return (
     <>
       {/* Categories Section */}
-      <section className='container mx-auto py-16'>
-        <div className='max-w-6xl mx-auto px-6'>
+      <section className='container mx-auto py-8 sm:py-12 lg:py-16'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6'>
           <H2
             stringProps={{ localeKey: 'categories.title' }}
-            className='text-2xl font-bold text-center text-gray-900 dark:text-white mb-12'
+            className='text-xl sm:text-2xl lg:text-3xl font-bold text-center text-gray-900 dark:text-white mb-6 sm:mb-8 lg:mb-12'
           />
         </div>
-        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8'>
+        <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-8 px-4 sm:px-6'>
           {loading ? (
             // Loading skeleton
             Array.from({ length: 6 }).map((_, index) => (
               <div key={index} className='animate-pulse'>
-                <div className='bg-gray-200 dark:bg-gray-700 rounded-lg h-24 w-full mb-2'></div>
-                <div className='bg-gray-200 dark:bg-gray-700 rounded h-4 w-3/4'></div>
+                <div className='bg-gray-200 dark:bg-gray-700 rounded-lg h-20 sm:h-24 w-full mb-2'></div>
+                <div className='bg-gray-200 dark:bg-gray-700 rounded h-3 sm:h-4 w-3/4 mx-auto'></div>
               </div>
             ))
           ) : (

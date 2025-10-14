@@ -325,13 +325,13 @@ function businessDetailsPage() {
         <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 dark:from-emerald-600/15 dark:to-teal-600/8 rounded-full blur-3xl animate-pulse animation-delay-1000' />
         <div className='absolute top-1/2 right-20 w-32 h-32 bg-gradient-to-br from-teal-300/30 to-cyan-300/20 rounded-full blur-2xl animate-float' />
       </div>
-      <div className='container mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-6 sm:space-y-8 flex-none relative z-10'>
+      <div className='container mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6 space-y-4 sm:space-y-6 lg:space-y-8 flex-none relative z-10'>
         {/* Header Section */}
         <Card className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-teal-100/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700'>
-          <CardContent className='p-4 sm:p-6'>
-            <div className='flex flex-col md:flex-row gap-4 sm:gap-6'>
+          <CardContent className='p-3 sm:p-4 lg:p-6'>
+            <div className='flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6'>
               {/* Business Image */}
-              <div className='group w-full md:w-52 h-48 sm:h-52 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'>
+              <div className='group w-full md:w-40 lg:w-52 h-40 sm:h-48 lg:h-52 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 rounded-lg lg:rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'>
                 <img
                   src={(business as any).logoUrl || (business as any).coverImageUrl || '/images/business-placeholder.jpg'}
                   alt={business.name}
@@ -341,24 +341,24 @@ function businessDetailsPage() {
               </div>
 
               {/* Business Info */}
-              <div className='flex-1 space-y-3 sm:space-y-4'>
-                <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4'>
+              <div className='flex-1 space-y-2 sm:space-y-3 lg:space-y-4'>
+                <div className='flex flex-col gap-3 sm:gap-4'>
                   <div>
                     <H1
                       stringProps={{ plainText: `${business.name}` }}
-                      className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white'
+                      className='text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white'
                     />
-                    <div className='flex items-center gap-2 mt-2'>
+                    <div className='flex items-center gap-2 mt-1 sm:mt-2'>
                       <div className='flex items-center'>
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-4 h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                          <Star key={i} className={`w-3 h-3 sm:w-4 sm:h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                         ))}
                       </div>
-                      <span className='text-sm text-gray-600 dark:text-gray-300'>{business.rating || 0} ({business.reviews?.length || 0} reviews)</span>
+                      <span className='text-xs sm:text-sm text-gray-600 dark:text-gray-300'>{business.rating || 0} ({business.reviews?.length || 0})</span>
                     </div>
-                    <Badge className='mt-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full shadow-md animate-pulse'>
-                      <div className='flex items-center gap-2'>
-                        <div className='w-2 h-2 bg-white rounded-full animate-ping' />
+                    <Badge className='mt-2 sm:mt-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 sm:px-3 py-1 text-xs rounded-full shadow-md animate-pulse'>
+                      <div className='flex items-center gap-1 sm:gap-2'>
+                        <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-ping' />
                         Open Now
                       </div>
                     </Badge>
@@ -369,33 +369,33 @@ function businessDetailsPage() {
                       buttonText={{ plainText: 'Save' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:heart' }}
-                      className='flex-1 sm:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover:border-none hover:bg-transparent text-sm py-2'
+                      className='flex-1 sm:flex-initial bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover:border-none hover:bg-transparent text-xs sm:text-sm py-2 px-3 touch-manipulation'
                     />
                     <Button
                       buttonText={{ plainText: 'Share' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:share' }}
-                      className='flex-1 sm:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover:border-none hover:bg-transparent text-sm py-2'
+                      className='flex-1 sm:flex-initial bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover:border-none hover:bg-transparent text-xs sm:text-sm py-2 px-3 touch-manipulation'
                     />
                   </div>
                 </div>
 
                 {/* Contact Info */}
-                <div className='space-y-2 text-sm text-gray-600 dark:text-gray-300'>
+                <div className='space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300'>
                   {(business as any).address && (
-                    <div className='flex items-center gap-2'>
-                      <MapPin className='w-4 h-4' />
-                      <span>{(business as any).address}</span>
+                    <div className='flex items-start gap-2'>
+                      <MapPin className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5' />
+                      <span className='break-words'>{(business as any).address}</span>
                     </div>
                   )}
                   {business.email && (
                     <div className='flex items-center gap-2'>
-                      <Globe className='w-4 h-4' />
-                      <span>{business.email}</span>
+                      <Globe className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0' />
+                      <span className='break-all'>{business.email}</span>
                     </div>
                   )}
-                  <div className='flex items-center gap-2'>
-                    <Clock className='w-4 h-4' />
+                  <div className='flex items-start gap-2'>
+                    <Clock className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5' />
                     <span>
                       {(business as any).openingHours
                         ? `Monday-Wednesday: ${(business as any).openingHours['Mon'] || '9AM-6PM'}, Thursday-Friday: ${(business as any).openingHours['Thu'] || '9AM-6PM'}, Saturday: ${(business as any).openingHours['Sat'] || '10AM-4PM'}, Sunday: ${(business as any).openingHours['Sun'] || 'Closed'}`
@@ -404,10 +404,10 @@ function businessDetailsPage() {
                   </div>
                   {business.socialLinks && business.socialLinks.length > 0 && (
                     <div className='flex items-center gap-2'>
-                      <Globe className='w-4 h-4' />
-                      <div className='flex gap-2'>
+                      <Globe className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0' />
+                      <div className='flex gap-2 flex-wrap'>
                         {business.socialLinks.map((link, index) => (
-                          <a key={index} href={link.url} target='_blank' rel='noopener noreferrer' className='text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 capitalize'>
+                          <a key={index} href={link.url} target='_blank' rel='noopener noreferrer' className='text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 capitalize text-xs sm:text-sm'>
                             {link.platform}
                           </a>
                         ))}
@@ -418,7 +418,7 @@ function businessDetailsPage() {
                 <Button
                   buttonText={{ plainText: 'Book Appointment' }}
                   variant='contained'
-                  className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 animate-glow'
+                  className='w-full sm:w-auto bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 sm:px-8 py-3 h-12 sm:h-14 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 animate-glow touch-manipulation'
                   /* oncLick: push client to book a promoted service */
                 />
               </div>
@@ -427,16 +427,16 @@ function businessDetailsPage() {
         </Card>
 
         {/* Tabs Navigation */}
-        <div className='mx-auto max-w-4xl rounded-xl border border-teal-100/50 dark:border-gray-700/50 shadow-lg sticky top-0 sm:top-4 z-30 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
-          <nav className='flex justify-center p-1 sm:p-2'>
-            <div className='flex w-full sm:w-auto bg-gray-100 dark:bg-gray-700 rounded-lg p-1 gap-1 overflow-x-auto'>
+        <div className='mx-auto max-w-4xl rounded-lg sm:rounded-xl border border-teal-100/50 dark:border-gray-700/50 shadow-lg sticky top-0 sm:top-4 z-30 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
+          <nav className='flex justify-center p-0.5 sm:p-1 lg:p-2'>
+            <div className='flex w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 sm:p-1 gap-0.5 sm:gap-1 overflow-x-auto scrollbar-thin'>
               {getTabsWithTranslation(t).map(tab => (
                 <Button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   variant='text'
-                  size='lg'
-                  className={`relative px-4 sm:px-6 py-2 sm:py-3 font-medium text-xs sm:text-sm transition-all duration-300 rounded-lg whitespace-nowrap ${
+                  size='md'
+                  className={`relative flex-1 sm:flex-initial px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 font-medium text-xs sm:text-sm transition-all duration-300 rounded-lg whitespace-nowrap touch-manipulation ${
                     activeTab === tab.id
                       ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg transform scale-105'
                       : 'text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-white/50 dark:hover:bg-gray-600/50 hover:scale-105'
@@ -451,48 +451,48 @@ function businessDetailsPage() {
       <div className='flex-1 overflow-y-auto'>
         {/* mockServices[mockBusinesses[0].services] */}
         {/* Tab Content */}
-        <div className='min-h-96 max-w-4xl mx-auto px-4 sm:px-6 pb-6 sm:pb-8 relative z-10'>
+        <div className='min-h-96 max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 pb-4 sm:pb-6 lg:pb-8 relative z-10'>
           {activeTab === 'services' && (
-            <div className='space-y-6'>
-              <h2 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
+            <div className='space-y-4 sm:space-y-6'>
+              <h2 className='text-2xl sm:text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
                 {t('business.sections.services')}
               </h2>
-              <div className='grid gap-6'>
+              <div className='grid gap-3 sm:gap-4 lg:gap-6'>
                 {services.map((service, index) => (
                   <Card
                     key={service.id || index}
-                    className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 border border-teal-100/50 dark:border-gray-700/50 hover:border-teal-200 dark:hover:border-gray-600 hover:scale-[1.02] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                    className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 border border-teal-100/50 dark:border-gray-700/50 hover:border-teal-200 dark:hover:border-gray-600 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
                     style={{
                       animationDelay: `${0.2 + index * 0.1}s`,
                       animationFillMode: 'forwards'
                     }}
                   >
-                    <CardContent className='p-6'>
-                      <div className='flex justify-between items-start'>
-                        <div className='flex-1 space-y-3'>
+                    <CardContent className='p-3 sm:p-4 lg:p-6'>
+                      <div className='flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4'>
+                        <div className='flex-1 space-y-2 sm:space-y-3 min-w-0'>
                           <H3
                             stringProps={{ plainText: service.name }}
-                            className='font-bold text-xl text-gray-900 dark:text-white group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors duration-300'
+                            className='font-bold text-lg sm:text-xl text-gray-900 dark:text-white group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors duration-300'
                           />
                           <P
                             stringProps={{ plainText: service.description || '' }}
-                            className='text-gray-600 dark:text-gray-300 leading-relaxed'
+                            className='text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed'
                           />
-                          <div className='flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400'>
-                            <span className='flex items-center gap-2 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 px-3 py-1 rounded-full'>
-                              <Clock className='w-4 h-4' />
+                          <div className='flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400'>
+                            <span className='flex items-center gap-1.5 sm:gap-2 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 px-2 sm:px-3 py-1 rounded-full'>
+                              <Clock className='w-3 h-3 sm:w-4 sm:h-4' />
                               {service.duration} min
                             </span>
                           </div>
                         </div>
-                        <div className='text-right space-y-3'>
-                          <div className='text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent'>
+                        <div className='w-full sm:w-auto text-left sm:text-right space-y-2 sm:space-y-3'>
+                          <div className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent'>
                             ${service.price}
                           </div>
                           <Button
                             buttonText={{ plainText: 'Book Now' }}
                             variant='contained'
-                            className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200'
+                            className='w-full sm:w-auto bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 touch-manipulation'
                             onClick={() => handelBookService(service)}
                           />
                         </div>

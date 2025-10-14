@@ -45,7 +45,7 @@ function LandPage() {
           <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-teal-100/20 to-cyan-100/10 dark:from-teal-800/10 dark:to-cyan-800/5 rounded-full blur-3xl animate-spin animation-duration-20000' />
         </div>
         {/* Hero Section */}
-        <section className='relative py-24 md:py-32'>
+        <section className='relative py-12 sm:py-16 md:py-24 lg:py-32'>
           <div
             className='absolute inset-0 bg-cover bg-center opacity-15'
             style={{
@@ -60,27 +60,27 @@ function LandPage() {
             <div className='absolute bottom-32 left-20 w-4 h-4 bg-emerald-400 dark:bg-emerald-500 rounded-full animate-bounce animation-delay-3000' />
             <div className='absolute bottom-20 right-10 w-2 h-2 bg-teal-500 dark:bg-teal-400 rounded-full animate-bounce animation-delay-4000' />
           </div>
-          <div className='relative max-w-6xl mx-auto px-6'>
+          <div className='relative max-w-6xl mx-auto px-4 sm:px-6'>
             <div
-              className={`text-center space-y-8 ${mounted ? 'opacity-0 animate-[fadeInUp_1s_ease-out_forwards]' : 'opacity-0'}`}
+              className={`text-center space-y-4 sm:space-y-6 lg:space-y-8 ${mounted ? 'opacity-0 animate-[fadeInUp_1s_ease-out_forwards]' : 'opacity-0'}`}
             >
               <H1
                 stringProps={{
                   localeKey: 'landing.hero.title'
                 }}
                 i18nTFn={t}
-                className='text-4xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-gray-900 via-teal-800 to-gray-900 dark:from-white dark:via-teal-300 dark:to-white bg-clip-text text-transparent leading-tight'
+                className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold bg-gradient-to-r from-gray-900 via-teal-800 to-gray-900 dark:from-white dark:via-teal-300 dark:to-white bg-clip-text text-transparent leading-tight px-4 sm:px-0'
               />
 
-              <p className='text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed'>
+              <p className='text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed px-4 sm:px-0'>
                 {t('landing.hero.subtitle')}
               </p>
               {/* Search Bar */}
               <div
-                className={`max-w-4xl mx-auto ${mounted ? 'opacity-0 animate-[fadeInUp_0.8s_ease-out_0.3s_forwards]' : 'opacity-0'}`}
+                className={`max-w-4xl mx-auto px-4 sm:px-0 ${mounted ? 'opacity-0 animate-[fadeInUp_0.8s_ease-out_0.3s_forwards]' : 'opacity-0'}`}
               >
-                <div className='p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/50 dark:border-gray-700/50 hover:shadow-3xl transition-all duration-300'>
-                  <div className='flex flex-col md:flex-row gap-3 p-4'>
+                <div className='p-2 sm:p-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-2xl border border-white/50 dark:border-gray-700/50 hover:shadow-3xl transition-all duration-300'>
+                  <div className='flex flex-col md:flex-row gap-2 sm:gap-3 p-2 sm:p-4'>
                     <div className='flex-1'>
                       <SearchInput
                         value={q}
@@ -89,7 +89,7 @@ function LandPage() {
                           localeKey: 'landing.search.servicePlaceholder'
                         }}
                         i18nTFn={t}
-                        className='w-full border-0 focus:ring-2 focus:ring-teal-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
+                        className='w-full h-12 sm:h-14 text-base border-0 focus:ring-2 focus:ring-teal-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
                       />
                     </div>
                     <div className='flex-1'>
@@ -101,14 +101,14 @@ function LandPage() {
                         }}
                         i18nTFn={t}
                         leadingIcon={MapPin}
-                        className='w-full border-0 focus:ring-2 focus:ring-teal-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
+                        className='w-full h-12 sm:h-14 text-base border-0 focus:ring-2 focus:ring-teal-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
                       />
                     </div>
                     <Button
                       onClick={goSearch}
                       buttonText={{ localeKey: 'landing.search.button' }}
                       i18nTFn={t}
-                      className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 px-8 py-3 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200'
+                      className='w-full md:w-auto bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 text-base sm:text-lg text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200'
                     />
                   </div>
                 </div>
@@ -116,19 +116,19 @@ function LandPage() {
 
               {/* Trust indicators */}
               <div
-                className={`flex flex-wrap justify-center items-center gap-8 pt-8 ${mounted ? 'opacity-0 animate-[fadeInUp_0.6s_ease-out_0.6s_forwards]' : 'opacity-0'}`}
+                className={`flex flex-wrap justify-center items-center gap-4 sm:gap-6 lg:gap-8 pt-4 sm:pt-6 lg:pt-8 px-4 ${mounted ? 'opacity-0 animate-[fadeInUp_0.6s_ease-out_0.6s_forwards]' : 'opacity-0'}`}
               >
                 <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300'>
                   <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
-                  <span className='text-sm font-medium'>{t('landing.stats.businesses')}</span>
+                  <span className='text-xs sm:text-sm font-medium'>{t('landing.stats.businesses')}</span>
                 </div>
                 <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300'>
                   <div className='w-2 h-2 bg-blue-500 rounded-full animate-pulse animation-delay-500' />
-                  <span className='text-sm font-medium'>{t('landing.stats.customers')}</span>
+                  <span className='text-xs sm:text-sm font-medium'>{t('landing.stats.customers')}</span>
                 </div>
                 <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300'>
                   <div className='w-2 h-2 bg-purple-500 rounded-full animate-pulse animation-delay-1000' />
-                  <span className='text-sm font-medium'>{t('landing.stats.rating')}</span>
+                  <span className='text-xs sm:text-sm font-medium'>{t('landing.stats.rating')}</span>
                 </div>
               </div>
             </div>

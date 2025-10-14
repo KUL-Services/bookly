@@ -22,6 +22,9 @@ export const BusinessAvatar = ({ businessName, imageSrc, imageAlt, className, si
   const [isLoading, setIsLoading] = useState(!!imageSrc)
 
   const getInitials = (name: string) => {
+    if (!name || name.length === 0) {
+      return '?' // Fallback for empty/undefined names
+    }
     return name
       .split(' ')
       .map(word => word.charAt(0))
@@ -32,6 +35,10 @@ export const BusinessAvatar = ({ businessName, imageSrc, imageAlt, className, si
 
   const generateColorFromName = (name: string) => {
     // Generate a consistent color based on the business name
+    if (!name || name.length === 0) {
+      return 'bg-gray-500' // Default color for empty/undefined names
+    }
+
     let hash = 0
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash)
