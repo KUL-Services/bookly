@@ -319,46 +319,51 @@ function businessDetailsPage() {
 
   return (
     <div className='min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900 relative overflow-hidden'>
-      {/* Animated background elements */}
+      {/* Background elements - static to prevent flickering */}
       <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 dark:from-teal-600/15 dark:to-cyan-600/8 rounded-full blur-3xl animate-pulse' />
-        <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 dark:from-emerald-600/15 dark:to-teal-600/8 rounded-full blur-3xl animate-pulse animation-delay-1000' />
-        <div className='absolute top-1/2 right-20 w-32 h-32 bg-gradient-to-br from-teal-300/30 to-cyan-300/20 rounded-full blur-2xl animate-float' />
+        <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/15 to-cyan-200/8 dark:from-teal-600/10 dark:to-cyan-600/5 rounded-full blur-3xl' />
+        <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/15 to-teal-200/8 dark:from-emerald-600/10 dark:to-teal-600/5 rounded-full blur-3xl' />
       </div>
       <div className='container mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6 space-y-4 sm:space-y-6 lg:space-y-8 flex-none relative z-10'>
         {/* Header Section */}
-        <Card className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-teal-100/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700'>
-          <CardContent className='p-3 sm:p-4 lg:p-6'>
+        <Card className='bg-white/95 dark:bg-gray-800/95 shadow-xl border border-teal-100/50 dark:border-gray-700/50 animate-in fade-in slide-in-from-bottom-6 duration-700'>
+          <CardContent className='p-3 sm:p-4 lg:p-6 select-text'>
             <div className='flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6'>
               {/* Business Image */}
-              <div className='group w-full md:w-40 lg:w-52 h-40 sm:h-48 lg:h-52 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 rounded-lg lg:rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105'>
+              <div className='w-full md:w-40 lg:w-52 h-40 sm:h-48 lg:h-52 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 rounded-lg lg:rounded-xl overflow-hidden shadow-lg select-none'>
                 <img
-                  src={(business as any).logoUrl || (business as any).coverImageUrl || '/images/business-placeholder.jpg'}
+                  src={
+                    (business as any).logoUrl || (business as any).coverImageUrl || '/images/business-placeholder.jpg'
+                  }
                   alt={business.name}
-                  className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                  className='w-full h-full object-cover'
                 />
-                <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
               </div>
 
               {/* Business Info */}
-              <div className='flex-1 space-y-2 sm:space-y-3 lg:space-y-4'>
+              <div className='flex-1 space-y-2 sm:space-y-3 lg:space-y-4 select-text'>
                 <div className='flex flex-col gap-3 sm:gap-4'>
                   <div>
                     <H1
                       stringProps={{ plainText: `${business.name}` }}
-                      className='text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white'
+                      className='text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white select-text'
                     />
                     <div className='flex items-center gap-2 mt-1 sm:mt-2'>
-                      <div className='flex items-center'>
+                      <div className='flex items-center select-none'>
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-3 h-3 sm:w-4 sm:h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                          <Star
+                            key={i}
+                            className={`w-3 h-3 sm:w-4 sm:h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                          />
                         ))}
                       </div>
-                      <span className='text-xs sm:text-sm text-gray-600 dark:text-gray-300'>{business.rating || 0} ({business.reviews?.length || 0})</span>
+                      <span className='text-xs sm:text-sm text-gray-600 dark:text-gray-300 select-text'>
+                        {business.rating || 0} ({business.reviews?.length || 0})
+                      </span>
                     </div>
-                    <Badge className='mt-2 sm:mt-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 sm:px-3 py-1 text-xs rounded-full shadow-md animate-pulse'>
+                    <Badge className='mt-2 sm:mt-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 sm:px-3 py-1 text-xs rounded-full shadow-md select-none'>
                       <div className='flex items-center gap-1 sm:gap-2'>
-                        <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-ping' />
+                        <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full' />
                         Open Now
                       </div>
                     </Badge>
@@ -381,22 +386,22 @@ function businessDetailsPage() {
                 </div>
 
                 {/* Contact Info */}
-                <div className='space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300'>
+                <div className='space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 select-text'>
                   {(business as any).address && (
                     <div className='flex items-start gap-2'>
-                      <MapPin className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5' />
-                      <span className='break-words'>{(business as any).address}</span>
+                      <MapPin className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5 select-none' />
+                      <span className='break-words select-text'>{(business as any).address}</span>
                     </div>
                   )}
                   {business.email && (
                     <div className='flex items-center gap-2'>
-                      <Globe className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0' />
-                      <span className='break-all'>{business.email}</span>
+                      <Globe className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 select-none' />
+                      <span className='break-all select-text'>{business.email}</span>
                     </div>
                   )}
                   <div className='flex items-start gap-2'>
-                    <Clock className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5' />
-                    <span>
+                    <Clock className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5 select-none' />
+                    <span className='select-text'>
                       {(business as any).openingHours
                         ? `Monday-Wednesday: ${(business as any).openingHours['Mon'] || '9AM-6PM'}, Thursday-Friday: ${(business as any).openingHours['Thu'] || '9AM-6PM'}, Saturday: ${(business as any).openingHours['Sat'] || '10AM-4PM'}, Sunday: ${(business as any).openingHours['Sun'] || 'Closed'}`
                         : 'Monday-Saturday: 9AM-6PM, Sunday: Closed'}
@@ -404,10 +409,16 @@ function businessDetailsPage() {
                   </div>
                   {business.socialLinks && business.socialLinks.length > 0 && (
                     <div className='flex items-center gap-2'>
-                      <Globe className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0' />
+                      <Globe className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 select-none' />
                       <div className='flex gap-2 flex-wrap'>
                         {business.socialLinks.map((link, index) => (
-                          <a key={index} href={link.url} target='_blank' rel='noopener noreferrer' className='text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 capitalize text-xs sm:text-sm'>
+                          <a
+                            key={index}
+                            href={link.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 capitalize text-xs sm:text-sm select-text'
+                          >
                             {link.platform}
                           </a>
                         ))}
@@ -415,19 +426,19 @@ function businessDetailsPage() {
                     </div>
                   )}
                 </div>
-                <Button
+                {/* <Button
                   buttonText={{ plainText: 'Book Appointment' }}
                   variant='contained'
                   className='w-full sm:w-auto bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 sm:px-8 py-3 h-12 sm:h-14 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 animate-glow touch-manipulation'
-                  /* oncLick: push client to book a promoted service */
-                />
+                 
+                /> */}
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Tabs Navigation */}
-        <div className='mx-auto max-w-4xl rounded-lg sm:rounded-xl border border-teal-100/50 dark:border-gray-700/50 shadow-lg sticky top-0 sm:top-4 z-30 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
+        <div className='mx-auto max-w-4xl rounded-lg sm:rounded-xl border border-teal-100/50 dark:border-gray-700/50 shadow-lg sticky top-0 sm:top-4 z-30 bg-white/98 dark:bg-gray-800/98 animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
           <nav className='flex justify-center p-0.5 sm:p-1 lg:p-2'>
             <div className='flex w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 sm:p-1 gap-0.5 sm:gap-1 overflow-x-auto scrollbar-thin'>
               {getTabsWithTranslation(t).map(tab => (
@@ -533,7 +544,9 @@ function businessDetailsPage() {
                               size='lg'
                             />
                             <div className='flex-1 min-w-0'>
-                              <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-1'>{branch.name}</h3>
+                              <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-1'>
+                                {branch.name}
+                              </h3>
                               <div className='space-y-2 text-sm text-gray-600 dark:text-gray-300'>
                                 <div className='flex items-center gap-2'>
                                   <MapPin className='w-4 h-4 flex-shrink-0' />
@@ -551,7 +564,9 @@ function businessDetailsPage() {
                                 </div>
                               </div>
                               <div className='mt-3 flex items-center justify-between'>
-                                <span className='text-sm text-teal-600 dark:text-teal-400 font-medium'>View Details →</span>
+                                <span className='text-sm text-teal-600 dark:text-teal-400 font-medium'>
+                                  View Details →
+                                </span>
                                 <div className='flex gap-1'>
                                   {[...Array(5)].map((_, i) => (
                                     <Star key={i} className='w-3 h-3 fill-yellow-400 text-yellow-400' />
@@ -573,7 +588,7 @@ function businessDetailsPage() {
                                         src={imageUrl}
                                         alt={`${branch.name} preview ${imageIndex + 1}`}
                                         className='w-full h-full object-cover'
-                                        onError={(e) => {
+                                        onError={e => {
                                           const target = e.target as HTMLImageElement
                                           target.src = '/images/placeholder-image.jpg'
                                         }}
@@ -638,10 +653,15 @@ function businessDetailsPage() {
                       <div className='text-4xl font-bold text-gray-900'>{business.rating || 0}</div>
                       <div className='flex items-center justify-center mt-1'>
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-4 h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                          />
                         ))}{' '}
                       </div>
-                      <div className='text-sm text-gray-600 mt-1'>{business.reviews?.length || 0} review{(business.reviews?.length || 0) !== 1 ? 's' : ''}</div>
+                      <div className='text-sm text-gray-600 mt-1'>
+                        {business.reviews?.length || 0} review{(business.reviews?.length || 0) !== 1 ? 's' : ''}
+                      </div>
                     </div>
                     <div className='flex-1 space-y-2'>
                       {[5, 4, 3, 2, 1].map(rating => (
@@ -666,47 +686,51 @@ function businessDetailsPage() {
 
               {/* Individual Reviews */}
               <div className='space-y-6'>
-                {businessReview().length > 0 ? businessReview().map((review, index) => (
-                  <Card
-                    key={review.id || index}
-                    className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
-                    style={{
-                      animationDelay: `${0.4 + index * 0.1}s`,
-                      animationFillMode: 'forwards'
-                    }}
-                  >
-                    <CardContent className='p-4'>
-                      <div className='flex items-start gap-3'>
-                        <div className='w-10 h-10 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full flex items-center justify-center'>
-                          <span className='text-sm font-medium text-teal-700'>
-                            {review.authorName
-                              .split(' ')
-                              .map(n => n[0])
-                              .join('')}
-                          </span>
-                        </div>
-                        <div className='flex-1'>
-                          <div className='flex items-center gap-2 mb-2'>
-                            <span className='font-medium text-gray-900'>{review.authorName}</span>
-                            <span className='text-sm text-gray-500'>{format(review.date, 'MMM dd, yyyy')}</span>
+                {businessReview().length > 0 ? (
+                  businessReview().map((review, index) => (
+                    <Card
+                      key={review.id || index}
+                      className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                      style={{
+                        animationDelay: `${0.4 + index * 0.1}s`,
+                        animationFillMode: 'forwards'
+                      }}
+                    >
+                      <CardContent className='p-4'>
+                        <div className='flex items-start gap-3'>
+                          <div className='w-10 h-10 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full flex items-center justify-center'>
+                            <span className='text-sm font-medium text-teal-700'>
+                              {review.authorName
+                                .split(' ')
+                                .map(n => n[0])
+                                .join('')}
+                            </span>
                           </div>
-                          <div className='flex items-center mb-2'>
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${
-                                  i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                                }`}
-                              />
-                            ))}
-                            <span className='ml-2 text-sm text-gray-600'>{review.rating}/5</span>
+                          <div className='flex-1'>
+                            <div className='flex items-center gap-2 mb-2'>
+                              <span className='font-medium text-gray-900'>{review.authorName}</span>
+                              <span className='text-sm text-gray-500'>{format(review.date, 'MMM dd, yyyy')}</span>
+                            </div>
+                            <div className='flex items-center mb-2'>
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-4 h-4 ${
+                                    i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                              <span className='ml-2 text-sm text-gray-600'>{review.rating}/5</span>
+                            </div>
+                            <p className='text-gray-700 dark:[color:rgb(55_65_81)] text-sm leading-relaxed'>
+                              {review.comment}
+                            </p>
                           </div>
-                          <p className='text-gray-700 dark:[color:rgb(55_65_81)] text-sm leading-relaxed'>{review.comment}</p>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )) : (
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
                   <Card className='shadow-sm opacity-0 animate-[fadeInUp_0.6s_ease-out_0.4s_forwards]'>
                     <CardContent className='p-8 text-center'>
                       <div className='text-gray-400 mb-3'>
@@ -735,7 +759,9 @@ function businessDetailsPage() {
 
                     <P
                       stringProps={{
-                        plainText: business.description || `${business.name} is committed to providing exceptional services in a welcoming, professional environment. Our experienced team is passionate about their craft and dedicated to helping every client look and feel their best.`
+                        plainText:
+                          business.description ||
+                          `${business.name} is committed to providing exceptional services in a welcoming, professional environment. Our experienced team is passionate about their craft and dedicated to helping every client look and feel their best.`
                       }}
                       className='text-gray-700 leading-relaxed'
                     />
@@ -799,9 +825,7 @@ function businessDetailsPage() {
                       {branches.length > 0 && branches[0].mobile && (
                         <P stringProps={{ plainText: `Phone: ${branches[0].mobile}` }} />
                       )}
-                      {business.email && (
-                        <P stringProps={{ plainText: `Email: ${business.email}` }} />
-                      )}
+                      {business.email && <P stringProps={{ plainText: `Email: ${business.email}` }} />}
                       {business.socialLinks && business.socialLinks.length > 0 && (
                         <div className='flex items-center gap-4 mt-3'>
                           <span className='font-medium'>Follow us:</span>

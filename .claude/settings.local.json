@@ -12,7 +12,8 @@
       "Bash(timeout 10 npm run dev)",
       "Bash(node:*)",
       "Bash(cat:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": [],
     "ask": []
