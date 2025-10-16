@@ -74,10 +74,17 @@ const BranchMapView = ({ branch }: BranchMapViewProps) => {
       onLoad={onMapLoad}
     >
       <MarkerF position={center} icon={markerIcon} title={branch.name}>
-        <InfoWindowF position={center}>
-          <div className='text-center p-2'>
-            <h3 className='font-semibold text-gray-900'>{branch.name}</h3>
-            <p className='text-sm text-gray-600 mt-1'>{branch.address}</p>
+        <InfoWindowF
+          position={center}
+          options={{
+            maxWidth: 250,
+            pixelOffset: new google.maps.Size(0, 0),
+            headerDisabled: true
+          }}
+        >
+          <div className='p-3'>
+            <h3 className='font-semibold text-gray-900 text-sm mb-1'>{branch.name}</h3>
+            <p className='text-xs text-gray-600 leading-relaxed'>{branch.address}</p>
           </div>
         </InfoWindowF>
       </MarkerF>

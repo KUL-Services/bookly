@@ -322,106 +322,110 @@ const StaffManagement = () => {
                 </Typography>
               </div>
             ) : (
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell>Mobile</TableCell>
-                    <TableCell>Assigned Branches</TableCell>
-                    <TableCell>Assigned Services</TableCell>
-                    <TableCell>Member Since</TableCell>
-                    <TableCell align='center'>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {staff.map(member => (
-                    <TableRow key={member.id} hover>
-                      <TableCell>
-                        <div className='flex items-center gap-3'>
-                          <Avatar>
-                            {member?.name
-                              ?.split(' ')
-                              .map(n => n[0])
-                              .join('')
-                              .toUpperCase()}
-                          </Avatar>
-                          <Typography variant='subtitle2'>{member.name}</Typography>
-                        </div>
-                      </TableCell>
-                      <TableCell>{member.mobile || 'No mobile number'}</TableCell>
-                      <TableCell>
-                        <div className='flex flex-wrap gap-1'>
-                          {member.branchId ? (
-                            (() => {
-                              const branch = branches.find(b => b.id === member.branchId)
-                              return branch ? (
+              <div className='overflow-x-auto'>
+                <Table sx={{ minWidth: { xs: 700, md: 'auto' } }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Name</TableCell>
+                      <TableCell>Mobile</TableCell>
+                      <TableCell>Assigned Branches</TableCell>
+                      <TableCell>Assigned Services</TableCell>
+                      <TableCell>Member Since</TableCell>
+                      <TableCell align='center'>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {staff.map(member => (
+                      <TableRow key={member.id} hover>
+                        <TableCell>
+                          <div className='flex items-center gap-3' style={{ minWidth: 150 }}>
+                            <Avatar>
+                              {member?.name
+                                ?.split(' ')
+                                .map(n => n[0])
+                                .join('')
+                                .toUpperCase()}
+                            </Avatar>
+                            <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{member.name}</Typography>
+                          </div>
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{member.mobile || 'No mobile number'}</TableCell>
+                        <TableCell>
+                          <div className='flex flex-wrap gap-1' style={{ minWidth: 120 }}>
+                            {member.branchId ? (
+                              (() => {
+                                const branch = branches.find(b => b.id === member.branchId)
+                                return branch ? (
+                                  <Chip
+                                    key={branch.id}
+                                    label={branch.name}
+                                    size='small'
+                                    color='secondary'
+                                    variant='outlined'
+                                  />
+                                ) : (
+                                  <Typography variant='body2' color='textSecondary'>
+                                    Branch not found
+                                  </Typography>
+                                )
+                              })()
+                            ) : (
+                              <Typography variant='body2' color='textSecondary'>
+                                No branch assigned
+                              </Typography>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex flex-wrap gap-1' style={{ minWidth: 120 }}>
+                            {member.services && member.services.length > 0 ? (
+                              member.services.map(service => (
                                 <Chip
-                                  key={branch.id}
-                                  label={branch.name}
+                                  key={service.id}
+                                  label={service.name}
                                   size='small'
-                                  color='secondary'
+                                  color='primary'
                                   variant='outlined'
                                 />
+                              ))
+                            ) : (
+                              <Typography variant='body2' color='textSecondary'>
+                                No services assigned
+                              </Typography>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(member.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell align='center'>
+                          <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                            <IconButton
+                              size='small'
+                              onClick={() => {
+                                setSelectedStaff(member)
+                                setEditDialogOpen(true)
+                              }}
+                            >
+                              <i className='ri-edit-line' />
+                            </IconButton>
+                            <IconButton
+                              size='small'
+                              color='error'
+                              onClick={() => handleDeleteStaff(member.id)}
+                              disabled={actionLoading === `delete-${member.id}`}
+                            >
+                              {actionLoading === `delete-${member.id}` ? (
+                                <CircularProgress size={16} />
                               ) : (
-                                <Typography variant='body2' color='textSecondary'>
-                                  Branch not found
-                                </Typography>
-                              )
-                            })()
-                          ) : (
-                            <Typography variant='body2' color='textSecondary'>
-                              No branch assigned
-                            </Typography>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex flex-wrap gap-1'>
-                          {member.services && member.services.length > 0 ? (
-                            member.services.map(service => (
-                              <Chip
-                                key={service.id}
-                                label={service.name}
-                                size='small'
-                                color='primary'
-                                variant='outlined'
-                              />
-                            ))
-                          ) : (
-                            <Typography variant='body2' color='textSecondary'>
-                              No services assigned
-                            </Typography>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{new Date(member.createdAt).toLocaleDateString()}</TableCell>
-                      <TableCell align='center'>
-                        <IconButton
-                          size='small'
-                          onClick={() => {
-                            setSelectedStaff(member)
-                            setEditDialogOpen(true)
-                          }}
-                        >
-                          <i className='ri-edit-line' />
-                        </IconButton>
-                        <IconButton
-                          size='small'
-                          color='error'
-                          onClick={() => handleDeleteStaff(member.id)}
-                          disabled={actionLoading === `delete-${member.id}`}
-                        >
-                          {actionLoading === `delete-${member.id}` ? (
-                            <CircularProgress size={16} />
-                          ) : (
-                            <i className='ri-delete-bin-line' />
-                          )}
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                                <i className='ri-delete-bin-line' />
+                              )}
+                            </IconButton>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

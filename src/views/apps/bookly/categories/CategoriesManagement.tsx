@@ -87,40 +87,44 @@ const CategoriesManagement = () => {
                 </Typography>
               </div>
             ) : (
-              <Table size='small'>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Category</TableCell>
-                    <TableCell>Slug</TableCell>
-                    <TableCell>Created</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {categories.map((category) => (
-                    <TableRow key={category.id} hover>
-                      <TableCell className='flex items-center gap-3'>
-                        <Avatar
-                          src={category.image}
-                          className='w-8 h-8'
-                        >
-                          {category.icon || category.name.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <div>
-                          <Typography variant='subtitle2'>{category.name}</Typography>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant='body2' color='textSecondary'>
-                          {category.slug || category.name.toLowerCase().replace(/\s+/g, '-')}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(category.createdAt).toLocaleDateString()}
-                      </TableCell>
+              <div className='overflow-x-auto'>
+                <Table size='small' sx={{ minWidth: { xs: 500, md: 'auto' } }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Category</TableCell>
+                      <TableCell>Slug</TableCell>
+                      <TableCell>Created</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {categories.map((category) => (
+                      <TableRow key={category.id} hover>
+                        <TableCell>
+                          <div className='flex items-center gap-3'>
+                            <Avatar
+                              src={category.image}
+                              className='w-8 h-8'
+                            >
+                              {category.icon || category.name.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <div>
+                              <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{category.name}</Typography>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant='body2' color='textSecondary' sx={{ whiteSpace: 'nowrap' }}>
+                            {category.slug || category.name.toLowerCase().replace(/\s+/g, '-')}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                          {new Date(category.createdAt).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

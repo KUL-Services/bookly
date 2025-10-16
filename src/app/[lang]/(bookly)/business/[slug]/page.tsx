@@ -74,7 +74,7 @@ function businessDetailsPage() {
             rating: mockBusinessData.rating,
             socialLinks: mockBusinessData.socialLinks,
             services: mockBusinessData.services,
-            branches: mockBusinessData.branches,
+            branches: mockBusinessData.fullBranches || mockBusinessData.branches,
             reviews: mockBusinessData.reviews as any,
             logoUrl: mockBusinessData.logoUrl,
             coverImageUrl: mockBusinessData.coverImageUrl

@@ -17,6 +17,8 @@ import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import InputAdornment from '@mui/material/InputAdornment'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import { useTheme } from '@mui/material/styles'
 
 // Types
 import type { Category, Branch, CreateServiceRequest } from '@/lib/api'
@@ -36,6 +38,9 @@ interface Props {
 }
 
 const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: Props) => {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
+
   const [formData, setFormData] = useState<CreateServiceRequest>({
     name: '',
     description: '',
@@ -106,7 +111,7 @@ const CreateServiceDialog = ({ open, onClose, onSubmit, categories, branches }: 
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth fullScreen={fullScreen}>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Create New Service</DialogTitle>
         <DialogContent>

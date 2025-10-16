@@ -238,112 +238,118 @@ const BranchesManagement = () => {
                 </Typography>
               </div>
             ) : (
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Branch Name</TableCell>
-                    <TableCell>Address</TableCell>
-                    <TableCell>Mobile</TableCell>
-                    <TableCell>Gallery</TableCell>
-                    <TableCell>Services</TableCell>
-                    <TableCell>Staff</TableCell>
-                    <TableCell>Created</TableCell>
-                    <TableCell align='center'>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {branches.map((branch) => (
-                    <TableRow key={branch.id} hover>
-                      <TableCell>
-                        <Typography variant='subtitle2'>{branch.name}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        {branch.address || 'No address provided'}
-                      </TableCell>
-                      <TableCell>
-                        {branch.mobile || 'No mobile number'}
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex flex-wrap gap-1'>
-                          {branch.galleryUrls?.length ? (
-                            <div className='flex gap-1 max-w-[200px] overflow-x-auto'>
-                              {branch.galleryUrls.slice(0, 3).map((imageUrl, index) => (
-                                <img
-                                  key={index}
-                                  src={imageUrl}
-                                  alt={`Branch ${branch.name} - Image ${index + 1}`}
-                                  className='w-12 h-12 object-cover rounded-md border'
-                                />
-                              ))}
-                              {branch.galleryUrls.length > 3 && (
-                                <div className='w-12 h-12 bg-gray-100 rounded-md border flex items-center justify-center text-xs text-gray-600'>
-                                  +{branch.galleryUrls.length - 3}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <Typography variant='body2' color='textSecondary'>
-                              No images
-                            </Typography>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex flex-wrap gap-1'>
-                          {branch.services?.length ? (
-                            branch.services.map((service) => (
-                              <Chip key={service.id} label={service.name} size='small' variant='outlined' />
-                            ))
-                          ) : (
-                            <Typography variant='body2' color='textSecondary'>
-                              No services
-                            </Typography>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex flex-wrap gap-1'>
-                          {branch.staff?.length ? (
-                            branch.staff.map((staff) => (
-                              <Chip key={staff.id} label={staff.name} size='small' color='primary' variant='outlined' />
-                            ))
-                          ) : (
-                            <Typography variant='body2' color='textSecondary'>
-                              No staff assigned
-                            </Typography>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(branch.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell align='center'>
-                        <IconButton
-                          size='small'
-                          onClick={() => {
-                            setSelectedBranch(branch)
-                            setEditDialogOpen(true)
-                          }}
-                        >
-                          <i className='ri-edit-line' />
-                        </IconButton>
-                        <IconButton
-                          size='small'
-                          color='error'
-                          onClick={() => handleDeleteBranch(branch.id)}
-                          disabled={actionLoading === `delete-${branch.id}`}
-                        >
-                          {actionLoading === `delete-${branch.id}` ? (
-                            <CircularProgress size={16} />
-                          ) : (
-                            <i className='ri-delete-bin-line' />
-                          )}
-                        </IconButton>
-                      </TableCell>
+              <div className='overflow-x-auto'>
+                <Table sx={{ minWidth: { xs: 900, md: 'auto' } }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Branch Name</TableCell>
+                      <TableCell>Address</TableCell>
+                      <TableCell>Mobile</TableCell>
+                      <TableCell>Gallery</TableCell>
+                      <TableCell>Services</TableCell>
+                      <TableCell>Staff</TableCell>
+                      <TableCell>Created</TableCell>
+                      <TableCell align='center'>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {branches.map((branch) => (
+                      <TableRow key={branch.id} hover>
+                        <TableCell>
+                          <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{branch.name}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant='body2' sx={{ maxWidth: 180, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {branch.address || 'No address provided'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                          {branch.mobile || 'No mobile number'}
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex flex-wrap gap-1'>
+                            {branch.galleryUrls?.length ? (
+                              <div className='flex gap-1' style={{ minWidth: 140 }}>
+                                {branch.galleryUrls.slice(0, 3).map((imageUrl, index) => (
+                                  <img
+                                    key={index}
+                                    src={imageUrl}
+                                    alt={`Branch ${branch.name} - Image ${index + 1}`}
+                                    className='w-12 h-12 object-cover rounded-md border'
+                                  />
+                                ))}
+                                {branch.galleryUrls.length > 3 && (
+                                  <div className='w-12 h-12 bg-gray-100 rounded-md border flex items-center justify-center text-xs text-gray-600'>
+                                    +{branch.galleryUrls.length - 3}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <Typography variant='body2' color='textSecondary'>
+                                No images
+                              </Typography>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex flex-wrap gap-1' style={{ minWidth: 120 }}>
+                            {branch.services?.length ? (
+                              branch.services.map((service) => (
+                                <Chip key={service.id} label={service.name} size='small' variant='outlined' />
+                              ))
+                            ) : (
+                              <Typography variant='body2' color='textSecondary'>
+                                No services
+                              </Typography>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex flex-wrap gap-1' style={{ minWidth: 120 }}>
+                            {branch.staff?.length ? (
+                              branch.staff.map((staff) => (
+                                <Chip key={staff.id} label={staff.name} size='small' color='primary' variant='outlined' />
+                              ))
+                            ) : (
+                              <Typography variant='body2' color='textSecondary'>
+                                No staff assigned
+                              </Typography>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                          {new Date(branch.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell align='center'>
+                          <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                            <IconButton
+                              size='small'
+                              onClick={() => {
+                                setSelectedBranch(branch)
+                                setEditDialogOpen(true)
+                              }}
+                            >
+                              <i className='ri-edit-line' />
+                            </IconButton>
+                            <IconButton
+                              size='small'
+                              color='error'
+                              onClick={() => handleDeleteBranch(branch.id)}
+                              disabled={actionLoading === `delete-${branch.id}`}
+                            >
+                              {actionLoading === `delete-${branch.id}` ? (
+                                <CircularProgress size={16} />
+                              ) : (
+                                <i className='ri-delete-bin-line' />
+                              )}
+                            </IconButton>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

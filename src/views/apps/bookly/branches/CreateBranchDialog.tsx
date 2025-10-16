@@ -16,6 +16,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import { useTheme } from '@mui/material/styles'
 
 // Types
 import type { Service, CreateBranchRequest } from '@/lib/api'
@@ -34,6 +36,9 @@ interface Props {
 }
 
 const CreateBranchDialog = ({ open, onClose, onSubmit, services }: Props) => {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
+
   const [formData, setFormData] = useState<CreateBranchRequest>({
     name: '',
     address: '',
@@ -91,7 +96,7 @@ const CreateBranchDialog = ({ open, onClose, onSubmit, services }: Props) => {
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth fullScreen={fullScreen}>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Create New Branch</DialogTitle>
         <DialogContent>

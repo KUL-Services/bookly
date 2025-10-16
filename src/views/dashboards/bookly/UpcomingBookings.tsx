@@ -25,45 +25,47 @@ const UpcomingBookings = ({ rows, lang }: { rows: Booking[]; lang?: string }) =>
     <Card>
       <CardHeader title='Upcoming Bookings' subheader='Based on mock Bookly data' />
       <CardContent>
-        <Table size='small' aria-label='Upcoming bookings table'>
-          <caption>Upcoming bookings with branch information</caption>
-          <TableHead>
-            <TableRow>
-              <TableCell>Business</TableCell>
-              <TableCell>Branch</TableCell>
-              <TableCell>Service</TableCell>
-              <TableCell>Staff</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Time</TableCell>
-              <TableCell align='right'>Price</TableCell>
-              <TableCell>Status</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map(row => (
-              <TableRow key={row.id} hover>
-                <TableCell>{row.businessName}</TableCell>
-                <TableCell>
-                  {lang ? (
-                    <Link href={`/${lang}/apps/bookly/businesses/${row.businessId}/branches/${row.branchId}`} className='text-primary'>
-                      {row.branchName}
-                    </Link>
-                  ) : (
-                    row.branchName
-                  )}
-                </TableCell>
-                <TableCell>{row.serviceName}</TableCell>
-                <TableCell>{row.staffMemberName}</TableCell>
-                <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
-                <TableCell>{row.time}</TableCell>
-                <TableCell align='right'>${row.price}</TableCell>
-                <TableCell>
-                  <Chip size='small' variant='tonal' label={row.status} color={statusColor[row.status]} />
-                </TableCell>
+        <div className='overflow-x-auto'>
+          <Table size='small' aria-label='Upcoming bookings table' sx={{ minWidth: { xs: 800, md: 'auto' } }}>
+            <caption>Upcoming bookings with branch information</caption>
+            <TableHead>
+              <TableRow>
+                <TableCell>Business</TableCell>
+                <TableCell>Branch</TableCell>
+                <TableCell>Service</TableCell>
+                <TableCell>Staff</TableCell>
+                <TableCell>Date</TableCell>
+                <TableCell>Time</TableCell>
+                <TableCell align='right'>Price</TableCell>
+                <TableCell>Status</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {rows.map(row => (
+                <TableRow key={row.id} hover>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.businessName}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                    {lang ? (
+                      <Link href={`/${lang}/apps/bookly/businesses/${row.businessId}/branches/${row.branchId}`} className='text-primary'>
+                        {row.branchName}
+                      </Link>
+                    ) : (
+                      row.branchName
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.serviceName}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.staffMemberName}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString()}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.time}</TableCell>
+                  <TableCell align='right' sx={{ whiteSpace: 'nowrap' }}>${row.price}</TableCell>
+                  <TableCell>
+                    <Chip size='small' variant='tonal' label={row.status} color={statusColor[row.status]} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   )

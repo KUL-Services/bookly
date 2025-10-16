@@ -101,59 +101,65 @@ const BusinessManagement = () => {
                 </Typography>
               </div>
             ) : (
-              <Table size='small'>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Business</TableCell>
-                    <TableCell>Email</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Created</TableCell>
-                    <TableCell align='center'>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {businesses.map((business) => (
-                    <TableRow key={business.id} hover>
-                      <TableCell className='flex items-center gap-3'>
-                        <Avatar
-                          alt={business.name}
-                          src={business.logoUrl}
-                          className='w-10 h-10'
-                        >
-                          {business.name.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <div>
-                          <Typography variant='subtitle2'>{business.name}</Typography>
-                          {business.description && (
-                            <Typography variant='caption' color='textSecondary' className='block max-w-xs truncate'>
-                              {business.description}
-                            </Typography>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{business.email || 'No email'}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={business.isApproved ? 'Approved' : 'Pending'}
-                          color={business.isApproved ? 'success' : 'warning'}
-                          size='small'
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {new Date(business.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell align='center'>
-                        <IconButton size='small'>
-                          <i className='ri-eye-line' />
-                        </IconButton>
-                        <IconButton size='small'>
-                          <i className='ri-edit-line' />
-                        </IconButton>
-                      </TableCell>
+              <div className='overflow-x-auto'>
+                <Table size='small' sx={{ minWidth: { xs: 600, md: 'auto' } }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Business</TableCell>
+                      <TableCell>Email</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Created</TableCell>
+                      <TableCell align='center'>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {businesses.map((business) => (
+                      <TableRow key={business.id} hover>
+                        <TableCell>
+                          <div className='flex items-center gap-3' style={{ minWidth: 200 }}>
+                            <Avatar
+                              alt={business.name}
+                              src={business.logoUrl}
+                              className='w-10 h-10'
+                            >
+                              {business.name.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <div>
+                              <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{business.name}</Typography>
+                              {business.description && (
+                                <Typography variant='caption' color='textSecondary' sx={{ display: 'block', maxWidth: 180, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {business.description}
+                                </Typography>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{business.email || 'No email'}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={business.isApproved ? 'Approved' : 'Pending'}
+                            color={business.isApproved ? 'success' : 'warning'}
+                            size='small'
+                          />
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                          {new Date(business.createdAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell align='center'>
+                          <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                            <IconButton size='small'>
+                              <i className='ri-eye-line' />
+                            </IconButton>
+                            <IconButton size='small'>
+                              <i className='ri-edit-line' />
+                            </IconButton>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

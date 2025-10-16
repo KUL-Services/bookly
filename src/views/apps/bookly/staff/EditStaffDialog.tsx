@@ -16,6 +16,8 @@ import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import { useTheme } from '@mui/material/styles'
 
 // Types
 import type { Staff, UpdateStaffRequest, Branch, Service } from '@/lib/api'
@@ -34,6 +36,8 @@ interface Props {
 }
 
 const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches, services = [] }: Props) => {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const [formData, setFormData] = useState<UpdateStaffRequest>({
     id: staff.id,
     name: staff.name,
@@ -94,7 +98,7 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches, services = 
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth='sm' fullWidth fullScreen={fullScreen}>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Edit Staff Member</DialogTitle>
         <DialogContent>

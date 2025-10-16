@@ -263,50 +263,50 @@ const ReviewsManagement = () => {
     <Grid container spacing={6}>
       {/* Statistics Cards */}
       <Grid item xs={12}>
-        <Grid container spacing={4}>
-          <Grid item xs={12} sm={6} md={3}>
+        <Grid container spacing={{ xs: 3, sm: 4 }}>
+          <Grid item xs={6} sm={6} md={3}>
             <Card>
-              <CardContent className='text-center'>
-                <Typography variant='h4' color='primary'>
+              <CardContent className='text-center' sx={{ py: { xs: 2, sm: 3 } }}>
+                <Typography variant='h4' color='primary' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.total}
                 </Typography>
-                <Typography variant='body2' color='textSecondary'>
+                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   Total Reviews
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <Card>
-              <CardContent className='text-center'>
-                <Typography variant='h4' color='success.main'>
+              <CardContent className='text-center' sx={{ py: { xs: 2, sm: 3 } }}>
+                <Typography variant='h4' color='success.main' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.avgRating.toFixed(1)}
                 </Typography>
-                <Typography variant='body2' color='textSecondary'>
+                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   Average Rating
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <Card>
-              <CardContent className='text-center'>
-                <Typography variant='h4' color='success.main'>
+              <CardContent className='text-center' sx={{ py: { xs: 2, sm: 3 } }}>
+                <Typography variant='h4' color='success.main' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.positive}
                 </Typography>
-                <Typography variant='body2' color='textSecondary'>
+                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   Positive Reviews
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6} md={3}>
             <Card>
-              <CardContent className='text-center'>
-                <Typography variant='h4' color='error.main'>
+              <CardContent className='text-center' sx={{ py: { xs: 2, sm: 3 } }}>
+                <Typography variant='h4' color='error.main' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.negative}
                 </Typography>
-                <Typography variant='body2' color='textSecondary'>
+                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   Negative Reviews
                 </Typography>
               </CardContent>
@@ -354,90 +354,92 @@ const ReviewsManagement = () => {
                 </Typography>
               </div>
             ) : (
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Customer</TableCell>
-                    <TableCell>Service</TableCell>
-                    <TableCell>Rating</TableCell>
-                    <TableCell>Comment</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell align='center'>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredReviews.map((review) => (
-                    <TableRow key={review.id} hover>
-                      <TableCell>
-                        <Box className='flex items-center gap-3'>
-                          <Avatar>
-                            {review.user.firstName[0]}{review.user.lastName[0]}
-                          </Avatar>
-                          <div>
-                            <Typography variant='subtitle2'>
-                              {review.user.firstName} {review.user.lastName}
-                            </Typography>
-                            <Typography variant='caption' color='textSecondary'>
-                              {review.user.email}
-                            </Typography>
-                            {review.user.isVerified && (
-                              <Chip label='Verified' size='small' color='success' className='ml-1' />
-                            )}
-                          </div>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <Typography variant='subtitle2'>{review.service.name}</Typography>
-                          <Typography variant='caption' color='textSecondary'>
-                            {review.service.location}
-                          </Typography>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Box className='flex items-center gap-2'>
-                          <Rating value={review.rating} readOnly size='small' />
-                          <Chip
-                            label={`${review.rating}/5`}
-                            size='small'
-                            color={getRatingColor(review.rating) as any}
-                          />
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant='body2' className='max-w-xs line-clamp-3'>
-                          {review.comment}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant='body2'>
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align='center'>
-                        <Box className='flex gap-1'>
-                          <IconButton
-                            size='small'
-                            color='primary'
-                            onClick={() => handleReplyToReview(review.id)}
-                            title='Reply to review'
-                          >
-                            <i className='ri-reply-line' />
-                          </IconButton>
-                          <IconButton
-                            size='small'
-                            color='warning'
-                            onClick={() => handleFlagReview(review.id)}
-                            title='Flag review'
-                          >
-                            <i className='ri-flag-line' />
-                          </IconButton>
-                        </Box>
-                      </TableCell>
+              <div className='overflow-x-auto'>
+                <Table sx={{ minWidth: { xs: 800, md: 'auto' } }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Customer</TableCell>
+                      <TableCell>Service</TableCell>
+                      <TableCell>Rating</TableCell>
+                      <TableCell>Comment</TableCell>
+                      <TableCell>Date</TableCell>
+                      <TableCell align='center'>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {filteredReviews.map((review) => (
+                      <TableRow key={review.id} hover>
+                        <TableCell>
+                          <Box className='flex items-center gap-3' sx={{ minWidth: 180 }}>
+                            <Avatar>
+                              {review.user.firstName[0]}{review.user.lastName[0]}
+                            </Avatar>
+                            <div>
+                              <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>
+                                {review.user.firstName} {review.user.lastName}
+                              </Typography>
+                              <Typography variant='caption' color='textSecondary' sx={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
+                                {review.user.email}
+                              </Typography>
+                              {review.user.isVerified && (
+                                <Chip label='Verified' size='small' color='success' className='ml-1' />
+                              )}
+                            </div>
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ minWidth: 140 }}>
+                          <div>
+                            <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{review.service.name}</Typography>
+                            <Typography variant='caption' color='textSecondary' sx={{ whiteSpace: 'nowrap' }}>
+                              {review.service.location}
+                            </Typography>
+                          </div>
+                        </TableCell>
+                        <TableCell sx={{ minWidth: 180 }}>
+                          <Box className='flex items-center gap-2'>
+                            <Rating value={review.rating} readOnly size='small' />
+                            <Chip
+                              label={`${review.rating}/5`}
+                              size='small'
+                              color={getRatingColor(review.rating) as any}
+                            />
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant='body2' sx={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
+                            {review.comment}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                          <Typography variant='body2'>
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align='center'>
+                          <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                            <IconButton
+                              size='small'
+                              color='primary'
+                              onClick={() => handleReplyToReview(review.id)}
+                              title='Reply to review'
+                            >
+                              <i className='ri-reply-line' />
+                            </IconButton>
+                            <IconButton
+                              size='small'
+                              color='warning'
+                              onClick={() => handleFlagReview(review.id)}
+                              title='Flag review'
+                            >
+                              <i className='ri-flag-line' />
+                            </IconButton>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

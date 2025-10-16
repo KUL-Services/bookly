@@ -202,74 +202,78 @@ const ServicesManagement = () => {
                 </Typography>
               </div>
             ) : (
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Service Name</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Location</TableCell>
-                    <TableCell align='right'>Duration (min)</TableCell>
-                    <TableCell align='right'>Price ($)</TableCell>
-                    <TableCell>Categories</TableCell>
-                    <TableCell>Branches</TableCell>
-                    <TableCell align='center'>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {services.map((service) => (
-                    <TableRow key={service.id} hover>
-                      <TableCell>
-                        <Typography variant='subtitle2'>{service.name}</Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant='body2' className='max-w-xs truncate'>
-                          {service.description || 'No description'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>{service.location}</TableCell>
-                      <TableCell align='right'>{service.duration}</TableCell>
-                      <TableCell align='right'>${service.price}</TableCell>
-                      <TableCell>
-                        <div className='flex flex-wrap gap-1'>
-                          {service.categories?.map((category) => (
-                            <Chip key={category.id} label={category.name} size='small' variant='outlined' />
-                          )) || 'No categories'}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex flex-wrap gap-1'>
-                          {service.branches?.map((branch) => (
-                            <Chip key={branch.id} label={branch.name} size='small' variant='outlined' />
-                          )) || 'No branches'}
-                        </div>
-                      </TableCell>
-                      <TableCell align='center'>
-                        <IconButton
-                          size='small'
-                          onClick={() => {
-                            setSelectedService(service)
-                            setEditDialogOpen(true)
-                          }}
-                        >
-                          <i className='ri-edit-line' />
-                        </IconButton>
-                        <IconButton
-                          size='small'
-                          color='error'
-                          onClick={() => handleDeleteService(service.id)}
-                          disabled={actionLoading === `delete-${service.id}`}
-                        >
-                          {actionLoading === `delete-${service.id}` ? (
-                            <CircularProgress size={16} />
-                          ) : (
-                            <i className='ri-delete-bin-line' />
-                          )}
-                        </IconButton>
-                      </TableCell>
+              <div className='overflow-x-auto'>
+                <Table sx={{ minWidth: { xs: 800, md: 'auto' } }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Service Name</TableCell>
+                      <TableCell>Description</TableCell>
+                      <TableCell>Location</TableCell>
+                      <TableCell align='right'>Duration (min)</TableCell>
+                      <TableCell align='right'>Price ($)</TableCell>
+                      <TableCell>Categories</TableCell>
+                      <TableCell>Branches</TableCell>
+                      <TableCell align='center'>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHead>
+                  <TableBody>
+                    {services.map((service) => (
+                      <TableRow key={service.id} hover>
+                        <TableCell>
+                          <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{service.name}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant='body2' sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {service.description || 'No description'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{service.location}</TableCell>
+                        <TableCell align='right'>{service.duration}</TableCell>
+                        <TableCell align='right'>${service.price}</TableCell>
+                        <TableCell>
+                          <div className='flex flex-wrap gap-1' style={{ minWidth: 120 }}>
+                            {service.categories?.map((category) => (
+                              <Chip key={category.id} label={category.name} size='small' variant='outlined' />
+                            )) || 'No categories'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className='flex flex-wrap gap-1' style={{ minWidth: 120 }}>
+                            {service.branches?.map((branch) => (
+                              <Chip key={branch.id} label={branch.name} size='small' variant='outlined' />
+                            )) || 'No branches'}
+                          </div>
+                        </TableCell>
+                        <TableCell align='center'>
+                          <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                            <IconButton
+                              size='small'
+                              onClick={() => {
+                                setSelectedService(service)
+                                setEditDialogOpen(true)
+                              }}
+                            >
+                              <i className='ri-edit-line' />
+                            </IconButton>
+                            <IconButton
+                              size='small'
+                              color='error'
+                              onClick={() => handleDeleteService(service.id)}
+                              disabled={actionLoading === `delete-${service.id}`}
+                            >
+                              {actionLoading === `delete-${service.id}` ? (
+                                <CircularProgress size={16} />
+                              ) : (
+                                <i className='ri-delete-bin-line' />
+                              )}
+                            </IconButton>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>

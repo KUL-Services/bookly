@@ -16,6 +16,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
+import useMediaQuery from '@mui/material/useMediaQuery'
+import { useTheme } from '@mui/material/styles'
 
 // Types
 import type { Branch, Service, UpdateBranchRequest } from '@/lib/api'
@@ -35,6 +37,8 @@ interface Props {
 }
 
 const EditBranchDialog = ({ open, onClose, onSubmit, branch, services }: Props) => {
+  const theme = useTheme()
+  const fullScreen = useMediaQuery(theme.breakpoints.down('sm'))
   const [formData, setFormData] = useState<UpdateBranchRequest>({
     id: branch.id,
     name: branch.name,
@@ -97,7 +101,7 @@ const EditBranchDialog = ({ open, onClose, onSubmit, branch, services }: Props) 
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth='md' fullWidth fullScreen={fullScreen}>
       <form onSubmit={handleSubmit}>
         <DialogTitle>Edit Branch</DialogTitle>
         <DialogContent>
