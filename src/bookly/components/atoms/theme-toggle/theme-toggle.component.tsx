@@ -1,9 +1,9 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { Sun, Moon, Monitor, ChevronDown } from 'lucide-react'
+import { Sun, Moon, ChevronDown } from 'lucide-react'
 
-type Theme = 'light' | 'dark' | 'system'
+type Theme = 'light' | 'dark'
 
 const themeOptions = [
   {
@@ -15,17 +15,12 @@ const themeOptions = [
     value: 'dark' as Theme,
     label: 'Dark',
     icon: Moon
-  },
-  {
-    value: 'system' as Theme,
-    label: 'System',
-    icon: Monitor
   }
 ]
 
 const BooklyThemeToggle = () => {
   const [open, setOpen] = useState(false)
-  const [theme, setTheme] = useState<Theme>('system')
+  const [theme, setTheme] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
   const anchorRef = useRef<HTMLButtonElement>(null)
 
@@ -33,23 +28,25 @@ const BooklyThemeToggle = () => {
   useEffect(() => {
     setMounted(true)
 
-    // Get theme from localStorage or default to system
-    const savedTheme = (localStorage.getItem('theme') as Theme) || 'system'
-    setTheme(savedTheme)
-    applyTheme(savedTheme)
+    // Get theme from localStorage or detect from system preference
+    const savedTheme = localStorage.getItem('theme') as Theme
+    let initialTheme: Theme
+
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      initialTheme = savedTheme
+    } else {
+      // Detect system preference and set to light or dark
+      initialTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      localStorage.setItem('theme', initialTheme)
+    }
+
+    setTheme(initialTheme)
+    applyTheme(initialTheme)
   }, [])
 
   const applyTheme = (newTheme: Theme) => {
     const root = document.documentElement
-
-    if (newTheme === 'system') {
-      // Use system preference
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-      root.classList.toggle('dark', systemTheme === 'dark')
-    } else {
-      // Use explicit theme
-      root.classList.toggle('dark', newTheme === 'dark')
-    }
+    root.classList.toggle('dark', newTheme === 'dark')
   }
 
   const handleThemeChange = (newTheme: Theme) => {
@@ -68,26 +65,20 @@ const BooklyThemeToggle = () => {
   }
 
   const getCurrentIcon = () => {
-    if (!mounted) return Monitor // Default icon during SSR
+    if (!mounted) return Sun // Default icon during SSR
 
-    if (theme === 'system') {
-      return Monitor
-    } else if (theme === 'dark') {
-      return Moon
-    } else {
-      return Sun
-    }
+    return theme === 'dark' ? Moon : Sun
   }
 
   const getCurrentTheme = () => {
-    return themeOptions.find(option => option.value === theme) || themeOptions[2]
+    return themeOptions.find(option => option.value === theme) || themeOptions[0]
   }
 
   if (!mounted) {
     // Return a placeholder during SSR to avoid hydration mismatch
     return (
       <div className='flex items-center gap-2 px-3 py-2 rounded-lg opacity-50'>
-        <Monitor className='w-4 h-4' />
+        <Sun className='w-4 h-4' />
       </div>
     )
   }
