@@ -1,11 +1,59 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import initTranslations from '@/app/i18n/i18n'
 import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
 import { Button } from '@/bookly/components/molecules'
 import { KulIcon } from '@/bookly/components/atoms'
+import { StaffCalendarView } from './staff-calendar-view'
+import { mockStaff } from '@/bookly/data/mock-data'
 import type { Branch, Service, Staff } from '@/lib/api'
+import type { StaffMember, StaffAppointment } from '@/bookly/data/types'
+
+// Helper function to generate sample appointments for staff
+const generateSampleAppointments = (staffId: string): StaffAppointment[] => {
+  const today = new Date(2025, 9, 17)
+  const appointments: StaffAppointment[] = []
+  const services = ['Haircut', 'Color Treatment', 'Massage', 'Facial', 'Manicure', 'Training Session']
+  const customers = ['Ahmed Ali', 'Sara Mohamed', 'John Smith', 'Emma Davis', 'Michael Brown', 'Lisa Chen']
+
+  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+    const date = new Date(today)
+    date.setDate(date.getDate() + dayOffset)
+
+    const appointmentCount = Math.floor(Math.random() * 4) + 2 // 2-5 appointments per day
+
+    for (let i = 0; i < appointmentCount; i++) {
+      const hour = 9 + Math.floor(Math.random() * 8)
+      const minute = Math.random() > 0.5 ? '00' : '30'
+      const duration = [30, 60, 90][Math.floor(Math.random() * 3)]
+
+      const startTime = `${hour.toString().padStart(2, '0')}:${minute}`
+      const endHour = hour + Math.floor(duration / 60)
+      const endMinute = (parseInt(minute) + (duration % 60)).toString().padStart(2, '0')
+      const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute}`
+
+      let status: 'confirmed' | 'pending' | 'completed' | 'cancelled' = 'confirmed'
+      if (Math.random() > 0.9) status = 'cancelled'
+      else if (Math.random() > 0.8) status = 'pending'
+
+      appointments.push({
+        id: `apt-${staffId}-${dayOffset}-${i}`,
+        date,
+        startTime,
+        endTime,
+        serviceName: services[Math.floor(Math.random() * services.length)],
+        customerName: customers[Math.floor(Math.random() * customers.length)],
+        status
+      })
+    }
+  }
+
+  return appointments.sort((a, b) => {
+    if (a.date.getTime() !== b.date.getTime()) return a.date.getTime() - b.date.getTime()
+    return a.startTime.localeCompare(b.startTime)
+  })
+}
 
 // Dynamically import map component to avoid SSR issues
 const BranchMapView = dynamic(() => import('./branch-map-view'), {
@@ -25,6 +73,7 @@ interface BranchDetailsModalProps {
   businessImage?: string
   services?: Service[]
   staff?: Staff[]
+  staffMembers?: StaffMember[] // Optional: If provided, will be used for calendar view with full data
   allBranches?: Branch[]
   onBranchChange?: (branch: Branch) => void
   onBookService?: (serviceId: string) => void
@@ -38,11 +87,12 @@ export const BranchDetailsModal = ({
   businessImage,
   services = [],
   staff = [],
+  staffMembers,
   allBranches = [],
   onBranchChange,
   onBookService
 }: BranchDetailsModalProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'staff'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'staff' | 'calendar'>('overview')
   const params = useParams<{ lang: string }>()
   const [t, setT] = useState<any>(() => (key: string) => key)
 
@@ -64,6 +114,66 @@ export const BranchDetailsModal = ({
   )
 
   const branchStaff = staff.filter(member => member.branchId === branch.id)
+
+  // Convert API Staff to StaffMember format with schedule data
+  const branchStaffMembers = useMemo(() => {
+    // If custom staffMembers provided, use them
+    if (staffMembers && staffMembers.length > 0) {
+      return staffMembers.filter(member => member.branchId === branch.id)
+    }
+
+    // Convert branchStaff (from API) to StaffMember format with mock schedule data
+    if (branchStaff.length > 0) {
+      return branchStaff.map((apiStaff, index) => {
+        // Try to find matching mock staff for schedule data
+        const mockStaffMatch = mockStaff.find(m => m.branchId === branch.id && m.id === apiStaff.id)
+
+        // Get schedule based on index (cycle through different schedules)
+        const schedules = [
+          [
+            { dayOfWeek: 'Mon' as const, startTime: '08:00', endTime: '19:00', isAvailable: true },
+            { dayOfWeek: 'Tue' as const, startTime: '08:00', endTime: '19:00', isAvailable: true },
+            { dayOfWeek: 'Wed' as const, startTime: '08:00', endTime: '19:00', isAvailable: true },
+            { dayOfWeek: 'Thu' as const, startTime: '08:00', endTime: '20:00', isAvailable: true },
+            { dayOfWeek: 'Fri' as const, startTime: '08:00', endTime: '20:00', isAvailable: true },
+            { dayOfWeek: 'Sat' as const, startTime: '08:00', endTime: '18:00', isAvailable: true },
+            { dayOfWeek: 'Sun' as const, startTime: '10:00', endTime: '16:00', isAvailable: true }
+          ],
+          [
+            { dayOfWeek: 'Mon' as const, startTime: '09:00', endTime: '17:00', isAvailable: true },
+            { dayOfWeek: 'Tue' as const, startTime: '09:00', endTime: '17:00', isAvailable: true },
+            { dayOfWeek: 'Wed' as const, startTime: '09:00', endTime: '17:00', isAvailable: true },
+            { dayOfWeek: 'Thu' as const, startTime: '09:00', endTime: '18:00', isAvailable: true },
+            { dayOfWeek: 'Fri' as const, startTime: '09:00', endTime: '18:00', isAvailable: true },
+            { dayOfWeek: 'Sat' as const, startTime: '08:00', endTime: '16:00', isAvailable: true },
+            { dayOfWeek: 'Sun' as const, startTime: '10:00', endTime: '15:00', isAvailable: false }
+          ]
+        ]
+
+        const staffMember: StaffMember = {
+          id: apiStaff.id,
+          name: apiStaff.name,
+          title: 'Staff Member', // API doesn't have title, use generic
+          photo: apiStaff.profilePhotoUrl || '',
+          businessId: apiStaff.businessId || '',
+          branchId: apiStaff.branchId,
+          schedule: mockStaffMatch?.schedule || schedules[index % schedules.length],
+          appointments: mockStaffMatch?.appointments || generateSampleAppointments(apiStaff.id)
+        }
+
+        return staffMember
+      })
+    }
+
+    // Fallback to mock staff data if no API staff
+    const matchedStaff = mockStaff.filter(member => member.branchId === branch.id)
+    if (matchedStaff.length > 0) {
+      return matchedStaff
+    }
+
+    // Last resort: return first 3 mock staff as examples
+    return mockStaff.slice(0, 3)
+  }, [staffMembers, branchStaff, branch.id])
 
   return (
     <div className='fixed inset-0 z-50 overflow-hidden'>
@@ -132,16 +242,17 @@ export const BranchDetailsModal = ({
 
             {/* Tabs */}
             <div className='border-b bg-gray-50 dark:bg-gray-700 dark:border-gray-600'>
-              <div className='flex'>
+              <div className='flex overflow-x-auto'>
                 {[
                   { id: 'overview', label: t('business.branchDetails.overview'), icon: 'lucide:info' },
                   { id: 'services', label: t('business.branchDetails.services'), icon: 'lucide:scissors' },
-                  { id: 'staff', label: t('business.branchDetails.staff'), icon: 'lucide:users' }
+                  { id: 'staff', label: t('business.branchDetails.staff'), icon: 'lucide:users' },
+                  { id: 'calendar', label: t('business.branchDetails.calendar'), icon: 'lucide:calendar-days' }
                 ].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'text-teal-600 border-teal-600 bg-white dark:bg-gray-800 dark:text-teal-400 dark:border-teal-400'
                         : 'text-gray-600 dark:text-white border-transparent hover:text-gray-800 dark:hover:text-teal-300 hover:border-gray-300 dark:hover:border-teal-400 hover:bg-gray-100 dark:hover:bg-gray-600'
@@ -331,6 +442,15 @@ export const BranchDetailsModal = ({
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'calendar' && (
+              <div>
+                <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+                  {t('business.branchDetails.staffSchedule')}
+                </h3>
+                <StaffCalendarView staff={branchStaffMembers} t={t} />
               </div>
             )}
           </div>

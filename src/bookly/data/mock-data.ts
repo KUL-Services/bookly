@@ -1,4 +1,4 @@
-import { Business, Service, StaffMember, Review, Category, Booking, User } from './types'
+import { Business, Service, StaffMember, Review, Category, Booking, User, StaffSchedule, StaffAppointment } from './types'
 
 export const categories: Category[] = [
   { id: '1', name: 'Hair', icon: '✂️', slug: 'hair' },
@@ -218,14 +218,114 @@ export const mockServices: Service[] = [
   }
 ]
 
-export const mockStaff: StaffMember[] = [
+// Helper function to generate appointments for staff members
+const generateStaffAppointments = (staffId: string, businessType: 'hair' | 'nails' | 'barber' | 'spa' | 'dental' | 'fitness'): StaffAppointment[] => {
+  const today = new Date(2025, 9, 17) // October 17, 2025
+  const appointments: StaffAppointment[] = []
+
+  const servicesByType = {
+    hair: ['Haircut & Style', 'Color Treatment', 'Highlights', 'Deep Conditioning'],
+    nails: ['Gel Manicure', 'Luxury Pedicure', 'Nail Art', 'French Manicure'],
+    barber: ['Classic Cut', 'Hot Towel Shave', 'Beard Trim', 'Kids Cut'],
+    spa: ['Swedish Massage', 'Deep Tissue Massage', 'Aromatherapy', 'Facial Treatment'],
+    dental: ['Dental Cleaning', 'Teeth Whitening', 'Dental Checkup', 'Cavity Filling'],
+    fitness: ['Personal Training', 'Yoga Session', 'Strength Training', 'Cardio Workout']
+  }
+
+  const customers = ['John Smith', 'Emma Davis', 'Michael Brown', 'Sarah Wilson', 'David Lee', 'Lisa Anderson', 'James Taylor', 'Maria Garcia']
+
+  // Generate appointments for the next 7 days
+  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+    const date = new Date(today)
+    date.setDate(date.getDate() + dayOffset)
+
+    // Skip Sundays for some variety
+    if (date.getDay() === 0 && Math.random() > 0.3) continue
+
+    // Generate 3-6 appointments per day
+    const appointmentCount = Math.floor(Math.random() * 4) + 3
+
+    for (let i = 0; i < appointmentCount; i++) {
+      const hour = 9 + Math.floor(Math.random() * 8) // 9 AM to 5 PM
+      const minute = Math.random() > 0.5 ? '00' : '30'
+      const duration = Math.floor(Math.random() * 3) * 30 + 30 // 30, 60, or 90 minutes
+
+      const startTime = `${hour.toString().padStart(2, '0')}:${minute}`
+      const endHour = hour + Math.floor(duration / 60)
+      const endMinute = (parseInt(minute) + (duration % 60)).toString().padStart(2, '0')
+      const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute}`
+
+      const services = servicesByType[businessType]
+      const serviceName = services[Math.floor(Math.random() * services.length)]
+      const customerName = customers[Math.floor(Math.random() * customers.length)]
+
+      let status: 'confirmed' | 'pending' | 'completed' | 'cancelled' = 'confirmed'
+      if (dayOffset < 0) status = 'completed'
+      else if (Math.random() > 0.9) status = 'cancelled'
+      else if (Math.random() > 0.8) status = 'pending'
+
+      appointments.push({
+        id: `apt-${staffId}-${dayOffset}-${i}`,
+        date,
+        startTime,
+        endTime,
+        serviceName,
+        customerName,
+        status
+      })
+    }
+  }
+
+  return appointments.sort((a, b) => {
+    if (a.date.getTime() !== b.date.getTime()) return a.date.getTime() - b.date.getTime()
+    return a.startTime.localeCompare(b.startTime)
+  })
+}
+
+// Standard working week schedule
+const standardSchedule: StaffSchedule[] = [
+  { dayOfWeek: 'Mon', startTime: '09:00', endTime: '17:00', isAvailable: true },
+  { dayOfWeek: 'Tue', startTime: '09:00', endTime: '17:00', isAvailable: true },
+  { dayOfWeek: 'Wed', startTime: '09:00', endTime: '17:00', isAvailable: true },
+  { dayOfWeek: 'Thu', startTime: '09:00', endTime: '18:00', isAvailable: true },
+  { dayOfWeek: 'Fri', startTime: '09:00', endTime: '18:00', isAvailable: true },
+  { dayOfWeek: 'Sat', startTime: '08:00', endTime: '16:00', isAvailable: true },
+  { dayOfWeek: 'Sun', startTime: '10:00', endTime: '15:00', isAvailable: false }
+]
+
+// Extended hours schedule
+const extendedSchedule: StaffSchedule[] = [
+  { dayOfWeek: 'Mon', startTime: '08:00', endTime: '19:00', isAvailable: true },
+  { dayOfWeek: 'Tue', startTime: '08:00', endTime: '19:00', isAvailable: true },
+  { dayOfWeek: 'Wed', startTime: '08:00', endTime: '19:00', isAvailable: true },
+  { dayOfWeek: 'Thu', startTime: '08:00', endTime: '20:00', isAvailable: true },
+  { dayOfWeek: 'Fri', startTime: '08:00', endTime: '20:00', isAvailable: true },
+  { dayOfWeek: 'Sat', startTime: '08:00', endTime: '18:00', isAvailable: true },
+  { dayOfWeek: 'Sun', startTime: '10:00', endTime: '16:00', isAvailable: true }
+]
+
+// Part-time schedule
+const partTimeSchedule: StaffSchedule[] = [
+  { dayOfWeek: 'Mon', startTime: '09:00', endTime: '17:00', isAvailable: false },
+  { dayOfWeek: 'Tue', startTime: '09:00', endTime: '17:00', isAvailable: true },
+  { dayOfWeek: 'Wed', startTime: '09:00', endTime: '17:00', isAvailable: true },
+  { dayOfWeek: 'Thu', startTime: '09:00', endTime: '17:00', isAvailable: false },
+  { dayOfWeek: 'Fri', startTime: '09:00', endTime: '17:00', isAvailable: true },
+  { dayOfWeek: 'Sat', startTime: '08:00', endTime: '16:00', isAvailable: true },
+  { dayOfWeek: 'Sun', startTime: '10:00', endTime: '15:00', isAvailable: false }
+]
+
+// Base staff data with old format (1-1, 1-2, etc.)
+const baseStaff: StaffMember[] = [
   {
     id: '1',
     name: 'Emma Johnson',
     title: 'Senior Stylist',
     photo: 'https://images.unsplash.com/photo-1494790108755-2616b612b077?w=150&h=150&fit=crop&crop=face',
     businessId: '1',
-    branchId: '1-1'
+    branchId: '1-1',
+    schedule: extendedSchedule,
+    appointments: generateStaffAppointments('1', 'hair')
   },
   {
     id: '2',
@@ -233,7 +333,9 @@ export const mockStaff: StaffMember[] = [
     title: 'Color Specialist',
     photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
     businessId: '1',
-    branchId: '1-2'
+    branchId: '1-2',
+    schedule: standardSchedule,
+    appointments: generateStaffAppointments('2', 'hair')
   },
   {
     id: '3',
@@ -241,7 +343,9 @@ export const mockStaff: StaffMember[] = [
     title: 'Nail Artist',
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     businessId: '2',
-    branchId: '2-1'
+    branchId: '2-1',
+    schedule: extendedSchedule,
+    appointments: generateStaffAppointments('3', 'nails')
   },
   {
     id: '4',
@@ -249,7 +353,9 @@ export const mockStaff: StaffMember[] = [
     title: 'Senior Nail Technician',
     photo: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=150&h=150&fit=crop&crop=face',
     businessId: '2',
-    branchId: '2-2'
+    branchId: '2-2',
+    schedule: standardSchedule,
+    appointments: generateStaffAppointments('4', 'nails')
   },
   {
     id: '5',
@@ -257,7 +363,9 @@ export const mockStaff: StaffMember[] = [
     title: 'Master Barber',
     photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
     businessId: '3',
-    branchId: '3-1'
+    branchId: '3-1',
+    schedule: extendedSchedule,
+    appointments: generateStaffAppointments('5', 'barber')
   },
   {
     id: '6',
@@ -265,7 +373,9 @@ export const mockStaff: StaffMember[] = [
     title: 'Barber',
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     businessId: '3',
-    branchId: '3-2'
+    branchId: '3-2',
+    schedule: standardSchedule,
+    appointments: generateStaffAppointments('6', 'barber')
   },
   {
     id: '7',
@@ -273,9 +383,96 @@ export const mockStaff: StaffMember[] = [
     title: 'Junior Stylist',
     photo: '', // Empty photo to demonstrate initials
     businessId: '1',
-    branchId: '1-3'
+    branchId: '1-3',
+    schedule: partTimeSchedule,
+    appointments: generateStaffAppointments('7', 'hair')
   }
 ]
+
+// Helper function to generate staff for any business/branch pattern
+function generateMockStaffForBusiness(businessId: string, branchId: string, staffIndex: number, category: 'spa' | 'hair' | 'dental' | 'fitness' | 'nails'): StaffMember {
+  const names = {
+    spa: ['Olivia Martinez', 'Isabella Santos', 'Mia Chen', 'Ava Rodriguez', 'Emma Williams'],
+    hair: ['Sophia Anderson', 'Charlotte Brown', 'Amelia Davis', 'Harper Wilson', 'Evelyn Moore'],
+    dental: ['Dr. James Wilson', 'Dr. Sarah Johnson', 'Dr. Michael Lee', 'Dr. Emily Taylor', 'Dr. David Martinez'],
+    fitness: ['Alex Thompson', 'Jordan Smith', 'Casey Rodriguez', 'Morgan Lee', 'Taylor Anderson'],
+    nails: ['Luna Garcia', 'Nova Martinez', 'Stella Chen', 'Aurora Kim', 'Violet Rodriguez']
+  }
+
+  const titles = {
+    spa: ['Senior Therapist', 'Massage Specialist', 'Spa Manager', 'Wellness Expert', 'Aromatherapist'],
+    hair: ['Senior Stylist', 'Color Specialist', 'Hair Artist', 'Style Director', 'Creative Stylist'],
+    dental: ['Dentist', 'Oral Surgeon', 'Orthodontist', 'Dental Hygienist', 'Dental Consultant'],
+    fitness: ['Personal Trainer', 'Fitness Coach', 'Strength Trainer', 'Yoga Instructor', 'Fitness Manager'],
+    nails: ['Nail Artist', 'Nail Technician', 'Manicure Specialist', 'Nail Designer', 'Nail Care Expert']
+  }
+
+  const photos = [
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1488716820095-cbe80883c496?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1494790108755-2616b612b077?w=150&h=150&fit=crop&crop=face',
+    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
+  ]
+
+  const schedules = [extendedSchedule, standardSchedule, partTimeSchedule]
+  const nameIndex = staffIndex % names[category].length
+  const titleIndex = staffIndex % titles[category].length
+  const photoIndex = staffIndex % photos.length
+  const scheduleIndex = staffIndex % schedules.length
+
+  return {
+    id: `${businessId}-staff-${staffIndex + 1}`,
+    name: names[category][nameIndex],
+    title: titles[category][titleIndex],
+    photo: photos[photoIndex],
+    businessId,
+    branchId,
+    schedule: schedules[scheduleIndex],
+    appointments: generateStaffAppointments(`${businessId}-staff-${staffIndex + 1}`, category)
+  }
+}
+
+// Generate staff for all businesses in the system
+const additionalStaff: StaffMember[] = []
+
+// Generate staff for biz-1 to biz-32 (spa, hair, dental, fitness businesses)
+for (let bizNum = 1; bizNum <= 32; bizNum++) {
+  const businessId = `biz-${bizNum}`
+
+  // Determine category based on business number (simplified mapping)
+  let category: 'spa' | 'hair' | 'dental' | 'fitness' | 'nails' = 'spa'
+  const bizMod = bizNum % 5
+  if (bizMod === 1) category = 'spa'
+  else if (bizMod === 2) category = 'hair'
+  else if (bizMod === 3) category = 'dental'
+  else if (bizMod === 4) category = 'fitness'
+  else category = 'nails'
+
+  // Branch 1 - always has 2 staff
+  additionalStaff.push(
+    generateMockStaffForBusiness(businessId, `${businessId}-branch-1`, 0, category),
+    generateMockStaffForBusiness(businessId, `${businessId}-branch-1`, 1, category)
+  )
+
+  // Branch 2 - some businesses have it (1 staff member)
+  if (bizNum % 2 === 0) {
+    additionalStaff.push(
+      generateMockStaffForBusiness(businessId, `${businessId}-branch-2`, 2, category)
+    )
+  }
+
+  // Branch 3 - fewer businesses have it (1 staff member)
+  if (bizNum % 3 === 0) {
+    additionalStaff.push(
+      generateMockStaffForBusiness(businessId, `${businessId}-branch-3`, 3, category)
+    )
+  }
+}
+
+export const mockStaff: StaffMember[] = [...baseStaff, ...additionalStaff]
 
 export const mockReviews: Review[] = [
   {

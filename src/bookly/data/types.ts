@@ -43,6 +43,23 @@ export interface Service {
   businessId: string;
 }
 
+export interface StaffSchedule {
+  dayOfWeek: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
+  startTime: string; // Format: "09:00"
+  endTime: string;   // Format: "17:00"
+  isAvailable: boolean;
+}
+
+export interface StaffAppointment {
+  id: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  serviceName: string;
+  customerName: string;
+  status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
+}
+
 export interface StaffMember {
   id: string;
   name: string;
@@ -50,6 +67,8 @@ export interface StaffMember {
   photo: string;
   businessId: string;
   branchId: string;
+  schedule?: StaffSchedule[];
+  appointments?: StaffAppointment[];
 }
 
 export interface Review {
