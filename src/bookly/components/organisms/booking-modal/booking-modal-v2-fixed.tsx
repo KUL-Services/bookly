@@ -163,7 +163,8 @@ function SortableServiceCard({
       <div
         {...attributes}
         {...listeners}
-        className='absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-2 hover:bg-slate-600 dark:hover:bg-slate-600 rounded-lg transition-colors'
+        className='absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-3 hover:bg-slate-600 dark:hover:bg-slate-600 rounded-lg transition-colors touch-none'
+        style={{ touchAction: 'none' }}
       >
         <KulIcon icon='lucide:grip-vertical' className='w-5 h-5 text-slate-400 hover:text-teal-400' />
       </div>
@@ -238,9 +239,13 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
   const [timeWarning, setTimeWarning] = useState<string | null>(null)
   const hasAutoAddedInitialService = useRef(false)
 
-  // DnD sensors
+  // DnD sensors - configured for both desktop and mobile
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px of movement required before drag starts
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates
     })
