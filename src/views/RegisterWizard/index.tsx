@@ -232,40 +232,8 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
 
   return (
     <div className="flex bs-full justify-center">
-      {/* Left side - Illustration (desktop only) */}
-      <div
-        className={classnames(
-          'flex bs-full items-center justify-center flex-1 min-bs-[100dvh] relative p-6 max-md:hidden',
-          {
-            'border-ie': settings.skin === 'bordered'
-          }
-        )}
-      >
-        <div className="pli-6 max-lg:mbs-40 lg:mbe-24">
-          {/* Show step-specific image if available */}
-          {steps[activeStep].image ? (
-            <img
-              src={steps[activeStep].image}
-              alt={`Step ${activeStep + 1}: ${steps[activeStep].title}`}
-              className="max-bs-[650px] max-is-full bs-auto rounded-lg"
-              onError={(e) => {
-                // Fallback to gradient background if image not found
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          ) : (
-            <div className="max-bs-[650px] max-is-full bs-auto bg-gradient-to-br from-primary to-secondary rounded-lg p-12 flex items-center justify-center">
-              <Typography variant="h3" className="text-white text-center">
-                {steps[activeStep].title}
-              </Typography>
-            </div>
-          )}
-        </div>
-        <img src={authBackground} className="absolute bottom-[4%] z-[-1] is-full max-md:hidden" />
-      </div>
-
-      {/* Right side - Form */}
-      <div className="flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:p-12 md:is-[600px] lg:is-[700px]">
+      {/* Form Section */}
+      <div className="flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:p-12">
         <Link
           href={getLocalizedUrl('/', locale as Locale)}
           className="absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]"
