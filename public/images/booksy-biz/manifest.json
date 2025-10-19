@@ -1,0 +1,154 @@
+{
+  "images": [
+    {
+      "order": 1,
+      "step": "step-01",
+      "original": "image1.jpeg",
+      "path": "/images/booksy-biz/steps/step-01/screenshot.jpeg"
+    },
+    {
+      "order": 2,
+      "step": "step-02",
+      "original": "image2.jpeg",
+      "path": "/images/booksy-biz/steps/step-02/screenshot.jpeg"
+    },
+    {
+      "order": 3,
+      "step": "step-03",
+      "original": "image3.jpeg",
+      "path": "/images/booksy-biz/steps/step-03/screenshot.jpeg"
+    },
+    {
+      "order": 4,
+      "step": "step-04",
+      "original": "image4.jpeg",
+      "path": "/images/booksy-biz/steps/step-04/screenshot.jpeg"
+    },
+    {
+      "order": 5,
+      "step": "step-05",
+      "original": "image5.jpeg",
+      "path": "/images/booksy-biz/steps/step-05/screenshot.jpeg"
+    },
+    {
+      "order": 6,
+      "step": "step-06",
+      "original": "image6.jpeg",
+      "path": "/images/booksy-biz/steps/step-06/screenshot.jpeg"
+    },
+    {
+      "order": 7,
+      "step": "step-07",
+      "original": "image7.jpeg",
+      "path": "/images/booksy-biz/steps/step-07/screenshot.jpeg"
+    },
+    {
+      "order": 8,
+      "step": "step-08",
+      "original": "image8.jpeg",
+      "path": "/images/booksy-biz/steps/step-08/screenshot.jpeg"
+    },
+    {
+      "order": 9,
+      "step": "step-09",
+      "original": "image9.jpeg",
+      "path": "/images/booksy-biz/steps/step-09/screenshot.jpeg"
+    },
+    {
+      "order": 10,
+      "step": "step-10",
+      "original": "image10.jpeg",
+      "path": "/images/booksy-biz/steps/step-10/screenshot.jpeg"
+    },
+    {
+      "order": 11,
+      "step": "step-11",
+      "original": "image11.jpeg",
+      "path": "/images/booksy-biz/steps/step-11/screenshot.jpeg"
+    },
+    {
+      "order": 12,
+      "step": "step-12",
+      "original": "image12.jpeg",
+      "path": "/images/booksy-biz/steps/step-12/screenshot.jpeg"
+    },
+    {
+      "order": 13,
+      "step": "step-13",
+      "original": "image13.jpeg",
+      "path": "/images/booksy-biz/steps/step-13/screenshot.jpeg"
+    },
+    {
+      "order": 14,
+      "step": "step-14",
+      "original": "image14.jpeg",
+      "path": "/images/booksy-biz/steps/step-14/screenshot.jpeg"
+    },
+    {
+      "order": 15,
+      "step": "step-15",
+      "original": "image15.jpeg",
+      "path": "/images/booksy-biz/steps/step-15/screenshot.jpeg"
+    },
+    {
+      "order": 16,
+      "step": "step-16",
+      "original": "image16.jpeg",
+      "path": "/images/booksy-biz/steps/step-16/screenshot.jpeg"
+    },
+    {
+      "order": 17,
+      "step": "step-17",
+      "original": "image17.jpeg",
+      "path": "/images/booksy-biz/steps/step-17/screenshot.jpeg"
+    },
+    {
+      "order": 18,
+      "step": "step-18",
+      "original": "image18.jpeg",
+      "path": "/images/booksy-biz/steps/step-18/screenshot.jpeg"
+    },
+    {
+      "order": 19,
+      "step": "step-19",
+      "original": "image19.jpeg",
+      "path": "/images/booksy-biz/steps/step-19/screenshot.jpeg"
+    },
+    {
+      "order": 20,
+      "step": "step-20",
+      "original": "image20.jpeg",
+      "path": "/images/booksy-biz/steps/step-20/screenshot.jpeg"
+    },
+    {
+      "order": 21,
+      "step": "step-21",
+      "original": "image21.jpeg",
+      "path": "/images/booksy-biz/steps/step-21/screenshot.jpeg"
+    },
+    {
+      "order": 22,
+      "step": "step-22",
+      "original": "image22.jpeg",
+      "path": "/images/booksy-biz/steps/step-22/screenshot.jpeg"
+    },
+    {
+      "order": 23,
+      "step": "step-23",
+      "original": "image23.jpeg",
+      "path": "/images/booksy-biz/steps/step-23/screenshot.jpeg"
+    },
+    {
+      "order": 24,
+      "step": "step-24",
+      "original": "image24.jpeg",
+      "path": "/images/booksy-biz/steps/step-24/screenshot.jpeg"
+    },
+    {
+      "order": 25,
+      "step": "step-25",
+      "original": "image25.jpeg",
+      "path": "/images/booksy-biz/steps/step-25/screenshot.jpeg"
+    }
+  ]
+}

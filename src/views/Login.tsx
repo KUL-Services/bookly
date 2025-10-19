@@ -169,16 +169,19 @@ const Login = ({ mode }: { mode: Mode }) => {
         <img src={authBackground} className='absolute bottom-[4%] z-[-1] is-full max-md:hidden' />
       </div>
       <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:!min-is-[unset] md:p-12 md:is-[480px]'>
-        <div className='absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]'>
+        <Link
+          href={getLocalizedUrl('/', locale as Locale)}
+          className='absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]'
+        >
           <Logo />
-        </div>
-        <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset]'>
-          <div>
-            <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}!👋🏻`}</Typography>
-            <Typography>Please sign-in to your account and start the adventure</Typography>
+        </Link>
+        <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
+          <div className='text-center sm:text-left'>
+            <Typography variant='h4' className='mb-2'>{`Welcome to ${themeConfig.templateName}!👋🏻`}</Typography>
+            <Typography className='text-sm sm:text-base'>Please sign-in to your account and start the adventure</Typography>
           </div>
           <Alert icon={false} className='bg-[var(--mui-palette-primary-lightOpacity)]'>
-            <Typography variant='body2' color='primary'>
+            <Typography variant='body2' color='primary' className='text-sm'>
               Use your business account credentials to access the dashboard
             </Typography>
           </Alert>
@@ -201,6 +204,10 @@ const Login = ({ mode }: { mode: Mode }) => {
                   autoFocus
                   type='email'
                   label='Email'
+                  autoComplete='email'
+                  inputProps={{
+                    inputMode: 'email'
+                  }}
                   onChange={e => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
@@ -223,6 +230,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                   label='Password'
                   id='login-password'
                   type={isPasswordShown ? 'text' : 'password'}
+                  autoComplete='current-password'
                   onChange={e => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
@@ -248,10 +256,10 @@ const Login = ({ mode }: { mode: Mode }) => {
                 />
               )}
             />
-            <div className='flex justify-between items-center flex-wrap gap-x-3 gap-y-1'>
+            <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-x-3 sm:gap-y-1'>
               <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me' />
               <Typography
-                className='text-end'
+                className='text-start sm:text-end'
                 color='primary'
                 component={Link}
                 href={getLocalizedUrl('/forgot-password', locale as Locale)}
@@ -276,8 +284,9 @@ const Login = ({ mode }: { mode: Mode }) => {
               </Typography>
             </div>
           </form>
-          <Divider className='gap-3'>or</Divider>
+          <Divider className='gap-3 my-2'>or</Divider>
           <Button
+            fullWidth
             color='secondary'
             className='self-center text-textPrimary'
             startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
