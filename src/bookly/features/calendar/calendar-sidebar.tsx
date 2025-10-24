@@ -129,10 +129,19 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Mobile Header */}
       {isMobile && (
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="h6">Filters</Typography>
-          <IconButton onClick={toggleSidebar} size="small">
-            <i className="ri-close-line" />
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            p: 2,
+            borderBottom: 1,
+            borderColor: 'divider'
+          }}
+        >
+          <Typography variant='h6'>Filters</Typography>
+          <IconButton onClick={toggleSidebar} size='small'>
+            <i className='ri-close-line' />
           </IconButton>
         </Box>
       )}
@@ -141,86 +150,111 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
         {/* Mini Calendar */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
+          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
             Calendar
           </Typography>
-          <Box sx={{
-            '& .rdp': {
-              '--rdp-cell-size': '40px',
-              '--rdp-accent-color': theme => theme.palette.primary.main,
-              margin: 0,
-            },
-            '& .rdp-months': {
-              width: '100%',
-            },
-            '& .rdp-month': {
-              width: '100%',
-            },
-            '& .rdp-caption': {
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: '0.5rem 0',
-              marginBottom: '0.5rem',
-            },
-            '& .rdp-caption_label': {
-              fontSize: '1rem',
-              fontWeight: 600,
-            },
-            '& .rdp-nav': {
-              position: 'absolute',
-              top: '0.5rem',
-              left: 0,
-              right: 0,
-              display: 'flex',
-              justifyContent: 'space-between',
-              padding: '0 0.25rem',
-            },
-            '& .rdp-nav_button': {
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            },
-            '& .rdp-head_cell': {
-              fontWeight: 500,
-              fontSize: '0.875rem',
-              color: theme => theme.palette.text.secondary,
-              padding: '0.5rem 0',
-            },
-            '& .rdp-cell': {
-              padding: '2px',
-            },
-            '& .rdp-day': {
-              width: '40px',
-              height: '40px',
-              fontSize: '0.9375rem',
-              fontWeight: 400,
-              borderRadius: '50%',
-              '&:hover': {
-                backgroundColor: theme => theme.palette.action.hover,
+          <Box
+            sx={{
+              '& .rdp': {
+                '--rdp-cell-size': '40px',
+                '--rdp-accent-color': theme => theme.palette.primary.main,
+                margin: 0
               },
-            },
-            '& .rdp-day_today': {
-              fontWeight: 600,
-              color: theme => theme.palette.error.main,
-            },
-            '& .rdp-day_selected': {
-              backgroundColor: theme => theme.palette.common.black + ' !important',
-              color: theme => theme.palette.common.white + ' !important',
-              fontWeight: 600,
-            },
-            '& .rdp-day_outside': {
-              color: theme => theme.palette.text.disabled,
-              opacity: 0.5,
-            },
-          }}>
-            <Calendar
-              mode="single"
-              selected={currentDate}
-              onSelect={handleDateSelect}
-            />
+              '& .rdp-months': {
+                width: '100%'
+              },
+              '& .rdp-month': {
+                width: '100%'
+              },
+              '& .rdp-caption': {
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '0.5rem 0',
+                marginBottom: '0.5rem'
+              },
+              '& .rdp-caption_label': {
+                fontSize: '1rem',
+                fontWeight: 600,
+                color: theme => theme.palette.text.primary,
+                padding: '0 1rem'
+              },
+              '& .rdp-nav': {
+                display: 'flex',
+                gap: '0.5rem'
+              },
+              '& .rdp-nav_button': {
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: theme => theme.palette.text.primary,
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                  color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
+                }
+              },
+              '& .rdp-head_cell': {
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                color: theme => theme.palette.text.secondary,
+                padding: '0.5rem 0',
+                textTransform: 'uppercase'
+              },
+              '& .rdp-cell': {
+                padding: '2px'
+              },
+              '& .rdp-day': {
+                width: '40px',
+                height: '40px',
+                fontSize: '0.9375rem',
+                fontWeight: 500,
+                borderRadius: '50%',
+                backgroundColor: 'transparent',
+                color: theme => theme.palette.text.primary,
+                border: '1px solid transparent',
+                transition: 'all 0.2s ease',
+                '&:hover:not(.rdp-day_selected):not(.rdp-day_disabled)': {
+                  backgroundColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                  borderColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)',
+                  color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
+                }
+              },
+              '& .rdp-day_today:not(.rdp-day_selected)': {
+                fontWeight: 700,
+                color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'),
+                backgroundColor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                border: '1px solid',
+                borderColor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)'
+              },
+              '& .rdp-day_selected': {
+                backgroundColor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgb(20, 184, 166) !important' : 'rgb(20, 184, 166) !important',
+                color: theme => (theme.palette.mode === 'dark' ? '#0f172a !important' : '#ffffff !important'),
+                fontWeight: 700,
+                border: 'none !important',
+                '&:hover': {
+                  backgroundColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgb(13, 148, 136) !important' : 'rgb(13, 148, 136) !important'
+                }
+              },
+              '& .rdp-day_outside': {
+                color: theme => theme.palette.text.disabled,
+                opacity: 0.3
+              }
+            }}
+          >
+            <Calendar mode='single' selected={currentDate} onSelect={handleDateSelect} />
           </Box>
         </Box>
 
@@ -228,19 +262,19 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
         {/* Jump By Week */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
+          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
             Jump By Week
           </Typography>
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1 }}>
             {[1, 2, 3, 4, 5, 6].map(week => (
-              <Button key={`plus-${week}`} variant="outlined" size="small" onClick={() => handleJumpWeek(week)}>
+              <Button key={`plus-${week}`} variant='outlined' size='small' onClick={() => handleJumpWeek(week)}>
                 +{week}
               </Button>
             ))}
           </Box>
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
             {[-1, -2, -3, -4, -5, -6].map(week => (
-              <Button key={`minus-${week}`} variant="outlined" size="small" onClick={() => handleJumpWeek(week)}>
+              <Button key={`minus-${week}`} variant='outlined' size='small' onClick={() => handleJumpWeek(week)}>
                 {week}
               </Button>
             ))}
@@ -251,15 +285,21 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
         {/* Staff and Resources */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
+          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
             Staff and Resources
           </Typography>
           <FormGroup>
             <FormControlLabel
               control={<Checkbox checked={pendingStaff.onlyMe} onChange={e => handleOnlyMeChange(e.target.checked)} />}
-              label="Only me"
+              label='Only me'
             />
-            <Button variant="text" size="small" onClick={handleSelectAllStaff} disabled={pendingStaff.onlyMe} sx={{ justifyContent: 'flex-start', mb: 1 }}>
+            <Button
+              variant='text'
+              size='small'
+              onClick={handleSelectAllStaff}
+              disabled={pendingStaff.onlyMe}
+              sx={{ justifyContent: 'flex-start', mb: 1 }}
+            >
               Select All
             </Button>
             {availableStaff.map(staff => (
@@ -272,7 +312,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                     disabled={pendingStaff.onlyMe}
                   />
                 }
-                label={<Typography variant="body2">{staff.name}</Typography>}
+                label={<Typography variant='body2'>{staff.name}</Typography>}
               />
             ))}
           </FormGroup>
@@ -282,27 +322,37 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
         {/* Highlight Filters */}
         <Box>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2 }}>
+          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
             Highlight
           </Typography>
 
           {/* Payments */}
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
             Payments
           </Typography>
           <FormGroup sx={{ mb: 2 }}>
             <FormControlLabel
-              control={<Checkbox checked={pendingHighlights.payments.includes('paid')} onChange={() => handlePaymentToggle('paid')} />}
-              label={<Typography variant="body2">Paid</Typography>}
+              control={
+                <Checkbox
+                  checked={pendingHighlights.payments.includes('paid')}
+                  onChange={() => handlePaymentToggle('paid')}
+                />
+              }
+              label={<Typography variant='body2'>Paid</Typography>}
             />
             <FormControlLabel
-              control={<Checkbox checked={pendingHighlights.payments.includes('unpaid')} onChange={() => handlePaymentToggle('unpaid')} />}
-              label={<Typography variant="body2">Unpaid</Typography>}
+              control={
+                <Checkbox
+                  checked={pendingHighlights.payments.includes('unpaid')}
+                  onChange={() => handlePaymentToggle('unpaid')}
+                />
+              }
+              label={<Typography variant='body2'>Unpaid</Typography>}
             />
           </FormGroup>
 
           {/* Appointment Status */}
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
             Appointment Status
           </Typography>
           <FormGroup sx={{ mb: 2 }}>
@@ -322,23 +372,33 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                     onChange={() => handleStatusToggle(status.value as AppointmentStatus)}
                   />
                 }
-                label={<Typography variant="body2">{status.label}</Typography>}
+                label={<Typography variant='body2'>{status.label}</Typography>}
               />
             ))}
           </FormGroup>
 
           {/* Details */}
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
             Details
           </Typography>
           <FormGroup>
             <FormControlLabel
-              control={<Checkbox checked={pendingHighlights.details.includes('starred')} onChange={() => handleDetailToggle('starred')} />}
-              label={<Typography variant="body2">Starred</Typography>}
+              control={
+                <Checkbox
+                  checked={pendingHighlights.details.includes('starred')}
+                  onChange={() => handleDetailToggle('starred')}
+                />
+              }
+              label={<Typography variant='body2'>Starred</Typography>}
             />
             <FormControlLabel
-              control={<Checkbox checked={pendingHighlights.details.includes('unstarred')} onChange={() => handleDetailToggle('unstarred')} />}
-              label={<Typography variant="body2">Unstarred</Typography>}
+              control={
+                <Checkbox
+                  checked={pendingHighlights.details.includes('unstarred')}
+                  onChange={() => handleDetailToggle('unstarred')}
+                />
+              }
+              label={<Typography variant='body2'>Unstarred</Typography>}
             />
           </FormGroup>
         </Box>
@@ -347,10 +407,10 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
       {/* Footer Actions */}
       <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" fullWidth onClick={handleClear}>
+          <Button variant='outlined' fullWidth onClick={handleClear}>
             Clear
           </Button>
-          <Button variant="contained" fullWidth onClick={handleApply}>
+          <Button variant='contained' fullWidth onClick={handleApply}>
             Apply
           </Button>
         </Box>
@@ -360,15 +420,13 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
   if (isMobile) {
     return (
-      <Drawer anchor="left" open={isSidebarOpen} onClose={toggleSidebar}>
+      <Drawer anchor='left' open={isSidebarOpen} onClose={toggleSidebar}>
         <Box sx={{ width: 320 }}>{SidebarContent}</Box>
       </Drawer>
     )
   }
 
   return (
-    <Box sx={{ width: 320, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-      {SidebarContent}
-    </Box>
+    <Box sx={{ width: 320, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>{SidebarContent}</Box>
   )
 }

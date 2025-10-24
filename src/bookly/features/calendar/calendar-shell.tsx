@@ -237,6 +237,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
             handleEventClick(event, eventEl || document.body)
           }}
           onBack={handleBackToAllStaff}
+          onTimeRangeSelect={handleSelectRange}
         />
       )
     }

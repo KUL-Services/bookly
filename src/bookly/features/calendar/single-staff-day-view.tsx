@@ -3,6 +3,7 @@
 import { Box, Typography, IconButton, Avatar, Button } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, isSameDay } from 'date-fns'
+import { useState, useRef } from 'react'
 import type { CalendarEvent } from './types'
 
 interface SingleStaffDayViewProps {
@@ -11,6 +12,7 @@ interface SingleStaffDayViewProps {
   currentDate: Date
   onEventClick?: (event: CalendarEvent) => void
   onBack?: () => void
+  onTimeRangeSelect?: (start: Date, end: Date) => void
 }
 
 export default function SingleStaffDayView({
@@ -18,10 +20,17 @@ export default function SingleStaffDayView({
   staff,
   currentDate,
   onEventClick,
-  onBack
+  onBack,
+  onTimeRangeSelect
 }: SingleStaffDayViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+
+  // Drag-to-select state
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState<number | null>(null)
+  const [dragEnd, setDragEnd] = useState<number | null>(null)
+  const eventsColumnRef = useRef<HTMLDivElement>(null)
 
   // Filter events for current date and staff
   const todayEvents = events.filter(
@@ -65,6 +74,91 @@ export default function SingleStaffDayView({
       no_show: { bg: '#FCE4EC', border: '#E91E63', text: '#880E4F' }
     }
     return colors[status] || colors.confirmed
+  }
+
+  // Convert Y position to time in minutes from start hour
+  const getMinutesFromY = (y: number): number => {
+    const slotHeight = 80 // 80px per 30 min slot
+    const minutes = Math.floor((y / slotHeight) * 30)
+    // Round to nearest 15 minutes
+    return Math.round(minutes / 15) * 15
+  }
+
+  // Convert minutes to Date object
+  const minutesToDate = (minutes: number): Date => {
+    const startHour = 6
+    const date = new Date(currentDate)
+    date.setHours(Math.floor(minutes / 60) + startHour, minutes % 60, 0, 0)
+    return date
+  }
+
+  // Handle mouse down to start drag selection
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Don't start drag if clicking on an event
+    const target = e.target as HTMLElement
+    if (target.closest('[data-event]')) {
+      return
+    }
+
+    const rect = eventsColumnRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const y = e.clientY - rect.top + (eventsColumnRef.current?.parentElement?.scrollTop || 0)
+    const minutes = getMinutesFromY(y)
+
+    setIsDragging(true)
+    setDragStart(minutes)
+    setDragEnd(minutes)
+  }
+
+  // Handle mouse move during drag
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDragging || dragStart === null) return
+
+    const rect = eventsColumnRef.current?.getBoundingClientRect()
+    if (!rect) return
+
+    const y = e.clientY - rect.top + (eventsColumnRef.current?.parentElement?.scrollTop || 0)
+    const minutes = getMinutesFromY(y)
+
+    setDragEnd(minutes)
+  }
+
+  // Handle mouse up to complete drag selection
+  const handleMouseUp = () => {
+    if (!isDragging || dragStart === null || dragEnd === null) {
+      setIsDragging(false)
+      setDragStart(null)
+      setDragEnd(null)
+      return
+    }
+
+    const startMinutes = Math.min(dragStart, dragEnd)
+    const endMinutes = Math.max(dragStart, dragEnd)
+
+    // Only trigger if selection is at least 15 minutes
+    if (endMinutes - startMinutes >= 15) {
+      const startDate = minutesToDate(startMinutes)
+      const endDate = minutesToDate(endMinutes)
+      onTimeRangeSelect?.(startDate, endDate)
+    }
+
+    setIsDragging(false)
+    setDragStart(null)
+    setDragEnd(null)
+  }
+
+  // Get drag selection style
+  const getDragSelectionStyle = () => {
+    if (!isDragging || dragStart === null || dragEnd === null) return null
+
+    const startMinutes = Math.min(dragStart, dragEnd)
+    const endMinutes = Math.max(dragStart, dragEnd)
+    const slotHeight = 80 // 80px per 30 min slot
+    const top = (startMinutes / 30) * slotHeight
+    const height = ((endMinutes - startMinutes) / 30) * slotHeight
+
+    return { top, height }
   }
 
   return (
@@ -152,7 +246,18 @@ export default function SingleStaffDayView({
           </Box>
 
           {/* Events column */}
-          <Box sx={{ position: 'relative' }}>
+          <Box
+            ref={eventsColumnRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            sx={{
+              position: 'relative',
+              cursor: isDragging ? 'row-resize' : 'pointer',
+              userSelect: 'none'
+            }}
+          >
             {/* Time slot grid lines */}
             {timeSlots.map((slot, index) => (
               <Box
@@ -165,6 +270,93 @@ export default function SingleStaffDayView({
               />
             ))}
 
+            {/* Drag selection indicator */}
+            {(() => {
+              const dragStyle = getDragSelectionStyle()
+              if (!dragStyle || dragStart === null || dragEnd === null) return null
+
+              const startMinutes = Math.min(dragStart, dragEnd)
+              const endMinutes = Math.max(dragStart, dragEnd)
+              const startDate = minutesToDate(startMinutes)
+              const endDate = minutesToDate(endMinutes)
+
+              return (
+                <>
+                  {/* Selection box */}
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: `${dragStyle.top}px`,
+                      left: 8,
+                      right: 8,
+                      height: `${dragStyle.height}px`,
+                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(144,202,249,0.3)' : 'rgba(25,118,210,0.2)',
+                      border: 2,
+                      borderColor: 'primary.main',
+                      borderRadius: 1,
+                      pointerEvents: 'none',
+                      zIndex: 10,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      py: 1
+                    }}
+                  >
+                    {/* Start time indicator */}
+                    <Box
+                      sx={{
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        boxShadow: 2
+                      }}
+                    >
+                      {format(startDate, 'h:mm a')}
+                    </Box>
+
+                    {/* Duration indicator (only if selection is tall enough) */}
+                    {dragStyle.height > 120 && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          bgcolor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.9)',
+                          color: 'primary.main',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          fontWeight: 700,
+                          fontSize: '0.7rem'
+                        }}
+                      >
+                        {Math.round((endMinutes - startMinutes) / 60 * 10) / 10}h
+                      </Typography>
+                    )}
+
+                    {/* End time indicator */}
+                    <Box
+                      sx={{
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        boxShadow: 2
+                      }}
+                    >
+                      {format(endDate, 'h:mm a')}
+                    </Box>
+                  </Box>
+                </>
+              )
+            })()}
+
             {/* Events */}
             {todayEvents.map(event => {
               const { top, height } = getEventStyle(event)
@@ -173,6 +365,7 @@ export default function SingleStaffDayView({
               return (
                 <Box
                   key={event.id}
+                  data-event="true"
                   onClick={() => onEventClick?.(event)}
                   sx={{
                     position: 'absolute',
