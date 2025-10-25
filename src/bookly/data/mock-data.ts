@@ -534,6 +534,98 @@ export const mockUser: User = {
   favoriteBusinesses: ['1', '2']
 }
 
+// Mock customers/clients for appointments
+export const mockCustomers: User[] = [
+  {
+    id: 'customer-1',
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john.doe@example.com',
+    phone: '+44 7700 900123',
+    profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    memberSince: new Date('2023-03-15'),
+    totalBookings: 8,
+    favoriteBusinesses: ['1', '2']
+  },
+  {
+    id: 'customer-2',
+    firstName: 'Sarah',
+    lastName: 'Smith',
+    email: 'sarah.smith@example.com',
+    phone: '+44 7700 900124',
+    profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face',
+    memberSince: new Date('2024-01-10'),
+    totalBookings: 3,
+    favoriteBusinesses: ['1']
+  },
+  {
+    id: 'customer-3',
+    firstName: 'Michael',
+    lastName: 'Johnson',
+    email: 'michael.j@example.com',
+    phone: '+44 7700 900125',
+    profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
+    memberSince: new Date('2023-08-22'),
+    totalBookings: 12,
+    favoriteBusinesses: ['1', '2', '3']
+  },
+  {
+    id: 'customer-4',
+    firstName: 'Emily',
+    lastName: 'Davis',
+    email: 'emily.davis@example.com',
+    phone: '+44 7700 900126',
+    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+    memberSince: new Date('2024-02-05'),
+    totalBookings: 5,
+    favoriteBusinesses: ['2']
+  },
+  {
+    id: 'customer-5',
+    firstName: 'David',
+    lastName: 'Wilson',
+    email: 'david.w@example.com',
+    phone: '+44 7700 900127',
+    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    memberSince: new Date('2023-11-18'),
+    totalBookings: 7,
+    favoriteBusinesses: ['3']
+  },
+  {
+    id: 'customer-6',
+    firstName: 'Jessica',
+    lastName: 'Martinez',
+    email: 'jessica.m@example.com',
+    phone: '+44 7700 900128',
+    profileImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
+    memberSince: new Date('2024-03-12'),
+    totalBookings: 2,
+    favoriteBusinesses: ['1']
+  },
+  {
+    id: 'customer-7',
+    firstName: 'Christopher',
+    lastName: 'Brown',
+    email: 'chris.brown@example.com',
+    phone: '+44 7700 900129',
+    profileImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face',
+    memberSince: new Date('2023-06-08'),
+    totalBookings: 15,
+    favoriteBusinesses: ['1', '2']
+  },
+  {
+    id: 'customer-8',
+    firstName: 'Amanda',
+    lastName: 'Taylor',
+    email: 'amanda.t@example.com',
+    phone: '+44 7700 900130',
+    profileImage: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face',
+    memberSince: new Date('2024-01-20'),
+    totalBookings: 4,
+    favoriteBusinesses: ['2', '3']
+  }
+]
+
 export const mockBookings: Booking[] = [
   // Upcoming bookings
   {

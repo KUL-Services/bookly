@@ -59,7 +59,7 @@ export default function MultiStaffWeekView({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: `120px repeat(${weekDays.length}, 1fr)`,
+          gridTemplateColumns: `220px repeat(${weekDays.length}, 1fr)`,
           borderBottom: 1,
           borderColor: 'divider',
           bgcolor: 'background.paper',
@@ -118,7 +118,7 @@ export default function MultiStaffWeekView({
             key={staff.id}
             sx={{
               display: 'grid',
-              gridTemplateColumns: `120px repeat(${weekDays.length}, 1fr)`,
+              gridTemplateColumns: `220px repeat(${weekDays.length}, 1fr)`,
               borderBottom: 1,
               borderColor: 'divider',
               minHeight: 120,
@@ -153,8 +153,8 @@ export default function MultiStaffWeekView({
               >
                 {staff.name.split(' ').map(n => n[0]).join('')}
               </Avatar>
-              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                <Typography variant="body2" fontWeight={600}>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 0 }}>
+                <Typography variant="body2" fontWeight={600} noWrap>
                   {staff.name}
                 </Typography>
                 {staff.branchId && (
@@ -165,7 +165,12 @@ export default function MultiStaffWeekView({
                     sx={{
                       height: 16,
                       fontSize: '0.6rem',
-                      width: 'fit-content',
+                      maxWidth: '100%',
+                      '& .MuiChip-label': {
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      },
                       '& .MuiChip-icon': { fontSize: '0.65rem', ml: 0.5 },
                       bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
                       color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
@@ -259,7 +264,7 @@ export default function MultiStaffWeekView({
                                 whiteSpace: 'nowrap'
                               }}
                             >
-                              {event.title}
+                              {event.extendedProps.serviceName || event.title}
                             </Typography>
                           </Box>
                         )

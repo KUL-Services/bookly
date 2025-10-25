@@ -84,7 +84,9 @@ interface CalendarStore extends CalendarState {
   setStaffFilters: (filters: StaffFilter) => void
   setHighlights: (highlights: HighlightFilters) => void
   toggleStarred: (eventId: string) => void
+  createEvent: (event: CalendarEvent) => void
   updateEvent: (event: CalendarEvent) => void
+  deleteEvent: (eventId: string) => void
   setSelectedEvent: (event: CalendarEvent | null) => void
   toggleSettings: () => void
   toggleNotifications: () => void
@@ -175,10 +177,30 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     set({ starredIds: newStarredIds, events: updatedEvents })
   },
 
+  createEvent: (newEvent) => {
+    const { events } = get()
+    set({ events: [...events, newEvent] })
+  },
+
   updateEvent: (updatedEvent) => {
     const { events } = get()
     const newEvents = events.map(event => (event.id === updatedEvent.id ? updatedEvent : event))
     set({ events: newEvents })
+  },
+
+  deleteEvent: (eventId) => {
+    const { events, starredIds, selectedEvent } = get()
+    const newEvents = events.filter(event => event.id !== eventId)
+    const newStarredIds = new Set(starredIds)
+    newStarredIds.delete(eventId)
+
+    // Update starred in localStorage
+    savePreference(STORAGE_KEYS.starred, Array.from(newStarredIds))
+
+    // Clear selected event if it's the one being deleted
+    const newSelectedEvent = selectedEvent?.id === eventId ? null : selectedEvent
+
+    set({ events: newEvents, starredIds: newStarredIds, selectedEvent: newSelectedEvent })
   },
 
   setSelectedEvent: (event) => {

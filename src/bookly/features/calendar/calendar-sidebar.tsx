@@ -33,11 +33,14 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   const branchFilters = useCalendarStore(state => state.branchFilters)
   const staffFilters = useCalendarStore(state => state.staffFilters)
   const highlights = useCalendarStore(state => state.highlights)
+  const previousStaffFilters = useCalendarStore(state => state.previousStaffFilters)
   const setBranchFilters = useCalendarStore(state => state.setBranchFilters)
   const setStaffFilters = useCalendarStore(state => state.setStaffFilters)
   const setHighlights = useCalendarStore(state => state.setHighlights)
   const clearHighlights = useCalendarStore(state => state.clearHighlights)
   const clearBranchFilters = useCalendarStore(state => state.clearBranchFilters)
+  const goBackToAllStaff = useCalendarStore(state => state.goBackToAllStaff)
+  const selectSingleStaff = useCalendarStore(state => state.selectSingleStaff)
   const toggleSidebar = useCalendarStore(state => state.toggleSidebar)
 
   const [pendingBranches, setPendingBranches] = useState<BranchFilter>(branchFilters)
@@ -340,10 +343,22 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
         {/* Branches */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <i className='ri-map-pin-line' style={{ fontSize: '1.1rem' }} />
-            Branches
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <i className='ri-map-pin-line' style={{ fontSize: '1.1rem' }} />
+              Branches
+            </Typography>
+            {!pendingBranches.allBranches && pendingBranches.branchIds.length > 0 && (
+              <Button
+                variant='text'
+                size='small'
+                onClick={() => setPendingBranches({ allBranches: true, branchIds: [] })}
+                sx={{ minWidth: 'auto', p: 0.5 }}
+              >
+                <i className='ri-close-circle-line' style={{ fontSize: '1.1rem' }} />
+              </Button>
+            )}
+          </Box>
           <FormGroup>
             <FormControlLabel
               control={
@@ -391,6 +406,21 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
             <i className='ri-user-line' style={{ fontSize: '1.1rem' }} />
             Staff Members
           </Typography>
+
+          {/* Back to All Staff button (shown in single-staff view) */}
+          {staffFilters.selectedStaffId && previousStaffFilters && (
+            <Button
+              variant='outlined'
+              size='small'
+              fullWidth
+              onClick={goBackToAllStaff}
+              startIcon={<i className='ri-arrow-left-line' />}
+              sx={{ mb: 2 }}
+            >
+              Back to All Staff
+            </Button>
+          )}
+
           <FormGroup>
             <FormControlLabel
               control={<Checkbox checked={pendingStaff.onlyMe} onChange={e => handleOnlyMeChange(e.target.checked)} />}

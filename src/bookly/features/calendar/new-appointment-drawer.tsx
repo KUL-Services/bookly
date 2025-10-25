@@ -23,6 +23,10 @@ import {
 } from '@mui/material'
 import { mockStaff } from '@/bookly/data/mock-data'
 import type { DateRange } from './types'
+import type { User } from '@/bookly/data/types'
+import { useCalendarStore } from './state'
+import { isStaffAvailable, hasConflict } from './utils'
+import ClientPickerDialog from './client-picker-dialog'
 
 interface NewAppointmentDrawerProps {
   open: boolean
@@ -42,19 +46,36 @@ export default function NewAppointmentDrawer({
   onSave
 }: NewAppointmentDrawerProps) {
   const [activeTab, setActiveTab] = useState(0)
+  const events = useCalendarStore(state => state.events)
 
   // Form state
   const [date, setDate] = useState(initialDate || new Date())
   const [startTime, setStartTime] = useState('11:15')
   const [endTime, setEndTime] = useState('11:30')
   const [staffId, setStaffId] = useState(initialStaffId || '')
+  const [selectedClient, setSelectedClient] = useState<User | null>(null)
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
   const [clientPhone, setClientPhone] = useState('')
   const [service, setService] = useState('')
+  const [servicePrice, setServicePrice] = useState(0)
   const [notes, setNotes] = useState('')
   const [requestedByClient, setRequestedByClient] = useState(false)
   const [staffManuallyChosen, setStaffManuallyChosen] = useState(!!initialStaffId)
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
+  const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
+
+  // Service pricing map
+  const servicePrices: Record<string, number> = {
+    haircut: 65,
+    manicure: 35,
+    massage: 80,
+    color: 120,
+    pedicure: 40,
+    facial: 90,
+    waxing: 45
+  }
 
   // Update state when props change
   useEffect(() => {
@@ -73,7 +94,52 @@ export default function NewAppointmentDrawer({
     }
   }, [initialDate, initialDateRange, initialStaffId, open])
 
+  // Check availability in real-time and show as warning
+  useEffect(() => {
+    if (!staffId || !startTime || !endTime) {
+      setAvailabilityWarning(null)
+      return
+    }
+
+    // Check staff availability
+    const availability = isStaffAvailable(staffId, date, startTime, endTime)
+    if (!availability.available) {
+      setAvailabilityWarning(availability.reason || 'Staff is not available at this time')
+      return
+    }
+
+    // Check for conflicts
+    const conflict = hasConflict(events, staffId, date, startTime, endTime)
+    if (conflict.conflict) {
+      const conflictStart = new Date(conflict.conflictingEvent!.start)
+      const conflictEnd = new Date(conflict.conflictingEvent!.end)
+      const conflictTimeStr = `${conflictStart.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${conflictEnd.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`
+      setAvailabilityWarning(`Conflicts with existing appointment (${conflictTimeStr})`)
+      return
+    }
+
+    setAvailabilityWarning(null)
+  }, [staffId, date, startTime, endTime, events])
+
   const handleSave = () => {
+    // Clear previous validation errors
+    setValidationError(null)
+
+    // Validate required fields only
+    if (!staffId) {
+      setValidationError('Please select a staff member')
+      return
+    }
+
+    // Validate time format and order
+    if (startTime >= endTime) {
+      setValidationError('End time must be after start time')
+      return
+    }
+
+    // Note: Availability and conflict checks are shown as warnings, not blocking errors
+    // This allows booking outside normal hours if needed (emergency bookings, etc.)
+
     const appointment = {
       date,
       startTime,
@@ -83,6 +149,7 @@ export default function NewAppointmentDrawer({
       clientEmail,
       clientPhone,
       service,
+      servicePrice,
       notes,
       requestedByClient,
       staffManuallyChosen
@@ -91,15 +158,38 @@ export default function NewAppointmentDrawer({
     handleClose()
   }
 
+  const handleServiceChange = (newService: string) => {
+    setService(newService)
+    setServicePrice(servicePrices[newService] || 0)
+  }
+
+  const handleClientSelect = (client: User | null) => {
+    setSelectedClient(client)
+    if (client) {
+      setClientName(`${client.firstName} ${client.lastName}`)
+      setClientEmail(client.email)
+      setClientPhone(client.phone)
+    } else {
+      // Walk-in - clear fields
+      setClientName('')
+      setClientEmail('')
+      setClientPhone('')
+    }
+  }
+
   const handleClose = () => {
     // Reset form
     setActiveTab(0)
+    setSelectedClient(null)
     setClientName('')
     setClientEmail('')
     setClientPhone('')
     setService('')
+    setServicePrice(0)
     setNotes('')
     setRequestedByClient(false)
+    setValidationError(null)
+    setAvailabilityWarning(null)
     onClose()
   }
 
@@ -134,29 +224,61 @@ export default function NewAppointmentDrawer({
         {/* Client Selection */}
         <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
           <Box
+            onClick={() => setIsClientPickerOpen(true)}
             sx={{
               display: 'flex',
               alignItems: 'center',
               gap: 2,
               p: 2,
               border: '2px dashed',
-              borderColor: 'divider',
+              borderColor: selectedClient ? 'primary.main' : 'divider',
               borderRadius: 2,
               cursor: 'pointer',
+              bgcolor: selectedClient ? 'action.selected' : 'transparent',
               '&:hover': {
                 borderColor: 'primary.main',
                 bgcolor: 'action.hover'
               }
             }}
           >
-            <Avatar sx={{ width: 56, height: 56, bgcolor: 'grey.200' }}>
-              <i className="ri-user-line" style={{ fontSize: '2rem', color: '#999' }} />
+            <Avatar
+              src={selectedClient?.profileImage}
+              sx={{ width: 56, height: 56, bgcolor: 'grey.200' }}
+            >
+              {selectedClient ? (
+                `${selectedClient.firstName[0]}${selectedClient.lastName[0]}`
+              ) : (
+                <i className="ri-user-line" style={{ fontSize: '2rem', color: '#999' }} />
+              )}
             </Avatar>
-            <Typography variant="body1" sx={{ flex: 1, color: 'text.secondary' }}>
-              Select a client or leave empty for walk-in
-            </Typography>
-            <IconButton>
-              <i className="ri-add-line" />
+            <Box sx={{ flex: 1 }}>
+              {selectedClient ? (
+                <>
+                  <Typography variant="body1" fontWeight={600}>
+                    {selectedClient.firstName} {selectedClient.lastName}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {selectedClient.email}
+                  </Typography>
+                </>
+              ) : (
+                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                  Select a client or leave empty for walk-in
+                </Typography>
+              )}
+            </Box>
+            <IconButton onClick={e => {
+              e.stopPropagation()
+              if (selectedClient) {
+                setSelectedClient(null)
+                setClientName('')
+                setClientEmail('')
+                setClientPhone('')
+              } else {
+                setIsClientPickerOpen(true)
+              }
+            }}>
+              <i className={selectedClient ? 'ri-close-line' : 'ri-add-line'} />
             </IconButton>
           </Box>
         </Box>
@@ -208,7 +330,7 @@ export default function NewAppointmentDrawer({
                   select
                   label="Select service"
                   value={service}
-                  onChange={(e) => setService(e.target.value)}
+                  onChange={(e) => handleServiceChange(e.target.value)}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -218,10 +340,13 @@ export default function NewAppointmentDrawer({
                   }}
                 >
                   <MenuItem value="">Select service</MenuItem>
-                  <MenuItem value="haircut">Haircut & Style</MenuItem>
-                  <MenuItem value="manicure">Manicure</MenuItem>
-                  <MenuItem value="massage">Massage</MenuItem>
-                  <MenuItem value="color">Hair Color</MenuItem>
+                  <MenuItem value="haircut">Haircut & Style - $65</MenuItem>
+                  <MenuItem value="manicure">Manicure - $35</MenuItem>
+                  <MenuItem value="massage">Massage - $80</MenuItem>
+                  <MenuItem value="color">Hair Color - $120</MenuItem>
+                  <MenuItem value="pedicure">Pedicure - $40</MenuItem>
+                  <MenuItem value="facial">Facial - $90</MenuItem>
+                  <MenuItem value="waxing">Waxing - $45</MenuItem>
                 </TextField>
               </FormControl>
 
@@ -270,20 +395,21 @@ export default function NewAppointmentDrawer({
               </FormControl>
 
               {/* Warning if staff not available */}
-              {staffId && (
+              {availabilityWarning && (
                 <Box
                   sx={{
                     p: 2,
-                    bgcolor: 'warning.light',
+                    bgcolor: theme => (theme.palette.mode === 'dark' ? 'warning.dark' : 'warning.light'),
                     borderRadius: 1,
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 1
+                    gap: 1,
+                    border: theme => `1px solid ${theme.palette.warning.main}`
                   }}
                 >
                   <i className="ri-information-line" />
-                  <Typography variant="body2">
-                    Not working on selected date
+                  <Typography variant="body2" color="warning.dark">
+                    {availabilityWarning}
                   </Typography>
                 </Box>
               )}
@@ -375,7 +501,7 @@ export default function NewAppointmentDrawer({
                 Total
               </Typography>
               <Typography variant="h4" fontWeight={700}>
-                $0.00
+                ${servicePrice.toFixed(2)}
               </Typography>
             </Box>
             <Box sx={{ textAlign: 'right' }}>
@@ -383,7 +509,7 @@ export default function NewAppointmentDrawer({
                 To be paid
               </Typography>
               <Typography variant="h4" fontWeight={700}>
-                $0.00
+                ${servicePrice.toFixed(2)}
               </Typography>
             </Box>
           </Box>
@@ -404,13 +530,40 @@ export default function NewAppointmentDrawer({
               fullWidth
               size="large"
               onClick={handleSave}
-              sx={{ textTransform: 'none', bgcolor: 'grey.400', '&:hover': { bgcolor: 'grey.500' } }}
+              color="primary"
+              sx={{ textTransform: 'none' }}
             >
               Save
             </Button>
           </Box>
+
+          {/* Validation Error */}
+          {validationError && (
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                bgcolor: theme => (theme.palette.mode === 'dark' ? 'error.dark' : 'error.light'),
+                borderRadius: 1,
+                border: theme => `1px solid ${theme.palette.error.main}`
+              }}
+            >
+              <Typography variant="body2" color="error" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <i className="ri-error-warning-line" />
+                {validationError}
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Box>
+
+      {/* Client Picker Dialog */}
+      <ClientPickerDialog
+        open={isClientPickerOpen}
+        onClose={() => setIsClientPickerOpen(false)}
+        onSelect={handleClientSelect}
+        selectedClientId={selectedClient?.id}
+      />
     </Drawer>
   )
 }

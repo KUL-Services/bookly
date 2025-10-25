@@ -332,3 +332,166 @@ export function isSameDay(date1: Date, date2: Date): boolean {
     date1.getDate() === date2.getDate()
   )
 }
+
+/**
+ * Parse 24-hour time format to minutes from midnight
+ * @example parseTime24h('14:30') => 870
+ */
+export function parseTime24h(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+/**
+ * Get day of week abbreviation from date
+ * @example getDayOfWeek(new Date('2025-01-13')) => 'Mon'
+ */
+export function getDayOfWeek(date: Date): string {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  return days[date.getDay()]
+}
+
+/**
+ * Check if staff member is available on a specific day and time
+ */
+export function isStaffAvailable(
+  staffId: string,
+  date: Date,
+  startTime: string,
+  endTime: string
+): { available: boolean; reason?: string } {
+  const staff = mockStaff.find(s => s.id === staffId)
+  if (!staff) {
+    return { available: false, reason: 'Staff member not found' }
+  }
+
+  const dayOfWeek = getDayOfWeek(date)
+  const schedule = staff.schedule?.find(s => s.dayOfWeek === dayOfWeek)
+
+  if (!schedule) {
+    return { available: false, reason: 'No schedule found for this day' }
+  }
+
+  if (!schedule.isAvailable) {
+    return { available: false, reason: 'Staff member is not working on this day' }
+  }
+
+  // Parse times to minutes from midnight
+  const requestStart = parseTime24h(startTime)
+  const requestEnd = parseTime24h(endTime)
+  const scheduleStart = parseTime24h(schedule.startTime)
+  const scheduleEnd = parseTime24h(schedule.endTime)
+
+  if (requestStart < scheduleStart || requestEnd > scheduleEnd) {
+    return {
+      available: false,
+      reason: `Staff working hours are ${schedule.startTime} - ${schedule.endTime}`
+    }
+  }
+
+  return { available: true }
+}
+
+/**
+ * Check for appointment conflicts (double-bookings)
+ */
+export function hasConflict(
+  events: CalendarEvent[],
+  staffId: string,
+  date: Date,
+  startTime: string,
+  endTime: string,
+  excludeEventId?: string
+): { conflict: boolean; conflictingEvent?: CalendarEvent } {
+  const requestStart = parseTime24h(startTime)
+  const requestEnd = parseTime24h(endTime)
+
+  for (const event of events) {
+    // Skip the event being edited
+    if (excludeEventId && event.id === excludeEventId) continue
+
+    // Only check same staff and same day
+    if (event.extendedProps.staffId !== staffId) continue
+    if (!isSameDay(new Date(event.start), date)) continue
+
+    // Skip cancelled appointments
+    if (event.extendedProps.status === 'cancelled') continue
+
+    // Parse event times
+    const eventStart = new Date(event.start)
+    const eventEnd = new Date(event.end)
+    const eventStartMinutes = eventStart.getHours() * 60 + eventStart.getMinutes()
+    const eventEndMinutes = eventEnd.getHours() * 60 + eventEnd.getMinutes()
+
+    // Check for overlap
+    const hasOverlap =
+      (requestStart >= eventStartMinutes && requestStart < eventEndMinutes) ||
+      (requestEnd > eventStartMinutes && requestEnd <= eventEndMinutes) ||
+      (requestStart <= eventStartMinutes && requestEnd >= eventEndMinutes)
+
+    if (hasOverlap) {
+      return { conflict: true, conflictingEvent: event }
+    }
+  }
+
+  return { conflict: false }
+}
+
+/**
+ * Generate available time slots for a staff member on a specific date
+ */
+export function getAvailableTimeSlots(
+  events: CalendarEvent[],
+  staffId: string,
+  date: Date,
+  slotDuration: number = 30 // in minutes
+): string[] {
+  const staff = mockStaff.find(s => s.id === staffId)
+  if (!staff) return []
+
+  const dayOfWeek = getDayOfWeek(date)
+  const schedule = staff.schedule?.find(s => s.dayOfWeek === dayOfWeek)
+
+  if (!schedule || !schedule.isAvailable) return []
+
+  const scheduleStart = parseTime24h(schedule.startTime)
+  const scheduleEnd = parseTime24h(schedule.endTime)
+
+  // Get all booked slots for this staff on this date
+  const bookedSlots: Array<{ start: number; end: number }> = []
+  for (const event of events) {
+    if (event.extendedProps.staffId !== staffId) continue
+    if (!isSameDay(new Date(event.start), date)) continue
+    if (event.extendedProps.status === 'cancelled') continue
+
+    const eventStart = new Date(event.start)
+    const eventEnd = new Date(event.end)
+    bookedSlots.push({
+      start: eventStart.getHours() * 60 + eventStart.getMinutes(),
+      end: eventEnd.getHours() * 60 + eventEnd.getMinutes()
+    })
+  }
+
+  // Generate all possible slots
+  const availableSlots: string[] = []
+  for (let minutes = scheduleStart; minutes + slotDuration <= scheduleEnd; minutes += slotDuration) {
+    const slotEnd = minutes + slotDuration
+
+    // Check if this slot conflicts with any booked slot
+    const isBooked = bookedSlots.some(
+      booked =>
+        (minutes >= booked.start && minutes < booked.end) ||
+        (slotEnd > booked.start && slotEnd <= booked.end) ||
+        (minutes <= booked.start && slotEnd >= booked.end)
+    )
+
+    if (!isBooked) {
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      const timeString = `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`
+      availableSlots.push(timeString)
+    }
+  }
+
+  return availableSlots
+}

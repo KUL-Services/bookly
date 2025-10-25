@@ -44,6 +44,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const setVisibleDateRange = useCalendarStore(state => state.setVisibleDateRange)
   const openNewBooking = useCalendarStore(state => state.openNewBooking)
   const closeNewBooking = useCalendarStore(state => state.closeNewBooking)
+  const createEvent = useCalendarStore(state => state.createEvent)
   const toggleSettings = useCalendarStore(state => state.toggleSettings)
   const toggleNotifications = useCalendarStore(state => state.toggleNotifications)
   const selectSingleStaff = useCalendarStore(state => state.selectSingleStaff)
@@ -63,13 +64,11 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     if (staffFilters.onlyMe) {
       return ['1'] // Current user ID
     }
-    return staffFilters.staffIds.length > 0 ? staffFilters.staffIds : []
+    // If no specific staff selected, show all staff (first 7 for performance)
+    return staffFilters.staffIds.length > 0 ? staffFilters.staffIds : mockStaff.slice(0, 7).map(s => s.id)
   }, [staffFilters])
 
   const activeStaffMembers = useMemo(() => {
-    if (activeStaffIds.length === 0) {
-      return []
-    }
     return mockStaff.filter(staff => activeStaffIds.includes(staff.id))
   }, [activeStaffIds])
 
@@ -210,6 +209,47 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     goBackToAllStaff()
   }
 
+  const handleSaveNewAppointment = (appointment: any) => {
+    // Generate unique ID for the new event
+    const eventId = `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+    // Convert appointment data to CalendarEvent
+    const newEvent: CalendarEvent = {
+      id: eventId,
+      title: appointment.clientName || 'Walk-in',
+      start: new Date(
+        appointment.date.getFullYear(),
+        appointment.date.getMonth(),
+        appointment.date.getDate(),
+        parseInt(appointment.startTime.split(':')[0]),
+        parseInt(appointment.startTime.split(':')[1])
+      ),
+      end: new Date(
+        appointment.date.getFullYear(),
+        appointment.date.getMonth(),
+        appointment.date.getDate(),
+        parseInt(appointment.endTime.split(':')[0]),
+        parseInt(appointment.endTime.split(':')[1])
+      ),
+      extendedProps: {
+        staffId: appointment.staffId,
+        staffName: mockStaff.find(s => s.id === appointment.staffId)?.name || 'Unknown Staff',
+        serviceName: appointment.service || 'No service selected',
+        customerName: appointment.clientName || 'Walk-in',
+        price: appointment.servicePrice || 0,
+        status: 'confirmed' as const,
+        paymentStatus: 'unpaid' as const,
+        selectionMethod: appointment.requestedByClient ? ('by_client' as const) : ('automatically' as const),
+        notes: appointment.notes || '',
+        starred: false,
+        bookingId: eventId
+      }
+    }
+
+    // Add to store
+    createEvent(newEvent)
+  }
+
   const handleDateClickInWeekView = (date: Date) => {
     // When clicking a date in week view, navigate to that day in day view
     useCalendarStore.getState().setView('timeGridDay')
@@ -232,7 +272,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           events={events}
           staff={activeStaffMembers[0]}
           currentDate={currentDate}
-          onEventClick={(event) => {
+          onEventClick={event => {
             const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
             handleEventClick(event, eventEl || document.body)
           }}
@@ -249,7 +289,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           events={events}
           staffMembers={activeStaffMembers}
           currentDate={currentDate}
-          onEventClick={(event) => {
+          onEventClick={event => {
             const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
             handleEventClick(event, eventEl || document.body)
           }}
@@ -266,7 +306,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           events={events}
           staff={activeStaffMembers[0]}
           currentDate={currentDate}
-          onEventClick={(event) => {
+          onEventClick={event => {
             const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
             handleEventClick(event, eventEl || document.body)
           }}
@@ -283,7 +323,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           events={events}
           staffMembers={activeStaffMembers}
           currentDate={currentDate}
-          onEventClick={(event) => {
+          onEventClick={event => {
             const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
             handleEventClick(event, eventEl || document.body)
           }}
@@ -305,7 +345,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         highlights={highlights}
         onDateRangeChange={handleDateRangeChange}
         onDateClick={handleDateClick}
-        onEventClick={(event) => {
+        onEventClick={event => {
           const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
           handleEventClick(event, eventEl || document.body)
         }}
@@ -335,14 +375,10 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         )}
 
         {/* Mobile Sidebar Drawer */}
-        {isMobile && (
-          <CalendarSidebar currentDate={currentDate} onDateChange={handleDateChange} isMobile={true} />
-        )}
+        {isMobile && <CalendarSidebar currentDate={currentDate} onDateChange={handleDateChange} isMobile={true} />}
 
         {/* Calendar View */}
-        <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          {renderCalendarView()}
-        </Box>
+        <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>{renderCalendarView()}</Box>
       </Box>
 
       {/* Event Details Drawer */}
@@ -354,11 +390,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       />
 
       {/* Edit Appointment Drawer */}
-      <EditAppointmentDrawer
-        open={isEditDrawerOpen}
-        event={selectedEvent}
-        onClose={handleCloseEditDrawer}
-      />
+      <EditAppointmentDrawer open={isEditDrawerOpen} event={selectedEvent} onClose={handleCloseEditDrawer} />
 
       {/* Settings Drawer */}
       <CalendarSettings open={isSettingsOpen} onClose={toggleSettings} />
@@ -373,6 +405,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         initialDateRange={useCalendarStore.getState().selectedDateRange}
         initialStaffId={staffFilters.selectedStaffId}
         onClose={closeNewBooking}
+        onSave={handleSaveNewAppointment}
       />
     </Box>
   )

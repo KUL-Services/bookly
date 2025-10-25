@@ -72,7 +72,8 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
             <i className='ri-arrow-up-line' />
           </Button>
         </ScrollToTop>
-        <Customizer dir={direction} />
+        {/* Commented theme customizer out  */}
+        {/* <Customizer dir={direction} /> */}
       </ClientAuthGuard>
     </Providers>
   )

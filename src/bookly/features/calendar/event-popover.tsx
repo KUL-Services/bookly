@@ -14,6 +14,7 @@ interface EventPopoverProps {
 export default function EventPopover({ anchorEl, event, onClose, onEdit }: EventPopoverProps) {
   const updateEvent = useCalendarStore(state => state.updateEvent)
   const toggleStarred = useCalendarStore(state => state.toggleStarred)
+  const deleteEvent = useCalendarStore(state => state.deleteEvent)
 
   if (!event || !event.extendedProps) return null
 
@@ -22,6 +23,14 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
   // Handle toggle starred
   const handleToggleStarred = () => {
     toggleStarred(event.id)
+  }
+
+  // Handle delete
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this appointment? This action cannot be undone.')) {
+      deleteEvent(event.id)
+      onClose()
+    }
   }
 
   // Handle payment status toggle
@@ -152,7 +161,15 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
             </div>
             <div className="flex items-center gap-3">
               <i className="ri-user-line text-xl" />
-              <Typography variant="body1">{extendedProps.customerName}</Typography>
+              <Box>
+                <Typography variant="body1" fontWeight={600}>{extendedProps.customerName}</Typography>
+                {extendedProps.selectionMethod === 'by_client' && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <i className="ri-heart-fill" style={{ fontSize: '0.75rem', color: '#f44336' }} />
+                    Requested by client
+                  </Typography>
+                )}
+              </Box>
             </div>
             <div className="flex items-center gap-3">
               <i className="ri-team-line text-xl" />
@@ -195,6 +212,16 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
             onClick={handleTogglePayment}
           >
             Mark as {extendedProps.paymentStatus === 'paid' ? 'Unpaid' : 'Paid'}
+          </Button>
+          <Button
+            fullWidth
+            variant="outlined"
+            size="large"
+            color="error"
+            startIcon={<i className="ri-delete-bin-line" />}
+            onClick={handleDelete}
+          >
+            Delete Appointment
           </Button>
 
           {/* Change Status Menu */}

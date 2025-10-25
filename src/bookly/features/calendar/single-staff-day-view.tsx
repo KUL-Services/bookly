@@ -441,7 +441,7 @@ export default function SingleStaffDayView({
                       mb: height > 100 ? 0.5 : 0
                     }}
                   >
-                    {event.title}
+                    {event.extendedProps.serviceName || event.title}
                   </Typography>
                   {height > 100 && (
                     <Typography

@@ -76,20 +76,23 @@ export default function MultiStaffDayView({
   }
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
-      {/* Header with staff columns */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: `60px repeat(${staffMembers.length}, 1fr)`,
-          borderBottom: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10
-        }}
-      >
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
+      {/* Wrapper for horizontal scroll */}
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+        {/* Header with staff columns */}
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: `60px repeat(${staffMembers.length}, minmax(180px, 1fr))`,
+            borderBottom: 1,
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            minWidth: `${60 + staffMembers.length * 180}px`
+          }}
+        >
         {/* Time column header */}
         <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider' }} />
 
@@ -148,14 +151,14 @@ export default function MultiStaffDayView({
         ))}
       </Box>
 
-      {/* Scrollable content */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+        {/* Scrollable content */}
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: `60px repeat(${staffMembers.length}, 1fr)`,
+            gridTemplateColumns: `60px repeat(${staffMembers.length}, minmax(180px, 1fr))`,
             position: 'relative',
-            minHeight: '100%'
+            minHeight: '100%',
+            minWidth: `${60 + staffMembers.length * 180}px`
           }}
         >
           {/* Time slots column */}
@@ -233,8 +236,8 @@ export default function MultiStaffDayView({
                     sx={{
                       position: 'absolute',
                       top: `${top}px`,
-                      left: 4,
-                      right: 4,
+                      left: '8px',
+                      right: '8px',
                       height: `${height}px`,
                       bgcolor: colors.bg,
                       border: 2,
@@ -285,7 +288,7 @@ export default function MultiStaffDayView({
                         opacity: 0.9
                       }}
                     >
-                      {event.title}
+                      {event.extendedProps.serviceName || event.title}
                     </Typography>
                   </Box>
                 )

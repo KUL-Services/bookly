@@ -331,7 +331,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           height='100%'
           events={calendarEvents}
           editable={true}
-          selectable={true}
+          selectable={view === 'timeGridDay' || view === 'timeGridWeek'}
           selectMirror={true}
           dayMaxEvents={3}
           weekends={true}
@@ -409,6 +409,21 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                   {props.starred && '⭐ '}
                   {event.title}
                 </Box>
+                {props.serviceName && (
+                  <Box
+                    sx={{
+                      fontSize: '0.7rem',
+                      lineHeight: 1.2,
+                      whiteSpace: 'normal',
+                      wordWrap: 'break-word',
+                      wordBreak: 'break-word',
+                      color: 'inherit',
+                      opacity: 0.85
+                    }}
+                  >
+                    {props.serviceName}
+                  </Box>
+                )}
               </Box>
             )
           }}

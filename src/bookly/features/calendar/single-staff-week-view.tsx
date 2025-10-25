@@ -255,7 +255,7 @@ export default function SingleStaffWeekView({
                               lineHeight: 1.3
                             }}
                           >
-                            {event.title}
+                            {event.extendedProps.serviceName || event.title}
                           </Typography>
                         </Box>
                       )

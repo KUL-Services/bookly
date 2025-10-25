@@ -8,16 +8,19 @@ import {
   IconButton,
   Button,
   TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Avatar,
   Divider,
-  Chip
+  Chip,
+  Tabs,
+  Tab,
+  Checkbox,
+  FormControlLabel,
+  Menu,
+  MenuItem as MuiMenuItem
 } from '@mui/material'
 import { useCalendarStore } from './state'
 import type { CalendarEvent, AppointmentStatus } from './types'
+import { mockStaff } from '@/bookly/data/mock-data'
 
 interface EditAppointmentDrawerProps {
   open: boolean
@@ -28,21 +31,40 @@ interface EditAppointmentDrawerProps {
 export default function EditAppointmentDrawer({ open, event, onClose }: EditAppointmentDrawerProps) {
   const updateEvent = useCalendarStore(state => state.updateEvent)
 
-  // Local state for form - must be declared before early return
+  // Local state for form
+  const [activeTab, setActiveTab] = useState(0)
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
-  const [staff, setStaff] = useState('')
+  const [staffId, setStaffId] = useState('')
+  const [staffName, setStaffName] = useState('')
   const [status, setStatus] = useState<AppointmentStatus>('confirmed')
+  const [customerName, setCustomerName] = useState('')
+  const [customerEmail, setCustomerEmail] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [notes, setNotes] = useState('')
+  const [requestedByClient, setRequestedByClient] = useState(false)
+  const [statusMenuAnchor, setStatusMenuAnchor] = useState<null | HTMLElement>(null)
 
   // Update local state when event changes
   useEffect(() => {
     if (event && event.extendedProps) {
-      setStartTime(new Date(event.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }))
-      setEndTime(new Date(event.end).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }))
-      setStaff(event.extendedProps.staffName)
+      const start = new Date(event.start)
+      const end = new Date(event.end)
+
+      setStartTime(start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
+      setEndTime(end.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
+      setStaffId(event.extendedProps.staffId)
+      setStaffName(event.extendedProps.staffName)
       setStatus(event.extendedProps.status)
+      setCustomerName(event.extendedProps.customerName || '')
+      setNotes(event.extendedProps.notes || '')
+      setRequestedByClient(event.extendedProps.selectionMethod === 'by_client')
+
+      // Try to extract email/phone if they exist (they might not be in old mock data)
+      setCustomerEmail('')
+      setCustomerPhone('')
     }
-  }, [event])
+  }, [event, open])
 
   if (!event || !event.extendedProps) return null
 
@@ -70,6 +92,15 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
     return `${startStr} - ${endStr}`
   }
 
+  const calculateDuration = () => {
+    if (!startTime || !endTime) return 0
+    const [startHour, startMin] = startTime.split(':').map(Number)
+    const [endHour, endMin] = endTime.split(':').map(Number)
+    const startMinutes = startHour * 60 + startMin
+    const endMinutes = endHour * 60 + endMin
+    return endMinutes - startMinutes
+  }
+
   const getStatusColor = (status: AppointmentStatus) => {
     const colors = {
       confirmed: 'success',
@@ -83,13 +114,79 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
   }
 
   const getStatusLabel = (status: AppointmentStatus) => {
-    return status.toUpperCase().replace('_', ' ')
+    const labels = {
+      confirmed: 'CONFIRMED',
+      pending: 'PENDING',
+      completed: 'COMPLETED',
+      cancelled: 'CANCELLED',
+      need_confirm: 'NEED CONFIRM',
+      no_show: 'NO SHOW'
+    }
+    return labels[status] || status.toUpperCase()
   }
 
   const handleSave = () => {
-    // Update event logic here
+    if (!event) return
+
+    // Parse times and create new Date objects
+    const [startHour, startMin] = startTime.split(':').map(Number)
+    const [endHour, endMin] = endTime.split(':').map(Number)
+
+    const originalDate = new Date(event.start)
+    const newStart = new Date(originalDate)
+    newStart.setHours(startHour, startMin, 0, 0)
+
+    const newEnd = new Date(originalDate)
+    newEnd.setHours(endHour, endMin, 0, 0)
+
+    // Create updated event
+    const updatedEvent: CalendarEvent = {
+      ...event,
+      start: newStart,
+      end: newEnd,
+      title: customerName || event.title,
+      extendedProps: {
+        ...extendedProps,
+        staffId,
+        staffName,
+        status,
+        customerName,
+        notes,
+        selectionMethod: requestedByClient ? 'by_client' : extendedProps.selectionMethod
+      }
+    }
+
+    updateEvent(updatedEvent)
     onClose()
   }
+
+  const handleStatusChange = (newStatus: AppointmentStatus) => {
+    setStatus(newStatus)
+    setStatusMenuAnchor(null)
+  }
+
+  const handleStaffChange = (newStaffId: string) => {
+    setStaffId(newStaffId)
+    const staff = mockStaff.find(s => s.id === newStaffId)
+    if (staff) {
+      setStaffName(staff.name)
+    }
+  }
+
+  // Generate time slots from 6:00 AM to 11:00 PM in 15-minute intervals
+  const generateTimeSlots = () => {
+    const slots = []
+    for (let hour = 6; hour <= 23; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        const timeStr = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
+        slots.push(timeStr)
+      }
+    }
+    return slots
+  }
+
+  const timeSlots = generateTimeSlots()
+  const duration = calculateDuration()
 
   return (
     <Drawer
@@ -113,6 +210,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
             <Button
               variant="outlined"
               size="small"
+              onClick={(e) => setStatusMenuAnchor(e.currentTarget)}
               sx={{
                 color: 'white',
                 borderColor: 'white',
@@ -128,204 +226,207 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
           </Typography>
         </Box>
 
+        {/* Status Change Menu */}
+        <Menu
+          anchorEl={statusMenuAnchor}
+          open={Boolean(statusMenuAnchor)}
+          onClose={() => setStatusMenuAnchor(null)}
+        >
+          {['confirmed', 'pending', 'need_confirm', 'completed', 'no_show', 'cancelled'].map((s) => (
+            <MuiMenuItem
+              key={s}
+              onClick={() => handleStatusChange(s as AppointmentStatus)}
+              selected={s === status}
+            >
+              {getStatusLabel(s as AppointmentStatus)}
+            </MuiMenuItem>
+          ))}
+        </Menu>
+
         {/* Client Info */}
         <Box sx={{ bgcolor: 'background.paper', p: 3, borderBottom: 1, borderColor: 'divider' }}>
-          <Box className="flex items-center justify-between">
-            <Box className="flex items-center gap-3">
-              <Avatar sx={{ width: 56, height: 56, bgcolor: 'grey.300' }}>
-                <Typography variant="h6" sx={{ color: 'grey.700' }}>
-                  {extendedProps.customerName.split(' ').map(n => n[0]).join('')}
-                </Typography>
-              </Avatar>
-              <Box>
-                <Box className="flex items-center gap-2">
-                  <Typography variant="h6" className="font-semibold">
-                    {extendedProps.customerName}
-                  </Typography>
-                  <i className="ri-arrow-right-s-line" />
-                </Box>
+          <Box className="flex items-center gap-3">
+            <Avatar sx={{ width: 56, height: 56, bgcolor: 'grey.300' }}>
+              <Typography variant="h6" sx={{ color: 'grey.700' }}>
+                {customerName?.split(' ').map(n => n[0]).join('') || 'W'}
+              </Typography>
+            </Avatar>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="h6" className="font-semibold">
+                {customerName || 'Walk-in'}
+              </Typography>
+              {customerPhone && (
                 <Typography variant="body2" color="text.secondary">
-                  +20 12 81474122
+                  {customerPhone}
                 </Typography>
-              </Box>
+              )}
             </Box>
-            <IconButton>
-              <i className="ri-close-line" />
-            </IconButton>
           </Box>
         </Box>
 
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-          <Box className="flex">
-            <Button
-              sx={{
-                flex: 1,
-                borderRadius: 0,
-                borderBottom: 2,
-                borderColor: 'primary.main',
-                color: 'text.primary',
-                fontWeight: 600
-              }}
-            >
-              APPOINTMENT
-            </Button>
-            <Button
-              sx={{
-                flex: 1,
-                borderRadius: 0,
-                color: 'text.secondary'
-              }}
-            >
-              NOTES & INFO
-            </Button>
-          </Box>
+          <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+            <Tab label="APPOINTMENT" />
+            <Tab label="NOTES & INFO" />
+          </Tabs>
         </Box>
 
         {/* Content */}
         <Box className="flex-1 overflow-auto p-4">
-          {/* Date/Time Selector */}
-          <Box sx={{ mb: 3 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              sx={{ justifyContent: 'space-between', p: 2, textTransform: 'none' }}
-              endIcon={<i className="ri-arrow-down-s-line" />}
-            >
+          {activeTab === 0 && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Date Display */}
               <Box>
-                <Typography variant="h6">{formatDate(event.start)}</Typography>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  {formatDate(event.start)}
+                </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {formatTimeRange(event.start, event.end)}
+                  Original time: {formatTimeRange(event.start, event.end)}
                 </Typography>
               </Box>
-            </Button>
-          </Box>
 
-          {/* Action Buttons */}
-          <Box className="flex gap-2 mb-4">
-            <Button
-              variant="outlined"
-              fullWidth
-              startIcon={<i className="ri-group-line" />}
-            >
-              GROUP BOOKING
-            </Button>
-            <Button
-              variant="outlined"
-              fullWidth
-              startIcon={<i className="ri-repeat-line" />}
-            >
-              RECURRING
-            </Button>
-          </Box>
+              <Divider />
 
-          {/* Service */}
-          <Box
-            sx={{
-              border: 1,
-              borderColor: 'divider',
-              borderLeft: 4,
-              borderLeftColor: 'success.main',
-              p: 2,
-              mb: 3,
-              borderRadius: 1
-            }}
-          >
-            <Box className="flex items-center justify-between">
-              <Box className="flex-1">
+              {/* Service Display */}
+              <Box
+                sx={{
+                  border: 1,
+                  borderColor: 'divider',
+                  borderLeft: 4,
+                  borderLeftColor: 'success.main',
+                  p: 2,
+                  borderRadius: 1
+                }}
+              >
                 <Typography variant="h6" className="font-semibold">
                   {extendedProps.serviceName}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  40min
+                  {duration} min
                 </Typography>
-              </Box>
-              <Box className="flex items-center gap-2">
-                <Typography variant="h6" className="font-semibold">
+                <Typography variant="h6" className="font-semibold" sx={{ mt: 1 }}>
                   ${extendedProps.price}
                 </Typography>
-                <i className="ri-arrow-right-s-line" />
               </Box>
+
+              {/* Time Selection */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                <TextField
+                  select
+                  label="START"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  size="small"
+                  SelectProps={{
+                    native: true
+                  }}
+                >
+                  {timeSlots.map(slot => (
+                    <option key={`start-${slot}`} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  label="END"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  size="small"
+                  SelectProps={{
+                    native: true
+                  }}
+                >
+                  {timeSlots.map(slot => (
+                    <option key={`end-${slot}`} value={slot}>
+                      {slot}
+                    </option>
+                  ))}
+                </TextField>
+              </Box>
+
+              {/* Staff Selection */}
+              <TextField
+                select
+                fullWidth
+                label="STAFF"
+                value={staffId}
+                onChange={(e) => handleStaffChange(e.target.value)}
+                SelectProps={{
+                  native: true
+                }}
+              >
+                {mockStaff.map((staff) => (
+                  <option key={staff.id} value={staff.id}>
+                    {staff.name}
+                  </option>
+                ))}
+              </TextField>
+
+              <Box className="flex items-center gap-2">
+                <i className="ri-user-line" />
+                <Typography variant="body2">Staff Member chosen manually</Typography>
+              </Box>
+
+              {/* Requested by client */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={requestedByClient}
+                    onChange={(e) => setRequestedByClient(e.target.checked)}
+                    icon={<i className="ri-heart-line" style={{ fontSize: '1.5rem' }} />}
+                    checkedIcon={<i className="ri-heart-fill" style={{ fontSize: '1.5rem', color: '#f44336' }} />}
+                  />
+                }
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2">Requested by client</Typography>
+                  </Box>
+                }
+              />
             </Box>
-          </Box>
+          )}
 
-          {/* Time Selection */}
-          <Box className="grid grid-cols-2 gap-3 mb-3">
-            <FormControl fullWidth>
-              <InputLabel size="small">START</InputLabel>
-              <Select
-                value={startTime}
-                label="START"
-                onChange={e => setStartTime(e.target.value)}
-                size="small"
-              >
-                <MenuItem value="10:00">10:00 AM</MenuItem>
-                <MenuItem value="10:30">10:30 AM</MenuItem>
-                <MenuItem value="11:00">11:00 AM</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth>
-              <InputLabel size="small">END</InputLabel>
-              <Select
-                value={endTime}
-                label="END"
-                onChange={e => setEndTime(e.target.value)}
-                size="small"
-              >
-                <MenuItem value="11:00">11:00 AM</MenuItem>
-                <MenuItem value="11:30">11:30 AM</MenuItem>
-                <MenuItem value="12:00">12:00 PM</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+          {activeTab === 1 && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Client Information */}
+              <TextField
+                fullWidth
+                label="Client Name"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Enter client name"
+              />
+              <TextField
+                fullWidth
+                label="Email"
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="client@example.com"
+              />
+              <TextField
+                fullWidth
+                label="Phone"
+                type="tel"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(e.target.value)}
+                placeholder="+1 (555) 000-0000"
+              />
 
-          {/* Staff Selection */}
-          <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel>STAFF</InputLabel>
-            <Select
-              value={staff}
-              label="STAFF"
-              onChange={e => setStaff(e.target.value)}
-            >
-              <MenuItem value="Kareem Gamal">Kareem Gamal</MenuItem>
-              <MenuItem value="John Doe">John Doe</MenuItem>
-            </Select>
-          </FormControl>
-
-          <Box className="flex items-center gap-2 mb-3">
-            <i className="ri-user-line" />
-            <Typography variant="body2">Staff Member chosen manually</Typography>
-          </Box>
-
-          {/* Requested by client */}
-          <Box
-            sx={{
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 2,
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              mb: 3
-            }}
-          >
-            <i className="ri-heart-line text-2xl" />
-            <Typography variant="body1">Requested by client</Typography>
-            <IconButton size="small">
-              <i className="ri-question-line" />
-            </IconButton>
-          </Box>
-
-          {/* Add Another Service */}
-          <Button
-            variant="outlined"
-            fullWidth
-            startIcon={<i className="ri-add-line" />}
-            sx={{ mb: 4, textTransform: 'none' }}
-          >
-            ADD ANOTHER SERVICE
-          </Button>
+              {/* Notes */}
+              <TextField
+                fullWidth
+                multiline
+                rows={6}
+                label="Notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add any notes about the appointment..."
+              />
+            </Box>
+          )}
         </Box>
 
         {/* Footer */}
@@ -339,24 +440,21 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 ${extendedProps.price}
               </Typography>
             </Box>
-            <IconButton sx={{ bgcolor: 'background.default' }}>
-              <i className="ri-chat-3-line" />
-            </IconButton>
             <Box>
               <Typography variant="caption" color="text.secondary">
-                To be paid
+                Duration
               </Typography>
-              <Typography variant="h4" className="font-bold">
-                ${extendedProps.price}
+              <Typography variant="h6" className="font-bold">
+                {duration} min
               </Typography>
             </Box>
           </Box>
           <Box className="grid grid-cols-2 gap-2 p-3">
-            <Button variant="outlined" size="large" fullWidth>
-              BOOK AGAIN
+            <Button variant="outlined" size="large" fullWidth onClick={onClose}>
+              CANCEL
             </Button>
-            <Button variant="contained" size="large" fullWidth onClick={handleSave}>
-              CHECKOUT
+            <Button variant="contained" size="large" fullWidth onClick={handleSave} color="primary">
+              SAVE CHANGES
             </Button>
           </Box>
         </Box>
