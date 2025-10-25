@@ -3,11 +3,12 @@
 import { Box, Typography, IconButton, Avatar, Chip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, addMinutes, isSameDay } from 'date-fns'
+import { getBranchName } from './utils'
 import type { CalendarEvent } from './types'
 
 interface MultiStaffDayViewProps {
   events: CalendarEvent[]
-  staffMembers: Array<{ id: string; name: string; photo?: string }>
+  staffMembers: Array<{ id: string; name: string; photo?: string; branchId?: string }>
   currentDate: Date
   onEventClick?: (event: CalendarEvent) => void
   onStaffClick?: (staffId: string) => void
@@ -126,6 +127,20 @@ export default function MultiStaffDayView({
             <Typography variant="body2" fontWeight={600} textAlign="center" noWrap sx={{ maxWidth: '100%' }}>
               {staff.name}
             </Typography>
+            {staff.branchId && (
+              <Chip
+                icon={<i className='ri-map-pin-line' style={{ fontSize: '0.7rem' }} />}
+                label={getBranchName(staff.branchId)}
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: '0.65rem',
+                  '& .MuiChip-icon': { fontSize: '0.7rem', ml: 0.5 },
+                  bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                  color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
+                }}
+              />
+            )}
             <Typography variant="caption" color="text.secondary">
               {getStaffEvents(staff.id).length} appointments
             </Typography>

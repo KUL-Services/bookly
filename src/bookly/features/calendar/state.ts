@@ -6,6 +6,7 @@ import type {
   CalendarView,
   DisplayMode,
   ColorScheme,
+  BranchFilter,
   StaffFilter,
   HighlightFilters,
   CalendarEvent,
@@ -17,6 +18,7 @@ const STORAGE_KEYS = {
   view: 'bookly.calendar.view',
   displayMode: 'bookly.calendar.displayMode',
   colorScheme: 'bookly.calendar.colorScheme',
+  branches: 'bookly.calendar.branches',
   staff: 'bookly.calendar.staff',
   highlights: 'bookly.calendar.highlights',
   starred: 'bookly.calendar.starred'
@@ -44,6 +46,11 @@ function savePreference<T>(key: string, value: T): void {
 }
 
 // Initial state
+const initialBranchFilter: BranchFilter = {
+  allBranches: true,
+  branchIds: []
+}
+
 const initialStaffFilter: StaffFilter = {
   onlyMe: false,
   staffIds: [],
@@ -73,6 +80,7 @@ interface CalendarStore extends CalendarState {
   setDisplayMode: (mode: DisplayMode) => void
   setColorScheme: (scheme: ColorScheme) => void
   setVisibleDateRange: (range: DateRange | null) => void
+  setBranchFilters: (filters: BranchFilter) => void
   setStaffFilters: (filters: StaffFilter) => void
   setHighlights: (highlights: HighlightFilters) => void
   toggleStarred: (eventId: string) => void
@@ -84,6 +92,7 @@ interface CalendarStore extends CalendarState {
   openNewBooking: (date?: Date, dateRange?: DateRange) => void
   closeNewBooking: () => void
   clearHighlights: () => void
+  clearBranchFilters: () => void
   getFilteredEvents: () => CalendarEvent[]
   selectSingleStaff: (staffId: string) => void
   goBackToAllStaff: () => void
@@ -96,6 +105,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   displayMode: loadPreference(STORAGE_KEYS.displayMode, 'full' as DisplayMode),
   colorScheme: loadPreference(STORAGE_KEYS.colorScheme, 'vivid' as ColorScheme),
   visibleDateRange: null,
+  branchFilters: loadPreference(STORAGE_KEYS.branches, initialBranchFilter),
   staffFilters: loadPreference(STORAGE_KEYS.staff, initialStaffFilter),
   highlights: loadPreference(STORAGE_KEYS.highlights, initialHighlights),
   starredIds: new Set(loadPreference<string[]>(STORAGE_KEYS.starred, [])),
@@ -127,6 +137,11 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
   setVisibleDateRange: (range) => {
     set({ visibleDateRange: range })
+  },
+
+  setBranchFilters: (filters) => {
+    savePreference(STORAGE_KEYS.branches, filters)
+    set({ branchFilters: filters })
   },
 
   setStaffFilters: (filters) => {
@@ -196,10 +211,17 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     set({ highlights: cleared })
   },
 
+  clearBranchFilters: () => {
+    const cleared = initialBranchFilter
+    savePreference(STORAGE_KEYS.branches, cleared)
+    set({ branchFilters: cleared })
+  },
+
   getFilteredEvents: () => {
-    const { events, visibleDateRange, staffFilters, highlights } = get()
+    const { events, visibleDateRange, branchFilters, staffFilters, highlights } = get()
     return filterEvents(events, {
       range: visibleDateRange,
+      branchFilters,
       staffFilters,
       highlights
     })

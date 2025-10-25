@@ -1,7 +1,9 @@
+import { mockStaff, mockBusinesses } from '@/bookly/data/mock-data'
 import type { Booking } from '@/bookly/data/types'
 import type {
   CalendarEvent,
   ColorScheme,
+  BranchFilter,
   HighlightFilters,
   StaffFilter,
   DateRange,
@@ -159,12 +161,13 @@ export function getEventClassNames(
 }
 
 /**
- * Filter events based on date range, staff filters, and highlights
+ * Filter events based on date range, branch filters, staff filters, and highlights
  */
 export function filterEvents(
   events: CalendarEvent[],
   filters: {
     range?: DateRange | null
+    branchFilters?: BranchFilter
     staffFilters?: StaffFilter
     highlights?: HighlightFilters
   }
@@ -180,6 +183,18 @@ export function filterEvents(
     })
   }
 
+  // Filter by branch (affects which staff are considered)
+  let validStaffIds: string[] | null = null
+  if (filters.branchFilters && !filters.branchFilters.allBranches && filters.branchFilters.branchIds.length > 0) {
+    // Get staff IDs from selected branches
+    validStaffIds = mockStaff
+      .filter(staff => filters.branchFilters!.branchIds.includes(staff.branchId))
+      .map(staff => staff.id)
+
+    // Filter events to only include staff from selected branches
+    filtered = filtered.filter(event => validStaffIds!.includes(event.extendedProps.staffId))
+  }
+
   // Filter by staff
   if (filters.staffFilters) {
     const { onlyMe, staffIds } = filters.staffFilters
@@ -188,7 +203,13 @@ export function filterEvents(
       // Filter to current user's events only (staffId '1' for demo)
       filtered = filtered.filter(event => event.extendedProps.staffId === '1')
     } else if (staffIds.length > 0) {
-      filtered = filtered.filter(event => staffIds.includes(event.extendedProps.staffId))
+      // If branches are selected, intersection of staff filter and branch filter
+      if (validStaffIds !== null) {
+        const intersectionIds = staffIds.filter(id => validStaffIds!.includes(id))
+        filtered = filtered.filter(event => intersectionIds.includes(event.extendedProps.staffId))
+      } else {
+        filtered = filtered.filter(event => staffIds.includes(event.extendedProps.staffId))
+      }
     }
   }
 
@@ -282,6 +303,23 @@ export function addMonths(date: Date, months: number): Date {
   const newDate = new Date(date)
   newDate.setMonth(newDate.getMonth() + months)
   return newDate
+}
+
+/**
+ * Get branch name by branch ID
+ */
+export function getBranchName(branchId: string): string {
+  const allBranches = mockBusinesses.flatMap(business => business.branches)
+  const branch = allBranches.find(b => b.id === branchId)
+  return branch?.name || 'Unknown Branch'
+}
+
+/**
+ * Get branch by ID
+ */
+export function getBranch(branchId: string) {
+  const allBranches = mockBusinesses.flatMap(business => business.branches)
+  return allBranches.find(b => b.id === branchId)
 }
 
 /**

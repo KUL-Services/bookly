@@ -1,14 +1,15 @@
 'use client'
 
-import { Box, Typography, IconButton, Avatar, Button } from '@mui/material'
+import { Box, Typography, IconButton, Avatar, Button, Chip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, isSameDay } from 'date-fns'
 import { useState, useRef } from 'react'
+import { getBranchName } from './utils'
 import type { CalendarEvent } from './types'
 
 interface SingleStaffDayViewProps {
   events: CalendarEvent[]
-  staff: { id: string; name: string; photo?: string; workingHours?: string }
+  staff: { id: string; name: string; photo?: string; workingHours?: string; branchId?: string }
   currentDate: Date
   onEventClick?: (event: CalendarEvent) => void
   onBack?: () => void
@@ -201,9 +202,25 @@ export default function SingleStaffDayView({
             {staff.name.split(' ').map(n => n[0]).join('')}
           </Avatar>
           <Box>
-            <Typography variant="h6" fontWeight={600}>
-              {staff.name}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <Typography variant="h6" fontWeight={600}>
+                {staff.name}
+              </Typography>
+              {staff.branchId && (
+                <Chip
+                  icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
+                  label={getBranchName(staff.branchId)}
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: '0.7rem',
+                    '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 },
+                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                    color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
+                  }}
+                />
+              )}
+            </Box>
             <Typography variant="caption" color="text.secondary">
               {staff.workingHours || '10:00 AM-7:00 PM'} • {todayEvents.length} appointments
             </Typography>

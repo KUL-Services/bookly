@@ -1,13 +1,14 @@
 'use client'
 
-import { Box, Typography, Avatar } from '@mui/material'
+import { Box, Typography, Avatar, Chip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday } from 'date-fns'
+import { getBranchName } from './utils'
 import type { CalendarEvent } from './types'
 
 interface MultiStaffWeekViewProps {
   events: CalendarEvent[]
-  staffMembers: Array<{ id: string; name: string; photo?: string }>
+  staffMembers: Array<{ id: string; name: string; photo?: string; branchId?: string }>
   currentDate: Date
   onEventClick?: (event: CalendarEvent) => void
   onStaffClick?: (staffId: string) => void
@@ -152,9 +153,26 @@ export default function MultiStaffWeekView({
               >
                 {staff.name.split(' ').map(n => n[0]).join('')}
               </Avatar>
-              <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }}>
-                {staff.name}
-              </Typography>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Typography variant="body2" fontWeight={600}>
+                  {staff.name}
+                </Typography>
+                {staff.branchId && (
+                  <Chip
+                    icon={<i className='ri-map-pin-line' style={{ fontSize: '0.65rem' }} />}
+                    label={getBranchName(staff.branchId)}
+                    size="small"
+                    sx={{
+                      height: 16,
+                      fontSize: '0.6rem',
+                      width: 'fit-content',
+                      '& .MuiChip-icon': { fontSize: '0.65rem', ml: 0.5 },
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                      color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
+                    }}
+                  />
+                )}
+              </Box>
             </Box>
 
             {/* Days for this staff */}

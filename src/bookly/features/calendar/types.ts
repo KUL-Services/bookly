@@ -33,6 +33,11 @@ export interface CalendarEvent extends EventInput {
   }
 }
 
+export interface BranchFilter {
+  allBranches: boolean
+  branchIds: string[]
+}
+
 export interface StaffFilter {
   onlyMe: boolean
   staffIds: string[]
@@ -51,6 +56,7 @@ export interface CalendarState {
   displayMode: DisplayMode
   colorScheme: ColorScheme
   visibleDateRange: { start: Date; end: Date } | null
+  branchFilters: BranchFilter
   staffFilters: StaffFilter
   highlights: HighlightFilters
   starredIds: Set<string>
@@ -69,6 +75,7 @@ export interface CalendarPreferences {
   view: CalendarView
   displayMode: DisplayMode
   colorScheme: ColorScheme
+  branchFilters: BranchFilter
   staffFilters: StaffFilter
   highlights: HighlightFilters
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Box,
   Typography,
@@ -10,13 +10,15 @@ import {
   FormControlLabel,
   FormGroup,
   Divider,
-  IconButton
+  IconButton,
+  Chip,
+  Avatar
 } from '@mui/material'
 import { Calendar } from '@/bookly/components/ui/calendar'
 import { useCalendarStore } from './state'
 import { addWeeks } from './utils'
-import { mockStaff } from '@/bookly/data/mock-data'
-import type { StaffFilter, HighlightFilters, PaymentStatus, AppointmentStatus, SelectionMethod } from './types'
+import { mockStaff, mockBusinesses } from '@/bookly/data/mock-data'
+import type { BranchFilter, StaffFilter, HighlightFilters, PaymentStatus, AppointmentStatus, SelectionMethod } from './types'
 
 interface CalendarSidebarProps {
   currentDate: Date
@@ -28,26 +30,75 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   const isSidebarOpen = useCalendarStore(state => state.isSidebarOpen)
   const view = useCalendarStore(state => state.view)
   const setView = useCalendarStore(state => state.setView)
+  const branchFilters = useCalendarStore(state => state.branchFilters)
   const staffFilters = useCalendarStore(state => state.staffFilters)
   const highlights = useCalendarStore(state => state.highlights)
+  const setBranchFilters = useCalendarStore(state => state.setBranchFilters)
   const setStaffFilters = useCalendarStore(state => state.setStaffFilters)
   const setHighlights = useCalendarStore(state => state.setHighlights)
   const clearHighlights = useCalendarStore(state => state.clearHighlights)
+  const clearBranchFilters = useCalendarStore(state => state.clearBranchFilters)
   const toggleSidebar = useCalendarStore(state => state.toggleSidebar)
 
+  const [pendingBranches, setPendingBranches] = useState<BranchFilter>(branchFilters)
   const [pendingStaff, setPendingStaff] = useState<StaffFilter>(staffFilters)
   const [pendingHighlights, setPendingHighlights] = useState<HighlightFilters>(highlights)
 
   useEffect(() => {
+    setPendingBranches(branchFilters)
     setPendingStaff(staffFilters)
     setPendingHighlights(highlights)
-  }, [staffFilters, highlights])
+  }, [branchFilters, staffFilters, highlights])
 
-  const availableStaff = mockStaff.slice(0, 6)
+  // Get branches from mock data with staff counts
+  const branches = useMemo(() => {
+    const businessBranches = mockBusinesses[0]?.branches || []
+    return businessBranches.map(branch => ({
+      ...branch,
+      staffCount: mockStaff.filter(s => s.branchId === branch.id).length
+    }))
+  }, [])
+
+  // Filter staff by selected branches
+  const availableStaff = useMemo(() => {
+    if (pendingBranches.allBranches || pendingBranches.branchIds.length === 0) {
+      return mockStaff.slice(0, 6)
+    }
+    return mockStaff.filter(staff =>
+      pendingBranches.branchIds.includes(staff.branchId)
+    ).slice(0, 10) // Show more staff when filtering by branch
+  }, [pendingBranches])
 
   const handleJumpWeek = (weeks: number) => {
     const newDate = addWeeks(currentDate, weeks)
     onDateChange(newDate)
+  }
+
+  // Branch handlers
+  const handleAllBranches = () => {
+    const newAllBranches = !pendingBranches.allBranches
+    setPendingBranches({
+      allBranches: newAllBranches,
+      branchIds: newAllBranches ? [] : pendingBranches.branchIds
+    })
+    // Reset staff selection when changing branches
+    if (newAllBranches) {
+      setPendingStaff({ ...pendingStaff, staffIds: [] })
+    }
+  }
+
+  const handleBranchToggle = (branchId: string) => {
+    const newBranchIds = pendingBranches.branchIds.includes(branchId)
+      ? pendingBranches.branchIds.filter(id => id !== branchId)
+      : [...pendingBranches.branchIds, branchId]
+
+    setPendingBranches({
+      allBranches: false, // Always uncheck "All Branches" when selecting individual branches
+      branchIds: newBranchIds
+    })
+
+    // Reset staff selection when changing branches
+    setPendingStaff({ ...pendingStaff, staffIds: [] })
   }
 
   const handleOnlyMeChange = (checked: boolean) => {
@@ -98,6 +149,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   }
 
   const handleApply = () => {
+    setBranchFilters(pendingBranches)
     setStaffFilters(pendingStaff)
     setHighlights(pendingHighlights)
     if (isMobile) {
@@ -106,10 +158,13 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   }
 
   const handleClear = () => {
+    const clearedBranches: BranchFilter = { allBranches: true, branchIds: [] }
     const cleared: StaffFilter = { onlyMe: false, staffIds: [], selectedStaffId: null }
     const clearedHighlights: HighlightFilters = { payments: [], statuses: [], selection: [], details: [] }
+    setPendingBranches(clearedBranches)
     setPendingStaff(cleared)
     setPendingHighlights(clearedHighlights)
+    setBranchFilters(clearedBranches)
     setStaffFilters(cleared)
     setHighlights(clearedHighlights)
   }
@@ -283,15 +338,63 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
         <Divider sx={{ my: 2 }} />
 
+        {/* Branches */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <i className='ri-map-pin-line' style={{ fontSize: '1.1rem' }} />
+            Branches
+          </Typography>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={pendingBranches.allBranches}
+                  onChange={() => handleAllBranches()}
+                />
+              }
+              label={<Typography variant='body2' sx={{ fontWeight: 500 }}>All Branches</Typography>}
+            />
+            {branches.map(branch => (
+              <FormControlLabel
+                key={branch.id}
+                control={
+                  <Checkbox
+                    checked={pendingBranches.branchIds.includes(branch.id)}
+                    onChange={() => handleBranchToggle(branch.id)}
+                  />
+                }
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                    <Typography variant='body2'>{branch.name}</Typography>
+                    <Chip
+                      label={`${branch.staffCount} staff`}
+                      size='small'
+                      sx={{
+                        height: 20,
+                        fontSize: '0.7rem',
+                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                        color: theme => theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)'
+                      }}
+                    />
+                  </Box>
+                }
+              />
+            ))}
+          </FormGroup>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
         {/* Staff and Resources */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
-            Staff and Resources
+          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <i className='ri-user-line' style={{ fontSize: '1.1rem' }} />
+            Staff Members
           </Typography>
           <FormGroup>
             <FormControlLabel
               control={<Checkbox checked={pendingStaff.onlyMe} onChange={e => handleOnlyMeChange(e.target.checked)} />}
-              label='Only me'
+              label={<Typography variant='body2' sx={{ fontWeight: 500 }}>Only me</Typography>}
             />
             <Button
               variant='text'
@@ -302,19 +405,45 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
             >
               Select All
             </Button>
-            {availableStaff.map(staff => (
-              <FormControlLabel
-                key={staff.id}
-                control={
-                  <Checkbox
-                    checked={pendingStaff.staffIds.includes(staff.id)}
-                    onChange={() => handleStaffToggle(staff.id)}
-                    disabled={pendingStaff.onlyMe}
-                  />
-                }
-                label={<Typography variant='body2'>{staff.name}</Typography>}
-              />
-            ))}
+            {availableStaff.map(staff => {
+              const branch = branches.find(b => b.id === staff.branchId)
+              return (
+                <FormControlLabel
+                  key={staff.id}
+                  control={
+                    <Checkbox
+                      checked={pendingStaff.staffIds.includes(staff.id)}
+                      onChange={() => handleStaffToggle(staff.id)}
+                      disabled={pendingStaff.onlyMe}
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
+                      <Avatar
+                        src={staff.photo}
+                        alt={staff.name}
+                        sx={{ width: 24, height: 24 }}
+                      />
+                      <Typography variant='body2'>{staff.name}</Typography>
+                      {branch && (
+                        <Chip
+                          icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
+                          label={branch.name}
+                          size='small'
+                          variant='outlined'
+                          sx={{
+                            height: 18,
+                            fontSize: '0.65rem',
+                            ml: 'auto',
+                            '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
+                          }}
+                        />
+                      )}
+                    </Box>
+                  }
+                />
+              )
+            })}
           </FormGroup>
         </Box>
 
