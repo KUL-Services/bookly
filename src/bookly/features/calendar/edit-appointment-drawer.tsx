@@ -199,12 +199,12 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header with Status */}
-        <Box sx={{ bgcolor: getStatusColor(status) + '.main', color: 'white', p: 2 }}>
+        <Box sx={{ bgcolor: getStatusColor(status) + '.main', color: 'white', p: { xs: 1.5, sm: 2 } }}>
           <Box className="flex items-center justify-between mb-2">
-            <IconButton onClick={onClose} sx={{ color: 'white' }}>
+            <IconButton onClick={onClose} sx={{ color: 'white' }} size="small">
               <i className="ri-close-line" />
             </IconButton>
-            <Typography variant="h6" className="font-semibold">
+            <Typography variant="h6" className="font-semibold" sx={{ fontSize: { xs: '0.95rem', sm: '1.25rem' } }}>
               {getStatusLabel(status)}
             </Typography>
             <Button
@@ -214,14 +214,16 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
               sx={{
                 color: 'white',
                 borderColor: 'white',
-                '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' }
+                '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' },
+                fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                px: { xs: 1, sm: 2 }
               }}
               endIcon={<i className="ri-arrow-down-s-line" />}
             >
               CHANGE
             </Button>
           </Box>
-          <Typography variant="caption" className="opacity-90">
+          <Typography variant="caption" className="opacity-90" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
             Business Booking ID: {extendedProps.bookingId}
           </Typography>
         </Box>
@@ -244,19 +246,19 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
         </Menu>
 
         {/* Client Info */}
-        <Box sx={{ bgcolor: 'background.paper', p: 3, borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ bgcolor: 'background.paper', p: { xs: 2, sm: 3 }, borderBottom: 1, borderColor: 'divider' }}>
           <Box className="flex items-center gap-3">
-            <Avatar sx={{ width: 56, height: 56, bgcolor: 'grey.300' }}>
-              <Typography variant="h6" sx={{ color: 'grey.700' }}>
+            <Avatar sx={{ width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 }, bgcolor: 'grey.300' }}>
+              <Typography variant="h6" sx={{ color: 'grey.700', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 {customerName?.split(' ').map(n => n[0]).join('') || 'W'}
               </Typography>
             </Avatar>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="h6" className="font-semibold">
+              <Typography variant="h6" className="font-semibold" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 {customerName || 'Walk-in'}
               </Typography>
               {customerPhone && (
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   {customerPhone}
                 </Typography>
               )}
@@ -266,14 +268,14 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
 
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-          <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-            <Tab label="APPOINTMENT" />
-            <Tab label="NOTES & INFO" />
+          <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} variant="fullWidth">
+            <Tab label="APPOINTMENT" sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }} />
+            <Tab label="NOTES & INFO" sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }} />
           </Tabs>
         </Box>
 
         {/* Content */}
-        <Box className="flex-1 overflow-auto p-4">
+        <Box className="flex-1 overflow-auto" sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
           {activeTab === 0 && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {/* Date Display */}
@@ -431,30 +433,43 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
 
         {/* Footer */}
         <Box sx={{ borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-          <Box className="flex items-center justify-between p-4">
+          <Box className="flex items-center justify-between" sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                 Total
               </Typography>
-              <Typography variant="h4" className="font-bold">
+              <Typography variant="h4" className="font-bold" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
                 ${extendedProps.price}
               </Typography>
             </Box>
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                 Duration
               </Typography>
-              <Typography variant="h6" className="font-bold">
+              <Typography variant="h6" className="font-bold" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 {duration} min
               </Typography>
             </Box>
           </Box>
-          <Box className="grid grid-cols-2 gap-2 p-3">
-            <Button variant="outlined" size="large" fullWidth onClick={onClose}>
+          <Box className="grid grid-cols-2" sx={{ gap: { xs: 1.5, sm: 2 }, p: { xs: 2, sm: 3 } }}>
+            <Button
+              variant="outlined"
+              size="large"
+              fullWidth
+              onClick={onClose}
+              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, py: { xs: 1, sm: 1.5 } }}
+            >
               CANCEL
             </Button>
-            <Button variant="contained" size="large" fullWidth onClick={handleSave} color="primary">
-              SAVE CHANGES
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              onClick={handleSave}
+              color="primary"
+              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, py: { xs: 1, sm: 1.5 } }}
+            >
+              SAVE
             </Button>
           </Box>
         </Box>

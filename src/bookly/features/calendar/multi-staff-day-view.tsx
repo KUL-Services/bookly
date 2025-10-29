@@ -78,21 +78,35 @@ export default function MultiStaffDayView({
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
       {/* Wrapper for horizontal scroll */}
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-        {/* Header with staff columns */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: `60px repeat(${staffMembers.length}, minmax(180px, 1fr))`,
-            borderBottom: 1,
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
-            position: 'sticky',
-            top: 0,
-            zIndex: 10,
-            minWidth: `${60 + staffMembers.length * 180}px`
-          }}
-        >
+      <Box sx={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'auto',
+        WebkitOverflowScrolling: 'touch'
+      }}>
+        <Box sx={{
+          minWidth: { xs: `${60 + staffMembers.length * 150}px`, md: '100%' },
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1
+        }}>
+          {/* Header with staff columns */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: `60px repeat(${staffMembers.length}, 150px)`,
+                md: `60px repeat(${staffMembers.length}, minmax(180px, 1fr))`
+              },
+              borderBottom: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              position: 'sticky',
+              top: 0,
+              zIndex: 10
+            }}
+          >
         {/* Time column header */}
         <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider' }} />
 
@@ -148,19 +162,21 @@ export default function MultiStaffDayView({
               {getStaffEvents(staff.id).length} appointments
             </Typography>
           </Box>
-        ))}
-      </Box>
+          ))}
+          </Box>
 
-        {/* Scrollable content */}
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: `60px repeat(${staffMembers.length}, minmax(180px, 1fr))`,
-            position: 'relative',
-            minHeight: '100%',
-            minWidth: `${60 + staffMembers.length * 180}px`
-          }}
-        >
+          {/* Content grid */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: `60px repeat(${staffMembers.length}, 150px)`,
+                md: `60px repeat(${staffMembers.length}, minmax(180px, 1fr))`
+              },
+              position: 'relative',
+              minHeight: '100%'
+            }}
+          >
           {/* Time slots column */}
           <Box sx={{ borderRight: 1, borderColor: 'divider' }}>
             {timeSlots.map((slot, index) => (
@@ -293,8 +309,9 @@ export default function MultiStaffDayView({
                   </Box>
                 )
               })}
-            </Box>
-          ))}
+              </Box>
+            ))}
+          </Box>
         </Box>
       </Box>
     </Box>

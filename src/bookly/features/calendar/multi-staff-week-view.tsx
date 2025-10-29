@@ -54,20 +54,45 @@ export default function MultiStaffWeekView({
   }
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
-      {/* Week header with days */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: `220px repeat(${weekDays.length}, 1fr)`,
-          borderBottom: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          position: 'sticky',
-          top: 0,
-          zIndex: 10
-        }}
-      >
+    <Box sx={{
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      bgcolor: 'background.default',
+      overflow: 'hidden'
+    }}>
+      {/* Horizontal scroll wrapper */}
+      <Box sx={{
+        flex: 1,
+        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+        WebkitOverflowScrolling: 'touch'
+      }}>
+        {/* Inner container with minimum width */}
+        <Box sx={{
+          minWidth: { xs: `${220 + weekDays.length * 120}px`, md: '100%' },
+          display: 'flex',
+          flexDirection: 'column',
+          flex: 1
+        }}>
+          {/* Week header with days */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: `220px repeat(${weekDays.length}, 120px)`,
+                md: `220px repeat(${weekDays.length}, 1fr)`
+              },
+              borderBottom: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              position: 'sticky',
+              top: 0,
+              zIndex: 10
+            }}
+          >
         {/* Staff column header */}
         <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider' }}>
           <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
@@ -109,22 +134,25 @@ export default function MultiStaffWeekView({
             </Typography>
           </Box>
         ))}
-      </Box>
+          </Box>
 
-      {/* Scrollable content */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        {staffMembers.map((staff, staffIndex) => (
-          <Box
-            key={staff.id}
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: `220px repeat(${weekDays.length}, 1fr)`,
-              borderBottom: 1,
-              borderColor: 'divider',
-              minHeight: 120,
-              bgcolor: staffIndex % 2 === 0 ? 'transparent' : isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'
-            }}
-          >
+          {/* Staff rows */}
+          <Box sx={{ flex: 1 }}>
+            {staffMembers.map((staff, staffIndex) => (
+              <Box
+                key={staff.id}
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: `220px repeat(${weekDays.length}, 120px)`,
+                    md: `220px repeat(${weekDays.length}, 1fr)`
+                  },
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  minHeight: 120,
+                  bgcolor: staffIndex % 2 === 0 ? 'transparent' : isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'
+                }}
+              >
             {/* Staff info */}
             <Box
               sx={{
@@ -292,8 +320,10 @@ export default function MultiStaffWeekView({
                 </Box>
               )
             })}
+              </Box>
+            ))}
           </Box>
-        ))}
+        </Box>
       </Box>
     </Box>
   )

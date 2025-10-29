@@ -115,8 +115,9 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
       <Box
         sx={{
           height: '100%',
-          p: 3,
-          pe: 10,
+          p: { xs: 1, sm: 2, md: 3 },
+          pe: { xs: 1, sm: 2, md: 10 },
+          overflow: 'hidden',
           '& .fc': {
             height: '100%',
             fontFamily: theme.typography.fontFamily,
@@ -311,15 +312,59 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             paddingTop: '4px'
           },
           '& .fc-col-header-cell': {
-            minWidth: '140px'
+            minWidth: { xs: '100px', sm: '120px', md: '140px' }
           },
           '& .fc-timegrid-col': {
-            minWidth: '140px'
+            minWidth: { xs: '100px', sm: '120px', md: '140px' }
           },
           '& .fc-scrollgrid-section-body table, & .fc-scrollgrid-section-header table': {
-            width: 'calc(100% - 40px) !important',
+            width: { xs: 'max-content !important', md: 'calc(100% - 40px) !important' },
             marginLeft: 'auto',
             marginRight: 'auto'
+          },
+          // Mobile: Enable horizontal scrolling
+          '& .fc-view': {
+            overflowX: { xs: 'auto', md: 'hidden' },
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch'
+          },
+          '& .fc-scroller-harness': {
+            overflowX: { xs: 'auto !important', md: 'hidden !important' }
+          },
+          '& .fc-scroller-harness > .fc-scroller': {
+            overflowX: { xs: 'visible !important', md: 'hidden !important' }
+          },
+          // Mobile: Ensure minimum widths for better spacing
+          '& .fc-daygrid-day': {
+            minWidth: { xs: '100px !important', sm: '120px !important', md: 'auto !important' },
+            minHeight: { xs: '100px !important', sm: '120px !important', md: 'auto !important' }
+          },
+          '& .fc-day': {
+            minHeight: { xs: '100px !important', sm: '120px !important', md: 'auto !important' }
+          },
+          '& .fc-daygrid-day-frame': {
+            minHeight: { xs: '100px', sm: '120px', md: 'auto' }
+          },
+          // Mobile: Week view improvements
+          '& .fc-timegrid-axis': {
+            minWidth: { xs: '50px !important', md: '60px !important' }
+          },
+          '& .fc-timegrid-slots table': {
+            minWidth: { xs: 'max-content !important', md: 'auto !important' }
+          },
+          // Mobile: Month view table width
+          '& .fc-dayGridMonth-view .fc-scrollgrid': {
+            minWidth: { xs: '700px !important', sm: '800px !important', md: 'auto !important' }
+          },
+          '& .fc-timeGridWeek-view .fc-scrollgrid': {
+            minWidth: { xs: '700px !important', sm: '800px !important', md: 'auto !important' }
+          },
+          // Mobile: Ensure proper scrolling container
+          '@media (max-width: 900px)': {
+            '& .fc-view-harness': {
+              overflowX: 'auto !important',
+              WebkitOverflowScrolling: 'touch'
+            }
           }
         }}
       >
@@ -333,6 +378,10 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           editable={true}
           selectable={view === 'timeGridDay' || view === 'timeGridWeek'}
           selectMirror={true}
+          selectLongPressDelay={300}
+          eventLongPressDelay={300}
+          selectMinDistance={5}
+          longPressDelay={300}
           dayMaxEvents={3}
           weekends={true}
           nowIndicator={true}

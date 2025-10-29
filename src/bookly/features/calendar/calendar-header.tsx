@@ -37,22 +37,25 @@ export default function CalendarHeader({ currentDate, onPrev, onNext, onToday, o
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      px: 3,
-      py: 2,
+      px: { xs: 1.5, sm: 2, md: 3 },
+      py: { xs: 1.5, md: 2 },
       borderBottom: 1,
       borderColor: 'divider',
       bgcolor: 'background.paper',
-      gap: 2,
-      flexWrap: 'wrap'
+      gap: { xs: 1, md: 2 },
+      flexWrap: 'nowrap'
     }}>
       {/* Left Section */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1, md: 2 }, flex: 1, minWidth: 0 }}>
         {/* View Selector */}
         <Select
           value={view}
           onChange={e => setView(e.target.value as CalendarView)}
           size="small"
-          sx={{ minWidth: 150 }}
+          sx={{
+            minWidth: { xs: 80, sm: 120, md: 150 },
+            fontSize: { xs: '0.75rem', md: '0.875rem' }
+          }}
         >
           {viewOptions.map(option => (
             <MenuItem key={option.value} value={option.value}>
@@ -66,29 +69,53 @@ export default function CalendarHeader({ currentDate, onPrev, onNext, onToday, o
           <IconButton onClick={onPrev} size="small">
             <i className="ri-arrow-left-s-line" />
           </IconButton>
-          <Button onClick={onToday} variant="outlined" size="small" sx={{ minWidth: 80 }}>
-            Today
+          <Button
+            onClick={onToday}
+            variant="outlined"
+            size="small"
+            sx={{
+              minWidth: { xs: 50, sm: 60, md: 80 },
+              px: { xs: 0.5, sm: 1, md: 2 },
+              fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.875rem' }
+            }}
+          >
+            {isMobile ? 'Now' : 'Today'}
           </Button>
           <IconButton onClick={onNext} size="small">
             <i className="ri-arrow-right-s-line" />
           </IconButton>
         </Box>
 
-        {/* Title */}
-        <Typography variant="h5" sx={{ fontWeight: 600, display: { xs: 'none', md: 'block' } }}>
+        {/* Title - Hidden on small screens */}
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 600,
+            display: { xs: 'none', lg: 'block' },
+            fontSize: { lg: '1.25rem', xl: '1.5rem' },
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
           {title}
         </Typography>
       </Box>
 
       {/* Right Section */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1 }, flexShrink: 0 }}>
         <Button
           variant="contained"
-          startIcon={<i className="ri-add-line" />}
+          startIcon={!isMobile && <i className="ri-add-line" />}
           onClick={onNewBooking}
-          size={isMobile ? 'small' : 'medium'}
+          size="small"
+          sx={{
+            minWidth: { xs: 36, sm: 'auto' },
+            px: { xs: 1, sm: 2 },
+            fontSize: { xs: '0.75rem', md: '0.875rem' }
+          }}
         >
-          {isMobile ? 'New' : 'New Booking'}
+          {isMobile ? <i className="ri-add-line" /> : 'New Booking'}
         </Button>
 
         {isMobile && (
@@ -97,13 +124,17 @@ export default function CalendarHeader({ currentDate, onPrev, onNext, onToday, o
           </IconButton>
         )}
 
-        <IconButton onClick={toggleSettings} size="small">
-          <i className="ri-settings-3-line" />
-        </IconButton>
+        {!isMobile && (
+          <>
+            <IconButton onClick={toggleSettings} size="small">
+              <i className="ri-settings-3-line" />
+            </IconButton>
 
-        <IconButton onClick={toggleNotifications} size="small">
-          <i className="ri-notification-3-line" />
-        </IconButton>
+            <IconButton onClick={toggleNotifications} size="small">
+              <i className="ri-notification-3-line" />
+            </IconButton>
+          </>
+        )}
       </Box>
     </Box>
   )
