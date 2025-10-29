@@ -357,13 +357,15 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   }
 
   return (
-    <Box sx={{
-      height: { xs: '100dvh', md: '100vh' }, // dvh for mobile to account for browser toolbars
-      display: 'flex',
-      flexDirection: 'column',
-      bgcolor: 'background.default',
-      overflow: 'hidden'
-    }}>
+    <Box
+      sx={{
+        height: { xs: '100dvh', md: '100vh' }, // dvh for mobile to account for browser toolbars
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.default',
+        overflow: 'hidden'
+      }}
+    >
       {/* Header */}
       <CalendarHeader
         currentDate={currentDate}
@@ -384,7 +386,9 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         {isMobile && <CalendarSidebar currentDate={currentDate} onDateChange={handleDateChange} isMobile={true} />}
 
         {/* Calendar View */}
-        <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>{renderCalendarView()}</Box>
+        <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+          {renderCalendarView()}
+        </Box>
       </Box>
 
       {/* Event Details Drawer */}
