@@ -1,4 +1,5 @@
 import { Business, Service, StaffMember, Review, Category, Booking, User, StaffSchedule, StaffAppointment } from './types'
+import type { Room, StaticServiceSlot } from '@/bookly/features/calendar/types'
 
 export const categories: Category[] = [
   { id: '1', name: 'Hair', icon: '✂️', slug: 'hair' },
@@ -325,7 +326,8 @@ const baseStaff: StaffMember[] = [
     businessId: '1',
     branchId: '1-1',
     schedule: extendedSchedule,
-    appointments: generateStaffAppointments('1', 'hair')
+    appointments: generateStaffAppointments('1', 'hair'),
+    maxConcurrentBookings: 2 // Can handle 2 overlapping appointments
   },
   {
     id: '2',
@@ -335,7 +337,8 @@ const baseStaff: StaffMember[] = [
     businessId: '1',
     branchId: '1-2',
     schedule: standardSchedule,
-    appointments: generateStaffAppointments('2', 'hair')
+    appointments: generateStaffAppointments('2', 'hair'),
+    maxConcurrentBookings: 1 // Standard: one client at a time
   },
   {
     id: '3',
@@ -945,5 +948,983 @@ export const mockBookings: Booking[] = [
     price: 25,
     status: 'pending',
     notes: 'Trim before business trip'
+  },
+
+  // Static scheduling bookings with slotId (for capacity testing)
+  // Next Monday's Morning Yoga (12 capacity) - 5 bookings
+  {
+    id: 'booking-static-1',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Morning Yoga Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'), // Next Monday
+    time: '9:00 AM',
+    duration: 60,
+    price: 25,
+    status: 'confirmed',
+    notes: 'Emma - Regular attendee',
+    slotId: 'slot-fitness-mon-1',
+    roomId: 'room-1-1-2',
+    partySize: 1
+  },
+  {
+    id: 'booking-static-2',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Morning Yoga Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '9:00 AM',
+    duration: 60,
+    price: 25,
+    status: 'confirmed',
+    notes: 'Olivia - Beginner friendly',
+    slotId: 'slot-fitness-mon-1',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-3',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Morning Yoga Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '9:00 AM',
+    duration: 60,
+    price: 25,
+    status: 'confirmed',
+    notes: 'Sophia',
+    slotId: 'slot-fitness-mon-1',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-4',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Morning Yoga Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '9:00 AM',
+    duration: 60,
+    price: 25,
+    status: 'pending',
+    notes: 'Isabella - First class',
+    slotId: 'slot-fitness-mon-1',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-5',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Morning Yoga Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '9:00 AM',
+    duration: 60,
+    price: 25,
+    status: 'cancelled',
+    notes: 'Ava - Cancelled, opens spot',
+    slotId: 'slot-fitness-mon-1',
+    roomId: 'room-1-1-2'
+  },
+  // Next Monday's Pilates (15 capacity) - 10 bookings
+  {
+    id: 'booking-static-6',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'confirmed',
+    notes: 'Mia',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-7',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'confirmed',
+    notes: 'Charlotte',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-8',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'confirmed',
+    notes: 'Amelia',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-9',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'confirmed',
+    notes: 'Harper',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-10',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'confirmed',
+    notes: 'Evelyn',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-11',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'confirmed',
+    notes: 'Abigail',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-12',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'confirmed',
+    notes: 'Ella',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-13',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'confirmed',
+    notes: 'Emily',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-14',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'pending',
+    notes: 'Luna',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-15',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Pilates Class',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-03'),
+    time: '6:00 PM',
+    duration: 60,
+    price: 30,
+    status: 'confirmed',
+    notes: 'Grace',
+    slotId: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2'
+  },
+  // Next Wednesday's small capacity slot (2 capacity) - 2 bookings to make it FULL
+  {
+    id: 'booking-static-16',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Personal Training Session',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-05'), // Next Wednesday
+    time: '10:00 AM',
+    duration: 60,
+    price: 50,
+    status: 'confirmed',
+    notes: 'Chloe - One-on-one',
+    slotId: 'slot-fitness-wed-small',
+    roomId: 'room-1-1-2'
+  },
+  {
+    id: 'booking-static-17',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Personal Training Session',
+    staffMemberName: 'Sarah Johnson',
+    date: new Date('2025-11-05'),
+    time: '10:00 AM',
+    duration: 60,
+    price: 50,
+    status: 'confirmed',
+    notes: 'Lily - Personal session',
+    slotId: 'slot-fitness-wed-small',
+    roomId: 'room-1-1-2'
+  }
+]
+
+// Mock Rooms for static scheduling mode
+export const mockRooms: Room[] = [
+  // Luxe Hair Studio - Oxford Branch
+  {
+    id: 'room-1-1-1',
+    name: 'Studio A',
+    branchId: '1-1',
+    color: '#FF6B6B'
+  },
+  {
+    id: 'room-1-1-2',
+    name: 'Studio B',
+    branchId: '1-1',
+    color: '#4ECDC4'
+  },
+  {
+    id: 'room-1-1-3',
+    name: 'Studio C',
+    branchId: '1-1',
+    color: '#95E1D3'
+  },
+  // Luxe Hair Studio - Soho Branch
+  {
+    id: 'room-1-2-1',
+    name: 'Room 1',
+    branchId: '1-2',
+    color: '#FFE66D'
+  },
+  {
+    id: 'room-1-2-2',
+    name: 'Room 2',
+    branchId: '1-2',
+    color: '#A8E6CF'
+  },
+  // Luxe Hair Studio - Kensington Branch
+  {
+    id: 'room-1-3-1',
+    name: 'Salon A',
+    branchId: '1-3',
+    color: '#FF8B94'
+  },
+  {
+    id: 'room-1-3-2',
+    name: 'Salon B',
+    branchId: '1-3',
+    color: '#C7CEEA'
+  },
+  // Bliss Nail Bar - King's Road Branch
+  {
+    id: 'room-2-1-1',
+    name: 'Station 1',
+    branchId: '2-1',
+    color: '#FFDAC1'
+  },
+  {
+    id: 'room-2-1-2',
+    name: 'Station 2',
+    branchId: '2-1',
+    color: '#B5EAD7'
+  },
+  {
+    id: 'room-2-1-3',
+    name: 'Station 3',
+    branchId: '2-1',
+    color: '#C7CEEA'
+  },
+  // Bliss Nail Bar - Camden Branch
+  {
+    id: 'room-2-2-1',
+    name: 'Pod A',
+    branchId: '2-2',
+    color: '#FFB6B9'
+  },
+  {
+    id: 'room-2-2-2',
+    name: 'Pod B',
+    branchId: '2-2',
+    color: '#FEC8D8'
+  }
+]
+
+// Mock Static Service Slots for static scheduling mode
+// These represent predefined time slots where specific services are available
+export const mockStaticServiceSlots: StaticServiceSlot[] = [
+  // Luxe Hair Studio - Oxford Branch (Business 1, Branch 1-1)
+  // Monday Schedule for Studio A
+  {
+    id: 'slot-1-1-1-mon-1',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '09:00',
+    endTime: '10:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-mon-2',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '10:00',
+    endTime: '11:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-mon-3',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '11:00',
+    endTime: '13:00',
+    serviceId: '2',
+    serviceName: 'Color Treatment',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 120
+  },
+  {
+    id: 'slot-1-1-1-mon-4',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '14:00',
+    endTime: '15:30',
+    serviceId: '3',
+    serviceName: 'Highlights',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 85
+  },
+  {
+    id: 'slot-1-1-1-mon-5',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '15:30',
+    endTime: '16:30',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+
+  // Monday Schedule for Studio B
+  {
+    id: 'slot-1-1-2-mon-1',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '09:00',
+    endTime: '11:00',
+    serviceId: '2',
+    serviceName: 'Color Treatment',
+    capacity: 1,
+    instructorStaffId: '2',
+    price: 120
+  },
+  {
+    id: 'slot-1-1-2-mon-2',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '11:00',
+    endTime: '12:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '2',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-2-mon-3',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '13:00',
+    endTime: '14:30',
+    serviceId: '3',
+    serviceName: 'Highlights',
+    capacity: 1,
+    instructorStaffId: '2',
+    price: 85
+  },
+  {
+    id: 'slot-1-1-2-mon-4',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '14:30',
+    endTime: '15:30',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '2',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-2-mon-5',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '15:30',
+    endTime: '17:30',
+    serviceId: '2',
+    serviceName: 'Color Treatment',
+    capacity: 1,
+    instructorStaffId: '2',
+    price: 120
+  },
+
+  // Tuesday Schedule for Studio A
+  {
+    id: 'slot-1-1-1-tue-1',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Tue',
+    startTime: '09:00',
+    endTime: '10:30',
+    serviceId: '3',
+    serviceName: 'Highlights',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 85
+  },
+  {
+    id: 'slot-1-1-1-tue-2',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Tue',
+    startTime: '10:30',
+    endTime: '11:30',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-tue-3',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Tue',
+    startTime: '13:00',
+    endTime: '15:00',
+    serviceId: '2',
+    serviceName: 'Color Treatment',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 120
+  },
+  {
+    id: 'slot-1-1-1-tue-4',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Tue',
+    startTime: '15:00',
+    endTime: '16:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+
+  // Wednesday Schedule for Studio A
+  {
+    id: 'slot-1-1-1-wed-1',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Wed',
+    startTime: '09:00',
+    endTime: '10:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-wed-2',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Wed',
+    startTime: '10:00',
+    endTime: '12:00',
+    serviceId: '2',
+    serviceName: 'Color Treatment',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 120
+  },
+  {
+    id: 'slot-1-1-1-wed-3',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Wed',
+    startTime: '13:00',
+    endTime: '14:30',
+    serviceId: '3',
+    serviceName: 'Highlights',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 85
+  },
+  {
+    id: 'slot-1-1-1-wed-4',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Wed',
+    startTime: '14:30',
+    endTime: '15:30',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-wed-5',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Wed',
+    startTime: '15:30',
+    endTime: '16:30',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+
+  // Thursday Schedule for Studio A
+  {
+    id: 'slot-1-1-1-thu-1',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Thu',
+    startTime: '09:00',
+    endTime: '11:00',
+    serviceId: '2',
+    serviceName: 'Color Treatment',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 120
+  },
+  {
+    id: 'slot-1-1-1-thu-2',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Thu',
+    startTime: '11:00',
+    endTime: '12:30',
+    serviceId: '3',
+    serviceName: 'Highlights',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 85
+  },
+  {
+    id: 'slot-1-1-1-thu-3',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Thu',
+    startTime: '14:00',
+    endTime: '15:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-thu-4',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Thu',
+    startTime: '15:00',
+    endTime: '16:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-thu-5',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Thu',
+    startTime: '16:00',
+    endTime: '17:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+
+  // Friday Schedule for Studio A
+  {
+    id: 'slot-1-1-1-fri-1',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Fri',
+    startTime: '09:00',
+    endTime: '10:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-fri-2',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Fri',
+    startTime: '10:00',
+    endTime: '11:30',
+    serviceId: '3',
+    serviceName: 'Highlights',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 85
+  },
+  {
+    id: 'slot-1-1-1-fri-3',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Fri',
+    startTime: '13:00',
+    endTime: '15:00',
+    serviceId: '2',
+    serviceName: 'Color Treatment',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 120
+  },
+  {
+    id: 'slot-1-1-1-fri-4',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Fri',
+    startTime: '15:00',
+    endTime: '16:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-fri-5',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Fri',
+    startTime: '16:00',
+    endTime: '17:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+
+  // Saturday Schedule for Studio A (shorter day)
+  {
+    id: 'slot-1-1-1-sat-1',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Sat',
+    startTime: '08:00',
+    endTime: '09:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-sat-2',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Sat',
+    startTime: '09:00',
+    endTime: '10:30',
+    serviceId: '3',
+    serviceName: 'Highlights',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 85
+  },
+  {
+    id: 'slot-1-1-1-sat-3',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Sat',
+    startTime: '10:30',
+    endTime: '11:30',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-sat-4',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Sat',
+    startTime: '11:30',
+    endTime: '13:30',
+    serviceId: '2',
+    serviceName: 'Color Treatment',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 120
+  },
+  {
+    id: 'slot-1-1-1-sat-5',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Sat',
+    startTime: '14:00',
+    endTime: '15:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+
+  // Sunday Schedule for Studio A (limited hours)
+  {
+    id: 'slot-1-1-1-sun-1',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Sun',
+    startTime: '10:00',
+    endTime: '11:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+  {
+    id: 'slot-1-1-1-sun-2',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Sun',
+    startTime: '11:00',
+    endTime: '12:30',
+    serviceId: '3',
+    serviceName: 'Highlights',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 85
+  },
+  {
+    id: 'slot-1-1-1-sun-3',
+    roomId: 'room-1-1-1',
+    branchId: '1-1',
+    dayOfWeek: 'Sun',
+    startTime: '13:00',
+    endTime: '14:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '1',
+    price: 65
+  },
+
+  // High-capacity class-style slots (Studio B - Fitness/Group Sessions)
+  // Monday Classes
+  {
+    id: 'slot-fitness-mon-1',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '09:00',
+    endTime: '10:00',
+    serviceId: 'fitness-1',
+    serviceName: 'Morning Yoga Class',
+    capacity: 12,
+    instructorStaffId: '2',
+    price: 25
+  },
+  {
+    id: 'slot-fitness-mon-2',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '18:00',
+    endTime: '19:00',
+    serviceId: 'fitness-2',
+    serviceName: 'Pilates Class',
+    capacity: 15,
+    instructorStaffId: '2',
+    price: 30
+  },
+  {
+    id: 'slot-fitness-mon-3',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Mon',
+    startTime: '19:30',
+    endTime: '20:30',
+    serviceId: 'fitness-3',
+    serviceName: 'Zumba Dance',
+    capacity: 20,
+    instructorStaffId: '3',
+    price: 28
+  },
+  // Tuesday Classes
+  {
+    id: 'slot-fitness-tue-1',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Tue',
+    startTime: '09:00',
+    endTime: '10:00',
+    serviceId: 'fitness-2',
+    serviceName: 'Pilates Class',
+    capacity: 15,
+    instructorStaffId: '2',
+    price: 30
+  },
+  {
+    id: 'slot-fitness-tue-2',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Tue',
+    startTime: '18:00',
+    endTime: '19:00',
+    serviceId: 'fitness-1',
+    serviceName: 'Morning Yoga Class',
+    capacity: 12,
+    instructorStaffId: '2',
+    price: 25
+  },
+  // Small capacity slot for testing full state
+  {
+    id: 'slot-fitness-wed-small',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Wed',
+    startTime: '10:00',
+    endTime: '11:00',
+    serviceId: 'fitness-4',
+    serviceName: 'Personal Training Session',
+    capacity: 2,
+    instructorStaffId: '2',
+    price: 50
   }
 ]

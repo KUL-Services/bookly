@@ -1,19 +1,24 @@
 'use client'
 
-import { IconButton, Button, Typography, Box, Select, MenuItem, useTheme, useMediaQuery } from '@mui/material'
+import { useState } from 'react'
+import { IconButton, Button, Typography, Box, Select, MenuItem, useTheme, useMediaQuery, Menu, ListItemIcon, ListItemText } from '@mui/material'
+import { format } from 'date-fns'
 import { useCalendarStore } from './state'
 import { getViewTitle } from './utils'
-import type { CalendarView } from './types'
+import { exportEventsToExcel, exportSummaryToExcel } from './export-utils'
+import type { CalendarView, CalendarEvent } from './types'
 
 interface CalendarHeaderProps {
   currentDate: Date
+  dateRange?: { start: Date; end: Date }
+  filteredEvents?: CalendarEvent[]
   onPrev: () => void
   onNext: () => void
   onToday: () => void
   onNewBooking: () => void
 }
 
-export default function CalendarHeader({ currentDate, onPrev, onNext, onToday, onNewBooking }: CalendarHeaderProps) {
+export default function CalendarHeader({ currentDate, dateRange, filteredEvents = [], onPrev, onNext, onToday, onNewBooking }: CalendarHeaderProps) {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
 
@@ -22,6 +27,65 @@ export default function CalendarHeader({ currentDate, onPrev, onNext, onToday, o
   const toggleSidebar = useCalendarStore(state => state.toggleSidebar)
   const toggleSettings = useCalendarStore(state => state.toggleSettings)
   const toggleNotifications = useCalendarStore(state => state.toggleNotifications)
+  const branchFilters = useCalendarStore(state => state.branchFilters)
+  const staffFilters = useCalendarStore(state => state.staffFilters)
+  const roomFilters = useCalendarStore(state => state.roomFilters)
+  const rooms = useCalendarStore(state => state.rooms)
+  const schedulingMode = useCalendarStore(state => state.schedulingMode)
+
+  const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null)
+  const exportMenuOpen = Boolean(exportAnchorEl)
+
+  const handleExportClick = (event: React.MouseEvent<HTMLElement>) => {
+    setExportAnchorEl(event.currentTarget)
+  }
+
+  const handleExportClose = () => {
+    setExportAnchorEl(null)
+  }
+
+  const handleExportDetails = () => {
+    const dateRangeStr = dateRange
+      ? `${format(dateRange.start, 'MMM dd, yyyy')} - ${format(dateRange.end, 'MMM dd, yyyy')}`
+      : format(currentDate, 'MMM dd, yyyy')
+
+    // Get filter details
+    const branches = branchFilters.allBranches
+      ? ['All Branches']
+      : branchFilters.branchIds
+
+    const staff = staffFilters.onlyMe
+      ? ['Only Me']
+      : staffFilters.staffIds.length > 0
+      ? staffFilters.staffIds.map(id => {
+          const event = filteredEvents.find(e => e.extendedProps.staffId === id)
+          return event?.extendedProps.staffName || id
+        })
+      : ['All Staff']
+
+    const roomsList = schedulingMode === 'static'
+      ? roomFilters.allRooms
+        ? ['All Rooms']
+        : roomFilters.roomIds.map(id => rooms.find(r => r.id === id)?.name || id)
+      : undefined
+
+    exportEventsToExcel(filteredEvents, {
+      filterInfo: {
+        view: viewOptions.find(v => v.value === view)?.label || view,
+        dateRange: dateRangeStr,
+        branches,
+        staff,
+        rooms: roomsList
+      }
+    })
+
+    handleExportClose()
+  }
+
+  const handleExportSummary = () => {
+    exportSummaryToExcel(filteredEvents)
+    handleExportClose()
+  }
 
   const viewOptions: { value: CalendarView; label: string }[] = [
     { value: 'timeGridDay', label: 'Day' },
@@ -117,6 +181,56 @@ export default function CalendarHeader({ currentDate, onPrev, onNext, onToday, o
         >
           {isMobile ? <i className="ri-add-line" /> : 'New Booking'}
         </Button>
+
+        {/* Export Button */}
+        <IconButton
+          onClick={handleExportClick}
+          size="small"
+          title="Export to Excel"
+          sx={{
+            color: exportMenuOpen ? 'primary.main' : 'inherit'
+          }}
+        >
+          <i className="ri-download-2-line" />
+        </IconButton>
+
+        {/* Export Menu */}
+        <Menu
+          anchorEl={exportAnchorEl}
+          open={exportMenuOpen}
+          onClose={handleExportClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+        >
+          <MenuItem onClick={handleExportDetails}>
+            <ListItemIcon>
+              <i className="ri-file-excel-2-line" style={{ fontSize: '1.25rem' }} />
+            </ListItemIcon>
+            <ListItemText
+              primary="Export Details"
+              secondary={`${filteredEvents.length} appointments`}
+              primaryTypographyProps={{ fontSize: '0.875rem' }}
+              secondaryTypographyProps={{ fontSize: '0.75rem' }}
+            />
+          </MenuItem>
+          <MenuItem onClick={handleExportSummary}>
+            <ListItemIcon>
+              <i className="ri-bar-chart-box-line" style={{ fontSize: '1.25rem' }} />
+            </ListItemIcon>
+            <ListItemText
+              primary="Export Summary"
+              secondary="Statistics & breakdown"
+              primaryTypographyProps={{ fontSize: '0.875rem' }}
+              secondaryTypographyProps={{ fontSize: '0.75rem' }}
+            />
+          </MenuItem>
+        </Menu>
 
         {isMobile && (
           <IconButton onClick={toggleSidebar} size="small">

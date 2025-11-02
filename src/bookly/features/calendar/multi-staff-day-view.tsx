@@ -3,7 +3,8 @@
 import { Box, Typography, IconButton, Avatar, Chip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, addMinutes, isSameDay } from 'date-fns'
-import { getBranchName } from './utils'
+import { useCalendarStore } from './state'
+import { getBranchName, buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
 
 interface MultiStaffDayViewProps {
@@ -25,6 +26,7 @@ export default function MultiStaffDayView({
 }: MultiStaffDayViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+  const colorScheme = useCalendarStore(state => state.colorScheme)
 
   // Filter events for current date
   const todayEvents = events.filter(event => isSameDay(new Date(event.start), currentDate))
@@ -60,19 +62,6 @@ export default function MultiStaffDayView({
     const height = (duration / 30) * slotHeight
 
     return { top, height }
-  }
-
-  // Get event color based on status
-  const getEventColor = (status: string) => {
-    const colors: Record<string, { bg: string; border: string; text: string }> = {
-      confirmed: { bg: '#E3F2FD', border: '#2196F3', text: '#0D47A1' },
-      pending: { bg: '#FFF3E0', border: '#FF9800', text: '#E65100' },
-      completed: { bg: '#F5F5F5', border: '#9E9E9E', text: '#424242' },
-      cancelled: { bg: '#FFEBEE', border: '#F44336', text: '#C62828' },
-      need_confirm: { bg: '#E8F5E9', border: '#4CAF50', text: '#1B5E20' },
-      no_show: { bg: '#FCE4EC', border: '#E91E63', text: '#880E4F' }
-    }
-    return colors[status] || colors.confirmed
   }
 
   return (
@@ -239,7 +228,7 @@ export default function MultiStaffDayView({
               {/* Events */}
               {getStaffEvents(staff.id).map(event => {
                 const { top, height } = getEventStyle(event)
-                const colors = getEventColor(event.extendedProps.status)
+                const colors = buildEventColors(colorScheme, event.extendedProps.status)
 
                 return (
                   <Box

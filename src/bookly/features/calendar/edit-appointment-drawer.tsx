@@ -21,6 +21,7 @@ import {
 import { useCalendarStore } from './state'
 import type { CalendarEvent, AppointmentStatus } from './types'
 import { mockStaff } from '@/bookly/data/mock-data'
+import { useMediaQuery, useTheme } from '@mui/material'
 
 interface EditAppointmentDrawerProps {
   open: boolean
@@ -29,7 +30,12 @@ interface EditAppointmentDrawerProps {
 }
 
 export default function EditAppointmentDrawer({ open, event, onClose }: EditAppointmentDrawerProps) {
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
   const updateEvent = useCalendarStore(state => state.updateEvent)
+  const schedulingMode = useCalendarStore(state => state.schedulingMode)
+  const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
+  const getSlotsForDate = useCalendarStore(state => state.getSlotsForDate)
 
   // Local state for form
   const [activeTab, setActiveTab] = useState(0)
@@ -312,6 +318,32 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 </Typography>
               </Box>
 
+              {/* Static Mode: Show slot capacity info */}
+              {extendedProps.slotId && (
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: 'info.light',
+                    borderRadius: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    border: theme => `1px solid ${theme.palette.info.main}`
+                  }}
+                >
+                  <i className="ri-information-line" />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      Static Slot Booking
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Time is locked to the scheduled slot
+                      {extendedProps.roomId && ` in ${extendedProps.roomId}`}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+
               {/* Time Selection */}
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                 <TextField
@@ -320,6 +352,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
                   size="small"
+                  disabled={!!extendedProps.slotId}
                   SelectProps={{
                     native: true
                   }}
@@ -336,6 +369,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
                   size="small"
+                  disabled={!!extendedProps.slotId}
                   SelectProps={{
                     native: true
                   }}

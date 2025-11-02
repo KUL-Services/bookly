@@ -12,7 +12,7 @@ import type { DateSelectArg, EventClickArg, EventDropArg, DatesSetArg } from '@f
 import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 
 import { buildEventColors } from './utils'
-import type { CalendarEvent, CalendarView, DisplayMode, ColorScheme, HighlightFilters, DateRange } from './types'
+import type { CalendarEvent, CalendarView, DisplayMode, ColorScheme, HighlightFilters, DateRange, SchedulingMode, Room } from './types'
 
 interface FullCalendarViewProps {
   events: CalendarEvent[]
@@ -20,6 +20,8 @@ interface FullCalendarViewProps {
   displayMode: DisplayMode
   colorScheme: ColorScheme
   highlights: HighlightFilters
+  schedulingMode?: SchedulingMode
+  rooms?: Room[]
   onDateRangeChange?: (range: DateRange) => void
   onDateClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
@@ -36,6 +38,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
       displayMode,
       colorScheme,
       highlights,
+      schedulingMode = 'dynamic',
+      rooms = [],
       onDateRangeChange,
       onDateClick,
       onEventClick,
@@ -47,6 +51,12 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
   ) => {
     const calendarRef = useRef<FullCalendar>(null)
     const theme = useTheme()
+
+    // Helper to get room info
+    const getRoomById = (roomId: string | undefined) => {
+      if (!roomId || schedulingMode !== 'static') return null
+      return rooms.find(r => r.id === roomId)
+    }
 
     // Expose calendar API to parent
     useImperativeHandle(ref, () => calendarRef.current as FullCalendar)
@@ -168,8 +178,16 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           '& .fc-daygrid-event': {
             mb: 0.5,
             px: 1,
-            py: 0.5,
-            whiteSpace: 'normal'
+            py: 0.75,
+            whiteSpace: 'normal',
+            minHeight: '32px',
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center'
+          },
+          '& .fc-daygrid-event .fc-event-main': {
+            overflow: 'hidden',
+            width: '100%'
           },
           '& .fc-timegrid-event': {
             borderRadius: '8px !important',
@@ -181,18 +199,23 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             flexDirection: 'column !important',
             alignItems: 'flex-start !important',
             justifyContent: 'flex-start !important',
-            height: '100% !important'
+            height: '100% !important',
+            overflow: 'hidden !important'
           },
           '& .fc-timegrid-event .fc-event-main-frame': {
             height: '100% !important',
             display: 'flex !important',
-            flexDirection: 'column !important'
+            flexDirection: 'column !important',
+            overflow: 'hidden !important',
+            width: '100% !important'
           },
           '& .fc-timegrid-event .fc-event-title-container': {
             flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            overflow: 'hidden',
+            width: '100%'
           },
           '& .fc-timegrid-event .fc-event-time': {
             fontSize: '0.7rem',
@@ -337,13 +360,13 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           // Mobile: Ensure minimum widths for better spacing
           '& .fc-daygrid-day': {
             minWidth: { xs: '100px !important', sm: '120px !important', md: 'auto !important' },
-            minHeight: { xs: '100px !important', sm: '120px !important', md: 'auto !important' }
+            minHeight: { xs: '120px !important', sm: '140px !important', md: '140px !important' }
           },
           '& .fc-day': {
-            minHeight: { xs: '100px !important', sm: '120px !important', md: 'auto !important' }
+            minHeight: { xs: '120px !important', sm: '140px !important', md: '140px !important' }
           },
           '& .fc-daygrid-day-frame': {
-            minHeight: { xs: '100px', sm: '120px', md: 'auto' }
+            minHeight: { xs: '120px', sm: '140px', md: '140px' }
           },
           // Mobile: Week view improvements
           '& .fc-timegrid-axis': {
@@ -418,6 +441,9 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           eventContent={arg => {
             const { event, timeText } = arg
             const props = event.extendedProps
+            const room = getRoomById(props.roomId)
+            const isStatic = schedulingMode === 'static'
+            const isDynamic = schedulingMode === 'dynamic'
 
             return (
               <Box
@@ -426,8 +452,10 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'center',
-                  gap: 0.25
+                  justifyContent: 'flex-start',
+                  gap: 0.25,
+                  overflow: 'hidden',
+                  minHeight: 0
                 }}
               >
                 {timeText && (
@@ -438,7 +466,9 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                       whiteSpace: 'nowrap',
                       lineHeight: 1.2,
                       color: 'inherit',
-                      opacity: 0.95
+                      opacity: 0.95,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
                     }}
                   >
                     {timeText}
@@ -449,10 +479,12 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                     fontSize: '0.8125rem',
                     fontWeight: 600,
                     lineHeight: 1.3,
-                    whiteSpace: 'normal',
-                    wordWrap: 'break-word',
-                    wordBreak: 'break-word',
-                    color: 'inherit'
+                    color: 'inherit',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical'
                   }}
                 >
                   {props.starred && '⭐ '}
@@ -463,14 +495,84 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                     sx={{
                       fontSize: '0.7rem',
                       lineHeight: 1.2,
-                      whiteSpace: 'normal',
-                      wordWrap: 'break-word',
-                      wordBreak: 'break-word',
                       color: 'inherit',
-                      opacity: 0.85
+                      opacity: 0.85,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 1,
+                      WebkitBoxOrient: 'vertical'
                     }}
                   >
                     {props.serviceName}
+                  </Box>
+                )}
+                {/* Show room for static mode */}
+                {room && isStatic && (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      mt: 0.25,
+                      minWidth: 0,
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        bgcolor: room.color || '#9E9E9E',
+                        flexShrink: 0
+                      }}
+                    />
+                    <Box
+                      sx={{
+                        fontSize: '0.65rem',
+                        lineHeight: 1,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        color: 'inherit',
+                        opacity: 0.8,
+                        flex: 1,
+                        minWidth: 0
+                      }}
+                    >
+                      {room.name}
+                    </Box>
+                  </Box>
+                )}
+                {/* Show staff for dynamic mode */}
+                {props.staffName && isDynamic && (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      mt: 0.25,
+                      minWidth: 0,
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <i className="ri-user-line" style={{ fontSize: '0.75rem', flexShrink: 0 }} />
+                    <Box
+                      sx={{
+                        fontSize: '0.65rem',
+                        lineHeight: 1,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        color: 'inherit',
+                        opacity: 0.8,
+                        flex: 1,
+                        minWidth: 0
+                      }}
+                    >
+                      {props.staffName}
+                    </Box>
                   </Box>
                 )}
               </Box>

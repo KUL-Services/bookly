@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useMemo } from 'react'
-import { Box, useTheme, useMediaQuery } from '@mui/material'
+import { Box, useTheme, useMediaQuery, Snackbar, Alert } from '@mui/material'
 import FullCalendar from '@fullcalendar/react'
 import { useCalendarStore } from './state'
 import { mockStaff } from '@/bookly/data/mock-data'
@@ -13,8 +13,9 @@ import MultiStaffDayView from './multi-staff-day-view'
 import SingleStaffDayView from './single-staff-day-view'
 import MultiStaffWeekView from './multi-staff-week-view'
 import SingleStaffWeekView from './single-staff-week-view'
-import EventPopover from './event-popover'
-import EditAppointmentDrawer from './edit-appointment-drawer'
+import MultiRoomDayView from './multi-room-day-view'
+import MultiRoomWeekView from './multi-room-week-view'
+import AppointmentDrawer from './appointment-drawer'
 import NewAppointmentDrawer from './new-appointment-drawer'
 import CalendarSettings from './calendar-settings'
 import CalendarNotifications from './calendar-notifications'
@@ -36,11 +37,17 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const highlights = useCalendarStore(state => state.highlights)
   const staffFilters = useCalendarStore(state => state.staffFilters)
+  const roomFilters = useCalendarStore(state => state.roomFilters)
+  const branchFilters = useCalendarStore(state => state.branchFilters)
+  const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const isSettingsOpen = useCalendarStore(state => state.isSettingsOpen)
   const isNotificationsOpen = useCalendarStore(state => state.isNotificationsOpen)
   const isSidebarOpen = useCalendarStore(state => state.isSidebarOpen)
   const isNewBookingOpen = useCalendarStore(state => state.isNewBookingOpen)
+  const lastActionError = useCalendarStore(state => state.lastActionError)
+  const visibleDateRange = useCalendarStore(state => state.visibleDateRange)
   const getFilteredEvents = useCalendarStore(state => state.getFilteredEvents)
+  const getRoomsByBranch = useCalendarStore(state => state.getRoomsByBranch)
   const setVisibleDateRange = useCalendarStore(state => state.setVisibleDateRange)
   const openNewBooking = useCalendarStore(state => state.openNewBooking)
   const closeNewBooking = useCalendarStore(state => state.closeNewBooking)
@@ -49,34 +56,62 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const toggleNotifications = useCalendarStore(state => state.toggleNotifications)
   const selectSingleStaff = useCalendarStore(state => state.selectSingleStaff)
   const goBackToAllStaff = useCalendarStore(state => state.goBackToAllStaff)
+  const openAppointmentDrawer = useCalendarStore(state => state.openAppointmentDrawer)
+  const clearError = useCalendarStore(state => state.clearError)
 
   // Local state
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null)
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
-  const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false)
 
   // Get filtered events
   const events = getFilteredEvents()
 
-  // Determine which staff are being shown
+  // Determine which staff are being shown (dynamic mode)
   const activeStaffIds = useMemo(() => {
+    if (schedulingMode === 'static') return []
+
     if (staffFilters.onlyMe) {
       return ['1'] // Current user ID
     }
     // If no specific staff selected, show all staff (first 7 for performance)
     return staffFilters.staffIds.length > 0 ? staffFilters.staffIds : mockStaff.slice(0, 7).map(s => s.id)
-  }, [staffFilters])
+  }, [staffFilters, schedulingMode])
 
   const activeStaffMembers = useMemo(() => {
     return mockStaff.filter(staff => activeStaffIds.includes(staff.id))
   }, [activeStaffIds])
 
+  // Determine which rooms are being shown (static mode)
+  const activeRooms = useMemo(() => {
+    if (schedulingMode === 'dynamic') return []
+
+    // Get first branch ID from branch filters, or default to '1-1'
+    const branchId = branchFilters.allBranches
+      ? '1-1'
+      : branchFilters.branchIds[0] || '1-1'
+
+    const branchRooms = getRoomsByBranch(branchId)
+
+    // If specific rooms are selected, filter to those
+    if (!roomFilters.allRooms && roomFilters.roomIds.length > 0) {
+      return branchRooms.filter(room => roomFilters.roomIds.includes(room.id))
+    }
+
+    // Otherwise show all rooms for the branch (limit to first 7 for performance)
+    return branchRooms.slice(0, 7)
+  }, [schedulingMode, branchFilters, roomFilters, getRoomsByBranch])
+
   // Determine which view to show
-  const shouldUseCustomDayView = view === 'timeGridDay' && activeStaffIds.length > 0
-  const shouldUseCustomWeekView = view === 'timeGridWeek' && activeStaffIds.length > 0
-  const isSingleStaffView = staffFilters.selectedStaffId !== null && staffFilters.selectedStaffId !== undefined
-  const isMultiStaffView = activeStaffIds.length > 1 && !isSingleStaffView
+  const shouldUseCustomDayView = view === 'timeGridDay' && (
+    (schedulingMode === 'dynamic' && activeStaffIds.length > 0) ||
+    (schedulingMode === 'static' && activeRooms.length > 0)
+  )
+  const shouldUseCustomWeekView = view === 'timeGridWeek' && (
+    (schedulingMode === 'dynamic' && activeStaffIds.length > 0) ||
+    (schedulingMode === 'static' && activeRooms.length > 0)
+  )
+  const isSingleStaffView = schedulingMode === 'dynamic' && staffFilters.selectedStaffId !== null && staffFilters.selectedStaffId !== undefined
+  const isMultiStaffView = schedulingMode === 'dynamic' && activeStaffIds.length > 1 && !isSingleStaffView
+  const isMultiRoomView = schedulingMode === 'static' && activeRooms.length > 0
 
   // Calendar API navigation
   const handlePrev = () => {
@@ -167,9 +202,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     }
   }
 
-  const handleEventClick = (event: CalendarEvent, target: HTMLElement) => {
-    setSelectedEvent(event)
-    setPopoverAnchor(target)
+  const handleEventClick = (event: CalendarEvent) => {
+    openAppointmentDrawer(event)
   }
 
   const handleSelectRange = (start: Date, end: Date) => {
@@ -184,21 +218,6 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const handleEventResize = (event: CalendarEvent, start: Date, end: Date) => {
     const updatedEvent: CalendarEvent = { ...event, start, end }
     useCalendarStore.getState().updateEvent(updatedEvent)
-  }
-
-  const handleEditEvent = (event: CalendarEvent) => {
-    setIsEditDrawerOpen(true)
-    setPopoverAnchor(null)
-  }
-
-  const handleClosePopover = () => {
-    setPopoverAnchor(null)
-    setSelectedEvent(null)
-  }
-
-  const handleCloseEditDrawer = () => {
-    setIsEditDrawerOpen(false)
-    setSelectedEvent(null)
   }
 
   const handleStaffClick = (staffId: string) => {
@@ -265,6 +284,40 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
   // Render the appropriate calendar view
   const renderCalendarView = () => {
+    // STATIC MODE VIEWS
+    // Multiple room day view (static mode)
+    if (shouldUseCustomDayView && isMultiRoomView && schedulingMode === 'static') {
+      return (
+        <MultiRoomDayView
+          events={events}
+          rooms={activeRooms}
+          currentDate={currentDate}
+          onEventClick={handleEventClick}
+          onSlotClick={(slotId, date) => {
+            // Open new booking drawer with slot prefilled
+            openNewBooking(date)
+          }}
+        />
+      )
+    }
+
+    // Multiple room week view (static mode)
+    if (shouldUseCustomWeekView && isMultiRoomView && schedulingMode === 'static') {
+      return (
+        <MultiRoomWeekView
+          events={events}
+          rooms={activeRooms}
+          currentDate={currentDate}
+          onEventClick={handleEventClick}
+          onSlotClick={(slotId, date) => {
+            // Open new booking drawer with slot prefilled
+            openNewBooking(date)
+          }}
+        />
+      )
+    }
+
+    // DYNAMIC MODE VIEWS
     // Single staff day view
     if (shouldUseCustomDayView && isSingleStaffView && activeStaffMembers.length === 1) {
       return (
@@ -272,10 +325,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           events={events}
           staff={activeStaffMembers[0]}
           currentDate={currentDate}
-          onEventClick={event => {
-            const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
-            handleEventClick(event, eventEl || document.body)
-          }}
+          onEventClick={handleEventClick}
           onBack={handleBackToAllStaff}
           onTimeRangeSelect={handleSelectRange}
         />
@@ -289,10 +339,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           events={events}
           staffMembers={activeStaffMembers}
           currentDate={currentDate}
-          onEventClick={event => {
-            const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
-            handleEventClick(event, eventEl || document.body)
-          }}
+          onEventClick={handleEventClick}
           onStaffClick={handleStaffClick}
           onCellClick={handleCellClickInWeekView}
         />
@@ -306,10 +353,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           events={events}
           staff={activeStaffMembers[0]}
           currentDate={currentDate}
-          onEventClick={event => {
-            const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
-            handleEventClick(event, eventEl || document.body)
-          }}
+          onEventClick={handleEventClick}
           onBack={handleBackToAllStaff}
           onDateClick={handleDateClickInWeekView}
         />
@@ -323,10 +367,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           events={events}
           staffMembers={activeStaffMembers}
           currentDate={currentDate}
-          onEventClick={event => {
-            const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
-            handleEventClick(event, eventEl || document.body)
-          }}
+          onEventClick={handleEventClick}
           onStaffClick={handleStaffClick}
           onDateClick={handleDateClickInWeekView}
           onCellClick={handleCellClickInWeekView}
@@ -343,12 +384,11 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         displayMode={displayMode}
         colorScheme={colorScheme}
         highlights={highlights}
+        schedulingMode={schedulingMode}
+        rooms={activeRooms}
         onDateRangeChange={handleDateRangeChange}
         onDateClick={handleDateClick}
-        onEventClick={event => {
-          const eventEl = document.querySelector(`[data-event-id="${event.id}"]`) as HTMLElement
-          handleEventClick(event, eventEl || document.body)
-        }}
+        onEventClick={handleEventClick}
         onSelectRange={handleSelectRange}
         onEventDrop={handleEventDrop}
         onEventResize={handleEventResize}
@@ -369,6 +409,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       {/* Header */}
       <CalendarHeader
         currentDate={currentDate}
+        dateRange={visibleDateRange || undefined}
+        filteredEvents={events}
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
@@ -391,16 +433,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         </Box>
       </Box>
 
-      {/* Event Details Drawer */}
-      <EventPopover
-        anchorEl={popoverAnchor}
-        event={selectedEvent}
-        onClose={handleClosePopover}
-        onEdit={handleEditEvent}
-      />
-
-      {/* Edit Appointment Drawer */}
-      <EditAppointmentDrawer open={isEditDrawerOpen} event={selectedEvent} onClose={handleCloseEditDrawer} />
+      {/* Unified Appointment Drawer */}
+      <AppointmentDrawer />
 
       {/* Settings Drawer */}
       <CalendarSettings open={isSettingsOpen} onClose={toggleSettings} />
@@ -417,6 +451,18 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         onClose={closeNewBooking}
         onSave={handleSaveNewAppointment}
       />
+
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!lastActionError}
+        autoHideDuration={6000}
+        onClose={clearError}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={clearError} severity="error" sx={{ width: '100%' }}>
+          {lastActionError}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

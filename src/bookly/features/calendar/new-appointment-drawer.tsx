@@ -21,11 +21,11 @@ import {
   Chip,
   InputAdornment
 } from '@mui/material'
-import { mockStaff } from '@/bookly/data/mock-data'
+import { mockStaff, mockServices } from '@/bookly/data/mock-data'
 import type { DateRange } from './types'
 import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
-import { isStaffAvailable, hasConflict } from './utils'
+import { isStaffAvailable, hasConflict, getServiceDuration } from './utils'
 import ClientPickerDialog from './client-picker-dialog'
 
 interface NewAppointmentDrawerProps {
@@ -47,6 +47,11 @@ export default function NewAppointmentDrawer({
 }: NewAppointmentDrawerProps) {
   const [activeTab, setActiveTab] = useState(0)
   const events = useCalendarStore(state => state.events)
+  const schedulingMode = useCalendarStore(state => state.schedulingMode)
+  const branchFilters = useCalendarStore(state => state.branchFilters)
+  const getSlotsForDate = useCalendarStore(state => state.getSlotsForDate)
+  const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
+  const getRoomsByBranch = useCalendarStore(state => state.getRoomsByBranch)
 
   // Form state
   const [date, setDate] = useState(initialDate || new Date())
@@ -58,6 +63,7 @@ export default function NewAppointmentDrawer({
   const [clientEmail, setClientEmail] = useState('')
   const [clientPhone, setClientPhone] = useState('')
   const [service, setService] = useState('')
+  const [serviceId, setServiceId] = useState('')
   const [servicePrice, setServicePrice] = useState(0)
   const [notes, setNotes] = useState('')
   const [requestedByClient, setRequestedByClient] = useState(false)
@@ -65,6 +71,11 @@ export default function NewAppointmentDrawer({
   const [validationError, setValidationError] = useState<string | null>(null)
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
+
+  // Static mode state
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null)
+  const [partySize, setPartySize] = useState(1)
 
   // Service pricing map
   const servicePrices: Record<string, number> = {
@@ -125,16 +136,38 @@ export default function NewAppointmentDrawer({
     // Clear previous validation errors
     setValidationError(null)
 
-    // Validate required fields only
-    if (!staffId) {
-      setValidationError('Please select a staff member')
-      return
-    }
+    // Validation for static mode
+    if (schedulingMode === 'static') {
+      if (!selectedSlotId) {
+        setValidationError('Please select a time slot')
+        return
+      }
+      // Check slot availability and capacity
+      const { available, remainingCapacity } = isSlotAvailable(selectedSlotId, date)
+      if (!available) {
+        setValidationError('Selected slot is fully booked')
+        return
+      }
+      if (partySize > remainingCapacity) {
+        setValidationError(`Not enough capacity: Only ${remainingCapacity} spot(s) remaining, but ${partySize} requested`)
+        return
+      }
+      if (partySize < 1) {
+        setValidationError('Party size must be at least 1')
+        return
+      }
+    } else {
+      // Validation for dynamic mode
+      if (!staffId) {
+        setValidationError('Please select a staff member')
+        return
+      }
 
-    // Validate time format and order
-    if (startTime >= endTime) {
-      setValidationError('End time must be after start time')
-      return
+      // Validate time format and order
+      if (startTime >= endTime) {
+        setValidationError('End time must be after start time')
+        return
+      }
     }
 
     // Note: Availability and conflict checks are shown as warnings, not blocking errors
@@ -152,15 +185,57 @@ export default function NewAppointmentDrawer({
       servicePrice,
       notes,
       requestedByClient,
-      staffManuallyChosen
+      staffManuallyChosen,
+      // Static mode fields
+      ...(schedulingMode === 'static' && {
+        slotId: selectedSlotId,
+        roomId: selectedRoomId,
+        partySize: partySize
+      })
     }
     onSave?.(appointment)
     handleClose()
   }
 
-  const handleServiceChange = (newService: string) => {
-    setService(newService)
-    setServicePrice(servicePrices[newService] || 0)
+  const handleServiceChange = (newServiceId: string) => {
+    const selectedService = mockServices.find(s => s.id === newServiceId)
+    if (selectedService) {
+      setServiceId(newServiceId)
+      setService(selectedService.name)
+      setServicePrice(selectedService.price)
+
+      // In dynamic mode, auto-calculate end time based on service duration
+      if (schedulingMode === 'dynamic' && startTime) {
+        const [hours, minutes] = startTime.split(':').map(Number)
+        const startMinutes = hours * 60 + minutes
+        const endMinutes = startMinutes + selectedService.duration
+        const endHours = Math.floor(endMinutes / 60)
+        const endMins = endMinutes % 60
+        setEndTime(`${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`)
+      }
+    } else {
+      setServiceId(newServiceId)
+      setService(newServiceId)
+      setServicePrice(servicePrices[newServiceId] || 0)
+    }
+  }
+
+  const handleSlotSelect = (slotId: string) => {
+    const availableSlots = getSlotsForDate(date)
+    const slot = availableSlots.find(s => s.id === slotId)
+
+    if (slot) {
+      setSelectedSlotId(slotId)
+      setSelectedRoomId(slot.roomId)
+      setStartTime(slot.startTime)
+      setEndTime(slot.endTime)
+      setServiceId(slot.serviceId)
+      setService(slot.serviceName)
+      setServicePrice(slot.price)
+      if (slot.instructorStaffId) {
+        setStaffId(slot.instructorStaffId)
+      }
+    }
   }
 
   const handleClientSelect = (client: User | null) => {
@@ -168,7 +243,7 @@ export default function NewAppointmentDrawer({
     if (client) {
       setClientName(`${client.firstName} ${client.lastName}`)
       setClientEmail(client.email)
-      setClientPhone(client.phone)
+      setClientPhone(client.phone || '')
     } else {
       // Walk-in - clear fields
       setClientName('')
@@ -185,11 +260,15 @@ export default function NewAppointmentDrawer({
     setClientEmail('')
     setClientPhone('')
     setService('')
+    setServiceId('')
     setServicePrice(0)
     setNotes('')
     setRequestedByClient(false)
     setValidationError(null)
     setAvailabilityWarning(null)
+    setSelectedSlotId(null)
+    setSelectedRoomId(null)
+    setPartySize(1)
     onClose()
   }
 
@@ -324,31 +403,162 @@ export default function NewAppointmentDrawer({
 
               <Divider />
 
-              {/* Service Selection */}
-              <FormControl fullWidth>
-                <TextField
-                  select
-                  label="Select service"
-                  value={service}
-                  onChange={(e) => handleServiceChange(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <i className="ri-arrow-right-s-line" />
-                      </InputAdornment>
-                    )
-                  }}
-                >
-                  <MenuItem value="">Select service</MenuItem>
-                  <MenuItem value="haircut">Haircut & Style - $65</MenuItem>
-                  <MenuItem value="manicure">Manicure - $35</MenuItem>
-                  <MenuItem value="massage">Massage - $80</MenuItem>
-                  <MenuItem value="color">Hair Color - $120</MenuItem>
-                  <MenuItem value="pedicure">Pedicure - $40</MenuItem>
-                  <MenuItem value="facial">Facial - $90</MenuItem>
-                  <MenuItem value="waxing">Waxing - $45</MenuItem>
-                </TextField>
-              </FormControl>
+              {/* STATIC MODE: Slot Selection */}
+              {schedulingMode === 'static' && (
+                <>
+                  <FormControl fullWidth>
+                    <TextField
+                      select
+                      label="Select Time Slot"
+                      value={selectedSlotId || ''}
+                      onChange={(e) => handleSlotSelect(e.target.value)}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <i className="ri-arrow-right-s-line" />
+                          </InputAdornment>
+                        )
+                      }}
+                    >
+                      <MenuItem value="">Select a slot</MenuItem>
+                      {getSlotsForDate(date).map((slot) => {
+                        const { available, remainingCapacity, total } = isSlotAvailable(slot.id, date)
+                        const roomName = getRoomsByBranch(slot.branchId).find(r => r.id === slot.roomId)?.name || 'Unknown Room'
+                        const isFull = !available
+                        const isLowCapacity = available && remainingCapacity < total * 0.3
+
+                        return (
+                          <MenuItem
+                            key={slot.id}
+                            value={slot.id}
+                            disabled={!available}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                              <Box sx={{ flex: 1, mr: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <Typography variant="body2" fontWeight={600}>
+                                    {slot.serviceName} - {roomName}
+                                  </Typography>
+                                  {isFull && (
+                                    <Chip
+                                      label="FULL"
+                                      size="small"
+                                      color="error"
+                                      sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700 }}
+                                    />
+                                  )}
+                                </Box>
+                                <Typography variant="caption" color="text.secondary">
+                                  {slot.startTime} - {slot.endTime}
+                                </Typography>
+                              </Box>
+                              <Chip
+                                icon={<i className="ri-user-line" style={{ fontSize: '0.75rem' }} />}
+                                label={`${remainingCapacity}/${total}`}
+                                size="small"
+                                color={isFull ? 'error' : isLowCapacity ? 'warning' : 'success'}
+                                sx={{
+                                  fontWeight: 600,
+                                  '& .MuiChip-icon': { marginLeft: '4px' }
+                                }}
+                              />
+                            </Box>
+                          </MenuItem>
+                        )
+                      })}
+                    </TextField>
+                  </FormControl>
+
+                  {/* Party Size Input */}
+                  {selectedSlotId && (
+                    <Box>
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Party Size"
+                        value={partySize}
+                        onChange={(e) => setPartySize(Math.max(1, parseInt(e.target.value) || 1))}
+                        inputProps={{ min: 1, max: 50 }}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <i className="ri-group-line" />
+                            </InputAdornment>
+                          )
+                        }}
+                        helperText="Number of people for this booking"
+                      />
+
+                      {/* Capacity Info Display */}
+                      {(() => {
+                        const { available, remainingCapacity, total } = isSlotAvailable(selectedSlotId, date)
+                        const isLowCapacity = available && remainingCapacity < total * 0.3
+                        const exceedsCapacity = partySize > remainingCapacity
+
+                        return (
+                          <Box
+                            sx={{
+                              mt: 1,
+                              p: 2,
+                              borderRadius: 1,
+                              bgcolor: exceedsCapacity ? 'error.lighter' : isLowCapacity ? 'warning.lighter' : 'success.lighter',
+                              border: 1,
+                              borderColor: exceedsCapacity ? 'error.main' : isLowCapacity ? 'warning.main' : 'success.main'
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <Typography variant="body2" fontWeight={600} color={exceedsCapacity ? 'error.dark' : isLowCapacity ? 'warning.dark' : 'success.dark'}>
+                                <i className={`ri-${exceedsCapacity ? 'error-warning' : isLowCapacity ? 'alert' : 'checkbox-circle'}-line`} style={{ marginRight: 4 }} />
+                                Capacity Status
+                              </Typography>
+                              <Chip
+                                icon={<i className="ri-user-line" style={{ fontSize: '0.7rem' }} />}
+                                label={`${remainingCapacity}/${total} available`}
+                                size="small"
+                                color={exceedsCapacity ? 'error' : isLowCapacity ? 'warning' : 'success'}
+                                sx={{ fontWeight: 600 }}
+                              />
+                            </Box>
+                            <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: 'text.secondary' }}>
+                              {exceedsCapacity
+                                ? `Cannot book ${partySize} spot(s) - only ${remainingCapacity} remaining`
+                                : isLowCapacity
+                                ? `Limited availability - only ${remainingCapacity} spot(s) left`
+                                : `${remainingCapacity} spot(s) available for booking`}
+                            </Typography>
+                          </Box>
+                        )
+                      })()}
+                    </Box>
+                  )}
+                </>
+              )}
+
+              {/* DYNAMIC MODE: Service Selection */}
+              {schedulingMode === 'dynamic' && (
+                <FormControl fullWidth>
+                  <TextField
+                    select
+                    label="Select service"
+                    value={serviceId}
+                    onChange={(e) => handleServiceChange(e.target.value)}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <i className="ri-arrow-right-s-line" />
+                        </InputAdornment>
+                      )
+                    }}
+                  >
+                    <MenuItem value="">Select service</MenuItem>
+                    {mockServices.map((svc) => (
+                      <MenuItem key={svc.id} value={svc.id}>
+                        {svc.name} - ${svc.price} ({svc.duration} min)
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </FormControl>
+              )}
 
               {/* Time Selection */}
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
@@ -359,6 +569,7 @@ export default function NewAppointmentDrawer({
                   onChange={(e) => setStartTime(e.target.value)}
                   InputLabelProps={{ shrink: true }}
                   inputProps={{ step: 900 }} // 15 min intervals
+                  disabled={schedulingMode === 'static' && !!selectedSlotId}
                 />
                 <TextField
                   label="END"
@@ -367,32 +578,50 @@ export default function NewAppointmentDrawer({
                   onChange={(e) => setEndTime(e.target.value)}
                   InputLabelProps={{ shrink: true }}
                   inputProps={{ step: 900 }}
+                  disabled={schedulingMode === 'static' && !!selectedSlotId}
                 />
               </Box>
 
-              {/* Staff Selection */}
-              <FormControl fullWidth>
-                <InputLabel>STAFF</InputLabel>
-                <Select
-                  value={staffId}
-                  label="STAFF"
-                  onChange={(e) => {
-                    setStaffId(e.target.value)
-                    setStaffManuallyChosen(true)
-                  }}
-                >
-                  {mockStaff.slice(0, 7).map((staff) => (
-                    <MenuItem key={staff.id} value={staff.id}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Avatar src={staff.photo} sx={{ width: 24, height: 24 }}>
-                          {staff.name[0]}
-                        </Avatar>
-                        {staff.name}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              {/* Staff Selection (only show in dynamic mode or if slot doesn't have instructor) */}
+              {(schedulingMode === 'dynamic' || (schedulingMode === 'static' && !staffId)) && (
+                <FormControl fullWidth>
+                  <InputLabel>STAFF</InputLabel>
+                  <Select
+                    value={staffId}
+                    label="STAFF"
+                    onChange={(e) => {
+                      setStaffId(e.target.value)
+                      setStaffManuallyChosen(true)
+                    }}
+                  >
+                    {mockStaff.slice(0, 7).map((staff) => (
+                      <MenuItem key={staff.id} value={staff.id}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Avatar src={staff.photo} sx={{ width: 24, height: 24 }}>
+                            {staff.name[0]}
+                          </Avatar>
+                          {staff.name}
+                        </Box>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
+              {/* Show assigned staff in static mode */}
+              {schedulingMode === 'static' && staffId && selectedSlotId && (
+                <Box sx={{ p: 2, bgcolor: 'action.selected', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar src={mockStaff.find(s => s.id === staffId)?.photo} sx={{ width: 40, height: 40 }}>
+                    {mockStaff.find(s => s.id === staffId)?.name[0]}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Instructor</Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {mockStaff.find(s => s.id === staffId)?.name}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
 
               {/* Warning if staff not available */}
               {availabilityWarning && (

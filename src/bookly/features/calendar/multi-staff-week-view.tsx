@@ -3,7 +3,8 @@
 import { Box, Typography, Avatar, Chip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday } from 'date-fns'
-import { getBranchName } from './utils'
+import { useCalendarStore } from './state'
+import { getBranchName, buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
 
 interface MultiStaffWeekViewProps {
@@ -27,6 +28,7 @@ export default function MultiStaffWeekView({
 }: MultiStaffWeekViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+  const colorScheme = useCalendarStore(state => state.colorScheme)
 
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
@@ -38,19 +40,6 @@ export default function MultiStaffWeekView({
     return events.filter(
       event => event.extendedProps.staffId === staffId && isSameDay(new Date(event.start), day)
     )
-  }
-
-  // Get event color based on status
-  const getEventColor = (status: string) => {
-    const colors: Record<string, { bg: string; border: string; text: string }> = {
-      confirmed: { bg: '#E3F2FD', border: '#2196F3', text: '#0D47A1' },
-      pending: { bg: '#FFF3E0', border: '#FF9800', text: '#E65100' },
-      completed: { bg: '#F5F5F5', border: '#9E9E9E', text: '#424242' },
-      cancelled: { bg: '#FFEBEE', border: '#F44336', text: '#C62828' },
-      need_confirm: { bg: '#E8F5E9', border: '#4CAF50', text: '#1B5E20' },
-      no_show: { bg: '#FCE4EC', border: '#E91E63', text: '#880E4F' }
-    }
-    return colors[status] || colors.confirmed
   }
 
   return (
@@ -246,7 +235,7 @@ export default function MultiStaffWeekView({
                     ) : (
                     <>
                       {dayEvents.slice(0, showAll ? dayEvents.length : 2).map(event => {
-                        const colors = getEventColor(event.extendedProps.status)
+                        const colors = buildEventColors(colorScheme, event.extendedProps.status)
 
                         return (
                           <Box

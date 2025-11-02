@@ -1,4 +1,4 @@
-import { mockStaff, mockBusinesses } from '@/bookly/data/mock-data'
+import { mockStaff, mockBusinesses, mockServices } from '@/bookly/data/mock-data'
 import type { Booking } from '@/bookly/data/types'
 import type {
   CalendarEvent,
@@ -6,10 +6,12 @@ import type {
   BranchFilter,
   HighlightFilters,
   StaffFilter,
+  RoomFilter,
   DateRange,
   AppointmentStatus,
   PaymentStatus,
-  SelectionMethod
+  SelectionMethod,
+  SchedulingMode
 } from './types'
 
 /**
@@ -60,7 +62,10 @@ function generateExtendedProps(booking: Booking, staffId: string) {
     customerName: booking.notes?.split(' ')[0] || 'Guest',
     price: booking.price,
     notes: booking.notes,
-    bookingId: booking.id
+    bookingId: booking.id,
+    slotId: booking.slotId,
+    roomId: booking.roomId,
+    partySize: booking.partySize
   }
 }
 
@@ -161,7 +166,7 @@ export function getEventClassNames(
 }
 
 /**
- * Filter events based on date range, branch filters, staff filters, and highlights
+ * Filter events based on date range, branch filters, staff filters, room filters, and highlights
  */
 export function filterEvents(
   events: CalendarEvent[],
@@ -169,7 +174,9 @@ export function filterEvents(
     range?: DateRange | null
     branchFilters?: BranchFilter
     staffFilters?: StaffFilter
+    roomFilters?: RoomFilter
     highlights?: HighlightFilters
+    schedulingMode?: SchedulingMode
   }
 ): CalendarEvent[] {
   let filtered = [...events]
@@ -195,8 +202,8 @@ export function filterEvents(
     filtered = filtered.filter(event => validStaffIds!.includes(event.extendedProps.staffId))
   }
 
-  // Filter by staff
-  if (filters.staffFilters) {
+  // Filter by staff (only in dynamic mode)
+  if (filters.staffFilters && filters.schedulingMode !== 'static') {
     const { onlyMe, staffIds } = filters.staffFilters
 
     if (onlyMe) {
@@ -210,6 +217,17 @@ export function filterEvents(
       } else {
         filtered = filtered.filter(event => staffIds.includes(event.extendedProps.staffId))
       }
+    }
+  }
+
+  // Filter by room (only in static mode)
+  if (filters.roomFilters && filters.schedulingMode === 'static') {
+    const { allRooms, roomIds } = filters.roomFilters
+
+    if (!allRooms && roomIds.length > 0) {
+      filtered = filtered.filter(event =>
+        event.extendedProps.roomId && roomIds.includes(event.extendedProps.roomId)
+      )
     }
   }
 
@@ -494,4 +512,110 @@ export function getAvailableTimeSlots(
   }
 
   return availableSlots
+}
+
+/**
+ * Get service duration by service ID
+ * @param serviceId - The ID of the service
+ * @returns Duration in minutes, or null if not found
+ */
+export function getServiceDuration(serviceId: string): number | null {
+  const service = mockServices.find(s => s.id === serviceId)
+  return service?.duration ?? null
+}
+
+/**
+ * Get service by service ID
+ * @param serviceId - The ID of the service
+ * @returns Service object or null if not found
+ */
+export function getService(serviceId: string) {
+  return mockServices.find(s => s.id === serviceId) || null
+}
+
+/**
+ * Get slots for a specific date from static service slots
+ * @param slots - Array of static service slots
+ * @param branchId - Branch ID to filter by
+ * @param date - Date to get slots for
+ * @returns Array of matching slots
+ */
+export function getSlotsForDate(
+  slots: import('./types').StaticServiceSlot[],
+  branchId: string,
+  date: Date
+): import('./types').StaticServiceSlot[] {
+  const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()] as import('./types').DayOfWeek
+  const dateStr = date.toISOString().split('T')[0]
+
+  return slots.filter(slot => {
+    if (slot.branchId !== branchId) return false
+
+    // Check if slot matches by dayOfWeek (recurring) or specific date
+    const matchesDayOfWeek = slot.dayOfWeek === dayOfWeek
+    const matchesDate = slot.date === dateStr
+
+    return matchesDayOfWeek || matchesDate
+  })
+}
+
+/**
+ * Get slot capacity by slot ID
+ * @param slots - Array of static service slots
+ * @param slotId - Slot ID
+ * @returns Capacity number or 0 if not found
+ */
+export function getSlotCapacity(slots: import('./types').StaticServiceSlot[], slotId: string): number {
+  const slot = slots.find(s => s.id === slotId)
+  return slot?.capacity || 0
+}
+
+/**
+ * Count slot occupancy (excluding cancelled bookings)
+ * @param events - Array of calendar events
+ * @param slotId - Slot ID
+ * @param date - Date to check
+ * @returns Number of occupied spots
+ */
+export function countSlotOccupancy(
+  events: import('./types').CalendarEvent[],
+  slotId: string,
+  date: Date
+): number {
+  const dateStr = date.toISOString().split('T')[0]
+
+  const bookings = events.filter(event => {
+    const eventDateStr = new Date(event.start).toISOString().split('T')[0]
+    return (
+      event.extendedProps.slotId === slotId &&
+      eventDateStr === dateStr &&
+      event.extendedProps.status !== 'cancelled'
+    )
+  })
+
+  // Sum up party sizes (default to 1 if not specified)
+  return bookings.reduce((sum, event) => {
+    return sum + (event.extendedProps.partySize || 1)
+  }, 0)
+}
+
+/**
+ * Get remaining capacity for a slot
+ * @param events - Array of calendar events
+ * @param slots - Array of static service slots
+ * @param slotId - Slot ID
+ * @param date - Date to check
+ * @returns Object with remaining capacity and total capacity
+ */
+export function getSlotRemaining(
+  events: import('./types').CalendarEvent[],
+  slots: import('./types').StaticServiceSlot[],
+  slotId: string,
+  date: Date
+): { remaining: number; total: number; occupied: number } {
+  const capacity = getSlotCapacity(slots, slotId)
+  const occupied = countSlotOccupancy(events, slotId, date)
+  const remaining = Math.max(0, capacity - occupied)
+
+  return { remaining, total: capacity, occupied }
 }

@@ -69,6 +69,7 @@ export interface StaffMember {
   branchId: string;
   schedule?: StaffSchedule[];
   appointments?: StaffAppointment[];
+  maxConcurrentBookings?: number; // Maximum overlapping appointments (default 1)
 }
 
 export interface Review {
@@ -112,6 +113,9 @@ export interface Booking {
   price: number;
   status: "confirmed" | "pending" | "cancelled" | "completed";
   notes?: string;
+  slotId?: string; // For static scheduling - links to a StaticServiceSlot
+  roomId?: string; // For static scheduling - room assignment
+  partySize?: number; // For group bookings (default 1)
 }
 
 export interface User {

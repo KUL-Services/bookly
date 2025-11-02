@@ -18,7 +18,7 @@ import { Calendar } from '@/bookly/components/ui/calendar'
 import { useCalendarStore } from './state'
 import { addWeeks } from './utils'
 import { mockStaff, mockBusinesses } from '@/bookly/data/mock-data'
-import type { BranchFilter, StaffFilter, HighlightFilters, PaymentStatus, AppointmentStatus, SelectionMethod } from './types'
+import type { BranchFilter, StaffFilter, RoomFilter, HighlightFilters, PaymentStatus, AppointmentStatus, SelectionMethod } from './types'
 
 interface CalendarSidebarProps {
   currentDate: Date
@@ -32,26 +32,33 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   const setView = useCalendarStore(state => state.setView)
   const branchFilters = useCalendarStore(state => state.branchFilters)
   const staffFilters = useCalendarStore(state => state.staffFilters)
+  const roomFilters = useCalendarStore(state => state.roomFilters)
   const highlights = useCalendarStore(state => state.highlights)
   const previousStaffFilters = useCalendarStore(state => state.previousStaffFilters)
+  const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const setBranchFilters = useCalendarStore(state => state.setBranchFilters)
   const setStaffFilters = useCalendarStore(state => state.setStaffFilters)
+  const setRoomFilters = useCalendarStore(state => state.setRoomFilters)
   const setHighlights = useCalendarStore(state => state.setHighlights)
   const clearHighlights = useCalendarStore(state => state.clearHighlights)
   const clearBranchFilters = useCalendarStore(state => state.clearBranchFilters)
+  const clearRoomFilters = useCalendarStore(state => state.clearRoomFilters)
   const goBackToAllStaff = useCalendarStore(state => state.goBackToAllStaff)
   const selectSingleStaff = useCalendarStore(state => state.selectSingleStaff)
+  const getRoomsByBranch = useCalendarStore(state => state.getRoomsByBranch)
   const toggleSidebar = useCalendarStore(state => state.toggleSidebar)
 
   const [pendingBranches, setPendingBranches] = useState<BranchFilter>(branchFilters)
   const [pendingStaff, setPendingStaff] = useState<StaffFilter>(staffFilters)
+  const [pendingRooms, setPendingRooms] = useState<RoomFilter>(roomFilters)
   const [pendingHighlights, setPendingHighlights] = useState<HighlightFilters>(highlights)
 
   useEffect(() => {
     setPendingBranches(branchFilters)
     setPendingStaff(staffFilters)
+    setPendingRooms(roomFilters)
     setPendingHighlights(highlights)
-  }, [branchFilters, staffFilters, highlights])
+  }, [branchFilters, staffFilters, roomFilters, highlights])
 
   // Get branches from mock data with staff counts
   const branches = useMemo(() => {
@@ -71,6 +78,17 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
       pendingBranches.branchIds.includes(staff.branchId)
     ).slice(0, 10) // Show more staff when filtering by branch
   }, [pendingBranches])
+
+  // Get available rooms based on selected branches
+  const availableRooms = useMemo(() => {
+    if (pendingBranches.allBranches || pendingBranches.branchIds.length === 0) {
+      const branchId = branches[0]?.id || '1-1'
+      return getRoomsByBranch(branchId)
+    }
+    // Get rooms for all selected branches
+    const allRooms = pendingBranches.branchIds.flatMap(branchId => getRoomsByBranch(branchId))
+    return allRooms
+  }, [pendingBranches, branches, getRoomsByBranch])
 
   const handleJumpWeek = (weeks: number) => {
     const newDate = addWeeks(currentDate, weeks)
@@ -123,6 +141,26 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     setPendingStaff({ ...pendingStaff, staffIds: newIds })
   }
 
+  // Room handlers
+  const handleAllRooms = () => {
+    setPendingRooms({ ...pendingRooms, allRooms: !pendingRooms.allRooms })
+  }
+
+  const handleSelectAllRooms = () => {
+    setPendingRooms({
+      ...pendingRooms,
+      allRooms: false,
+      roomIds: availableRooms.map(r => r.id)
+    })
+  }
+
+  const handleRoomToggle = (roomId: string) => {
+    const newIds = pendingRooms.roomIds.includes(roomId)
+      ? pendingRooms.roomIds.filter(id => id !== roomId)
+      : [...pendingRooms.roomIds, roomId]
+    setPendingRooms({ ...pendingRooms, allRooms: false, roomIds: newIds })
+  }
+
   const handlePaymentToggle = (payment: PaymentStatus) => {
     const newPayments = pendingHighlights.payments.includes(payment)
       ? pendingHighlights.payments.filter(p => p !== payment)
@@ -154,6 +192,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   const handleApply = () => {
     setBranchFilters(pendingBranches)
     setStaffFilters(pendingStaff)
+    setRoomFilters(pendingRooms)
     setHighlights(pendingHighlights)
     if (isMobile) {
       toggleSidebar()
@@ -163,12 +202,15 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   const handleClear = () => {
     const clearedBranches: BranchFilter = { allBranches: true, branchIds: [] }
     const cleared: StaffFilter = { onlyMe: false, staffIds: [], selectedStaffId: null }
+    const clearedRooms: RoomFilter = { allRooms: true, roomIds: [] }
     const clearedHighlights: HighlightFilters = { payments: [], statuses: [], selection: [], details: [] }
     setPendingBranches(clearedBranches)
     setPendingStaff(cleared)
+    setPendingRooms(clearedRooms)
     setPendingHighlights(clearedHighlights)
     setBranchFilters(clearedBranches)
     setStaffFilters(cleared)
+    setRoomFilters(clearedRooms)
     setHighlights(clearedHighlights)
   }
 
@@ -476,6 +518,88 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
             })}
           </FormGroup>
         </Box>
+
+        {/* Rooms (only in static scheduling mode) */}
+        {schedulingMode === 'static' && (
+          <>
+            <Divider sx={{ my: 2 }} />
+
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <i className='ri-door-line' style={{ fontSize: '1.1rem' }} />
+                  Rooms
+                </Typography>
+                {!pendingRooms.allRooms && pendingRooms.roomIds.length > 0 && (
+                  <Button
+                    variant='text'
+                    size='small'
+                    onClick={() => setPendingRooms({ allRooms: true, roomIds: [] })}
+                    sx={{ minWidth: 'auto', p: 0.5 }}
+                  >
+                    <i className='ri-close-circle-line' style={{ fontSize: '1.1rem' }} />
+                  </Button>
+                )}
+              </Box>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Checkbox checked={pendingRooms.allRooms} onChange={handleAllRooms} />}
+                  label={<Typography variant='body2' sx={{ fontWeight: 500 }}>All Rooms</Typography>}
+                />
+                <Button
+                  variant='text'
+                  size='small'
+                  onClick={handleSelectAllRooms}
+                  sx={{ justifyContent: 'flex-start', mb: 1 }}
+                >
+                  Select All
+                </Button>
+                {availableRooms.map(room => {
+                  const branch = branches.find(b => b.id === room.branchId)
+                  return (
+                    <FormControlLabel
+                      key={room.id}
+                      control={
+                        <Checkbox
+                          checked={pendingRooms.roomIds.includes(room.id)}
+                          onChange={() => handleRoomToggle(room.id)}
+                        />
+                      }
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
+                          <Box
+                            sx={{
+                              width: 16,
+                              height: 16,
+                              borderRadius: '50%',
+                              bgcolor: room.color || '#9E9E9E',
+                              flexShrink: 0
+                            }}
+                          />
+                          <Typography variant='body2'>{room.name}</Typography>
+                          {branch && (
+                            <Chip
+                              icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
+                              label={branch.name}
+                              size='small'
+                              variant='outlined'
+                              sx={{
+                                height: 18,
+                                fontSize: '0.65rem',
+                                ml: 'auto',
+                                '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
+                              }}
+                            />
+                          )}
+                        </Box>
+                      }
+                    />
+                  )
+                })}
+              </FormGroup>
+            </Box>
+          </>
+        )}
 
         <Divider sx={{ my: 2 }} />
 
