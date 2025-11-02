@@ -83,7 +83,11 @@ export default function MultiRoomWeekView({
               position: 'sticky',
               top: 0,
               bgcolor: 'background.paper',
-              zIndex: 10
+              zIndex: 10,
+              '& > *': {
+                minWidth: 0,
+                overflow: 'hidden'
+              }
             }}
           >
             {/* Room label */}
@@ -150,7 +154,11 @@ export default function MultiRoomWeekView({
                     md: `220px repeat(${weekDays.length}, 1fr)`
                   },
                   borderBottom: `1px solid ${theme.palette.divider}`,
-                  minHeight: { xs: '100px', md: '120px' }
+                  minHeight: { xs: '100px', md: '120px' },
+                  '& > *': {
+                    minWidth: 0,
+                    overflow: 'hidden'
+                  }
                 }}
               >
                 {/* Room name cell */}

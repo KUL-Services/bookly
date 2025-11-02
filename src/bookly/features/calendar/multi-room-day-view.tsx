@@ -112,7 +112,11 @@ export default function MultiRoomDayView({
               position: 'sticky',
               top: 0,
               bgcolor: 'background.paper',
-              zIndex: 10
+              zIndex: 10,
+              '& > *': {
+                minWidth: 0,
+                overflow: 'hidden'
+              }
             }}
           >
             {/* Empty corner cell */}
@@ -160,7 +164,7 @@ export default function MultiRoomDayView({
           </Box>
 
           {/* Time grid */}
-          <Box sx={{ flex: 1, position: 'relative', display: 'grid', gridTemplateColumns: { xs: `60px repeat(${rooms.length}, 150px)`, md: `60px repeat(${rooms.length}, minmax(180px, 1fr))` } }}>
+          <Box sx={{ flex: 1, position: 'relative', display: 'grid', gridTemplateColumns: { xs: `60px repeat(${rooms.length}, 150px)`, md: `60px repeat(${rooms.length}, minmax(180px, 1fr))` }, '& > *': { minWidth: 0, overflow: 'hidden' } }}>
             {/* Time labels column */}
             <Box>
               {timeSlots.map((slot, idx) => (

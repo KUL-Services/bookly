@@ -93,7 +93,11 @@ export default function MultiStaffDayView({
               bgcolor: 'background.paper',
               position: 'sticky',
               top: 0,
-              zIndex: 10
+              zIndex: 10,
+              '& > *': {
+                minWidth: 0,
+                overflow: 'hidden'
+              }
             }}
           >
         {/* Time column header */}
@@ -163,7 +167,11 @@ export default function MultiStaffDayView({
                 md: `60px repeat(${staffMembers.length}, minmax(180px, 1fr))`
               },
               position: 'relative',
-              minHeight: '100%'
+              minHeight: '100%',
+              '& > *': {
+                minWidth: 0,
+                overflow: 'hidden'
+              }
             }}
           >
           {/* Time slots column */}

@@ -79,7 +79,11 @@ export default function MultiStaffWeekView({
               bgcolor: 'background.paper',
               position: 'sticky',
               top: 0,
-              zIndex: 10
+              zIndex: 10,
+              '& > *': {
+                minWidth: 0,
+                overflow: 'hidden'
+              }
             }}
           >
         {/* Staff column header */}
@@ -139,7 +143,11 @@ export default function MultiStaffWeekView({
                   borderBottom: 1,
                   borderColor: 'divider',
                   minHeight: 120,
-                  bgcolor: staffIndex % 2 === 0 ? 'transparent' : isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)'
+                  bgcolor: staffIndex % 2 === 0 ? 'transparent' : isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)',
+                  '& > *': {
+                    minWidth: 0,
+                    overflow: 'hidden'
+                  }
                 }}
               >
             {/* Staff info */}
@@ -217,7 +225,9 @@ export default function MultiStaffWeekView({
                     transition: 'background-color 0.2s',
                     '&:hover': {
                       bgcolor: isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)'
-                    }
+                    },
+                    minWidth: 0,
+                    overflow: 'hidden'
                   }}
                   onClick={(e) => {
                     // Only navigate if clicking on empty space (not on an event)
@@ -252,7 +262,9 @@ export default function MultiStaffWeekView({
                               '&:hover': {
                                 boxShadow: 2,
                                 transform: 'scale(1.02)'
-                              }
+                              },
+                              minWidth: 0,
+                              overflow: 'hidden'
                             }}
                           >
                             <Typography
