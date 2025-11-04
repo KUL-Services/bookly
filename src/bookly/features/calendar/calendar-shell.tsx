@@ -19,6 +19,7 @@ import AppointmentDrawer from './appointment-drawer'
 import NewAppointmentDrawer from './new-appointment-drawer'
 import CalendarSettings from './calendar-settings'
 import CalendarNotifications from './calendar-notifications'
+import TemplateManagementDrawer from './template-management-drawer'
 import type { CalendarEvent, DateRange } from './types'
 
 interface CalendarShellProps {
@@ -261,7 +262,13 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         selectionMethod: appointment.requestedByClient ? ('by_client' as const) : ('automatically' as const),
         notes: appointment.notes || '',
         starred: false,
-        bookingId: eventId
+        bookingId: eventId,
+        // Static mode fields
+        ...(appointment.slotId && {
+          slotId: appointment.slotId,
+          roomId: appointment.roomId,
+          partySize: appointment.partySize || 1
+        })
       }
     }
 
@@ -286,7 +293,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const renderCalendarView = () => {
     // STATIC MODE VIEWS
     // Multiple room day view (static mode)
-    if (shouldUseCustomDayView && isMultiRoomView && schedulingMode === 'static') {
+    if (view === 'timeGridDay' && schedulingMode === 'static' && activeRooms.length > 0) {
       return (
         <MultiRoomDayView
           events={events}
@@ -302,7 +309,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     }
 
     // Multiple room week view (static mode)
-    if (shouldUseCustomWeekView && isMultiRoomView && schedulingMode === 'static') {
+    if (view === 'timeGridWeek' && schedulingMode === 'static' && activeRooms.length > 0) {
       return (
         <MultiRoomWeekView
           events={events}
@@ -313,13 +320,14 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
             // Open new booking drawer with slot prefilled
             openNewBooking(date)
           }}
+          onDateClick={handleDateClickInWeekView}
         />
       )
     }
 
-    // DYNAMIC MODE VIEWS
-    // Single staff day view
-    if (shouldUseCustomDayView && isSingleStaffView && activeStaffMembers.length === 1) {
+    // DYNAMIC MODE VIEWS - Always use custom views for day/week
+    // Single staff day view (when a specific staff is selected)
+    if (view === 'timeGridDay' && schedulingMode === 'dynamic' && isSingleStaffView && activeStaffMembers.length === 1) {
       return (
         <SingleStaffDayView
           events={events}
@@ -332,8 +340,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       )
     }
 
-    // Multiple staff day view
-    if (shouldUseCustomDayView && isMultiStaffView) {
+    // Multiple staff day view (when viewing all staff or multiple staff)
+    if (view === 'timeGridDay' && schedulingMode === 'dynamic' && activeStaffMembers.length > 0) {
       return (
         <MultiStaffDayView
           events={events}
@@ -346,8 +354,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       )
     }
 
-    // Single staff week view
-    if (shouldUseCustomWeekView && isSingleStaffView && activeStaffMembers.length === 1) {
+    // Single staff week view (when a specific staff is selected)
+    if (view === 'timeGridWeek' && schedulingMode === 'dynamic' && isSingleStaffView && activeStaffMembers.length === 1) {
       return (
         <SingleStaffWeekView
           events={events}
@@ -360,8 +368,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       )
     }
 
-    // Multiple staff week view
-    if (shouldUseCustomWeekView && isMultiStaffView) {
+    // Multiple staff week view (when viewing all staff or multiple staff)
+    if (view === 'timeGridWeek' && schedulingMode === 'dynamic' && activeStaffMembers.length > 0) {
       return (
         <MultiStaffWeekView
           events={events}
@@ -375,7 +383,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       )
     }
 
-    // Default FullCalendar view (for month, list, and default day/week)
+    // FullCalendar view - ONLY for month and list views
     return (
       <FullCalendarView
         ref={calendarRef}
@@ -441,6 +449,9 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
       {/* Notifications Drawer */}
       <CalendarNotifications open={isNotificationsOpen} onClose={toggleNotifications} />
+
+      {/* Template Management Drawer */}
+      <TemplateManagementDrawer />
 
       {/* New Appointment Drawer */}
       <NewAppointmentDrawer

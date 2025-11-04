@@ -208,112 +208,136 @@ export default function MultiStaffWeekView({
             {/* Days for this staff */}
             {weekDays.map(day => {
               const dayEvents = getStaffDayEvents(staff.id, day)
-              const showAll = dayEvents.length <= 2
+              const displayLimit = 3
+              const hasMore = dayEvents.length > displayLimit
 
               return (
                 <Box
                   key={`${staff.id}-${day.toISOString()}`}
                   sx={{
-                    p: 1,
+                    p: { xs: 0.5, md: 1 },
                     borderRight: 1,
                     borderColor: 'divider',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 0.5,
+                    gap: { xs: 0.5, md: 0.75 },
                     bgcolor: isToday(day) ? (isDark ? 'rgba(144,202,249,0.03)' : 'rgba(25,118,210,0.03)') : 'transparent',
-                    cursor: 'pointer',
+                    cursor: dayEvents.length === 0 ? 'pointer' : 'default',
                     transition: 'background-color 0.2s',
-                    '&:hover': {
+                    '&:hover': dayEvents.length === 0 ? {
                       bgcolor: isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)'
-                    },
+                    } : {},
                     minWidth: 0,
-                    overflow: 'hidden'
+                    overflow: 'visible',
+                    position: 'relative'
                   }}
                   onClick={(e) => {
-                    // Only navigate if clicking on empty space (not on an event)
-                    const target = e.target as HTMLElement
-                    if (target === e.currentTarget || target.closest('.day-cell-content')) {
+                    // Only navigate if clicking on empty space
+                    if (dayEvents.length === 0) {
                       onCellClick?.(staff.id, day)
                     }
                   }}
                 >
-                  <Box className="day-cell-content" sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, flex: 1 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 0.5, md: 0.75 }, flex: 1, minHeight: 0 }}>
                     {dayEvents.length === 0 ? (
-                      <Typography variant="caption" color="text.disabled" sx={{ textAlign: 'center', py: 2 }}>
+                      <Typography variant="caption" color="text.disabled" sx={{ textAlign: 'center', py: { xs: 1, md: 2 } }}>
                         -
                       </Typography>
                     ) : (
                     <>
-                      {dayEvents.slice(0, showAll ? dayEvents.length : 2).map(event => {
+                      {dayEvents.slice(0, displayLimit).map(event => {
                         const colors = buildEventColors(colorScheme, event.extendedProps.status)
 
                         return (
                           <Box
                             key={event.id}
-                            onClick={() => onEventClick?.(event)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onEventClick?.(event)
+                            }}
                             sx={{
                               bgcolor: colors.bg,
-                              border: 1.5,
+                              border: 1,
                               borderColor: colors.border,
-                              borderRadius: 1,
-                              p: 0.75,
+                              borderRadius: 0.75,
+                              p: { xs: 0.5, md: 0.75 },
                               cursor: 'pointer',
-                              transition: 'all 0.2s',
+                              transition: 'all 0.15s',
                               '&:hover': {
-                                boxShadow: 2,
-                                transform: 'scale(1.02)'
+                                boxShadow: 1,
+                                borderColor: colors.text,
+                                transform: 'translateX(2px)'
                               },
                               minWidth: 0,
-                              overflow: 'hidden'
+                              overflow: 'hidden',
+                              position: 'relative'
                             }}
                           >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontWeight: 600,
+                                  color: colors.text,
+                                  fontSize: { xs: '0.6rem', md: '0.65rem' },
+                                  lineHeight: 1
+                                }}
+                              >
+                                {format(new Date(event.start), 'h:mm a')}
+                              </Typography>
+                              {event.extendedProps.starred && (
+                                <i className="ri-star-fill" style={{ fontSize: '0.6rem', color: '#FFA500' }} />
+                              )}
+                            </Box>
                             <Typography
                               variant="caption"
                               sx={{
                                 display: 'block',
                                 fontWeight: 600,
                                 color: colors.text,
-                                fontSize: '0.65rem',
-                                mb: 0.25,
-                                lineHeight: 1.2
-                              }}
-                            >
-                              {format(new Date(event.start), 'h:mm a')}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                display: 'block',
-                                fontWeight: 600,
-                                color: colors.text,
-                                fontSize: '0.7rem',
-                                lineHeight: 1.3,
+                                fontSize: { xs: '0.65rem', md: '0.7rem' },
+                                lineHeight: 1.2,
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap'
                               }}
                             >
-                              {event.extendedProps.serviceName || event.title}
+                              {event.title}
                             </Typography>
                           </Box>
                         )
                       })}
-                      {!showAll && dayEvents.length > 2 && (
-                        <Typography
-                          variant="caption"
+                      {hasMore && (
+                        <Box
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDateClick?.(day)
+                          }}
                           sx={{
                             textAlign: 'center',
-                            color: 'primary.main',
-                            fontWeight: 600,
-                            cursor: 'pointer',
                             py: 0.5,
+                            px: 1,
+                            bgcolor: isDark ? 'rgba(144,202,249,0.1)' : 'rgba(25,118,210,0.1)',
+                            borderRadius: 0.75,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
                             '&:hover': {
-                              textDecoration: 'underline'
+                              bgcolor: isDark ? 'rgba(144,202,249,0.2)' : 'rgba(25,118,210,0.2)',
+                              transform: 'scale(1.02)'
                             }
                           }}
                         >
-                          Show all ({dayEvents.length})
-                        </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: 'primary.main',
+                              fontWeight: 700,
+                              fontSize: { xs: '0.65rem', md: '0.7rem' }
+                            }}
+                          >
+                            +{dayEvents.length - displayLimit} more
+                          </Typography>
+                        </Box>
                       )}
                     </>
                   )}

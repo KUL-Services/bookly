@@ -27,6 +27,7 @@ export default function CalendarHeader({ currentDate, dateRange, filteredEvents 
   const toggleSidebar = useCalendarStore(state => state.toggleSidebar)
   const toggleSettings = useCalendarStore(state => state.toggleSettings)
   const toggleNotifications = useCalendarStore(state => state.toggleNotifications)
+  const toggleTemplateManagement = useCalendarStore(state => state.toggleTemplateManagement)
   const branchFilters = useCalendarStore(state => state.branchFilters)
   const staffFilters = useCalendarStore(state => state.staffFilters)
   const roomFilters = useCalendarStore(state => state.roomFilters)
@@ -181,6 +182,20 @@ export default function CalendarHeader({ currentDate, dateRange, filteredEvents 
         >
           {isMobile ? <i className="ri-add-line" /> : 'New Booking'}
         </Button>
+
+        {/* Schedule Templates Button (Static Mode Only) */}
+        {schedulingMode === 'static' && !isMobile && (
+          <IconButton
+            onClick={toggleTemplateManagement}
+            size="small"
+            title="Manage Schedule Templates"
+            sx={{
+              color: 'inherit'
+            }}
+          >
+            <i className="ri-calendar-schedule-line" />
+          </IconButton>
+        )}
 
         {/* Export Button */}
         <IconButton

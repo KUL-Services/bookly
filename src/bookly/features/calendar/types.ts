@@ -37,6 +37,38 @@ export interface StaticServiceSlot {
   capacity: number
   instructorStaffId?: string
   price: number
+  templateId?: string    // If generated from a template
+  isOverride?: boolean   // If overriding a template occurrence
+  isCancelled?: boolean  // If cancelling a template occurrence
+  overrideDate?: string  // Specific date this override applies to (YYYY-MM-DD)
+}
+
+// Weekly pattern definition for schedule templates
+export interface WeeklySlotPattern {
+  id: string  // Unique ID for this pattern slot
+  dayOfWeek: DayOfWeek
+  startTime: string
+  endTime: string
+  serviceId: string
+  serviceName: string
+  roomId: string
+  capacity: number
+  instructorStaffId?: string
+  price: number
+}
+
+// Schedule template (creates recurring weekly slots)
+export interface ScheduleTemplate {
+  id: string
+  name: string
+  businessId: string
+  branchId: string
+  activeFrom: Date
+  activeUntil: Date | null  // null = ongoing
+  isActive: boolean
+  weeklyPattern: WeeklySlotPattern[]  // All slots for the week
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface CalendarEvent extends EventInput {
@@ -110,6 +142,8 @@ export interface CalendarState {
   schedulingMode: SchedulingMode
   rooms: Room[]
   staticSlots: StaticServiceSlot[]
+  scheduleTemplates: ScheduleTemplate[]
+  isTemplateManagementOpen: boolean  // For template management drawer
 }
 
 export interface CalendarPreferences {

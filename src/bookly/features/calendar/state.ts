@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { mockBookings, mockStaff, mockRooms, mockStaticServiceSlots } from '@/bookly/data/mock-data'
+import { mockBookings, mockStaff, mockRooms, mockStaticServiceSlots, mockScheduleTemplates } from '@/bookly/data/mock-data'
 import { mapBookingToEvent, filterEvents } from './utils'
 import type {
   CalendarState,
@@ -14,7 +14,9 @@ import type {
   DateRange,
   SchedulingMode,
   Room,
-  StaticServiceSlot
+  StaticServiceSlot,
+  ScheduleTemplate,
+  WeeklySlotPattern
 } from './types'
 
 // LocalStorage keys
@@ -27,7 +29,9 @@ const STORAGE_KEYS = {
   rooms: 'bookly.calendar.rooms',
   highlights: 'bookly.calendar.highlights',
   starred: 'bookly.calendar.starred',
-  schedulingMode: 'bookly.calendar.schedulingMode'
+  schedulingMode: 'bookly.calendar.schedulingMode',
+  scheduleTemplates: 'bookly.calendar.scheduleTemplates',
+  staticSlots: 'bookly.calendar.staticSlots'
 }
 
 // Load preferences from localStorage
@@ -48,6 +52,38 @@ function savePreference<T>(key: string, value: T): void {
     localStorage.setItem(key, JSON.stringify(value))
   } catch (e) {
     console.error('Failed to save preference:', e)
+  }
+}
+
+// Load schedule templates from localStorage with date parsing
+function loadTemplates(): ScheduleTemplate[] {
+  if (typeof window === 'undefined') return mockScheduleTemplates
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.scheduleTemplates)
+    if (!stored) return mockScheduleTemplates
+
+    const templates = JSON.parse(stored) as ScheduleTemplate[]
+    // Parse date strings back to Date objects
+    return templates.map(template => ({
+      ...template,
+      activeFrom: new Date(template.activeFrom),
+      activeUntil: template.activeUntil ? new Date(template.activeUntil) : null,
+      createdAt: new Date(template.createdAt),
+      updatedAt: new Date(template.updatedAt)
+    }))
+  } catch {
+    return mockScheduleTemplates
+  }
+}
+
+// Load static slots from localStorage
+function loadStaticSlots(): StaticServiceSlot[] {
+  if (typeof window === 'undefined') return mockStaticServiceSlots
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.staticSlots)
+    return stored ? JSON.parse(stored) : mockStaticServiceSlots
+  } catch {
+    return mockStaticServiceSlots
   }
 }
 
@@ -124,6 +160,16 @@ interface CalendarStore extends CalendarState {
   // Staff concurrent booking checking (for dynamic mode)
   getConcurrentStaffBookings: (staffId: string, start: Date, end: Date) => CalendarEvent[]
   isStaffAvailableForBooking: (staffId: string, start: Date, end: Date, excludeEventId?: string) => { available: boolean; currentCount: number; maxAllowed: number }
+  // Template management actions
+  createTemplate: (template: Omit<ScheduleTemplate, 'id' | 'createdAt' | 'updatedAt'>) => string
+  updateTemplate: (templateId: string, updates: Partial<ScheduleTemplate>) => void
+  deleteTemplate: (templateId: string) => void
+  toggleTemplateActive: (templateId: string) => void
+  generateSlotsFromTemplate: (templateId: string, startDate: Date, endDate: Date) => StaticServiceSlot[]
+  toggleTemplateManagement: () => void
+  // Slot override actions
+  overrideSlot: (templateId: string, date: string, patternId: string, updates: Partial<StaticServiceSlot>) => void
+  cancelSlotOccurrence: (templateId: string, date: string, patternId: string) => void
 }
 
 export const useCalendarStore = create<CalendarStore>((set, get) => ({
@@ -151,7 +197,9 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   // Static/Dynamic scheduling
   schedulingMode: loadPreference(STORAGE_KEYS.schedulingMode, 'dynamic' as SchedulingMode),
   rooms: mockRooms,
-  staticSlots: mockStaticServiceSlots,
+  staticSlots: loadStaticSlots(),
+  scheduleTemplates: loadTemplates(),
+  isTemplateManagementOpen: false,
 
   // Actions
   setView: (view) => {
@@ -451,6 +499,9 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     const dateStr = date.toISOString().split('T')[0]
 
     return staticSlots.filter(slot => {
+      // Skip cancelled slots
+      if (slot.isCancelled) return false
+
       // Match by day of week (recurring) or specific date
       const matchesDate = slot.dayOfWeek === dayOfWeek || slot.date === dateStr
 
@@ -545,6 +596,262 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       available: currentCount < maxAllowed,
       currentCount,
       maxAllowed
+    }
+  },
+
+  // Template management actions
+  createTemplate: (template) => {
+    const { scheduleTemplates } = get()
+    const newTemplate: ScheduleTemplate = {
+      ...template,
+      id: `template-${Date.now()}`,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    const updatedTemplates = [...scheduleTemplates, newTemplate]
+    set({ scheduleTemplates: updatedTemplates })
+    savePreference(STORAGE_KEYS.scheduleTemplates, updatedTemplates)
+    return newTemplate.id
+  },
+
+  updateTemplate: (templateId, updates) => {
+    const { scheduleTemplates } = get()
+    const updatedTemplates = scheduleTemplates.map(template =>
+      template.id === templateId
+        ? { ...template, ...updates, updatedAt: new Date() }
+        : template
+    )
+    set({ scheduleTemplates: updatedTemplates })
+    savePreference(STORAGE_KEYS.scheduleTemplates, updatedTemplates)
+  },
+
+  deleteTemplate: (templateId) => {
+    const { scheduleTemplates, staticSlots } = get()
+
+    // Remove template
+    const updatedTemplates = scheduleTemplates.filter(t => t.id !== templateId)
+
+    // Remove all slots generated from this template
+    const updatedSlots = staticSlots.filter(slot => slot.templateId !== templateId)
+
+    set({
+      scheduleTemplates: updatedTemplates,
+      staticSlots: updatedSlots
+    })
+    savePreference(STORAGE_KEYS.scheduleTemplates, updatedTemplates)
+    savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
+  },
+
+  toggleTemplateActive: (templateId) => {
+    const { scheduleTemplates, staticSlots } = get()
+    const template = scheduleTemplates.find(t => t.id === templateId)
+
+    if (!template) return
+
+    const isBecomingActive = !template.isActive
+
+    // Update template status
+    const updatedTemplates = scheduleTemplates.map(t =>
+      t.id === templateId
+        ? { ...t, isActive: isBecomingActive, updatedAt: new Date() }
+        : t
+    )
+
+    if (isBecomingActive) {
+      // Generate slots when activating
+      const startDate = new Date(template.activeFrom)
+      const endDate = template.activeUntil ? new Date(template.activeUntil) : new Date()
+
+      // For ongoing templates, generate for next 90 days
+      if (!template.activeUntil) {
+        endDate.setDate(endDate.getDate() + 90)
+      }
+
+      // First save the updated templates
+      set({ scheduleTemplates: updatedTemplates })
+      savePreference(STORAGE_KEYS.scheduleTemplates, updatedTemplates)
+
+      // Then generate slots
+      get().generateSlotsFromTemplate(templateId, startDate, endDate)
+    } else {
+      // Remove slots when deactivating
+      const updatedSlots = staticSlots.filter(slot => slot.templateId !== templateId)
+
+      set({
+        scheduleTemplates: updatedTemplates,
+        staticSlots: updatedSlots
+      })
+      savePreference(STORAGE_KEYS.scheduleTemplates, updatedTemplates)
+      savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
+    }
+  },
+
+  generateSlotsFromTemplate: (templateId, startDate, endDate) => {
+    const { scheduleTemplates, staticSlots } = get()
+    const template = scheduleTemplates.find(t => t.id === templateId)
+
+    if (!template) return []
+
+    const generatedSlots: StaticServiceSlot[] = []
+    const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> =
+      ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+    // Iterate through each day in the range
+    let currentDate = new Date(startDate)
+    while (currentDate <= endDate) {
+      const dayOfWeek = dayNames[currentDate.getDay()]
+      const dateStr = currentDate.toISOString().split('T')[0]
+
+      // Find all patterns for this day of week
+      const patternsForDay = template.weeklyPattern.filter(p => p.dayOfWeek === dayOfWeek)
+
+      // Generate a slot for each pattern
+      for (const pattern of patternsForDay) {
+        // Check if there's already an override or cancellation for this date and pattern
+        const hasOverride = staticSlots.some(
+          slot => slot.templateId === templateId &&
+                  slot.overrideDate === dateStr &&
+                  slot.id.includes(pattern.id)
+        )
+
+        // Only generate if no override exists
+        if (!hasOverride) {
+          const newSlot: StaticServiceSlot = {
+            id: `slot-${templateId}-${pattern.id}-${dateStr}`,
+            roomId: pattern.roomId,
+            branchId: template.branchId,
+            date: dateStr,
+            dayOfWeek: dayOfWeek,
+            startTime: pattern.startTime,
+            endTime: pattern.endTime,
+            serviceId: pattern.serviceId,
+            serviceName: pattern.serviceName,
+            capacity: pattern.capacity,
+            instructorStaffId: pattern.instructorStaffId,
+            price: pattern.price,
+            templateId: template.id
+          }
+          generatedSlots.push(newSlot)
+        }
+      }
+
+      // Move to next day
+      currentDate = new Date(currentDate)
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+
+    // Add generated slots to the store
+    const allSlots = [...staticSlots, ...generatedSlots]
+    set({ staticSlots: allSlots })
+    savePreference(STORAGE_KEYS.staticSlots, allSlots)
+
+    return generatedSlots
+  },
+
+  toggleTemplateManagement: () => {
+    set(state => ({ isTemplateManagementOpen: !state.isTemplateManagementOpen }))
+  },
+
+  // Slot override actions
+  overrideSlot: (templateId, date, patternId, updates) => {
+    const { staticSlots, scheduleTemplates } = get()
+    const template = scheduleTemplates.find(t => t.id === templateId)
+    const pattern = template?.weeklyPattern.find(p => p.id === patternId)
+
+    if (!template || !pattern) return
+
+    // Find existing generated slot for this date and pattern
+    const existingSlotId = `slot-${templateId}-${patternId}-${date}`
+    const existingSlot = staticSlots.find(s => s.id === existingSlotId)
+
+    if (existingSlot) {
+      // Update existing slot with override
+      const updatedSlots = staticSlots.map(slot =>
+        slot.id === existingSlotId
+          ? { ...slot, ...updates, isOverride: true, overrideDate: date }
+          : slot
+      )
+      set({ staticSlots: updatedSlots })
+      savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
+    } else {
+      // Create new override slot
+      const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> =
+        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      const dateObj = new Date(date)
+      const dayOfWeek = dayNames[dateObj.getDay()]
+
+      const overrideSlot: StaticServiceSlot = {
+        id: `slot-${templateId}-${patternId}-${date}-override`,
+        roomId: pattern.roomId,
+        branchId: template.branchId,
+        date: date,
+        dayOfWeek: dayOfWeek,
+        startTime: pattern.startTime,
+        endTime: pattern.endTime,
+        serviceId: pattern.serviceId,
+        serviceName: pattern.serviceName,
+        capacity: pattern.capacity,
+        instructorStaffId: pattern.instructorStaffId,
+        price: pattern.price,
+        templateId: template.id,
+        isOverride: true,
+        overrideDate: date,
+        ...updates
+      }
+      const updatedSlots = [...staticSlots, overrideSlot]
+      set({ staticSlots: updatedSlots })
+      savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
+    }
+  },
+
+  cancelSlotOccurrence: (templateId, date, patternId) => {
+    const { staticSlots, scheduleTemplates } = get()
+    const template = scheduleTemplates.find(t => t.id === templateId)
+    const pattern = template?.weeklyPattern.find(p => p.id === patternId)
+
+    if (!template || !pattern) return
+
+    // Find existing generated slot for this date and pattern
+    const existingSlotId = `slot-${templateId}-${patternId}-${date}`
+    const existingSlot = staticSlots.find(s => s.id === existingSlotId)
+
+    if (existingSlot) {
+      // Mark existing slot as cancelled
+      const updatedSlots = staticSlots.map(slot =>
+        slot.id === existingSlotId
+          ? { ...slot, isCancelled: true, overrideDate: date }
+          : slot
+      )
+      set({ staticSlots: updatedSlots })
+      savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
+    } else {
+      // Create cancelled override slot
+      const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> =
+        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      const dateObj = new Date(date)
+      const dayOfWeek = dayNames[dateObj.getDay()]
+
+      const cancelledSlot: StaticServiceSlot = {
+        id: `slot-${templateId}-${patternId}-${date}-cancelled`,
+        roomId: pattern.roomId,
+        branchId: template.branchId,
+        date: date,
+        dayOfWeek: dayOfWeek,
+        startTime: pattern.startTime,
+        endTime: pattern.endTime,
+        serviceId: pattern.serviceId,
+        serviceName: pattern.serviceName,
+        capacity: pattern.capacity,
+        instructorStaffId: pattern.instructorStaffId,
+        price: pattern.price,
+        templateId: template.id,
+        isCancelled: true,
+        overrideDate: date
+      }
+      const updatedSlots = [...staticSlots, cancelledSlot]
+      set({ staticSlots: updatedSlots })
+      savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
     }
   }
 }))

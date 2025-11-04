@@ -1,5 +1,5 @@
 import { Business, Service, StaffMember, Review, Category, Booking, User, StaffSchedule, StaffAppointment } from './types'
-import type { Room, StaticServiceSlot } from '@/bookly/features/calendar/types'
+import type { Room, StaticServiceSlot, ScheduleTemplate, WeeklySlotPattern } from '@/bookly/features/calendar/types'
 
 export const categories: Category[] = [
   { id: '1', name: 'Hair', icon: '✂️', slug: 'hair' },
@@ -1926,5 +1926,160 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     capacity: 2,
     instructorStaffId: '2',
     price: 50
+  }
+]
+
+// Schedule Templates for automated slot generation
+export const mockScheduleTemplates: ScheduleTemplate[] = [
+  {
+    id: 'template-1',
+    name: 'Winter 2025 Fitness Schedule',
+    businessId: '1',
+    branchId: '1-1',
+    activeFrom: new Date('2025-01-01'),
+    activeUntil: new Date('2025-03-31'),
+    isActive: true,
+    createdAt: new Date('2024-12-01'),
+    updatedAt: new Date('2024-12-01'),
+    weeklyPattern: [
+      // Monday Classes
+      {
+        id: 'pattern-mon-1',
+        dayOfWeek: 'Mon',
+        startTime: '09:00',
+        endTime: '10:00',
+        serviceId: 'fitness-1',
+        serviceName: 'Morning Yoga Class',
+        roomId: 'room-1-1-2',
+        capacity: 12,
+        instructorStaffId: '2',
+        price: 25
+      },
+      {
+        id: 'pattern-mon-2',
+        dayOfWeek: 'Mon',
+        startTime: '10:30',
+        endTime: '11:30',
+        serviceId: 'fitness-2',
+        serviceName: 'Pilates Class',
+        roomId: 'room-1-1-2',
+        capacity: 15,
+        instructorStaffId: '2',
+        price: 30
+      },
+      {
+        id: 'pattern-mon-3',
+        dayOfWeek: 'Mon',
+        startTime: '18:00',
+        endTime: '19:00',
+        serviceId: 'fitness-3',
+        serviceName: 'Zumba Dance',
+        roomId: 'room-1-1-2',
+        capacity: 20,
+        instructorStaffId: '3',
+        price: 28
+      },
+      // Tuesday Classes
+      {
+        id: 'pattern-tue-1',
+        dayOfWeek: 'Tue',
+        startTime: '09:00',
+        endTime: '10:00',
+        serviceId: 'fitness-2',
+        serviceName: 'Pilates Class',
+        roomId: 'room-1-1-2',
+        capacity: 15,
+        instructorStaffId: '2',
+        price: 30
+      },
+      {
+        id: 'pattern-tue-2',
+        dayOfWeek: 'Tue',
+        startTime: '18:00',
+        endTime: '19:00',
+        serviceId: 'fitness-1',
+        serviceName: 'Evening Yoga',
+        roomId: 'room-1-1-2',
+        capacity: 12,
+        instructorStaffId: '2',
+        price: 25
+      },
+      // Wednesday Classes
+      {
+        id: 'pattern-wed-1',
+        dayOfWeek: 'Wed',
+        startTime: '10:00',
+        endTime: '11:00',
+        serviceId: 'fitness-4',
+        serviceName: 'Personal Training Session',
+        roomId: 'room-1-1-2',
+        capacity: 2,
+        instructorStaffId: '2',
+        price: 50
+      },
+      {
+        id: 'pattern-wed-2',
+        dayOfWeek: 'Wed',
+        startTime: '18:30',
+        endTime: '19:30',
+        serviceId: 'fitness-3',
+        serviceName: 'Zumba Dance',
+        roomId: 'room-1-1-2',
+        capacity: 20,
+        instructorStaffId: '3',
+        price: 28
+      },
+      // Thursday Classes
+      {
+        id: 'pattern-thu-1',
+        dayOfWeek: 'Thu',
+        startTime: '09:00',
+        endTime: '10:00',
+        serviceId: 'fitness-1',
+        serviceName: 'Morning Yoga Class',
+        roomId: 'room-1-1-2',
+        capacity: 12,
+        instructorStaffId: '2',
+        price: 25
+      },
+      {
+        id: 'pattern-thu-2',
+        dayOfWeek: 'Thu',
+        startTime: '19:00',
+        endTime: '20:00',
+        serviceId: 'fitness-2',
+        serviceName: 'Pilates Class',
+        roomId: 'room-1-1-2',
+        capacity: 15,
+        instructorStaffId: '2',
+        price: 30
+      },
+      // Friday Classes
+      {
+        id: 'pattern-fri-1',
+        dayOfWeek: 'Fri',
+        startTime: '18:00',
+        endTime: '19:00',
+        serviceId: 'fitness-3',
+        serviceName: 'Friday Zumba',
+        roomId: 'room-1-1-2',
+        capacity: 20,
+        instructorStaffId: '3',
+        price: 28
+      },
+      // Saturday Classes
+      {
+        id: 'pattern-sat-1',
+        dayOfWeek: 'Sat',
+        startTime: '10:00',
+        endTime: '11:00',
+        serviceId: 'fitness-1',
+        serviceName: 'Weekend Yoga',
+        roomId: 'room-1-1-2',
+        capacity: 15,
+        instructorStaffId: '2',
+        price: 25
+      }
+    ]
   }
 ]

@@ -52,6 +52,7 @@ export default function NewAppointmentDrawer({
   const getSlotsForDate = useCalendarStore(state => state.getSlotsForDate)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
   const getRoomsByBranch = useCalendarStore(state => state.getRoomsByBranch)
+  const staticSlots = useCalendarStore(state => state.staticSlots) // Subscribe to slots for reactivity
 
   // Form state
   const [date, setDate] = useState(initialDate || new Date())

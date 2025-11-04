@@ -51,6 +51,9 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
   const [requestedByClient, setRequestedByClient] = useState(false)
   const [statusMenuAnchor, setStatusMenuAnchor] = useState<null | HTMLElement>(null)
 
+  // Static mode state
+  const [partySize, setPartySize] = useState(1)
+
   // Update local state when event changes
   useEffect(() => {
     if (event && event.extendedProps) {
@@ -65,6 +68,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
       setCustomerName(event.extendedProps.customerName || '')
       setNotes(event.extendedProps.notes || '')
       setRequestedByClient(event.extendedProps.selectionMethod === 'by_client')
+      setPartySize(event.extendedProps.partySize || 1)
 
       // Try to extract email/phone if they exist (they might not be in old mock data)
       setCustomerEmail('')
@@ -134,6 +138,21 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
   const handleSave = () => {
     if (!event) return
 
+    // Validate party size for static mode
+    if (extendedProps.slotId) {
+      const eventDate = new Date(event.start)
+      const { available, remainingCapacity } = isSlotAvailable(extendedProps.slotId, eventDate)
+
+      // Calculate available capacity excluding current booking
+      const currentPartySize = extendedProps.partySize || 1
+      const availableForEdit = remainingCapacity + currentPartySize
+
+      if (partySize > availableForEdit) {
+        alert(`Not enough capacity: Only ${availableForEdit} spot(s) available, but ${partySize} requested`)
+        return
+      }
+    }
+
     // Parse times and create new Date objects
     const [startHour, startMin] = startTime.split(':').map(Number)
     const [endHour, endMin] = endTime.split(':').map(Number)
@@ -158,7 +177,9 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
         status,
         customerName,
         notes,
-        selectionMethod: requestedByClient ? 'by_client' : extendedProps.selectionMethod
+        selectionMethod: requestedByClient ? 'by_client' : extendedProps.selectionMethod,
+        // Update party size for static mode
+        ...(extendedProps.slotId && { partySize })
       }
     }
 
@@ -319,30 +340,79 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
               </Box>
 
               {/* Static Mode: Show slot capacity info */}
-              {extendedProps.slotId && (
-                <Box
-                  sx={{
-                    p: 2,
-                    bgcolor: 'info.light',
-                    borderRadius: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    border: theme => `1px solid ${theme.palette.info.main}`
-                  }}
-                >
-                  <i className="ri-information-line" />
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" fontWeight={600}>
-                      Static Slot Booking
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Time is locked to the scheduled slot
-                      {extendedProps.roomId && ` in ${extendedProps.roomId}`}
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
+              {extendedProps.slotId && (() => {
+                const eventDate = new Date(event.start)
+                const { remainingCapacity, total } = isSlotAvailable(extendedProps.slotId, eventDate)
+                const currentPartySize = extendedProps.partySize || 1
+                const availableForEdit = remainingCapacity + currentPartySize
+
+                return (
+                  <>
+                    <Box
+                      sx={{
+                        p: 2,
+                        bgcolor: 'info.light',
+                        borderRadius: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        border: theme => `1px solid ${theme.palette.info.main}`
+                      }}
+                    >
+                      <i className="ri-information-line" />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" fontWeight={600}>
+                          Static Slot Booking
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Time and instructor are locked to the scheduled slot
+                          {extendedProps.roomId && ` in room ${extendedProps.roomId}`}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Party Size Input */}
+                    <Box>
+                      <TextField
+                        fullWidth
+                        type="number"
+                        label="Party Size"
+                        value={partySize}
+                        onChange={(e) => setPartySize(Math.max(1, parseInt(e.target.value) || 1))}
+                        inputProps={{ min: 1, max: availableForEdit }}
+                        helperText={`Available capacity: ${availableForEdit} of ${total} total spots`}
+                        InputProps={{
+                          startAdornment: (
+                            <Box sx={{ mr: 1 }}>
+                              <i className="ri-group-line" />
+                            </Box>
+                          )
+                        }}
+                      />
+
+                      {/* Capacity Warning */}
+                      {partySize > availableForEdit && (
+                        <Box
+                          sx={{
+                            mt: 1,
+                            p: 1,
+                            bgcolor: 'error.light',
+                            borderRadius: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1
+                          }}
+                        >
+                          <i className="ri-error-warning-line" />
+                          <Typography variant="caption" color="error">
+                            Party size exceeds available capacity
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  </>
+                )
+              })()}
 
               {/* Time Selection */}
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
@@ -389,9 +459,11 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 label="STAFF"
                 value={staffId}
                 onChange={(e) => handleStaffChange(e.target.value)}
+                disabled={!!extendedProps.slotId}
                 SelectProps={{
                   native: true
                 }}
+                helperText={extendedProps.slotId ? "Instructor is assigned to the slot" : undefined}
               >
                 {mockStaff.map((staff) => (
                   <option key={staff.id} value={staff.id}>

@@ -12,6 +12,7 @@ interface MultiRoomWeekViewProps {
   currentDate: Date
   onEventClick?: (event: CalendarEvent) => void
   onSlotClick?: (slotId: string, date: Date) => void
+  onDateClick?: (date: Date) => void
 }
 
 export default function MultiRoomWeekView({
@@ -19,12 +20,14 @@ export default function MultiRoomWeekView({
   rooms,
   currentDate,
   onEventClick,
-  onSlotClick
+  onSlotClick,
+  onDateClick
 }: MultiRoomWeekViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const getSlotsForDate = useCalendarStore(state => state.getSlotsForDate)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
+  const staticSlots = useCalendarStore(state => state.staticSlots) // Subscribe to slots for reactivity
 
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
@@ -117,8 +120,14 @@ export default function MultiRoomWeekView({
                     flexDirection: 'column',
                     alignItems: 'center',
                     bgcolor: isToday ? 'primary.light' : 'transparent',
-                    color: isToday ? 'primary.contrastText' : 'inherit'
+                    color: isToday ? 'primary.contrastText' : 'inherit',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                    '&:hover': {
+                      bgcolor: isToday ? 'primary.main' : 'action.hover'
+                    }
                   }}
+                  onClick={() => onDateClick?.(day)}
                 >
                   <Typography
                     variant="caption"

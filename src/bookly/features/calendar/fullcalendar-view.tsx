@@ -173,7 +173,12 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             fontSize: '0.8125rem',
             fontWeight: 500,
             border: 'none',
-            overflow: 'visible'
+            overflow: 'visible',
+            transition: 'all 0.15s ease',
+            '&:hover': {
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+              zIndex: 10
+            }
           },
           '& .fc-daygrid-event': {
             mb: 0.5,

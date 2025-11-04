@@ -27,11 +27,12 @@ export default function MultiRoomDayView({
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const getSlotsForDate = useCalendarStore(state => state.getSlotsForDate)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
+  const staticSlots = useCalendarStore(state => state.staticSlots) // Subscribe to slots for reactivity
 
   // Filter events for current date
   const todayEvents = events.filter(event => isSameDay(new Date(event.start), currentDate))
 
-  // Get slots for today
+  // Get slots for today (now reactive to staticSlots changes)
   const todaySlots = getSlotsForDate(currentDate)
 
   // Generate time slots (6 AM to 10 PM, 30 min intervals)
