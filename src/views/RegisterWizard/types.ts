@@ -1,8 +1,66 @@
+export interface Branch {
+  id: string
+  name: string
+  addressLine1: string
+  addressLine2?: string
+  city: string
+  state: string
+  postalCode: string
+  country: string
+  phone?: string
+  timezone: string
+  isMainBranch: boolean
+  latitude?: number
+  longitude?: number
+  placeId?: string
+  formattedAddress?: string
+}
+
+export interface Room {
+  id: string
+  name: string
+  capacity: number
+  branchId: string
+  floor?: string
+  amenities?: string[]
+}
+
+export interface TimeSlot {
+  start: string
+  end: string
+}
+
+export interface WorkingHours {
+  [day: string]: {
+    isWorking: boolean
+    shifts: TimeSlot[]
+  }
+}
+
 export interface StaffMember {
   id: string
   name: string
   role: string
   isOwner?: boolean
+  branchIds: string[]
+  email?: string
+  phone?: string
+  color?: string
+  workingHours?: WorkingHours
+  specialization?: string[]
+}
+
+export interface BasicTemplate {
+  id: string
+  name: string
+  roomId: string
+  instructorStaffId: string
+  capacity: number
+  duration: number
+  description?: string
+  weeklySchedule: {
+    [day: string]: string[]
+  }
 }
 
 export interface BusinessRegistrationData {
@@ -23,7 +81,13 @@ export interface BusinessRegistrationData {
   staffCount: string
   servicesOffered: string[]
 
-  // Step 4: Location
+  // Step 3.5: Scheduling Mode (NEW)
+  schedulingMode: 'static' | 'dynamic' | ''
+
+  // Step 4: Location & Branches (ENHANCED)
+  hasMultipleBranches: boolean
+  branches: Branch[]
+  // Legacy fields for single branch (backward compatibility)
   country: string
   addressLine1: string
   addressLine2: string
@@ -36,6 +100,9 @@ export interface BusinessRegistrationData {
   placeId?: string
   formattedAddress?: string
 
+  // Step 4.5: Rooms Setup (NEW - for static mode)
+  rooms: Room[]
+
   // Step 5: Business Profile
   publicUrlSlug: string
   timezone: string
@@ -44,8 +111,11 @@ export interface BusinessRegistrationData {
   }
   acceptsOnlineBooking: boolean
 
-  // Step 6: Staff Management
+  // Step 6: Staff Management (ENHANCED)
   staff: StaffMember[]
+
+  // Step 6.5: Initial Templates (NEW - for static mode)
+  initialTemplates: BasicTemplate[]
 
   // Step 7: Legal
   acceptTerms: boolean
@@ -83,6 +153,19 @@ export const BUSINESS_TYPES = [
   'Education',
   'Other'
 ]
+
+export const SCHEDULING_MODE_SUGGESTIONS: Record<string, 'static' | 'dynamic'> = {
+  'Fitness': 'static',
+  'Wellness': 'static',
+  'Education': 'static',
+  'Salon & Spa': 'dynamic',
+  'Barbershop': 'dynamic',
+  'Beauty': 'dynamic',
+  'Massage': 'dynamic',
+  'Pet Care': 'dynamic',
+  'Healthcare': 'dynamic',
+  'Other': 'dynamic'
+}
 
 export const STAFF_COUNTS = [
   'Just me',
@@ -147,4 +230,29 @@ export const COUNTRY_CODES = [
   { code: '+49', country: 'DE' },
   { code: '+81', country: 'JP' },
   { code: '+971', country: 'AE' }
+]
+
+export const ROOM_AMENITIES = [
+  'Air Conditioning',
+  'Heating',
+  'Mirrors',
+  'Sound System',
+  'Projector',
+  'Yoga Mats',
+  'Weights',
+  'Cardio Equipment',
+  'Showers',
+  'Lockers',
+  'Water Fountain',
+  'WiFi',
+  'Parking',
+  'Wheelchair Accessible'
+]
+
+export const CLASS_DURATIONS = [
+  { value: 30, label: '30 minutes' },
+  { value: 45, label: '45 minutes' },
+  { value: 60, label: '1 hour' },
+  { value: 90, label: '1.5 hours' },
+  { value: 120, label: '2 hours' }
 ]

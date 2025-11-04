@@ -14,9 +14,18 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import Alert from '@mui/material/Alert'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import OutlinedInput from '@mui/material/OutlinedInput'
 
-import type { StepProps } from '../types'
-import type { StaffMember } from '../types'
+import type { StepProps, StaffMember } from '../types'
+
+const STAFF_COLORS = [
+  '#1976d2', '#d32f2f', '#388e3c', '#f57c00', '#7b1fa2',
+  '#c2185b', '#0288d1', '#689f38', '#e64a19', '#5e35b1'
+]
 
 const StaffManagementStep = ({
   handleNext,
@@ -29,27 +38,43 @@ const StaffManagementStep = ({
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newStaffName, setNewStaffName] = useState('')
   const [newStaffRole, setNewStaffRole] = useState('')
+  const [newStaffEmail, setNewStaffEmail] = useState('')
+  const [newStaffPhone, setNewStaffPhone] = useState('')
+  const [newStaffBranchIds, setNewStaffBranchIds] = useState<string[]>([])
+  const [newStaffColor, setNewStaffColor] = useState(STAFF_COLORS[0])
   const [editingId, setEditingId] = useState<string | null>(null)
+
+  const availableBranches = formData.branches || []
 
   // Initialize owner as first staff member
   useEffect(() => {
-    // Initialize staff array if undefined or add owner if empty
     if ((!formData.staff || formData.staff.length === 0) && formData.ownerName) {
       const ownerStaff: StaffMember = {
         id: 'owner',
         name: formData.ownerName,
         role: 'Owner',
-        isOwner: true
+        isOwner: true,
+        branchIds: availableBranches.map(b => b.id),
+        email: formData.email,
+        color: STAFF_COLORS[0]
       }
       updateFormData({ staff: [ownerStaff] })
     }
-  }, [formData.ownerName, formData.staff, updateFormData])
+  }, [formData.ownerName, formData.email])
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {}
 
     if (!formData.staff || formData.staff.length === 0) {
       errors.staff = 'At least one staff member (you) is required'
+    }
+
+    // Validate that all staff have at least one branch assigned
+    if (formData.staff) {
+      const staffWithoutBranch = formData.staff.find(s => !s.branchIds || s.branchIds.length === 0)
+      if (staffWithoutBranch) {
+        errors.staff = 'All staff members must be assigned to at least one branch'
+      }
     }
 
     setValidationErrors(errors)
@@ -67,10 +92,21 @@ const StaffManagementStep = ({
       setEditingId(staff.id)
       setNewStaffName(staff.name)
       setNewStaffRole(staff.role)
+      setNewStaffEmail(staff.email || '')
+      setNewStaffPhone(staff.phone || '')
+      setNewStaffBranchIds(staff.branchIds || [])
+      setNewStaffColor(staff.color || STAFF_COLORS[0])
     } else {
       setEditingId(null)
       setNewStaffName('')
       setNewStaffRole('')
+      setNewStaffEmail('')
+      setNewStaffPhone('')
+      setNewStaffBranchIds(availableBranches.length > 0 ? [availableBranches[0].id] : [])
+      // Pick a color that's not used yet
+      const usedColors = (formData.staff || []).map(s => s.color).filter(Boolean)
+      const availableColor = STAFF_COLORS.find(c => !usedColors.includes(c)) || STAFF_COLORS[0]
+      setNewStaffColor(availableColor)
     }
     setDialogOpen(true)
   }
@@ -79,18 +115,32 @@ const StaffManagementStep = ({
     setDialogOpen(false)
     setNewStaffName('')
     setNewStaffRole('')
+    setNewStaffEmail('')
+    setNewStaffPhone('')
+    setNewStaffBranchIds([])
+    setNewStaffColor(STAFF_COLORS[0])
     setEditingId(null)
   }
 
   const handleSaveStaff = () => {
-    if (!newStaffName.trim() || !newStaffRole.trim()) return
+    if (!newStaffName.trim() || !newStaffRole.trim() || newStaffBranchIds.length === 0) return
 
     const currentStaff = formData.staff || []
 
     if (editingId) {
       // Edit existing staff
       const updatedStaff = currentStaff.map((s) =>
-        s.id === editingId ? { ...s, name: newStaffName, role: newStaffRole } : s
+        s.id === editingId
+          ? {
+              ...s,
+              name: newStaffName,
+              role: newStaffRole,
+              email: newStaffEmail,
+              phone: newStaffPhone,
+              branchIds: newStaffBranchIds,
+              color: newStaffColor
+            }
+          : s
       )
       updateFormData({ staff: updatedStaff })
     } else {
@@ -99,7 +149,11 @@ const StaffManagementStep = ({
         id: `staff-${Date.now()}`,
         name: newStaffName,
         role: newStaffRole,
-        isOwner: false
+        email: newStaffEmail,
+        phone: newStaffPhone,
+        isOwner: false,
+        branchIds: newStaffBranchIds,
+        color: newStaffColor
       }
       updateFormData({ staff: [...currentStaff, newStaff] })
     }
@@ -118,6 +172,13 @@ const StaffManagementStep = ({
     updateFormData({ staff: updatedStaff })
   }
 
+  const getBranchNames = (branchIds: string[]) => {
+    return branchIds
+      .map(id => availableBranches.find(b => b.id === id)?.name)
+      .filter(Boolean)
+      .join(', ') || 'No branches'
+  }
+
   return (
     <div className="flex flex-col gap-5">
       <div className="text-center mb-2">
@@ -125,7 +186,9 @@ const StaffManagementStep = ({
           Add Staff Members
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Who will be providing services at your business?
+          {formData.schedulingMode === 'static'
+            ? 'Who will be instructing your classes or sessions?'
+            : 'Who will be providing services at your business?'}
         </Typography>
       </div>
 
@@ -139,7 +202,10 @@ const StaffManagementStep = ({
           <Card key={staff.id} variant="outlined" className="shadow-sm">
             <CardContent className="flex items-center justify-between gap-3 p-4">
               <Box className="flex items-center gap-3 flex-1">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-medium">
+                <div
+                  className="flex items-center justify-center w-10 h-10 rounded-full text-white font-medium"
+                  style={{ backgroundColor: staff.color || '#1976d2' }}
+                >
                   {staff.name.charAt(0).toUpperCase()}
                 </div>
                 <Box className="flex-1">
@@ -156,7 +222,15 @@ const StaffManagementStep = ({
                   </Typography>
                   <Typography variant="body2" color="text.secondary" className="text-sm">
                     {staff.role}
+                    {staff.branchIds && staff.branchIds.length > 0 && (
+                      <> • {getBranchNames(staff.branchIds)}</>
+                    )}
                   </Typography>
+                  {staff.email && (
+                    <Typography variant="caption" color="text.secondary" className="text-xs">
+                      {staff.email}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
 
@@ -177,6 +251,15 @@ const StaffManagementStep = ({
                     <i className="ri-delete-bin-line" />
                   </IconButton>
                 </Box>
+              )}
+              {staff.isOwner && (
+                <IconButton
+                  size="small"
+                  onClick={() => handleOpenDialog(staff)}
+                  className="text-primary"
+                >
+                  <i className="ri-pencil-line" />
+                </IconButton>
               )}
             </CardContent>
           </Card>
@@ -206,15 +289,83 @@ const StaffManagementStep = ({
               onChange={(e) => setNewStaffName(e.target.value)}
               placeholder="e.g., Ahmed Hassan"
               autoFocus
+              required
             />
             <TextField
               fullWidth
               label="Role / Position"
               value={newStaffRole}
               onChange={(e) => setNewStaffRole(e.target.value)}
-              placeholder="e.g., Barber, Stylist, Manager"
+              placeholder={formData.schedulingMode === 'static' ? 'e.g., Yoga Instructor, Spin Instructor' : 'e.g., Barber, Stylist, Manager'}
               helperText="The role or specialty of this staff member"
+              required
             />
+
+            <TextField
+              fullWidth
+              label="Email (Optional)"
+              type="email"
+              value={newStaffEmail}
+              onChange={(e) => setNewStaffEmail(e.target.value)}
+              placeholder="staff@example.com"
+              helperText="For login and notifications"
+            />
+
+            <TextField
+              fullWidth
+              label="Phone (Optional)"
+              value={newStaffPhone}
+              onChange={(e) => setNewStaffPhone(e.target.value)}
+              placeholder="+20 123 456 7890"
+            />
+
+            <FormControl fullWidth required>
+              <InputLabel>Works At (Branches)</InputLabel>
+              <Select
+                multiple
+                value={newStaffBranchIds}
+                onChange={(e) => {
+                  const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                  setNewStaffBranchIds(value)
+                }}
+                input={<OutlinedInput label="Works At (Branches)" />}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {selected.map((branchId) => {
+                      const branch = availableBranches.find(b => b.id === branchId)
+                      return <Chip key={branchId} label={branch?.name || branchId} size="small" />
+                    })}
+                  </Box>
+                )}
+              >
+                {availableBranches.map((branch) => (
+                  <MenuItem key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Calendar Color</InputLabel>
+              <Select
+                value={newStaffColor}
+                label="Calendar Color"
+                onChange={(e) => setNewStaffColor(e.target.value)}
+              >
+                {STAFF_COLORS.map((color) => (
+                  <MenuItem key={color} value={color}>
+                    <Box className="flex items-center gap-2">
+                      <div
+                        className="w-6 h-6 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span>{color}</span>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </div>
         </DialogContent>
         <DialogActions className="p-4">
@@ -222,12 +373,21 @@ const StaffManagementStep = ({
           <Button
             variant="contained"
             onClick={handleSaveStaff}
-            disabled={!newStaffName.trim() || !newStaffRole.trim()}
+            disabled={!newStaffName.trim() || !newStaffRole.trim() || newStaffBranchIds.length === 0}
           >
             {editingId ? 'Save Changes' : 'Add Staff'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Info about availability */}
+      {formData.schedulingMode === 'dynamic' && (
+        <Alert severity="info" icon={<i className="ri-information-line" />}>
+          <Typography variant="caption">
+            You can configure detailed working hours and availability for each staff member later in the calendar settings.
+          </Typography>
+        </Alert>
+      )}
 
       {/* Navigation */}
       <Box className="flex gap-3 justify-between mt-4">

@@ -123,17 +123,30 @@ export const getDefaultWorkingHours = () => ({
 
 // Initial form data
 export const getInitialFormData = (): BusinessRegistrationData => ({
+  // Account
   email: '',
   password: '',
   confirmPassword: '',
   ownerName: '',
+
+  // Mobile Verification
   countryCode: '+20',
   phone: '',
   otp: '',
+
+  // Business Basics
   businessName: '',
   businessType: '',
   staffCount: '',
   servicesOffered: [],
+
+  // Scheduling Mode (NEW)
+  schedulingMode: '',
+
+  // Location & Branches (ENHANCED)
+  hasMultipleBranches: false,
+  branches: [],
+  // Legacy single-branch fields
   country: 'EG',
   addressLine1: '',
   addressLine2: '',
@@ -141,11 +154,23 @@ export const getInitialFormData = (): BusinessRegistrationData => ({
   state: '',
   postalCode: '',
   mobileOnly: false,
+
+  // Rooms (NEW - for static mode)
+  rooms: [],
+
+  // Business Profile
   publicUrlSlug: '',
   timezone: 'Africa/Cairo',
   workingHours: getDefaultWorkingHours(),
   acceptsOnlineBooking: true,
+
+  // Staff (ENHANCED)
   staff: [],
+
+  // Initial Templates (NEW - for static mode)
+  initialTemplates: [],
+
+  // Legal
   acceptTerms: false,
   acceptPrivacy: false,
   marketingOptIn: false

@@ -27,26 +27,22 @@ import { getInitialFormData, saveDraft, loadDraft } from './utils'
 import AccountStep from './steps/AccountStep'
 import MobileVerificationStep from './steps/MobileVerificationStep'
 import BusinessBasicsStep from './steps/BusinessBasicsStep'
+import SchedulingModeStep from './steps/SchedulingModeStep'
 import LocationStep from './steps/LocationStep'
+import RoomsSetupStep from './steps/RoomsSetupStep'
 import BusinessProfileStep from './steps/BusinessProfileStep'
 import StaffManagementStep from './steps/StaffManagementStep'
+import InitialTemplatesStep from './steps/InitialTemplatesStep'
 import LegalStep from './steps/LegalStep'
 import RegistrationSuccess from './RegistrationSuccess'
 
-const steps: StepConfig[] = [
+const baseSteps: StepConfig[] = [
   {
     icon: 'ri-user-line',
     title: 'Account',
     subtitle: 'Create credentials',
     image: '/images/booksy-biz/step-1.jpeg'
   },
-  // OTP Verification - Hidden for Egypt deployment
-  // {
-  //   icon: 'ri-smartphone-line',
-  //   title: 'Verification',
-  //   subtitle: 'Verify phone',
-  //   image: '/images/booksy-biz/step-2.jpeg'
-  // },
   {
     icon: 'ri-store-line',
     title: 'Business',
@@ -54,11 +50,29 @@ const steps: StepConfig[] = [
     image: '/images/booksy-biz/step-3.jpeg'
   },
   {
+    icon: 'ri-calendar-line',
+    title: 'Scheduling',
+    subtitle: 'Choose mode',
+    image: '/images/booksy-biz/step-3.jpeg'
+  },
+  {
     icon: 'ri-map-pin-line',
     title: 'Location',
     subtitle: 'Address details',
     image: '/images/booksy-biz/step-4.jpeg'
-  },
+  }
+]
+
+const staticModeSteps: StepConfig[] = [
+  {
+    icon: 'ri-door-open-line',
+    title: 'Rooms',
+    subtitle: 'Setup facilities',
+    image: '/images/booksy-biz/step-5.jpeg'
+  }
+]
+
+const profileAndStaffSteps: StepConfig[] = [
   {
     icon: 'ri-profile-line',
     title: 'Profile',
@@ -70,7 +84,19 @@ const steps: StepConfig[] = [
     title: 'Staff',
     subtitle: 'Add team members',
     image: '/images/booksy-biz/step-6.jpeg'
-  },
+  }
+]
+
+const templateStep: StepConfig[] = [
+  {
+    icon: 'ri-calendar-event-line',
+    title: 'Templates',
+    subtitle: 'Class schedules',
+    image: '/images/booksy-biz/step-6.jpeg'
+  }
+]
+
+const legalStep: StepConfig[] = [
   {
     icon: 'ri-file-text-line',
     title: 'Legal',
@@ -79,8 +105,31 @@ const steps: StepConfig[] = [
   }
 ]
 
+const getSteps = (schedulingMode: 'static' | 'dynamic' | '') => {
+  const steps = [...baseSteps]
+
+  // Add rooms step for static mode
+  if (schedulingMode === 'static') {
+    steps.push(...staticModeSteps)
+  }
+
+  // Add profile and staff steps
+  steps.push(...profileAndStaffSteps)
+
+  // Add templates step for static mode
+  if (schedulingMode === 'static') {
+    steps.push(...templateStep)
+  }
+
+  // Add legal step
+  steps.push(...legalStep)
+
+  return steps
+}
+
 const renderStepContent = (
   activeStep: number,
+  steps: StepConfig[],
   isLastStep: boolean,
   isSubmitting: boolean,
   handleNext: () => void,
@@ -101,21 +150,27 @@ const renderStepContent = (
     setValidationErrors
   }
 
-  // Note: Step 1 (MobileVerificationStep) is hidden for Egypt deployment
-  switch (activeStep) {
-    case 0:
+  // Dynamic step rendering based on scheduling mode
+  const stepTitle = steps[activeStep]?.title
+
+  switch (stepTitle) {
+    case 'Account':
       return <AccountStep {...stepProps} />
-    // case 1:
-    //   return <MobileVerificationStep {...stepProps} />
-    case 1:
+    case 'Business':
       return <BusinessBasicsStep {...stepProps} />
-    case 2:
+    case 'Scheduling':
+      return <SchedulingModeStep {...stepProps} />
+    case 'Location':
       return <LocationStep {...stepProps} />
-    case 3:
+    case 'Rooms':
+      return <RoomsSetupStep {...stepProps} />
+    case 'Profile':
       return <BusinessProfileStep {...stepProps} />
-    case 4:
+    case 'Staff':
       return <StaffManagementStep {...stepProps} />
-    case 5:
+    case 'Templates':
+      return <InitialTemplatesStep {...stepProps} />
+    case 'Legal':
       return <LegalStep {...stepProps} isSubmitting={isSubmitting} />
     default:
       return null
@@ -136,6 +191,9 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
 
   const { settings } = useSettings()
   const { lang: locale } = useParams()
+
+  // Generate steps dynamically based on scheduling mode
+  const steps = getSteps(formData.schedulingMode)
   const isLastStep = activeStep === steps.length - 1
 
   // Illustration images
@@ -341,6 +399,7 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
           <div className="flex-1">
             {renderStepContent(
               activeStep,
+              steps,
               isLastStep,
               isSubmitting,
               handleNext,
