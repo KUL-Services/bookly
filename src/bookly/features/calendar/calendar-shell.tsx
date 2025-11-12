@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useMemo } from 'react'
+import { useState, useRef, useMemo, useEffect } from 'react'
 import { Box, useTheme, useMediaQuery, Snackbar, Alert } from '@mui/material'
 import FullCalendar from '@fullcalendar/react'
 import { useCalendarStore } from './state'
@@ -20,6 +20,7 @@ import NewAppointmentDrawer from './new-appointment-drawer'
 import CalendarSettings from './calendar-settings'
 import CalendarNotifications from './calendar-notifications'
 import TemplateManagementDrawer from './template-management-drawer'
+import QuickActionMenu from './quick-action-menu'
 import type { CalendarEvent, DateRange } from './types'
 
 interface CalendarShellProps {
@@ -62,6 +63,26 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
   // Local state
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [isQuickActionMenuOpen, setIsQuickActionMenuOpen] = useState(false)
+  const [selectedTimeRange, setSelectedTimeRange] = useState<{ start: Date; end: Date } | null>(null)
+  const [menuAnchorPosition, setMenuAnchorPosition] = useState<{ top: number; left: number } | undefined>(undefined)
+  const [selectionOverlay, setSelectionOverlay] = useState<{
+    top: number
+    left: number
+    width: number
+    height: number
+  } | null>(null)
+
+  // Track mouse position for popover
+  const mousePositionRef = useRef({ x: 0, y: 0 })
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mousePositionRef.current = { x: e.clientX, y: e.clientY }
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
 
   // Get filtered events
   const events = getFilteredEvents()
@@ -86,9 +107,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     if (schedulingMode === 'dynamic') return []
 
     // Get first branch ID from branch filters, or default to '1-1'
-    const branchId = branchFilters.allBranches
-      ? '1-1'
-      : branchFilters.branchIds[0] || '1-1'
+    const branchId = branchFilters.allBranches ? '1-1' : branchFilters.branchIds[0] || '1-1'
 
     const branchRooms = getRoomsByBranch(branchId)
 
@@ -102,15 +121,16 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   }, [schedulingMode, branchFilters, roomFilters, getRoomsByBranch])
 
   // Determine which view to show
-  const shouldUseCustomDayView = view === 'timeGridDay' && (
-    (schedulingMode === 'dynamic' && activeStaffIds.length > 0) ||
-    (schedulingMode === 'static' && activeRooms.length > 0)
-  )
-  const shouldUseCustomWeekView = view === 'timeGridWeek' && (
-    (schedulingMode === 'dynamic' && activeStaffIds.length > 0) ||
-    (schedulingMode === 'static' && activeRooms.length > 0)
-  )
-  const isSingleStaffView = schedulingMode === 'dynamic' && staffFilters.selectedStaffId !== null && staffFilters.selectedStaffId !== undefined
+  const shouldUseCustomDayView =
+    view === 'timeGridDay' &&
+    ((schedulingMode === 'dynamic' && activeStaffIds.length > 0) ||
+      (schedulingMode === 'static' && activeRooms.length > 0))
+  const shouldUseCustomWeekView =
+    view === 'timeGridWeek' &&
+    ((schedulingMode === 'dynamic' && activeStaffIds.length > 0) ||
+      (schedulingMode === 'static' && activeRooms.length > 0))
+  const isSingleStaffView =
+    schedulingMode === 'dynamic' && staffFilters.selectedStaffId !== null && staffFilters.selectedStaffId !== undefined
   const isMultiStaffView = schedulingMode === 'dynamic' && activeStaffIds.length > 1 && !isSingleStaffView
   const isMultiRoomView = schedulingMode === 'static' && activeRooms.length > 0
 
@@ -207,18 +227,86 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     openAppointmentDrawer(event)
   }
 
-  const handleSelectRange = (start: Date, end: Date) => {
-    openNewBooking(start, { start, end })
+  const handleSelectRange = (
+    start: Date,
+    end: Date,
+    jsEvent?: MouseEvent,
+    dimensions?: { top: number; left: number; width: number; height: number } | null
+  ) => {
+    setSelectedTimeRange({ start, end })
+    setMenuAnchorPosition({
+      top: mousePositionRef.current.y,
+      left: mousePositionRef.current.x
+    })
+
+    // Use the dimensions captured synchronously by the FullCalendar callback
+    if (dimensions) {
+      setSelectionOverlay(dimensions)
+    }
+
+    setIsQuickActionMenuOpen(true)
   }
 
-  const handleEventDrop = (event: CalendarEvent, start: Date, end: Date) => {
-    const updatedEvent: CalendarEvent = { ...event, start, end }
-    useCalendarStore.getState().updateEvent(updatedEvent)
+  const handleQuickMenuNewAppointment = () => {
+    if (selectedTimeRange) {
+      openNewBooking(selectedTimeRange.start, selectedTimeRange)
+    }
+    // Clear overlay when option is selected
+    setSelectionOverlay(null)
   }
 
-  const handleEventResize = (event: CalendarEvent, start: Date, end: Date) => {
+  const handleQuickMenuTimeReservation = () => {
+    // Navigate to staff page with time-reservation action
+    window.location.href = '/en/apps/bookly/staff?action=time-reservation'
+    // Clear overlay when option is selected
+    setSelectionOverlay(null)
+  }
+
+  const handleQuickMenuTimeOff = () => {
+    // Navigate to staff page with time-off action
+    window.location.href = '/en/apps/bookly/staff?action=time-off'
+    // Clear overlay when option is selected
+    setSelectionOverlay(null)
+  }
+
+  const handleCloseQuickMenu = () => {
+    setIsQuickActionMenuOpen(false)
+    // Clear overlay when menu closes without selection
+    setSelectionOverlay(null)
+    clearCalendarSelection()
+  }
+
+  const handleCloseNewBooking = () => {
+    closeNewBooking()
+    clearCalendarSelection()
+  }
+
+  const clearCalendarSelection = () => {
+    // Clear the selection from FullCalendar
+    const api = calendarRef.current as any
+    if (api && api.clearSelection) {
+      api.clearSelection()
+    }
+  }
+
+  const handleEventDrop = (event: CalendarEvent, start: Date, end: Date): boolean => {
     const updatedEvent: CalendarEvent = { ...event, start, end }
+    const stateBefore = useCalendarStore.getState().lastActionError
     useCalendarStore.getState().updateEvent(updatedEvent)
+    const stateAfter = useCalendarStore.getState().lastActionError
+
+    // If a new error appeared, validation failed
+    return stateBefore === stateAfter
+  }
+
+  const handleEventResize = (event: CalendarEvent, start: Date, end: Date): boolean => {
+    const updatedEvent: CalendarEvent = { ...event, start, end }
+    const stateBefore = useCalendarStore.getState().lastActionError
+    useCalendarStore.getState().updateEvent(updatedEvent)
+    const stateAfter = useCalendarStore.getState().lastActionError
+
+    // If a new error appeared, validation failed
+    return stateBefore === stateAfter
   }
 
   const handleStaffClick = (staffId: string) => {
@@ -274,6 +362,9 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
     // Add to store
     createEvent(newEvent)
+
+    // Clear the calendar selection
+    clearCalendarSelection()
   }
 
   const handleDateClickInWeekView = (date: Date) => {
@@ -327,7 +418,12 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
     // DYNAMIC MODE VIEWS - Always use custom views for day/week
     // Single staff day view (when a specific staff is selected)
-    if (view === 'timeGridDay' && schedulingMode === 'dynamic' && isSingleStaffView && activeStaffMembers.length === 1) {
+    if (
+      view === 'timeGridDay' &&
+      schedulingMode === 'dynamic' &&
+      isSingleStaffView &&
+      activeStaffMembers.length === 1
+    ) {
       return (
         <SingleStaffDayView
           events={events}
@@ -355,7 +451,12 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     }
 
     // Single staff week view (when a specific staff is selected)
-    if (view === 'timeGridWeek' && schedulingMode === 'dynamic' && isSingleStaffView && activeStaffMembers.length === 1) {
+    if (
+      view === 'timeGridWeek' &&
+      schedulingMode === 'dynamic' &&
+      isSingleStaffView &&
+      activeStaffMembers.length === 1
+    ) {
       return (
         <SingleStaffWeekView
           events={events}
@@ -453,13 +554,23 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       {/* Template Management Drawer */}
       <TemplateManagementDrawer />
 
+      {/* Quick Action Menu */}
+      <QuickActionMenu
+        open={isQuickActionMenuOpen}
+        anchorPosition={menuAnchorPosition}
+        onClose={handleCloseQuickMenu}
+        onNewAppointment={handleQuickMenuNewAppointment}
+        onTimeReservation={handleQuickMenuTimeReservation}
+        onTimeOff={handleQuickMenuTimeOff}
+      />
+
       {/* New Appointment Drawer */}
       <NewAppointmentDrawer
         open={isNewBookingOpen}
         initialDate={useCalendarStore.getState().selectedDate}
         initialDateRange={useCalendarStore.getState().selectedDateRange}
         initialStaffId={staffFilters.selectedStaffId}
-        onClose={closeNewBooking}
+        onClose={handleCloseNewBooking}
         onSave={handleSaveNewAppointment}
       />
 
@@ -470,10 +581,32 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         onClose={clearError}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={clearError} severity="error" sx={{ width: '100%' }}>
+        <Alert onClose={clearError} severity='error' sx={{ width: '100%' }}>
           {lastActionError}
         </Alert>
       </Snackbar>
+
+      {/* Custom Selection Overlay - Persists after FullCalendar's highlight disappears */}
+      {selectionOverlay && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: selectionOverlay.top,
+            left: selectionOverlay.left,
+            width: selectionOverlay.width,
+            height: selectionOverlay.height,
+            backgroundColor: theme =>
+              theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.2)' : 'rgba(20, 184, 166, 0.15)',
+            border: theme =>
+              theme.palette.mode === 'dark' ? '2px solid rgba(20, 184, 166, 0.5)' : '2px solid rgba(20, 184, 166, 0.6)',
+            borderRadius: '8px',
+            pointerEvents: 'none',
+            zIndex: 1200,
+            transition: 'opacity 0.2s ease',
+            opacity: 1
+          }}
+        />
+      )}
     </Box>
   )
 }

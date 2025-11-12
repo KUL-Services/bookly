@@ -1,6 +1,12 @@
 import { create } from 'zustand'
 import { mockBookings, mockStaff, mockRooms, mockStaticServiceSlots, mockScheduleTemplates } from '@/bookly/data/mock-data'
 import { mapBookingToEvent, filterEvents } from './utils'
+import {
+  timeOffToCalendarEvent,
+  reservationToCalendarEvent,
+  validateBookingTime
+} from './staff-management-integration'
+import { useStaffManagementStore } from '../staff-management/staff-store'
 import type {
   CalendarState,
   CalendarView,
@@ -111,14 +117,40 @@ const initialHighlights: HighlightFilters = {
   details: []
 }
 
+// Generate background events from staff management data
+function generateBackgroundEvents(): CalendarEvent[] {
+  const staffManagementState = useStaffManagementStore.getState()
+
+  // Time off background events
+  const timeOffEvents = staffManagementState.timeOffRequests.map(timeOff => {
+    const staff = mockStaff.find(s => s.id === timeOff.staffId)
+    return timeOffToCalendarEvent(timeOff, staff?.name || 'Staff Member')
+  })
+
+  // Reservation background events
+  const reservationEvents = staffManagementState.timeReservations.map(reservation => {
+    const staff = mockStaff.find(s => s.id === reservation.staffId)
+    return reservationToCalendarEvent(reservation, staff?.name || 'Staff Member')
+  })
+
+  return [...timeOffEvents, ...reservationEvents]
+}
+
 // Generate initial events from mock bookings
 function getInitialEvents(): CalendarEvent[] {
   const starredIds = new Set(loadPreference<string[]>(STORAGE_KEYS.starred, []))
-  return mockBookings.map(booking => {
+
+  // Regular booking events
+  const bookingEvents = mockBookings.map(booking => {
     // Find staff ID from booking
     const staff = mockStaff.find(s => s.name === booking.staffMemberName)
     return mapBookingToEvent(booking, staff?.id || '1', starredIds)
   })
+
+  // Background events from staff management
+  const backgroundEvents = generateBackgroundEvents()
+
+  return [...bookingEvents, ...backgroundEvents]
 }
 
 interface CalendarStore extends CalendarState {
@@ -151,6 +183,8 @@ interface CalendarStore extends CalendarState {
   selectSingleStaff: (staffId: string) => void
   goBackToAllStaff: () => void
   navigateToDate: (date: Date, switchView?: CalendarView) => void
+  // Staff management integration
+  syncStaffManagementData: () => void
   // Static/Dynamic scheduling actions
   setSchedulingMode: (mode: SchedulingMode) => void
   getRoomsByBranch: (branchId: string) => Room[]
@@ -265,6 +299,23 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   createEvent: (newEvent) => {
     const { events, schedulingMode } = get()
 
+    // Validate time off and reservation conflicts
+    if (newEvent.extendedProps.staffId) {
+      const staffManagementState = useStaffManagementStore.getState()
+      const validation = validateBookingTime(
+        newEvent.extendedProps.staffId,
+        new Date(newEvent.start),
+        new Date(newEvent.end),
+        staffManagementState.timeOffRequests,
+        staffManagementState.timeReservations
+      )
+
+      if (!validation.valid) {
+        set({ lastActionError: validation.error })
+        return
+      }
+    }
+
     // Validate capacity for static scheduling
     if (schedulingMode === 'static' && newEvent.extendedProps.slotId) {
       const slotDate = new Date(newEvent.start)
@@ -298,6 +349,30 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   updateEvent: (updatedEvent) => {
     const { events, schedulingMode } = get()
     const oldEvent = events.find(e => e.id === updatedEvent.id)
+
+    // Validate time off and reservation conflicts when changing staff or time
+    if (updatedEvent.extendedProps.staffId) {
+      const staffChanged = oldEvent?.extendedProps.staffId !== updatedEvent.extendedProps.staffId
+      const timeChanged =
+        oldEvent?.start.toString() !== updatedEvent.start.toString() ||
+        oldEvent?.end.toString() !== updatedEvent.end.toString()
+
+      if (staffChanged || timeChanged) {
+        const staffManagementState = useStaffManagementStore.getState()
+        const validation = validateBookingTime(
+          updatedEvent.extendedProps.staffId,
+          new Date(updatedEvent.start),
+          new Date(updatedEvent.end),
+          staffManagementState.timeOffRequests,
+          staffManagementState.timeReservations
+        )
+
+        if (!validation.valid) {
+          set({ lastActionError: validation.error })
+          return
+        }
+      }
+    }
 
     // Validate capacity for static scheduling when changing slots or party size
     if (schedulingMode === 'static' && updatedEvent.extendedProps.slotId) {
@@ -479,6 +554,22 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     }
     // The actual navigation happens in the component via calendarRef
     // This action is here to trigger the view switch if needed
+  },
+
+  // Staff management integration
+  syncStaffManagementData: () => {
+    const { events } = get()
+
+    // Remove old background events (time off and reservations)
+    const bookingEvents = events.filter(
+      event => event.extendedProps.type !== 'timeOff' && event.extendedProps.type !== 'reservation'
+    )
+
+    // Generate fresh background events from staff management store
+    const backgroundEvents = generateBackgroundEvents()
+
+    // Combine and update
+    set({ events: [...bookingEvents, ...backgroundEvents] })
   },
 
   // Static/Dynamic scheduling actions

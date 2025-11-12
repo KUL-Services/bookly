@@ -43,11 +43,17 @@ export interface StaffMember {
   role: string
   isOwner?: boolean
   branchIds: string[]
+  serviceIds?: string[]  // NEW: Services this staff can provide
   email?: string
   phone?: string
   color?: string
   workingHours?: WorkingHours
   specialization?: string[]
+  // NEW: Staff management fields
+  shiftOverrides?: any[]  // StaffShiftInstance[]
+  breaks?: any[]  // BreakTemplate[]
+  timeOffRequests?: any[]  // TimeOffRequest[]
+  timeReservations?: any[]  // TimeReservation[]
 }
 
 export interface BasicTemplate {

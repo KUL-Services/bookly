@@ -6,4 +6,3 @@ const BooklyStaffPage = () => {
 }
 
 export default BooklyStaffPage
-

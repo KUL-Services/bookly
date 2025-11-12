@@ -153,6 +153,9 @@ export const mockBusinesses: Business[] = [
   }
 ]
 
+// Extract all branches from all businesses
+export const mockBranches = mockBusinesses.flatMap(business => business.branches)
+
 export const mockServices: Service[] = [
   {
     id: '1',

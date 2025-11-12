@@ -1,0 +1,35 @@
+Bookly Scope Expansion Addendum
+
+Overview
+The following addendum captures the additional product scope that was introduced after the original MVP proposal. These items focus on multi-branch intelligence and an advanced scheduling suite that goes beyond the baseline marketplace, booking, and admin experiences.
+
+Added Deliverables
+1. Advanced Multi-Mode Calendar Suite
+   • Dual scheduling engines (appointment-based staff calendars and static class schedules) with a single UI.
+   • Capacity-aware bookings, FullCalendar bridge, and quick-action overlays for new appointments, time reservations, and time off.
+   • Custom multi-staff and multi-room day/week grids that respect branch filters and provide instant navigation controls.
+
+2. Branch-Centric Filtering & Data Governance
+   • Persistent branch/staff/room filters shared across the dashboard so every decision is location-aware.
+   • Branch-aware pipelines for all events, capacity checks, and utilization metrics, ensuring each location operates independently while sharing the same platform.
+
+3. Staff Shifts, Breaks, Time-Off & Reservations
+   • Shifts timeline, duplicate/copy tooling, and a detailed shift editor with break management.
+   • Hourly and all-day time-off requests with approvals, recurrence, and reservations that translate into calendar overlays.
+   • Unified staff drawers connecting service assignments, working hours, and calendar visibility per branch.
+
+4. Resource (Room) Management for Static Scheduling
+   • CRUD management for rooms/amenities per branch, including capacity and color-coding.
+   • Static slot templates linked to rooms so capacity enforcement, overrides, and conflict detection stay per location.
+
+5. Commission & Financial Oversight Enhancements
+   • Nested commission configuration by service/product categories or individual staffers, with onboarding popovers and flexible scopes (provider vs seller).
+   • Hooks for expanded payout tracking and promo management inside the admin workspace.
+
+Cost Impact
+• Original MVP quote (including super admin): 210,000 EGP
+• Added scope effort: +65% (advanced calendar, branch handling, shifts, resources, commissions)
+• Revised project total: 350,000 EGP
+
+Notes
+The revised total includes integration, responsive QA, and documentation for the new modules. Hosting, gateway fees, and post-launch retainers remain unchanged from the MVP proposal.

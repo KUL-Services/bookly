@@ -14,7 +14,12 @@ interface SingleStaffDayViewProps {
   currentDate: Date
   onEventClick?: (event: CalendarEvent) => void
   onBack?: () => void
-  onTimeRangeSelect?: (start: Date, end: Date) => void
+  onTimeRangeSelect?: (
+    start: Date,
+    end: Date,
+    jsEvent?: MouseEvent,
+    dimensions?: { top: number; left: number; width: number; height: number } | null
+  ) => void
 }
 
 export default function SingleStaffDayView({
@@ -34,6 +39,7 @@ export default function SingleStaffDayView({
   const [dragStart, setDragStart] = useState<number | null>(null)
   const [dragEnd, setDragEnd] = useState<number | null>(null)
   const eventsColumnRef = useRef<HTMLDivElement>(null)
+  const selectionBoxRef = useRef<HTMLDivElement>(null)
 
   // Filter events for current date and staff
   const todayEvents = events.filter(
@@ -130,7 +136,20 @@ export default function SingleStaffDayView({
     if (endMinutes - startMinutes >= 15) {
       const startDate = minutesToDate(startMinutes)
       const endDate = minutesToDate(endMinutes)
-      onTimeRangeSelect?.(startDate, endDate)
+
+      // Capture selection box dimensions before clearing state
+      let dimensions = null
+      if (selectionBoxRef.current) {
+        const rect = selectionBoxRef.current.getBoundingClientRect()
+        dimensions = {
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height
+        }
+      }
+
+      onTimeRangeSelect?.(startDate, endDate, undefined, dimensions)
     }
 
     setIsDragging(false)
@@ -290,15 +309,16 @@ export default function SingleStaffDayView({
                 <>
                   {/* Selection box */}
                   <Box
+                    ref={selectionBoxRef}
                     sx={{
                       position: 'absolute',
                       top: `${dragStyle.top}px`,
                       left: 8,
                       right: 8,
                       height: `${dragStyle.height}px`,
-                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(144,202,249,0.3)' : 'rgba(25,118,210,0.2)',
+                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.2)' : 'rgba(20, 184, 166, 0.15)',
                       border: 2,
-                      borderColor: 'primary.main',
+                      borderColor: theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.5)' : 'rgba(20, 184, 166, 0.6)',
                       borderRadius: 1,
                       pointerEvents: 'none',
                       zIndex: 10,

@@ -25,9 +25,14 @@ interface FullCalendarViewProps {
   onDateRangeChange?: (range: DateRange) => void
   onDateClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
-  onSelectRange?: (start: Date, end: Date) => void
-  onEventDrop?: (event: CalendarEvent, start: Date, end: Date) => void
-  onEventResize?: (event: CalendarEvent, start: Date, end: Date) => void
+  onSelectRange?: (
+    start: Date,
+    end: Date,
+    jsEvent?: MouseEvent,
+    dimensions?: { top: number; left: number; width: number; height: number } | null
+  ) => void
+  onEventDrop?: (event: CalendarEvent, start: Date, end: Date) => boolean
+  onEventResize?: (event: CalendarEvent, start: Date, end: Date) => boolean
 }
 
 const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
@@ -58,8 +63,19 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
       return rooms.find(r => r.id === roomId)
     }
 
-    // Expose calendar API to parent
-    useImperativeHandle(ref, () => calendarRef.current as FullCalendar)
+    // Expose calendar API to parent with custom methods
+    useImperativeHandle(ref, () => {
+      const api = calendarRef.current
+      return {
+        ...api,
+        clearSelection: () => {
+          const calendarApi = calendarRef.current?.getApi()
+          if (calendarApi) {
+            calendarApi.unselect()
+          }
+        }
+      } as FullCalendar & { clearSelection: () => void }
+    })
 
     // Update view when prop changes
     useEffect(() => {
@@ -89,14 +105,33 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
 
     // Handle date range selection
     const handleSelect = (arg: DateSelectArg) => {
-      onSelectRange?.(arg.start, arg.end)
+      // Capture the highlight element's position IMMEDIATELY, SYNCHRONOUSLY
+      // This must happen before FullCalendar removes the element
+      const highlightEl = document.querySelector('.fc-highlight') as HTMLElement
+      let dimensions = null
+      if (highlightEl) {
+        const rect = highlightEl.getBoundingClientRect()
+        dimensions = {
+          top: rect.top,
+          left: rect.left,
+          width: rect.width,
+          height: rect.height
+        }
+      }
+
+      // Pass the dimensions along with dates
+      onSelectRange?.(arg.start, arg.end, arg.jsEvent as MouseEvent, dimensions)
     }
 
     // Handle event drop
     const handleEventDrop = (arg: EventDropArg) => {
       const event = events.find(e => e.id === arg.event.id)
       if (event && arg.event.start && arg.event.end) {
-        onEventDrop?.(event, arg.event.start, arg.event.end)
+        const success = onEventDrop?.(event, arg.event.start, arg.event.end)
+        // Revert if validation failed
+        if (success === false) {
+          arg.revert()
+        }
       }
     }
 
@@ -104,7 +139,11 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
     const handleEventResize = (arg: EventResizeDoneArg) => {
       const event = events.find(e => e.id === arg.event.id)
       if (event && arg.event.start && arg.event.end) {
-        onEventResize?.(event, arg.event.start, arg.event.end)
+        const success = onEventResize?.(event, arg.event.start, arg.event.end)
+        // Revert if validation failed
+        if (success === false) {
+          arg.revert()
+        }
       }
     }
 
@@ -166,6 +205,23 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             alignItems: 'center',
             justifyContent: 'center',
             fontWeight: 600
+          },
+          // Selection highlight styling
+          '& .fc-highlight': {
+            backgroundColor: isDark
+              ? 'rgba(20, 184, 166, 0.2) !important'
+              : 'rgba(20, 184, 166, 0.15) !important',
+            border: isDark
+              ? '2px solid rgba(20, 184, 166, 0.5) !important'
+              : '2px solid rgba(20, 184, 166, 0.6) !important',
+            borderRadius: '8px',
+            opacity: 1,
+            zIndex: 3
+          },
+          '& .fc-timegrid .fc-highlight': {
+            backgroundColor: isDark
+              ? 'rgba(20, 184, 166, 0.2) !important'
+              : 'rgba(20, 184, 166, 0.15) !important',
           },
           '& .fc-event': {
             cursor: 'pointer',
@@ -406,6 +462,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           editable={true}
           selectable={view === 'timeGridDay' || view === 'timeGridWeek'}
           selectMirror={true}
+          unselectAuto={false}
           selectLongPressDelay={300}
           eventLongPressDelay={300}
           selectMinDistance={5}

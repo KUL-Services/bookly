@@ -67,9 +67,11 @@ export interface StaffMember {
   photo: string;
   businessId: string;
   branchId: string;
+  serviceIds?: string[];  // Services this staff can provide
   schedule?: StaffSchedule[];
   appointments?: StaffAppointment[];
   maxConcurrentBookings?: number; // Maximum overlapping appointments (default 1)
+  color?: string;  // For calendar color coding
 }
 
 export interface Review {

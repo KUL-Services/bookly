@@ -161,3 +161,86 @@ export interface DateRange {
   start: Date
   end: Date
 }
+
+// ============================================================================
+// Staff Management Types
+// ============================================================================
+
+export interface BreakRange {
+  id: string
+  start: string  // "HH:MM"
+  end: string    // "HH:MM"
+}
+
+export interface StaffShift {
+  id: string
+  start: string  // "HH:MM"
+  end: string    // "HH:MM"
+  breaks?: BreakRange[]
+}
+
+export interface StaffShiftInstance extends StaffShift {
+  date: string  // "YYYY-MM-DD"
+  reason?: 'manual' | 'business_hours_change' | 'copy'
+}
+
+export interface WeeklyStaffHours {
+  [day in DayOfWeek]: {
+    isWorking: boolean
+    shifts: StaffShift[]
+  }
+}
+
+export interface WeeklyBusinessHours {
+  [day in DayOfWeek]: {
+    isOpen: boolean
+    shifts: { start: string; end: string }[]
+  }
+}
+
+export interface TimeReservation {
+  id: string
+  staffId: string
+  start: Date
+  end: Date
+  reason: string
+  note?: string
+}
+
+export type TimeOffReasonGroup = 'Personal' | 'Sick' | 'Vacation' | 'Training' | 'No-Show' | 'Late' | 'Other'
+
+export interface TimeOffRequest {
+  id: string
+  staffId: string
+  range: { start: Date; end: Date }
+  allDay: boolean
+  repeat?: { until: Date }
+  reason: TimeOffReasonGroup
+  approved: boolean
+  note?: string
+}
+
+export interface Resource {
+  id: string
+  branchId: string
+  name: string
+  capacity: number
+  floor?: string
+  amenities: string[]
+  color?: string
+}
+
+export interface CommissionPolicy {
+  id: string
+  scope: 'serviceCategory' | 'service' | 'product' | 'giftCard' | 'membership' | 'package'
+  scopeRefId?: string
+  type: 'percent' | 'fixed'
+  value: number
+  appliesTo: 'serviceProvider' | 'seller'
+  staffScope: 'all' | { staffIds: string[] }
+}
+
+export interface ShiftRuleSet {
+  duplication: { allowCopy: boolean; allowPrint: boolean }
+  tutorialsSeen: boolean
+}

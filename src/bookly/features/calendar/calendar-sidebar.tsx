@@ -360,6 +360,60 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
         <Divider sx={{ my: 2 }} />
 
+        {/* Quick Actions */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <i className='ri-calendar-event-line' style={{ fontSize: '1.1rem' }} />
+            Quick Actions
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Button
+              variant='outlined'
+              fullWidth
+              onClick={() => window.location.href = '/en/apps/bookly/staff?action=time-reservation'}
+              startIcon={<i className='ri-time-line' />}
+              sx={{
+                justifyContent: 'flex-start',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                py: 1,
+                borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(33, 150, 243, 0.5)' : 'rgba(33, 150, 243, 0.5)',
+                color: theme => theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)',
+                '&:hover': {
+                  borderColor: theme => theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)',
+                  backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.08)' : 'rgba(25, 118, 210, 0.04)'
+                }
+              }}
+            >
+              Add Time Reservation
+            </Button>
+            <Button
+              variant='outlined'
+              fullWidth
+              onClick={() => window.location.href = '/en/apps/bookly/staff?action=time-off'}
+              startIcon={<i className='ri-calendar-close-line' />}
+              sx={{
+                justifyContent: 'flex-start',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                py: 1,
+                borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(121, 85, 72, 0.5)' : 'rgba(121, 85, 72, 0.5)',
+                color: theme => theme.palette.mode === 'dark' ? 'rgb(188, 170, 164)' : 'rgb(121, 85, 72)',
+                '&:hover': {
+                  borderColor: theme => theme.palette.mode === 'dark' ? 'rgb(188, 170, 164)' : 'rgb(121, 85, 72)',
+                  backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(121, 85, 72, 0.08)' : 'rgba(121, 85, 72, 0.04)'
+                }
+              }}
+            >
+              Add Time Off
+            </Button>
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
         {/* Jump By Week */}
         <Box sx={{ mb: 3 }}>
           <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
