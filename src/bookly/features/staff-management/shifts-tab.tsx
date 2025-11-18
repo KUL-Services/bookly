@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -22,9 +22,12 @@ import {
   TextField,
   Chip,
   Tooltip,
-  Badge
+  Badge,
+  Popover,
+  Divider
 } from '@mui/material'
 import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns'
+import { Calendar } from '@/bookly/components/ui/calendar'
 import { mockStaff } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { BusinessHoursModal } from './business-hours-modal'
@@ -32,6 +35,57 @@ import { StaffEditWorkingHoursModal } from './staff-edit-working-hours-modal'
 import { TimeOffModal } from './time-off-modal'
 import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
+
+// Print Styles Component
+function PrintStyles() {
+  useEffect(() => {
+    const style = document.createElement('style')
+    style.innerHTML = `
+      @media print {
+        @page {
+          size: landscape;
+          margin: 0.5cm;
+        }
+
+        #print-content {
+          display: block !important;
+        }
+
+        /* Hide UI elements */
+        button,
+        .MuiIconButton-root,
+        .no-print {
+          display: none !important;
+        }
+
+        /* Ensure proper sizing */
+        #print-content table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        #print-content th,
+        #print-content td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
+        }
+
+        #print-content th {
+          background-color: #f5f5f5;
+          font-weight: 600;
+        }
+      }
+    `
+    document.head.appendChild(style)
+
+    return () => {
+      document.head.removeChild(style)
+    }
+  }, [])
+
+  return null
+}
 
 const TIMELINE_HOURS = [
   '10:00 AM',
@@ -297,6 +351,10 @@ export function ShiftsTab() {
   const [staffMenuAnchor, setStaffMenuAnchor] = useState<null | HTMLElement>(null)
   const [staffMenuOpen, setStaffMenuOpen] = useState(false)
 
+  // Calendar popover state
+  const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
+  const calendarOpen = Boolean(calendarAnchor)
+
   const { timeOffRequests } = useStaffManagementStore()
 
   const displayStaff =
@@ -340,6 +398,28 @@ export function ShiftsTab() {
   const handleOpenTimeOffModal = () => {
     setIsTimeOffModalOpen(true)
     handleCloseStaffMenu()
+  }
+
+  const handleOpenCalendar = (event: React.MouseEvent<HTMLElement>) => {
+    setCalendarAnchor(event.currentTarget)
+  }
+
+  const handleCloseCalendar = () => {
+    setCalendarAnchor(null)
+  }
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (!date) return
+    setSelectedDate(date)
+    handleCloseCalendar()
+  }
+
+  const handleJumpWeek = (weeks: number) => {
+    setSelectedDate(addWeeks(selectedDate, weeks))
+  }
+
+  const handlePrint = () => {
+    window.print()
   }
 
   const handleDragEnd = useCallback((event: any) => {
@@ -417,13 +497,33 @@ export function ShiftsTab() {
         <IconButton size='small' onClick={handlePrevPeriod}>
           <i className='ri-arrow-left-s-line' />
         </IconButton>
-        <Box sx={{ minWidth: 180, textAlign: 'center', py: 0.5, px: 2 }}>
-          <Typography variant='body2' fontWeight={600}>
-            {getDateDisplay()}
-          </Typography>
-          <Typography variant='caption' color='text.secondary'>
-            Closed
-          </Typography>
+        <Box
+          onClick={handleOpenCalendar}
+          sx={{
+            minWidth: 180,
+            textAlign: 'center',
+            py: 0.5,
+            px: 2,
+            cursor: 'pointer',
+            borderRadius: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 0.5,
+            '&:hover': {
+              bgcolor: 'action.hover'
+            }
+          }}
+        >
+          <Box>
+            <Typography variant='body2' fontWeight={600}>
+              {getDateDisplay()}
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              Closed
+            </Typography>
+          </Box>
+          <i className='ri-arrow-down-s-line' style={{ fontSize: '1.2rem' }} />
         </Box>
         <IconButton size='small' onClick={handleNextPeriod}>
           <i className='ri-arrow-right-s-line' />
@@ -433,16 +533,16 @@ export function ShiftsTab() {
       <Box sx={{ flexGrow: 1 }} />
 
       <Tooltip title='Print Schedule'>
-        <IconButton size='small'>
+        <IconButton size='small' onClick={handlePrint}>
           <i className='ri-printer-line' />
         </IconButton>
       </Tooltip>
-      <Button variant='outlined' startIcon={<i className='ri-file-copy-line' />}>
+      {/* <Button variant='outlined' startIcon={<i className='ri-file-copy-line' />}>
         COPY
       </Button>
       <Button variant='contained' startIcon={<i className='ri-save-line' />}>
         SAVE
-      </Button>
+      </Button> */}
     </Box>
   )
 
@@ -526,6 +626,7 @@ export function ShiftsTab() {
     return (
       <DndContext onDragEnd={handleDragEnd}>
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+          <PrintStyles />
           {renderEnhancedHeader()}
 
           <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.paper' }}>
@@ -639,6 +740,292 @@ export function ShiftsTab() {
           )}
 
           <TimeOffModal open={isTimeOffModalOpen} onClose={() => setIsTimeOffModalOpen(false)} />
+
+          {/* Print Content - Hidden on screen, visible when printing */}
+          <Box
+            id='print-content'
+            sx={{
+              display: 'none',
+              '@media print': {
+                display: 'block'
+              }
+            }}
+          >
+            <Box className='print-page-break' sx={{ p: 3 }}>
+              {/* Header */}
+              <Box sx={{ mb: 3, textAlign: 'center' }}>
+                <Typography variant='h5' fontWeight={600} gutterBottom>
+                  Zerv
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {`${format(weekStart, 'MMM d')} - ${format(addDays(weekStart, 6), 'MMM d, yyyy')}`}
+                </Typography>
+              </Box>
+
+              {/* Staff Schedule Table */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                <thead>
+                  <tr>
+                    <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f5f5f5' }}>
+                      Staff Member
+                    </th>
+                    {weekDates.map((date, idx) => (
+                      <th
+                        key={idx}
+                        style={{
+                          border: '1px solid #ddd',
+                          padding: '8px',
+                          backgroundColor: '#f5f5f5',
+                          textAlign: 'center'
+                        }}
+                      >
+                        {WEEK_DAYS[idx]}
+                        <br />
+                        {format(date, 'MMM d')}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayStaff.map(staff => (
+                    <tr key={staff.id}>
+                      <td style={{ border: '1px solid #ddd', padding: '8px', fontWeight: 600 }}>{staff.name}</td>
+                      {weekDates.map((date, idx) => {
+                        const timeOff = timeOffRequests.find(
+                          req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
+                        )
+                        return (
+                          <td key={idx} style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                            {timeOff ? (
+                              <Box>
+                                <Typography variant='caption' display='block' fontWeight={500}>
+                                  {timeOff.reason}
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary'>
+                                  Sick Day
+                                </Typography>
+                              </Box>
+                            ) : (
+                              <Box>
+                                <Typography variant='caption' display='block'>
+                                  10:00 AM - 7:00 PM
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary'>
+                                  9h
+                                </Typography>
+                              </Box>
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Footer */}
+              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #ddd', display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant='caption' color='text.secondary'>
+                  {new Date().toLocaleDateString()}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  https://zerv.app/staff/shifts?date={format(selectedDate, 'yyyy-MM-dd')}&view=day
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Calendar Picker Popover */}
+          <Popover
+            open={calendarOpen}
+            anchorEl={calendarAnchor}
+            onClose={handleCloseCalendar}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'center'
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'center'
+            }}
+          >
+            <Box sx={{ p: 3, minWidth: 320 }}>
+              {/* Calendar */}
+              <Box
+                sx={{
+                  mb: 3,
+                  '& .rdp': {
+                    '--rdp-cell-size': '40px',
+                    '--rdp-accent-color': theme => theme.palette.primary.main,
+                    margin: 0
+                  },
+                  '& .rdp-months': {
+                    width: '100%'
+                  },
+                  '& .rdp-month': {
+                    width: '100%'
+                  },
+                  '& .rdp-caption': {
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0.5rem 0',
+                    marginBottom: '0.5rem'
+                  },
+                  '& .rdp-caption_label': {
+                    fontSize: '1rem',
+                    fontWeight: 600,
+                    color: theme => theme.palette.text.primary,
+                    padding: '0 1rem'
+                  },
+                  '& .rdp-nav': {
+                    display: 'flex',
+                    gap: '0.5rem'
+                  },
+                  '& .rdp-nav_button': {
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: theme => theme.palette.text.primary,
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: theme =>
+                        theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                      color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
+                    }
+                  },
+                  '& .rdp-head_cell': {
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                    color: theme => theme.palette.text.secondary,
+                    padding: '0.5rem 0',
+                    textTransform: 'uppercase'
+                  },
+                  '& .rdp-cell': {
+                    padding: '2px'
+                  },
+                  '& .rdp-day': {
+                    width: '40px',
+                    height: '40px',
+                    fontSize: '0.9375rem',
+                    fontWeight: 500,
+                    borderRadius: '50%',
+                    backgroundColor: 'transparent',
+                    color: theme => theme.palette.text.primary,
+                    border: '1px solid transparent',
+                    transition: 'all 0.2s ease',
+                    '&:hover:not(.rdp-day_selected):not(.rdp-day_disabled)': {
+                      backgroundColor: theme =>
+                        theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                      borderColor: theme =>
+                        theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)',
+                      color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
+                    }
+                  },
+                  '& .rdp-day_today:not(.rdp-day_selected)': {
+                    fontWeight: 700,
+                    color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'),
+                    backgroundColor: theme =>
+                      theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                    border: '1px solid',
+                    borderColor: theme =>
+                      theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)'
+                  },
+                  '& .rdp-day_selected': {
+                    backgroundColor: theme =>
+                      theme.palette.mode === 'dark' ? 'rgb(20, 184, 166) !important' : 'rgb(20, 184, 166) !important',
+                    color: theme => (theme.palette.mode === 'dark' ? '#0f172a !important' : '#ffffff !important'),
+                    fontWeight: 700,
+                    border: 'none !important',
+                    '&:hover': {
+                      backgroundColor: theme =>
+                        theme.palette.mode === 'dark' ? 'rgb(13, 148, 136) !important' : 'rgb(13, 148, 136) !important'
+                    }
+                  },
+                  '& .rdp-day_outside': {
+                    color: theme => theme.palette.text.disabled,
+                    opacity: 0.3
+                  }
+                }}
+              >
+                <Calendar mode='single' selected={selectedDate} onSelect={handleDateSelect} />
+              </Box>
+
+              <Divider sx={{ my: 2 }} />
+
+              {/* Jump By Week */}
+              <Box>
+                <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
+                  Jump By Week
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
+                  {[1, 2, 3, 4, 5, 6].map((week, index) => (
+                    <Box key={`plus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography
+                        variant='body2'
+                        onClick={() => handleJumpWeek(week)}
+                        sx={{
+                          cursor: 'pointer',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 0.5,
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            bgcolor: theme =>
+                              theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                            color: 'primary.main'
+                          }
+                        }}
+                      >
+                        +{week}
+                      </Typography>
+                      {index < 5 && (
+                        <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
+                          |
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                  {[-1, -2, -3, -4, -5, -6].map((week, index) => (
+                    <Box key={`minus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography
+                        variant='body2'
+                        onClick={() => handleJumpWeek(week)}
+                        sx={{
+                          cursor: 'pointer',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 0.5,
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            bgcolor: theme =>
+                              theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                            color: 'primary.main'
+                          }
+                        }}
+                      >
+                        {week}
+                      </Typography>
+                      {index < 5 && (
+                        <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
+                          |
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          </Popover>
         </Box>
       </DndContext>
     )
@@ -646,6 +1033,7 @@ export function ShiftsTab() {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+      <PrintStyles />
       {renderEnhancedHeader()}
 
       <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.paper' }}>
@@ -654,7 +1042,7 @@ export function ShiftsTab() {
             <Box sx={{ height: 60, borderBottom: 1, borderColor: 'divider' }} />
 
             <Box
-              sx={{ height: 60, display: 'flex', alignItems: 'center', px: 2, borderBottom: 1, borderColor: 'divider' }}
+              sx={{ height: 70, display: 'flex', alignItems: 'center', px: 2, borderBottom: 1, borderColor: 'divider' }}
             >
               <Typography variant='body2' fontWeight={600}>
                 Business Hours
@@ -668,7 +1056,7 @@ export function ShiftsTab() {
               <Box
                 key={staff.id}
                 sx={{
-                  height: 60,
+                  height: 80,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1,
@@ -678,15 +1066,15 @@ export function ShiftsTab() {
                 }}
               >
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant='body2' fontWeight={600}>
+                  <Typography variant='body2' fontWeight={600} noWrap>
                     {staff.name}
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                    <Typography variant='caption' color='text.secondary'>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
+                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
                       W 45h/45h
                     </Typography>
-                    <Typography variant='caption' color='text.secondary'>
-                      M 149h 45min/149h 45min
+                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                      M 149h 45min
                     </Typography>
                   </Box>
                 </Box>
@@ -732,23 +1120,34 @@ export function ShiftsTab() {
 
                 <Box
                   sx={{
-                    height: 60,
+                    height: 70,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderBottom: 1,
                     borderColor: 'divider',
-                    bgcolor: 'grey.900',
-                    m: 1,
-                    borderRadius: 1
+                    p: 1
                   }}
                 >
-                  <Typography variant='body2' color='white'>
-                    Closed
-                  </Typography>
-                  <IconButton size='small' sx={{ ml: 'auto', mr: 0.5, color: 'white' }}>
-                    <i className='ri-edit-line' style={{ fontSize: 14 }} />
-                  </IconButton>
+                  <Box
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      bgcolor: 'grey.900',
+                      borderRadius: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative'
+                    }}
+                  >
+                    <Typography variant='body2' color='white'>
+                      Closed
+                    </Typography>
+                    <IconButton size='small' sx={{ position: 'absolute', top: 2, right: 2, color: 'white' }}>
+                      <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Box>
                 </Box>
 
                 {displayStaff.map(staff => {
@@ -760,7 +1159,7 @@ export function ShiftsTab() {
                     <Box
                       key={staff.id}
                       sx={{
-                        height: 60,
+                        height: 80,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -768,8 +1167,7 @@ export function ShiftsTab() {
                         borderBottom: 1,
                         borderColor: 'divider',
                         position: 'relative',
-                        m: 1,
-                        borderRadius: 1
+                        p: 1
                       }}
                     >
                       {!timeOff && (
@@ -878,6 +1276,292 @@ export function ShiftsTab() {
       )}
 
       <TimeOffModal open={isTimeOffModalOpen} onClose={() => setIsTimeOffModalOpen(false)} />
+
+      {/* Print Content - Hidden on screen, visible when printing */}
+      <Box
+        id='print-content'
+        sx={{
+          display: 'none',
+          '@media print': {
+            display: 'block'
+          }
+        }}
+      >
+        <Box sx={{ p: 3 }}>
+          {/* Header */}
+          <Box sx={{ mb: 3, textAlign: 'center' }}>
+            <Typography variant='h5' fontWeight={600} gutterBottom>
+              Zerv
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              {`${format(weekStart, 'MMM d')} - ${format(addDays(weekStart, 6), 'MMM d, yyyy')}`}
+            </Typography>
+          </Box>
+
+          {/* Staff Schedule Table */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+            <thead>
+              <tr>
+                <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f5f5f5' }}>
+                  Staff Member
+                </th>
+                {weekDates.map((date, idx) => (
+                  <th
+                    key={idx}
+                    style={{
+                      border: '1px solid #ddd',
+                      padding: '8px',
+                      backgroundColor: '#f5f5f5',
+                      textAlign: 'center'
+                    }}
+                  >
+                    {WEEK_DAYS[idx]}
+                    <br />
+                    {format(date, 'MMM d')}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {displayStaff.map(staff => (
+                <tr key={staff.id}>
+                  <td style={{ border: '1px solid #ddd', padding: '8px', fontWeight: 600 }}>{staff.name}</td>
+                  {weekDates.map((date, idx) => {
+                    const timeOff = timeOffRequests.find(
+                      req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
+                    )
+                    return (
+                      <td key={idx} style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                        {timeOff ? (
+                          <Box>
+                            <Typography variant='caption' display='block' fontWeight={500}>
+                              {timeOff.reason}
+                            </Typography>
+                            <Typography variant='caption' color='text.secondary'>
+                              Sick Day
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Box>
+                            <Typography variant='caption' display='block'>
+                              10:00 AM - 7:00 PM
+                            </Typography>
+                            <Typography variant='caption' color='text.secondary'>
+                              9h
+                            </Typography>
+                          </Box>
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Footer */}
+          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #ddd', display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant='caption' color='text.secondary'>
+              {new Date().toLocaleDateString()}
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              https://zerv.app/staff/shifts?date={format(selectedDate, 'yyyy-MM-dd')}&view={viewMode.toLowerCase()}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Calendar Picker Popover */}
+      <Popover
+        open={calendarOpen}
+        anchorEl={calendarAnchor}
+        onClose={handleCloseCalendar}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center'
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center'
+        }}
+      >
+        <Box sx={{ p: 3, minWidth: 320 }}>
+          {/* Calendar */}
+          <Box
+            sx={{
+              mb: 3,
+              '& .rdp': {
+                '--rdp-cell-size': '40px',
+                '--rdp-accent-color': theme => theme.palette.primary.main,
+                margin: 0
+              },
+              '& .rdp-months': {
+                width: '100%'
+              },
+              '& .rdp-month': {
+                width: '100%'
+              },
+              '& .rdp-caption': {
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '0.5rem 0',
+                marginBottom: '0.5rem'
+              },
+              '& .rdp-caption_label': {
+                fontSize: '1rem',
+                fontWeight: 600,
+                color: theme => theme.palette.text.primary,
+                padding: '0 1rem'
+              },
+              '& .rdp-nav': {
+                display: 'flex',
+                gap: '0.5rem'
+              },
+              '& .rdp-nav_button': {
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                backgroundColor: 'transparent',
+                border: 'none',
+                color: theme => theme.palette.text.primary,
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                  color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
+                }
+              },
+              '& .rdp-head_cell': {
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                color: theme => theme.palette.text.secondary,
+                padding: '0.5rem 0',
+                textTransform: 'uppercase'
+              },
+              '& .rdp-cell': {
+                padding: '2px'
+              },
+              '& .rdp-day': {
+                width: '40px',
+                height: '40px',
+                fontSize: '0.9375rem',
+                fontWeight: 500,
+                borderRadius: '50%',
+                backgroundColor: 'transparent',
+                color: theme => theme.palette.text.primary,
+                border: '1px solid transparent',
+                transition: 'all 0.2s ease',
+                '&:hover:not(.rdp-day_selected):not(.rdp-day_disabled)': {
+                  backgroundColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                  borderColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)',
+                  color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
+                }
+              },
+              '& .rdp-day_today:not(.rdp-day_selected)': {
+                fontWeight: 700,
+                color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'),
+                backgroundColor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                border: '1px solid',
+                borderColor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)'
+              },
+              '& .rdp-day_selected': {
+                backgroundColor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgb(20, 184, 166) !important' : 'rgb(20, 184, 166) !important',
+                color: theme => (theme.palette.mode === 'dark' ? '#0f172a !important' : '#ffffff !important'),
+                fontWeight: 700,
+                border: 'none !important',
+                '&:hover': {
+                  backgroundColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgb(13, 148, 136) !important' : 'rgb(13, 148, 136) !important'
+                }
+              },
+              '& .rdp-day_outside': {
+                color: theme => theme.palette.text.disabled,
+                opacity: 0.3
+              }
+            }}
+          >
+            <Calendar mode='single' selected={selectedDate} onSelect={handleDateSelect} />
+          </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          {/* Jump By Week */}
+          <Box>
+            <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
+              Jump By Week
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
+              {[1, 2, 3, 4, 5, 6].map((week, index) => (
+                <Box key={`plus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography
+                    variant='body2'
+                    onClick={() => handleJumpWeek(week)}
+                    sx={{
+                      cursor: 'pointer',
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 0.5,
+                      fontWeight: 500,
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: theme =>
+                          theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                        color: 'primary.main'
+                      }
+                    }}
+                  >
+                    +{week}
+                  </Typography>
+                  {index < 5 && (
+                    <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
+                      |
+                    </Typography>
+                  )}
+                </Box>
+              ))}
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+              {[-1, -2, -3, -4, -5, -6].map((week, index) => (
+                <Box key={`minus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Typography
+                    variant='body2'
+                    onClick={() => handleJumpWeek(week)}
+                    sx={{
+                      cursor: 'pointer',
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 0.5,
+                      fontWeight: 500,
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: theme =>
+                          theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                        color: 'primary.main'
+                      }
+                    }}
+                  >
+                    {week}
+                  </Typography>
+                  {index < 5 && (
+                    <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
+                      |
+                    </Typography>
+                  )}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        </Box>
+      </Popover>
     </Box>
   )
 }

@@ -20,7 +20,7 @@ import {
   Button,
   Divider
 } from '@mui/material'
-import { mockStaff, mockServices } from '@/bookly/data/mock-data'
+import { mockStaff, mockServices, mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { EditServicesModal } from './edit-services-modal'
 import { WorkingHoursEditor } from './working-hours-editor'
@@ -80,6 +80,29 @@ export function StaffMembersTab() {
     staff.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  // Group staff by branch and sort
+  const staffByBranch = filteredStaff.reduce((acc, staff) => {
+    const branchId = staff.branchId
+    if (!acc[branchId]) {
+      acc[branchId] = []
+    }
+    acc[branchId].push(staff)
+    return acc
+  }, {} as Record<string, typeof mockStaff>)
+
+  // Get branch information and sort branches alphabetically
+  const sortedBranches = Object.keys(staffByBranch)
+    .map(branchId => {
+      // Find branch details from mockBranches
+      const branch = mockBranches.find(b => b.id === branchId)
+      return {
+        id: branchId,
+        name: branch?.name || branchId,
+        staff: staffByBranch[branchId].sort((a, b) => a.name.localeCompare(b.name))
+      }
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+
   // Get assigned services for selected staff
   const assignedServiceIds = selectedStaffId ? getStaffServices(selectedStaffId) : []
   const assignedServices = mockServices.filter(s => assignedServiceIds.includes(s.id))
@@ -129,49 +152,78 @@ export function StaffMembersTab() {
           />
         </Box>
 
-        {/* Staff List */}
+        {/* Staff List - Grouped by Branch */}
         <List sx={{ flexGrow: 1, overflow: 'auto', py: 0 }}>
-          {filteredStaff.map((staff) => (
-            <ListItemButton
-              key={staff.id}
-              selected={selectedStaffId === staff.id}
-              onClick={() => selectStaff(staff.id)}
-              sx={{
-                borderLeft: 3,
-                borderColor: selectedStaffId === staff.id ? 'primary.main' : 'transparent',
-                '&.Mui-selected': {
-                  bgcolor: 'action.selected',
-                  '&:hover': {
-                    bgcolor: 'action.selected'
-                  }
-                }
-              }}
-            >
-              <ListItemAvatar>
-                <Avatar
-                  src={staff.photo}
-                  alt={staff.name}
+          {sortedBranches.map((branch) => (
+            <Box key={branch.id}>
+              {/* Branch Header */}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1,
+                  bgcolor: 'action.hover',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 1,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase' }}>
+                  {branch.name}
+                </Typography>
+                <Typography variant="caption" color="text.disabled">
+                  {branch.staff.length} {branch.staff.length === 1 ? 'member' : 'members'}
+                </Typography>
+              </Box>
+
+              {/* Staff Members in Branch */}
+              {branch.staff.map((staff) => (
+                <ListItemButton
+                  key={staff.id}
+                  selected={selectedStaffId === staff.id}
+                  onClick={() => selectStaff(staff.id)}
                   sx={{
-                    bgcolor: staff.color || 'primary.main',
-                    width: 40,
-                    height: 40
+                    borderLeft: 3,
+                    borderColor: selectedStaffId === staff.id ? 'primary.main' : 'transparent',
+                    '&.Mui-selected': {
+                      bgcolor: 'action.selected',
+                      '&:hover': {
+                        bgcolor: 'action.selected'
+                      }
+                    }
                   }}
                 >
-                  {staff.name[0]}
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary={staff.name}
-                secondary={staff.title}
-                primaryTypographyProps={{ fontWeight: 500 }}
-              />
-              <Chip
-                size="small"
-                label="Active"
-                color="success"
-                sx={{ height: 20, fontSize: '0.75rem' }}
-              />
-            </ListItemButton>
+                  <ListItemAvatar>
+                    <Avatar
+                      src={staff.photo}
+                      alt={staff.name}
+                      sx={{
+                        bgcolor: staff.color || 'primary.main',
+                        width: 40,
+                        height: 40
+                      }}
+                    >
+                      {staff.name[0]}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={staff.name}
+                    secondary={staff.title}
+                    primaryTypographyProps={{ fontWeight: 500 }}
+                  />
+                  <Chip
+                    size="small"
+                    label="Active"
+                    color="success"
+                    sx={{ height: 20, fontSize: '0.75rem' }}
+                  />
+                </ListItemButton>
+              ))}
+            </Box>
           ))}
         </List>
 
