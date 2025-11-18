@@ -22,6 +22,12 @@ import type { BreakRange } from '../calendar/types'
 interface ShiftEditorModalProps {
   open: boolean
   onClose: () => void
+  staffName?: string
+  date?: Date
+  hasShift?: boolean
+  initialStartTime?: string
+  initialEndTime?: string
+  onSave?: (data: { hasShift: boolean; startTime: string; endTime: string; breaks: BreakRange[] }) => void
 }
 
 function calculateDuration(start: string, end: string): string {
@@ -33,11 +39,30 @@ function calculateDuration(start: string, end: string): string {
   return `${hours}h ${mins}m`
 }
 
-export function ShiftEditorModal({ open, onClose }: ShiftEditorModalProps) {
-  const [isWorking, setIsWorking] = useState(true)
-  const [startTime, setStartTime] = useState('09:00')
-  const [endTime, setEndTime] = useState('17:00')
+export function ShiftEditorModal({
+  open,
+  onClose,
+  staffName = 'Staff Member',
+  date,
+  hasShift = true,
+  initialStartTime = '10:00',
+  initialEndTime = '19:00',
+  onSave
+}: ShiftEditorModalProps) {
+  const [isWorking, setIsWorking] = useState(hasShift)
+  const [startTime, setStartTime] = useState(initialStartTime)
+  const [endTime, setEndTime] = useState(initialEndTime)
   const [breaks, setBreaks] = useState<BreakRange[]>([])
+
+  // Reset form when modal opens with new data
+  useState(() => {
+    if (open) {
+      setIsWorking(hasShift)
+      setStartTime(initialStartTime)
+      setEndTime(initialEndTime)
+      setBreaks([])
+    }
+  })
 
   const handleAddBreak = () => {
     setBreaks([
@@ -61,179 +86,192 @@ export function ShiftEditorModal({ open, onClose }: ShiftEditorModalProps) {
   }
 
   const handleSave = () => {
-    // Save logic here
+    if (onSave) {
+      onSave({
+        hasShift: isWorking,
+        startTime,
+        endTime,
+        breaks
+      })
+    }
     onClose()
   }
 
   const handleCancel = () => {
     // Reset form
-    setIsWorking(true)
-    setStartTime('09:00')
-    setEndTime('17:00')
+    setIsWorking(hasShift)
+    setStartTime(initialStartTime)
+    setEndTime(initialEndTime)
     setBreaks([])
     onClose()
   }
 
   const duration = isWorking ? calculateDuration(startTime, endTime) : '0h 0m'
 
+  const formatDate = (d: Date) => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    return `${days[d.getDay()]}, ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
+  }
+
   return (
     <Dialog
       open={open}
       onClose={handleCancel}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
     >
       <DialogTitle>
-        <Typography variant="h5" fontWeight={600}>
-          Edit Shift
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Adjust working hours and breaks
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton size="small" onClick={handleCancel} sx={{ mr: 1 }}>
+            <i className="ri-close-line" />
+          </IconButton>
+          <Typography variant="h6" fontWeight={600}>
+            Edit shift • {staffName} • {date ? formatDate(date) : 'Select Date'}
+          </Typography>
+        </Box>
       </DialogTitle>
 
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Working Toggle */}
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isWorking}
-                onChange={(e) => setIsWorking(e.target.checked)}
-                color="primary"
-              />
-            }
-            label={<Typography fontWeight={500}>Working this day</Typography>}
-          />
-
-          {isWorking && (
-            <>
-              {/* Start/End Times */}
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                <TextField
-                  type="time"
-                  label="Start Time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ step: 900 }} // 15 min increments
-                  fullWidth
+          {/* Top Row - Shift Toggle, Time Pickers, Duration & Add Break */}
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            {/* Shift Toggle */}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isWorking}
+                  onChange={(e) => setIsWorking(e.target.checked)}
+                  color="primary"
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: 'success.main'
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: 'success.main'
+                    }
+                  }}
                 />
-                <Typography color="text.secondary">—</Typography>
-                <TextField
-                  type="time"
-                  label="End Time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ step: 900 }} // 15 min increments
-                  fullWidth
-                />
-              </Box>
+              }
+              label={<Typography fontWeight={600}>Shift</Typography>}
+              sx={{ mr: 2 }}
+            />
 
-              {/* Duration Display */}
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: 'primary.50',
-                  borderRadius: 1,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <Typography variant="body2" fontWeight={500}>
-                  Total Duration
-                </Typography>
-                <Chip label={duration} color="primary" />
-              </Box>
+            {/* Start/End Times */}
+            <TextField
+              type="time"
+              label="Start"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ step: 900 }} // 15 min increments
+              disabled={!isWorking}
+              sx={{ width: 150 }}
+            />
+            <TextField
+              type="time"
+              label="End"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ step: 900 }} // 15 min increments
+              disabled={!isWorking}
+              sx={{ width: 150 }}
+            />
 
-              {/* Breaks */}
-              <Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    Breaks
-                  </Typography>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<i className="ri-add-line" />}
-                    onClick={handleAddBreak}
-                  >
-                    Add Break
-                  </Button>
-                </Box>
+            {/* Duration Display */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <i className="ri-time-line" style={{ fontSize: 20, opacity: 0.5 }} />
+              <Typography variant="body1" fontWeight={500}>
+                {duration}
+              </Typography>
+            </Box>
 
-                {breaks.length === 0 ? (
-                  <Box
-                    sx={{
-                      p: 3,
-                      textAlign: 'center',
-                      bgcolor: 'action.hover',
-                      borderRadius: 1,
-                      color: 'text.secondary'
-                    }}
-                  >
-                    <i className="ri-cup-line" style={{ fontSize: 32, opacity: 0.3 }} />
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      No breaks added
-                    </Typography>
+            <Box sx={{ flexGrow: 1 }} />
+
+            {/* Add Break Button */}
+            <Button
+              size="medium"
+              variant="text"
+              startIcon={<i className="ri-add-line" />}
+              onClick={handleAddBreak}
+              disabled={!isWorking}
+              sx={{ textTransform: 'none', fontWeight: 500 }}
+            >
+              + Add Break
+            </Button>
+          </Box>
+
+          {/* Breaks Section */}
+          {isWorking && breaks.length === 0 && (
+            <Box
+              sx={{
+                p: 3,
+                textAlign: 'center',
+                bgcolor: 'action.hover',
+                borderRadius: 1,
+                color: 'text.secondary'
+              }}
+            >
+              <i className="ri-cup-line" style={{ fontSize: 32, opacity: 0.3 }} />
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                No breaks added
+              </Typography>
+            </Box>
+          )}
+
+          {isWorking && breaks.length > 0 && (
+            <List sx={{ p: 0 }}>
+              {breaks.map((breakRange, index) => (
+                <ListItem
+                  key={breakRange.id}
+                  sx={{
+                    p: 2,
+                    mb: 1,
+                    bgcolor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1
+                  }}
+                >
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
+                    <i className="ri-cup-line" style={{ fontSize: 20, opacity: 0.5 }} />
+                    <TextField
+                      type="time"
+                      label="Start"
+                      value={breakRange.start}
+                      onChange={(e) => handleUpdateBreak(breakRange.id, 'start', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      size="small"
+                      sx={{ width: 120 }}
+                    />
+                    <Typography variant="body2" color="text.secondary">—</Typography>
+                    <TextField
+                      type="time"
+                      label="End"
+                      value={breakRange.end}
+                      onChange={(e) => handleUpdateBreak(breakRange.id, 'end', e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      size="small"
+                      sx={{ width: 120 }}
+                    />
+                    <Chip
+                      size="small"
+                      label={calculateDuration(breakRange.start, breakRange.end)}
+                      variant="outlined"
+                    />
+                    <Box sx={{ flexGrow: 1 }} />
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleRemoveBreak(breakRange.id)}
+                    >
+                      <i className="ri-delete-bin-line" />
+                    </IconButton>
                   </Box>
-                ) : (
-                  <List sx={{ p: 0 }}>
-                    {breaks.map((breakRange, index) => (
-                      <ListItem
-                        key={breakRange.id}
-                        sx={{
-                          p: 2,
-                          mb: 1,
-                          bgcolor: 'background.paper',
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1
-                        }}
-                      >
-                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
-                          <i className="ri-cup-line" style={{ fontSize: 20, opacity: 0.5 }} />
-                          <TextField
-                            type="time"
-                            label="Start"
-                            value={breakRange.start}
-                            onChange={(e) => handleUpdateBreak(breakRange.id, 'start', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            size="small"
-                            sx={{ width: 120 }}
-                          />
-                          <Typography variant="body2" color="text.secondary">—</Typography>
-                          <TextField
-                            type="time"
-                            label="End"
-                            value={breakRange.end}
-                            onChange={(e) => handleUpdateBreak(breakRange.id, 'end', e.target.value)}
-                            InputLabelProps={{ shrink: true }}
-                            size="small"
-                            sx={{ width: 120 }}
-                          />
-                          <Chip
-                            size="small"
-                            label={calculateDuration(breakRange.start, breakRange.end)}
-                            variant="outlined"
-                          />
-                          <Box sx={{ flexGrow: 1 }} />
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemoveBreak(breakRange.id)}
-                          >
-                            <i className="ri-delete-bin-line" />
-                          </IconButton>
-                        </Box>
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-              </Box>
-            </>
+                </ListItem>
+              ))}
+            </List>
           )}
         </Box>
       </DialogContent>

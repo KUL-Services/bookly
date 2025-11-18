@@ -33,6 +33,7 @@ import { useStaffManagementStore } from './staff-store'
 import { BusinessHoursModal } from './business-hours-modal'
 import { StaffEditWorkingHoursModal } from './staff-edit-working-hours-modal'
 import { TimeOffModal } from './time-off-modal'
+import { ShiftEditorModal } from './shift-editor-modal'
 import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -351,6 +352,17 @@ export function ShiftsTab() {
   const [staffMenuAnchor, setStaffMenuAnchor] = useState<null | HTMLElement>(null)
   const [staffMenuOpen, setStaffMenuOpen] = useState(false)
 
+  // ShiftEditorModal state
+  const [isShiftEditorOpen, setIsShiftEditorOpen] = useState(false)
+  const [shiftEditorContext, setShiftEditorContext] = useState<{
+    staffId: string
+    staffName: string
+    date: Date
+    hasShift: boolean
+    startTime: string
+    endTime: string
+  } | null>(null)
+
   // Calendar popover state
   const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
   const calendarOpen = Boolean(calendarAnchor)
@@ -398,6 +410,33 @@ export function ShiftsTab() {
   const handleOpenTimeOffModal = () => {
     setIsTimeOffModalOpen(true)
     handleCloseStaffMenu()
+  }
+
+  const openShiftEditor = (
+    staff: { id: string; name: string },
+    date: Date,
+    existingShift?: { start: string; end: string } | null
+  ) => {
+    setShiftEditorContext({
+      staffId: staff.id,
+      staffName: staff.name,
+      date,
+      hasShift: !!existingShift,
+      startTime: existingShift?.start || '10:00',
+      endTime: existingShift?.end || '19:00'
+    })
+    setIsShiftEditorOpen(true)
+  }
+
+  const closeShiftEditor = () => {
+    setIsShiftEditorOpen(false)
+    setShiftEditorContext(null)
+  }
+
+  const handleShiftEditorSave = (data: { hasShift: boolean; startTime: string; endTime: string; breaks: any[] }) => {
+    console.log('Saving shift data:', data, 'for context:', shiftEditorContext)
+    // Here you would update your shift data store
+    // For now, just log the data
   }
 
   const handleOpenCalendar = (event: React.MouseEvent<HTMLElement>) => {
@@ -473,6 +512,17 @@ export function ShiftsTab() {
         </Select>
       </FormControl>
 
+      <FormControl size='small' sx={{ minWidth: 120 }}>
+        <Select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)}>
+          <MenuItem value='Staff'>Staff</MenuItem>
+          {mockStaff.slice(0, 2).map(staff => (
+            <MenuItem key={staff.id} value={staff.name}>
+              {staff.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
       <FormControlLabel
         control={<Checkbox checked={bulkMode} onChange={e => setBulkMode(e.target.checked)} color='primary' />}
         label='Bulk Edit'
@@ -520,7 +570,7 @@ export function ShiftsTab() {
               {getDateDisplay()}
             </Typography>
             <Typography variant='caption' color='text.secondary'>
-              Closed
+              10:00 am – 7:00 pm
             </Typography>
           </Box>
           <i className='ri-arrow-down-s-line' style={{ fontSize: '1.2rem' }} />
@@ -532,17 +582,14 @@ export function ShiftsTab() {
 
       <Box sx={{ flexGrow: 1 }} />
 
+      <Button variant='outlined' startIcon={<i className='ri-file-copy-line' />} size='small'>
+        COPY
+      </Button>
       <Tooltip title='Print Schedule'>
         <IconButton size='small' onClick={handlePrint}>
           <i className='ri-printer-line' />
         </IconButton>
       </Tooltip>
-      {/* <Button variant='outlined' startIcon={<i className='ri-file-copy-line' />}>
-        COPY
-      </Button>
-      <Button variant='contained' startIcon={<i className='ri-save-line' />}>
-        SAVE
-      </Button> */}
     </Box>
   )
 
@@ -552,8 +599,13 @@ export function ShiftsTab() {
       req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, selectedDate)
     )
 
+    // Mock shift data - in real implementation, this would come from your data store
+    const hasShift = !timeOff && staff.id !== '3' // Demo: staff with id '3' has no shift
+    const shiftStart = '10:00 AM'
+    const shiftEnd = '7:00 PM'
+
     return (
-      <Box key={staff.id} sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 60 }}>
+      <Box key={staff.id} sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 80 }}>
         <Box sx={{ width: 200, display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
           {bulkMode && <Checkbox checked={isSelected} onChange={() => toggleStaffSelection(staff.id)} size='small' />}
 
@@ -572,31 +624,93 @@ export function ShiftsTab() {
           </Box>
         </Box>
 
-        <DroppableTimeSlot
-          dropData={{
-            type: 'timeSlot',
-            timeSlot: '10:00-19:00',
-            date: selectedDate
-          }}
-        >
-          {!timeOff && (
-            <DraggableShift
-              shiftData={{
-                type: 'shift',
-                staffId: staff.id,
-                shiftId: 'main-shift',
-                originalTime: { start: '10:00', end: '19:00' }
+        <Box sx={{ flex: 1, position: 'relative', m: 1 }}>
+          {hasShift && !timeOff && (
+            <Box
+              onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, { start: shiftStart, end: shiftEnd })}
+              sx={{
+                position: 'absolute',
+                left: `${timeToPosition(shiftStart)}%`,
+                width: `${calculateWidth(shiftStart, shiftEnd)}%`,
+                top: 0,
+                bottom: 0,
+                bgcolor: 'rgba(139, 195, 74, 0.3)',
+                borderRadius: 1,
+                border: 1,
+                borderColor: 'success.light',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: 'rgba(139, 195, 74, 0.4)',
+                  borderColor: 'success.main'
+                }
               }}
-              onEdit={() => handleOpenWorkingHoursModal()}
             >
-              <Typography variant='body2' fontWeight={500} color='text.primary'>
-                10:00 am - 7:00 pm
+              <Typography variant='caption' fontWeight={500} color='text.primary'>
+                10:00 am
               </Typography>
-              <IconButton size='small' sx={{ ml: 'auto', mr: 1, color: 'text.primary' }}>
-                <i className='ri-drag-move-line' style={{ fontSize: 16 }} />
+              <Typography variant='caption' fontWeight={500} color='text.primary'>
+                7:00 pm
+              </Typography>
+              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
+                9h/9h
+              </Typography>
+              <IconButton
+                size='small'
+                sx={{ position: 'absolute', top: 2, right: 2, color: 'text.primary' }}
+                onClick={e => {
+                  e.stopPropagation()
+                  openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, { start: shiftStart, end: shiftEnd })
+                }}
+              >
+                <i className='ri-edit-line' style={{ fontSize: 14 }} />
               </IconButton>
-            </DraggableShift>
+            </Box>
           )}
+
+          {!hasShift && !timeOff && (
+            <Box
+              onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, null)}
+              sx={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+                bgcolor: 'rgba(0, 0, 0, 0.02)',
+                borderRadius: 1,
+                border: 1,
+                borderColor: 'divider',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.04)'
+                }
+              }}
+            >
+              <Typography variant='body2' color='text.secondary'>
+                No Shift
+              </Typography>
+              <IconButton
+                size='small'
+                sx={{ position: 'absolute', top: 2, right: 2, color: 'text.secondary' }}
+                onClick={e => {
+                  e.stopPropagation()
+                  openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, null)
+                }}
+              >
+                <i className='ri-edit-line' style={{ fontSize: 14 }} />
+              </IconButton>
+            </Box>
+          )}
+
           {timeOff && (
             <Box
               sx={{
@@ -617,7 +731,7 @@ export function ShiftsTab() {
               </Typography>
             </Box>
           )}
-        </DroppableTimeSlot>
+        </Box>
       </Box>
     )
   }
@@ -700,6 +814,39 @@ export function ShiftsTab() {
             {displayStaff.map(renderEnhancedStaffRow)}
           </Box>
 
+          {/* Day View Footer */}
+          <Box
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 2,
+              borderTop: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper'
+            }}
+          >
+            <Button
+              variant='outlined'
+              size='small'
+              onClick={() => setSelectedDate(new Date())}
+              sx={{ borderRadius: 2, textTransform: 'uppercase', px: 3 }}
+            >
+              Today
+            </Button>
+            <Box sx={{ flex: 1 }} />
+            <Button
+              variant='contained'
+              color='error'
+              startIcon={<i className='ri-calendar-close-line' />}
+              onClick={() => setIsTimeOffModalOpen(true)}
+              sx={{ textTransform: 'uppercase' }}
+            >
+              Add Time Off
+            </Button>
+          </Box>
+
           <BulkOperationsDialog
             open={bulkDialogOpen}
             onClose={() => setBulkDialogOpen(false)}
@@ -740,6 +887,17 @@ export function ShiftsTab() {
           )}
 
           <TimeOffModal open={isTimeOffModalOpen} onClose={() => setIsTimeOffModalOpen(false)} />
+
+          <ShiftEditorModal
+            open={isShiftEditorOpen}
+            onClose={closeShiftEditor}
+            staffName={shiftEditorContext?.staffName}
+            date={shiftEditorContext?.date}
+            hasShift={shiftEditorContext?.hasShift}
+            initialStartTime={shiftEditorContext?.startTime}
+            initialEndTime={shiftEditorContext?.endTime}
+            onSave={handleShiftEditorSave}
+          />
 
           {/* Print Content - Hidden on screen, visible when printing */}
           <Box
@@ -1044,10 +1202,23 @@ export function ShiftsTab() {
             <Box
               sx={{ height: 70, display: 'flex', alignItems: 'center', px: 2, borderBottom: 1, borderColor: 'divider' }}
             >
-              <Typography variant='body2' fontWeight={600}>
-                Business Hours
-              </Typography>
-              <IconButton size='small' onClick={handleOpenBusinessHoursModal} sx={{ ml: 'auto' }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant='body2' fontWeight={600}>
+                  Business Hours
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
+                  <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                    D 0h
+                  </Typography>
+                  <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                    W 0h
+                  </Typography>
+                  <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                    M 50h 35min
+                  </Typography>
+                </Box>
+              </Box>
+              <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
                 <i className='ri-edit-line' style={{ fontSize: 16 }} />
               </IconButton>
             </Box>
@@ -1086,7 +1257,7 @@ export function ShiftsTab() {
           </Box>
 
           {weekDates.map((date, dayIndex) => {
-            const isToday = isSameDay(date, new Date())
+            const isSelected = isSameDay(date, selectedDate)
             const dayName = WEEK_DAYS[dayIndex]
 
             return (
@@ -1097,10 +1268,11 @@ export function ShiftsTab() {
                   flexShrink: 0,
                   borderRight: 1,
                   borderColor: 'divider',
-                  bgcolor: isToday ? 'rgba(20, 184, 166, 0.05)' : 'transparent'
+                  bgcolor: isSelected ? 'rgba(20, 184, 166, 0.05)' : 'transparent'
                 }}
               >
                 <Box
+                  onClick={() => setSelectedDate(date)}
                   sx={{
                     height: 60,
                     display: 'flex',
@@ -1109,8 +1281,13 @@ export function ShiftsTab() {
                     justifyContent: 'center',
                     borderBottom: 1,
                     borderColor: 'divider',
-                    bgcolor: isToday ? 'primary.main' : 'transparent',
-                    color: isToday ? 'white' : 'text.primary'
+                    bgcolor: isSelected ? 'primary.main' : 'transparent',
+                    color: isSelected ? 'white' : 'text.primary',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: isSelected ? 'primary.main' : 'action.hover'
+                    }
                   }}
                 >
                   <Typography variant='caption' fontWeight={600}>
@@ -1155,6 +1332,9 @@ export function ShiftsTab() {
                     req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
                   )
 
+                  // Mock shift data - in real implementation, this would come from your data store
+                  const hasShift = !timeOff && staff.id !== '3' // Demo: staff with id '3' has no shift
+
                   return (
                     <Box
                       key={staff.id}
@@ -1170,20 +1350,27 @@ export function ShiftsTab() {
                         p: 1
                       }}
                     >
-                      {!timeOff && (
+                      {hasShift && !timeOff && (
                         <Box
+                          onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, { start: '10:00 AM', end: '7:00 PM' })}
                           sx={{
                             width: '100%',
                             height: '100%',
-                            bgcolor: staff.id === '1' ? 'rgba(139, 195, 74, 0.3)' : 'rgba(255, 193, 7, 0.3)',
+                            bgcolor: 'rgba(139, 195, 74, 0.3)',
                             borderRadius: 1,
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
                             border: 1,
-                            borderColor: staff.id === '1' ? 'success.light' : 'warning.light',
-                            p: 0.5
+                            borderColor: 'success.light',
+                            p: 0.5,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: 'rgba(139, 195, 74, 0.4)',
+                              borderColor: 'success.main'
+                            }
                           }}
                         >
                           <Typography variant='caption' fontWeight={500} color='text.primary'>
@@ -1198,7 +1385,45 @@ export function ShiftsTab() {
                           <IconButton
                             size='small'
                             sx={{ position: 'absolute', top: 2, right: 2, color: 'text.primary' }}
-                            onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}
+                            onClick={e => {
+                              e.stopPropagation()
+                              openShiftEditor({ id: staff.id, name: staff.name }, date, { start: '10:00 AM', end: '7:00 PM' })
+                            }}
+                          >
+                            <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                          </IconButton>
+                        </Box>
+                      )}
+                      {!hasShift && !timeOff && (
+                        <Box
+                          onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, null)}
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            bgcolor: 'background.paper',
+                            borderRadius: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: 1,
+                            borderColor: 'divider',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: 'rgba(0, 0, 0, 0.02)'
+                            }
+                          }}
+                        >
+                          <Typography variant='body2' color='text.secondary'>
+                            No Shift
+                          </Typography>
+                          <IconButton
+                            size='small'
+                            sx={{ position: 'absolute', top: 2, right: 2, color: 'text.secondary' }}
+                            onClick={e => {
+                              e.stopPropagation()
+                              openShiftEditor({ id: staff.id, name: staff.name }, date, null)
+                            }}
                           >
                             <i className='ri-edit-line' style={{ fontSize: 14 }} />
                           </IconButton>
@@ -1234,6 +1459,39 @@ export function ShiftsTab() {
             )
           })}
         </Box>
+      </Box>
+
+      {/* Week View Footer */}
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 2,
+          borderTop: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper'
+        }}
+      >
+        <Button
+          variant='outlined'
+          size='small'
+          onClick={() => setSelectedDate(startOfWeek(new Date()))}
+          sx={{ borderRadius: 2, textTransform: 'uppercase', px: 3 }}
+        >
+          Current Week
+        </Button>
+        <Box sx={{ flex: 1 }} />
+        <Button
+          variant='contained'
+          color='error'
+          startIcon={<i className='ri-calendar-close-line' />}
+          onClick={() => setIsTimeOffModalOpen(true)}
+          sx={{ textTransform: 'uppercase' }}
+        >
+          Add Time Off
+        </Button>
       </Box>
 
       <BulkOperationsDialog
@@ -1276,6 +1534,17 @@ export function ShiftsTab() {
       )}
 
       <TimeOffModal open={isTimeOffModalOpen} onClose={() => setIsTimeOffModalOpen(false)} />
+
+      <ShiftEditorModal
+        open={isShiftEditorOpen}
+        onClose={closeShiftEditor}
+        staffName={shiftEditorContext?.staffName}
+        date={shiftEditorContext?.date}
+        hasShift={shiftEditorContext?.hasShift}
+        initialStartTime={shiftEditorContext?.startTime}
+        initialEndTime={shiftEditorContext?.endTime}
+        onSave={handleShiftEditorSave}
+      />
 
       {/* Print Content - Hidden on screen, visible when printing */}
       <Box
