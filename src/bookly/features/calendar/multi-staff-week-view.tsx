@@ -222,18 +222,19 @@ export default function MultiStaffWeekView({
                     flexDirection: 'column',
                     gap: { xs: 0.5, md: 0.75 },
                     bgcolor: isToday(day) ? (isDark ? 'rgba(144,202,249,0.03)' : 'rgba(25,118,210,0.03)') : 'transparent',
-                    cursor: dayEvents.length === 0 ? 'pointer' : 'default',
+                    cursor: 'pointer',
                     transition: 'background-color 0.2s',
-                    '&:hover': dayEvents.length === 0 ? {
+                    '&:hover': {
                       bgcolor: isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)'
-                    } : {},
+                    },
                     minWidth: 0,
                     overflow: 'visible',
                     position: 'relative'
                   }}
                   onClick={(e) => {
-                    // Only navigate if clicking on empty space
-                    if (dayEvents.length === 0) {
+                    // Only navigate if clicking on the cell itself (not on an event)
+                    const target = e.target as HTMLElement
+                    if (target === e.currentTarget || !target.closest('[data-event-card]')) {
                       onCellClick?.(staff.id, day)
                     }
                   }}
@@ -251,6 +252,7 @@ export default function MultiStaffWeekView({
                         return (
                           <Box
                             key={event.id}
+                            data-event-card
                             onClick={(e) => {
                               e.stopPropagation()
                               onEventClick?.(event)

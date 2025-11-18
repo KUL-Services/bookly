@@ -1,8 +1,9 @@
 'use client'
 
-import { Box, Typography, Avatar, Button } from '@mui/material'
+import { Box, Typography, Avatar, Button, Select, MenuItem, FormControl } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday } from 'date-fns'
+import { useState, useEffect } from 'react'
 import { useCalendarStore } from './state'
 import { buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
@@ -14,6 +15,8 @@ interface SingleStaffWeekViewProps {
   onEventClick?: (event: CalendarEvent) => void
   onBack?: () => void
   onDateClick?: (date: Date) => void
+  staffOptions?: Array<{ id: string; name: string; photo?: string }>
+  onStaffChange?: (staffId: string) => void
 }
 
 export default function SingleStaffWeekView({
@@ -22,11 +25,24 @@ export default function SingleStaffWeekView({
   currentDate,
   onEventClick,
   onBack,
-  onDateClick
+  onDateClick,
+  staffOptions = [],
+  onStaffChange
 }: SingleStaffWeekViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const colorScheme = useCalendarStore(state => state.colorScheme)
+
+  // Current time tracking for live indicator
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [])
 
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
@@ -47,6 +63,24 @@ export default function SingleStaffWeekView({
     return eventDate >= weekStart && eventDate <= weekEnd
   })
 
+  // Calculate current time indicator position for a given day
+  const getCurrentTimeIndicator = (day: Date) => {
+    if (!isToday(day)) return null
+
+    const now = currentTime
+    const hours = now.getHours()
+    const minutes = now.getMinutes()
+
+    // Only show if within working hours (6 AM to 10 PM)
+    if (hours < 6 || hours >= 22) return null
+
+    return {
+      time: format(now, 'h:mm a'),
+      hours,
+      minutes
+    }
+  }
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       {/* Header with back button and staff info */}
@@ -61,17 +95,56 @@ export default function SingleStaffWeekView({
           gap: 2
         }}
       >
-        {onBack && (
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<i className="ri-arrow-left-line" />}
-            onClick={onBack}
-            sx={{ flexShrink: 0 }}
-          >
-            All Staff
-          </Button>
-        )}
+        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+          {onBack && (
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<i className="ri-arrow-left-line" />}
+              onClick={onBack}
+            >
+              All Staff
+            </Button>
+          )}
+
+          {staffOptions.length > 0 && onStaffChange && onBack && (
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <Select
+                value={staff.id}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value === 'all-staff') {
+                    onBack()
+                  } else {
+                    onStaffChange(value)
+                  }
+                }}
+                displayEmpty
+                sx={{ fontSize: '0.875rem' }}
+              >
+                <MenuItem value="all-staff">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <i className="ri-group-line" style={{ fontSize: '1.25rem' }} />
+                    <Typography variant="body2" fontWeight={600}>All Staff</Typography>
+                  </Box>
+                </MenuItem>
+                {staffOptions.map((option) => (
+                  <MenuItem key={option.id} value={option.id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Avatar
+                        src={option.photo}
+                        sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
+                      >
+                        {option.name.split(' ').map(n => n[0]).join('')}
+                      </Avatar>
+                      <Typography variant="body2">{option.name}</Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
           <Avatar
@@ -109,6 +182,7 @@ export default function SingleStaffWeekView({
         >
           {weekDays.map(day => {
             const dayEvents = getDayEvents(day)
+            const timeIndicator = getCurrentTimeIndicator(day)
 
             return (
               <Box
@@ -165,15 +239,77 @@ export default function SingleStaffWeekView({
                     sx={{
                       display: 'block',
                       color: isToday(day) ? 'primary.contrastText' : 'text.secondary',
-                      opacity: 0.8
+                      opacity: 0.8,
+                      mb: 0.25
                     }}
                   >
                     {dayEvents.length} appointment{dayEvents.length !== 1 ? 's' : ''}
                   </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: 'block',
+                      color: isToday(day) ? 'primary.contrastText' : 'text.secondary',
+                      opacity: 0.7,
+                      fontSize: '0.65rem'
+                    }}
+                  >
+                    {staff.workingHours || '10:00 AM-7:00 PM'}
+                  </Typography>
                 </Box>
 
                 {/* Day events */}
-                <Box sx={{ flex: 1, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1, overflow: 'auto' }}>
+                <Box sx={{ flex: 1, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1, overflow: 'auto', position: 'relative' }}>
+                  {/* Current time indicator */}
+                  {timeIndicator && (
+                    <Box
+                      sx={{
+                        position: 'sticky',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '2px',
+                        bgcolor: '#ef4444',
+                        zIndex: 100,
+                        mb: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          left: 0,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          bgcolor: '#ef4444'
+                        }
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          position: 'absolute',
+                          left: 16,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          bgcolor: '#ef4444',
+                          color: 'white',
+                          px: 1,
+                          py: 0.25,
+                          borderRadius: 0.5,
+                          fontSize: '0.7rem',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                          boxShadow: 2
+                        }}
+                      >
+                        {timeIndicator.time}
+                      </Typography>
+                    </Box>
+                  )}
+
                   {dayEvents.length === 0 ? (
                     <Box
                       sx={{

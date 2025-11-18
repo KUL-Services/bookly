@@ -1,9 +1,9 @@
 'use client'
 
-import { Box, Typography, IconButton, Avatar, Button, Chip } from '@mui/material'
+import { Box, Typography, IconButton, Avatar, Button, Chip, Select, MenuItem, FormControl } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import { format, isSameDay } from 'date-fns'
-import { useState, useRef } from 'react'
+import { format, isSameDay, isToday } from 'date-fns'
+import { useState, useRef, useEffect } from 'react'
 import { useCalendarStore } from './state'
 import { getBranchName, buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
@@ -20,6 +20,8 @@ interface SingleStaffDayViewProps {
     jsEvent?: MouseEvent,
     dimensions?: { top: number; left: number; width: number; height: number } | null
   ) => void
+  staffOptions?: Array<{ id: string; name: string; photo?: string }>
+  onStaffChange?: (staffId: string) => void
 }
 
 export default function SingleStaffDayView({
@@ -28,7 +30,9 @@ export default function SingleStaffDayView({
   currentDate,
   onEventClick,
   onBack,
-  onTimeRangeSelect
+  onTimeRangeSelect,
+  staffOptions = [],
+  onStaffChange
 }: SingleStaffDayViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
@@ -46,18 +50,30 @@ export default function SingleStaffDayView({
     event => isSameDay(new Date(event.start), currentDate) && event.extendedProps.staffId === staff.id
   )
 
-  // Generate time slots (6 AM to 10 PM, 30 min intervals)
+  // Generate time slots (6 AM to 10 PM, 15 min intervals)
   const timeSlots: Date[] = []
   const startHour = 6
   const endHour = 22
+  const minutesPerSlot = 15
 
   for (let hour = startHour; hour < endHour; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
+    for (let minute = 0; minute < 60; minute += minutesPerSlot) {
       const slot = new Date(currentDate)
       slot.setHours(hour, minute, 0, 0)
       timeSlots.push(slot)
     }
   }
+
+  // Current time tracking for live indicator
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [])
 
   // Calculate event position and height
   const getEventStyle = (event: CalendarEvent) => {
@@ -65,19 +81,35 @@ export default function SingleStaffDayView({
     const end = new Date(event.end)
     const startMinutes = start.getHours() * 60 + start.getMinutes() - startHour * 60
     const duration = (end.getTime() - start.getTime()) / (1000 * 60)
-    const slotHeight = 80 // 80px per 30 min slot
-    const top = (startMinutes / 30) * slotHeight
-    const height = (duration / 30) * slotHeight
+    const slotHeight = 40 // 40px per 15 min slot
+    const top = (startMinutes / minutesPerSlot) * slotHeight
+    const height = (duration / minutesPerSlot) * slotHeight
 
     return { top, height }
   }
 
+  // Calculate current time indicator position
+  const getCurrentTimePosition = () => {
+    if (!isToday(currentDate)) return null
+
+    const now = currentTime
+    const currentMinutes = now.getHours() * 60 + now.getMinutes() - startHour * 60
+
+    // Only show if within working hours
+    if (currentMinutes < 0 || currentMinutes > (endHour - startHour) * 60) return null
+
+    const slotHeight = 40 // 40px per 15 min slot
+    const top = (currentMinutes / minutesPerSlot) * slotHeight
+
+    return { top, time: format(now, 'h:mm a') }
+  }
+
   // Convert Y position to time in minutes from start hour
   const getMinutesFromY = (y: number): number => {
-    const slotHeight = 80 // 80px per 30 min slot
-    const minutes = Math.floor((y / slotHeight) * 30)
+    const slotHeight = 40 // 40px per 15 min slot
+    const minutes = Math.floor((y / slotHeight) * minutesPerSlot)
     // Round to nearest 15 minutes
-    return Math.round(minutes / 15) * 15
+    return Math.round(minutes / minutesPerSlot) * minutesPerSlot
   }
 
   // Convert minutes to Date object
@@ -163,12 +195,14 @@ export default function SingleStaffDayView({
 
     const startMinutes = Math.min(dragStart, dragEnd)
     const endMinutes = Math.max(dragStart, dragEnd)
-    const slotHeight = 80 // 80px per 30 min slot
-    const top = (startMinutes / 30) * slotHeight
-    const height = ((endMinutes - startMinutes) / 30) * slotHeight
+    const slotHeight = 40 // 40px per 15 min slot
+    const top = (startMinutes / minutesPerSlot) * slotHeight
+    const height = ((endMinutes - startMinutes) / minutesPerSlot) * slotHeight
 
     return { top, height }
   }
+
+  const currentTimeIndicator = getCurrentTimePosition()
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
@@ -184,17 +218,56 @@ export default function SingleStaffDayView({
           gap: 2
         }}
       >
-        {onBack && (
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<i className="ri-arrow-left-line" />}
-            onClick={onBack}
-            sx={{ flexShrink: 0 }}
-          >
-            All Staff
-          </Button>
-        )}
+        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+          {onBack && (
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<i className="ri-arrow-left-line" />}
+              onClick={onBack}
+            >
+              All Staff
+            </Button>
+          )}
+
+          {staffOptions.length > 0 && onStaffChange && onBack && (
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <Select
+                value={staff.id}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value === 'all-staff') {
+                    onBack()
+                  } else {
+                    onStaffChange(value)
+                  }
+                }}
+                displayEmpty
+                sx={{ fontSize: '0.875rem' }}
+              >
+                <MenuItem value="all-staff">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <i className="ri-group-line" style={{ fontSize: '1.25rem' }} />
+                    <Typography variant="body2" fontWeight={600}>All Staff</Typography>
+                  </Box>
+                </MenuItem>
+                {staffOptions.map((option) => (
+                  <MenuItem key={option.id} value={option.id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Avatar
+                        src={option.photo}
+                        sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
+                      >
+                        {option.name.split(' ').map(n => n[0]).join('')}
+                      </Avatar>
+                      <Typography variant="body2">{option.name}</Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
           <Avatar
@@ -248,26 +321,45 @@ export default function SingleStaffDayView({
         >
           {/* Time slots column */}
           <Box sx={{ borderRight: 1, borderColor: 'divider', bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
-            {timeSlots.map((slot, index) => (
-              <Box
-                key={index}
-                sx={{
-                  height: 80,
-                  borderBottom: 1,
-                  borderColor: 'divider',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'center',
-                  pt: 1
-                }}
-              >
-                {slot.getMinutes() === 0 && (
-                  <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                    {format(slot, 'h a')}
-                  </Typography>
-                )}
-              </Box>
-            ))}
+            {timeSlots.map((slot, index) => {
+              const minutes = slot.getMinutes()
+              const showDashedLine = minutes === 15 || minutes === 30 || minutes === 45
+
+              return (
+                <Box
+                  key={index}
+                  sx={{
+                    height: 40,
+                    borderBottom: minutes === 0 ? 1 : 0,
+                    borderColor: 'divider',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'center',
+                    pt: minutes === 0 ? 0 : 0.5,
+                    position: 'relative',
+                    '&::after': showDashedLine ? {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '1px',
+                      backgroundImage: isDark
+                        ? 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.12) 100%)'
+                        : 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.12) 100%)',
+                      backgroundSize: '8px 1px',
+                      backgroundRepeat: 'repeat-x'
+                    } : {}
+                  }}
+                >
+                  {minutes === 0 && (
+                    <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.7rem', mt: -0.5 }}>
+                      {format(slot, 'h a')}
+                    </Typography>
+                  )}
+                </Box>
+              )
+            })}
           </Box>
 
           {/* Events column */}
@@ -284,16 +376,77 @@ export default function SingleStaffDayView({
             }}
           >
             {/* Time slot grid lines */}
-            {timeSlots.map((slot, index) => (
+            {timeSlots.map((slot, index) => {
+              const minutes = slot.getMinutes()
+              const showDashedLine = minutes === 15 || minutes === 30 || minutes === 45
+
+              return (
+                <Box
+                  key={index}
+                  sx={{
+                    height: 40,
+                    borderBottom: minutes === 0 ? 1 : 0,
+                    borderColor: 'divider',
+                    position: 'relative',
+                    '&::after': showDashedLine ? {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '1px',
+                      backgroundImage: isDark
+                        ? 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.12) 100%)'
+                        : 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.12) 100%)',
+                      backgroundSize: '8px 1px',
+                      backgroundRepeat: 'repeat-x'
+                    } : {}
+                  }}
+                />
+              )
+            })}
+
+            {/* Current time indicator */}
+            {currentTimeIndicator && (
               <Box
-                key={index}
                 sx={{
-                  height: 80,
-                  borderBottom: 1,
-                  borderColor: 'divider'
+                  position: 'absolute',
+                  top: `${currentTimeIndicator.top}px`,
+                  left: 0,
+                  right: 0,
+                  height: '2px',
+                  bgcolor: '#ef4444',
+                  zIndex: 100,
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 0,
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    bgcolor: '#ef4444'
+                  },
+                  '&::after': {
+                    content: `"${currentTimeIndicator.time}"`,
+                    position: 'absolute',
+                    left: 16,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    bgcolor: '#ef4444',
+                    color: 'white',
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: 0.5,
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                    boxShadow: 2
+                  }
                 }}
               />
-            ))}
+            )}
 
             {/* Drag selection indicator */}
             {(() => {
@@ -408,6 +561,8 @@ export default function SingleStaffDayView({
                     overflow: 'hidden',
                     transition: 'all 0.2s',
                     boxShadow: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
                     '&:hover': {
                       boxShadow: 6,
                       transform: 'translateX(4px)',
@@ -422,7 +577,11 @@ export default function SingleStaffDayView({
                       fontWeight: 700,
                       color: colors.text,
                       fontSize: '0.75rem',
-                      mb: 0.5
+                      mb: 0.5,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      flexShrink: 0
                     }}
                   >
                     {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
@@ -434,7 +593,14 @@ export default function SingleStaffDayView({
                       color: colors.text,
                       fontSize: '0.95rem',
                       lineHeight: 1.4,
-                      mb: 0.5
+                      mb: 0.5,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      wordBreak: 'break-word',
+                      flexShrink: 1
                     }}
                   >
                     {event.extendedProps.starred && '⭐ '}
@@ -447,7 +613,11 @@ export default function SingleStaffDayView({
                       color: colors.text,
                       fontSize: '0.8rem',
                       opacity: 0.9,
-                      mb: height > 100 ? 0.5 : 0
+                      mb: height > 100 ? 0.5 : 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0
                     }}
                   >
                     {event.extendedProps.serviceName || event.title}
@@ -459,7 +629,8 @@ export default function SingleStaffDayView({
                         display: 'block',
                         color: colors.text,
                         fontSize: '0.7rem',
-                        opacity: 0.8
+                        opacity: 0.8,
+                        flexShrink: 0
                       }}
                     >
                       ${event.extendedProps.price}

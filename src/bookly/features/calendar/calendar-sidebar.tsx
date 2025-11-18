@@ -12,7 +12,12 @@ import {
   Divider,
   IconButton,
   Chip,
-  Avatar
+  Avatar,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  ToggleButtonGroup,
+  ToggleButton
 } from '@mui/material'
 import { Calendar } from '@/bookly/components/ui/calendar'
 import { useCalendarStore } from './state'
@@ -52,6 +57,17 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   const [pendingStaff, setPendingStaff] = useState<StaffFilter>(staffFilters)
   const [pendingRooms, setPendingRooms] = useState<RoomFilter>(roomFilters)
   const [pendingHighlights, setPendingHighlights] = useState<HighlightFilters>(highlights)
+
+  // Accordion expansion state
+  const [expandedAccordions, setExpandedAccordions] = useState<{ [key: string]: boolean }>({
+    branches: true,
+    staff: true,
+    rooms: true,
+    highlight: true
+  })
+
+  // Staff/Resources tab selection
+  const [resourceTab, setResourceTab] = useState<'staff' | 'resources'>('staff')
 
   useEffect(() => {
     setPendingBranches(branchFilters)
@@ -201,7 +217,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
   const handleClear = () => {
     const clearedBranches: BranchFilter = { allBranches: true, branchIds: [] }
-    const cleared: StaffFilter = { onlyMe: false, staffIds: [], selectedStaffId: null }
+    const cleared: StaffFilter = { onlyMe: false, staffIds: [], selectedStaffId: null, workingStaffOnly: false }
     const clearedRooms: RoomFilter = { allRooms: true, roomIds: [] }
     const clearedHighlights: HighlightFilters = { payments: [], statuses: [], selection: [], details: [] }
     setPendingBranches(clearedBranches)
@@ -223,6 +239,10 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     }
 
     onDateChange(date)
+  }
+
+  const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpandedAccordions(prev => ({ ...prev, [panel]: isExpanded }))
   }
 
   const SidebarContent = (
@@ -419,18 +439,62 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
           <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
             Jump By Week
           </Typography>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, mb: 1 }}>
-            {[1, 2, 3, 4, 5, 6].map(week => (
-              <Button key={`plus-${week}`} variant='outlined' size='small' onClick={() => handleJumpWeek(week)}>
-                +{week}
-              </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
+            {[1, 2, 3, 4, 5, 6].map((week, index) => (
+              <Box key={`plus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography
+                  variant='body2'
+                  onClick={() => handleJumpWeek(week)}
+                  sx={{
+                    cursor: 'pointer',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 0.5,
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                      color: 'primary.main'
+                    }
+                  }}
+                >
+                  +{week}
+                </Typography>
+                {index < 5 && (
+                  <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
+                    |
+                  </Typography>
+                )}
+              </Box>
             ))}
           </Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
-            {[-1, -2, -3, -4, -5, -6].map(week => (
-              <Button key={`minus-${week}`} variant='outlined' size='small' onClick={() => handleJumpWeek(week)}>
-                {week}
-              </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+            {[-1, -2, -3, -4, -5, -6].map((week, index) => (
+              <Box key={`minus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography
+                  variant='body2'
+                  onClick={() => handleJumpWeek(week)}
+                  sx={{
+                    cursor: 'pointer',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 0.5,
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                      color: 'primary.main'
+                    }
+                  }}
+                >
+                  {week}
+                </Typography>
+                {index < 5 && (
+                  <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
+                    |
+                  </Typography>
+                )}
+              </Box>
             ))}
           </Box>
         </Box>
@@ -438,307 +502,465 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
         <Divider sx={{ my: 2 }} />
 
         {/* Branches */}
-        <Box sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-            <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <i className='ri-map-pin-line' style={{ fontSize: '1.1rem' }} />
-              Branches
-            </Typography>
-            {!pendingBranches.allBranches && pendingBranches.branchIds.length > 0 && (
-              <Button
-                variant='text'
-                size='small'
-                onClick={() => setPendingBranches({ allBranches: true, branchIds: [] })}
-                sx={{ minWidth: 'auto', p: 0.5 }}
-              >
-                <i className='ri-close-circle-line' style={{ fontSize: '1.1rem' }} />
-              </Button>
-            )}
-          </Box>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={pendingBranches.allBranches}
-                  onChange={() => handleAllBranches()}
-                />
-              }
-              label={<Typography variant='body2' sx={{ fontWeight: 500 }}>All Branches</Typography>}
-            />
-            {branches.map(branch => (
-              <FormControlLabel
-                key={branch.id}
-                control={
-                  <Checkbox
-                    checked={pendingBranches.branchIds.includes(branch.id)}
-                    onChange={() => handleBranchToggle(branch.id)}
-                  />
-                }
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                    <Typography variant='body2'>{branch.name}</Typography>
-                    <Chip
-                      label={`${branch.staffCount} staff`}
-                      size='small'
-                      sx={{
-                        height: 20,
-                        fontSize: '0.7rem',
-                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
-                        color: theme => theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)'
-                      }}
-                    />
-                  </Box>
-                }
-              />
-            ))}
-          </FormGroup>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Staff and Resources */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <i className='ri-user-line' style={{ fontSize: '1.1rem' }} />
-            Staff Members
-          </Typography>
-
-          {/* Back to All Staff button (shown in single-staff view) */}
-          {staffFilters.selectedStaffId && previousStaffFilters && (
-            <Button
-              variant='outlined'
-              size='small'
-              fullWidth
-              onClick={goBackToAllStaff}
-              startIcon={<i className='ri-arrow-left-line' />}
-              sx={{ mb: 2 }}
-            >
-              Back to All Staff
-            </Button>
-          )}
-
-          <FormGroup>
-            <FormControlLabel
-              control={<Checkbox checked={pendingStaff.onlyMe} onChange={e => handleOnlyMeChange(e.target.checked)} />}
-              label={<Typography variant='body2' sx={{ fontWeight: 500 }}>Only me</Typography>}
-            />
-            <Button
-              variant='text'
-              size='small'
-              onClick={handleSelectAllStaff}
-              disabled={pendingStaff.onlyMe}
-              sx={{ justifyContent: 'flex-start', mb: 1 }}
-            >
-              Select All
-            </Button>
-            {availableStaff.map(staff => {
-              const branch = branches.find(b => b.id === staff.branchId)
-              return (
-                <FormControlLabel
-                  key={staff.id}
-                  control={
-                    <Checkbox
-                      checked={pendingStaff.staffIds.includes(staff.id)}
-                      onChange={() => handleStaffToggle(staff.id)}
-                      disabled={pendingStaff.onlyMe}
-                    />
-                  }
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
-                      <Avatar
-                        src={staff.photo}
-                        alt={staff.name}
-                        sx={{ width: 24, height: 24 }}
-                      />
-                      <Typography variant='body2'>{staff.name}</Typography>
-                      {branch && (
-                        <Chip
-                          icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
-                          label={branch.name}
-                          size='small'
-                          variant='outlined'
-                          sx={{
-                            height: 18,
-                            fontSize: '0.65rem',
-                            ml: 'auto',
-                            '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
-                          }}
-                        />
-                      )}
-                    </Box>
-                  }
-                />
-              )
-            })}
-          </FormGroup>
-        </Box>
-
-        {/* Rooms (only in static scheduling mode) */}
-        {schedulingMode === 'static' && (
-          <>
-            <Divider sx={{ my: 2 }} />
-
-            <Box sx={{ mb: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <i className='ri-door-line' style={{ fontSize: '1.1rem' }} />
-                  Rooms
-                </Typography>
-                {!pendingRooms.allRooms && pendingRooms.roomIds.length > 0 && (
-                  <Button
-                    variant='text'
-                    size='small'
-                    onClick={() => setPendingRooms({ allRooms: true, roomIds: [] })}
-                    sx={{ minWidth: 'auto', p: 0.5 }}
-                  >
-                    <i className='ri-close-circle-line' style={{ fontSize: '1.1rem' }} />
-                  </Button>
-                )}
-              </Box>
-              <FormGroup>
-                <FormControlLabel
-                  control={<Checkbox checked={pendingRooms.allRooms} onChange={handleAllRooms} />}
-                  label={<Typography variant='body2' sx={{ fontWeight: 500 }}>All Rooms</Typography>}
-                />
+        <Accordion
+          expanded={expandedAccordions.branches}
+          onChange={handleAccordionChange('branches')}
+          sx={{
+            mb: 2,
+            '&:before': { display: 'none' },
+            boxShadow: 'none',
+            bgcolor: 'transparent'
+          }}
+        >
+          <AccordionSummary
+            expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
+            sx={{
+              minHeight: 48,
+              px: 0,
+              '& .MuiAccordionSummary-content': { my: 1 }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 1 }}>
+              <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <i className='ri-map-pin-line' style={{ fontSize: '1.1rem' }} />
+                Branches
+              </Typography>
+              {!pendingBranches.allBranches && pendingBranches.branchIds.length > 0 && (
                 <Button
                   variant='text'
                   size='small'
-                  onClick={handleSelectAllRooms}
-                  sx={{ justifyContent: 'flex-start', mb: 1 }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPendingBranches({ allBranches: true, branchIds: [] })
+                  }}
+                  sx={{ minWidth: 'auto', p: 0.5 }}
                 >
-                  Select All
+                  <i className='ri-close-circle-line' style={{ fontSize: '1.1rem' }} />
                 </Button>
-                {availableRooms.map(room => {
-                  const branch = branches.find(b => b.id === room.branchId)
-                  return (
-                    <FormControlLabel
-                      key={room.id}
-                      control={
-                        <Checkbox
-                          checked={pendingRooms.roomIds.includes(room.id)}
-                          onChange={() => handleRoomToggle(room.id)}
+              )}
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingBranches.allBranches}
+                    onChange={() => handleAllBranches()}
+                  />
+                }
+                label={<Typography variant='body2' sx={{ fontWeight: 500 }}>All Branches</Typography>}
+              />
+              {branches.map(branch => (
+                <FormControlLabel
+                  key={branch.id}
+                  control={
+                    <Checkbox
+                      checked={pendingBranches.branchIds.includes(branch.id)}
+                      onChange={() => handleBranchToggle(branch.id)}
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                      <Typography variant='body2'>{branch.name}</Typography>
+                      <Chip
+                        label={`${branch.staffCount} staff`}
+                        size='small'
+                        sx={{
+                          height: 20,
+                          fontSize: '0.7rem',
+                          bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                          color: theme => theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)'
+                        }}
+                      />
+                    </Box>
+                  }
+                />
+              ))}
+            </FormGroup>
+          </AccordionDetails>
+        </Accordion>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Staff/Resources Segmented Control */}
+        {schedulingMode === 'static' && (
+          <Box sx={{ mb: 2 }}>
+            <ToggleButtonGroup
+              value={resourceTab}
+              exclusive
+              onChange={(e, newValue) => {
+                if (newValue !== null) {
+                  setResourceTab(newValue)
+                }
+              }}
+              fullWidth
+              sx={{
+                '& .MuiToggleButton-root': {
+                  py: 1,
+                  textTransform: 'none',
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  border: 1,
+                  borderColor: 'divider',
+                  '&.Mui-selected': {
+                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                    color: 'primary.main',
+                    '&:hover': {
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.18)' : 'rgba(25, 118, 210, 0.12)'
+                    }
+                  }
+                }
+              }}
+            >
+              <ToggleButton value="staff">
+                <i className='ri-user-line' style={{ fontSize: '1.1rem', marginRight: '0.5rem' }} />
+                Staff Members
+              </ToggleButton>
+              <ToggleButton value="resources">
+                <i className='ri-door-line' style={{ fontSize: '1.1rem', marginRight: '0.5rem' }} />
+                Resources
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        )}
+
+        {/* Staff and Resources */}
+        {(schedulingMode !== 'static' || resourceTab === 'staff') && (
+          <Accordion
+            expanded={expandedAccordions.staff}
+            onChange={handleAccordionChange('staff')}
+            sx={{
+              mb: 2,
+              '&:before': { display: 'none' },
+              boxShadow: 'none',
+              bgcolor: 'transparent'
+            }}
+          >
+          <AccordionSummary
+            expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
+            sx={{
+              minHeight: 48,
+              px: 0,
+              '& .MuiAccordionSummary-content': { my: 1 }
+            }}
+          >
+            <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <i className='ri-user-line' style={{ fontSize: '1.1rem' }} />
+              Staff Members
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+            {/* Back to All Staff button (shown in single-staff view) */}
+            {staffFilters.selectedStaffId && previousStaffFilters && (
+              <Button
+                variant='outlined'
+                size='small'
+                fullWidth
+                onClick={goBackToAllStaff}
+                startIcon={<i className='ri-arrow-left-line' />}
+                sx={{ mb: 2 }}
+              >
+                Back to All Staff
+              </Button>
+            )}
+
+            <FormGroup>
+              <FormControlLabel
+                control={<Checkbox checked={pendingStaff.onlyMe} onChange={e => handleOnlyMeChange(e.target.checked)} />}
+                label={<Typography variant='body2' sx={{ fontWeight: 500 }}>Only me</Typography>}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingStaff.workingStaffOnly}
+                    onChange={e => setPendingStaff({ ...pendingStaff, workingStaffOnly: e.target.checked })}
+                  />
+                }
+                label={<Typography variant='body2'>Working staff members</Typography>}
+              />
+              <Button
+                variant='text'
+                size='small'
+                onClick={handleSelectAllStaff}
+                disabled={pendingStaff.onlyMe}
+                sx={{ justifyContent: 'flex-start', mb: 1 }}
+              >
+                Select All
+              </Button>
+              {availableStaff.map(staff => {
+                const branch = branches.find(b => b.id === staff.branchId)
+                return (
+                  <FormControlLabel
+                    key={staff.id}
+                    control={
+                      <Checkbox
+                        checked={pendingStaff.staffIds.includes(staff.id)}
+                        onChange={() => handleStaffToggle(staff.id)}
+                        disabled={pendingStaff.onlyMe}
+                      />
+                    }
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
+                        <Avatar
+                          src={staff.photo}
+                          alt={staff.name}
+                          sx={{ width: 24, height: 24 }}
                         />
-                      }
-                      label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
-                          <Box
+                        <Typography variant='body2'>{staff.name}</Typography>
+                        {branch && (
+                          <Chip
+                            icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
+                            label={branch.name}
+                            size='small'
+                            variant='outlined'
                             sx={{
-                              width: 16,
-                              height: 16,
-                              borderRadius: '50%',
-                              bgcolor: room.color || '#9E9E9E',
-                              flexShrink: 0
+                              height: 18,
+                              fontSize: '0.65rem',
+                              ml: 'auto',
+                              '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
                             }}
                           />
-                          <Typography variant='body2'>{room.name}</Typography>
-                          {branch && (
-                            <Chip
-                              icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
-                              label={branch.name}
-                              size='small'
-                              variant='outlined'
+                        )}
+                      </Box>
+                    }
+                  />
+                )
+              })}
+            </FormGroup>
+          </AccordionDetails>
+        </Accordion>
+        )}
+
+        {/* Rooms (only in static scheduling mode and resources tab) */}
+        {schedulingMode === 'static' && resourceTab === 'resources' && (
+          <Accordion
+            expanded={expandedAccordions.rooms}
+            onChange={handleAccordionChange('rooms')}
+            sx={{
+              mb: 2,
+              '&:before': { display: 'none' },
+              boxShadow: 'none',
+              bgcolor: 'transparent'
+            }}
+          >
+              <AccordionSummary
+                expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
+                sx={{
+                  minHeight: 48,
+                  px: 0,
+                  '& .MuiAccordionSummary-content': { my: 1 }
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 1 }}>
+                  <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <i className='ri-door-line' style={{ fontSize: '1.1rem' }} />
+                    Rooms
+                  </Typography>
+                  {!pendingRooms.allRooms && pendingRooms.roomIds.length > 0 && (
+                    <Button
+                      variant='text'
+                      size='small'
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setPendingRooms({ allRooms: true, roomIds: [] })
+                      }}
+                      sx={{ minWidth: 'auto', p: 0.5 }}
+                    >
+                      <i className='ri-close-circle-line' style={{ fontSize: '1.1rem' }} />
+                    </Button>
+                  )}
+                </Box>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                <FormGroup>
+                  <FormControlLabel
+                    control={<Checkbox checked={pendingRooms.allRooms} onChange={handleAllRooms} />}
+                    label={<Typography variant='body2' sx={{ fontWeight: 500 }}>All Rooms</Typography>}
+                  />
+                  <Button
+                    variant='text'
+                    size='small'
+                    onClick={handleSelectAllRooms}
+                    sx={{ justifyContent: 'flex-start', mb: 1 }}
+                  >
+                    Select All
+                  </Button>
+                  {availableRooms.map(room => {
+                    const branch = branches.find(b => b.id === room.branchId)
+                    return (
+                      <FormControlLabel
+                        key={room.id}
+                        control={
+                          <Checkbox
+                            checked={pendingRooms.roomIds.includes(room.id)}
+                            onChange={() => handleRoomToggle(room.id)}
+                          />
+                        }
+                        label={
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
+                            <Box
                               sx={{
-                                height: 18,
-                                fontSize: '0.65rem',
-                                ml: 'auto',
-                                '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
+                                width: 16,
+                                height: 16,
+                                borderRadius: '50%',
+                                bgcolor: room.color || '#9E9E9E',
+                                flexShrink: 0
                               }}
                             />
-                          )}
-                        </Box>
-                      }
-                    />
-                  )
-                })}
-              </FormGroup>
-            </Box>
-          </>
+                            <Typography variant='body2'>{room.name}</Typography>
+                            {branch && (
+                              <Chip
+                                icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
+                                label={branch.name}
+                                size='small'
+                                variant='outlined'
+                                sx={{
+                                  height: 18,
+                                  fontSize: '0.65rem',
+                                  ml: 'auto',
+                                  '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
+                                }}
+                              />
+                            )}
+                          </Box>
+                        }
+                      />
+                    )
+                  })}
+                </FormGroup>
+              </AccordionDetails>
+            </Accordion>
         )}
 
         <Divider sx={{ my: 2 }} />
 
         {/* Highlight Filters */}
-        <Box>
-          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
-            Highlight
-          </Typography>
-
-          {/* Payments */}
-          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
-            Payments
-          </Typography>
-          <FormGroup sx={{ mb: 2 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={pendingHighlights.payments.includes('paid')}
-                  onChange={() => handlePaymentToggle('paid')}
-                />
-              }
-              label={<Typography variant='body2'>Paid</Typography>}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={pendingHighlights.payments.includes('unpaid')}
-                  onChange={() => handlePaymentToggle('unpaid')}
-                />
-              }
-              label={<Typography variant='body2'>Unpaid</Typography>}
-            />
-          </FormGroup>
-
-          {/* Appointment Status */}
-          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
-            Appointment Status
-          </Typography>
-          <FormGroup sx={{ mb: 2 }}>
-            {[
-              { value: 'confirmed', label: 'Confirmed' },
-              { value: 'need_confirm', label: 'Need confirm' },
-              { value: 'no_show', label: 'No-show' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'completed', label: 'Completed' },
-              { value: 'cancelled', label: 'Cancelled' }
-            ].map(status => (
+        <Accordion
+          expanded={expandedAccordions.highlight}
+          onChange={handleAccordionChange('highlight')}
+          sx={{
+            mb: 2,
+            '&:before': { display: 'none' },
+            boxShadow: 'none',
+            bgcolor: 'transparent'
+          }}
+        >
+          <AccordionSummary
+            expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
+            sx={{
+              minHeight: 48,
+              px: 0,
+              '& .MuiAccordionSummary-content': { my: 1 }
+            }}
+          >
+            <Typography variant='subtitle2' sx={{ fontWeight: 600 }}>
+              Highlight
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+            {/* Payments */}
+            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
+              Payments
+            </Typography>
+            <FormGroup sx={{ mb: 2 }}>
               <FormControlLabel
-                key={status.value}
                 control={
                   <Checkbox
-                    checked={pendingHighlights.statuses.includes(status.value as AppointmentStatus)}
-                    onChange={() => handleStatusToggle(status.value as AppointmentStatus)}
+                    checked={pendingHighlights.payments.includes('paid')}
+                    onChange={() => handlePaymentToggle('paid')}
                   />
                 }
-                label={<Typography variant='body2'>{status.label}</Typography>}
+                label={<Typography variant='body2'>Paid</Typography>}
               />
-            ))}
-          </FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingHighlights.payments.includes('unpaid')}
+                    onChange={() => handlePaymentToggle('unpaid')}
+                  />
+                }
+                label={<Typography variant='body2'>Unpaid</Typography>}
+              />
+            </FormGroup>
 
-          {/* Details */}
-          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
-            Details
-          </Typography>
-          <FormGroup>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={pendingHighlights.details.includes('starred')}
-                  onChange={() => handleDetailToggle('starred')}
+            {/* Appointment Status */}
+            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
+              Appointment Status
+            </Typography>
+            <FormGroup sx={{ mb: 2 }}>
+              {[
+                { value: 'confirmed', label: 'Confirmed' },
+                { value: 'need_confirm', label: 'Need confirm' },
+                { value: 'no_show', label: 'No-show' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'cancelled', label: 'Cancelled' }
+              ].map(status => (
+                <FormControlLabel
+                  key={status.value}
+                  control={
+                    <Checkbox
+                      checked={pendingHighlights.statuses.includes(status.value as AppointmentStatus)}
+                      onChange={() => handleStatusToggle(status.value as AppointmentStatus)}
+                    />
+                  }
+                  label={<Typography variant='body2'>{status.label}</Typography>}
                 />
-              }
-              label={<Typography variant='body2'>Starred</Typography>}
-            />
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={pendingHighlights.details.includes('unstarred')}
-                  onChange={() => handleDetailToggle('unstarred')}
-                />
-              }
-              label={<Typography variant='body2'>Unstarred</Typography>}
-            />
-          </FormGroup>
-        </Box>
+              ))}
+            </FormGroup>
+
+            {/* Staff Member Selected */}
+            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1, mt: 2 }}>
+              Staff member selected
+            </Typography>
+            <FormGroup sx={{ mb: 2 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingHighlights.selection.includes('by_client')}
+                    onChange={() => handleSelectionToggle('by_client')}
+                  />
+                }
+                label={<Typography variant='body2'>By client</Typography>}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingHighlights.selection.includes('automatically')}
+                    onChange={() => handleSelectionToggle('automatically')}
+                  />
+                }
+                label={<Typography variant='body2'>Automatically</Typography>}
+              />
+            </FormGroup>
+
+            {/* Details */}
+            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
+              Details
+            </Typography>
+            <FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingHighlights.details.includes('starred')}
+                    onChange={() => handleDetailToggle('starred')}
+                  />
+                }
+                label={<Typography variant='body2'>Starred</Typography>}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingHighlights.details.includes('unstarred')}
+                    onChange={() => handleDetailToggle('unstarred')}
+                  />
+                }
+                label={<Typography variant='body2'>Unstarred</Typography>}
+              />
+            </FormGroup>
+          </AccordionDetails>
+        </Accordion>
       </Box>
 
       {/* Footer Actions */}

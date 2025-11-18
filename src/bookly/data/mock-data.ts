@@ -286,6 +286,27 @@ const generateStaffAppointments = (staffId: string, businessType: 'hair' | 'nail
   })
 }
 
+// Helper function to convert 24h time to 12h format
+const formatTimeTo12Hour = (time24: string): string => {
+  const [hours, minutes] = time24.split(':').map(Number)
+  const period = hours >= 12 ? 'PM' : 'AM'
+  const hours12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`
+}
+
+// Helper function to get typical working hours from schedule
+const getWorkingHoursFromSchedule = (schedule?: StaffSchedule[]): string => {
+  if (!schedule || schedule.length === 0) return '10:00 AM-7:00 PM'
+
+  // Find a typical working day (prefer Mon-Fri)
+  const workingDay = schedule.find(s => s.isAvailable && ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(s.dayOfWeek))
+    || schedule.find(s => s.isAvailable)
+
+  if (!workingDay) return '10:00 AM-7:00 PM'
+
+  return `${formatTimeTo12Hour(workingDay.startTime)}-${formatTimeTo12Hour(workingDay.endTime)}`
+}
+
 // Standard working week schedule
 const standardSchedule: StaffSchedule[] = [
   { dayOfWeek: 'Mon', startTime: '09:00', endTime: '17:00', isAvailable: true },
@@ -329,6 +350,7 @@ const baseStaff: StaffMember[] = [
     businessId: '1',
     branchId: '1-1',
     schedule: extendedSchedule,
+    workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('1', 'hair'),
     maxConcurrentBookings: 2 // Can handle 2 overlapping appointments
   },
@@ -340,6 +362,7 @@ const baseStaff: StaffMember[] = [
     businessId: '1',
     branchId: '1-2',
     schedule: standardSchedule,
+    workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('2', 'hair'),
     maxConcurrentBookings: 1 // Standard: one client at a time
   },
@@ -351,6 +374,7 @@ const baseStaff: StaffMember[] = [
     businessId: '2',
     branchId: '2-1',
     schedule: extendedSchedule,
+    workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('3', 'nails')
   },
   {
@@ -361,6 +385,7 @@ const baseStaff: StaffMember[] = [
     businessId: '2',
     branchId: '2-2',
     schedule: standardSchedule,
+    workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('4', 'nails')
   },
   {
@@ -371,6 +396,7 @@ const baseStaff: StaffMember[] = [
     businessId: '3',
     branchId: '3-1',
     schedule: extendedSchedule,
+    workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('5', 'barber')
   },
   {
@@ -381,6 +407,7 @@ const baseStaff: StaffMember[] = [
     businessId: '3',
     branchId: '3-2',
     schedule: standardSchedule,
+    workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('6', 'barber')
   },
   {
@@ -391,6 +418,7 @@ const baseStaff: StaffMember[] = [
     businessId: '1',
     branchId: '1-3',
     schedule: partTimeSchedule,
+    workingHours: getWorkingHoursFromSchedule(partTimeSchedule),
     appointments: generateStaffAppointments('7', 'hair')
   }
 ]
@@ -428,6 +456,7 @@ function generateMockStaffForBusiness(businessId: string, branchId: string, staf
   const titleIndex = staffIndex % titles[category].length
   const photoIndex = staffIndex % photos.length
   const scheduleIndex = staffIndex % schedules.length
+  const selectedSchedule = schedules[scheduleIndex]
 
   return {
     id: `${businessId}-staff-${staffIndex + 1}`,
@@ -436,7 +465,8 @@ function generateMockStaffForBusiness(businessId: string, branchId: string, staf
     photo: photos[photoIndex],
     businessId,
     branchId,
-    schedule: schedules[scheduleIndex],
+    schedule: selectedSchedule,
+    workingHours: getWorkingHoursFromSchedule(selectedSchedule),
     appointments: generateStaffAppointments(`${businessId}-staff-${staffIndex + 1}`, category)
   }
 }

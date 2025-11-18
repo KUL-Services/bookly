@@ -69,6 +69,7 @@ export interface StaffMember {
   branchId: string;
   serviceIds?: string[];  // Services this staff can provide
   schedule?: StaffSchedule[];
+  workingHours?: string;  // Simplified display format (e.g., "9:00 AM-5:00 PM")
   appointments?: StaffAppointment[];
   maxConcurrentBookings?: number; // Maximum overlapping appointments (default 1)
   color?: string;  // For calendar color coding

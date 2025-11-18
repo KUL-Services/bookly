@@ -102,7 +102,8 @@ const initialBranchFilter: BranchFilter = {
 const initialStaffFilter: StaffFilter = {
   onlyMe: false,
   staffIds: [],
-  selectedStaffId: null
+  selectedStaffId: null,
+  workingStaffOnly: false
 }
 
 const initialRoomFilter: RoomFilter = {
@@ -534,8 +535,15 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   goBackToAllStaff: () => {
     const { previousStaffFilters } = get()
     if (previousStaffFilters) {
+      // When going back, clear selectedStaffId and ensure we're not stuck with a single staff
+      // If the previous filter had only one staff ID, clear it to show all staff
+      const shouldClearStaffIds = previousStaffFilters.staffIds.length <= 1
       set({
-        staffFilters: { ...previousStaffFilters, selectedStaffId: null },
+        staffFilters: {
+          ...previousStaffFilters,
+          selectedStaffId: null,
+          staffIds: shouldClearStaffIds ? [] : previousStaffFilters.staffIds
+        },
         previousStaffFilters: null
       })
     } else {

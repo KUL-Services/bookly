@@ -91,6 +91,15 @@ export interface CalendarEvent extends EventInput {
     slotId?: string  // For static scheduling mode - links booking to a specific slot
     roomId?: string  // For static scheduling mode - indicates which room
     partySize?: number  // For group bookings (default 1)
+    branchId?: string  // Branch where this appointment takes place
+    branchName?: string  // Branch name for display
+    type?: 'booking' | 'timeOff' | 'reservation'  // Event type for filtering
+    timeOffId?: string  // ID of time off request
+    reservationId?: string  // ID of time reservation
+    reason?: string  // Reason for time off/reservation
+    approved?: boolean  // For time off approval status
+    allDay?: boolean  // For all-day time off
+    note?: string  // Additional notes
   }
 }
 
@@ -103,6 +112,7 @@ export interface StaffFilter {
   onlyMe: boolean
   staffIds: string[]
   selectedStaffId?: string | null // For single-staff view mode
+  workingStaffOnly: boolean // Filter to show only staff working on current date/week
 }
 
 export interface RoomFilter {

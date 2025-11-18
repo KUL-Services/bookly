@@ -15,6 +15,7 @@ import MultiStaffWeekView from './multi-staff-week-view'
 import SingleStaffWeekView from './single-staff-week-view'
 import MultiRoomDayView from './multi-room-day-view'
 import MultiRoomWeekView from './multi-room-week-view'
+import AppointmentListView from './appointment-list-view'
 import AppointmentDrawer from './appointment-drawer'
 import NewAppointmentDrawer from './new-appointment-drawer'
 import CalendarSettings from './calendar-settings'
@@ -101,6 +102,14 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const activeStaffMembers = useMemo(() => {
     return mockStaff.filter(staff => activeStaffIds.includes(staff.id))
   }, [activeStaffIds])
+
+  // Get all available staff for dropdown (filtered by branch if applicable)
+  const availableStaffForDropdown = useMemo(() => {
+    if (branchFilters.allBranches || branchFilters.branchIds.length === 0) {
+      return mockStaff.slice(0, 10) // Show first 10 staff when all branches selected
+    }
+    return mockStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
+  }, [branchFilters])
 
   // Determine which rooms are being shown (static mode)
   const activeRooms = useMemo(() => {
@@ -432,6 +441,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           onEventClick={handleEventClick}
           onBack={handleBackToAllStaff}
           onTimeRangeSelect={handleSelectRange}
+          staffOptions={availableStaffForDropdown}
+          onStaffChange={handleStaffClick}
         />
       )
     }
@@ -465,6 +476,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           onEventClick={handleEventClick}
           onBack={handleBackToAllStaff}
           onDateClick={handleDateClickInWeekView}
+          staffOptions={availableStaffForDropdown}
+          onStaffChange={handleStaffClick}
         />
       )
     }
@@ -484,7 +497,12 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       )
     }
 
-    // FullCalendar view - ONLY for month and list views
+    // Appointment List View
+    if (view === 'listMonth') {
+      return <AppointmentListView events={events} onEventClick={handleEventClick} />
+    }
+
+    // FullCalendar view - ONLY for month view
     return (
       <FullCalendarView
         ref={calendarRef}

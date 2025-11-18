@@ -326,6 +326,8 @@ export default function MultiRoomDayView({
                           overflow: 'hidden',
                           zIndex: 5,
                           transition: 'all 0.2s',
+                          display: 'flex',
+                          flexDirection: 'column',
                           '&:hover': {
                             boxShadow: theme.shadows[4],
                             transform: 'scale(1.02)'

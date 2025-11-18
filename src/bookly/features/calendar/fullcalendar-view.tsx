@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { useTheme } from '@mui/material/styles'
-import { Box } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -388,12 +388,36 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             display: 'block'
           },
           '& .fc-timegrid-slot': {
-            height: '5rem'
+            height: '2.5rem',
+            position: 'relative',
+            '&:nth-of-type(2n)::after': {
+              content: '""',
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '1px',
+              backgroundImage: 'linear-gradient(to right, transparent 0%, transparent 50%, var(--fc-border-color) 50%, var(--fc-border-color) 100%)',
+              backgroundSize: '8px 1px',
+              backgroundRepeat: 'repeat-x'
+            }
           },
           '& .fc-timegrid-slot-label': {
             fontSize: '0.75rem',
             verticalAlign: 'top',
             paddingTop: '4px'
+          },
+          '& .time-off-event, & .time-reservation-event': {
+            background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px) !important',
+            opacity: '0.15 !important',
+            pointerEvents: 'none',
+            zIndex: 1
+          },
+          '& .time-off-event': {
+            color: '#795548 !important'
+          },
+          '& .time-reservation-event': {
+            color: '#2196f3 !important'
           },
           '& .fc-col-header-cell': {
             minWidth: { xs: '100px', sm: '120px', md: '140px' }
@@ -480,7 +504,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           eventResize={handleEventResize}
           slotMinTime='06:00:00'
           slotMaxTime='22:00:00'
-          slotDuration='00:30:00'
+          slotDuration='00:15:00'
+          slotLabelInterval='01:00:00'
           allDaySlot={false}
           scrollTime='08:00:00'
           eventTimeFormat={{
@@ -498,6 +523,71 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
               ? { weekday: 'short', month: 'short', day: 'numeric' }
               : { weekday: 'short', day: 'numeric' }
           }
+          dayHeaderContent={(arg) => {
+            const date = arg.date
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
+            const dayNumber = date.getDate()
+            const monthName = view === 'timeGridDay' ? date.toLocaleDateString('en-US', { month: 'short' }) : ''
+            // Default business hours (matches standard schedule from mock data: 9:00 AM-5:00 PM)
+            const businessHours = '9:00 AM-5:00 PM'
+
+            return (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  py: 1
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 600,
+                      color: 'text.secondary',
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    {dayName}
+                  </Typography>
+                  {monthName && (
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontWeight: 600,
+                        color: 'text.secondary',
+                        fontSize: '0.75rem'
+                      }}
+                    >
+                      {monthName}
+                    </Typography>
+                  )}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 600,
+                      color: 'text.secondary',
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    {dayNumber}
+                  </Typography>
+                </Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: 'text.secondary',
+                    fontSize: '0.65rem',
+                    opacity: 0.8
+                  }}
+                >
+                  {businessHours}
+                </Typography>
+              </Box>
+            )
+          }}
           listDayFormat={{ month: 'long', day: 'numeric', year: 'numeric' }}
           listDaySideFormat={false}
           eventContent={arg => {
