@@ -11,10 +11,12 @@ import {
   Button,
   IconButton,
   Chip,
-  Divider
+  Divider,
+  InputAdornment
 } from '@mui/material'
 import { useStaffManagementStore } from './staff-store'
 import type { DayOfWeek, StaffShift, BreakRange } from '../calendar/types'
+import { TimeSelectField } from './time-select-field'
 
 interface WorkingHoursEditorProps {
   staffId: string
@@ -52,7 +54,7 @@ export function WorkingHoursEditor({ staffId }: WorkingHoursEditorProps) {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {DAYS_OF_WEEK.map((day) => {
-        const dayHours = getStaffWorkingHours(staffId, day)
+        const dayHours = getStaffWorkingHours(staffId, day) || { isWorking: false, shifts: [] }
 
         const handleToggleWorking = () => {
           if (dayHours.isWorking) {
@@ -207,23 +209,19 @@ export function WorkingHoursEditor({ staffId }: WorkingHoursEditorProps) {
                 {dayHours.shifts.map((shift, shiftIndex) => (
                   <Box key={shift.id}>
                     <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                      <TextField
-                        type="time"
-                        size="small"
+                      <TimeSelectField
                         label="Start"
                         value={shift.start}
-                        onChange={(e) => handleUpdateShift(shiftIndex, 'start', e.target.value)}
-                        InputLabelProps={{ shrink: true }}
+                        onChange={(value) => handleUpdateShift(shiftIndex, 'start', value)}
+                        size="small"
                         sx={{ width: 140 }}
                       />
                       <Typography color="text.secondary">—</Typography>
-                      <TextField
-                        type="time"
-                        size="small"
+                      <TimeSelectField
                         label="End"
                         value={shift.end}
-                        onChange={(e) => handleUpdateShift(shiftIndex, 'end', e.target.value)}
-                        InputLabelProps={{ shrink: true }}
+                        onChange={(value) => handleUpdateShift(shiftIndex, 'end', value)}
+                        size="small"
                         sx={{ width: 140 }}
                       />
 
@@ -253,23 +251,19 @@ export function WorkingHoursEditor({ staffId }: WorkingHoursEditorProps) {
                         {shift.breaks.map((breakRange) => (
                           <Box key={breakRange.id} sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                             <i className="ri-cup-line" style={{ fontSize: 16, opacity: 0.5 }} />
-                            <TextField
-                              type="time"
-                              size="small"
+                            <TimeSelectField
                               label="Break Start"
                               value={breakRange.start}
-                              onChange={(e) => handleUpdateBreak(shiftIndex, breakRange.id, 'start', e.target.value)}
-                              InputLabelProps={{ shrink: true }}
+                              onChange={(value) => handleUpdateBreak(shiftIndex, breakRange.id, 'start', value)}
+                              size="small"
                               sx={{ width: 140 }}
                             />
                             <Typography variant="body2" color="text.secondary">—</Typography>
-                            <TextField
-                              type="time"
-                              size="small"
+                            <TimeSelectField
                               label="Break End"
                               value={breakRange.end}
-                              onChange={(e) => handleUpdateBreak(shiftIndex, breakRange.id, 'end', e.target.value)}
-                              InputLabelProps={{ shrink: true }}
+                              onChange={(value) => handleUpdateBreak(shiftIndex, breakRange.id, 'end', value)}
+                              size="small"
                               sx={{ width: 140 }}
                             />
                             <Chip

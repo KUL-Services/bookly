@@ -29,30 +29,56 @@ import { ResourceEditorDrawer } from './resource-editor-drawer'
 import type { Resource } from '../calendar/types'
 
 type ViewMode = 'grid' | 'list'
+type NavigationView = 'branch-selection' | 'resource-management'
 
 export function ResourcesTab() {
+  const [navigationView, setNavigationView] = useState<NavigationView>('branch-selection')
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedBranchId, setSelectedBranchId] = useState<string>('all')
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [editingResource, setEditingResource] = useState<Resource | null>(null)
 
-  const { resources, deleteResource, openResourceEditor, closeResourceEditor } = useStaffManagementStore()
+  const { resources, deleteResource } = useStaffManagementStore()
 
-  // Filter resources
+  // Filter resources for selected branch
   const filteredResources = useMemo(() => {
+    if (!selectedBranchId) return []
+
     return resources.filter(resource => {
-      const matchesSearch = resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          resource.amenities.some(a => a.toLowerCase().includes(searchQuery.toLowerCase()))
-      const matchesBranch = selectedBranchId === 'all' || resource.branchId === selectedBranchId
+      const matchesSearch =
+        resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        resource.amenities.some(a => a.toLowerCase().includes(searchQuery.toLowerCase()))
+      const matchesBranch = resource.branchId === selectedBranchId
       return matchesSearch && matchesBranch
     })
   }, [resources, searchQuery, selectedBranchId])
+
+  // Get resource counts per branch
+  const branchResourceCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    mockBranches.forEach(branch => {
+      counts[branch.id] = resources.filter(r => r.branchId === branch.id).length
+    })
+    return counts
+  }, [resources])
 
   const handleViewChange = (_: React.MouseEvent<HTMLElement>, newView: ViewMode | null) => {
     if (newView !== null) {
       setViewMode(newView)
     }
+  }
+
+  const handleSelectBranch = (branchId: string) => {
+    setSelectedBranchId(branchId)
+    setNavigationView('resource-management')
+    setSearchQuery('') // Reset search when entering branch
+  }
+
+  const handleBackToBranches = () => {
+    setNavigationView('branch-selection')
+    setSelectedBranchId(null)
+    setSearchQuery('')
   }
 
   const handleAddResource = () => {
@@ -81,317 +107,415 @@ export function ResourcesTab() {
     return branch?.name || 'Unknown Branch'
   }
 
+  const selectedBranch = selectedBranchId ? mockBranches.find(b => b.id === selectedBranchId) : null
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {/* Header Controls */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 2,
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          flexWrap: 'wrap'
-        }}
-      >
-        {/* Search */}
-        <TextField
-          size="small"
-          placeholder="Search resources..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <i className="ri-search-line" />
-              </InputAdornment>
-            )
-          }}
-          sx={{ width: 300 }}
-        />
-
-        {/* Branch Filter */}
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel>Branch</InputLabel>
-          <Select
-            value={selectedBranchId}
-            onChange={(e) => setSelectedBranchId(e.target.value)}
-            label="Branch"
-          >
-            <MenuItem value="all">All Branches</MenuItem>
-            {mockBranches.map((branch) => (
-              <MenuItem key={branch.id} value={branch.id}>
-                {branch.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        <Box sx={{ flexGrow: 1 }} />
-
-        {/* View Toggle */}
-        <ToggleButtonGroup
-          value={viewMode}
-          exclusive
-          onChange={handleViewChange}
-          size="small"
-        >
-          <ToggleButton value="grid">
-            <i className="ri-grid-line" />
-          </ToggleButton>
-          <ToggleButton value="list">
-            <i className="ri-list-check" />
-          </ToggleButton>
-        </ToggleButtonGroup>
-
-        {/* Results Count */}
-        <Chip
-          label={`${filteredResources.length} resource${filteredResources.length !== 1 ? 's' : ''}`}
-          variant="outlined"
-        />
-      </Paper>
-
-      {/* Resources Content */}
-      <Paper
-        elevation={0}
-        sx={{
-          flexGrow: 1,
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          overflow: 'auto',
-          p: 3
-        }}
-      >
-        {filteredResources.length === 0 ? (
-          <Box
+      {/* Branch Selection View */}
+      {navigationView === 'branch-selection' && (
+        <>
+          {/* Branch Selection Header */}
+          <Paper
+            elevation={0}
             sx={{
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'text.secondary'
+              p: 3,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider'
             }}
           >
-            <Box sx={{ textAlign: 'center' }}>
-              <i className="ri-door-line" style={{ fontSize: 64, opacity: 0.3 }} />
-              <Typography variant="h6" sx={{ mt: 2 }}>
-                No resources found
-              </Typography>
-              <Typography variant="body2">
-                {searchQuery || selectedBranchId !== 'all'
-                  ? 'Try adjusting your filters'
-                  : 'Add your first room or facility'}
-              </Typography>
-              {!searchQuery && selectedBranchId === 'all' && (
-                <Button
-                  variant="contained"
-                  startIcon={<i className="ri-add-line" />}
-                  onClick={handleAddResource}
-                  sx={{ mt: 3 }}
-                >
-                  Add Resource
-                </Button>
-              )}
-            </Box>
-          </Box>
-        ) : viewMode === 'grid' ? (
-          <Grid container spacing={3}>
-            {filteredResources.map((resource) => (
-              <Grid item xs={12} sm={6} md={4} key={resource.id}>
-                <Card
-                  variant="outlined"
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    borderRadius: 2,
-                    '&:hover': {
-                      boxShadow: 2
-                    }
-                  }}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
-                      <Avatar
-                        sx={{
-                          bgcolor: resource.color || 'primary.main',
-                          width: 48,
-                          height: 48
-                        }}
-                      >
-                        <i className="ri-door-line" />
-                      </Avatar>
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="h6" fontWeight={600}>
-                          {resource.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {getBranchName(resource.branchId)}
-                        </Typography>
+            <Typography variant='h5' fontWeight={600} gutterBottom>
+              Select a Branch
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Choose a branch to view and manage its resources
+            </Typography>
+          </Paper>
+
+          {/* Branch Cards */}
+          <Paper
+            elevation={0}
+            sx={{
+              flexGrow: 1,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'auto',
+              p: 3
+            }}
+          >
+            <Grid container spacing={3}>
+              {mockBranches.map(branch => (
+                <Grid item xs={12} sm={6} md={4} key={branch.id}>
+                  <Card
+                    variant='outlined'
+                    sx={{
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      borderRadius: 2,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        boxShadow: 4,
+                        borderColor: 'primary.main'
+                      }
+                    }}
+                    onClick={() => handleSelectBranch(branch.id)}
+                  >
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                        <Avatar
+                          sx={{
+                            bgcolor: 'primary.main',
+                            width: 56,
+                            height: 56
+                          }}
+                        >
+                          <i className='ri-building-line' style={{ fontSize: 28 }} />
+                        </Avatar>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography variant='h6' fontWeight={600}>
+                            {branch.name}
+                          </Typography>
+                          <Typography variant='body2' color='text.secondary'>
+                            {branch.address}
+                          </Typography>
+                        </Box>
                       </Box>
-                    </Box>
 
-                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                      <Chip
-                        size="small"
-                        icon={<i className="ri-group-line" />}
-                        label={`${resource.capacity} capacity`}
-                        variant="outlined"
-                      />
-                      {resource.floor && (
+                      <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
                         <Chip
-                          size="small"
-                          label={resource.floor}
-                          variant="outlined"
+                          size='small'
+                          icon={<i className='ri-door-line' />}
+                          label={`${branchResourceCounts[branch.id] || 0} resources`}
+                          color='primary'
+                          variant='outlined'
                         />
-                      )}
-                    </Box>
+                        <Chip
+                          size='small'
+                          icon={<i className='ri-map-pin-line' />}
+                          label={branch.city}
+                          variant='outlined'
+                        />
+                      </Box>
+                    </CardContent>
 
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {resource.amenities.slice(0, 4).map((amenity) => (
-                        <Chip
-                          key={amenity}
-                          label={amenity}
-                          size="small"
-                          sx={{ fontSize: '0.7rem', height: 20 }}
-                        />
-                      ))}
-                      {resource.amenities.length > 4 && (
-                        <Chip
-                          label={`+${resource.amenities.length - 4}`}
-                          size="small"
-                          sx={{ fontSize: '0.7rem', height: 20 }}
-                        />
-                      )}
-                    </Box>
-                  </CardContent>
+                    <CardActions sx={{ px: 2, pb: 2 }}>
+                      <Button
+                        fullWidth
+                        variant='contained'
+                        endIcon={<i className='ri-arrow-right-line' />}
+                        onClick={() => handleSelectBranch(branch.id)}
+                      >
+                        View Resources
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        </>
+      )}
 
-                  <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+      {/* Resource Management View */}
+      {navigationView === 'resource-management' && selectedBranch && (
+        <>
+          {/* Header with Back Button */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2
+            }}
+          >
+            <Button
+              variant='outlined'
+              startIcon={<i className='ri-arrow-left-line' />}
+              onClick={handleBackToBranches}
+              sx={{ textTransform: 'none' }}
+            >
+              Back to All Branches
+            </Button>
+            <Box sx={{ flexGrow: 1 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <i className='ri-building-line' style={{ fontSize: 20, opacity: 0.6 }} />
+              <Typography variant='h6' fontWeight={600}>
+                {selectedBranch.name}
+              </Typography>
+            </Box>
+          </Paper>
+
+          {/* Resource Controls */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              flexWrap: 'wrap'
+            }}
+          >
+            {/* Search */}
+            <TextField
+              size='small'
+              placeholder='Search resources...'
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <i className='ri-search-line' />
+                  </InputAdornment>
+                )
+              }}
+              sx={{ width: 300 }}
+            />
+
+            <Box sx={{ flexGrow: 1 }} />
+
+            {/* View Toggle */}
+            <ToggleButtonGroup value={viewMode} exclusive onChange={handleViewChange} size='small'>
+              <ToggleButton value='grid'>
+                <i className='ri-grid-line' />
+              </ToggleButton>
+              <ToggleButton value='list'>
+                <i className='ri-list-check' />
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Results Count */}
+            <Chip
+              label={`${filteredResources.length} resource${filteredResources.length !== 1 ? 's' : ''}`}
+              variant='outlined'
+            />
+          </Paper>
+
+          {/* Resources Content */}
+          <Paper
+            elevation={0}
+            sx={{
+              flexGrow: 1,
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              overflow: 'auto',
+              p: 3
+            }}
+          >
+            {filteredResources.length === 0 ? (
+              <Box
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.secondary'
+                }}
+              >
+                <Box sx={{ textAlign: 'center' }}>
+                  <i className='ri-door-line' style={{ fontSize: 64, opacity: 0.3 }} />
+                  <Typography variant='h6' sx={{ mt: 2 }}>
+                    No resources found
+                  </Typography>
+                  <Typography variant='body2'>
+                    {searchQuery ? 'Try adjusting your search' : `Add your first resource to ${selectedBranch.name}`}
+                  </Typography>
+                  {!searchQuery && (
                     <Button
-                      size="small"
-                      startIcon={<i className="ri-edit-line" />}
+                      variant='contained'
+                      startIcon={<i className='ri-add-line' />}
+                      onClick={handleAddResource}
+                      sx={{ mt: 3 }}
+                    >
+                      Add Resource
+                    </Button>
+                  )}
+                </Box>
+              </Box>
+            ) : viewMode === 'grid' ? (
+              <Grid container spacing={3}>
+                {filteredResources.map(resource => (
+                  <Grid item xs={12} sm={6} md={4} key={resource.id}>
+                    <Card
+                      variant='outlined'
+                      sx={{
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        borderRadius: 2,
+                        '&:hover': {
+                          boxShadow: 2
+                        }
+                      }}
+                    >
+                      <CardContent sx={{ flexGrow: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                          <Avatar
+                            sx={{
+                              bgcolor: resource.color || 'primary.main',
+                              width: 48,
+                              height: 48
+                            }}
+                          >
+                            <i className='ri-door-line' />
+                          </Avatar>
+                          <Box sx={{ flexGrow: 1 }}>
+                            <Typography variant='h6' fontWeight={600}>
+                              {resource.name}
+                            </Typography>
+                            <Typography variant='caption' color='text.secondary'>
+                              {selectedBranch.name}
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                          <Chip
+                            size='small'
+                            icon={<i className='ri-group-line' />}
+                            label={`${resource.capacity} capacity`}
+                            variant='outlined'
+                          />
+                          {resource.floor && <Chip size='small' label={resource.floor} variant='outlined' />}
+                        </Box>
+
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                          {resource.amenities.slice(0, 4).map(amenity => (
+                            <Chip key={amenity} label={amenity} size='small' sx={{ fontSize: '0.7rem', height: 20 }} />
+                          ))}
+                          {resource.amenities.length > 4 && (
+                            <Chip
+                              label={`+${resource.amenities.length - 4}`}
+                              size='small'
+                              sx={{ fontSize: '0.7rem', height: 20 }}
+                            />
+                          )}
+                        </Box>
+                      </CardContent>
+
+                      <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
+                        <Button
+                          size='small'
+                          startIcon={<i className='ri-edit-line' />}
+                          onClick={() => handleEditResource(resource)}
+                        >
+                          Edit
+                        </Button>
+                        <IconButton size='small' color='error' onClick={() => handleDeleteResource(resource.id)}>
+                          <i className='ri-delete-bin-line' />
+                        </IconButton>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {filteredResources.map(resource => (
+                  <Paper
+                    key={resource.id}
+                    variant='outlined'
+                    sx={{
+                      p: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      borderRadius: 2,
+                      '&:hover': {
+                        bgcolor: 'action.hover'
+                      }
+                    }}
+                  >
+                    <Avatar
+                      sx={{
+                        bgcolor: resource.color || 'primary.main',
+                        width: 40,
+                        height: 40
+                      }}
+                    >
+                      <i className='ri-door-line' />
+                    </Avatar>
+
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant='subtitle1' fontWeight={600}>
+                        {resource.name}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary'>
+                        {selectedBranch.name}
+                        {resource.floor && ` • ${resource.floor}`}
+                      </Typography>
+                    </Box>
+
+                    <Chip
+                      size='small'
+                      icon={<i className='ri-group-line' />}
+                      label={`${resource.capacity} capacity`}
+                      variant='outlined'
+                    />
+
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      {resource.amenities.slice(0, 3).map(amenity => (
+                        <Chip key={amenity} label={amenity} size='small' sx={{ fontSize: '0.7rem', height: 20 }} />
+                      ))}
+                      {resource.amenities.length > 3 && (
+                        <Chip
+                          label={`+${resource.amenities.length - 3}`}
+                          size='small'
+                          sx={{ fontSize: '0.7rem', height: 20 }}
+                        />
+                      )}
+                    </Box>
+
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      startIcon={<i className='ri-edit-line' />}
                       onClick={() => handleEditResource(resource)}
                     >
                       Edit
                     </Button>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeleteResource(resource.id)}
-                    >
-                      <i className="ri-delete-bin-line" />
+
+                    <IconButton size='small' color='error' onClick={() => handleDeleteResource(resource.id)}>
+                      <i className='ri-delete-bin-line' />
                     </IconButton>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {filteredResources.map((resource) => (
-              <Paper
-                key={resource.id}
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                  borderRadius: 2,
-                  '&:hover': {
-                    bgcolor: 'action.hover'
-                  }
-                }}
-              >
-                <Avatar
-                  sx={{
-                    bgcolor: resource.color || 'primary.main',
-                    width: 40,
-                    height: 40
-                  }}
-                >
-                  <i className="ri-door-line" />
-                </Avatar>
+                  </Paper>
+                ))}
+              </Box>
+            )}
+          </Paper>
 
-                <Box sx={{ flexGrow: 1 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {resource.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {getBranchName(resource.branchId)}
-                    {resource.floor && ` • ${resource.floor}`}
-                  </Typography>
-                </Box>
-
-                <Chip
-                  size="small"
-                  icon={<i className="ri-group-line" />}
-                  label={`${resource.capacity} capacity`}
-                  variant="outlined"
-                />
-
-                <Box sx={{ display: 'flex', gap: 0.5 }}>
-                  {resource.amenities.slice(0, 3).map((amenity) => (
-                    <Chip
-                      key={amenity}
-                      label={amenity}
-                      size="small"
-                      sx={{ fontSize: '0.7rem', height: 20 }}
-                    />
-                  ))}
-                  {resource.amenities.length > 3 && (
-                    <Chip
-                      label={`+${resource.amenities.length - 3}`}
-                      size="small"
-                      sx={{ fontSize: '0.7rem', height: 20 }}
-                    />
-                  )}
-                </Box>
-
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={<i className="ri-edit-line" />}
-                  onClick={() => handleEditResource(resource)}
-                >
-                  Edit
-                </Button>
-
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={() => handleDeleteResource(resource.id)}
-                >
-                  <i className="ri-delete-bin-line" />
-                </IconButton>
-              </Paper>
-            ))}
-          </Box>
-        )}
-      </Paper>
-
-      {/* Add Resource FAB */}
-      <Fab
-        color="primary"
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24
-        }}
-        onClick={handleAddResource}
-      >
-        <i className="ri-add-line" />
-      </Fab>
+          {/* Add Resource FAB - only in resource management view */}
+          <Fab
+            color='primary'
+            sx={{
+              position: 'fixed',
+              bottom: 24,
+              right: 24
+            }}
+            onClick={handleAddResource}
+          >
+            <i className='ri-add-line' />
+          </Fab>
+        </>
+      )}
 
       {/* Resource Editor Drawer */}
       <ResourceEditorDrawer
         open={isEditorOpen}
         onClose={handleCloseEditor}
         resource={editingResource}
+        selectedBranchId={selectedBranchId}
       />
     </Box>
   )

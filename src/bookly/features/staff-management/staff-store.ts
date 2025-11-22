@@ -178,7 +178,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
   getStaffWorkingHours: (staffId, day) => {
     const staffHours = get().staffWorkingHours[staffId]
-    if (!staffHours) {
+    if (!staffHours || !staffHours[day]) {
       return { isWorking: false, shifts: [] }
     }
     return staffHours[day]

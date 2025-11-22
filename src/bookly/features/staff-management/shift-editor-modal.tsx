@@ -15,9 +15,11 @@ import {
   IconButton,
   Chip,
   List,
-  ListItem
+  ListItem,
+  InputAdornment
 } from '@mui/material'
 import type { BreakRange } from '../calendar/types'
+import { TimeSelectField } from './time-select-field'
 
 interface ShiftEditorModalProps {
   open: boolean
@@ -158,23 +160,17 @@ export function ShiftEditorModal({
             />
 
             {/* Start/End Times */}
-            <TextField
-              type="time"
+            <TimeSelectField
               label="Start"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              inputProps={{ step: 900 }} // 15 min increments
+              onChange={setStartTime}
               disabled={!isWorking}
               sx={{ width: 150 }}
             />
-            <TextField
-              type="time"
+            <TimeSelectField
               label="End"
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              inputProps={{ step: 900 }} // 15 min increments
+              onChange={setEndTime}
               disabled={!isWorking}
               sx={{ width: 150 }}
             />
@@ -236,22 +232,18 @@ export function ShiftEditorModal({
                 >
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
                     <i className="ri-cup-line" style={{ fontSize: 20, opacity: 0.5 }} />
-                    <TextField
-                      type="time"
+                    <TimeSelectField
                       label="Start"
                       value={breakRange.start}
-                      onChange={(e) => handleUpdateBreak(breakRange.id, 'start', e.target.value)}
-                      InputLabelProps={{ shrink: true }}
+                      onChange={(value) => handleUpdateBreak(breakRange.id, 'start', value)}
                       size="small"
                       sx={{ width: 120 }}
                     />
                     <Typography variant="body2" color="text.secondary">—</Typography>
-                    <TextField
-                      type="time"
+                    <TimeSelectField
                       label="End"
                       value={breakRange.end}
-                      onChange={(e) => handleUpdateBreak(breakRange.id, 'end', e.target.value)}
-                      InputLabelProps={{ shrink: true }}
+                      onChange={(value) => handleUpdateBreak(breakRange.id, 'end', value)}
                       size="small"
                       sx={{ width: 120 }}
                     />

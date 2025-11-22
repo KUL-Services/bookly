@@ -24,6 +24,7 @@ interface ResourceEditorDrawerProps {
   open: boolean
   onClose: () => void
   resource: Resource | null
+  selectedBranchId?: string | null
 }
 
 const AMENITIES_OPTIONS = [
@@ -56,7 +57,7 @@ const COLOR_OPTIONS = [
   { value: '#f9a825', label: 'Yellow' }
 ]
 
-export function ResourceEditorDrawer({ open, onClose, resource }: ResourceEditorDrawerProps) {
+export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId }: ResourceEditorDrawerProps) {
   const { createResource, updateResource } = useStaffManagementStore()
 
   const [name, setName] = useState('')
@@ -76,15 +77,15 @@ export function ResourceEditorDrawer({ open, onClose, resource }: ResourceEditor
       setAmenities(resource.amenities)
       setColor(resource.color || '#1976d2')
     } else {
-      // Reset for new resource
+      // Reset for new resource - use selectedBranchId if available
       setName('')
-      setBranchId(mockBranches[0]?.id || '')
+      setBranchId(selectedBranchId || mockBranches[0]?.id || '')
       setCapacity(10)
       setFloor('')
       setAmenities([])
       setColor('#1976d2')
     }
-  }, [resource, open])
+  }, [resource, open, selectedBranchId])
 
   const handleSave = () => {
     if (!name || !branchId) {

@@ -20,6 +20,7 @@ import {
 } from '@mui/material'
 import { useStaffManagementStore } from './staff-store'
 import type { DayOfWeek } from '../calendar/types'
+import { TimeSelectField } from './time-select-field'
 
 interface StaffEditWorkingHoursModalProps {
   open: boolean
@@ -40,32 +41,6 @@ const DAY_LABELS: Record<DayOfWeek, string> = {
   Sat: 'Saturday'
 }
 
-// Generate time options in 15-minute intervals
-function generateTimeOptions(): string[] {
-  const times: string[] = []
-  for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      const hourStr = hour.toString().padStart(2, '0')
-      const minStr = minute.toString().padStart(2, '0')
-      times.push(`${hourStr}:${minStr}`)
-    }
-  }
-  return times
-}
-
-// Format time from 24h to 12h format for display
-function formatTime12h(time24: string): string {
-  const [hourStr, minStr] = time24.split(':')
-  let hour = parseInt(hourStr)
-  const minute = minStr
-  const period = hour >= 12 ? 'PM' : 'AM'
-
-  if (hour === 0) hour = 12
-  else if (hour > 12) hour -= 12
-
-  return `${hour}:${minute} ${period}`
-}
-
 function calculateDuration(start: string, end: string): string {
   const [startHour, startMin] = start.split(':').map(Number)
   const [endHour, endMin] = end.split(':').map(Number)
@@ -80,8 +55,6 @@ function calculateDuration(start: string, end: string): string {
   return `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`
 }
 
-const TIME_OPTIONS = generateTimeOptions()
-
 export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }: StaffEditWorkingHoursModalProps) {
   const { getStaffWorkingHours, updateStaffWorkingHours } = useStaffManagementStore()
   const [effectiveDate, setEffectiveDate] = useState('immediately')
@@ -91,24 +64,19 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-    >
+    <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
       <DialogTitle>
-        <Typography variant="h6" fontWeight={600}>
+        <Typography variant='h6' fontWeight={600}>
           Edit • Working Hours • {staffName}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant='body2' color='text.secondary'>
           Set working hours for {staffName}
         </Typography>
       </DialogTitle>
 
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {DAYS_OF_WEEK.map((day) => {
+          {DAYS_OF_WEEK.map(day => {
             const dayHours = getStaffWorkingHours(staffId, day)
 
             const handleToggleWorking = () => {
@@ -120,12 +88,14 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
               } else {
                 updateStaffWorkingHours(staffId, day, {
                   isWorking: true,
-                  shifts: [{
-                    id: crypto.randomUUID(),
-                    start: '09:00',
-                    end: '17:00',
-                    breaks: []
-                  }]
+                  shifts: [
+                    {
+                      id: crypto.randomUUID(),
+                      start: '09:00',
+                      end: '17:00',
+                      breaks: []
+                    }
+                  ]
                 })
               }
             }
@@ -180,9 +150,7 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
               const shift = newShifts[shiftIndex]
               newShifts[shiftIndex] = {
                 ...shift,
-                breaks: (shift.breaks || []).map(b =>
-                  b.id === breakId ? { ...b, [field]: value } : b
-                )
+                breaks: (shift.breaks || []).map(b => (b.id === breakId ? { ...b, [field]: value } : b))
               }
               updateStaffWorkingHours(staffId, day, {
                 ...dayHours,
@@ -193,7 +161,7 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
             return (
               <Paper
                 key={day}
-                variant="outlined"
+                variant='outlined'
                 sx={{
                   p: 2,
                   bgcolor: dayHours.isWorking ? 'background.paper' : 'action.hover'
@@ -201,15 +169,9 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: dayHours.isWorking ? 2 : 0 }}>
                   <FormControlLabel
-                    control={
-                      <Switch
-                        checked={dayHours.isWorking}
-                        onChange={handleToggleWorking}
-                        color="primary"
-                      />
-                    }
+                    control={<Switch checked={dayHours.isWorking} onChange={handleToggleWorking} color='primary' />}
                     label={
-                      <Typography variant="subtitle1" fontWeight={600} sx={{ minWidth: 100 }}>
+                      <Typography variant='subtitle1' fontWeight={600} sx={{ minWidth: 100 }}>
                         {DAY_LABELS[day]}
                       </Typography>
                     }
@@ -217,23 +179,14 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
 
                   {dayHours.isWorking && dayHours.shifts.length > 0 && (
                     <Chip
-                      size="small"
-                      label={calculateDuration(
-                        dayHours.shifts[0].start,
-                        dayHours.shifts[0].end
-                      )}
-                      color="primary"
-                      variant="outlined"
+                      size='small'
+                      label={calculateDuration(dayHours.shifts[0].start, dayHours.shifts[0].end)}
+                      color='primary'
+                      variant='outlined'
                     />
                   )}
 
-                  {!dayHours.isWorking && (
-                    <Chip
-                      size="small"
-                      label="Not Working"
-                      color="default"
-                    />
-                  )}
+                  {!dayHours.isWorking && <Chip size='small' label='Not Working' color='default' />}
                 </Box>
 
                 {dayHours.isWorking && (
@@ -241,44 +194,30 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
                     {dayHours.shifts.map((shift, shiftIndex) => (
                       <Box key={shift.id}>
                         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                          <FormControl size="small" sx={{ minWidth: 140 }}>
-                            <Select
-                              value={shift.start}
-                              onChange={(e) => handleUpdateShift(shiftIndex, 'start', e.target.value)}
-                              displayEmpty
-                            >
-                              {TIME_OPTIONS.map((time) => (
-                                <MenuItem key={time} value={time}>
-                                  {formatTime12h(time)}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
+                          <TimeSelectField
+                            value={shift.start}
+                            onChange={value => handleUpdateShift(shiftIndex, 'start', value)}
+                            size='small'
+                            sx={{ minWidth: 140 }}
+                          />
 
-                          <FormControl size="small" sx={{ minWidth: 140 }}>
-                            <Select
-                              value={shift.end}
-                              onChange={(e) => handleUpdateShift(shiftIndex, 'end', e.target.value)}
-                              displayEmpty
-                            >
-                              {TIME_OPTIONS.map((time) => (
-                                <MenuItem key={time} value={time}>
-                                  {formatTime12h(time)}
-                                </MenuItem>
-                              ))}
-                            </Select>
-                          </FormControl>
+                          <TimeSelectField
+                            value={shift.end}
+                            onChange={value => handleUpdateShift(shiftIndex, 'end', value)}
+                            size='small'
+                            sx={{ minWidth: 140 }}
+                          />
 
                           <Chip
-                            icon={<i className="ri-time-line" style={{ fontSize: 16 }} />}
-                            size="small"
+                            icon={<i className='ri-time-line' style={{ fontSize: 16 }} />}
+                            size='small'
                             label={calculateDuration(shift.start, shift.end)}
                             sx={{ ml: 1 }}
                           />
 
                           <Button
-                            size="small"
-                            variant="text"
+                            size='small'
+                            variant='text'
                             onClick={() => handleAddBreak(shiftIndex)}
                             sx={{ ml: 'auto' }}
                           >
@@ -289,55 +228,38 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
                         {/* Breaks */}
                         {shift.breaks && shift.breaks.length > 0 && (
                           <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {shift.breaks.map((breakRange) => (
+                            {shift.breaks.map(breakRange => (
                               <Box key={breakRange.id} sx={{ display: 'flex', gap: 2, alignItems: 'center', pl: 0 }}>
-                                <Typography
-                                  variant="body2"
-                                  sx={{ minWidth: 60, color: 'text.secondary' }}
-                                >
+                                <Typography variant='body2' sx={{ minWidth: 60, color: 'text.secondary' }}>
                                   Break
                                 </Typography>
 
-                                <FormControl size="small" sx={{ minWidth: 140 }}>
-                                  <Select
-                                    value={breakRange.start}
-                                    onChange={(e) => handleUpdateBreak(shiftIndex, breakRange.id, 'start', e.target.value)}
-                                    displayEmpty
-                                  >
-                                    {TIME_OPTIONS.map((time) => (
-                                      <MenuItem key={time} value={time}>
-                                        {formatTime12h(time)}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                </FormControl>
+                                <TimeSelectField
+                                  value={breakRange.start}
+                                  onChange={value => handleUpdateBreak(shiftIndex, breakRange.id, 'start', value)}
+                                  size='small'
+                                  sx={{ minWidth: 140 }}
+                                />
 
-                                <FormControl size="small" sx={{ minWidth: 140 }}>
-                                  <Select
-                                    value={breakRange.end}
-                                    onChange={(e) => handleUpdateBreak(shiftIndex, breakRange.id, 'end', e.target.value)}
-                                    displayEmpty
-                                  >
-                                    {TIME_OPTIONS.map((time) => (
-                                      <MenuItem key={time} value={time}>
-                                        {formatTime12h(time)}
-                                      </MenuItem>
-                                    ))}
-                                  </Select>
-                                </FormControl>
+                                <TimeSelectField
+                                  value={breakRange.end}
+                                  onChange={value => handleUpdateBreak(shiftIndex, breakRange.id, 'end', value)}
+                                  size='small'
+                                  sx={{ minWidth: 140 }}
+                                />
 
                                 <Chip
-                                  size="small"
+                                  size='small'
                                   label={calculateDuration(breakRange.start, breakRange.end)}
-                                  variant="outlined"
+                                  variant='outlined'
                                 />
 
                                 <IconButton
-                                  size="small"
-                                  color="error"
+                                  size='small'
+                                  color='error'
                                   onClick={() => handleRemoveBreak(shiftIndex, breakRange.id)}
                                 >
-                                  <i className="ri-delete-bin-line" />
+                                  <i className='ri-delete-bin-line' />
                                 </IconButton>
                               </Box>
                             ))}
@@ -353,42 +275,40 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
 
           {/* Make Changes Effective */}
           <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" gutterBottom fontWeight={600}>
+            <Typography variant='subtitle2' gutterBottom fontWeight={600}>
               Make changes effective
             </Typography>
-            <FormControl fullWidth size="small">
-              <Select
-                value={effectiveDate}
-                onChange={(e) => setEffectiveDate(e.target.value)}
-              >
-                <MenuItem value="immediately">Immediately</MenuItem>
-                <MenuItem value="next-week">Next Week</MenuItem>
-                <MenuItem value="custom">Custom Date</MenuItem>
+            <FormControl fullWidth size='small'>
+              <Select value={effectiveDate} onChange={e => setEffectiveDate(e.target.value)}>
+                <MenuItem value='immediately'>Immediately</MenuItem>
+                <MenuItem value='next-week'>Next Week</MenuItem>
+                <MenuItem value='custom'>Custom Date</MenuItem>
               </Select>
             </FormControl>
           </Box>
 
           {/* Timeframe Info */}
           <Paper
-            variant="outlined"
+            variant='outlined'
             sx={{
               p: 2,
               bgcolor: 'action.hover',
               borderStyle: 'dashed'
             }}
           >
-            <Typography variant="body2" color="text.secondary">
-              <strong>TIMEFRAME:</strong> These changes will apply to future scheduling for {staffName}. Existing appointments will not be affected.
+            <Typography variant='body2' color='text.secondary'>
+              <strong>TIMEFRAME:</strong> These changes will apply to future scheduling for {staffName}. Existing
+              appointments will not be affected.
             </Typography>
           </Paper>
         </Box>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={onClose} variant='outlined'>
           CANCEL
         </Button>
-        <Button onClick={handleSave} variant="contained">
+        <Button onClick={handleSave} variant='contained'>
           SAVE
         </Button>
       </DialogActions>

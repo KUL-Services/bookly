@@ -13,10 +13,12 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  InputAdornment
 } from '@mui/material'
 import { mockStaff } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
+import { TimeSelectField } from './time-select-field'
 
 interface TimeReservationModalProps {
   open: boolean
@@ -110,21 +112,19 @@ export function TimeReservationModal({ open, onClose }: TimeReservationModalProp
 
           {/* Time Range */}
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <TextField
-              type="time"
+            <TimeSelectField
               label="Start Time"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              onChange={setStartTime}
+              size="small"
               required
               fullWidth
             />
-            <TextField
-              type="time"
+            <TimeSelectField
               label="End Time"
               value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              onChange={setEndTime}
+              size="small"
               required
               fullWidth
             />

@@ -363,6 +363,14 @@ export function ShiftsTab() {
     endTime: string
   } | null>(null)
 
+  // TimeOffModal edit state
+  const [editingTimeOffId, setEditingTimeOffId] = useState<string | undefined>(undefined)
+  const [timeOffModalContext, setTimeOffModalContext] = useState<{
+    staffId: string
+    staffName: string
+    date: Date
+  } | null>(null)
+
   // Calendar popover state
   const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
   const calendarOpen = Boolean(calendarAnchor)
@@ -408,8 +416,20 @@ export function ShiftsTab() {
   }
 
   const handleOpenTimeOffModal = () => {
+    setEditingTimeOffId(undefined)
+    setTimeOffModalContext(null)
     setIsTimeOffModalOpen(true)
     handleCloseStaffMenu()
+  }
+
+  const handleEditTimeOff = (timeOffId: string, staff: { id: string; name: string }, date: Date) => {
+    setEditingTimeOffId(timeOffId)
+    setTimeOffModalContext({
+      staffId: staff.id,
+      staffName: staff.name,
+      date
+    })
+    setIsTimeOffModalOpen(true)
   }
 
   const openShiftEditor = (
@@ -713,6 +733,7 @@ export function ShiftsTab() {
 
           {timeOff && (
             <Box
+              onClick={() => handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, selectedDate)}
               sx={{
                 position: 'absolute',
                 left: 0,
@@ -723,7 +744,12 @@ export function ShiftsTab() {
                 borderRadius: 1,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: '#333333'
+                }
               }}
             >
               <Typography variant='body2' sx={{ color: '#fff' }} fontWeight={500}>
@@ -886,7 +912,18 @@ export function ShiftsTab() {
             />
           )}
 
-          <TimeOffModal open={isTimeOffModalOpen} onClose={() => setIsTimeOffModalOpen(false)} />
+          <TimeOffModal
+            open={isTimeOffModalOpen}
+            onClose={() => {
+              setIsTimeOffModalOpen(false)
+              setEditingTimeOffId(undefined)
+              setTimeOffModalContext(null)
+            }}
+            editTimeOffId={editingTimeOffId}
+            initialStaffId={timeOffModalContext?.staffId}
+            initialStaffName={timeOffModalContext?.staffName}
+            initialDate={timeOffModalContext?.date}
+          />
 
           <ShiftEditorModal
             open={isShiftEditorOpen}
@@ -1431,6 +1468,7 @@ export function ShiftsTab() {
                       )}
                       {timeOff && (
                         <Box
+                          onClick={() => handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)}
                           sx={{
                             width: '100%',
                             height: '100%',
@@ -1439,7 +1477,12 @@ export function ShiftsTab() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            p: 0.5
+                            p: 0.5,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: '#333333'
+                            }
                           }}
                         >
                           <Box sx={{ textAlign: 'center' }}>
@@ -1533,7 +1576,18 @@ export function ShiftsTab() {
         />
       )}
 
-      <TimeOffModal open={isTimeOffModalOpen} onClose={() => setIsTimeOffModalOpen(false)} />
+      <TimeOffModal
+        open={isTimeOffModalOpen}
+        onClose={() => {
+          setIsTimeOffModalOpen(false)
+          setEditingTimeOffId(undefined)
+          setTimeOffModalContext(null)
+        }}
+        editTimeOffId={editingTimeOffId}
+        initialStaffId={timeOffModalContext?.staffId}
+        initialStaffName={timeOffModalContext?.staffName}
+        initialDate={timeOffModalContext?.date}
+      />
 
       <ShiftEditorModal
         open={isShiftEditorOpen}
