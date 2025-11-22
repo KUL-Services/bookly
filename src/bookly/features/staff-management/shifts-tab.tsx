@@ -29,6 +29,7 @@ import {
 import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { Calendar } from '@/bookly/components/ui/calendar'
 import { mockStaff } from '@/bookly/data/mock-data'
+import { mockBusinessHours } from '@/bookly/data/staff-management-mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { BusinessHoursModal } from './business-hours-modal'
 import { StaffEditWorkingHoursModal } from './staff-edit-working-hours-modal'
@@ -88,27 +89,54 @@ function PrintStyles() {
   return null
 }
 
-const TIMELINE_HOURS = [
-  '10:00 AM',
-  '11:00 AM',
-  '12:00 PM',
-  '1:00 PM',
-  '2:00 PM',
-  '3:00 PM',
-  '4:00 PM',
-  '5:00 PM',
-  '6:00 PM',
-  '7:00 PM',
-  '8:00 PM',
-  '9:00 PM',
-  '10:00 PM',
-  '11:00 PM',
-  '12:00 AM'
-]
-
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-function timeToPosition(time: string): number {
+// Generate timeline hours based on business hours for a specific day
+function generateTimelineHours(dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'): string[] {
+  const businessHours = mockBusinessHours[dayOfWeek]
+
+  if (!businessHours.isOpen || businessHours.shifts.length === 0) {
+    // Default fallback if business is closed
+    return ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM']
+  }
+
+  // Get first shift's start and end times
+  const shift = businessHours.shifts[0]
+  const [startHour, startMin] = shift.start.split(':').map(Number)
+  const [endHour, endMin] = shift.end.split(':').map(Number)
+
+  const hours: string[] = []
+
+  // Generate hourly labels from start to end
+  for (let hour = startHour; hour <= endHour; hour++) {
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
+    const period = hour >= 12 ? 'PM' : 'AM'
+    hours.push(`${displayHour}:00 ${period}`)
+  }
+
+  return hours
+}
+
+// Get business hours start/end for a specific day (in minutes from midnight)
+function getBusinessHoursRange(dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'): { start: number; end: number } {
+  const businessHours = mockBusinessHours[dayOfWeek]
+
+  if (!businessHours.isOpen || businessHours.shifts.length === 0) {
+    // Default fallback
+    return { start: 9 * 60, end: 17 * 60 }
+  }
+
+  const shift = businessHours.shifts[0]
+  const [startHour, startMin] = shift.start.split(':').map(Number)
+  const [endHour, endMin] = shift.end.split(':').map(Number)
+
+  return {
+    start: startHour * 60 + startMin,
+    end: endHour * 60 + endMin
+  }
+}
+
+function timeToPosition(time: string, dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'): number {
   const [hourStr, period] = time.split(' ')
   let [hours, minutes = 0] = hourStr.split(':').map(Number)
 
@@ -116,15 +144,14 @@ function timeToPosition(time: string): number {
   if (period === 'AM' && hours === 12) hours = 0
 
   const totalMinutes = hours * 60 + minutes
-  const startMinutes = 10 * 60
-  const endMinutes = 24 * 60
+  const { start: startMinutes, end: endMinutes } = getBusinessHoursRange(dayOfWeek)
 
   return ((totalMinutes - startMinutes) / (endMinutes - startMinutes)) * 100
 }
 
-function calculateWidth(start: string, end: string): number {
-  const startPos = timeToPosition(start)
-  const endPos = timeToPosition(end)
+function calculateWidth(start: string, end: string, dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'): number {
+  const startPos = timeToPosition(start, dayOfWeek)
+  const endPos = timeToPosition(end, dayOfWeek)
   return endPos - startPos
 }
 
@@ -375,7 +402,7 @@ export function ShiftsTab() {
   const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
   const calendarOpen = Boolean(calendarAnchor)
 
-  const { timeOffRequests } = useStaffManagementStore()
+  const { timeOffRequests, getStaffWorkingHours } = useStaffManagementStore()
 
   const displayStaff =
     selectedStaff === 'Staff' ? mockStaff.slice(0, 2) : mockStaff.filter(s => s.name === selectedStaff)
@@ -619,10 +646,28 @@ export function ShiftsTab() {
       req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, selectedDate)
     )
 
-    // Mock shift data - in real implementation, this would come from your data store
-    const hasShift = !timeOff && staff.id !== '3' // Demo: staff with id '3' has no shift
-    const shiftStart = '10:00 AM'
-    const shiftEnd = '7:00 PM'
+    // Get the day of week from the selected date
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
+    const workingHours = getStaffWorkingHours(staff.id, dayOfWeek)
+    const hasShift = !timeOff && workingHours.isWorking && workingHours.shifts.length > 0
+
+    // Helper function to convert 24h time to 12h format
+    const formatTime12Hour = (time24: string) => {
+      const [hourStr, minStr] = time24.split(':')
+      let hour = parseInt(hourStr)
+      const minute = minStr
+      const period = hour >= 12 ? 'PM' : 'AM'
+
+      if (hour === 0) hour = 12
+      else if (hour > 12) hour -= 12
+
+      return `${hour}:${minute} ${period}`
+    }
+
+    // Get shift times from working hours data
+    const firstShift = workingHours.shifts[0]
+    const shiftStart = firstShift ? formatTime12Hour(firstShift.start) : '10:00 AM'
+    const shiftEnd = firstShift ? formatTime12Hour(firstShift.end) : '7:00 PM'
 
     return (
       <Box key={staff.id} sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 80 }}>
@@ -650,8 +695,8 @@ export function ShiftsTab() {
               onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, { start: shiftStart, end: shiftEnd })}
               sx={{
                 position: 'absolute',
-                left: `${timeToPosition(shiftStart)}%`,
-                width: `${calculateWidth(shiftStart, shiftEnd)}%`,
+                left: `${timeToPosition(shiftStart, dayOfWeek)}%`,
+                width: `${calculateWidth(shiftStart, shiftEnd, dayOfWeek)}%`,
                 top: 0,
                 bottom: 0,
                 bgcolor: 'rgba(139, 195, 74, 0.3)',
@@ -671,10 +716,10 @@ export function ShiftsTab() {
               }}
             >
               <Typography variant='caption' fontWeight={500} color='text.primary'>
-                10:00 am
+                {shiftStart.toLowerCase()}
               </Typography>
               <Typography variant='caption' fontWeight={500} color='text.primary'>
-                7:00 pm
+                {shiftEnd.toLowerCase()}
               </Typography>
               <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
                 9h/9h
@@ -701,9 +746,9 @@ export function ShiftsTab() {
                 right: 0,
                 top: 0,
                 bottom: 0,
-                bgcolor: 'rgba(0, 0, 0, 0.02)',
+                bgcolor: 'transparent',
                 borderRadius: 1,
-                border: 1,
+                border: '2px dashed',
                 borderColor: 'divider',
                 display: 'flex',
                 alignItems: 'center',
@@ -711,11 +756,12 @@ export function ShiftsTab() {
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.04)'
+                  bgcolor: 'rgba(0, 0, 0, 0.02)',
+                  borderColor: 'primary.main'
                 }
               }}
             >
-              <Typography variant='body2' color='text.secondary'>
+              <Typography variant='body2' color='text.secondary' fontWeight={500}>
                 No Shift
               </Typography>
               <IconButton
@@ -763,6 +809,10 @@ export function ShiftsTab() {
   }
 
   if (viewMode === 'Day') {
+    // Get the day of week for timeline generation
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
+    const timelineHours = generateTimelineHours(dayOfWeek)
+
     return (
       <DndContext onDragEnd={handleDragEnd}>
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
@@ -792,7 +842,7 @@ export function ShiftsTab() {
                 )}
               </Box>
               <Box sx={{ flex: 1, display: 'flex', px: 2 }}>
-                {TIMELINE_HOURS.map((hour, idx) => (
+                {timelineHours.map((hour, idx) => (
                   <Box key={idx} sx={{ flex: 1, textAlign: 'center', py: 1 }}>
                     <Typography variant='caption' color='text.secondary'>
                       {hour}
@@ -1369,8 +1419,28 @@ export function ShiftsTab() {
                     req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
                   )
 
-                  // Mock shift data - in real implementation, this would come from your data store
-                  const hasShift = !timeOff && staff.id !== '3' // Demo: staff with id '3' has no shift
+                  // Get working hours for this specific day
+                  const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()] as 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
+                  const workingHours = getStaffWorkingHours(staff.id, dayOfWeek)
+                  const hasShift = !timeOff && workingHours.isWorking && workingHours.shifts.length > 0
+
+                  // Helper function to convert 24h time to 12h format
+                  const formatTime12Hour = (time24: string) => {
+                    const [hourStr, minStr] = time24.split(':')
+                    let hour = parseInt(hourStr)
+                    const minute = minStr
+                    const period = hour >= 12 ? 'PM' : 'AM'
+
+                    if (hour === 0) hour = 12
+                    else if (hour > 12) hour -= 12
+
+                    return `${hour}:${minute} ${period}`
+                  }
+
+                  // Get shift times from working hours data
+                  const firstShift = workingHours.shifts[0]
+                  const shiftStart = firstShift ? formatTime12Hour(firstShift.start) : '10:00 AM'
+                  const shiftEnd = firstShift ? formatTime12Hour(firstShift.end) : '7:00 PM'
 
                   return (
                     <Box
@@ -1389,7 +1459,7 @@ export function ShiftsTab() {
                     >
                       {hasShift && !timeOff && (
                         <Box
-                          onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, { start: '10:00 AM', end: '7:00 PM' })}
+                          onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, { start: shiftStart, end: shiftEnd })}
                           sx={{
                             width: '100%',
                             height: '100%',
@@ -1411,10 +1481,10 @@ export function ShiftsTab() {
                           }}
                         >
                           <Typography variant='caption' fontWeight={500} color='text.primary'>
-                            10:00 am
+                            {shiftStart.toLowerCase()}
                           </Typography>
                           <Typography variant='caption' fontWeight={500} color='text.primary'>
-                            7:00 pm
+                            {shiftEnd.toLowerCase()}
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
                             9h (9h)
@@ -1424,7 +1494,7 @@ export function ShiftsTab() {
                             sx={{ position: 'absolute', top: 2, right: 2, color: 'text.primary' }}
                             onClick={e => {
                               e.stopPropagation()
-                              openShiftEditor({ id: staff.id, name: staff.name }, date, { start: '10:00 AM', end: '7:00 PM' })
+                              openShiftEditor({ id: staff.id, name: staff.name }, date, { start: shiftStart, end: shiftEnd })
                             }}
                           >
                             <i className='ri-edit-line' style={{ fontSize: 14 }} />
@@ -1437,21 +1507,22 @@ export function ShiftsTab() {
                           sx={{
                             width: '100%',
                             height: '100%',
-                            bgcolor: 'background.paper',
+                            bgcolor: 'transparent',
                             borderRadius: 1,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            border: 1,
+                            border: '2px dashed',
                             borderColor: 'divider',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             '&:hover': {
-                              bgcolor: 'rgba(0, 0, 0, 0.02)'
+                              bgcolor: 'rgba(0, 0, 0, 0.02)',
+                              borderColor: 'primary.main'
                             }
                           }}
                         >
-                          <Typography variant='body2' color='text.secondary'>
+                          <Typography variant='body2' color='text.secondary' fontWeight={500}>
                             No Shift
                           </Typography>
                           <IconButton

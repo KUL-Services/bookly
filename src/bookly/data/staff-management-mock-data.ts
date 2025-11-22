@@ -57,7 +57,7 @@ const createDefaultShift = (start: string, end: string, breaks?: BreakRange[]): 
 })
 
 export const mockStaffWorkingHours: Record<string, WeeklyStaffHours> = {
-  // Staff member 1 - Full time
+  // Staff member 1 - Full time (Mon-Fri, off weekends)
   '1': {
     Sun: { isWorking: false, shifts: [] },
     Mon: {
@@ -80,12 +80,9 @@ export const mockStaffWorkingHours: Record<string, WeeklyStaffHours> = {
       isWorking: true,
       shifts: [createDefaultShift('09:00', '18:00', [{ id: '5', start: '12:00', end: '13:00' }])]
     },
-    Sat: {
-      isWorking: true,
-      shifts: [createDefaultShift('08:00', '16:00', [{ id: '6', start: '12:00', end: '12:30' }])]
-    }
+    Sat: { isWorking: false, shifts: [] }
   },
-  // Staff member 2 - Part time with split shift
+  // Staff member 2 - Part time (Tue-Sat, off Sun-Mon)
   '2': {
     Sun: { isWorking: false, shifts: [] },
     Mon: { isWorking: false, shifts: [] },
@@ -110,7 +107,7 @@ export const mockStaffWorkingHours: Record<string, WeeklyStaffHours> = {
       shifts: [createDefaultShift('09:00', '18:00', [{ id: '7', start: '13:00', end: '14:00' }])]
     }
   },
-  // Staff member 3 - Weekend specialist
+  // Staff member 3 - Weekend specialist (Fri-Sun only)
   '3': {
     Sun: {
       isWorking: true,
