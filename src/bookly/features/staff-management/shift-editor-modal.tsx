@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -29,13 +29,14 @@ interface ShiftEditorModalProps {
   hasShift?: boolean
   initialStartTime?: string
   initialEndTime?: string
+  initialBreaks?: BreakRange[]
   onSave?: (data: { hasShift: boolean; startTime: string; endTime: string; breaks: BreakRange[] }) => void
 }
 
 function calculateDuration(start: string, end: string): string {
   const [startHour, startMin] = start.split(':').map(Number)
   const [endHour, endMin] = end.split(':').map(Number)
-  const minutes = (endHour * 60 + endMin) - (startHour * 60 + startMin)
+  const minutes = endHour * 60 + endMin - (startHour * 60 + startMin)
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
   return `${hours}h ${mins}m`
@@ -47,24 +48,25 @@ export function ShiftEditorModal({
   staffName = 'Staff Member',
   date,
   hasShift = true,
-  initialStartTime = '10:00',
-  initialEndTime = '19:00',
+  initialStartTime = '09:00',
+  initialEndTime = '17:00',
+  initialBreaks = [],
   onSave
 }: ShiftEditorModalProps) {
   const [isWorking, setIsWorking] = useState(hasShift)
   const [startTime, setStartTime] = useState(initialStartTime)
   const [endTime, setEndTime] = useState(initialEndTime)
-  const [breaks, setBreaks] = useState<BreakRange[]>([])
+  const [breaks, setBreaks] = useState<BreakRange[]>(initialBreaks)
 
   // Reset form when modal opens with new data
-  useState(() => {
+  useEffect(() => {
     if (open) {
       setIsWorking(hasShift)
       setStartTime(initialStartTime)
       setEndTime(initialEndTime)
-      setBreaks([])
+      setBreaks(initialBreaks || [])
     }
-  })
+  }, [open])
 
   const handleAddBreak = () => {
     setBreaks([
@@ -82,9 +84,7 @@ export function ShiftEditorModal({
   }
 
   const handleUpdateBreak = (id: string, field: 'start' | 'end', value: string) => {
-    setBreaks(breaks.map(b =>
-      b.id === id ? { ...b, [field]: value } : b
-    ))
+    setBreaks(breaks.map(b => (b.id === id ? { ...b, [field]: value } : b)))
   }
 
   const handleSave = () => {
@@ -117,18 +117,13 @@ export function ShiftEditorModal({
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleCancel}
-      maxWidth="md"
-      fullWidth
-    >
+    <Dialog open={open} onClose={handleCancel} maxWidth='md' fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton size="small" onClick={handleCancel} sx={{ mr: 1 }}>
-            <i className="ri-close-line" />
+          <IconButton size='small' onClick={handleCancel} sx={{ mr: 1 }}>
+            <i className='ri-close-line' />
           </IconButton>
-          <Typography variant="h6" fontWeight={600}>
+          <Typography variant='h6' fontWeight={600}>
             Edit shift • {staffName} • {date ? formatDate(date) : 'Select Date'}
           </Typography>
         </Box>
@@ -140,35 +135,21 @@ export function ShiftEditorModal({
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             {/* Shift Toggle */}
             <FormControlLabel
-              control={
-                <Switch
-                  checked={isWorking}
-                  onChange={(e) => setIsWorking(e.target.checked)}
-                  color="primary"
-                  sx={{
-                    '& .MuiSwitch-switchBase.Mui-checked': {
-                      color: 'success.main'
-                    },
-                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                      backgroundColor: 'success.main'
-                    }
-                  }}
-                />
-              }
+              control={<Switch checked={isWorking} onChange={e => setIsWorking(e.target.checked)} color='primary' />}
               label={<Typography fontWeight={600}>Shift</Typography>}
               sx={{ mr: 2 }}
             />
 
             {/* Start/End Times */}
             <TimeSelectField
-              label="Start"
+              label='Start'
               value={startTime}
               onChange={setStartTime}
               disabled={!isWorking}
               sx={{ width: 150 }}
             />
             <TimeSelectField
-              label="End"
+              label='End'
               value={endTime}
               onChange={setEndTime}
               disabled={!isWorking}
@@ -177,8 +158,8 @@ export function ShiftEditorModal({
 
             {/* Duration Display */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <i className="ri-time-line" style={{ fontSize: 20, opacity: 0.5 }} />
-              <Typography variant="body1" fontWeight={500}>
+              <i className='ri-time-line' style={{ fontSize: 20, opacity: 0.5 }} />
+              <Typography variant='body1' fontWeight={500}>
                 {duration}
               </Typography>
             </Box>
@@ -187,14 +168,14 @@ export function ShiftEditorModal({
 
             {/* Add Break Button */}
             <Button
-              size="medium"
-              variant="text"
-              startIcon={<i className="ri-add-line" />}
+              size='medium'
+              variant='text'
+              startIcon={<i className='ri-add-line' />}
               onClick={handleAddBreak}
               disabled={!isWorking}
               sx={{ textTransform: 'none', fontWeight: 500 }}
             >
-              + Add Break
+              Add Break
             </Button>
           </Box>
 
@@ -209,8 +190,8 @@ export function ShiftEditorModal({
                 color: 'text.secondary'
               }}
             >
-              <i className="ri-cup-line" style={{ fontSize: 32, opacity: 0.3 }} />
-              <Typography variant="body2" sx={{ mt: 1 }}>
+              <i className='ri-cup-line' style={{ fontSize: 32, opacity: 0.3 }} />
+              <Typography variant='body2' sx={{ mt: 1 }}>
                 No breaks added
               </Typography>
             </Box>
@@ -231,34 +212,28 @@ export function ShiftEditorModal({
                   }}
                 >
                   <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
-                    <i className="ri-cup-line" style={{ fontSize: 20, opacity: 0.5 }} />
+                    <i className='ri-cup-line' style={{ fontSize: 20, opacity: 0.5 }} />
                     <TimeSelectField
-                      label="Start"
+                      label='Start'
                       value={breakRange.start}
-                      onChange={(value) => handleUpdateBreak(breakRange.id, 'start', value)}
-                      size="small"
+                      onChange={value => handleUpdateBreak(breakRange.id, 'start', value)}
+                      size='small'
                       sx={{ width: 120 }}
                     />
-                    <Typography variant="body2" color="text.secondary">—</Typography>
+                    <Typography variant='body2' color='text.secondary'>
+                      —
+                    </Typography>
                     <TimeSelectField
-                      label="End"
+                      label='End'
                       value={breakRange.end}
-                      onChange={(value) => handleUpdateBreak(breakRange.id, 'end', value)}
-                      size="small"
+                      onChange={value => handleUpdateBreak(breakRange.id, 'end', value)}
+                      size='small'
                       sx={{ width: 120 }}
                     />
-                    <Chip
-                      size="small"
-                      label={calculateDuration(breakRange.start, breakRange.end)}
-                      variant="outlined"
-                    />
+                    <Chip size='small' label={calculateDuration(breakRange.start, breakRange.end)} variant='outlined' />
                     <Box sx={{ flexGrow: 1 }} />
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleRemoveBreak(breakRange.id)}
-                    >
-                      <i className="ri-delete-bin-line" />
+                    <IconButton size='small' color='error' onClick={() => handleRemoveBreak(breakRange.id)}>
+                      <i className='ri-delete-bin-line' />
                     </IconButton>
                   </Box>
                 </ListItem>
@@ -269,10 +244,10 @@ export function ShiftEditorModal({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleCancel} variant="outlined">
+        <Button onClick={handleCancel} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained">
+        <Button onClick={handleSave} variant='contained'>
           Save
         </Button>
       </DialogActions>
