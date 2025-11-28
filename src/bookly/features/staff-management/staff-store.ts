@@ -107,6 +107,9 @@ export interface StaffManagementState {
   deleteCommissionPolicy: (id: string) => void
   getCommissionPolicies: (scope?: CommissionPolicy['scope']) => CommissionPolicy[]
 
+  // Actions - Staff Management
+  createStaffMember: (staffData: any) => void
+
   // Actions - UI
   selectStaff: (staffId: string | null) => void
   openEditServices: () => void
@@ -427,6 +430,44 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   getCommissionPolicies: (scope) => {
     const policies = get().commissionPolicies
     return scope ? policies.filter(p => p.scope === scope) : policies
+  },
+
+  // Staff Management Actions
+  createStaffMember: (staffData) => {
+    const newStaffId = `staff-${Date.now()}`
+
+    // Initialize staff working hours (all days off by default)
+    const defaultWorkingHours: WeeklyStaffHours = {
+      Sun: { isWorking: false, shifts: [] },
+      Mon: { isWorking: false, shifts: [] },
+      Tue: { isWorking: false, shifts: [] },
+      Wed: { isWorking: false, shifts: [] },
+      Thu: { isWorking: false, shifts: [] },
+      Fri: { isWorking: false, shifts: [] },
+      Sat: { isWorking: false, shifts: [] }
+    }
+
+    set(state => ({
+      staffWorkingHours: {
+        ...state.staffWorkingHours,
+        [newStaffId]: defaultWorkingHours
+      }
+    }))
+
+    // Add to mockStaff array (in a real app, this would be an API call)
+    mockStaff.push({
+      id: newStaffId,
+      name: staffData.name,
+      title: staffData.title,
+      email: staffData.email,
+      phone: staffData.phone,
+      photo: staffData.photo,
+      color: staffData.color,
+      branchId: staffData.branchId,
+      isActive: staffData.isActive
+    })
+
+    console.log('Created new staff member:', { id: newStaffId, ...staffData })
   },
 
   // UI Actions
