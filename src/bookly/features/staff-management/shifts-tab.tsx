@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import {
   Box,
   Typography,
@@ -28,7 +28,7 @@ import {
 } from '@mui/material'
 import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { Calendar } from '@/bookly/components/ui/calendar'
-import { mockStaff } from '@/bookly/data/mock-data'
+import { mockStaff, mockBranches } from '@/bookly/data/mock-data'
 import { mockBusinessHours } from '@/bookly/data/staff-management-mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { BusinessHoursModal } from './business-hours-modal'
@@ -366,6 +366,7 @@ function BulkOperationsDialog({
 export function ShiftsTab() {
   const [viewMode, setViewMode] = useState('Day')
   const [selectedStaff, setSelectedStaff] = useState('Staff')
+  const [selectedBranch, setSelectedBranch] = useState('all')
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
   const [bulkMode, setBulkMode] = useState(false)
@@ -404,8 +405,48 @@ export function ShiftsTab() {
 
   const { timeOffRequests, getStaffWorkingHours } = useStaffManagementStore()
 
-  const displayStaff =
-    selectedStaff === 'Staff' ? mockStaff.slice(0, 2) : mockStaff.filter(s => s.name === selectedStaff)
+  // Filter staff by branch and staff selection
+  const displayStaff = useMemo(() => {
+    let filtered = selectedStaff === 'Staff' ? mockStaff.slice(0, 2) : mockStaff.filter(s => s.name === selectedStaff)
+
+    if (selectedBranch !== 'all') {
+      filtered = filtered.filter(s => s.branchId === selectedBranch)
+    }
+
+    return filtered
+  }, [selectedStaff, selectedBranch])
+
+  // Group staff by branch and sort by shift start time
+  const staffByBranch = useMemo(() => {
+    const grouped: Record<string, typeof mockStaff> = {}
+
+    displayStaff.forEach(staff => {
+      if (!grouped[staff.branchId]) grouped[staff.branchId] = []
+      grouped[staff.branchId].push(staff)
+    })
+
+    // Sort staff within each branch by shift start time
+    Object.keys(grouped).forEach(branchId => {
+      grouped[branchId].sort((a, b) => {
+        const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][
+          selectedDate.getDay()
+        ] as 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
+
+        const aHours = getStaffWorkingHours(a.id, dayOfWeek)
+        const bHours = getStaffWorkingHours(b.id, dayOfWeek)
+
+        if (!aHours.isWorking) return 1  // Non-working to bottom
+        if (!bHours.isWorking) return -1
+
+        const aStart = aHours.shifts[0]?.start || '23:59'
+        const bStart = bHours.shifts[0]?.start || '23:59'
+
+        return aStart.localeCompare(bStart)  // Earliest first
+      })
+    })
+
+    return grouped
+  }, [displayStaff, selectedDate, getStaffWorkingHours])
 
   const handlePrevPeriod = () => {
     if (viewMode === 'Week') {
@@ -570,6 +611,17 @@ export function ShiftsTab() {
         </Select>
       </FormControl>
 
+      <FormControl size='small' sx={{ minWidth: 180 }}>
+        <Select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)}>
+          <MenuItem value='all'>All Branches</MenuItem>
+          {mockBranches.map(branch => (
+            <MenuItem key={branch.id} value={branch.id}>
+              {branch.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
       <FormControlLabel
         control={<Checkbox checked={bulkMode} onChange={e => setBulkMode(e.target.checked)} color='primary' />}
         label='Bulk Edit'
@@ -683,9 +735,25 @@ export function ShiftsTab() {
           <Box
             sx={{ display: 'flex', flexDirection: 'column', fontSize: '0.65rem', color: 'text.secondary', ml: 'auto' }}
           >
-            <Typography variant='caption'>D 9h/9h</Typography>
-            <Typography variant='caption'>W 45h/45h</Typography>
-            <Typography variant='caption'>M 149h 45min</Typography>
+            {viewMode === 'Day' && (
+              <Typography variant='caption'>
+                {hasShift && firstShift
+                  ? `D ${Math.floor((parseInt(firstShift.end.split(':')[0]) * 60 + parseInt(firstShift.end.split(':')[1]) - (parseInt(firstShift.start.split(':')[0]) * 60 + parseInt(firstShift.start.split(':')[1]))) / 60)}h`
+                  : 'D 0h'}
+              </Typography>
+            )}
+            {viewMode === 'Week' && (
+              <>
+                <Typography variant='caption'>
+                  {hasShift ? 'D 8h' : 'D 0h'}
+                </Typography>
+                <Typography variant='caption'>
+                  W {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].filter(day =>
+                    getStaffWorkingHours(staff.id, day as any).isWorking
+                  ).length}d
+                </Typography>
+              </>
+            )}
           </Box>
         </Box>
 
@@ -887,7 +955,39 @@ export function ShiftsTab() {
               </Box>
             </Box>
 
-            {displayStaff.map(renderEnhancedStaffRow)}
+            {/* Staff grouped by branches */}
+            {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
+              const branch = mockBranches.find(b => b.id === branchId)
+
+              return (
+                <Box key={branchId}>
+                  {/* Branch Header */}
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      bgcolor: 'action.selected',
+                      borderBottom: 2,
+                      borderColor: 'divider',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}
+                  >
+                    <i className='ri-building-line' style={{ fontSize: 16 }} />
+                    <Typography variant='subtitle2' fontWeight={600}>
+                      {branch?.name || branchId}
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      ({branchStaff.length} staff)
+                    </Typography>
+                  </Box>
+
+                  {/* Staff in this branch */}
+                  {branchStaff.map(renderEnhancedStaffRow)}
+                </Box>
+              )
+            })}
           </Box>
 
           {/* Day View Footer */}

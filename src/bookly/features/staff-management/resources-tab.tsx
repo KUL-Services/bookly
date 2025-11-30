@@ -26,6 +26,7 @@ import {
 import { mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { ResourceEditorDrawer } from './resource-editor-drawer'
+import { ResourceAssignServicesModal } from './resource-assign-services-modal'
 import type { Resource } from '../calendar/types'
 
 type ViewMode = 'grid' | 'list'
@@ -38,8 +39,10 @@ export function ResourcesTab() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [editingResource, setEditingResource] = useState<Resource | null>(null)
+  const [isAssignServicesOpen, setIsAssignServicesOpen] = useState(false)
+  const [assigningResource, setAssigningResource] = useState<{ id: string; name: string } | null>(null)
 
-  const { resources, deleteResource } = useStaffManagementStore()
+  const { resources, deleteResource, getResourceServices } = useStaffManagementStore()
 
   // Filter resources for selected branch
   const filteredResources = useMemo(() => {
@@ -100,6 +103,16 @@ export function ResourcesTab() {
   const handleCloseEditor = () => {
     setIsEditorOpen(false)
     setEditingResource(null)
+  }
+
+  const handleAssignServices = (resource: Resource) => {
+    setAssigningResource({ id: resource.id, name: resource.name })
+    setIsAssignServicesOpen(true)
+  }
+
+  const handleCloseAssignServices = () => {
+    setIsAssignServicesOpen(false)
+    setAssigningResource(null)
   }
 
   const getBranchName = (branchId: string) => {
@@ -380,7 +393,7 @@ export function ResourcesTab() {
                           </Box>
                         </Box>
 
-                        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                           <Chip
                             size='small'
                             icon={<i className='ri-group-line' />}
@@ -388,6 +401,13 @@ export function ResourcesTab() {
                             variant='outlined'
                           />
                           {resource.floor && <Chip size='small' label={resource.floor} variant='outlined' />}
+                          <Chip
+                            size='small'
+                            icon={<i className='ri-service-line' />}
+                            label={`${getResourceServices(resource.id).length} services`}
+                            color='primary'
+                            variant='outlined'
+                          />
                         </Box>
 
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -407,14 +427,23 @@ export function ResourcesTab() {
                       <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
                         <Button
                           size='small'
-                          startIcon={<i className='ri-edit-line' />}
-                          onClick={() => handleEditResource(resource)}
+                          startIcon={<i className='ri-service-line' />}
+                          onClick={() => handleAssignServices(resource)}
                         >
-                          Edit
+                          Services
                         </Button>
-                        <IconButton size='small' color='error' onClick={() => handleDeleteResource(resource.id)}>
-                          <i className='ri-delete-bin-line' />
-                        </IconButton>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button
+                            size='small'
+                            startIcon={<i className='ri-edit-line' />}
+                            onClick={() => handleEditResource(resource)}
+                          >
+                            Edit
+                          </Button>
+                          <IconButton size='small' color='error' onClick={() => handleDeleteResource(resource.id)}>
+                            <i className='ri-delete-bin-line' />
+                          </IconButton>
+                        </Box>
                       </CardActions>
                     </Card>
                   </Grid>
@@ -464,6 +493,14 @@ export function ResourcesTab() {
                       variant='outlined'
                     />
 
+                    <Chip
+                      size='small'
+                      icon={<i className='ri-service-line' />}
+                      label={`${getResourceServices(resource.id).length} services`}
+                      color='primary'
+                      variant='outlined'
+                    />
+
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
                       {resource.amenities.slice(0, 3).map(amenity => (
                         <Chip key={amenity} label={amenity} size='small' sx={{ fontSize: '0.7rem', height: 20 }} />
@@ -476,6 +513,15 @@ export function ResourcesTab() {
                         />
                       )}
                     </Box>
+
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      startIcon={<i className='ri-service-line' />}
+                      onClick={() => handleAssignServices(resource)}
+                    >
+                      Services
+                    </Button>
 
                     <Button
                       size='small'
@@ -517,6 +563,16 @@ export function ResourcesTab() {
         resource={editingResource}
         selectedBranchId={selectedBranchId}
       />
+
+      {/* Resource Assign Services Modal */}
+      {assigningResource && (
+        <ResourceAssignServicesModal
+          open={isAssignServicesOpen}
+          onClose={handleCloseAssignServices}
+          resourceId={assigningResource.id}
+          resourceName={assigningResource.name}
+        />
+      )}
     </Box>
   )
 }

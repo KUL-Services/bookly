@@ -238,6 +238,7 @@ export interface Resource {
   floor?: string
   amenities: string[]
   color?: string
+  serviceIds?: string[]  // Services assigned to this resource
 }
 
 export interface CommissionPolicy {
@@ -253,4 +254,32 @@ export interface CommissionPolicy {
 export interface ShiftRuleSet {
   duplication: { allowCopy: boolean; allowPrint: boolean }
   tutorialsSeen: boolean
+}
+
+// ============================================================================
+// Room Management Types (extends Resource with scheduling)
+// ============================================================================
+
+export interface RoomShift {
+  id: string
+  start: string  // "HH:MM"
+  end: string    // "HH:MM"
+  serviceIds: string[]  // Services available during this shift
+}
+
+export interface RoomShiftInstance extends RoomShift {
+  date: string  // "YYYY-MM-DD"
+  reason?: 'manual' | 'copy'
+}
+
+export interface WeeklyRoomSchedule {
+  [day in DayOfWeek]: {
+    isAvailable: boolean
+    shifts: RoomShift[]
+  }
+}
+
+export interface ManagedRoom extends Resource {
+  weeklySchedule: WeeklyRoomSchedule
+  shiftOverrides: RoomShiftInstance[]
 }

@@ -6,7 +6,9 @@ import {
   mockTimeOffRequests,
   mockResources,
   mockCommissionPolicies,
-  mockShiftRules
+  mockShiftRules,
+  mockManagedRooms,
+  mockStaffServiceAssignments
 } from '@/bookly/data/staff-management-mock-data'
 import { mockStaff } from '@/bookly/data/mock-data'
 import type {
@@ -19,7 +21,11 @@ import type {
   ShiftRuleSet,
   StaffShift,
   StaffShiftInstance,
-  DayOfWeek
+  DayOfWeek,
+  ManagedRoom,
+  WeeklyRoomSchedule,
+  RoomShift,
+  RoomShiftInstance
 } from '../calendar/types'
 
 // Helper to sync changes with calendar
@@ -51,6 +57,11 @@ export interface StaffManagementState {
 
   // Resources
   resources: Resource[]
+  resourceServiceAssignments: Record<string, string[]>  // resourceId -> serviceIds[]
+
+  // Rooms
+  rooms: ManagedRoom[]
+  roomShiftOverrides: Record<string, RoomShiftInstance[]>  // roomId -> overrides[]
 
   // Commissions
   commissionPolicies: CommissionPolicy[]
@@ -101,6 +112,24 @@ export interface StaffManagementState {
   deleteResource: (id: string) => void
   getResourcesForBranch: (branchId: string) => Resource[]
 
+  // Actions - Resource Service Assignments
+  assignServicesToResource: (resourceId: string, serviceIds: string[]) => { success: boolean; conflicts?: string[] }
+  getResourceServices: (resourceId: string) => string[]
+  getServiceResourceAssignments: () => Record<string, string>  // serviceId -> resourceId
+  isServiceAssigned: (serviceId: string) => boolean
+  getResourceForService: (serviceId: string) => string | null
+
+  // Actions - Rooms
+  createRoom: (room: Omit<ManagedRoom, 'id' | 'weeklySchedule' | 'shiftOverrides'>) => void
+  updateRoom: (id: string, updates: Partial<ManagedRoom>) => void
+  deleteRoom: (id: string) => void
+  getRoomsForBranch: (branchId: string) => ManagedRoom[]
+  updateRoomSchedule: (roomId: string, day: DayOfWeek, schedule: WeeklyRoomSchedule[DayOfWeek]) => void
+  getRoomSchedule: (roomId: string, day: DayOfWeek) => WeeklyRoomSchedule[DayOfWeek]
+  getRoomShiftForDate: (roomId: string, date: string) => RoomShift | null
+  updateRoomShiftInstance: (roomId: string, shift: RoomShiftInstance) => void
+  duplicateRoomShifts: (roomId: string, fromDate: string, toRange: { start: string; end: string }) => void
+
   // Actions - Commissions
   createCommissionPolicy: (policy: Omit<CommissionPolicy, 'id'>) => void
   updateCommissionPolicy: (id: string, updates: Partial<CommissionPolicy>) => void
@@ -137,11 +166,14 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   // Initial State
   businessHours: mockBusinessHours,
   staffWorkingHours: mockStaffWorkingHours,
-  staffServiceAssignments: {},
+  staffServiceAssignments: mockStaffServiceAssignments,
   timeReservations: mockTimeReservations,
   timeOffRequests: mockTimeOffRequests,
   shiftOverrides: {},
   resources: mockResources,
+  resourceServiceAssignments: {},
+  rooms: mockManagedRooms,
+  roomShiftOverrides: {},
   commissionPolicies: mockCommissionPolicies,
   selectedStaffId: null,
   isEditServicesOpen: false,
@@ -404,6 +436,207 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
   getResourcesForBranch: (branchId) => {
     return get().resources.filter(res => res.branchId === branchId)
+  },
+
+  // Resource Service Assignment Actions
+  getServiceResourceAssignments: () => {
+    const assignments: Record<string, string> = {}
+    const state = get()
+
+    // Check resources
+    Object.entries(state.resourceServiceAssignments).forEach(([resourceId, serviceIds]) => {
+      serviceIds.forEach(serviceId => {
+        assignments[serviceId] = resourceId
+      })
+    })
+
+    // Check rooms
+    state.rooms.forEach(room => {
+      if (room.serviceIds) {
+        room.serviceIds.forEach(serviceId => {
+          assignments[serviceId] = room.id
+        })
+      }
+    })
+
+    return assignments
+  },
+
+  isServiceAssigned: (serviceId) => {
+    const assignments = get().getServiceResourceAssignments()
+    return serviceId in assignments
+  },
+
+  getResourceForService: (serviceId) => {
+    const assignments = get().getServiceResourceAssignments()
+    return assignments[serviceId] || null
+  },
+
+  assignServicesToResource: (resourceId, serviceIds) => {
+    const currentAssignments = get().getServiceResourceAssignments()
+    const conflicts: string[] = []
+
+    // Check for conflicts
+    serviceIds.forEach(serviceId => {
+      if (currentAssignments[serviceId] && currentAssignments[serviceId] !== resourceId) {
+        conflicts.push(serviceId)
+      }
+    })
+
+    if (conflicts.length > 0) {
+      return { success: false, conflicts }
+    }
+
+    set(state => ({
+      resourceServiceAssignments: {
+        ...state.resourceServiceAssignments,
+        [resourceId]: serviceIds
+      }
+    }))
+
+    return { success: true }
+  },
+
+  getResourceServices: (resourceId) => {
+    return get().resourceServiceAssignments[resourceId] || []
+  },
+
+  // Room Management Actions
+  createRoom: (room) => {
+    const defaultSchedule: WeeklyRoomSchedule = {
+      Sun: { isAvailable: false, shifts: [] },
+      Mon: { isAvailable: false, shifts: [] },
+      Tue: { isAvailable: false, shifts: [] },
+      Wed: { isAvailable: false, shifts: [] },
+      Thu: { isAvailable: false, shifts: [] },
+      Fri: { isAvailable: false, shifts: [] },
+      Sat: { isAvailable: false, shifts: [] }
+    }
+
+    set(state => ({
+      rooms: [
+        ...state.rooms,
+        {
+          ...room,
+          id: `room-${Date.now()}`,
+          serviceIds: room.serviceIds || [],
+          weeklySchedule: defaultSchedule,
+          shiftOverrides: []
+        }
+      ]
+    }))
+  },
+
+  updateRoom: (id, updates) => {
+    set(state => ({
+      rooms: state.rooms.map(room =>
+        room.id === id ? { ...room, ...updates } : room
+      )
+    }))
+  },
+
+  deleteRoom: (id) => {
+    set(state => ({
+      rooms: state.rooms.filter(room => room.id !== id),
+      roomShiftOverrides: Object.fromEntries(
+        Object.entries(state.roomShiftOverrides).filter(([roomId]) => roomId !== id)
+      )
+    }))
+  },
+
+  getRoomsForBranch: (branchId) => {
+    return get().rooms.filter(room => room.branchId === branchId)
+  },
+
+  updateRoomSchedule: (roomId, day, schedule) => {
+    set(state => ({
+      rooms: state.rooms.map(room =>
+        room.id === roomId
+          ? {
+              ...room,
+              weeklySchedule: {
+                ...room.weeklySchedule,
+                [day]: schedule
+              }
+            }
+          : room
+      )
+    }))
+  },
+
+  getRoomSchedule: (roomId, day) => {
+    const room = get().rooms.find(r => r.id === roomId)
+    if (!room || !room.weeklySchedule[day]) {
+      return { isAvailable: false, shifts: [] }
+    }
+    return room.weeklySchedule[day]
+  },
+
+  getRoomShiftForDate: (roomId, date) => {
+    // Check for override first
+    const overrides = get().roomShiftOverrides[roomId] || []
+    const override = overrides.find(o => o.date === date)
+    if (override) {
+      return override
+    }
+
+    // Fall back to weekly template
+    const room = get().rooms.find(r => r.id === roomId)
+    if (!room) return null
+
+    const dateObj = new Date(date)
+    const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const day = dayNames[dateObj.getDay()]
+
+    const daySchedule = room.weeklySchedule[day]
+    return daySchedule.shifts[0] || null
+  },
+
+  updateRoomShiftInstance: (roomId, shift) => {
+    set(state => {
+      const overrides = state.roomShiftOverrides[roomId] || []
+      const existingIndex = overrides.findIndex(o => o.date === shift.date)
+
+      let newOverrides
+      if (existingIndex >= 0) {
+        newOverrides = [...overrides]
+        newOverrides[existingIndex] = shift
+      } else {
+        newOverrides = [...overrides, shift]
+      }
+
+      return {
+        roomShiftOverrides: {
+          ...state.roomShiftOverrides,
+          [roomId]: newOverrides
+        }
+      }
+    })
+  },
+
+  duplicateRoomShifts: (roomId, fromDate, toRange) => {
+    const sourceShift = get().getRoomShiftForDate(roomId, fromDate)
+    if (!sourceShift) return
+
+    const start = new Date(toRange.start)
+    const end = new Date(toRange.end)
+    const newOverrides: RoomShiftInstance[] = []
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0]
+      newOverrides.push({
+        ...sourceShift,
+        date: dateStr,
+        reason: 'copy'
+      })
+    }
+
+    set(state => ({
+      roomShiftOverrides: {
+        ...state.roomShiftOverrides,
+        [roomId]: [...(state.roomShiftOverrides[roomId] || []), ...newOverrides]
+      }
+    }))
   },
 
   // Commission Actions

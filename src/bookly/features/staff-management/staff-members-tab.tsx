@@ -18,7 +18,11 @@ import {
   Tabs,
   Tab,
   Button,
-  Divider
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material'
 import { mockStaff, mockServices, mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
@@ -49,6 +53,8 @@ export function StaffMembersTab() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentTab, setCurrentTab] = useState(0)
   const [isAddStaffDrawerOpen, setIsAddStaffDrawerOpen] = useState(false)
+  const [serviceFilter, setServiceFilter] = useState<string>('all')
+  const [branchFilter, setBranchFilter] = useState<string>('all')
 
   const {
     selectedStaffId,
@@ -75,30 +81,39 @@ export function StaffMembersTab() {
       staff.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // Group staff by branch and sort
-  const staffByBranch = filteredStaff.reduce(
-    (acc, staff) => {
-      const branchId = staff.branchId
-      if (!acc[branchId]) {
-        acc[branchId] = []
-      }
-      acc[branchId].push(staff)
-      return acc
-    },
-    {} as Record<string, typeof mockStaff>
-  )
+  // Filter by branch if selected
+  const filteredByBranch = branchFilter !== 'all'
+    ? filteredStaff.filter(staff => staff.branchId === branchFilter)
+    : filteredStaff
 
-  // Get branch information and sort branches alphabetically
-  const sortedBranches = Object.keys(staffByBranch)
-    .map(branchId => {
-      // Find branch details from mockBranches
-      const branch = mockBranches.find(b => b.id === branchId)
-      return {
-        id: branchId,
-        name: branch?.name || branchId,
-        staff: staffByBranch[branchId].sort((a, b) => a.name.localeCompare(b.name))
-      }
-    })
+  // Filter by service if selected
+  const filteredByService = serviceFilter !== 'all'
+    ? filteredByBranch.filter(staff => {
+        const assignedServices = getStaffServices(staff.id)
+        return assignedServices.includes(serviceFilter)
+      })
+    : filteredByBranch
+
+  // Always group by branch
+  const groupedStaff: Record<string, { name: string; staff: typeof mockStaff }> = {}
+
+  filteredByService.forEach(staff => {
+    const branchId = staff.branchId
+    const branch = mockBranches.find(b => b.id === branchId)
+
+    if (!groupedStaff[branchId]) {
+      groupedStaff[branchId] = { name: branch?.name || branchId, staff: [] }
+    }
+    groupedStaff[branchId].staff.push(staff)
+  })
+
+  // Sort groups and staff within groups
+  const sortedGroups = Object.entries(groupedStaff)
+    .map(([id, group]) => ({
+      id,
+      name: group.name,
+      staff: group.staff.sort((a, b) => a.name.localeCompare(b.name))
+    }))
     .sort((a, b) => a.name.localeCompare(b.name))
 
   // Get assigned services for selected staff
@@ -132,8 +147,8 @@ export function StaffMembersTab() {
           flexDirection: 'column'
         }}
       >
-        {/* Search */}
-        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+        {/* Search and Filters */}
+        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
             fullWidth
             size='small'
@@ -148,13 +163,49 @@ export function StaffMembersTab() {
               )
             }}
           />
+
+          <FormControl fullWidth size='small'>
+            <InputLabel>Branch</InputLabel>
+            <Select
+              value={branchFilter}
+              onChange={e => setBranchFilter(e.target.value)}
+              label='Branch'
+            >
+              <MenuItem value='all'>
+                <em>All Branches</em>
+              </MenuItem>
+              {mockBranches.map(branch => (
+                <MenuItem key={branch.id} value={branch.id}>
+                  {branch.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth size='small'>
+            <InputLabel>Service</InputLabel>
+            <Select
+              value={serviceFilter}
+              onChange={e => setServiceFilter(e.target.value)}
+              label='Service'
+            >
+              <MenuItem value='all'>
+                <em>All Services</em>
+              </MenuItem>
+              {mockServices.map(service => (
+                <MenuItem key={service.id} value={service.id}>
+                  {service.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Box>
 
-        {/* Staff List - Grouped by Branch */}
+        {/* Staff List - Grouped by Branch or Service */}
         <List sx={{ flexGrow: 1, overflow: 'auto', py: 0 }}>
-          {sortedBranches.map(branch => (
-            <Box key={branch.id}>
-              {/* Branch Header */}
+          {sortedGroups.map(group => (
+            <Box key={group.id}>
+              {/* Group Header */}
               <Box
                 sx={{
                   px: 2,
@@ -174,17 +225,18 @@ export function StaffMembersTab() {
                   variant='caption'
                   fontWeight={600}
                   color='text.secondary'
-                  sx={{ textTransform: 'uppercase' }}
+                  sx={{ textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 0.5 }}
                 >
-                  {branch.name}
+                  <i className='ri-building-line' style={{ fontSize: 14 }} />
+                  {group.name}
                 </Typography>
                 <Typography variant='caption' color='text.disabled'>
-                  {branch.staff.length} {branch.staff.length === 1 ? 'member' : 'members'}
+                  {group.staff.length} {group.staff.length === 1 ? 'member' : 'members'}
                 </Typography>
               </Box>
 
-              {/* Staff Members in Branch */}
-              {branch.staff.map(staff => (
+              {/* Staff Members in Group */}
+              {group.staff.map(staff => (
                 <ListItemButton
                   key={staff.id}
                   selected={selectedStaffId === staff.id}

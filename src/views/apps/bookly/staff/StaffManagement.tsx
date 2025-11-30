@@ -6,6 +6,7 @@ import { Box, Tabs, Tab } from '@mui/material'
 import { StaffMembersTab } from '@/bookly/features/staff-management/staff-members-tab'
 import { ShiftsTab } from '@/bookly/features/staff-management/shifts-tab'
 import { ResourcesTab } from '@/bookly/features/staff-management/resources-tab'
+import { RoomsTab } from '@/bookly/features/staff-management/rooms-tab'
 import { CommissionsTab } from '@/bookly/features/staff-management/commissions-tab'
 import { useStaffManagementStore } from '@/bookly/features/staff-management/staff-store'
 
@@ -19,12 +20,7 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props
 
   return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      {...other}
-      style={{ height: '100%' }}
-    >
+    <div role='tabpanel' hidden={value !== index} {...other} style={{ height: '100%' }}>
       {value === index && children}
     </div>
   )
@@ -59,15 +55,12 @@ const StaffManagement = () => {
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       {/* Tabs Header */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-        <Tabs
-          value={currentTab}
-          onChange={(_, newValue) => setCurrentTab(newValue)}
-          sx={{ px: 3 }}
-        >
-          <Tab label="STAFF MEMBERS" sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
-          <Tab label="SHIFTS" sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
-          <Tab label="RESOURCES" sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
-          <Tab label="COMMISSIONS" sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
+        <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)} sx={{ px: 3 }}>
+          <Tab label='STAFF MEMBERS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
+          <Tab label='SHIFTS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
+          <Tab label='RESOURCES' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
+          <Tab label='ROOMS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
+          <Tab label='COMMISSIONS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
         </Tabs>
       </Box>
 
@@ -83,6 +76,9 @@ const StaffManagement = () => {
           <ResourcesTab />
         </TabPanel>
         <TabPanel value={currentTab} index={3}>
+          <RoomsTab />
+        </TabPanel>
+        <TabPanel value={currentTab} index={4}>
           <CommissionsTab />
         </TabPanel>
       </Box>

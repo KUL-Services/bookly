@@ -41,6 +41,7 @@ export function EditServicesModal({
   const [selectedServices, setSelectedServices] = useState<string[]>(() =>
     getStaffServices(staffId)
   )
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
   // Filter services by search
   const filteredServices = useMemo(() => {
@@ -179,7 +180,18 @@ export function EditServicesModal({
               return (
                 <Accordion
                   key={categoryName}
-                  defaultExpanded
+                  expanded={expandedCategories.has(categoryName)}
+                  onChange={(_, isExpanded) => {
+                    setExpandedCategories(prev => {
+                      const next = new Set(prev)
+                      if (isExpanded) {
+                        next.add(categoryName)
+                      } else {
+                        next.delete(categoryName)
+                      }
+                      return next
+                    })
+                  }}
                   sx={{ mb: 1, '&:before': { display: 'none' } }}
                 >
                   <AccordionSummary expandIcon={<i className="ri-arrow-down-s-line" />}>

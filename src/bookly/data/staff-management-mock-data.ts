@@ -7,7 +7,10 @@ import type {
   CommissionPolicy,
   ShiftRuleSet,
   StaffShift,
-  BreakRange
+  BreakRange,
+  ManagedRoom,
+  WeeklyRoomSchedule,
+  RoomShift
 } from '@/bookly/features/calendar/types'
 
 // ============================================================================
@@ -328,4 +331,406 @@ export const getResourcesForBranch = (branchId: string) => {
 
 export const getCommissionForScope = (scope: CommissionPolicy['scope'], scopeRefId?: string) => {
   return mockCommissionPolicies.filter(comm => comm.scope === scope && (!scopeRefId || comm.scopeRefId === scopeRefId))
+}
+
+// ============================================================================
+// Managed Rooms (with Schedules & Service Assignments)
+// ============================================================================
+
+const createRoomShift = (start: string, end: string, serviceIds: string[]): RoomShift => ({
+  id: crypto.randomUUID(),
+  start,
+  end,
+  serviceIds
+})
+
+export const mockManagedRooms: ManagedRoom[] = [
+  // Main Studio - Luxe Hair Studio Oxford (1-1)
+  {
+    id: 'room-1',
+    branchId: '1-1',
+    name: 'Main Studio',
+    capacity: 20,
+    floor: '1st Floor',
+    amenities: ['Air Conditioning', 'Mirrors', 'Sound System', 'WiFi'],
+    color: '#1976d2',
+    serviceIds: ['1', '2'], // Haircut & Style, Color Treatment
+    weeklySchedule: {
+      Sun: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '17:00', ['1'])] // Only haircuts on Sunday
+      },
+      Mon: {
+        isAvailable: true,
+        shifts: [
+          createRoomShift('09:00', '12:00', ['1', '2']),
+          createRoomShift('13:00', '19:00', ['1', '2', '3'])
+        ]
+      },
+      Tue: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '19:00', ['1', '2', '3'])]
+      },
+      Wed: {
+        isAvailable: false,
+        shifts: []
+      },
+      Thu: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '20:00', ['1', '2', '3'])]
+      },
+      Fri: {
+        isAvailable: true,
+        shifts: [
+          createRoomShift('09:00', '13:00', ['1', '3']),
+          createRoomShift('14:00', '20:00', ['1', '2', '3'])
+        ]
+      },
+      Sat: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '18:00', ['1', '2', '3'])]
+      }
+    },
+    shiftOverrides: [
+      // Special override for a specific date
+      {
+        id: crypto.randomUUID(),
+        date: '2025-12-01',
+        start: '10:00',
+        end: '16:00',
+        serviceIds: ['1'],
+        reason: 'manual'
+      }
+    ]
+  },
+  // Yoga Room - Luxe Hair Studio Oxford (1-1)
+  {
+    id: 'room-2',
+    branchId: '1-1',
+    name: 'Yoga Room',
+    capacity: 15,
+    floor: '2nd Floor',
+    amenities: ['Air Conditioning', 'Yoga Mats', 'Mirrors', 'Sound System'],
+    color: '#388e3c',
+    serviceIds: ['3'], // Highlights only
+    weeklySchedule: {
+      Sun: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '17:00', ['3'])]
+      },
+      Mon: {
+        isAvailable: true,
+        shifts: [
+          createRoomShift('09:00', '12:00', ['3']),
+          createRoomShift('14:00', '18:00', ['3'])
+        ]
+      },
+      Tue: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '19:00', ['3'])]
+      },
+      Wed: {
+        isAvailable: false,
+        shifts: []
+      },
+      Thu: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '20:00', ['3'])]
+      },
+      Fri: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '20:00', ['3'])]
+      },
+      Sat: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '18:00', ['3'])]
+      }
+    },
+    shiftOverrides: []
+  },
+  // Private Room - Luxe Hair Studio Oxford (1-1)
+  {
+    id: 'room-3',
+    branchId: '1-1',
+    name: 'Private Room',
+    capacity: 5,
+    floor: '1st Floor',
+    amenities: ['Air Conditioning', 'Mirrors'],
+    color: '#d32f2f',
+    serviceIds: ['2'], // Color Treatment only
+    weeklySchedule: {
+      Sun: {
+        isAvailable: false,
+        shifts: []
+      },
+      Mon: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '18:00', ['2'])]
+      },
+      Tue: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '18:00', ['2'])]
+      },
+      Wed: {
+        isAvailable: false,
+        shifts: []
+      },
+      Thu: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '19:00', ['2'])]
+      },
+      Fri: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '19:00', ['2'])]
+      },
+      Sat: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '17:00', ['2'])]
+      }
+    },
+    shiftOverrides: []
+  },
+  // Spin Studio - Luxe Hair Studio Soho (1-2)
+  {
+    id: 'room-4',
+    branchId: '1-2',
+    name: 'Spin Studio',
+    capacity: 12,
+    floor: 'Ground Floor',
+    amenities: ['Air Conditioning', 'Sound System', 'Lockers', 'Showers', 'WiFi'],
+    color: '#f57c00',
+    serviceIds: ['1', '3'], // Haircut & Highlights
+    weeklySchedule: {
+      Sun: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '16:00', ['1'])]
+      },
+      Mon: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '19:00', ['1', '3'])]
+      },
+      Tue: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '19:00', ['1', '3'])]
+      },
+      Wed: {
+        isAvailable: false,
+        shifts: []
+      },
+      Thu: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '20:00', ['1', '3'])]
+      },
+      Fri: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '20:00', ['1', '3'])]
+      },
+      Sat: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '18:00', ['1', '3'])]
+      }
+    },
+    shiftOverrides: []
+  },
+  // Nail Station 1 - Bliss Nail Bar King's Road (2-1)
+  {
+    id: 'room-5',
+    branchId: '2-1',
+    name: 'Station 1',
+    capacity: 1,
+    floor: 'Main Floor',
+    amenities: ['UV Lamp', 'Massage Chair', 'Music'],
+    color: '#e91e63',
+    serviceIds: ['4'], // Gel Manicure
+    weeklySchedule: {
+      Sun: {
+        isAvailable: true,
+        shifts: [createRoomShift('11:00', '18:00', ['4'])]
+      },
+      Mon: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '20:00', ['4'])]
+      },
+      Tue: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '20:00', ['4'])]
+      },
+      Wed: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '20:00', ['4'])]
+      },
+      Thu: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '21:00', ['4'])]
+      },
+      Fri: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '21:00', ['4'])]
+      },
+      Sat: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '19:00', ['4'])]
+      }
+    },
+    shiftOverrides: []
+  },
+  // Nail Station 2 - Bliss Nail Bar King's Road (2-1)
+  {
+    id: 'room-6',
+    branchId: '2-1',
+    name: 'Station 2',
+    capacity: 1,
+    floor: 'Main Floor',
+    amenities: ['UV Lamp', 'Massage Chair', 'Music'],
+    color: '#9c27b0',
+    serviceIds: ['5'], // Luxury Pedicure
+    weeklySchedule: {
+      Sun: {
+        isAvailable: true,
+        shifts: [createRoomShift('11:00', '18:00', ['5'])]
+      },
+      Mon: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '20:00', ['5'])]
+      },
+      Tue: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '20:00', ['5'])]
+      },
+      Wed: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '20:00', ['5'])]
+      },
+      Thu: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '21:00', ['5'])]
+      },
+      Fri: {
+        isAvailable: true,
+        shifts: [createRoomShift('10:00', '21:00', ['5'])]
+      },
+      Sat: {
+        isAvailable: true,
+        shifts: [createRoomShift('09:00', '19:00', ['5'])]
+      }
+    },
+    shiftOverrides: []
+  },
+  // Barber Chair 1 - Urban Barber Shoreditch (3-1)
+  {
+    id: 'room-7',
+    branchId: '3-1',
+    name: 'Chair 1',
+    capacity: 1,
+    floor: 'Ground Floor',
+    amenities: ['Hot Towel Station', 'Shaving Tools', 'Music'],
+    color: '#795548',
+    serviceIds: ['6', '7'], // Classic Cut & Hot Towel Shave
+    weeklySchedule: {
+      Sun: {
+        isAvailable: false,
+        shifts: []
+      },
+      Mon: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '19:00', ['6', '7'])]
+      },
+      Tue: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '19:00', ['6', '7'])]
+      },
+      Wed: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '19:00', ['6', '7'])]
+      },
+      Thu: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '20:00', ['6', '7'])]
+      },
+      Fri: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '20:00', ['6', '7'])]
+      },
+      Sat: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '18:00', ['6', '7'])]
+      }
+    },
+    shiftOverrides: []
+  },
+  // Barber Chair 2 - Urban Barber Brixton (3-2)
+  {
+    id: 'room-8',
+    branchId: '3-2',
+    name: 'Chair 2',
+    capacity: 1,
+    floor: 'Ground Floor',
+    amenities: ['Hot Towel Station', 'Shaving Tools', 'Music'],
+    color: '#607d8b',
+    serviceIds: ['6'], // Classic Cut only
+    weeklySchedule: {
+      Sun: {
+        isAvailable: false,
+        shifts: []
+      },
+      Mon: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '19:00', ['6'])]
+      },
+      Tue: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '19:00', ['6'])]
+      },
+      Wed: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '19:00', ['6'])]
+      },
+      Thu: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '20:00', ['6'])]
+      },
+      Fri: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '20:00', ['6'])]
+      },
+      Sat: {
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '18:00', ['6'])]
+      }
+    },
+    shiftOverrides: [
+      // Example: Room closed for maintenance on a specific date
+      {
+        id: crypto.randomUUID(),
+        date: '2025-12-10',
+        start: '08:00',
+        end: '12:00',
+        serviceIds: [],
+        reason: 'manual'
+      }
+    ]
+  }
+]
+
+export const getRoomsForBranch = (branchId: string) => {
+  return mockManagedRooms.filter(room => room.branchId === branchId)
+}
+
+// ============================================================================
+// Staff Service Assignments (Initial Mock Data)
+// ============================================================================
+
+export const mockStaffServiceAssignments: Record<string, string[]> = {
+  // Luxe Hair Studio staff
+  '1': ['1', '2', '3'], // Emma Johnson - All hair services
+  '2': ['1', '2', '3'], // Sarah Williams - All hair services
+  '7': ['1'], // Alex Thompson - Basic haircuts only
+
+  // Bliss Nail Bar staff
+  '3': ['4', '5'], // Lisa Chen - All nail services
+  '4': ['4', '5'], // Maria Garcia - All nail services
+
+  // Urban Barber staff
+  '5': ['6', '7'], // James Mitchell - All barber services
+  '6': ['6'], // David Brown - Classic cuts only
 }

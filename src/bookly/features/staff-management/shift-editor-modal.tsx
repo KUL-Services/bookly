@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -16,10 +16,12 @@ import {
   Chip,
   List,
   ListItem,
-  InputAdornment
+  InputAdornment,
+  Alert
 } from '@mui/material'
-import type { BreakRange } from '../calendar/types'
+import type { BreakRange, DayOfWeek } from '../calendar/types'
 import { TimeSelectField } from './time-select-field'
+import { useStaffManagementStore } from './staff-store'
 
 interface ShiftEditorModalProps {
   open: boolean
@@ -53,10 +55,36 @@ export function ShiftEditorModal({
   initialBreaks = [],
   onSave
 }: ShiftEditorModalProps) {
+  const { getBusinessHours } = useStaffManagementStore()
   const [isWorking, setIsWorking] = useState(hasShift)
   const [startTime, setStartTime] = useState(initialStartTime)
   const [endTime, setEndTime] = useState(initialEndTime)
   const [breaks, setBreaks] = useState<BreakRange[]>(initialBreaks)
+
+  // Calculate if shift is outside business hours
+  const isOutsideBusinessHours = useMemo(() => {
+    if (!date || !isWorking) return false
+
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()] as DayOfWeek
+    const businessHours = getBusinessHours(dayOfWeek)
+
+    if (!businessHours.isOpen) return true
+    if (businessHours.shifts.length === 0) return true
+
+    const bizShift = businessHours.shifts[0]
+    const [bizStartH, bizStartM] = bizShift.start.split(':').map(Number)
+    const [bizEndH, bizEndM] = bizShift.end.split(':').map(Number)
+
+    const [shiftStartH, shiftStartM] = startTime.split(':').map(Number)
+    const [shiftEndH, shiftEndM] = endTime.split(':').map(Number)
+
+    const bizStartMinutes = bizStartH * 60 + bizStartM
+    const bizEndMinutes = bizEndH * 60 + bizEndM
+    const shiftStartMinutes = shiftStartH * 60 + shiftStartM
+    const shiftEndMinutes = shiftEndH * 60 + shiftEndM
+
+    return shiftStartMinutes < bizStartMinutes || shiftEndMinutes > bizEndMinutes
+  }, [date, startTime, endTime, isWorking, getBusinessHours])
 
   // Reset form when modal opens with new data
   useEffect(() => {
@@ -131,6 +159,18 @@ export function ShiftEditorModal({
 
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {/* Business Hours Warning */}
+          {isOutsideBusinessHours && (
+            <Alert severity="warning">
+              <Typography variant="body2" fontWeight={600}>
+                Outside Business Hours
+              </Typography>
+              <Typography variant="body2">
+                This shift is outside the configured business hours for this day.
+              </Typography>
+            </Alert>
+          )}
+
           {/* Top Row - Shift Toggle, Time Pickers, Duration & Add Break */}
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             {/* Shift Toggle */}
