@@ -33,15 +33,24 @@ export function CalendarPopover({
         vertical: 'top',
         horizontal: 'center'
       }}
+      slotProps={{
+        paper: {
+          sx: {
+            bgcolor: 'background.paper',
+            backgroundImage: 'none'
+          }
+        }
+      }}
     >
-      <Box sx={{ p: 3, minWidth: 320 }}>
+      <Box sx={{ p: 3, minWidth: 320, bgcolor: 'background.paper' }}>
         {/* Calendar with custom theme-aware styling */}
         <Box
           sx={{
             mb: 3,
             '& .rdp': {
               '--rdp-cell-size': '40px',
-              margin: 0
+              margin: 0,
+              backgroundColor: 'transparent'
             },
             '& .rdp-months': {
               justifyContent: 'center'
