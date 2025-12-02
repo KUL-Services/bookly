@@ -349,6 +349,11 @@ const baseStaff: StaffMember[] = [
     photo: 'https://images.unsplash.com/photo-1494790108755-2616b612b077?w=150&h=150&fit=crop&crop=face',
     businessId: '1',
     branchId: '1-1',
+    email: 'emma.johnson@luxehair.com',
+    phone: '+44 7700 900001',
+    color: '#1976d2',
+    isActive: true,
+    staffType: 'dynamic',  // Traditional appointment-based scheduling
     schedule: extendedSchedule,
     workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('1', 'hair'),
@@ -361,10 +366,41 @@ const baseStaff: StaffMember[] = [
     photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
     businessId: '1',
     branchId: '1-2',
+    email: 'sarah.williams@luxehair.com',
+    phone: '+44 7700 900002',
+    color: '#9c27b0',
+    isActive: true,
+    staffType: 'static',  // Works in rooms on fixed schedule
     schedule: standardSchedule,
     workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('2', 'hair'),
-    maxConcurrentBookings: 1 // Standard: one client at a time
+    maxConcurrentBookings: 1,
+    roomAssignments: [
+      {
+        roomId: 'room-1-1-2',
+        roomName: 'Studio B',
+        dayOfWeek: 'Mon',
+        startTime: '09:00',
+        endTime: '13:00',
+        serviceIds: ['fitness-1', 'fitness-2']  // Morning yoga and pilates
+      },
+      {
+        roomId: 'room-1-1-2',
+        roomName: 'Studio B',
+        dayOfWeek: 'Wed',
+        startTime: '10:00',
+        endTime: '11:00',
+        serviceIds: ['fitness-4']  // Personal training
+      },
+      {
+        roomId: 'room-1-1-2',
+        roomName: 'Studio B',
+        dayOfWeek: 'Thu',
+        startTime: '09:00',
+        endTime: '10:00',
+        serviceIds: ['fitness-1']  // Morning yoga
+      }
+    ]
   },
   {
     id: '3',
@@ -373,9 +409,40 @@ const baseStaff: StaffMember[] = [
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     businessId: '2',
     branchId: '2-1',
+    email: 'lisa.chen@blissnails.com',
+    phone: '+44 7700 900003',
+    color: '#e91e63',
+    isActive: true,
+    staffType: 'static',  // Works in nail stations
     schedule: extendedSchedule,
     workingHours: getWorkingHoursFromSchedule(extendedSchedule),
-    appointments: generateStaffAppointments('3', 'nails')
+    appointments: generateStaffAppointments('3', 'nails'),
+    roomAssignments: [
+      {
+        roomId: 'room-2-1-1',
+        roomName: 'Station 1',
+        dayOfWeek: 'Mon',
+        startTime: '09:00',
+        endTime: '20:00',
+        serviceIds: ['4']  // Gel Manicure
+      },
+      {
+        roomId: 'room-2-1-1',
+        roomName: 'Station 1',
+        dayOfWeek: 'Tue',
+        startTime: '09:00',
+        endTime: '20:00',
+        serviceIds: ['4']
+      },
+      {
+        roomId: 'room-2-1-1',
+        roomName: 'Station 1',
+        dayOfWeek: 'Wed',
+        startTime: '09:00',
+        endTime: '20:00',
+        serviceIds: ['4']
+      }
+    ]
   },
   {
     id: '4',
@@ -384,6 +451,11 @@ const baseStaff: StaffMember[] = [
     photo: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=150&h=150&fit=crop&crop=face',
     businessId: '2',
     branchId: '2-2',
+    email: 'maria.garcia@blissnails.com',
+    phone: '+44 7700 900004',
+    color: '#f06292',
+    isActive: true,
+    staffType: 'dynamic',  // Traditional booking
     schedule: standardSchedule,
     workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('4', 'nails')
@@ -395,6 +467,11 @@ const baseStaff: StaffMember[] = [
     photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
     businessId: '3',
     branchId: '3-1',
+    email: 'james.mitchell@urbanbarber.com',
+    phone: '+44 7700 900005',
+    color: '#795548',
+    isActive: true,
+    staffType: 'dynamic',  // Traditional booking
     schedule: extendedSchedule,
     workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('5', 'barber')
@@ -406,6 +483,11 @@ const baseStaff: StaffMember[] = [
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     businessId: '3',
     branchId: '3-2',
+    email: 'david.brown@urbanbarber.com',
+    phone: '+44 7700 900006',
+    color: '#6d4c41',
+    isActive: true,
+    staffType: 'dynamic',  // Traditional booking
     schedule: standardSchedule,
     workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('6', 'barber')
@@ -417,6 +499,11 @@ const baseStaff: StaffMember[] = [
     photo: '', // Empty photo to demonstrate initials
     businessId: '1',
     branchId: '1-3',
+    email: 'alex.thompson@luxehair.com',
+    phone: '+44 7700 900007',
+    color: '#00897b',
+    isActive: true,
+    staffType: 'dynamic',  // Traditional booking
     schedule: partTimeSchedule,
     workingHours: getWorkingHoursFromSchedule(partTimeSchedule),
     appointments: generateStaffAppointments('7', 'hair')
@@ -465,6 +552,7 @@ function generateMockStaffForBusiness(businessId: string, branchId: string, staf
     photo: photos[photoIndex],
     businessId,
     branchId,
+    staffType: 'dynamic',  // Default to dynamic scheduling
     schedule: selectedSchedule,
     workingHours: getWorkingHoursFromSchedule(selectedSchedule),
     appointments: generateStaffAppointments(`${businessId}-staff-${staffIndex + 1}`, category)

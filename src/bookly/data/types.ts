@@ -60,6 +60,17 @@ export interface StaffAppointment {
   status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
 }
 
+export type StaffType = 'dynamic' | 'static'
+
+export interface RoomAssignment {
+  roomId: string
+  roomName: string
+  dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
+  startTime: string  // Format: "09:00"
+  endTime: string    // Format: "17:00"
+  serviceIds: string[]  // Services provided in this room during this time
+}
+
 export interface StaffMember {
   id: string;
   name: string;
@@ -67,12 +78,22 @@ export interface StaffMember {
   photo: string;
   businessId: string;
   branchId: string;
+
+  // Staff scheduling type
+  staffType?: StaffType;  // 'dynamic' = traditional appointment-based, 'static' = room/slot-based (default: 'dynamic')
+
   serviceIds?: string[];  // Services this staff can provide
   schedule?: StaffSchedule[];
   workingHours?: string;  // Simplified display format (e.g., "9:00 AM-5:00 PM")
   appointments?: StaffAppointment[];
-  maxConcurrentBookings?: number; // Maximum overlapping appointments (default 1)
+  maxConcurrentBookings?: number; // Maximum overlapping appointments (default 1, only applies to dynamic staff)
   color?: string;  // For calendar color coding
+
+  // Room assignments (for static staff)
+  roomAssignments?: RoomAssignment[];  // When static staff are assigned to work in specific rooms
+  email?: string;
+  phone?: string;
+  isActive?: boolean;
 }
 
 export interface Review {

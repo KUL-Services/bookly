@@ -17,6 +17,32 @@ export type SchedulingMode = 'static' | 'dynamic'
 
 export type DayOfWeek = 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
 
+export type ResourceType = 'staff' | 'room'
+
+// Unified calendar resource for displaying both staff and rooms in the same view
+export interface CalendarResource {
+  id: string
+  type: ResourceType
+  name: string
+  color: string
+  branchId: string
+
+  // For staff resources
+  staffType?: 'dynamic' | 'static'
+  roomAssignments?: Array<{
+    roomId: string
+    roomName: string
+    dayOfWeek: DayOfWeek
+    startTime: string
+    endTime: string
+    serviceIds: string[]
+  }>
+
+  // For room resources
+  capacity?: number
+  serviceIds?: string[]
+}
+
 export interface Room {
   id: string
   name: string

@@ -10,18 +10,14 @@ import {
   IconButton,
   Button,
   Tooltip,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Grid
+  Chip
 } from '@mui/material'
 import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { mockBranches, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { CalendarPopover } from './calendar-popover'
+import { RoomEditorDrawer } from './room-editor-drawer'
+import { RoomScheduleEditor } from './room-schedule-editor'
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -66,11 +62,15 @@ export function RoomsTab() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedBranch, setSelectedBranch] = useState('all')
   const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
-  const [isAddRoomDialogOpen, setIsAddRoomDialogOpen] = useState(false)
-  const [isEditRoomDialogOpen, setIsEditRoomDialogOpen] = useState(false)
+  const [isRoomEditorOpen, setIsRoomEditorOpen] = useState(false)
   const [selectedRoomForEdit, setSelectedRoomForEdit] = useState<any>(null)
-  const [isShiftEditDialogOpen, setIsShiftEditDialogOpen] = useState(false)
-  const [selectedShiftForEdit, setSelectedShiftForEdit] = useState<any>(null)
+  const [isScheduleEditorOpen, setIsScheduleEditorOpen] = useState(false)
+  const [scheduleEditorContext, setScheduleEditorContext] = useState<{
+    roomId: string
+    roomName: string
+    dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
+    initialShift?: { start: string; end: string; serviceIds: string[] } | null
+  } | null>(null)
 
   const calendarOpen = Boolean(calendarAnchor)
 
@@ -132,12 +132,32 @@ export function RoomsTab() {
 
   const handleEditRoom = (room: any) => {
     setSelectedRoomForEdit(room)
-    setIsEditRoomDialogOpen(true)
+    setIsRoomEditorOpen(true)
   }
 
-  const handleEditShift = (room: any, shift: any, dayOfWeek: string) => {
-    setSelectedShiftForEdit({ room, shift, dayOfWeek })
-    setIsShiftEditDialogOpen(true)
+  const handleAddRoom = () => {
+    setSelectedRoomForEdit(null)
+    setIsRoomEditorOpen(true)
+  }
+
+  const handleCloseRoomEditor = () => {
+    setIsRoomEditorOpen(false)
+    setSelectedRoomForEdit(null)
+  }
+
+  const handleEditShift = (room: any, shift: any | null, dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat') => {
+    setScheduleEditorContext({
+      roomId: room.id,
+      roomName: room.name,
+      dayOfWeek,
+      initialShift: shift
+    })
+    setIsScheduleEditorOpen(true)
+  }
+
+  const handleCloseScheduleEditor = () => {
+    setIsScheduleEditorOpen(false)
+    setScheduleEditorContext(null)
   }
 
   const weekStart = startOfWeek(selectedDate)
@@ -224,7 +244,7 @@ export function RoomsTab() {
           variant='contained'
           startIcon={<i className='ri-add-line' />}
           size='small'
-          onClick={() => setIsAddRoomDialogOpen(true)}
+          onClick={handleAddRoom}
         >
           Add Room
         </Button>
@@ -256,9 +276,12 @@ export function RoomsTab() {
       return `${hour}:${minute} ${period}`
     }
 
+    // Calculate dynamic height based on number of shifts
+    const rowHeight = schedule.shifts.length > 0 ? Math.max(80, schedule.shifts.length * 50) : 80
+
     return (
-      <Box key={room.id} sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 80 }}>
-        <Box sx={{ width: 250, display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
+      <Box key={room.id} sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: rowHeight }}>
+        <Box sx={{ width: 250, display: 'flex', alignItems: 'center', gap: 1, p: 2, flexShrink: 0 }}>
           <Box
             sx={{
               width: 8,
@@ -276,10 +299,26 @@ export function RoomsTab() {
               <i className='ri-group-line' style={{ fontSize: 12, marginRight: 2 }} />
               Capacity: {room.capacity}
             </Typography>
+            {room.serviceIds && room.serviceIds.length > 0 && (
+              <Chip
+                label={`${room.serviceIds.length} service${room.serviceIds.length > 1 ? 's' : ''}`}
+                size='small'
+                sx={{ mt: 0.5, height: 18, fontSize: '0.65rem' }}
+              />
+            )}
           </Box>
-          <IconButton size='small' onClick={() => handleEditRoom(room)}>
-            <i className='ri-edit-line' style={{ fontSize: 16 }} />
-          </IconButton>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Tooltip title='Edit Services'>
+              <IconButton size='small' onClick={(e) => { e.stopPropagation(); /* TODO: Open services modal */ }}>
+                <i className='ri-service-line' style={{ fontSize: 14 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title='Edit Room'>
+              <IconButton size='small' onClick={() => handleEditRoom(room)}>
+                <i className='ri-edit-line' style={{ fontSize: 14 }} />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
 
         <Box sx={{ flex: 1, position: 'relative', m: 1 }}>
@@ -287,7 +326,7 @@ export function RoomsTab() {
             schedule.shifts.map((shift, idx) => {
               const shiftStart = formatTime12Hour(shift.start)
               const shiftEnd = formatTime12Hour(shift.end)
-              const shiftServices = mockServices.filter(s => shift.serviceIds.includes(s.id))
+              const shiftServices = mockServices.filter(s => shift.serviceIds?.includes(s.id))
 
               return (
                 <Box
@@ -297,8 +336,8 @@ export function RoomsTab() {
                     position: 'absolute',
                     left: `${timeToPosition(shiftStart)}%`,
                     width: `${calculateWidth(shiftStart, shiftEnd)}%`,
-                    top: idx * 45,
-                    minHeight: 40,
+                    top: idx * 48 + 2,
+                    height: 42,
                     bgcolor: `${room.color}40` || 'rgba(25, 118, 210, 0.2)',
                     borderRadius: 1,
                     border: 1,
@@ -308,14 +347,16 @@ export function RoomsTab() {
                     p: 0.5,
                     cursor: 'pointer',
                     transition: 'all 0.2s',
+                    overflow: 'hidden',
                     '&:hover': {
                       bgcolor: `${room.color}60` || 'rgba(25, 118, 210, 0.4)',
                       transform: 'translateY(-2px)',
-                      boxShadow: 2
+                      boxShadow: 2,
+                      zIndex: 10
                     }
                   }}
                 >
-                  <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ fontSize: '0.65rem' }}>
+                  <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
                     {shiftStart.toLowerCase()} - {shiftEnd.toLowerCase()}
                   </Typography>
                   {shiftServices.length > 0 && (
@@ -354,6 +395,7 @@ export function RoomsTab() {
             })
           ) : (
             <Box
+              onClick={() => handleEditShift(room, null, dayOfWeek)}
               sx={{
                 position: 'absolute',
                 left: 0,
@@ -376,7 +418,7 @@ export function RoomsTab() {
               }}
             >
               <Typography variant='body2' color='text.secondary' fontWeight={500}>
-                Closed
+                Click to add schedule
               </Typography>
             </Box>
           )}
@@ -401,15 +443,15 @@ export function RoomsTab() {
         {renderHeader()}
 
         <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.paper' }}>
-          <Box sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider' }}>
-            <Box sx={{ width: 250, p: 2 }}>
+          <Box sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', position: 'sticky', top: 0, bgcolor: 'background.paper', zIndex: 2 }}>
+            <Box sx={{ width: 250, p: 2, flexShrink: 0, borderRight: 1, borderColor: 'divider' }}>
               <Typography variant='body2' fontWeight={600}>
                 Rooms
               </Typography>
             </Box>
-            <Box sx={{ flex: 1, display: 'flex', px: 2 }}>
+            <Box sx={{ flex: 1, display: 'flex' }}>
               {timelineHours.map((hour, idx) => (
-                <Box key={idx} sx={{ flex: 1, textAlign: 'center', py: 1 }}>
+                <Box key={idx} sx={{ flex: 1, textAlign: 'center', py: 1, borderRight: idx < timelineHours.length - 1 ? 1 : 0, borderColor: 'divider' }}>
                   <Typography variant='caption' color='text.secondary'>
                     {hour}
                   </Typography>
@@ -498,125 +540,23 @@ export function RoomsTab() {
           onJumpWeek={handleJumpWeek}
         />
 
-        {/* Add Room Dialog */}
-        <Dialog open={isAddRoomDialogOpen} onClose={() => setIsAddRoomDialogOpen(false)} maxWidth='sm' fullWidth>
-          <DialogTitle>Add New Room</DialogTitle>
-          <DialogContent>
-            <Grid container spacing={2} sx={{ mt: 0.5 }}>
-              <Grid item xs={12}>
-                <TextField fullWidth label='Room Name' placeholder='e.g., Studio A' />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <Select displayEmpty>
-                    <MenuItem value=''>Select Branch</MenuItem>
-                    {mockBranches.map(branch => (
-                      <MenuItem key={branch.id} value={branch.id}>
-                        {branch.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth label='Capacity' type='number' placeholder='e.g., 20' />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField fullWidth label='Floor' placeholder='e.g., 1st Floor' />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField fullWidth label='Color' type='color' defaultValue='#1976d2' />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setIsAddRoomDialogOpen(false)}>Cancel</Button>
-            <Button variant='contained' onClick={() => setIsAddRoomDialogOpen(false)}>
-              Add Room
-            </Button>
-          </DialogActions>
-        </Dialog>
+        {/* Room Editor Drawer */}
+        <RoomEditorDrawer
+          open={isRoomEditorOpen}
+          onClose={handleCloseRoomEditor}
+          room={selectedRoomForEdit}
+          selectedBranchId={selectedBranch !== 'all' ? selectedBranch : null}
+        />
 
-        {/* Edit Room Dialog */}
-        <Dialog open={isEditRoomDialogOpen} onClose={() => setIsEditRoomDialogOpen(false)} maxWidth='sm' fullWidth>
-          <DialogTitle>Edit Room</DialogTitle>
-          <DialogContent>
-            {selectedRoomForEdit && (
-              <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                <Grid item xs={12}>
-                  <TextField fullWidth label='Room Name' defaultValue={selectedRoomForEdit.name} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label='Capacity' type='number' defaultValue={selectedRoomForEdit.capacity} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label='Floor' defaultValue={selectedRoomForEdit.floor || ''} />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField fullWidth label='Color' type='color' defaultValue={selectedRoomForEdit.color} />
-                </Grid>
-              </Grid>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setIsEditRoomDialogOpen(false)}>Cancel</Button>
-            <Button variant='contained' onClick={() => setIsEditRoomDialogOpen(false)}>
-              Save Changes
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Edit Shift Dialog */}
-        <Dialog open={isShiftEditDialogOpen} onClose={() => setIsShiftEditDialogOpen(false)} maxWidth='sm' fullWidth>
-          <DialogTitle>Edit Room Shift</DialogTitle>
-          <DialogContent>
-            {selectedShiftForEdit && (
-              <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                <Grid item xs={12}>
-                  <Typography variant='body2' color='text.secondary' gutterBottom>
-                    Room: {selectedShiftForEdit.room.name}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label='Start Time'
-                    type='time'
-                    defaultValue={selectedShiftForEdit.shift.start}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label='End Time'
-                    type='time'
-                    defaultValue={selectedShiftForEdit.shift.end}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography variant='body2' gutterBottom>
-                    Assigned Services:
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {mockServices
-                      .filter(s => selectedShiftForEdit.shift.serviceIds.includes(s.id))
-                      .map(service => (
-                        <Chip key={service.id} label={service.name} onDelete={() => {}} />
-                      ))}
-                  </Box>
-                </Grid>
-              </Grid>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setIsShiftEditDialogOpen(false)}>Cancel</Button>
-            <Button variant='contained' onClick={() => setIsShiftEditDialogOpen(false)}>
-              Save Changes
-            </Button>
-          </DialogActions>
-        </Dialog>
+        {/* Room Schedule Editor */}
+        <RoomScheduleEditor
+          open={isScheduleEditorOpen}
+          onClose={handleCloseScheduleEditor}
+          roomId={scheduleEditorContext?.roomId || null}
+          roomName={scheduleEditorContext?.roomName || ''}
+          dayOfWeek={scheduleEditorContext?.dayOfWeek || null}
+          initialShift={scheduleEditorContext?.initialShift}
+        />
       </Box>
     )
   }
@@ -847,86 +787,23 @@ export function RoomsTab() {
         onJumpWeek={handleJumpWeek}
       />
 
-      {/* Edit Room Dialog (shared with Day view) */}
-      <Dialog open={isEditRoomDialogOpen} onClose={() => setIsEditRoomDialogOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Edit Room</DialogTitle>
-        <DialogContent>
-          {selectedRoomForEdit && (
-            <Grid container spacing={2} sx={{ mt: 0.5 }}>
-              <Grid item xs={12}>
-                <TextField fullWidth label='Room Name' defaultValue={selectedRoomForEdit.name} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth label='Capacity' type='number' defaultValue={selectedRoomForEdit.capacity} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField fullWidth label='Floor' defaultValue={selectedRoomForEdit.floor || ''} />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField fullWidth label='Color' type='color' defaultValue={selectedRoomForEdit.color} />
-              </Grid>
-            </Grid>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsEditRoomDialogOpen(false)}>Cancel</Button>
-          <Button variant='contained' onClick={() => setIsEditRoomDialogOpen(false)}>
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Room Editor Drawer (shared with Day view) */}
+      <RoomEditorDrawer
+        open={isRoomEditorOpen}
+        onClose={handleCloseRoomEditor}
+        room={selectedRoomForEdit}
+        selectedBranchId={selectedBranch !== 'all' ? selectedBranch : null}
+      />
 
-      {/* Edit Shift Dialog (shared with Day view) */}
-      <Dialog open={isShiftEditDialogOpen} onClose={() => setIsShiftEditDialogOpen(false)} maxWidth='sm' fullWidth>
-        <DialogTitle>Edit Room Shift</DialogTitle>
-        <DialogContent>
-          {selectedShiftForEdit && (
-            <Grid container spacing={2} sx={{ mt: 0.5 }}>
-              <Grid item xs={12}>
-                <Typography variant='body2' color='text.secondary' gutterBottom>
-                  Room: {selectedShiftForEdit.room.name}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label='Start Time'
-                  type='time'
-                  defaultValue={selectedShiftForEdit.shift.start}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label='End Time'
-                  type='time'
-                  defaultValue={selectedShiftForEdit.shift.end}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant='body2' gutterBottom>
-                  Assigned Services:
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {mockServices
-                    .filter(s => selectedShiftForEdit.shift.serviceIds.includes(s.id))
-                    .map(service => (
-                      <Chip key={service.id} label={service.name} onDelete={() => {}} />
-                    ))}
-                </Box>
-              </Grid>
-            </Grid>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsShiftEditDialogOpen(false)}>Cancel</Button>
-          <Button variant='contained' onClick={() => setIsShiftEditDialogOpen(false)}>
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Room Schedule Editor (shared with Day view) */}
+      <RoomScheduleEditor
+        open={isScheduleEditorOpen}
+        onClose={handleCloseScheduleEditor}
+        roomId={scheduleEditorContext?.roomId || null}
+        roomName={scheduleEditorContext?.roomName || ''}
+        dayOfWeek={scheduleEditorContext?.dayOfWeek || null}
+        initialShift={scheduleEditorContext?.initialShift}
+      />
     </Box>
   )
 }

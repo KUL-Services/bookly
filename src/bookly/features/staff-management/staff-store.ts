@@ -27,6 +27,7 @@ import type {
   RoomShift,
   RoomShiftInstance
 } from '../calendar/types'
+import type { StaffType, RoomAssignment } from '@/bookly/data/types'
 
 // Helper to sync changes with calendar
 function syncWithCalendar() {
@@ -135,6 +136,14 @@ export interface StaffManagementState {
   updateCommissionPolicy: (id: string, updates: Partial<CommissionPolicy>) => void
   deleteCommissionPolicy: (id: string) => void
   getCommissionPolicies: (scope?: CommissionPolicy['scope']) => CommissionPolicy[]
+
+  // Actions - Staff Type & Room Assignments
+  updateStaffType: (staffId: string, staffType: StaffType) => void
+  assignStaffToRoom: (staffId: string, roomAssignment: RoomAssignment) => void
+  removeStaffRoomAssignment: (staffId: string, assignmentIndex: number) => void
+  updateStaffRoomAssignment: (staffId: string, assignmentIndex: number, updates: Partial<RoomAssignment>) => void
+  getStaffRoomAssignments: (staffId: string) => RoomAssignment[]
+  isStaffBusyInRoom: (staffId: string, date: Date, time: string) => { busy: boolean; assignment?: RoomAssignment }
 
   // Actions - Staff Management
   createStaffMember: (staffData: any) => void
@@ -663,6 +672,89 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   getCommissionPolicies: (scope) => {
     const policies = get().commissionPolicies
     return scope ? policies.filter(p => p.scope === scope) : policies
+  },
+
+  // Staff Type & Room Assignment Actions
+  updateStaffType: (staffId, staffType) => {
+    const staff = mockStaff.find(s => s.id === staffId)
+    if (staff) {
+      staff.staffType = staffType
+      // If changing to dynamic, clear room assignments
+      if (staffType === 'dynamic') {
+        staff.roomAssignments = []
+      }
+      syncWithCalendar()
+    }
+  },
+
+  assignStaffToRoom: (staffId, roomAssignment) => {
+    const staff = mockStaff.find(s => s.id === staffId)
+    if (staff) {
+      if (!staff.roomAssignments) {
+        staff.roomAssignments = []
+      }
+      staff.roomAssignments.push(roomAssignment)
+      // Automatically set staff type to static if not already
+      if (staff.staffType !== 'static') {
+        staff.staffType = 'static'
+      }
+      syncWithCalendar()
+    }
+  },
+
+  removeStaffRoomAssignment: (staffId, assignmentIndex) => {
+    const staff = mockStaff.find(s => s.id === staffId)
+    if (staff && staff.roomAssignments) {
+      staff.roomAssignments.splice(assignmentIndex, 1)
+      syncWithCalendar()
+    }
+  },
+
+  updateStaffRoomAssignment: (staffId, assignmentIndex, updates) => {
+    const staff = mockStaff.find(s => s.id === staffId)
+    if (staff && staff.roomAssignments && staff.roomAssignments[assignmentIndex]) {
+      staff.roomAssignments[assignmentIndex] = {
+        ...staff.roomAssignments[assignmentIndex],
+        ...updates
+      }
+      syncWithCalendar()
+    }
+  },
+
+  getStaffRoomAssignments: (staffId) => {
+    const staff = mockStaff.find(s => s.id === staffId)
+    return staff?.roomAssignments || []
+  },
+
+  isStaffBusyInRoom: (staffId, date, time) => {
+    const staff = mockStaff.find(s => s.id === staffId)
+    if (!staff || !staff.roomAssignments || staff.roomAssignments.length === 0) {
+      return { busy: false }
+    }
+
+    // Get day of week from date
+    const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const dayOfWeek = dayNames[date.getDay()]
+
+    // Convert time to minutes for comparison
+    const [hours, minutes] = time.split(':').map(Number)
+    const timeInMinutes = hours * 60 + minutes
+
+    // Check each room assignment
+    for (const assignment of staff.roomAssignments) {
+      if (assignment.dayOfWeek === dayOfWeek) {
+        const [startHours, startMinutes] = assignment.startTime.split(':').map(Number)
+        const [endHours, endMinutes] = assignment.endTime.split(':').map(Number)
+        const startInMinutes = startHours * 60 + startMinutes
+        const endInMinutes = endHours * 60 + endMinutes
+
+        if (timeInMinutes >= startInMinutes && timeInMinutes < endInMinutes) {
+          return { busy: true, assignment }
+        }
+      }
+    }
+
+    return { busy: false }
   },
 
   // Staff Management Actions

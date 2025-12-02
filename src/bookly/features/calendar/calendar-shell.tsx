@@ -9,12 +9,10 @@ import { addDays, addWeeks, addMonths } from './utils'
 import CalendarHeader from './calendar-header'
 import CalendarSidebar from './calendar-sidebar'
 import FullCalendarView from './fullcalendar-view'
-import MultiStaffDayView from './multi-staff-day-view'
 import SingleStaffDayView from './single-staff-day-view'
-import MultiStaffWeekView from './multi-staff-week-view'
 import SingleStaffWeekView from './single-staff-week-view'
-import MultiRoomDayView from './multi-room-day-view'
-import MultiRoomWeekView from './multi-room-week-view'
+import UnifiedMultiResourceDayView from './unified-multi-resource-day-view'
+import UnifiedMultiResourceWeekView from './unified-multi-resource-week-view'
 import AppointmentListView from './appointment-list-view'
 import AppointmentDrawer from './appointment-drawer'
 import NewAppointmentDrawer from './new-appointment-drawer'
@@ -389,50 +387,24 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     setCurrentDate(date)
   }
 
+  const handleResourceCellClick = (resourceId: string, resourceType: 'staff' | 'room', date: Date) => {
+    // Handle cell click for unified resource view
+    if (resourceType === 'staff') {
+      // Navigate to single-staff day view
+      selectSingleStaff(resourceId)
+      useCalendarStore.getState().setView('timeGridDay')
+      setCurrentDate(date)
+    } else {
+      // For rooms, just open new booking
+      openNewBooking(date)
+    }
+  }
+
   // Render the appropriate calendar view
   const renderCalendarView = () => {
-    // STATIC MODE VIEWS
-    // Multiple room day view (static mode)
-    if (view === 'timeGridDay' && schedulingMode === 'static' && activeRooms.length > 0) {
-      return (
-        <MultiRoomDayView
-          events={events}
-          rooms={activeRooms}
-          currentDate={currentDate}
-          onEventClick={handleEventClick}
-          onSlotClick={(slotId, date) => {
-            // Open new booking drawer with slot prefilled
-            openNewBooking(date)
-          }}
-        />
-      )
-    }
-
-    // Multiple room week view (static mode)
-    if (view === 'timeGridWeek' && schedulingMode === 'static' && activeRooms.length > 0) {
-      return (
-        <MultiRoomWeekView
-          events={events}
-          rooms={activeRooms}
-          currentDate={currentDate}
-          onEventClick={handleEventClick}
-          onSlotClick={(slotId, date) => {
-            // Open new booking drawer with slot prefilled
-            openNewBooking(date)
-          }}
-          onDateClick={handleDateClickInWeekView}
-        />
-      )
-    }
-
-    // DYNAMIC MODE VIEWS - Always use custom views for day/week
+    // UNIFIED MULTI-RESOURCE VIEWS (combines staff and rooms)
     // Single staff day view (when a specific staff is selected)
-    if (
-      view === 'timeGridDay' &&
-      schedulingMode === 'dynamic' &&
-      isSingleStaffView &&
-      activeStaffMembers.length === 1
-    ) {
+    if (view === 'timeGridDay' && isSingleStaffView && activeStaffMembers.length === 1) {
       return (
         <SingleStaffDayView
           events={events}
@@ -447,27 +419,21 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       )
     }
 
-    // Multiple staff day view (when viewing all staff or multiple staff)
-    if (view === 'timeGridDay' && schedulingMode === 'dynamic' && activeStaffMembers.length > 0) {
+    // Unified day view (shows both staff and rooms)
+    if (view === 'timeGridDay') {
       return (
-        <MultiStaffDayView
+        <UnifiedMultiResourceDayView
           events={events}
-          staffMembers={activeStaffMembers}
           currentDate={currentDate}
           onEventClick={handleEventClick}
           onStaffClick={handleStaffClick}
-          onCellClick={handleCellClickInWeekView}
+          onCellClick={handleResourceCellClick}
         />
       )
     }
 
     // Single staff week view (when a specific staff is selected)
-    if (
-      view === 'timeGridWeek' &&
-      schedulingMode === 'dynamic' &&
-      isSingleStaffView &&
-      activeStaffMembers.length === 1
-    ) {
+    if (view === 'timeGridWeek' && isSingleStaffView && activeStaffMembers.length === 1) {
       return (
         <SingleStaffWeekView
           events={events}
@@ -482,17 +448,16 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       )
     }
 
-    // Multiple staff week view (when viewing all staff or multiple staff)
-    if (view === 'timeGridWeek' && schedulingMode === 'dynamic' && activeStaffMembers.length > 0) {
+    // Unified week view (shows both staff and rooms)
+    if (view === 'timeGridWeek') {
       return (
-        <MultiStaffWeekView
+        <UnifiedMultiResourceWeekView
           events={events}
-          staffMembers={activeStaffMembers}
           currentDate={currentDate}
           onEventClick={handleEventClick}
           onStaffClick={handleStaffClick}
           onDateClick={handleDateClickInWeekView}
-          onCellClick={handleCellClickInWeekView}
+          onCellClick={handleResourceCellClick}
         />
       )
     }

@@ -44,7 +44,7 @@ export const mockBusinessHours: WeeklyBusinessHours = {
   },
   Sat: {
     isOpen: true,
-    shifts: [{ start: '08:00', end: '18:00' }]
+    shifts: [{ start: '09:00', end: '18:00' }]
   }
 }
 
@@ -126,7 +126,113 @@ export const mockStaffWorkingHours: Record<string, WeeklyStaffHours> = {
     },
     Sat: {
       isWorking: true,
-      shifts: [createDefaultShift('08:00', '18:00', [{ id: '8', start: '12:00', end: '13:00' }])]
+      shifts: [createDefaultShift('09:00', '18:00', [{ id: '8', start: '12:00', end: '13:00' }])]
+    }
+  },
+  // Staff member 4 - Maria Garcia (Nail Technician)
+  '4': {
+    Sun: { isWorking: false, shifts: [] },
+    Mon: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '9', start: '12:00', end: '13:00' }])]
+    },
+    Tue: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '10', start: '12:00', end: '13:00' }])]
+    },
+    Wed: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '11', start: '12:00', end: '13:00' }])]
+    },
+    Thu: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '18:00', [{ id: '12', start: '12:00', end: '13:00' }])]
+    },
+    Fri: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '18:00', [{ id: '13', start: '12:00', end: '13:00' }])]
+    },
+    Sat: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '16:00')]
+    }
+  },
+  // Staff member 5 - James Mitchell (Master Barber)
+  '5': {
+    Sun: { isWorking: false, shifts: [] },
+    Mon: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '19:00', [{ id: '14', start: '12:30', end: '13:30' }])]
+    },
+    Tue: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '19:00', [{ id: '15', start: '12:30', end: '13:30' }])]
+    },
+    Wed: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '19:00', [{ id: '16', start: '12:30', end: '13:30' }])]
+    },
+    Thu: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '20:00', [{ id: '17', start: '12:30', end: '13:30' }])]
+    },
+    Fri: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '20:00', [{ id: '18', start: '12:30', end: '13:30' }])]
+    },
+    Sat: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '18:00', [{ id: '19', start: '12:00', end: '13:00' }])]
+    }
+  },
+  // Staff member 6 - David Brown (Barber)
+  '6': {
+    Sun: { isWorking: false, shifts: [] },
+    Mon: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '20', start: '12:00', end: '13:00' }])]
+    },
+    Tue: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '21', start: '12:00', end: '13:00' }])]
+    },
+    Wed: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '22', start: '12:00', end: '13:00' }])]
+    },
+    Thu: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '23', start: '12:00', end: '13:00' }])]
+    },
+    Fri: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '24', start: '12:00', end: '13:00' }])]
+    },
+    Sat: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '16:00')]
+    }
+  },
+  // Staff member 7 - Alex Thompson (Junior Stylist) - Part-time
+  '7': {
+    Sun: { isWorking: false, shifts: [] },
+    Mon: { isWorking: false, shifts: [] },
+    Tue: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '25', start: '12:00', end: '13:00' }])]
+    },
+    Wed: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '26', start: '12:00', end: '13:00' }])]
+    },
+    Thu: { isWorking: false, shifts: [] },
+    Fri: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '27', start: '12:00', end: '13:00' }])]
+    },
+    Sat: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '16:00')]
     }
   }
 }
@@ -358,7 +464,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     weeklySchedule: {
       Sun: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '17:00', ['1'])] // Only haircuts on Sunday
+        shifts: [createRoomShift('09:00', '17:00', ['1'])] // Only haircuts on Sunday
       },
       Mon: {
         isAvailable: true,
@@ -388,7 +494,7 @@ export const mockManagedRooms: ManagedRoom[] = [
       },
       Sat: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '18:00', ['1', '2', '3'])]
+        shifts: [createRoomShift('09:00', '18:00', ['1', '2', '3'])]
       }
     },
     shiftOverrides: [
@@ -416,7 +522,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     weeklySchedule: {
       Sun: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '17:00', ['3'])]
+        shifts: [createRoomShift('09:00', '17:00', ['3'])]
       },
       Mon: {
         isAvailable: true,
@@ -443,7 +549,7 @@ export const mockManagedRooms: ManagedRoom[] = [
       },
       Sat: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '18:00', ['3'])]
+        shifts: [createRoomShift('09:00', '18:00', ['3'])]
       }
     },
     shiftOverrides: []
@@ -465,11 +571,11 @@ export const mockManagedRooms: ManagedRoom[] = [
       },
       Mon: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '18:00', ['2'])]
+        shifts: [createRoomShift('09:00', '18:00', ['2'])]
       },
       Tue: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '18:00', ['2'])]
+        shifts: [createRoomShift('09:00', '18:00', ['2'])]
       },
       Wed: {
         isAvailable: false,
@@ -477,11 +583,11 @@ export const mockManagedRooms: ManagedRoom[] = [
       },
       Thu: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '19:00', ['2'])]
+        shifts: [createRoomShift('09:00', '19:00', ['2'])]
       },
       Fri: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '19:00', ['2'])]
+        shifts: [createRoomShift('09:00', '19:00', ['2'])]
       },
       Sat: {
         isAvailable: true,
@@ -503,7 +609,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     weeklySchedule: {
       Sun: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '16:00', ['1'])]
+        shifts: [createRoomShift('09:00', '16:00', ['1'])]
       },
       Mon: {
         isAvailable: true,
@@ -527,7 +633,7 @@ export const mockManagedRooms: ManagedRoom[] = [
       },
       Sat: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '18:00', ['1', '3'])]
+        shifts: [createRoomShift('09:00', '18:00', ['1', '3'])]
       }
     },
     shiftOverrides: []
@@ -549,23 +655,23 @@ export const mockManagedRooms: ManagedRoom[] = [
       },
       Mon: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '20:00', ['4'])]
+        shifts: [createRoomShift('09:00', '20:00', ['4'])]
       },
       Tue: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '20:00', ['4'])]
+        shifts: [createRoomShift('09:00', '20:00', ['4'])]
       },
       Wed: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '20:00', ['4'])]
+        shifts: [createRoomShift('09:00', '20:00', ['4'])]
       },
       Thu: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '21:00', ['4'])]
+        shifts: [createRoomShift('09:00', '21:00', ['4'])]
       },
       Fri: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '21:00', ['4'])]
+        shifts: [createRoomShift('09:00', '21:00', ['4'])]
       },
       Sat: {
         isAvailable: true,
@@ -591,23 +697,23 @@ export const mockManagedRooms: ManagedRoom[] = [
       },
       Mon: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '20:00', ['5'])]
+        shifts: [createRoomShift('09:00', '20:00', ['5'])]
       },
       Tue: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '20:00', ['5'])]
+        shifts: [createRoomShift('09:00', '20:00', ['5'])]
       },
       Wed: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '20:00', ['5'])]
+        shifts: [createRoomShift('09:00', '20:00', ['5'])]
       },
       Thu: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '21:00', ['5'])]
+        shifts: [createRoomShift('09:00', '21:00', ['5'])]
       },
       Fri: {
         isAvailable: true,
-        shifts: [createRoomShift('10:00', '21:00', ['5'])]
+        shifts: [createRoomShift('09:00', '21:00', ['5'])]
       },
       Sat: {
         isAvailable: true,
@@ -633,27 +739,27 @@ export const mockManagedRooms: ManagedRoom[] = [
       },
       Mon: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '19:00', ['6', '7'])]
+        shifts: [createRoomShift('09:00', '19:00', ['6', '7'])]
       },
       Tue: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '19:00', ['6', '7'])]
+        shifts: [createRoomShift('09:00', '19:00', ['6', '7'])]
       },
       Wed: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '19:00', ['6', '7'])]
+        shifts: [createRoomShift('09:00', '19:00', ['6', '7'])]
       },
       Thu: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '20:00', ['6', '7'])]
+        shifts: [createRoomShift('09:00', '20:00', ['6', '7'])]
       },
       Fri: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '20:00', ['6', '7'])]
+        shifts: [createRoomShift('09:00', '20:00', ['6', '7'])]
       },
       Sat: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '18:00', ['6', '7'])]
+        shifts: [createRoomShift('09:00', '18:00', ['6', '7'])]
       }
     },
     shiftOverrides: []
@@ -675,27 +781,27 @@ export const mockManagedRooms: ManagedRoom[] = [
       },
       Mon: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '19:00', ['6'])]
+        shifts: [createRoomShift('09:00', '19:00', ['6'])]
       },
       Tue: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '19:00', ['6'])]
+        shifts: [createRoomShift('09:00', '19:00', ['6'])]
       },
       Wed: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '19:00', ['6'])]
+        shifts: [createRoomShift('09:00', '19:00', ['6'])]
       },
       Thu: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '20:00', ['6'])]
+        shifts: [createRoomShift('09:00', '20:00', ['6'])]
       },
       Fri: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '20:00', ['6'])]
+        shifts: [createRoomShift('09:00', '20:00', ['6'])]
       },
       Sat: {
         isAvailable: true,
-        shifts: [createRoomShift('08:00', '18:00', ['6'])]
+        shifts: [createRoomShift('09:00', '18:00', ['6'])]
       }
     },
     shiftOverrides: [

@@ -1,0 +1,313 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Box,
+  Typography,
+  Button,
+  Switch,
+  FormControlLabel,
+  IconButton,
+  Divider,
+  Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  OutlinedInput
+} from '@mui/material'
+import { mockServices } from '@/bookly/data/mock-data'
+import { useStaffManagementStore } from './staff-store'
+import { TimeSelectField } from './time-select-field'
+import type { DayOfWeek } from '../calendar/types'
+
+interface RoomScheduleEditorProps {
+  open: boolean
+  onClose: () => void
+  roomId: string | null
+  roomName: string
+  dayOfWeek: DayOfWeek | null
+  initialShift?: { start: string; end: string; serviceIds: string[] } | null
+}
+
+export function RoomScheduleEditor({
+  open,
+  onClose,
+  roomId,
+  roomName,
+  dayOfWeek,
+  initialShift
+}: RoomScheduleEditorProps) {
+  const { updateRoomSchedule, getRoomSchedule } = useStaffManagementStore()
+
+  const [isAvailable, setIsAvailable] = useState(false)
+  const [shifts, setShifts] = useState<Array<{ id: string; start: string; end: string; serviceIds: string[] }>>([])
+
+  useEffect(() => {
+    if (open && roomId && dayOfWeek) {
+      const schedule = getRoomSchedule(roomId, dayOfWeek)
+      setIsAvailable(schedule.isAvailable)
+
+      if (schedule.shifts.length > 0) {
+        setShifts(schedule.shifts.map((s, idx) => ({
+          id: s.id || `shift-${idx}`,
+          start: s.start,
+          end: s.end,
+          serviceIds: s.serviceIds || []
+        })))
+      } else if (initialShift) {
+        // If opening to create a new shift
+        setShifts([{
+          id: `shift-${Date.now()}`,
+          start: initialShift.start || '09:00',
+          end: initialShift.end || '17:00',
+          serviceIds: initialShift.serviceIds || []
+        }])
+        setIsAvailable(true)
+      } else {
+        setShifts([])
+      }
+    }
+  }, [open, roomId, dayOfWeek, getRoomSchedule, initialShift])
+
+  const handleAddShift = () => {
+    setShifts([
+      ...shifts,
+      {
+        id: `shift-${Date.now()}`,
+        start: '09:00',
+        end: '17:00',
+        serviceIds: []
+      }
+    ])
+  }
+
+  const handleRemoveShift = (id: string) => {
+    setShifts(shifts.filter(s => s.id !== id))
+  }
+
+  const handleUpdateShift = (id: string, field: 'start' | 'end' | 'serviceIds', value: any) => {
+    setShifts(shifts.map(s => s.id === id ? { ...s, [field]: value } : s))
+  }
+
+  const handleSave = () => {
+    if (!roomId || !dayOfWeek) return
+
+    if (isAvailable && shifts.length === 0) {
+      alert('Please add at least one shift or mark the day as unavailable')
+      return
+    }
+
+    // Validate shift times
+    for (const shift of shifts) {
+      if (shift.start >= shift.end) {
+        alert('End time must be after start time for all shifts')
+        return
+      }
+    }
+
+    updateRoomSchedule(roomId, dayOfWeek, {
+      isAvailable,
+      shifts: isAvailable ? shifts : []
+    })
+
+    onClose()
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
+      <DialogTitle>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant='h6' fontWeight={600}>
+              Edit Room Schedule
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {roomName} - {dayOfWeek}
+            </Typography>
+          </Box>
+          <IconButton onClick={onClose} size='small'>
+            <i className='ri-close-line' />
+          </IconButton>
+        </Box>
+      </DialogTitle>
+
+      <DialogContent>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+          {/* Availability Toggle */}
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isAvailable}
+                onChange={(e) => {
+                  setIsAvailable(e.target.checked)
+                  if (!e.target.checked) {
+                    setShifts([])
+                  }
+                }}
+                color='primary'
+              />
+            }
+            label={
+              <Box>
+                <Typography variant='body2' fontWeight={500}>
+                  Room Available on {dayOfWeek}
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Toggle to make room available or closed
+                </Typography>
+              </Box>
+            }
+          />
+
+          {isAvailable && (
+            <>
+              <Divider />
+
+              {/* Shifts */}
+              <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant='subtitle1' fontWeight={600}>
+                    Shifts ({shifts.length})
+                  </Typography>
+                  <Button
+                    size='small'
+                    startIcon={<i className='ri-add-line' />}
+                    onClick={handleAddShift}
+                  >
+                    Add Shift
+                  </Button>
+                </Box>
+
+                {shifts.length === 0 ? (
+                  <Box
+                    sx={{
+                      p: 4,
+                      border: '2px dashed',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      textAlign: 'center'
+                    }}
+                  >
+                    <i className='ri-time-line' style={{ fontSize: 48, opacity: 0.3 }} />
+                    <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+                      No shifts added yet
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      Click "Add Shift" to create a time slot
+                    </Typography>
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {shifts.map((shift, idx) => (
+                      <Box
+                        key={shift.id}
+                        sx={{
+                          p: 2,
+                          border: 1,
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                          bgcolor: 'background.default'
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                          <Typography variant='subtitle2' fontWeight={600}>
+                            Shift {idx + 1}
+                          </Typography>
+                          <IconButton
+                            size='small'
+                            color='error'
+                            onClick={() => handleRemoveShift(shift.id)}
+                          >
+                            <i className='ri-delete-bin-line' />
+                          </IconButton>
+                        </Box>
+
+                        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                          <TimeSelectField
+                            label='Start Time'
+                            value={shift.start}
+                            onChange={(value) => handleUpdateShift(shift.id, 'start', value)}
+                            fullWidth
+                          />
+                          <TimeSelectField
+                            label='End Time'
+                            value={shift.end}
+                            onChange={(value) => handleUpdateShift(shift.id, 'end', value)}
+                            fullWidth
+                          />
+                        </Box>
+
+                        <FormControl fullWidth>
+                          <InputLabel>Services for this shift</InputLabel>
+                          <Select
+                            multiple
+                            value={shift.serviceIds}
+                            onChange={(e) => {
+                              const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                              handleUpdateShift(shift.id, 'serviceIds', value)
+                            }}
+                            input={<OutlinedInput label="Services for this shift" />}
+                            renderValue={(selected) => (
+                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                {selected.map((value) => {
+                                  const service = mockServices.find(s => s.id === value)
+                                  return (
+                                    <Chip key={value} label={service?.name || value} size="small" />
+                                  )
+                                })}
+                              </Box>
+                            )}
+                          >
+                            {mockServices.map((service) => (
+                              <MenuItem key={service.id} value={service.id}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                  <Typography>{service.name}</Typography>
+                                  <Typography variant='caption' color='text.secondary'>
+                                    {service.duration} min
+                                  </Typography>
+                                </Box>
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: 'info.50',
+                  borderRadius: 1,
+                  border: '1px solid',
+                  borderColor: 'info.main'
+                }}
+              >
+                <Typography variant='caption' color='info.dark'>
+                  <strong>Tip:</strong> You can add multiple shifts per day. Assign specific services
+                  to each shift to control which services are available during different time periods.
+                </Typography>
+              </Box>
+            </>
+          )}
+        </Box>
+      </DialogContent>
+
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button onClick={onClose} variant='outlined'>
+          Cancel
+        </Button>
+        <Button onClick={handleSave} variant='contained'>
+          Save Schedule
+        </Button>
+      </DialogActions>
+    </Dialog>
+  )
+}
