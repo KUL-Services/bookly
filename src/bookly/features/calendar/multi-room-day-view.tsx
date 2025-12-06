@@ -141,7 +141,7 @@ export default function MultiRoomDayView({
                     width: { xs: 32, md: 40 },
                     height: { xs: 32, md: 40 },
                     borderRadius: '50%',
-                    bgcolor: room.color || '#9E9E9E',
+                    bgcolor: '#9E9E9E',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

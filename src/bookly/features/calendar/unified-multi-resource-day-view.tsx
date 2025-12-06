@@ -367,8 +367,8 @@ export default function UnifiedMultiResourceDayView({
                 }}
                 onClick={() => onRoomClick?.(room.id)}
               >
-                <Box sx={{ width: 32, height: 32, borderRadius: '50%', bgcolor: room.color || 'success.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className='ri-door-open-line' style={{ color: '#fff', fontSize: 16 }} />
+                <Box sx={{ width: 32, height: 32, borderRadius: '50%', bgcolor: 'success.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <i className='ri-tools-line' style={{ color: '#fff', fontSize: 16 }} />
                 </Box>
                 <Box sx={{ textAlign: 'center' }}>
                   <Typography variant='body2' fontWeight={600} noWrap>

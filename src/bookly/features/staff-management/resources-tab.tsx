@@ -56,9 +56,7 @@ export function ResourcesTab() {
     if (!selectedBranchId) return []
 
     return resources.filter(resource => {
-      const matchesSearch =
-        resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        resource.amenities.some(a => a.toLowerCase().includes(searchQuery.toLowerCase()))
+      const matchesSearch = resource.name.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesBranch = resource.branchId === selectedBranchId
       return matchesSearch && matchesBranch
     })
@@ -356,12 +354,12 @@ export function ResourcesTab() {
                 }}
               >
                 <Box sx={{ textAlign: 'center' }}>
-                  <i className='ri-door-line' style={{ fontSize: 64, opacity: 0.3 }} />
+                  <i className='ri-tools-line' style={{ fontSize: 64, opacity: 0.3 }} />
                   <Typography variant='h6' sx={{ mt: 2 }}>
                     No resources found
                   </Typography>
                   <Typography variant='body2'>
-                    {searchQuery ? 'Try adjusting your search' : `Add your first resource to ${selectedBranch.name}`}
+                    {searchQuery ? 'Try adjusting your search' : `Add your first equipment to ${selectedBranch.name}`}
                   </Typography>
                   {!searchQuery && (
                     <Button
@@ -395,12 +393,12 @@ export function ResourcesTab() {
                         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
                           <Avatar
                             sx={{
-                              bgcolor: resource.color || 'primary.main',
+                              bgcolor: 'primary.main',
                               width: 48,
                               height: 48
                             }}
                           >
-                            <i className='ri-door-line' />
+                            <i className='ri-tools-line' />
                           </Avatar>
                           <Box sx={{ flexGrow: 1 }}>
                             <Typography variant='h6' fontWeight={600}>
@@ -412,14 +410,13 @@ export function ResourcesTab() {
                           </Box>
                         </Box>
 
-                        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                           <Chip
                             size='small'
                             icon={<i className='ri-group-line' />}
                             label={`${resource.capacity} capacity`}
                             variant='outlined'
                           />
-                          {resource.floor && <Chip size='small' label={resource.floor} variant='outlined' />}
                           <Chip
                             size='small'
                             icon={<i className='ri-service-line' />}
@@ -427,19 +424,6 @@ export function ResourcesTab() {
                             color='primary'
                             variant='outlined'
                           />
-                        </Box>
-
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {resource.amenities.slice(0, 4).map(amenity => (
-                            <Chip key={amenity} label={amenity} size='small' sx={{ fontSize: '0.7rem', height: 20 }} />
-                          ))}
-                          {resource.amenities.length > 4 && (
-                            <Chip
-                              label={`+${resource.amenities.length - 4}`}
-                              size='small'
-                              sx={{ fontSize: '0.7rem', height: 20 }}
-                            />
-                          )}
                         </Box>
                       </CardContent>
 
@@ -487,12 +471,12 @@ export function ResourcesTab() {
                   >
                     <Avatar
                       sx={{
-                        bgcolor: resource.color || 'primary.main',
+                        bgcolor: 'primary.main',
                         width: 40,
                         height: 40
                       }}
                     >
-                      <i className='ri-door-line' />
+                      <i className='ri-tools-line' />
                     </Avatar>
 
                     <Box sx={{ flexGrow: 1 }}>
@@ -501,7 +485,6 @@ export function ResourcesTab() {
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
                         {selectedBranch.name}
-                        {resource.floor && ` • ${resource.floor}`}
                       </Typography>
                     </Box>
 
@@ -519,19 +502,6 @@ export function ResourcesTab() {
                       color='primary'
                       variant='outlined'
                     />
-
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      {resource.amenities.slice(0, 3).map(amenity => (
-                        <Chip key={amenity} label={amenity} size='small' sx={{ fontSize: '0.7rem', height: 20 }} />
-                      ))}
-                      {resource.amenities.length > 3 && (
-                        <Chip
-                          label={`+${resource.amenities.length - 3}`}
-                          size='small'
-                          sx={{ fontSize: '0.7rem', height: 20 }}
-                        />
-                      )}
-                    </Box>
 
                     <Button
                       size='small'

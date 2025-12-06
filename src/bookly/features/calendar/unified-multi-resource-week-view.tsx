@@ -128,8 +128,8 @@ export default function UnifiedMultiResourceWeekView({
               {resource.name.split(' ').map((n: string) => n[0]).join('')}
             </Avatar>
           ) : (
-            <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: resource.color || 'success.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <i className='ri-door-open-line' style={{ color: '#fff', fontSize: 18 }} />
+            <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: 'success.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i className='ri-tools-line' style={{ color: '#fff', fontSize: 18 }} />
             </Box>
           )}
           <Box sx={{ flex: 1, minWidth: 0 }}>

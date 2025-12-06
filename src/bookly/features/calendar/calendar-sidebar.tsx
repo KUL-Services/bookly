@@ -804,7 +804,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                                 width: 16,
                                 height: 16,
                                 borderRadius: '50%',
-                                bgcolor: room.color || '#9E9E9E',
+                                bgcolor: '#9E9E9E',
                                 flexShrink: 0
                               }}
                             />

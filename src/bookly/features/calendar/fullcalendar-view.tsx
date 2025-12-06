@@ -676,7 +676,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                         width: 10,
                         height: 10,
                         borderRadius: '50%',
-                        bgcolor: room.color || '#9E9E9E',
+                        bgcolor: '#9E9E9E',
                         flexShrink: 0
                       }}
                     />

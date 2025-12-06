@@ -316,45 +316,57 @@ export const mockTimeOffRequests: TimeOffRequest[] = [
 ]
 
 // ============================================================================
-// Resources (Rooms/Facilities)
+// Resources (Equipment & Machines)
 // ============================================================================
 
 export const mockResources: Resource[] = [
   {
-    id: 'room-1',
+    id: 'res-1',
     branchId: '1-1',
-    name: 'Main Studio',
-    capacity: 20,
-    floor: '1st Floor',
-    amenities: ['Air Conditioning', 'Mirrors', 'Sound System', 'WiFi'],
-    color: '#1976d2'
+    name: 'Styling Chair #1',
+    capacity: 1
   },
   {
-    id: 'room-2',
+    id: 'res-2',
     branchId: '1-1',
-    name: 'Yoga Room',
-    capacity: 15,
-    floor: '2nd Floor',
-    amenities: ['Air Conditioning', 'Yoga Mats', 'Mirrors', 'Sound System'],
-    color: '#388e3c'
+    name: 'Styling Chair #2',
+    capacity: 1
   },
   {
-    id: 'room-3',
+    id: 'res-3',
     branchId: '1-1',
-    name: 'Private Room',
-    capacity: 5,
-    floor: '1st Floor',
-    amenities: ['Air Conditioning', 'Mirrors'],
-    color: '#d32f2f'
+    name: 'Hair Dryer Station #1',
+    capacity: 1
   },
   {
-    id: 'room-4',
+    id: 'res-4',
+    branchId: '1-1',
+    name: 'Massage Chair #1',
+    capacity: 1
+  },
+  {
+    id: 'res-5',
     branchId: '1-2',
-    name: 'Spin Studio',
-    capacity: 12,
-    floor: 'Ground Floor',
-    amenities: ['Air Conditioning', 'Sound System', 'Lockers', 'Showers', 'WiFi'],
-    color: '#f57c00'
+    name: 'Pedicure Chair #1',
+    capacity: 1
+  },
+  {
+    id: 'res-6',
+    branchId: '1-2',
+    name: 'Pedicure Chair #2',
+    capacity: 1
+  },
+  {
+    id: 'res-7',
+    branchId: '2-1',
+    name: 'Manicure Station #1',
+    capacity: 1
+  },
+  {
+    id: 'res-8',
+    branchId: '2-1',
+    name: 'Manicure Station #2',
+    capacity: 1
   }
 ]
 

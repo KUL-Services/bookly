@@ -264,9 +264,6 @@ export interface Resource {
   branchId: string
   name: string
   capacity: number
-  floor?: string
-  amenities: string[]
-  color?: string
   serviceIds?: string[]  // Services assigned to this resource
 }
 

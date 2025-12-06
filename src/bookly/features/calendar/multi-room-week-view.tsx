@@ -186,7 +186,7 @@ export default function MultiRoomWeekView({
                       width: { xs: 36, md: 48 },
                       height: { xs: 36, md: 48 },
                       borderRadius: '50%',
-                      bgcolor: room.color || '#9E9E9E',
+                      bgcolor: '#9E9E9E',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
