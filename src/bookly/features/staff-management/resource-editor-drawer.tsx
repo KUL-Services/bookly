@@ -12,9 +12,11 @@ import {
   Select,
   MenuItem,
   IconButton,
-  Divider
+  Divider,
+  Chip,
+  OutlinedInput
 } from '@mui/material'
-import { mockBranches } from '@/bookly/data/mock-data'
+import { mockBranches, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import type { Resource } from '../calendar/types'
 
@@ -27,11 +29,12 @@ interface ResourceEditorDrawerProps {
 
 
 export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId }: ResourceEditorDrawerProps) {
-  const { createResource, updateResource } = useStaffManagementStore()
+  const { createResource, updateResource, resources, isServiceAssigned, getResourceForService } = useStaffManagementStore()
 
   const [name, setName] = useState('')
   const [branchId, setBranchId] = useState('')
   const [capacity, setCapacity] = useState(1)
+  const [serviceIds, setServiceIds] = useState<string[]>([])
 
   // Load resource data if editing
   useEffect(() => {
@@ -39,11 +42,13 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
       setName(resource.name)
       setBranchId(resource.branchId)
       setCapacity(resource.capacity)
+      setServiceIds(resource.serviceIds || [])
     } else {
       // Reset for new resource - use selectedBranchId if available
       setName('')
       setBranchId(selectedBranchId || mockBranches[0]?.id || '')
       setCapacity(1)
+      setServiceIds([])
     }
   }, [resource, open, selectedBranchId])
 
@@ -58,14 +63,16 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
       updateResource(resource.id, {
         name,
         branchId,
-        capacity
+        capacity,
+        serviceIds
       })
     } else {
       // Create new
       createResource({
         name,
         branchId,
-        capacity
+        capacity,
+        serviceIds
       })
     }
 
@@ -74,6 +81,23 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
 
   const handleCancel = () => {
     onClose()
+  }
+
+  // Check if a service is already assigned to another resource
+  const isServiceAssignedToOther = (serviceId: string): boolean => {
+    if (resource && resource.serviceIds?.includes(serviceId)) {
+      return false // Current resource can keep its services
+    }
+    const assignedResourceId = getResourceForService(serviceId)
+    return assignedResourceId !== null && assignedResourceId !== resource?.id
+  }
+
+  const getServiceConflict = (serviceId: string): string | null => {
+    const assignedResourceId = getResourceForService(serviceId)
+    if (!assignedResourceId || assignedResourceId === resource?.id) return null
+
+    const conflictResource = resources.find(r => r.id === assignedResourceId)
+    return conflictResource ? conflictResource.name : null
   }
 
   return (
@@ -140,6 +164,73 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
             required
             fullWidth
           />
+
+          <Divider />
+
+          {/* Service Assignment */}
+          <Typography variant="subtitle1" fontWeight={600} color="primary">
+            Service Assignment
+          </Typography>
+
+          <FormControl fullWidth>
+            <InputLabel>Assigned Services</InputLabel>
+            <Select
+              multiple
+              value={serviceIds}
+              onChange={(e) => {
+                const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                // Check for conflicts
+                const conflicts = value.filter(id => isServiceAssignedToOther(id))
+                if (conflicts.length > 0) {
+                  const conflictNames = conflicts.map(id => {
+                    const service = mockServices.find(s => s.id === id)
+                    const conflictResource = getServiceConflict(id)
+                    return `${service?.name} (assigned to ${conflictResource})`
+                  }).join(', ')
+                  alert(`Cannot assign: ${conflictNames}. Services can only be assigned to one resource.`)
+                  return
+                }
+                setServiceIds(value)
+              }}
+              input={<OutlinedInput label="Assigned Services" />}
+              renderValue={(selected) => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map((value) => {
+                    const service = mockServices.find(s => s.id === value)
+                    return (
+                      <Chip key={value} label={service?.name || value} size="small" />
+                    )
+                  })}
+                </Box>
+              )}
+            >
+              {mockServices.map((service) => {
+                const assigned = isServiceAssignedToOther(service.id)
+                const conflictResource = getServiceConflict(service.id)
+                return (
+                  <MenuItem
+                    key={service.id}
+                    value={service.id}
+                    disabled={assigned}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                      <Typography>{service.name}</Typography>
+                      {assigned && conflictResource && (
+                        <Chip
+                          label={`In ${conflictResource}`}
+                          size="small"
+                          sx={{ ml: 1, height: 20, fontSize: '0.7rem' }}
+                        />
+                      )}
+                    </Box>
+                  </MenuItem>
+                )
+              })}
+            </Select>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+              Services assigned to this resource will be scheduled here
+            </Typography>
+          </FormControl>
         </Box>
 
         <Divider sx={{ my: 3 }} />
