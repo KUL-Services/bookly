@@ -102,18 +102,42 @@ export function ResourceAssignServicesModal({
   }
 
   const isServiceInConflict = (serviceId: string) => {
-    return isServiceAssigned(serviceId) && getResourceForService(serviceId) !== resourceId
+    // Get the current resource to check its branch
+    const currentResource = resources.find(r => r.id === resourceId)
+    if (!currentResource) return false
+
+    // Only check for conflicts within the same branch
+    const resourcesInSameBranch = resources.filter(
+      r => r.branchId === currentResource.branchId && r.id !== resourceId
+    )
+    const roomsInSameBranch = rooms.filter(
+      r => r.branchId === currentResource.branchId && r.id !== resourceId
+    )
+
+    return (
+      resourcesInSameBranch.some(r => r.serviceIds?.includes(serviceId)) ||
+      roomsInSameBranch.some(r => r.serviceIds?.includes(serviceId))
+    )
   }
 
   const getConflictResourceName = (serviceId: string) => {
-    const assignedResourceId = getResourceForService(serviceId)
-    if (!assignedResourceId) return ''
+    // Get the current resource to check its branch
+    const currentResource = resources.find(r => r.id === resourceId)
+    if (!currentResource) return ''
 
-    const resource = resources.find(r => r.id === assignedResourceId)
-    if (resource) return resource.name
+    // Only check for conflicts within the same branch
+    const resourcesInSameBranch = resources.filter(
+      r => r.branchId === currentResource.branchId && r.id !== resourceId
+    )
+    const roomsInSameBranch = rooms.filter(
+      r => r.branchId === currentResource.branchId && r.id !== resourceId
+    )
 
-    const room = rooms.find(r => r.id === assignedResourceId)
-    if (room) return room.name
+    const conflictResource = resourcesInSameBranch.find(r => r.serviceIds?.includes(serviceId))
+    if (conflictResource) return conflictResource.name
+
+    const conflictRoom = roomsInSameBranch.find(r => r.serviceIds?.includes(serviceId))
+    if (conflictRoom) return conflictRoom.name
 
     return 'Unknown'
   }

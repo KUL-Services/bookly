@@ -83,20 +83,21 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
     onClose()
   }
 
-  // Check if a service is already assigned to another resource
+  // Check if a service is already assigned to another resource in the same branch
   const isServiceAssignedToOther = (serviceId: string): boolean => {
     if (resource && resource.serviceIds?.includes(serviceId)) {
       return false // Current resource can keep its services
     }
-    const assignedResourceId = getResourceForService(serviceId)
-    return assignedResourceId !== null && assignedResourceId !== resource?.id
+
+    // Only check for conflicts within the same branch
+    const resourcesInSameBranch = resources.filter(r => r.branchId === branchId && r.id !== resource?.id)
+    return resourcesInSameBranch.some(r => r.serviceIds?.includes(serviceId))
   }
 
   const getServiceConflict = (serviceId: string): string | null => {
-    const assignedResourceId = getResourceForService(serviceId)
-    if (!assignedResourceId || assignedResourceId === resource?.id) return null
-
-    const conflictResource = resources.find(r => r.id === assignedResourceId)
+    // Only check for conflicts within the same branch
+    const resourcesInSameBranch = resources.filter(r => r.branchId === branchId && r.id !== resource?.id)
+    const conflictResource = resourcesInSameBranch.find(r => r.serviceIds?.includes(serviceId))
     return conflictResource ? conflictResource.name : null
   }
 

@@ -140,16 +140,20 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
     }
   }
 
-  // Check if a service is already assigned to another room
+  // Check if a service is already assigned to another room in the same branch
   const isServiceAssigned = (serviceId: string): boolean => {
     if (room && room.serviceIds?.includes(serviceId)) {
       return false // Current room can keep its services
     }
-    return rooms.some(r => r.id !== room?.id && r.serviceIds?.includes(serviceId))
+    // Only check for conflicts within the same branch
+    const roomsInSameBranch = rooms.filter(r => r.branchId === branchId && r.id !== room?.id)
+    return roomsInSameBranch.some(r => r.serviceIds?.includes(serviceId))
   }
 
   const getServiceConflict = (serviceId: string): string | null => {
-    const conflictRoom = rooms.find(r => r.id !== room?.id && r.serviceIds?.includes(serviceId))
+    // Only check for conflicts within the same branch
+    const roomsInSameBranch = rooms.filter(r => r.branchId === branchId && r.id !== room?.id)
+    const conflictRoom = roomsInSameBranch.find(r => r.serviceIds?.includes(serviceId))
     return conflictRoom ? conflictRoom.name : null
   }
 
