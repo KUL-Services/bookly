@@ -4,7 +4,7 @@ import { Box, Typography, Avatar, Chip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, addMinutes, isSameDay, isToday } from 'date-fns'
 import { useState, useEffect } from 'react'
-import { mockStaff } from '@/bookly/data/mock-data'
+import { mockStaff, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
 import { getBranchName, buildEventColors } from './utils'
@@ -249,18 +249,33 @@ export default function UnifiedMultiResourceDayView({
               >
                 {format(event.start, 'h:mm a')}
               </Typography>
-              <Typography
-                variant='caption'
-                sx={{
-                  fontSize: '0.65rem',
-                  display: 'block',
-                  color: colors.text,
-                  opacity: 0.8
-                }}
-                noWrap
-              >
-                {event.extendedProps?.serviceName || event.title}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {(() => {
+                  const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                  return service?.color ? (
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: '50%',
+                        bgcolor: service.color,
+                        flexShrink: 0
+                      }}
+                    />
+                  ) : null
+                })()}
+                <Typography
+                  variant='caption'
+                  sx={{
+                    fontSize: '0.65rem',
+                    color: colors.text,
+                    opacity: 0.8
+                  }}
+                  noWrap
+                >
+                  {event.extendedProps?.serviceName || event.title}
+                </Typography>
+              </Box>
             </Box>
           )
         })}
@@ -314,7 +329,7 @@ export default function UnifiedMultiResourceDayView({
                 }}
                 onClick={() => onStaffClick?.(staff.id)}
               >
-                <Avatar src={staff.photo} sx={{ width: 32, height: 32 }}>
+                <Avatar sx={{ width: 32, height: 32 }}>
                   {staff.name.split(' ').map(n => n[0]).join('')}
                 </Avatar>
                 <Box sx={{ textAlign: 'center' }}>

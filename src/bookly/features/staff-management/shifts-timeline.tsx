@@ -6,20 +6,30 @@ import { mockStaff } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import type { DayOfWeek } from '../calendar/types'
 
+// Helper function to get 2 initials from a name
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return parts[0].substring(0, 2).toUpperCase()
+}
+
 interface ShiftsTimelineProps {
   viewMode: 'day' | 'week'
   selectedStaffIds: string[]
   selectedDate: Date
+  branchId?: string  // The selected branch ID
   onEditBusinessHours: () => void
   onEditStaffShift: () => void
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i) // 0-23
 const DAY_NAMES: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-function timeToPosition(time: string): number {
+function timeToPosition(time: string, startHour: number, hourRange: number): number {
   const [hours, minutes] = time.split(':').map(Number)
-  return ((hours + minutes / 60) / 24) * 100
+  const timeInHours = hours + minutes / 60
+  return ((timeInHours - startHour) / hourRange) * 100
 }
 
 function calculateDuration(start: string, end: string): string {
@@ -35,6 +45,7 @@ export function ShiftsTimeline({
   viewMode,
   selectedStaffIds,
   selectedDate,
+  branchId,
   onEditBusinessHours,
   onEditStaffShift
 }: ShiftsTimelineProps) {
@@ -48,6 +59,47 @@ export function ShiftsTimeline({
 
   // Days to show based on view mode
   const daysToShow = viewMode === 'day' ? [currentDay] : DAY_NAMES
+
+  // Calculate dynamic hours based on branch business hours
+  const { hours: HOURS, startHour, hourRange } = useMemo(() => {
+    if (!branchId || branchId === 'all') {
+      // Default to full 24 hours if no specific branch selected
+      return { hours: Array.from({ length: 24 }, (_, i) => i), startHour: 0, hourRange: 24 }
+    }
+
+    // Find the earliest start and latest end across all days
+    let earliestStart = 24
+    let latestEnd = 0
+
+    daysToShow.forEach(day => {
+      const businessHours = getBusinessHours(branchId, day)
+      if (businessHours.isOpen && businessHours.shifts.length > 0) {
+        businessHours.shifts.forEach(shift => {
+          const [startH] = shift.start.split(':').map(Number)
+          const [endH] = shift.end.split(':').map(Number)
+          earliestStart = Math.min(earliestStart, startH)
+          latestEnd = Math.max(latestEnd, endH)
+        })
+      }
+    })
+
+    // If no business hours found, default to 9 AM - 6 PM
+    if (earliestStart === 24 || latestEnd === 0) {
+      earliestStart = 9
+      latestEnd = 18
+    }
+
+    // Add padding (1 hour before and after)
+    const paddedStart = Math.max(0, earliestStart - 1)
+    const paddedEnd = Math.min(24, latestEnd + 1)
+    const range = paddedEnd - paddedStart
+
+    return {
+      hours: Array.from({ length: range }, (_, i) => paddedStart + i),
+      startHour: paddedStart,
+      hourRange: range
+    }
+  }, [branchId, daysToShow, getBusinessHours])
 
   // Calculate totals for each staff member
   const staffTotals = useMemo(() => {
@@ -126,12 +178,12 @@ export function ShiftsTimeline({
           </Typography>
         </Box>
         <Box sx={{ position: 'relative', flexGrow: 1, height: 40 }}>
-          {HOURS.map(hour => (
+          {HOURS.map((hour, index) => (
             <Box
               key={hour}
               sx={{
                 position: 'absolute',
-                left: `${(hour / 24) * 100}%`,
+                left: `${(index / HOURS.length) * 100}%`,
                 transform: 'translateX(-50%)',
                 top: 8
               }}
@@ -179,12 +231,12 @@ export function ShiftsTimeline({
 
           <Box sx={{ position: 'relative', flexGrow: 1 }}>
             {/* Hour grid lines */}
-            {HOURS.map(hour => (
+            {HOURS.map((hour, index) => (
               <Box
                 key={hour}
                 sx={{
                   position: 'absolute',
-                  left: `${(hour / 24) * 100}%`,
+                  left: `${(index / HOURS.length) * 100}%`,
                   top: 0,
                   bottom: 0,
                   width: 1,
@@ -194,8 +246,8 @@ export function ShiftsTimeline({
             ))}
 
             {/* Business hours bars */}
-            {daysToShow.map((day, index) => {
-              const businessHours = getBusinessHours(day)
+            {branchId && branchId !== 'all' && daysToShow.map((day, index) => {
+              const businessHours = getBusinessHours(branchId, day)
 
               if (!businessHours.isOpen) {
                 // Show "Closed" indicator when business is closed
@@ -245,8 +297,8 @@ export function ShiftsTimeline({
                   key={`${day}-${shiftIndex}`}
                   sx={{
                     position: 'absolute',
-                    left: `${timeToPosition(shift.start)}%`,
-                    width: `${timeToPosition(shift.end) - timeToPosition(shift.start)}%`,
+                    left: `${timeToPosition(shift.start, startHour, hourRange)}%`,
+                    width: `${timeToPosition(shift.end, startHour, hourRange) - timeToPosition(shift.start, startHour, hourRange)}%`,
                     top: viewMode === 'week' ? `${(index / 7) * 100}%` : '10%',
                     height: viewMode === 'week' ? `${100 / 7}%` : '80%',
                     bgcolor: 'grey.800',
@@ -301,8 +353,8 @@ export function ShiftsTimeline({
                   gap: 2
                 }}
               >
-                <Avatar src={staff.photo} alt={staff.name} sx={{ width: 32, height: 32, bgcolor: staff.color }}>
-                  {staff.name[0]}
+                <Avatar alt={staff.name} sx={{ width: 32, height: 32, bgcolor: staff.color }}>
+                  {getInitials(staff.name)}
                 </Avatar>
                 <Box>
                   <Typography variant='body2' fontWeight={500}>
@@ -342,8 +394,8 @@ export function ShiftsTimeline({
                       <Box
                         sx={{
                           position: 'absolute',
-                          left: `${timeToPosition(shift.start)}%`,
-                          width: `${timeToPosition(shift.end) - timeToPosition(shift.start)}%`,
+                          left: `${timeToPosition(shift.start, startHour, hourRange)}%`,
+                          width: `${timeToPosition(shift.end, startHour, hourRange) - timeToPosition(shift.start, startHour, hourRange)}%`,
                           top: viewMode === 'week' ? `${(dayIndex / 7) * 100 + 10}%` : '20%',
                           height: viewMode === 'week' ? `${100 / 7 - 20}%` : '60%',
                           bgcolor: '#d4a574',
@@ -364,7 +416,7 @@ export function ShiftsTimeline({
                           size='small'
                           sx={{
                             position: 'absolute',
-                            left: `${timeToPosition(breakRange.start)}%`,
+                            left: `${timeToPosition(breakRange.start, startHour, hourRange)}%`,
                             top: viewMode === 'week' ? `${(dayIndex / 7) * 100 + 15}%` : '25%',
                             height: 20,
                             fontSize: '0.65rem'

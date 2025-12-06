@@ -24,6 +24,7 @@ import type { DayOfWeek, BreakRange } from '../calendar/types'
 interface BusinessHoursModalProps {
   open: boolean
   onClose: () => void
+  branchId?: string  // The branch ID for which to edit business hours
 }
 
 const DAYS_OF_WEEK: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -80,13 +81,18 @@ function calculateDuration(start: string, end: string): string {
 
 const TIME_OPTIONS = generateTimeOptions()
 
-export function BusinessHoursModal({ open, onClose }: BusinessHoursModalProps) {
+export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursModalProps) {
   const { getBusinessHours, updateBusinessHours } = useStaffManagementStore()
   const [effectiveDate, setEffectiveDate] = useState('immediately')
 
   const handleSave = () => {
     // In a real app, you would save with the effective date
     onClose()
+  }
+
+  // If no branchId is provided, show a warning
+  if (!branchId) {
+    return null
   }
 
   return (
@@ -108,16 +114,16 @@ export function BusinessHoursModal({ open, onClose }: BusinessHoursModalProps) {
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {DAYS_OF_WEEK.map((day) => {
-            const dayHours = getBusinessHours(day)
+            const dayHours = getBusinessHours(branchId, day)
 
             const handleToggleOpen = () => {
               if (dayHours.isOpen) {
-                updateBusinessHours(day, {
+                updateBusinessHours(branchId, day, {
                   isOpen: false,
                   shifts: []
                 })
               } else {
-                updateBusinessHours(day, {
+                updateBusinessHours(branchId, day, {
                   isOpen: true,
                   shifts: [{
                     id: crypto.randomUUID(),
@@ -135,7 +141,7 @@ export function BusinessHoursModal({ open, onClose }: BusinessHoursModalProps) {
                 ...newShifts[shiftIndex],
                 [field]: value
               }
-              updateBusinessHours(day, {
+              updateBusinessHours(branchId, day, {
                 ...dayHours,
                 shifts: newShifts
               })
@@ -155,7 +161,7 @@ export function BusinessHoursModal({ open, onClose }: BusinessHoursModalProps) {
                   }
                 ]
               }
-              updateBusinessHours(day, {
+              updateBusinessHours(branchId, day, {
                 ...dayHours,
                 shifts: newShifts
               })
@@ -168,7 +174,7 @@ export function BusinessHoursModal({ open, onClose }: BusinessHoursModalProps) {
                 ...shift,
                 breaks: (shift.breaks || []).filter(b => b.id !== breakId)
               }
-              updateBusinessHours(day, {
+              updateBusinessHours(branchId, day, {
                 ...dayHours,
                 shifts: newShifts
               })
@@ -183,7 +189,7 @@ export function BusinessHoursModal({ open, onClose }: BusinessHoursModalProps) {
                   b.id === breakId ? { ...b, [field]: value } : b
                 )
               }
-              updateBusinessHours(day, {
+              updateBusinessHours(branchId, day, {
                 ...dayHours,
                 shifts: newShifts
               })

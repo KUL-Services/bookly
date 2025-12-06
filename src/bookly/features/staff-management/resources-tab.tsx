@@ -21,7 +21,12 @@ import {
   MenuItem,
   ToggleButtonGroup,
   ToggleButton,
-  Avatar
+  Avatar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText
 } from '@mui/material'
 import { mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
@@ -41,6 +46,8 @@ export function ResourcesTab() {
   const [editingResource, setEditingResource] = useState<Resource | null>(null)
   const [isAssignServicesOpen, setIsAssignServicesOpen] = useState(false)
   const [assigningResource, setAssigningResource] = useState<{ id: string; name: string } | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [resourceToDelete, setResourceToDelete] = useState<{ id: string; name: string } | null>(null)
 
   const { resources, deleteResource, getResourceServices } = useStaffManagementStore()
 
@@ -94,10 +101,22 @@ export function ResourcesTab() {
     setIsEditorOpen(true)
   }
 
-  const handleDeleteResource = (id: string) => {
-    if (confirm('Are you sure you want to delete this resource?')) {
-      deleteResource(id)
+  const handleDeleteResource = (resource: { id: string; name: string }) => {
+    setResourceToDelete(resource)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (resourceToDelete) {
+      deleteResource(resourceToDelete.id)
+      setDeleteDialogOpen(false)
+      setResourceToDelete(null)
     }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false)
+    setResourceToDelete(null)
   }
 
   const handleCloseEditor = () => {
@@ -440,7 +459,7 @@ export function ResourcesTab() {
                           >
                             Edit
                           </Button>
-                          <IconButton size='small' color='error' onClick={() => handleDeleteResource(resource.id)}>
+                          <IconButton size='small' color='error' onClick={() => handleDeleteResource({ id: resource.id, name: resource.name })}>
                             <i className='ri-delete-bin-line' />
                           </IconButton>
                         </Box>
@@ -532,7 +551,7 @@ export function ResourcesTab() {
                       Edit
                     </Button>
 
-                    <IconButton size='small' color='error' onClick={() => handleDeleteResource(resource.id)}>
+                    <IconButton size='small' color='error' onClick={() => handleDeleteResource({ id: resource.id, name: resource.name })}>
                       <i className='ri-delete-bin-line' />
                     </IconButton>
                   </Paper>
@@ -573,6 +592,29 @@ export function ResourcesTab() {
           resourceName={assigningResource.name}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        maxWidth='xs'
+        fullWidth
+      >
+        <DialogTitle>Delete Resource</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete <strong>{resourceToDelete?.name}</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleDeleteCancel} color='inherit'>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} variant='contained' color='error' autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

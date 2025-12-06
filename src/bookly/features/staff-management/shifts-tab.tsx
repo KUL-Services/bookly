@@ -377,7 +377,7 @@ function BulkOperationsDialog({
 export function ShiftsTab() {
   const [viewMode, setViewMode] = useState('Day')
   const [selectedStaff, setSelectedStaff] = useState('Staff')
-  const [selectedBranch, setSelectedBranch] = useState('all')
+  const [selectedBranch, setSelectedBranch] = useState(mockBranches[0]?.id || 'all')
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
   const [bulkMode, setBulkMode] = useState(false)
@@ -414,7 +414,7 @@ export function ShiftsTab() {
   const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
   const calendarOpen = Boolean(calendarAnchor)
 
-  const { timeOffRequests, getStaffWorkingHours } = useStaffManagementStore()
+  const { timeOffRequests, getStaffWorkingHours, getBusinessHours } = useStaffManagementStore()
 
   // Filter staff by branch and staff selection
   const displayStaff = useMemo(() => {
@@ -961,68 +961,125 @@ export function ShiftsTab() {
               </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 60 }}>
-              <Box sx={{ width: 200, display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
-                <Typography variant='body2' fontWeight={600}>
-                  Business Hours
-                </Typography>
-                <Tooltip title='Edit Business Hours'>
-                  <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
-                    <i className='ri-edit-line' style={{ fontSize: 16 }} />
-                  </IconButton>
-                </Tooltip>
-                <Typography variant='caption' color='text.secondary'>
-                  Off
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  flex: 1,
-                  bgcolor: '#424242',
-                  m: 1,
-                  borderRadius: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative'
-                }}
-              >
-                <Typography variant='body2' sx={{ color: '#fff' }}>
-                  Closed
-                </Typography>
-                <IconButton size='small' sx={{ color: '#fff', ml: 'auto', mr: 1 }}>
-                  <i className='ri-edit-line' style={{ fontSize: 16 }} />
-                </IconButton>
-              </Box>
-            </Box>
+            {/* Business Hours - Only show when a specific branch is selected */}
+            {selectedBranch !== 'all' && (() => {
+              const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as DayOfWeek
+              const businessHours = getBusinessHours(selectedBranch, dayOfWeek)
+              const isOpen = businessHours.isOpen && businessHours.shifts.length > 0
+
+              // Format time from 24h to 12h
+              const formatTime = (time24: string) => {
+                const [hourStr, minStr] = time24.split(':')
+                let hour = parseInt(hourStr)
+                const minute = minStr
+                const period = hour >= 12 ? 'PM' : 'AM'
+                if (hour === 0) hour = 12
+                else if (hour > 12) hour -= 12
+                return `${hour}:${minute} ${period}`
+              }
+
+              return (
+                <Box sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 60 }}>
+                  <Box sx={{ width: 200, display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
+                    <Typography variant='body2' fontWeight={600}>
+                      Business Hours
+                    </Typography>
+                    <Tooltip title='Edit Business Hours'>
+                      <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
+                        <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+                    <Typography variant='caption' color='text.secondary'>
+                      {isOpen ? 'On' : 'Off'}
+                    </Typography>
+                  </Box>
+                  <Box
+                    onClick={handleOpenBusinessHoursModal}
+                    sx={{
+                      flex: 1,
+                      bgcolor: isOpen ? 'rgba(139, 195, 74, 0.2)' : '#424242',
+                      m: 1,
+                      borderRadius: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      border: isOpen ? '1px solid' : 'none',
+                      borderColor: isOpen ? 'success.main' : 'transparent',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: isOpen ? 'rgba(139, 195, 74, 0.3)' : '#333333'
+                      }
+                    }}
+                  >
+                    {isOpen ? (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <Typography variant='body2' fontWeight={500}>
+                          {formatTime(businessHours.shifts[0].start)} - {formatTime(businessHours.shifts[0].end)}
+                        </Typography>
+                        {businessHours.shifts.length > 1 && (
+                          <Typography variant='caption' color='text.secondary'>
+                            +{businessHours.shifts.length - 1} more shift{businessHours.shifts.length > 2 ? 's' : ''}
+                          </Typography>
+                        )}
+                      </Box>
+                    ) : (
+                      <Typography variant='body2' sx={{ color: '#fff' }}>
+                        Closed
+                      </Typography>
+                    )}
+                    <IconButton size='small' sx={{ position: 'absolute', right: 8, color: isOpen ? 'text.primary' : '#fff' }}>
+                      <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Box>
+                </Box>
+              )
+            })()}
 
             {/* Staff grouped by branches */}
             {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
               const branch = mockBranches.find(b => b.id === branchId)
+              const dayName = format(selectedDate, 'EEE')
+              const todayHours = branch?.openingHours?.[dayName as keyof typeof branch.openingHours]
+              const showBranchHeader = selectedBranch === 'all' // Only show header when viewing all branches
 
               return (
                 <Box key={branchId}>
-                  {/* Branch Header */}
-                  <Box
-                    sx={{
-                      px: 2,
-                      py: 1.5,
-                      bgcolor: 'action.selected',
-                      borderBottom: 2,
-                      borderColor: 'divider',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1
-                    }}
-                  >
-                    <i className='ri-building-line' style={{ fontSize: 16 }} />
-                    <Typography variant='subtitle2' fontWeight={600}>
-                      {branch?.name || branchId}
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary'>
-                      ({branchStaff.length} staff)
-                    </Typography>
-                  </Box>
+                  {/* Branch Header - only show when all branches selected */}
+                  {showBranchHeader && (
+                    <Box
+                      sx={{
+                        px: 2,
+                        py: 1.5,
+                        bgcolor: 'action.selected',
+                        borderBottom: 2,
+                        borderColor: 'divider',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <i className='ri-building-line' style={{ fontSize: 16 }} />
+                        <Typography variant='subtitle2' fontWeight={600}>
+                          {branch?.name || branchId}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          ({branchStaff.length} staff)
+                        </Typography>
+                      </Box>
+                      {todayHours && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <i className='ri-time-line' style={{ fontSize: 14 }} />
+                          <Typography variant='caption' color='text.secondary'>
+                            {todayHours}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+                  )}
 
                   {/* Staff in this branch */}
                   {branchStaff.map(renderEnhancedStaffRow)}
@@ -1092,7 +1149,11 @@ export function ShiftsTab() {
             </MenuItem>
           </Menu>
 
-          <BusinessHoursModal open={isBusinessHoursModalOpen} onClose={() => setIsBusinessHoursModalOpen(false)} />
+          <BusinessHoursModal
+            open={isBusinessHoursModalOpen}
+            onClose={() => setIsBusinessHoursModalOpen(false)}
+            branchId={selectedBranch !== 'all' ? selectedBranch : undefined}
+          />
 
           {selectedStaffForEdit && (
             <StaffEditWorkingHoursModal
@@ -1100,6 +1161,7 @@ export function ShiftsTab() {
               onClose={() => setIsWorkingHoursModalOpen(false)}
               staffId={selectedStaffForEdit.id}
               staffName={selectedStaffForEdit.name}
+              referenceDate={selectedDate}
             />
           )}
 
@@ -1119,6 +1181,7 @@ export function ShiftsTab() {
           <ShiftEditorModal
             open={isShiftEditorOpen}
             onClose={closeShiftEditor}
+            staffId={shiftEditorContext?.staffId}
             staffName={shiftEditorContext?.staffName}
             date={shiftEditorContext?.date}
             hasShift={shiftEditorContext?.hasShift}
@@ -1137,7 +1200,7 @@ export function ShiftsTab() {
               }
             }}
           >
-            <Box className='print-page-break' sx={{ p: 3 }}>
+            <Box sx={{ p: 3 }}>
               {/* Header */}
               <Box sx={{ mb: 3, textAlign: 'center' }}>
                 <Typography variant='h5' fontWeight={600} gutterBottom>
@@ -1245,61 +1308,119 @@ export function ShiftsTab() {
           <Box sx={{ width: 150, flexShrink: 0, borderRight: 1, borderColor: 'divider' }}>
             <Box sx={{ height: 60, borderBottom: 1, borderColor: 'divider' }} />
 
-            <Box
-              sx={{ height: 70, display: 'flex', alignItems: 'center', px: 2, borderBottom: 1, borderColor: 'divider' }}
-            >
-              <Box sx={{ flex: 1 }}>
-                <Typography variant='body2' fontWeight={600}>
-                  Business Hours
-                </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
-                  <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
-                    D 0h
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
-                    W 0h
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
-                    M 50h 35min
-                  </Typography>
-                </Box>
-              </Box>
-              <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
-                <i className='ri-edit-line' style={{ fontSize: 16 }} />
-              </IconButton>
-            </Box>
+            {/* Business Hours - Only show when a specific branch is selected */}
+            {selectedBranch !== 'all' && (() => {
+              // Calculate total hours for the week
+              const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+              let weekTotalMinutes = 0
+              let daysOpen = 0
 
-            {displayStaff.map(staff => (
-              <Box
-                key={staff.id}
-                sx={{
-                  height: 80,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 2,
-                  borderBottom: 1,
-                  borderColor: 'divider'
-                }}
-              >
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='body2' fontWeight={600} noWrap>
-                    {staff.name}
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
-                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
-                      W 45h/45h
+              dayNames.forEach(day => {
+                const dayHours = getBusinessHours(selectedBranch, day)
+                if (dayHours.isOpen && dayHours.shifts.length > 0) {
+                  daysOpen++
+                  dayHours.shifts.forEach(shift => {
+                    const [startH, startM] = shift.start.split(':').map(Number)
+                    const [endH, endM] = shift.end.split(':').map(Number)
+                    const minutes = (endH * 60 + endM) - (startH * 60 + startM)
+                    weekTotalMinutes += minutes
+                  })
+                }
+              })
+
+              const weekHours = Math.floor(weekTotalMinutes / 60)
+              const weekMinutes = weekTotalMinutes % 60
+
+              return (
+                <Box
+                  sx={{ height: 70, display: 'flex', alignItems: 'center', px: 2, borderBottom: 1, borderColor: 'divider' }}
+                >
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant='body2' fontWeight={600}>
+                      Business Hours
                     </Typography>
-                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
-                      M 149h 45min
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
+                      <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                        {daysOpen} days open
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                        W {weekHours}h {weekMinutes > 0 ? `${weekMinutes}m` : ''}
+                      </Typography>
+                    </Box>
                   </Box>
+                  <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
+                    <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                  </IconButton>
                 </Box>
-                <IconButton size='small' onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}>
-                  <i className='ri-edit-line' style={{ fontSize: 16 }} />
-                </IconButton>
-              </Box>
-            ))}
+              )
+            })()}
+
+            {/* Staff grouped by branches */}
+            {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
+              const branch = mockBranches.find(b => b.id === branchId)
+              const showBranchHeader = selectedBranch === 'all' // Only show header when viewing all branches
+
+              return (
+                <Box key={branchId}>
+                  {/* Branch Header - only show when all branches selected */}
+                  {showBranchHeader && (
+                    <Box
+                      sx={{
+                        px: 2,
+                        py: 1,
+                        bgcolor: 'action.selected',
+                        borderBottom: 1,
+                        borderColor: 'divider',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1
+                      }}
+                    >
+                      <i className='ri-building-line' style={{ fontSize: 14 }} />
+                      <Typography variant='caption' fontWeight={600} fontSize='0.7rem'>
+                        {branch?.name || branchId}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary' fontSize='0.65rem'>
+                        ({branchStaff.length})
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Staff in this branch */}
+                  {branchStaff.map(staff => (
+                    <Box
+                      key={staff.id}
+                      sx={{
+                        height: 80,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        px: 2,
+                        borderBottom: 1,
+                        borderColor: 'divider'
+                      }}
+                    >
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant='body2' fontWeight={600} noWrap>
+                          {staff.name}
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
+                          <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                            W 45h/45h
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                            M 149h 45min
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <IconButton size='small' onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}>
+                        <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              )
+            })}
           </Box>
 
           {weekDates.map((date, dayIndex) => {
@@ -1341,88 +1462,152 @@ export function ShiftsTab() {
                   </Typography>
                 </Box>
 
-                <Box
-                  sx={{
-                    height: 70,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderBottom: 1,
-                    borderColor: 'divider',
-                    p: 1
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      bgcolor: 'grey.900',
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative'
-                    }}
-                  >
-                    <Typography variant='body2' color='white'>
-                      Closed
-                    </Typography>
-                    <IconButton size='small' sx={{ position: 'absolute', top: 2, right: 2, color: 'white' }}>
-                      <i className='ri-edit-line' style={{ fontSize: 14 }} />
-                    </IconButton>
-                  </Box>
-                </Box>
+                {/* Business Hours cells - Only show when a specific branch is selected */}
+                {selectedBranch !== 'all' && (() => {
+                  const dayOfWeek = WEEK_DAYS[dayIndex] as DayOfWeek
+                  const businessHours = getBusinessHours(selectedBranch, dayOfWeek)
+                  const isOpen = businessHours.isOpen && businessHours.shifts.length > 0
 
-                {displayStaff.map(staff => {
-                  const timeOff = timeOffRequests.find(
-                    req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
-                  )
-
-                  // Get working hours for this specific day
-                  const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()] as
-                    | 'Sun'
-                    | 'Mon'
-                    | 'Tue'
-                    | 'Wed'
-                    | 'Thu'
-                    | 'Fri'
-                    | 'Sat'
-                  const workingHours = getStaffWorkingHours(staff.id, dayOfWeek)
-                  const hasShift = !timeOff && workingHours.isWorking && workingHours.shifts.length > 0
-
-                  // Helper function to convert 24h time to 12h format
-                  const formatTime12Hour = (time24: string) => {
+                  // Format time from 24h to 12h
+                  const formatTime = (time24: string) => {
                     const [hourStr, minStr] = time24.split(':')
                     let hour = parseInt(hourStr)
                     const minute = minStr
                     const period = hour >= 12 ? 'PM' : 'AM'
-
                     if (hour === 0) hour = 12
                     else if (hour > 12) hour -= 12
-
                     return `${hour}:${minute} ${period}`
                   }
 
-                  // Get shift times from working hours data
-                  const firstShift = workingHours.shifts[0]
-                  const shiftStart = firstShift ? formatTime12Hour(firstShift.start) : '10:00 AM'
-                  const shiftEnd = firstShift ? formatTime12Hour(firstShift.end) : '7:00 PM'
-
                   return (
                     <Box
-                      key={staff.id}
                       sx={{
-                        height: 80,
+                        height: 70,
                         display: 'flex',
-                        flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         borderBottom: 1,
                         borderColor: 'divider',
-                        position: 'relative',
                         p: 1
                       }}
                     >
+                      <Box
+                        onClick={handleOpenBusinessHoursModal}
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          bgcolor: isOpen ? 'rgba(139, 195, 74, 0.2)' : 'grey.900',
+                          borderRadius: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          position: 'relative',
+                          border: isOpen ? '1px solid' : 'none',
+                          borderColor: isOpen ? 'success.main' : 'transparent',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            bgcolor: isOpen ? 'rgba(139, 195, 74, 0.3)' : 'grey.800'
+                          }
+                        }}
+                      >
+                        {isOpen ? (
+                          <>
+                            <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.65rem' }}>
+                              {formatTime(businessHours.shifts[0].start)}
+                            </Typography>
+                            <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.65rem' }}>
+                              {formatTime(businessHours.shifts[0].end)}
+                            </Typography>
+                            {businessHours.shifts.length > 1 && (
+                              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.55rem' }}>
+                                +{businessHours.shifts.length - 1}
+                              </Typography>
+                            )}
+                          </>
+                        ) : (
+                          <Typography variant='body2' color='white'>
+                            Closed
+                          </Typography>
+                        )}
+                        <IconButton size='small' sx={{ position: 'absolute', top: 2, right: 2, color: isOpen ? 'text.primary' : 'white' }}>
+                          <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  )
+                })()}
+
+                {/* Staff cells grouped by branches */}
+                {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
+                  const showBranchHeader = selectedBranch === 'all' // Only show header when viewing all branches
+
+                  return (
+                    <Box key={branchId}>
+                      {/* Branch header cell - matches left sidebar branch header height - only show when all branches selected */}
+                      {showBranchHeader && (
+                        <Box
+                          sx={{
+                            height: '33px',
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                            bgcolor: 'action.selected'
+                          }}
+                        />
+                      )}
+
+                      {/* Staff cells in this branch */}
+                      {branchStaff.map(staff => {
+                      const timeOff = timeOffRequests.find(
+                        req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
+                      )
+
+                      // Get working hours for this specific day
+                      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()] as
+                        | 'Sun'
+                        | 'Mon'
+                        | 'Tue'
+                        | 'Wed'
+                        | 'Thu'
+                        | 'Fri'
+                        | 'Sat'
+                      const workingHours = getStaffWorkingHours(staff.id, dayOfWeek)
+                      const hasShift = !timeOff && workingHours.isWorking && workingHours.shifts.length > 0
+
+                      // Helper function to convert 24h time to 12h format
+                      const formatTime12Hour = (time24: string) => {
+                        const [hourStr, minStr] = time24.split(':')
+                        let hour = parseInt(hourStr)
+                        const minute = minStr
+                        const period = hour >= 12 ? 'PM' : 'AM'
+
+                        if (hour === 0) hour = 12
+                        else if (hour > 12) hour -= 12
+
+                        return `${hour}:${minute} ${period}`
+                      }
+
+                      // Get shift times from working hours data
+                      const firstShift = workingHours.shifts[0]
+                      const shiftStart = firstShift ? formatTime12Hour(firstShift.start) : '10:00 AM'
+                      const shiftEnd = firstShift ? formatTime12Hour(firstShift.end) : '7:00 PM'
+
+                      return (
+                        <Box
+                          key={staff.id}
+                          sx={{
+                            height: 80,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                            position: 'relative',
+                            p: 1
+                          }}
+                        >
                       {hasShift && !timeOff && (
                         <Box
                           onClick={() =>
@@ -1542,6 +1727,9 @@ export function ShiftsTab() {
                       )}
                     </Box>
                   )
+                      })}
+                    </Box>
+                  )
                 })}
               </Box>
             )
@@ -1610,7 +1798,11 @@ export function ShiftsTab() {
         </MenuItem>
       </Menu>
 
-      <BusinessHoursModal open={isBusinessHoursModalOpen} onClose={() => setIsBusinessHoursModalOpen(false)} />
+      <BusinessHoursModal
+        open={isBusinessHoursModalOpen}
+        onClose={() => setIsBusinessHoursModalOpen(false)}
+        branchId={selectedBranch !== 'all' ? selectedBranch : undefined}
+      />
 
       {selectedStaffForEdit && (
         <StaffEditWorkingHoursModal
@@ -1618,6 +1810,7 @@ export function ShiftsTab() {
           onClose={() => setIsWorkingHoursModalOpen(false)}
           staffId={selectedStaffForEdit.id}
           staffName={selectedStaffForEdit.name}
+          referenceDate={selectedDate}
         />
       )}
 
@@ -1637,6 +1830,7 @@ export function ShiftsTab() {
       <ShiftEditorModal
         open={isShiftEditorOpen}
         onClose={closeShiftEditor}
+        staffId={shiftEditorContext?.staffId}
         staffName={shiftEditorContext?.staffName}
         date={shiftEditorContext?.date}
         hasShift={shiftEditorContext?.hasShift}

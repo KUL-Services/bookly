@@ -74,6 +74,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
   const [color, setColor] = useState('#1976d2')
   const [serviceIds, setServiceIds] = useState<string[]>([])
   const [description, setDescription] = useState('')
+  const [customAmenity, setCustomAmenity] = useState('')
 
   // Load room data if editing
   useEffect(() => {
@@ -129,6 +130,14 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
 
   const handleCancel = () => {
     onClose()
+  }
+
+  const handleAddCustomAmenity = () => {
+    const trimmed = customAmenity.trim()
+    if (trimmed && !amenities.includes(trimmed)) {
+      setAmenities([...amenities, trimmed])
+      setCustomAmenity('')
+    }
   }
 
   // Check if a service is already assigned to another room
@@ -195,6 +204,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
               value={branchId}
               onChange={(e) => setBranchId(e.target.value)}
               label="Branch"
+              disabled={!!room}
             >
               {mockBranches.map((branch) => (
                 <MenuItem key={branch.id} value={branch.id}>
@@ -205,6 +215,11 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
                 </MenuItem>
               ))}
             </Select>
+            {room && (
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                Branch cannot be changed after room creation
+              </Typography>
+            )}
           </FormControl>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
@@ -389,6 +404,38 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
               ))}
             </Select>
           </FormControl>
+
+          {/* Add Custom Amenity */}
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+            <TextField
+              label="Add Other Amenity"
+              value={customAmenity}
+              onChange={(e) => setCustomAmenity(e.target.value)}
+              placeholder="e.g., Coffee Machine"
+              size="small"
+              fullWidth
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleAddCustomAmenity()
+                }
+              }}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={handleAddCustomAmenity}
+                      edge="end"
+                      size="small"
+                      disabled={!customAmenity.trim()}
+                    >
+                      <i className="ri-add-line" />
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
+            />
+          </Box>
 
           {/* Info Box */}
           <Box

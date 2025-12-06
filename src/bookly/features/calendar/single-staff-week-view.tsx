@@ -4,6 +4,7 @@ import { Box, Typography, Avatar, Button, Select, MenuItem, FormControl } from '
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday } from 'date-fns'
 import { useState, useEffect } from 'react'
+import { mockServices } from '@/bookly/data/mock-data'
 import { useCalendarStore } from './state'
 import { buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
@@ -371,18 +372,33 @@ export default function SingleStaffWeekView({
                             {event.extendedProps.starred && '⭐ '}
                             {event.extendedProps.customerName}
                           </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              display: 'block',
-                              color: colors.text,
-                              fontSize: '0.7rem',
-                              opacity: 0.9,
-                              lineHeight: 1.3
-                            }}
-                          >
-                            {event.extendedProps.serviceName || event.title}
-                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            {(() => {
+                              const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                              return service?.color ? (
+                                <Box
+                                  sx={{
+                                    width: 5,
+                                    height: 5,
+                                    borderRadius: '50%',
+                                    bgcolor: service.color,
+                                    flexShrink: 0
+                                  }}
+                                />
+                              ) : null
+                            })()}
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                color: colors.text,
+                                fontSize: '0.7rem',
+                                opacity: 0.9,
+                                lineHeight: 1.3
+                              }}
+                            >
+                              {event.extendedProps.serviceName || event.title}
+                            </Typography>
+                          </Box>
                         </Box>
                       )
                     })

@@ -28,6 +28,15 @@ import { useCalendarStore } from './state'
 import { isStaffAvailable, hasConflict, getServiceDuration } from './utils'
 import ClientPickerDialog from './client-picker-dialog'
 
+// Helper function to get 2 initials from a name
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return parts[0].substring(0, 2).toUpperCase()
+}
+
 interface NewAppointmentDrawerProps {
   open: boolean
   initialDate?: Date | null
@@ -598,8 +607,8 @@ export default function NewAppointmentDrawer({
                     {mockStaff.slice(0, 7).map((staff) => (
                       <MenuItem key={staff.id} value={staff.id}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Avatar src={staff.photo} sx={{ width: 24, height: 24 }}>
-                            {staff.name[0]}
+                          <Avatar sx={{ width: 24, height: 24 }}>
+                            {getInitials(staff.name)}
                           </Avatar>
                           {staff.name}
                         </Box>
@@ -612,8 +621,8 @@ export default function NewAppointmentDrawer({
               {/* Show assigned staff in static mode */}
               {schedulingMode === 'static' && staffId && selectedSlotId && (
                 <Box sx={{ p: 2, bgcolor: 'action.selected', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar src={mockStaff.find(s => s.id === staffId)?.photo} sx={{ width: 40, height: 40 }}>
-                    {mockStaff.find(s => s.id === staffId)?.name[0]}
+                  <Avatar sx={{ width: 40, height: 40 }}>
+                    {getInitials(mockStaff.find(s => s.id === staffId)?.name || '')}
                   </Avatar>
                   <Box>
                     <Typography variant="caption" color="text.secondary">Instructor</Typography>

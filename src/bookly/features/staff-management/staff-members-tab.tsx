@@ -14,7 +14,6 @@ import {
   InputAdornment,
   Fab,
   Typography,
-  Chip,
   Tabs,
   Tab,
   Button,
@@ -22,7 +21,13 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText
 } from '@mui/material'
 import { mockStaff, mockServices, mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
@@ -49,12 +54,23 @@ function TabPanel(props: TabPanelProps) {
   )
 }
 
+// Helper function to get 2 initials from a name
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return parts[0].substring(0, 2).toUpperCase()
+}
+
 export function StaffMembersTab() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentTab, setCurrentTab] = useState(0)
   const [isAddStaffDrawerOpen, setIsAddStaffDrawerOpen] = useState(false)
   const [serviceFilter, setServiceFilter] = useState<string>('all')
   const [branchFilter, setBranchFilter] = useState<string>('all')
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [staffToDelete, setStaffToDelete] = useState<{ id: string; name: string } | null>(null)
 
   const {
     selectedStaffId,
@@ -66,7 +82,8 @@ export function StaffMembersTab() {
     isTimeOffOpen,
     isTimeReservationOpen,
     toggleTimeOff,
-    toggleTimeReservation
+    toggleTimeReservation,
+    deleteStaffMember
   } = useStaffManagementStore()
 
   const { setStaffFilters } = useCalendarStore()
@@ -130,6 +147,24 @@ export function StaffMembersTab() {
     })
     // Navigate to calendar (you can add router.push here)
     window.location.href = '/en/apps/bookly/calendar'
+  }
+
+  const handleDeleteClick = (staff: { id: string; name: string }) => {
+    setStaffToDelete(staff)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (staffToDelete) {
+      deleteStaffMember(staffToDelete.id)
+      setDeleteDialogOpen(false)
+      setStaffToDelete(null)
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false)
+    setStaffToDelete(null)
   }
 
   return (
@@ -254,7 +289,6 @@ export function StaffMembersTab() {
                 >
                   <ListItemAvatar>
                     <Avatar
-                      src={staff.photo}
                       alt={staff.name}
                       sx={{
                         bgcolor: staff.color || 'primary.main',
@@ -262,7 +296,7 @@ export function StaffMembersTab() {
                         height: 40
                       }}
                     >
-                      {staff.name[0]}
+                      {getInitials(staff.name)}
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
@@ -270,7 +304,16 @@ export function StaffMembersTab() {
                     secondary={staff.title}
                     primaryTypographyProps={{ fontWeight: 500 }}
                   />
-                  <Chip size='small' label='Active' color='success' sx={{ height: 20, fontSize: '0.75rem' }} />
+                  <IconButton
+                    edge='end'
+                    size='small'
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteClick(staff)
+                    }}
+                  >
+                    <i className='ri-delete-bin-line' style={{ fontSize: 18 }} />
+                  </IconButton>
                 </ListItemButton>
               ))}
             </Box>
@@ -326,7 +369,7 @@ export function StaffMembersTab() {
                   height: 64
                 }}
               >
-                {selectedStaff.name[0]}
+                {getInitials(selectedStaff.name)}
               </Avatar>
               <Box sx={{ flexGrow: 1 }}>
                 <Typography variant='h5' fontWeight={600}>
@@ -461,6 +504,29 @@ export function StaffMembersTab() {
         open={isAddStaffDrawerOpen}
         onClose={() => setIsAddStaffDrawerOpen(false)}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        maxWidth='xs'
+        fullWidth
+      >
+        <DialogTitle>Delete Staff Member</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete <strong>{staffToDelete?.name}</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleDeleteCancel} color='inherit'>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} variant='contained' color='error' autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

@@ -3,7 +3,7 @@
 import { Box, Typography, Avatar, Chip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday } from 'date-fns'
-import { mockStaff } from '@/bookly/data/mock-data'
+import { mockStaff, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
 import { getBranchName, buildEventColors } from './utils'
@@ -124,7 +124,7 @@ export default function UnifiedMultiResourceWeekView({
           }}
         >
           {isStaff ? (
-            <Avatar src={resource.photo} sx={{ width: 40, height: 40 }}>
+            <Avatar sx={{ width: 40, height: 40 }}>
               {resource.name.split(' ').map((n: string) => n[0]).join('')}
             </Avatar>
           ) : (
@@ -237,18 +237,33 @@ export default function UnifiedMultiResourceWeekView({
                     >
                       {format(event.start, 'h:mm a')}
                     </Typography>
-                    <Typography
-                      variant='caption'
-                      sx={{
-                        fontSize: '0.6rem',
-                        display: 'block',
-                        color: colors.text,
-                        opacity: 0.8
-                      }}
-                      noWrap
-                    >
-                      {event.extendedProps?.serviceName || event.title}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      {(() => {
+                        const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                        return service?.color ? (
+                          <Box
+                            sx={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: '50%',
+                              bgcolor: service.color,
+                              flexShrink: 0
+                            }}
+                          />
+                        ) : null
+                      })()}
+                      <Typography
+                        variant='caption'
+                        sx={{
+                          fontSize: '0.6rem',
+                          color: colors.text,
+                          opacity: 0.8
+                        }}
+                        noWrap
+                      >
+                        {event.extendedProps?.serviceName || event.title}
+                      </Typography>
+                    </Box>
                   </Box>
                 )
               })}

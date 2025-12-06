@@ -18,6 +18,7 @@ import {
   MenuItem,
   FormControl
 } from '@mui/material'
+import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns'
 import { useStaffManagementStore } from './staff-store'
 import type { DayOfWeek } from '../calendar/types'
 import { TimeSelectField } from './time-select-field'
@@ -27,6 +28,7 @@ interface StaffEditWorkingHoursModalProps {
   onClose: () => void
   staffId: string
   staffName: string
+  referenceDate?: Date  // The date/week being viewed
 }
 
 const DAYS_OF_WEEK: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -55,12 +57,64 @@ function calculateDuration(start: string, end: string): string {
   return `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`
 }
 
-export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }: StaffEditWorkingHoursModalProps) {
-  const { getStaffWorkingHours, updateStaffWorkingHours } = useStaffManagementStore()
+export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName, referenceDate }: StaffEditWorkingHoursModalProps) {
+  const { getStaffWorkingHours, updateStaffWorkingHours, updateShiftsForDate } = useStaffManagementStore()
   const [effectiveDate, setEffectiveDate] = useState('immediately')
+  const [applyToAllWeeks, setApplyToAllWeeks] = useState(true)  // Default: edit recurring schedule
+
+  // Calculate the current week dates
+  const weekDates = referenceDate
+    ? eachDayOfInterval({
+        start: startOfWeek(referenceDate, { weekStartsOn: 0 }),
+        end: endOfWeek(referenceDate, { weekStartsOn: 0 })
+      })
+    : []
 
   const handleSave = () => {
-    onClose()
+    if (applyToAllWeeks) {
+      // Save to recurring weekly template - no additional action needed
+      // Changes are already applied via updateStaffWorkingHours in the day handlers
+      onClose()
+    } else {
+      // Create shift instances for this week only
+      if (!referenceDate) {
+        console.warn('Cannot save for this week only without a reference date')
+        onClose()
+        return
+      }
+
+      // Create shift instances for each day of the week
+      weekDates.forEach((date, index) => {
+        const dayOfWeek = DAYS_OF_WEEK[index]
+        const dayHours = getStaffWorkingHours(staffId, dayOfWeek)
+        const dateStr = date.toISOString().split('T')[0]
+
+        if (dayHours.isWorking && dayHours.shifts.length > 0) {
+          // Create shift instances for all shifts on this day
+          const shiftInstances = dayHours.shifts.map(shift => ({
+            id: shift.id,
+            date: dateStr,
+            start: shift.start,
+            end: shift.end,
+            breaks: shift.breaks && shift.breaks.length > 0 ? shift.breaks : undefined,
+            reason: 'manual' as const
+          }))
+          updateShiftsForDate(staffId, dateStr, shiftInstances)
+        } else {
+          // Create no-shift instance for this specific date
+          updateShiftsForDate(staffId, dateStr, [{
+            id: crypto.randomUUID(),
+            date: dateStr,
+            start: '00:00',
+            end: '00:00',
+            breaks: undefined,
+            reason: 'manual'
+          }])
+        }
+      })
+
+      onClose()
+    }
   }
 
   return (
@@ -76,6 +130,42 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
 
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Apply To Toggle */}
+          <Box
+            sx={{
+              p: 2,
+              bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)'),
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'primary.main'
+            }}
+          >
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={applyToAllWeeks}
+                  onChange={e => setApplyToAllWeeks(e.target.checked)}
+                  color='primary'
+                />
+              }
+              label={
+                <Box>
+                  <Typography fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <i className='ri-repeat-line' style={{ fontSize: 18 }} />
+                    {applyToAllWeeks ? 'Apply to All Future Weeks' : 'This Week Only'}
+                  </Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    {applyToAllWeeks
+                      ? `Changes will apply to the recurring weekly schedule for ${staffName}. This sets the default working hours for each day of the week.`
+                      : referenceDate
+                        ? `Changes will only apply to the week of ${format(startOfWeek(referenceDate, { weekStartsOn: 0 }), 'MMM d')} - ${format(endOfWeek(referenceDate, { weekStartsOn: 0 }), 'MMM d, yyyy')}. The recurring schedule will remain unchanged.`
+                        : 'Changes will only apply to the current week. The recurring schedule will remain unchanged.'}
+                  </Typography>
+                </Box>
+              }
+            />
+          </Box>
+
           {DAYS_OF_WEEK.map(day => {
             const dayHours = getStaffWorkingHours(staffId, day)
 
@@ -110,6 +200,32 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
                 ...dayHours,
                 shifts: newShifts
               })
+            }
+
+            const handleAddShift = () => {
+              const newShifts = [
+                ...dayHours.shifts,
+                {
+                  id: crypto.randomUUID(),
+                  start: '09:00',
+                  end: '17:00',
+                  breaks: []
+                }
+              ]
+              updateStaffWorkingHours(staffId, day, {
+                ...dayHours,
+                shifts: newShifts
+              })
+            }
+
+            const handleRemoveShift = (shiftIndex: number) => {
+              if (dayHours.shifts.length > 1) {
+                const newShifts = dayHours.shifts.filter((_, idx) => idx !== shiftIndex)
+                updateStaffWorkingHours(staffId, day, {
+                  ...dayHours,
+                  shifts: newShifts
+                })
+              }
             }
 
             const handleAddBreak = (shiftIndex: number) => {
@@ -192,7 +308,29 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
                 {dayHours.isWorking && (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {dayHours.shifts.map((shift, shiftIndex) => (
-                      <Box key={shift.id}>
+                      <Box
+                        key={shift.id}
+                        sx={{
+                          p: 1.5,
+                          border: dayHours.shifts.length > 1 ? '1px solid' : 'none',
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                          bgcolor: dayHours.shifts.length > 1 ? 'action.hover' : 'transparent'
+                        }}
+                      >
+                        {/* Shift Header (only show if multiple shifts) */}
+                        {dayHours.shifts.length > 1 && (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Typography variant='caption' fontWeight={600} color='text.secondary'>
+                              Shift {shiftIndex + 1}
+                            </Typography>
+                            <Box sx={{ flexGrow: 1 }} />
+                            <IconButton size='small' color='error' onClick={() => handleRemoveShift(shiftIndex)}>
+                              <i className='ri-delete-bin-line' style={{ fontSize: 16 }} />
+                            </IconButton>
+                          </Box>
+                        )}
+
                         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                           <TimeSelectField
                             value={shift.start}
@@ -267,6 +405,17 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName }
                         )}
                       </Box>
                     ))}
+
+                    {/* Add Another Shift Button */}
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      startIcon={<i className='ri-add-line' />}
+                      onClick={handleAddShift}
+                      sx={{ alignSelf: 'flex-start' }}
+                    >
+                      Add Another Shift
+                    </Button>
                   </Box>
                 )}
               </Paper>

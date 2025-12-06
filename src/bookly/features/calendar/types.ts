@@ -43,11 +43,14 @@ export interface CalendarResource {
   serviceIds?: string[]
 }
 
+export type RoomType = 'dynamic' | 'static'
+
 export interface Room {
   id: string
   name: string
   branchId: string
   color?: string
+  roomType?: RoomType
 }
 
 export interface StaticServiceSlot {

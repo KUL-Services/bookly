@@ -10,7 +10,16 @@ import {
   IconButton,
   Button,
   Tooltip,
-  Chip
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+  Menu,
+  ListItemIcon,
+  ListItemText,
+  Divider
 } from '@mui/material'
 import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { mockBranches, mockServices } from '@/bookly/data/mock-data'
@@ -60,7 +69,11 @@ function calculateWidth(start: string, end: string): number {
 export function RoomsTab() {
   const [viewMode, setViewMode] = useState('Day')
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [selectedBranch, setSelectedBranch] = useState('all')
+  const [selectedBranch, setSelectedBranch] = useState(() => {
+    // Default to main branch or first branch instead of 'all'
+    const mainBranch = mockBranches.find(b => b.isMainBranch)
+    return mainBranch?.id || mockBranches[0]?.id || 'all'
+  })
   const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
   const [isRoomEditorOpen, setIsRoomEditorOpen] = useState(false)
   const [selectedRoomForEdit, setSelectedRoomForEdit] = useState<any>(null)
@@ -71,10 +84,15 @@ export function RoomsTab() {
     dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
     initialShift?: { start: string; end: string; serviceIds: string[] } | null
   } | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [roomToDelete, setRoomToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [roomMenuAnchor, setRoomMenuAnchor] = useState<null | HTMLElement>(null)
+  const [selectedRoomForMenu, setSelectedRoomForMenu] = useState<any>(null)
 
   const calendarOpen = Boolean(calendarAnchor)
+  const roomMenuOpen = Boolean(roomMenuAnchor)
 
-  const { rooms, getRoomsForBranch, getRoomSchedule } = useStaffManagementStore()
+  const { rooms, getRoomsForBranch, getRoomSchedule, deleteRoom, updateRoomType } = useStaffManagementStore()
 
   // Filter rooms by branch
   const displayRooms = selectedBranch === 'all' ? rooms : getRoomsForBranch(selectedBranch)
@@ -158,6 +176,56 @@ export function RoomsTab() {
   const handleCloseScheduleEditor = () => {
     setIsScheduleEditorOpen(false)
     setScheduleEditorContext(null)
+  }
+
+  const handleDeleteClick = (room: { id: string; name: string }) => {
+    setRoomToDelete(room)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (roomToDelete) {
+      deleteRoom(roomToDelete.id)
+      setDeleteDialogOpen(false)
+      setRoomToDelete(null)
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false)
+    setRoomToDelete(null)
+  }
+
+  const handleOpenRoomMenu = (event: React.MouseEvent<HTMLElement>, room: any) => {
+    event.stopPropagation()
+    setRoomMenuAnchor(event.currentTarget)
+    setSelectedRoomForMenu(room)
+  }
+
+  const handleCloseRoomMenu = () => {
+    setRoomMenuAnchor(null)
+    setSelectedRoomForMenu(null)
+  }
+
+  const handleToggleRoomType = () => {
+    if (!selectedRoomForMenu) return
+    const newType = selectedRoomForMenu.roomType === 'static' ? 'dynamic' : 'static'
+    updateRoomType(selectedRoomForMenu.id, newType)
+    handleCloseRoomMenu()
+  }
+
+  const handleEditRoomFromMenu = () => {
+    if (selectedRoomForMenu) {
+      handleEditRoom(selectedRoomForMenu)
+    }
+    handleCloseRoomMenu()
+  }
+
+  const handleDeleteRoomFromMenu = () => {
+    if (selectedRoomForMenu) {
+      handleDeleteClick(selectedRoomForMenu)
+    }
+    handleCloseRoomMenu()
   }
 
   const weekStart = startOfWeek(selectedDate)
@@ -308,14 +376,9 @@ export function RoomsTab() {
             )}
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <Tooltip title='Edit Services'>
-              <IconButton size='small' onClick={(e) => { e.stopPropagation(); /* TODO: Open services modal */ }}>
-                <i className='ri-service-line' style={{ fontSize: 14 }} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title='Edit Room'>
-              <IconButton size='small' onClick={() => handleEditRoom(room)}>
-                <i className='ri-edit-line' style={{ fontSize: 14 }} />
+            <Tooltip title='More Options'>
+              <IconButton size='small' onClick={(e) => handleOpenRoomMenu(e, room)}>
+                <i className='ri-more-2-fill' style={{ fontSize: 14 }} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -338,10 +401,10 @@ export function RoomsTab() {
                     width: `${calculateWidth(shiftStart, shiftEnd)}%`,
                     top: idx * 48 + 2,
                     height: 42,
-                    bgcolor: `${room.color}40` || 'rgba(25, 118, 210, 0.2)',
+                    bgcolor: theme => theme.palette.mode === 'dark' ? '#424242' : '#E8F5E9',
                     borderRadius: 1,
                     border: 1,
-                    borderColor: room.color || 'primary.main',
+                    borderColor: theme => theme.palette.mode === 'dark' ? '#616161' : '#81C784',
                     display: 'flex',
                     flexDirection: 'column',
                     p: 0.5,
@@ -349,7 +412,7 @@ export function RoomsTab() {
                     transition: 'all 0.2s',
                     overflow: 'hidden',
                     '&:hover': {
-                      bgcolor: `${room.color}60` || 'rgba(25, 118, 210, 0.4)',
+                      bgcolor: theme => theme.palette.mode === 'dark' ? '#616161' : '#C8E6C9',
                       transform: 'translateY(-2px)',
                       boxShadow: 2,
                       zIndex: 10
@@ -369,6 +432,10 @@ export function RoomsTab() {
                           sx={{
                             height: 16,
                             fontSize: '0.6rem',
+                            bgcolor: service.color ? `${service.color}20` : 'rgba(0,0,0,0.08)',
+                            color: service.color || 'text.primary',
+                            border: service.color ? `1px solid ${service.color}40` : 'none',
+                            fontWeight: 500,
                             '& .MuiChip-label': {
                               px: 0.5
                             }
@@ -382,6 +449,7 @@ export function RoomsTab() {
                           sx={{
                             height: 16,
                             fontSize: '0.6rem',
+                            bgcolor: 'rgba(0,0,0,0.08)',
                             '& .MuiChip-label': {
                               px: 0.5
                             }
@@ -557,6 +625,45 @@ export function RoomsTab() {
           dayOfWeek={scheduleEditorContext?.dayOfWeek || null}
           initialShift={scheduleEditorContext?.initialShift}
         />
+
+        {/* Room Actions Menu */}
+        <Menu
+          anchorEl={roomMenuAnchor}
+          open={roomMenuOpen}
+          onClose={handleCloseRoomMenu}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right'
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right'
+          }}
+        >
+          <MenuItem onClick={handleEditRoomFromMenu}>
+            <ListItemIcon>
+              <i className='ri-edit-line' />
+            </ListItemIcon>
+            <ListItemText>EDIT ROOM</ListItemText>
+          </MenuItem>
+          <MenuItem onClick={handleDeleteRoomFromMenu}>
+            <ListItemIcon>
+              <i className='ri-delete-bin-line' />
+            </ListItemIcon>
+            <ListItemText>DELETE ROOM</ListItemText>
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={handleToggleRoomType}>
+            <ListItemIcon>
+              <i className={selectedRoomForMenu?.roomType === 'static' ? 'ri-user-follow-line' : 'ri-calendar-2-line'} />
+            </ListItemIcon>
+            <ListItemText>
+              {selectedRoomForMenu?.roomType === 'static'
+                ? 'SWITCH TO FLEXIBLE SCHEDULING'
+                : 'SWITCH TO SHIFT-BASED SCHEDULING'}
+            </ListItemText>
+          </MenuItem>
+        </Menu>
       </Box>
     )
   }
@@ -571,41 +678,73 @@ export function RoomsTab() {
           <Box sx={{ width: 200, flexShrink: 0, borderRight: 1, borderColor: 'divider' }}>
             <Box sx={{ height: 60, borderBottom: 1, borderColor: 'divider' }} />
 
-            {displayRooms.map(room => (
-              <Box
-                key={room.id}
-                sx={{
-                  height: 80,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  px: 2,
-                  borderBottom: 1,
-                  borderColor: 'divider'
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 6,
-                    height: 30,
-                    borderRadius: 1,
-                    bgcolor: room.color || 'primary.main',
-                    mr: 0.5
-                  }}
-                />
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant='body2' fontWeight={600} noWrap>
-                    {room.name}
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary' display='block'>
-                    Cap: {room.capacity}
-                  </Typography>
+            {Object.entries(roomsByBranch).map(([branchId, branchRooms]) => {
+              const branch = mockBranches.find(b => b.id === branchId)
+              return (
+                <Box key={branchId}>
+                  {/* Branch Header */}
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1,
+                      bgcolor: 'action.selected',
+                      borderBottom: 1,
+                      borderColor: 'divider',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5
+                    }}
+                  >
+                    <i className='ri-building-line' style={{ fontSize: 14 }} />
+                    <Typography variant='caption' fontWeight={600} fontSize='0.7rem'>
+                      {branch?.name || branchId}
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary' fontSize='0.65rem'>
+                      ({branchRooms.length})
+                    </Typography>
+                  </Box>
+
+                  {/* Rooms in this branch */}
+                  {branchRooms.map(room => (
+                    <Box
+                      key={room.id}
+                      sx={{
+                        height: 80,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        px: 2,
+                        borderBottom: 1,
+                        borderColor: 'divider'
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 6,
+                          height: 30,
+                          borderRadius: 1,
+                          bgcolor: room.color || 'primary.main',
+                          mr: 0.5
+                        }}
+                      />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant='body2' fontWeight={600} noWrap>
+                          {room.name}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary' display='block'>
+                          Cap: {room.capacity}
+                        </Typography>
+                      </Box>
+                      <Tooltip title='More Options'>
+                        <IconButton size='small' onClick={(e) => handleOpenRoomMenu(e, room)}>
+                          <i className='ri-more-2-fill' style={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  ))}
                 </Box>
-                <IconButton size='small' onClick={() => handleEditRoom(room)}>
-                  <i className='ri-edit-line' style={{ fontSize: 16 }} />
-                </IconButton>
-              </Box>
-            ))}
+              )
+            })}
           </Box>
 
           {weekDates.map((date, dayIndex) => {
@@ -647,107 +786,121 @@ export function RoomsTab() {
                   </Typography>
                 </Box>
 
-                {displayRooms.map(room => {
-                  const dayOfWeek = WEEK_DAYS[date.getDay()] as 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
-                  const schedule = getRoomSchedule(room.id, dayOfWeek)
-                  const hasAvailability = schedule.isAvailable && schedule.shifts.length > 0
-                  const shiftServices = hasAvailability
-                    ? mockServices.filter(s => schedule.shifts.some(shift => shift.serviceIds.includes(s.id)))
-                    : []
+                {/* Room cells grouped by branches */}
+                {Object.entries(roomsByBranch).map(([branchId, branchRooms]) => (
+                  <Box key={branchId}>
+                    {/* Branch header cell - matches left sidebar branch header height */}
+                    <Box sx={{ height: '33px', borderBottom: 1, borderColor: 'divider', bgcolor: 'action.selected' }} />
 
-                  return (
-                    <Box
-                      key={room.id}
-                      sx={{
-                        height: 80,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderBottom: 1,
-                        borderColor: 'divider',
-                        position: 'relative',
-                        p: 1
-                      }}
-                    >
-                      {hasAvailability ? (
+                    {/* Room cells in this branch */}
+                    {branchRooms.map(room => {
+                      const dayOfWeek = WEEK_DAYS[date.getDay()] as 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
+                      const schedule = getRoomSchedule(room.id, dayOfWeek)
+                      const hasAvailability = schedule.isAvailable && schedule.shifts.length > 0
+                      const shiftServices = hasAvailability
+                        ? mockServices.filter(s => schedule.shifts.some(shift => shift.serviceIds.includes(s.id)))
+                        : []
+
+                      return (
                         <Box
-                          onClick={() => handleEditShift(room, schedule.shifts[0], dayOfWeek)}
+                          key={room.id}
                           sx={{
-                            width: '100%',
-                            height: '100%',
-                            bgcolor: `${room.color}40` || 'rgba(25, 118, 210, 0.2)',
-                            borderRadius: 1,
+                            height: 80,
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            border: 1,
-                            borderColor: room.color || 'primary.main',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            p: 0.5,
-                            '&:hover': {
-                              bgcolor: `${room.color}60` || 'rgba(25, 118, 210, 0.4)',
-                              transform: 'scale(1.02)'
-                            }
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                            position: 'relative',
+                            p: 1
                           }}
                         >
-                          <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ mb: 0.5 }}>
-                            {schedule.shifts.length} shift{schedule.shifts.length > 1 ? 's' : ''}
-                          </Typography>
-                          {shiftServices.length > 0 && (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3, justifyContent: 'center' }}>
-                              {shiftServices.slice(0, 2).map(service => (
-                                <Chip
-                                  key={service.id}
-                                  label={service.name}
-                                  size='small'
-                                  sx={{
-                                    height: 14,
-                                    fontSize: '0.55rem',
-                                    '& .MuiChip-label': {
-                                      px: 0.5
-                                    }
-                                  }}
-                                />
-                              ))}
-                              {shiftServices.length > 2 && (
-                                <Chip
-                                  label={`+${shiftServices.length - 2}`}
-                                  size='small'
-                                  sx={{
-                                    height: 14,
-                                    fontSize: '0.55rem',
-                                    '& .MuiChip-label': {
-                                      px: 0.5
-                                    }
-                                  }}
-                                />
+                          {hasAvailability ? (
+                            <Box
+                              onClick={() => handleEditShift(room, schedule.shifts[0], dayOfWeek)}
+                              sx={{
+                                width: '100%',
+                                height: '100%',
+                                bgcolor: theme => theme.palette.mode === 'dark' ? '#424242' : '#E8F5E9',
+                                borderRadius: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: 1,
+                                borderColor: theme => theme.palette.mode === 'dark' ? '#616161' : '#81C784',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                p: 0.5,
+                                '&:hover': {
+                                  bgcolor: theme => theme.palette.mode === 'dark' ? '#616161' : '#C8E6C9',
+                                  transform: 'scale(1.02)'
+                                }
+                              }}
+                            >
+                              <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ mb: 0.5 }}>
+                                {schedule.shifts.length} shift{schedule.shifts.length > 1 ? 's' : ''}
+                              </Typography>
+                              {shiftServices.length > 0 && (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3, justifyContent: 'center' }}>
+                                  {shiftServices.slice(0, 2).map(service => (
+                                    <Chip
+                                      key={service.id}
+                                      label={service.name}
+                                      size='small'
+                                      sx={{
+                                        height: 14,
+                                        fontSize: '0.55rem',
+                                        bgcolor: service.color ? `${service.color}20` : 'rgba(0,0,0,0.08)',
+                                        color: service.color || 'text.primary',
+                                        border: service.color ? `1px solid ${service.color}40` : 'none',
+                                        fontWeight: 500,
+                                        '& .MuiChip-label': {
+                                          px: 0.5
+                                        }
+                                      }}
+                                    />
+                                  ))}
+                                  {shiftServices.length > 2 && (
+                                    <Chip
+                                      label={`+${shiftServices.length - 2}`}
+                                      size='small'
+                                      sx={{
+                                        height: 14,
+                                        fontSize: '0.55rem',
+                                        bgcolor: 'rgba(0,0,0,0.08)',
+                                        '& .MuiChip-label': {
+                                          px: 0.5
+                                        }
+                                      }}
+                                    />
+                                  )}
+                                </Box>
                               )}
+                            </Box>
+                          ) : (
+                            <Box
+                              sx={{
+                                width: '100%',
+                                height: '100%',
+                                bgcolor: 'grey.200',
+                                borderRadius: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              <Typography variant='caption' color='text.disabled'>
+                                Closed
+                              </Typography>
                             </Box>
                           )}
                         </Box>
-                      ) : (
-                        <Box
-                          sx={{
-                            width: '100%',
-                            height: '100%',
-                            bgcolor: 'grey.200',
-                            borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          <Typography variant='caption' color='text.disabled'>
-                            Closed
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  )
-                })}
+                      )
+                    })}
+                  </Box>
+                ))}
               </Box>
             )
           })}
@@ -804,6 +957,68 @@ export function RoomsTab() {
         dayOfWeek={scheduleEditorContext?.dayOfWeek || null}
         initialShift={scheduleEditorContext?.initialShift}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        maxWidth='xs'
+        fullWidth
+      >
+        <DialogTitle>Delete Room</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete <strong>{roomToDelete?.name}</strong>? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleDeleteCancel} color='inherit'>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} variant='contained' color='error' autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Room Actions Menu */}
+      <Menu
+        anchorEl={roomMenuAnchor}
+        open={roomMenuOpen}
+        onClose={handleCloseRoomMenu}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right'
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right'
+        }}
+      >
+        <MenuItem onClick={handleEditRoomFromMenu}>
+          <ListItemIcon>
+            <i className='ri-edit-line' />
+          </ListItemIcon>
+          <ListItemText>EDIT ROOM</ListItemText>
+        </MenuItem>
+        <MenuItem onClick={handleDeleteRoomFromMenu}>
+          <ListItemIcon>
+            <i className='ri-delete-bin-line' />
+          </ListItemIcon>
+          <ListItemText>DELETE ROOM</ListItemText>
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleToggleRoomType}>
+          <ListItemIcon>
+            <i className={selectedRoomForMenu?.roomType === 'static' ? 'ri-user-follow-line' : 'ri-calendar-2-line'} />
+          </ListItemIcon>
+          <ListItemText>
+            {selectedRoomForMenu?.roomType === 'static'
+              ? 'SWITCH TO FLEXIBLE SCHEDULING'
+              : 'SWITCH TO SHIFT-BASED SCHEDULING'}
+          </ListItemText>
+        </MenuItem>
+      </Menu>
     </Box>
   )
 }

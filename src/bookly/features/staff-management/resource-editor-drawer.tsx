@@ -163,6 +163,7 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
               value={branchId}
               onChange={(e) => setBranchId(e.target.value)}
               label="Branch"
+              disabled={!!resource}
             >
               {mockBranches.map((branch) => (
                 <MenuItem key={branch.id} value={branch.id}>

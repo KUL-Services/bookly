@@ -4,6 +4,7 @@ import { Box, Typography, IconButton, Avatar, Button, Chip, Select, MenuItem, Fo
 import { useTheme } from '@mui/material/styles'
 import { format, isSameDay, isToday } from 'date-fns'
 import { useState, useRef, useEffect } from 'react'
+import { mockServices } from '@/bookly/data/mock-data'
 import { useCalendarStore } from './state'
 import { getBranchName, buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
@@ -606,22 +607,36 @@ export default function SingleStaffDayView({
                     {event.extendedProps.starred && '⭐ '}
                     {event.extendedProps.customerName}
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      display: 'block',
-                      color: colors.text,
-                      fontSize: '0.8rem',
-                      opacity: 0.9,
-                      mb: height > 100 ? 0.5 : 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0
-                    }}
-                  >
-                    {event.extendedProps.serviceName || event.title}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: height > 100 ? 0.5 : 0 }}>
+                    {(() => {
+                      const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                      return service?.color ? (
+                        <Box
+                          sx={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: '50%',
+                            bgcolor: service.color,
+                            flexShrink: 0
+                          }}
+                        />
+                      ) : null
+                    })()}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: colors.text,
+                        fontSize: '0.8rem',
+                        opacity: 0.9,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
+                      }}
+                    >
+                      {event.extendedProps.serviceName || event.title}
+                    </Typography>
+                  </Box>
                   {height > 100 && (
                     <Typography
                       variant="caption"

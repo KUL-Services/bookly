@@ -1,4 +1,14 @@
-import { Business, Service, StaffMember, Review, Category, Booking, User, StaffSchedule, StaffAppointment } from './types'
+import {
+  Business,
+  Service,
+  StaffMember,
+  Review,
+  Category,
+  Booking,
+  User,
+  StaffSchedule,
+  StaffAppointment
+} from './types'
 import type { Room, StaticServiceSlot, ScheduleTemplate, WeeklySlotPattern } from '@/bookly/features/calendar/types'
 
 export const categories: Category[] = [
@@ -30,21 +40,51 @@ export const mockBusinesses: Business[] = [
         name: 'Luxe Hair Studio - Oxford',
         address: '123 Oxford Street',
         city: 'London',
-        location: { latitude: 51.5074, longitude: -0.1278 }
+        location: { latitude: 51.5074, longitude: -0.1278 },
+        openingHours: {
+          Mon: '9:00 AM - 7:00 PM',
+          Tue: '9:00 AM - 7:00 PM',
+          Wed: '9:00 AM - 7:00 PM',
+          Thu: '9:00 AM - 8:00 PM',
+          Fri: '9:00 AM - 8:00 PM',
+          Sat: '8:00 AM - 6:00 PM',
+          Sun: '10:00 AM - 5:00 PM'
+        },
+        serviceIds: ['1', '2', '3'] // All hair services
       },
       {
         id: '1-2',
         name: 'Luxe Hair Studio - Soho',
         address: '50 Dean Street',
         city: 'London',
-        location: { latitude: 51.5135, longitude: -0.1321 }
+        location: { latitude: 51.5135, longitude: -0.1321 },
+        openingHours: {
+          Mon: '10:00 AM - 8:00 PM',
+          Tue: '10:00 AM - 8:00 PM',
+          Wed: '10:00 AM - 8:00 PM',
+          Thu: '10:00 AM - 9:00 PM',
+          Fri: '10:00 AM - 9:00 PM',
+          Sat: '9:00 AM - 7:00 PM',
+          Sun: 'Closed'
+        },
+        serviceIds: ['1', '2', '3'] // All hair services
       },
       {
         id: '1-3',
         name: 'Luxe Hair Studio - Kensington',
         address: '200 Kensington High Street',
         city: 'London',
-        location: { latitude: 51.5009, longitude: -0.1995 }
+        location: { latitude: 51.5009, longitude: -0.1995 },
+        openingHours: {
+          Mon: '8:00 AM - 6:00 PM',
+          Tue: '8:00 AM - 6:00 PM',
+          Wed: '8:00 AM - 6:00 PM',
+          Thu: '8:00 AM - 7:00 PM',
+          Fri: '8:00 AM - 7:00 PM',
+          Sat: '9:00 AM - 5:00 PM',
+          Sun: '10:00 AM - 4:00 PM'
+        },
+        serviceIds: ['1', '3'] // Haircut & Highlights only
       }
     ],
     about: 'Premium hair salon offering cutting-edge styles and treatments in the heart of London.',
@@ -81,14 +121,34 @@ export const mockBusinesses: Business[] = [
         name: "Bliss Nail Bar - King's Road",
         address: "456 King's Road",
         city: 'London',
-        location: { latitude: 51.4875, longitude: -0.1687 }
+        location: { latitude: 51.4875, longitude: -0.1687 },
+        openingHours: {
+          Mon: '10:00 AM - 7:00 PM',
+          Tue: '10:00 AM - 7:00 PM',
+          Wed: '10:00 AM - 7:00 PM',
+          Thu: '10:00 AM - 8:00 PM',
+          Fri: '10:00 AM - 8:00 PM',
+          Sat: '9:00 AM - 6:00 PM',
+          Sun: '11:00 AM - 5:00 PM'
+        },
+        serviceIds: ['4', '5'] // All nail services
       },
       {
         id: '2-2',
         name: 'Bliss Nail Bar - Camden',
         address: '22 Camden High Street',
         city: 'London',
-        location: { latitude: 51.5416, longitude: -0.1469 }
+        location: { latitude: 51.5416, longitude: -0.1469 },
+        openingHours: {
+          Mon: '9:00 AM - 6:00 PM',
+          Tue: '9:00 AM - 6:00 PM',
+          Wed: '9:00 AM - 6:00 PM',
+          Thu: '9:00 AM - 7:00 PM',
+          Fri: '9:00 AM - 7:00 PM',
+          Sat: '10:00 AM - 6:00 PM',
+          Sun: 'Closed'
+        },
+        serviceIds: ['4'] // Gel Manicure only
       }
     ],
     about: 'Modern nail salon specializing in gel manicures, nail art, and luxury pedicures.',
@@ -125,14 +185,34 @@ export const mockBusinesses: Business[] = [
         name: 'Urban Barber Co. - Shoreditch',
         address: '789 Shoreditch High Street',
         city: 'London',
-        location: { latitude: 51.5223, longitude: -0.0813 }
+        location: { latitude: 51.5223, longitude: -0.0813 },
+        openingHours: {
+          Mon: '8:00 AM - 7:00 PM',
+          Tue: '8:00 AM - 7:00 PM',
+          Wed: '8:00 AM - 7:00 PM',
+          Thu: '8:00 AM - 8:00 PM',
+          Fri: '8:00 AM - 8:00 PM',
+          Sat: '9:00 AM - 6:00 PM',
+          Sun: '10:00 AM - 4:00 PM'
+        },
+        serviceIds: ['6', '7'] // All barber services
       },
       {
         id: '3-2',
         name: 'Urban Barber Co. - Brixton',
         address: '332 Brixton Road',
         city: 'London',
-        location: { latitude: 51.4635, longitude: -0.1062 }
+        location: { latitude: 51.4635, longitude: -0.1062 },
+        openingHours: {
+          Mon: '9:00 AM - 6:00 PM',
+          Tue: '9:00 AM - 6:00 PM',
+          Wed: '9:00 AM - 6:00 PM',
+          Thu: '9:00 AM - 7:00 PM',
+          Fri: '9:00 AM - 7:00 PM',
+          Sat: '10:00 AM - 5:00 PM',
+          Sun: 'Closed'
+        },
+        serviceIds: ['6'] // Classic Cut only
       }
     ],
     about: 'Traditional barbering with a modern twist. Specialists in classic cuts and hot towel shaves.',
@@ -164,7 +244,8 @@ export const mockServices: Service[] = [
     price: 65,
     duration: 60,
     category: 'Haircut',
-    businessId: '1'
+    businessId: '1',
+    color: '#3B82F6' // Blue
   },
   {
     id: '2',
@@ -173,7 +254,8 @@ export const mockServices: Service[] = [
     price: 120,
     duration: 120,
     category: 'Coloring',
-    businessId: '1'
+    businessId: '1',
+    color: '#8B5CF6' // Purple
   },
   {
     id: '3',
@@ -182,7 +264,8 @@ export const mockServices: Service[] = [
     price: 85,
     duration: 90,
     category: 'Coloring',
-    businessId: '1'
+    businessId: '1',
+    color: '#EC4899' // Pink
   },
   {
     id: '4',
@@ -191,7 +274,8 @@ export const mockServices: Service[] = [
     price: 35,
     duration: 45,
     category: 'Manicure',
-    businessId: '2'
+    businessId: '2',
+    color: '#F59E0B' // Amber
   },
   {
     id: '5',
@@ -200,7 +284,8 @@ export const mockServices: Service[] = [
     price: 45,
     duration: 60,
     category: 'Pedicure',
-    businessId: '2'
+    businessId: '2',
+    color: '#10B981' // Emerald
   },
   {
     id: '6',
@@ -209,7 +294,8 @@ export const mockServices: Service[] = [
     price: 25,
     duration: 30,
     category: 'Haircut',
-    businessId: '3'
+    businessId: '3',
+    color: '#14B8A6' // Teal
   },
   {
     id: '7',
@@ -218,12 +304,16 @@ export const mockServices: Service[] = [
     price: 30,
     duration: 45,
     category: 'Shave',
-    businessId: '3'
+    businessId: '3',
+    color: '#F97316' // Orange
   }
 ]
 
 // Helper function to generate appointments for staff members
-const generateStaffAppointments = (staffId: string, businessType: 'hair' | 'nails' | 'barber' | 'spa' | 'dental' | 'fitness'): StaffAppointment[] => {
+const generateStaffAppointments = (
+  staffId: string,
+  businessType: 'hair' | 'nails' | 'barber' | 'spa' | 'dental' | 'fitness'
+): StaffAppointment[] => {
   const today = new Date(2025, 9, 17) // October 17, 2025
   const appointments: StaffAppointment[] = []
 
@@ -236,7 +326,16 @@ const generateStaffAppointments = (staffId: string, businessType: 'hair' | 'nail
     fitness: ['Personal Training', 'Yoga Session', 'Strength Training', 'Cardio Workout']
   }
 
-  const customers = ['John Smith', 'Emma Davis', 'Michael Brown', 'Sarah Wilson', 'David Lee', 'Lisa Anderson', 'James Taylor', 'Maria Garcia']
+  const customers = [
+    'John Smith',
+    'Emma Davis',
+    'Michael Brown',
+    'Sarah Wilson',
+    'David Lee',
+    'Lisa Anderson',
+    'James Taylor',
+    'Maria Garcia'
+  ]
 
   // Generate appointments for the next 7 days
   for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
@@ -299,8 +398,9 @@ const getWorkingHoursFromSchedule = (schedule?: StaffSchedule[]): string => {
   if (!schedule || schedule.length === 0) return '10:00 AM-7:00 PM'
 
   // Find a typical working day (prefer Mon-Fri)
-  const workingDay = schedule.find(s => s.isAvailable && ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(s.dayOfWeek))
-    || schedule.find(s => s.isAvailable)
+  const workingDay =
+    schedule.find(s => s.isAvailable && ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(s.dayOfWeek)) ||
+    schedule.find(s => s.isAvailable)
 
   if (!workingDay) return '10:00 AM-7:00 PM'
 
@@ -353,7 +453,7 @@ const baseStaff: StaffMember[] = [
     phone: '+44 7700 900001',
     color: '#1976d2',
     isActive: true,
-    staffType: 'dynamic',  // Traditional appointment-based scheduling
+    staffType: 'dynamic', // Traditional appointment-based scheduling
     schedule: extendedSchedule,
     workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('1', 'hair'),
@@ -365,12 +465,12 @@ const baseStaff: StaffMember[] = [
     title: 'Color Specialist',
     photo: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
     businessId: '1',
-    branchId: '1-2',
+    branchId: '1-1',
     email: 'sarah.williams@luxehair.com',
     phone: '+44 7700 900002',
     color: '#9c27b0',
     isActive: true,
-    staffType: 'static',  // Works in rooms on fixed schedule
+    staffType: 'static', // Works in rooms on fixed schedule
     schedule: standardSchedule,
     workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('2', 'hair'),
@@ -382,7 +482,7 @@ const baseStaff: StaffMember[] = [
         dayOfWeek: 'Mon',
         startTime: '09:00',
         endTime: '13:00',
-        serviceIds: ['fitness-1', 'fitness-2']  // Morning yoga and pilates
+        serviceIds: ['fitness-1', 'fitness-2'] // Morning yoga and pilates
       },
       {
         roomId: 'room-1-1-2',
@@ -390,7 +490,7 @@ const baseStaff: StaffMember[] = [
         dayOfWeek: 'Wed',
         startTime: '10:00',
         endTime: '11:00',
-        serviceIds: ['fitness-4']  // Personal training
+        serviceIds: ['fitness-4'] // Personal training
       },
       {
         roomId: 'room-1-1-2',
@@ -398,7 +498,7 @@ const baseStaff: StaffMember[] = [
         dayOfWeek: 'Thu',
         startTime: '09:00',
         endTime: '10:00',
-        serviceIds: ['fitness-1']  // Morning yoga
+        serviceIds: ['fitness-1'] // Morning yoga
       }
     ]
   },
@@ -413,7 +513,7 @@ const baseStaff: StaffMember[] = [
     phone: '+44 7700 900003',
     color: '#e91e63',
     isActive: true,
-    staffType: 'static',  // Works in nail stations
+    staffType: 'static', // Works in nail stations
     schedule: extendedSchedule,
     workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('3', 'nails'),
@@ -424,7 +524,7 @@ const baseStaff: StaffMember[] = [
         dayOfWeek: 'Mon',
         startTime: '09:00',
         endTime: '20:00',
-        serviceIds: ['4']  // Gel Manicure
+        serviceIds: ['4'] // Gel Manicure
       },
       {
         roomId: 'room-2-1-1',
@@ -450,12 +550,12 @@ const baseStaff: StaffMember[] = [
     title: 'Senior Nail Technician',
     photo: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=150&h=150&fit=crop&crop=face',
     businessId: '2',
-    branchId: '2-2',
+    branchId: '1-1',
     email: 'maria.garcia@blissnails.com',
     phone: '+44 7700 900004',
     color: '#f06292',
     isActive: true,
-    staffType: 'dynamic',  // Traditional booking
+    staffType: 'dynamic', // Traditional booking
     schedule: standardSchedule,
     workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('4', 'nails')
@@ -471,7 +571,7 @@ const baseStaff: StaffMember[] = [
     phone: '+44 7700 900005',
     color: '#795548',
     isActive: true,
-    staffType: 'dynamic',  // Traditional booking
+    staffType: 'dynamic', // Traditional booking
     schedule: extendedSchedule,
     workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('5', 'barber')
@@ -487,7 +587,7 @@ const baseStaff: StaffMember[] = [
     phone: '+44 7700 900006',
     color: '#6d4c41',
     isActive: true,
-    staffType: 'dynamic',  // Traditional booking
+    staffType: 'dynamic', // Traditional booking
     schedule: standardSchedule,
     workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('6', 'barber')
@@ -503,7 +603,7 @@ const baseStaff: StaffMember[] = [
     phone: '+44 7700 900007',
     color: '#00897b',
     isActive: true,
-    staffType: 'dynamic',  // Traditional booking
+    staffType: 'dynamic', // Traditional booking
     schedule: partTimeSchedule,
     workingHours: getWorkingHoursFromSchedule(partTimeSchedule),
     appointments: generateStaffAppointments('7', 'hair')
@@ -511,7 +611,12 @@ const baseStaff: StaffMember[] = [
 ]
 
 // Helper function to generate staff for any business/branch pattern
-function generateMockStaffForBusiness(businessId: string, branchId: string, staffIndex: number, category: 'spa' | 'hair' | 'dental' | 'fitness' | 'nails'): StaffMember {
+function generateMockStaffForBusiness(
+  businessId: string,
+  branchId: string,
+  staffIndex: number,
+  category: 'spa' | 'hair' | 'dental' | 'fitness' | 'nails'
+): StaffMember {
   const names = {
     spa: ['Olivia Martinez', 'Isabella Santos', 'Mia Chen', 'Ava Rodriguez', 'Emma Williams'],
     hair: ['Sophia Anderson', 'Charlotte Brown', 'Amelia Davis', 'Harper Wilson', 'Evelyn Moore'],
@@ -552,7 +657,7 @@ function generateMockStaffForBusiness(businessId: string, branchId: string, staf
     photo: photos[photoIndex],
     businessId,
     branchId,
-    staffType: 'dynamic',  // Default to dynamic scheduling
+    staffType: 'dynamic', // Default to dynamic scheduling
     schedule: selectedSchedule,
     workingHours: getWorkingHoursFromSchedule(selectedSchedule),
     appointments: generateStaffAppointments(`${businessId}-staff-${staffIndex + 1}`, category)
@@ -583,16 +688,12 @@ for (let bizNum = 1; bizNum <= 32; bizNum++) {
 
   // Branch 2 - some businesses have it (1 staff member)
   if (bizNum % 2 === 0) {
-    additionalStaff.push(
-      generateMockStaffForBusiness(businessId, `${businessId}-branch-2`, 2, category)
-    )
+    additionalStaff.push(generateMockStaffForBusiness(businessId, `${businessId}-branch-2`, 2, category))
   }
 
   // Branch 3 - fewer businesses have it (1 staff member)
   if (bizNum % 3 === 0) {
-    additionalStaff.push(
-      generateMockStaffForBusiness(businessId, `${businessId}-branch-3`, 3, category)
-    )
+    additionalStaff.push(generateMockStaffForBusiness(businessId, `${businessId}-branch-3`, 3, category))
   }
 }
 

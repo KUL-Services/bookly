@@ -7,6 +7,16 @@ export interface Branch {
     latitude: number;
     longitude: number;
   };
+  openingHours?: {
+    Mon: string;
+    Tue: string;
+    Wed: string;
+    Thu: string;
+    Fri: string;
+    Sat: string;
+    Sun: string;
+  };
+  serviceIds?: string[]; // Services available at this branch
 }
 
 export interface Business {
@@ -41,6 +51,7 @@ export interface Service {
   duration: number; // in minutes
   category: string;
   businessId: string;
+  color?: string; // Service-specific color for visual identification
 }
 
 export interface StaffSchedule {

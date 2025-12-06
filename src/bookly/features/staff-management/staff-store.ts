@@ -44,8 +44,8 @@ function syncWithCalendar() {
 // ============================================================================
 
 export interface StaffManagementState {
-  // Business hours
-  businessHours: WeeklyBusinessHours
+  // Business hours (branch-specific)
+  businessHours: Record<string, WeeklyBusinessHours>  // branchId -> WeeklyBusinessHours
 
   // Staff data
   staffWorkingHours: Record<string, WeeklyStaffHours>
@@ -78,14 +78,17 @@ export interface StaffManagementState {
   shiftRules: ShiftRuleSet
 
   // Actions - Business Hours
-  updateBusinessHours: (day: DayOfWeek, hours: WeeklyBusinessHours[DayOfWeek]) => void
-  getBusinessHours: (day: DayOfWeek) => WeeklyBusinessHours[DayOfWeek]
+  updateBusinessHours: (branchId: string, day: DayOfWeek, hours: WeeklyBusinessHours[DayOfWeek]) => void
+  getBusinessHours: (branchId: string, day: DayOfWeek) => WeeklyBusinessHours[DayOfWeek]
 
   // Actions - Staff Working Hours
   updateStaffWorkingHours: (staffId: string, day: DayOfWeek, hours: WeeklyStaffHours[DayOfWeek]) => void
   getStaffWorkingHours: (staffId: string, day: DayOfWeek) => WeeklyStaffHours[DayOfWeek]
   getStaffShiftForDate: (staffId: string, date: string) => StaffShift | null
+  getStaffShiftsForDate: (staffId: string, date: string) => StaffShiftInstance[]
   updateShiftInstance: (staffId: string, shift: StaffShiftInstance) => void
+  updateShiftsForDate: (staffId: string, date: string, shifts: StaffShiftInstance[]) => void
+  deleteShiftInstance: (staffId: string, date: string, shiftId: string) => void
   duplicateShifts: (staffId: string, fromDate: string, toRange: { start: string; end: string }) => void
   addBreak: (staffId: string, shiftId: string, breakRange: { start: string; end: string }) => void
   removeBreak: (staffId: string, shiftId: string, breakId: string) => void
@@ -139,6 +142,7 @@ export interface StaffManagementState {
 
   // Actions - Staff Type & Room Assignments
   updateStaffType: (staffId: string, staffType: StaffType) => void
+  updateRoomType: (roomId: string, roomType: 'dynamic' | 'static') => void
   assignStaffToRoom: (staffId: string, roomAssignment: RoomAssignment) => void
   removeStaffRoomAssignment: (staffId: string, assignmentIndex: number) => void
   updateStaffRoomAssignment: (staffId: string, assignmentIndex: number, updates: Partial<RoomAssignment>) => void
@@ -147,6 +151,7 @@ export interface StaffManagementState {
 
   // Actions - Staff Management
   createStaffMember: (staffData: any) => void
+  deleteStaffMember: (staffId: string) => void
 
   // Actions - UI
   selectStaff: (staffId: string | null) => void
@@ -173,7 +178,13 @@ export interface StaffManagementState {
 
 export const useStaffManagementStore = create<StaffManagementState>((set, get) => ({
   // Initial State
-  businessHours: mockBusinessHours,
+  // Initialize business hours for all branches (use same hours for all initially)
+  businessHours: {
+    '1-1': mockBusinessHours, // Luxe Hair Studio - Oxford
+    '1-2': mockBusinessHours, // Luxe Hair Studio - Soho
+    '1-3': mockBusinessHours, // Luxe Hair Studio - Kensington
+    '2-1': mockBusinessHours  // Bliss Nail Bar - King's Road
+  },
   staffWorkingHours: mockStaffWorkingHours,
   staffServiceAssignments: mockStaffServiceAssignments,
   timeReservations: mockTimeReservations,
@@ -194,17 +205,25 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   shiftRules: mockShiftRules,
 
   // Business Hours Actions
-  updateBusinessHours: (day, hours) => {
+  updateBusinessHours: (branchId, day, hours) => {
     set(state => ({
       businessHours: {
         ...state.businessHours,
-        [day]: hours
+        [branchId]: {
+          ...(state.businessHours[branchId] || {}),
+          [day]: hours
+        }
       }
     }))
   },
 
-  getBusinessHours: (day) => {
-    return get().businessHours[day]
+  getBusinessHours: (branchId, day) => {
+    const branchHours = get().businessHours[branchId]
+    if (!branchHours) {
+      // Return default closed state if branch not found
+      return { isOpen: false, shifts: [] }
+    }
+    return branchHours[day]
   },
 
   // Staff Working Hours Actions
@@ -248,15 +267,73 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   updateShiftInstance: (staffId, shift) => {
     set(state => {
       const overrides = state.shiftOverrides[staffId] || []
-      const existingIndex = overrides.findIndex(o => o.date === shift.date)
+      // Find existing shift by both date AND id to support multiple shifts per day
+      const existingIndex = overrides.findIndex(o => o.date === shift.date && o.id === shift.id)
 
       let newOverrides
       if (existingIndex >= 0) {
+        // Update existing shift
         newOverrides = [...overrides]
         newOverrides[existingIndex] = shift
       } else {
+        // Add new shift (allows multiple shifts per day)
         newOverrides = [...overrides, shift]
       }
+
+      return {
+        shiftOverrides: {
+          ...state.shiftOverrides,
+          [staffId]: newOverrides
+        }
+      }
+    })
+  },
+
+  getStaffShiftsForDate: (staffId, date) => {
+    // Get all shift instances for a specific date (supports multiple shifts per day)
+    const overrides = get().shiftOverrides[staffId] || []
+    const dateOverrides = overrides.filter(o => o.date === date)
+
+    if (dateOverrides.length > 0) {
+      return dateOverrides
+    }
+
+    // Fall back to weekly template
+    const dateObj = new Date(date)
+    const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const day = dayNames[dateObj.getDay()]
+
+    const dayHours = get().getStaffWorkingHours(staffId, day)
+    return dayHours.shifts.map(shift => ({
+      ...shift,
+      date,
+      reason: undefined
+    }))
+  },
+
+  updateShiftsForDate: (staffId, date, shifts) => {
+    // Replace all shifts for a specific date
+    set(state => {
+      const overrides = state.shiftOverrides[staffId] || []
+      // Remove all existing shifts for this date
+      const filteredOverrides = overrides.filter(o => o.date !== date)
+      // Add new shifts
+      const newOverrides = [...filteredOverrides, ...shifts]
+
+      return {
+        shiftOverrides: {
+          ...state.shiftOverrides,
+          [staffId]: newOverrides
+        }
+      }
+    })
+  },
+
+  deleteShiftInstance: (staffId, date, shiftId) => {
+    // Delete a specific shift instance
+    set(state => {
+      const overrides = state.shiftOverrides[staffId] || []
+      const newOverrides = overrides.filter(o => !(o.date === date && o.id === shiftId))
 
       return {
         shiftOverrides: {
@@ -687,6 +764,17 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     }
   },
 
+  updateRoomType: (roomId, roomType) => {
+    set(state => ({
+      rooms: state.rooms.map(room =>
+        room.id === roomId
+          ? { ...room, roomType }
+          : room
+      )
+    }))
+    syncWithCalendar()
+  },
+
   assignStaffToRoom: (staffId, roomAssignment) => {
     const staff = mockStaff.find(s => s.id === staffId)
     if (staff) {
@@ -793,6 +881,33 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     })
 
     console.log('Created new staff member:', { id: newStaffId, ...staffData })
+    syncWithCalendar()
+  },
+
+  deleteStaffMember: (staffId) => {
+    // Find and remove staff from mockStaff array
+    const staffIndex = mockStaff.findIndex(s => s.id === staffId)
+    if (staffIndex !== -1) {
+      mockStaff.splice(staffIndex, 1)
+
+      // Clean up related data
+      set(state => ({
+        staffWorkingHours: Object.fromEntries(
+          Object.entries(state.staffWorkingHours).filter(([id]) => id !== staffId)
+        ),
+        staffServiceAssignments: Object.fromEntries(
+          Object.entries(state.staffServiceAssignments).filter(([id]) => id !== staffId)
+        ),
+        shiftOverrides: Object.fromEntries(
+          Object.entries(state.shiftOverrides).filter(([id]) => id !== staffId)
+        ),
+        timeReservations: state.timeReservations.filter(res => res.staffId !== staffId),
+        timeOffRequests: state.timeOffRequests.filter(req => req.staffId !== staffId),
+        selectedStaffId: state.selectedStaffId === staffId ? null : state.selectedStaffId
+      }))
+
+      syncWithCalendar()
+    }
   },
 
   // UI Actions
