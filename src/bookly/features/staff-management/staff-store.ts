@@ -24,6 +24,7 @@ import type {
   DayOfWeek,
   ManagedRoom,
   WeeklyRoomSchedule,
+  RoomDaySchedule,
   RoomShift,
   RoomShiftInstance
 } from '../calendar/types'
@@ -128,8 +129,8 @@ export interface StaffManagementState {
   updateRoom: (id: string, updates: Partial<ManagedRoom>) => void
   deleteRoom: (id: string) => void
   getRoomsForBranch: (branchId: string) => ManagedRoom[]
-  updateRoomSchedule: (roomId: string, day: DayOfWeek, schedule: WeeklyRoomSchedule[DayOfWeek]) => void
-  getRoomSchedule: (roomId: string, day: DayOfWeek) => WeeklyRoomSchedule[DayOfWeek]
+  updateRoomSchedule: (roomId: string, day: DayOfWeek, schedule: RoomDaySchedule) => void
+  getRoomSchedule: (roomId: string, day: DayOfWeek) => RoomDaySchedule
   getRoomShiftForDate: (roomId: string, date: string) => RoomShift | null
   updateRoomShiftInstance: (roomId: string, shift: RoomShiftInstance) => void
   duplicateRoomShifts: (roomId: string, fromDate: string, toRange: { start: string; end: string }) => void

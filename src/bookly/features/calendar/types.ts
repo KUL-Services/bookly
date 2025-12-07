@@ -298,14 +298,26 @@ export interface RoomShiftInstance extends RoomShift {
   reason?: 'manual' | 'copy'
 }
 
+export interface RoomDaySchedule {
+  isAvailable: boolean
+  shifts: RoomShift[]
+}
+
 export interface WeeklyRoomSchedule {
-  [day in DayOfWeek]: {
-    isAvailable: boolean
-    shifts: RoomShift[]
-  }
+  Sun: RoomDaySchedule
+  Mon: RoomDaySchedule
+  Tue: RoomDaySchedule
+  Wed: RoomDaySchedule
+  Thu: RoomDaySchedule
+  Fri: RoomDaySchedule
+  Sat: RoomDaySchedule
 }
 
 export interface ManagedRoom extends Resource {
+  floor?: string
+  amenities?: string[]
+  color?: string
+  description?: string
   weeklySchedule: WeeklyRoomSchedule
   shiftOverrides: RoomShiftInstance[]
 }
