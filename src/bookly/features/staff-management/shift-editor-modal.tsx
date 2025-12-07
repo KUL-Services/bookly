@@ -145,12 +145,14 @@ export function ShiftEditorModal({
       if (existingShifts && existingShifts.length > 0) {
         // Load existing shifts from store
         setIsWorking(true)
-        setShifts(existingShifts.map(s => ({
-          id: s.id,
-          start: s.start,
-          end: s.end,
-          breaks: s.breaks || []
-        })))
+        setShifts(
+          existingShifts.map(s => ({
+            id: s.id,
+            start: s.start,
+            end: s.end,
+            breaks: s.breaks || []
+          }))
+        )
       } else {
         // Use initial values
         setIsWorking(hasShift)
@@ -226,6 +228,44 @@ export function ShiftEditorModal({
       return
     }
 
+    // Validate shift times
+    for (const shift of shifts) {
+      const [startH, startM] = shift.start.split(':').map(Number)
+      const [endH, endM] = shift.end.split(':').map(Number)
+      const startMinutes = startH * 60 + startM
+      const endMinutes = endH * 60 + endM
+
+      if (startMinutes >= endMinutes) {
+        alert('End time must be after start time for all shifts')
+        return
+      }
+    }
+
+    // Check for shift time intersections
+    if (shifts.length > 1) {
+      for (let i = 0; i < shifts.length; i++) {
+        const [startH1, startM1] = shifts[i].start.split(':').map(Number)
+        const [endH1, endM1] = shifts[i].end.split(':').map(Number)
+        const start1 = startH1 * 60 + startM1
+        const end1 = endH1 * 60 + endM1
+
+        for (let j = i + 1; j < shifts.length; j++) {
+          const [startH2, startM2] = shifts[j].start.split(':').map(Number)
+          const [endH2, endM2] = shifts[j].end.split(':').map(Number)
+          const start2 = startH2 * 60 + startM2
+          const end2 = endH2 * 60 + endM2
+
+          // Check if shifts overlap
+          if (start1 < end2 && end1 > start2) {
+            alert(
+              `Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't intersect.`
+            )
+            return
+          }
+        }
+      }
+    }
+
     if (staffId && date) {
       // Create a one-time override for this specific date
       const dateStr = date.toISOString().split('T')[0]
@@ -243,14 +283,16 @@ export function ShiftEditorModal({
         updateShiftsForDate(staffId, dateStr, shiftInstances)
       } else {
         // Mark this day as no-shift override (staff not working this specific day)
-        updateShiftsForDate(staffId, dateStr, [{
-          id: crypto.randomUUID(),
-          date: dateStr,
-          start: '00:00',
-          end: '00:00',
-          breaks: undefined,
-          reason: 'manual'
-        }])
+        updateShiftsForDate(staffId, dateStr, [
+          {
+            id: crypto.randomUUID(),
+            date: dateStr,
+            start: '00:00',
+            end: '00:00',
+            breaks: undefined,
+            reason: 'manual'
+          }
+        ])
       }
     }
 
@@ -304,30 +346,35 @@ export function ShiftEditorModal({
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Business Hours Validation Warning */}
           {businessHoursValidation.isOutside && (
-            <Alert severity="error">
-              <Typography variant="body2" fontWeight={600}>
+            <Alert severity='error'>
+              <Typography variant='body2' fontWeight={600}>
                 Outside Business Hours
               </Typography>
-              <Typography variant="body2">
-                {businessHoursValidation.message}
-              </Typography>
+              <Typography variant='body2'>{businessHoursValidation.message}</Typography>
             </Alert>
           )}
 
           {/* Info about editing single day */}
-          <Box sx={{
-            p: 2,
-            bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)',
-            borderRadius: 1,
-            border: '1px solid',
-            borderColor: 'info.main'
-          }}>
-            <Typography variant='body2' fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+          <Box
+            sx={{
+              p: 2,
+              bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)'),
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'info.main'
+            }}
+          >
+            <Typography
+              variant='body2'
+              fontWeight={600}
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}
+            >
               <i className='ri-information-line' style={{ fontSize: 18 }} />
               Editing Single Day
             </Typography>
             <Typography variant='caption' color='text.secondary'>
-              This change will only apply to {date ? formatDate(date) : 'this specific date'}. To edit the weekly schedule, use "Edit Working Hours" from the staff menu.
+              This change will only apply to {date ? formatDate(date) : 'this specific date'}. To edit the weekly
+              schedule, use "Edit Working Hours" from the staff menu.
             </Typography>
           </Box>
 
@@ -341,108 +388,117 @@ export function ShiftEditorModal({
           </Box>
 
           {/* Shifts Section */}
-          {isWorking && shifts.map((shift, shiftIndex) => (
-            <Box
-              key={shift.id}
-              sx={{
-                p: 2,
-                border: '2px solid',
-                borderColor: 'divider',
-                borderRadius: 2,
-                bgcolor: 'background.paper'
-              }}
-            >
-              {/* Shift Header */}
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-                <Typography variant='subtitle2' fontWeight={600}>
-                  Shift {shiftIndex + 1}
-                </Typography>
-                <Box sx={{ flexGrow: 1 }} />
-                {shifts.length > 1 && (
-                  <IconButton size='small' color='error' onClick={() => handleRemoveShift(shift.id)}>
-                    <i className='ri-delete-bin-line' />
-                  </IconButton>
+          {isWorking &&
+            shifts.map((shift, shiftIndex) => (
+              <Box
+                key={shift.id}
+                sx={{
+                  p: 2,
+                  border: '2px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  bgcolor: 'background.paper'
+                }}
+              >
+                {/* Shift Header */}
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+                  <Typography variant='subtitle2' fontWeight={600}>
+                    Shift {shiftIndex + 1}
+                  </Typography>
+                  <Box sx={{ flexGrow: 1 }} />
+                  {shifts.length > 1 && (
+                    <IconButton size='small' color='error' onClick={() => handleRemoveShift(shift.id)}>
+                      <i className='ri-delete-bin-line' />
+                    </IconButton>
+                  )}
+                </Box>
+
+                {/* Shift Time Fields */}
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+                  <TimeSelectField
+                    label='Start'
+                    value={shift.start}
+                    onChange={value => handleUpdateShift(shift.id, 'start', value)}
+                    sx={{ width: 150 }}
+                  />
+                  <TimeSelectField
+                    label='End'
+                    value={shift.end}
+                    onChange={value => handleUpdateShift(shift.id, 'end', value)}
+                    sx={{ width: 150 }}
+                  />
+                  <Chip
+                    icon={<i className='ri-time-line' style={{ fontSize: 16 }} />}
+                    size='small'
+                    label={calculateDuration(shift.start, shift.end)}
+                    sx={{ ml: 1 }}
+                  />
+                  <Box sx={{ flexGrow: 1 }} />
+                  <Button
+                    size='small'
+                    variant='text'
+                    startIcon={<i className='ri-add-line' />}
+                    onClick={() => handleAddBreak(shift.id)}
+                    sx={{ textTransform: 'none', fontWeight: 500 }}
+                  >
+                    Add Break
+                  </Button>
+                </Box>
+
+                {/* Breaks for this shift */}
+                {shift.breaks.length > 0 && (
+                  <List sx={{ p: 0 }}>
+                    {shift.breaks.map(breakRange => (
+                      <ListItem
+                        key={breakRange.id}
+                        sx={{
+                          p: 2,
+                          mb: 1,
+                          bgcolor: 'action.hover',
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          borderRadius: 1
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
+                          <i className='ri-cup-line' style={{ fontSize: 20, opacity: 0.5 }} />
+                          <TimeSelectField
+                            label='Start'
+                            value={breakRange.start}
+                            onChange={value => handleUpdateBreak(shift.id, breakRange.id, 'start', value)}
+                            size='small'
+                            sx={{ width: 120 }}
+                          />
+                          <Typography variant='body2' color='text.secondary'>
+                            —
+                          </Typography>
+                          <TimeSelectField
+                            label='End'
+                            value={breakRange.end}
+                            onChange={value => handleUpdateBreak(shift.id, breakRange.id, 'end', value)}
+                            size='small'
+                            sx={{ width: 120 }}
+                          />
+                          <Chip
+                            size='small'
+                            label={calculateDuration(breakRange.start, breakRange.end)}
+                            variant='outlined'
+                          />
+                          <Box sx={{ flexGrow: 1 }} />
+                          <IconButton
+                            size='small'
+                            color='error'
+                            onClick={() => handleRemoveBreak(shift.id, breakRange.id)}
+                          >
+                            <i className='ri-delete-bin-line' />
+                          </IconButton>
+                        </Box>
+                      </ListItem>
+                    ))}
+                  </List>
                 )}
               </Box>
-
-              {/* Shift Time Fields */}
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-                <TimeSelectField
-                  label='Start'
-                  value={shift.start}
-                  onChange={value => handleUpdateShift(shift.id, 'start', value)}
-                  sx={{ width: 150 }}
-                />
-                <TimeSelectField
-                  label='End'
-                  value={shift.end}
-                  onChange={value => handleUpdateShift(shift.id, 'end', value)}
-                  sx={{ width: 150 }}
-                />
-                <Chip
-                  icon={<i className='ri-time-line' style={{ fontSize: 16 }} />}
-                  size='small'
-                  label={calculateDuration(shift.start, shift.end)}
-                  sx={{ ml: 1 }}
-                />
-                <Box sx={{ flexGrow: 1 }} />
-                <Button
-                  size='small'
-                  variant='text'
-                  startIcon={<i className='ri-add-line' />}
-                  onClick={() => handleAddBreak(shift.id)}
-                  sx={{ textTransform: 'none', fontWeight: 500 }}
-                >
-                  Add Break
-                </Button>
-              </Box>
-
-              {/* Breaks for this shift */}
-              {shift.breaks.length > 0 && (
-                <List sx={{ p: 0 }}>
-                  {shift.breaks.map(breakRange => (
-                    <ListItem
-                      key={breakRange.id}
-                      sx={{
-                        p: 2,
-                        mb: 1,
-                        bgcolor: 'action.hover',
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', width: '100%' }}>
-                        <i className='ri-cup-line' style={{ fontSize: 20, opacity: 0.5 }} />
-                        <TimeSelectField
-                          label='Start'
-                          value={breakRange.start}
-                          onChange={value => handleUpdateBreak(shift.id, breakRange.id, 'start', value)}
-                          size='small'
-                          sx={{ width: 120 }}
-                        />
-                        <Typography variant='body2' color='text.secondary'>
-                          —
-                        </Typography>
-                        <TimeSelectField
-                          label='End'
-                          value={breakRange.end}
-                          onChange={value => handleUpdateBreak(shift.id, breakRange.id, 'end', value)}
-                          size='small'
-                          sx={{ width: 120 }}
-                        />
-                        <Chip size='small' label={calculateDuration(breakRange.start, breakRange.end)} variant='outlined' />
-                        <Box sx={{ flexGrow: 1 }} />
-                        <IconButton size='small' color='error' onClick={() => handleRemoveBreak(shift.id, breakRange.id)}>
-                          <i className='ri-delete-bin-line' />
-                        </IconButton>
-                      </Box>
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </Box>
-          ))}
+            ))}
 
           {/* Add Another Shift Button */}
           {isWorking && (
@@ -462,11 +518,7 @@ export function ShiftEditorModal({
         <Button onClick={handleCancel} variant='outlined'>
           Cancel
         </Button>
-        <Button
-          onClick={handleSave}
-          variant='contained'
-          disabled={businessHoursValidation.isOutside}
-        >
+        <Button onClick={handleSave} variant='contained' disabled={businessHoursValidation.isOutside}>
           Save
         </Button>
       </DialogActions>

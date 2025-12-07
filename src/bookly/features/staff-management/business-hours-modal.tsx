@@ -24,7 +24,7 @@ import type { DayOfWeek, BreakRange } from '../calendar/types'
 interface BusinessHoursModalProps {
   open: boolean
   onClose: () => void
-  branchId?: string  // The branch ID for which to edit business hours
+  branchId?: string // The branch ID for which to edit business hours
 }
 
 const DAYS_OF_WEEK: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -86,6 +86,46 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
   const [effectiveDate, setEffectiveDate] = useState('immediately')
 
   const handleSave = () => {
+    if (!branchId) return
+
+    // Validate all shifts for overlaps before saving
+    for (const day of DAYS_OF_WEEK) {
+      const dayHours = getBusinessHours(branchId, day)
+
+      if (dayHours.isOpen && dayHours.shifts.length > 1) {
+        // Check all pairs of shifts for overlaps
+        for (let i = 0; i < dayHours.shifts.length; i++) {
+          const shift1 = dayHours.shifts[i]
+          const [startH1, startM1] = shift1.start.split(':').map(Number)
+          const [endH1, endM1] = shift1.end.split(':').map(Number)
+          const start1 = startH1 * 60 + startM1
+          const end1 = endH1 * 60 + endM1
+
+          // Validate end time is after start time
+          if (end1 <= start1) {
+            alert(`${DAY_LABELS[day]}: Shift ${i + 1} end time must be after start time`)
+            return
+          }
+
+          for (let j = i + 1; j < dayHours.shifts.length; j++) {
+            const shift2 = dayHours.shifts[j]
+            const [startH2, startM2] = shift2.start.split(':').map(Number)
+            const [endH2, endM2] = shift2.end.split(':').map(Number)
+            const start2 = startH2 * 60 + startM2
+            const end2 = endH2 * 60 + endM2
+
+            // Check for overlap
+            if (start1 < end2 && end1 > start2) {
+              alert(
+                `${DAY_LABELS[day]}: Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`
+              )
+              return
+            }
+          }
+        }
+      }
+    }
+
     // In a real app, you would save with the effective date
     onClose()
   }
@@ -96,24 +136,19 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-    >
+    <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
       <DialogTitle>
-        <Typography variant="h6" fontWeight={600}>
+        <Typography variant='h6' fontWeight={600}>
           Edit • Business Hours
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant='body2' color='text.secondary'>
           Set your business operating hours for each day of the week
         </Typography>
       </DialogTitle>
 
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {DAYS_OF_WEEK.map((day) => {
+          {DAYS_OF_WEEK.map(day => {
             const dayHours = getBusinessHours(branchId, day)
 
             const handleToggleOpen = () => {
@@ -125,12 +160,14 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
               } else {
                 updateBusinessHours(branchId, day, {
                   isOpen: true,
-                  shifts: [{
-                    id: crypto.randomUUID(),
-                    start: '09:00',
-                    end: '17:00',
-                    breaks: []
-                  }]
+                  shifts: [
+                    {
+                      id: crypto.randomUUID(),
+                      start: '09:00',
+                      end: '17:00',
+                      breaks: []
+                    }
+                  ]
                 })
               }
             }
@@ -185,9 +222,7 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
               const shift = newShifts[shiftIndex]
               newShifts[shiftIndex] = {
                 ...shift,
-                breaks: (shift.breaks || []).map(b =>
-                  b.id === breakId ? { ...b, [field]: value } : b
-                )
+                breaks: (shift.breaks || []).map(b => (b.id === breakId ? { ...b, [field]: value } : b))
               }
               updateBusinessHours(branchId, day, {
                 ...dayHours,
@@ -198,7 +233,7 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
             return (
               <Paper
                 key={day}
-                variant="outlined"
+                variant='outlined'
                 sx={{
                   p: 2,
                   bgcolor: dayHours.isOpen ? 'background.paper' : 'action.hover'
@@ -206,15 +241,9 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: dayHours.isOpen ? 2 : 0 }}>
                   <FormControlLabel
-                    control={
-                      <Switch
-                        checked={dayHours.isOpen}
-                        onChange={handleToggleOpen}
-                        color="primary"
-                      />
-                    }
+                    control={<Switch checked={dayHours.isOpen} onChange={handleToggleOpen} color='primary' />}
                     label={
-                      <Typography variant="subtitle1" fontWeight={600} sx={{ minWidth: 100 }}>
+                      <Typography variant='subtitle1' fontWeight={600} sx={{ minWidth: 100 }}>
                         {DAY_LABELS[day]}
                       </Typography>
                     }
@@ -222,23 +251,14 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
 
                   {dayHours.isOpen && dayHours.shifts.length > 0 && (
                     <Chip
-                      size="small"
-                      label={calculateDuration(
-                        dayHours.shifts[0].start,
-                        dayHours.shifts[0].end
-                      )}
-                      color="primary"
-                      variant="outlined"
+                      size='small'
+                      label={calculateDuration(dayHours.shifts[0].start, dayHours.shifts[0].end)}
+                      color='primary'
+                      variant='outlined'
                     />
                   )}
 
-                  {!dayHours.isOpen && (
-                    <Chip
-                      size="small"
-                      label="Closed"
-                      color="default"
-                    />
-                  )}
+                  {!dayHours.isOpen && <Chip size='small' label='Closed' color='default' />}
                 </Box>
 
                 {dayHours.isOpen && (
@@ -246,13 +266,13 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
                     {dayHours.shifts.map((shift, shiftIndex) => (
                       <Box key={shift.id}>
                         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-                          <FormControl size="small" sx={{ minWidth: 140 }}>
+                          <FormControl size='small' sx={{ minWidth: 140 }}>
                             <Select
                               value={shift.start}
-                              onChange={(e) => handleUpdateShift(shiftIndex, 'start', e.target.value)}
+                              onChange={e => handleUpdateShift(shiftIndex, 'start', e.target.value)}
                               displayEmpty
                             >
-                              {TIME_OPTIONS.map((time) => (
+                              {TIME_OPTIONS.map(time => (
                                 <MenuItem key={time} value={time}>
                                   {formatTime12h(time)}
                                 </MenuItem>
@@ -260,13 +280,13 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
                             </Select>
                           </FormControl>
 
-                          <FormControl size="small" sx={{ minWidth: 140 }}>
+                          <FormControl size='small' sx={{ minWidth: 140 }}>
                             <Select
                               value={shift.end}
-                              onChange={(e) => handleUpdateShift(shiftIndex, 'end', e.target.value)}
+                              onChange={e => handleUpdateShift(shiftIndex, 'end', e.target.value)}
                               displayEmpty
                             >
-                              {TIME_OPTIONS.map((time) => (
+                              {TIME_OPTIONS.map(time => (
                                 <MenuItem key={time} value={time}>
                                   {formatTime12h(time)}
                                 </MenuItem>
@@ -275,15 +295,15 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
                           </FormControl>
 
                           <Chip
-                            icon={<i className="ri-time-line" style={{ fontSize: 16 }} />}
-                            size="small"
+                            icon={<i className='ri-time-line' style={{ fontSize: 16 }} />}
+                            size='small'
                             label={calculateDuration(shift.start, shift.end)}
                             sx={{ ml: 1 }}
                           />
 
                           <Button
-                            size="small"
-                            variant="text"
+                            size='small'
+                            variant='text'
                             onClick={() => handleAddBreak(shiftIndex)}
                             sx={{ ml: 'auto' }}
                           >
@@ -294,22 +314,21 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
                         {/* Breaks */}
                         {shift.breaks && shift.breaks.length > 0 && (
                           <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {shift.breaks.map((breakRange) => (
+                            {shift.breaks.map(breakRange => (
                               <Box key={breakRange.id} sx={{ display: 'flex', gap: 2, alignItems: 'center', pl: 0 }}>
-                                <Typography
-                                  variant="body2"
-                                  sx={{ minWidth: 60, color: 'text.secondary' }}
-                                >
+                                <Typography variant='body2' sx={{ minWidth: 60, color: 'text.secondary' }}>
                                   Break
                                 </Typography>
 
-                                <FormControl size="small" sx={{ minWidth: 140 }}>
+                                <FormControl size='small' sx={{ minWidth: 140 }}>
                                   <Select
                                     value={breakRange.start}
-                                    onChange={(e) => handleUpdateBreak(shiftIndex, breakRange.id, 'start', e.target.value)}
+                                    onChange={e =>
+                                      handleUpdateBreak(shiftIndex, breakRange.id, 'start', e.target.value)
+                                    }
                                     displayEmpty
                                   >
-                                    {TIME_OPTIONS.map((time) => (
+                                    {TIME_OPTIONS.map(time => (
                                       <MenuItem key={time} value={time}>
                                         {formatTime12h(time)}
                                       </MenuItem>
@@ -317,13 +336,13 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
                                   </Select>
                                 </FormControl>
 
-                                <FormControl size="small" sx={{ minWidth: 140 }}>
+                                <FormControl size='small' sx={{ minWidth: 140 }}>
                                   <Select
                                     value={breakRange.end}
-                                    onChange={(e) => handleUpdateBreak(shiftIndex, breakRange.id, 'end', e.target.value)}
+                                    onChange={e => handleUpdateBreak(shiftIndex, breakRange.id, 'end', e.target.value)}
                                     displayEmpty
                                   >
-                                    {TIME_OPTIONS.map((time) => (
+                                    {TIME_OPTIONS.map(time => (
                                       <MenuItem key={time} value={time}>
                                         {formatTime12h(time)}
                                       </MenuItem>
@@ -332,17 +351,17 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
                                 </FormControl>
 
                                 <Chip
-                                  size="small"
+                                  size='small'
                                   label={calculateDuration(breakRange.start, breakRange.end)}
-                                  variant="outlined"
+                                  variant='outlined'
                                 />
 
                                 <IconButton
-                                  size="small"
-                                  color="error"
+                                  size='small'
+                                  color='error'
                                   onClick={() => handleRemoveBreak(shiftIndex, breakRange.id)}
                                 >
-                                  <i className="ri-delete-bin-line" />
+                                  <i className='ri-delete-bin-line' />
                                 </IconButton>
                               </Box>
                             ))}
@@ -358,42 +377,40 @@ export function BusinessHoursModal({ open, onClose, branchId }: BusinessHoursMod
 
           {/* Make Changes Effective */}
           <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" gutterBottom fontWeight={600}>
+            <Typography variant='subtitle2' gutterBottom fontWeight={600}>
               Make changes effective
             </Typography>
-            <FormControl fullWidth size="small">
-              <Select
-                value={effectiveDate}
-                onChange={(e) => setEffectiveDate(e.target.value)}
-              >
-                <MenuItem value="immediately">Immediately</MenuItem>
-                <MenuItem value="next-week">Next Week</MenuItem>
-                <MenuItem value="custom">Custom Date</MenuItem>
+            <FormControl fullWidth size='small'>
+              <Select value={effectiveDate} onChange={e => setEffectiveDate(e.target.value)}>
+                <MenuItem value='immediately'>Immediately</MenuItem>
+                <MenuItem value='next-week'>Next Week</MenuItem>
+                <MenuItem value='custom'>Custom Date</MenuItem>
               </Select>
             </FormControl>
           </Box>
 
           {/* Timeframe Info */}
           <Paper
-            variant="outlined"
+            variant='outlined'
             sx={{
               p: 2,
               bgcolor: 'action.hover',
               borderStyle: 'dashed'
             }}
           >
-            <Typography variant="body2" color="text.secondary">
-              <strong>TIMEFRAME:</strong> These changes will apply to all future scheduling. Existing appointments will not be affected.
+            <Typography variant='body2' color='text.secondary'>
+              <strong>TIMEFRAME:</strong> These changes will apply to all future scheduling. Existing appointments will
+              not be affected.
             </Typography>
           </Paper>
         </Box>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={onClose} variant='outlined'>
           CANCEL
         </Button>
-        <Button onClick={handleSave} variant="contained">
+        <Button onClick={handleSave} variant='contained'>
           SAVE
         </Button>
       </DialogActions>

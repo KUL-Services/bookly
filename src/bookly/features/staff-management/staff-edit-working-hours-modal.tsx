@@ -28,7 +28,7 @@ interface StaffEditWorkingHoursModalProps {
   onClose: () => void
   staffId: string
   staffName: string
-  referenceDate?: Date  // The date/week being viewed
+  referenceDate?: Date // The date/week being viewed
 }
 
 const DAYS_OF_WEEK: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -57,10 +57,16 @@ function calculateDuration(start: string, end: string): string {
   return `${hours}h${minutes > 0 ? ` ${minutes}m` : ''}`
 }
 
-export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName, referenceDate }: StaffEditWorkingHoursModalProps) {
+export function StaffEditWorkingHoursModal({
+  open,
+  onClose,
+  staffId,
+  staffName,
+  referenceDate
+}: StaffEditWorkingHoursModalProps) {
   const { getStaffWorkingHours, updateStaffWorkingHours, updateShiftsForDate } = useStaffManagementStore()
   const [effectiveDate, setEffectiveDate] = useState('immediately')
-  const [applyToAllWeeks, setApplyToAllWeeks] = useState(true)  // Default: edit recurring schedule
+  const [applyToAllWeeks, setApplyToAllWeeks] = useState(true) // Default: edit recurring schedule
 
   // Calculate the current week dates
   const weekDates = referenceDate
@@ -71,6 +77,44 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName, 
     : []
 
   const handleSave = () => {
+    // Validate all shifts for overlaps before saving
+    for (const day of DAYS_OF_WEEK) {
+      const dayHours = getStaffWorkingHours(staffId, day)
+
+      if (dayHours.isWorking && dayHours.shifts.length > 1) {
+        // Check all pairs of shifts for overlaps
+        for (let i = 0; i < dayHours.shifts.length; i++) {
+          const shift1 = dayHours.shifts[i]
+          const [startH1, startM1] = shift1.start.split(':').map(Number)
+          const [endH1, endM1] = shift1.end.split(':').map(Number)
+          const start1 = startH1 * 60 + startM1
+          const end1 = endH1 * 60 + endM1
+
+          // Validate end time is after start time
+          if (end1 <= start1) {
+            alert(`${DAY_LABELS[day]}: Shift ${i + 1} end time must be after start time`)
+            return
+          }
+
+          for (let j = i + 1; j < dayHours.shifts.length; j++) {
+            const shift2 = dayHours.shifts[j]
+            const [startH2, startM2] = shift2.start.split(':').map(Number)
+            const [endH2, endM2] = shift2.end.split(':').map(Number)
+            const start2 = startH2 * 60 + startM2
+            const end2 = endH2 * 60 + endM2
+
+            // Check for overlap
+            if (start1 < end2 && end1 > start2) {
+              alert(
+                `${DAY_LABELS[day]}: Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`
+              )
+              return
+            }
+          }
+        }
+      }
+    }
+
     if (applyToAllWeeks) {
       // Save to recurring weekly template - no additional action needed
       // Changes are already applied via updateStaffWorkingHours in the day handlers
@@ -102,14 +146,16 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName, 
           updateShiftsForDate(staffId, dateStr, shiftInstances)
         } else {
           // Create no-shift instance for this specific date
-          updateShiftsForDate(staffId, dateStr, [{
-            id: crypto.randomUUID(),
-            date: dateStr,
-            start: '00:00',
-            end: '00:00',
-            breaks: undefined,
-            reason: 'manual'
-          }])
+          updateShiftsForDate(staffId, dateStr, [
+            {
+              id: crypto.randomUUID(),
+              date: dateStr,
+              start: '00:00',
+              end: '00:00',
+              breaks: undefined,
+              reason: 'manual'
+            }
+          ])
         }
       })
 
@@ -168,6 +214,43 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName, 
 
           {DAYS_OF_WEEK.map(day => {
             const dayHours = getStaffWorkingHours(staffId, day)
+
+            // Check for shift overlaps for this day
+            const checkShiftOverlaps = (shifts: typeof dayHours.shifts) => {
+              const overlaps: Array<{ shift1: number; shift2: number }> = []
+
+              for (let i = 0; i < shifts.length; i++) {
+                const shift1 = shifts[i]
+                const [startH1, startM1] = shift1.start.split(':').map(Number)
+                const [endH1, endM1] = shift1.end.split(':').map(Number)
+                const start1 = startH1 * 60 + startM1
+                const end1 = endH1 * 60 + endM1
+
+                // Check if end time is before start time
+                if (end1 <= start1) {
+                  overlaps.push({ shift1: i, shift2: i })
+                  continue
+                }
+
+                for (let j = i + 1; j < shifts.length; j++) {
+                  const shift2 = shifts[j]
+                  const [startH2, startM2] = shift2.start.split(':').map(Number)
+                  const [endH2, endM2] = shift2.end.split(':').map(Number)
+                  const start2 = startH2 * 60 + startM2
+                  const end2 = endH2 * 60 + endM2
+
+                  // Check for overlap
+                  if (start1 < end2 && end1 > start2) {
+                    overlaps.push({ shift1: i, shift2: j })
+                  }
+                }
+              }
+
+              return overlaps
+            }
+
+            const shiftOverlaps = checkShiftOverlaps(dayHours.shifts)
+            const hasOverlaps = shiftOverlaps.length > 0
 
             const handleToggleWorking = () => {
               if (dayHours.isWorking) {
@@ -416,6 +499,37 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName, 
                     >
                       Add Another Shift
                     </Button>
+
+                    {/* Overlap Warning */}
+                    {hasOverlaps && (
+                      <Box
+                        sx={{
+                          mt: 1,
+                          p: 1.5,
+                          bgcolor: 'error.50',
+                          border: '1px solid',
+                          borderColor: 'error.main',
+                          borderRadius: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1
+                        }}
+                      >
+                        <i className='ri-error-warning-line' style={{ color: '#d32f2f', fontSize: 18 }} />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant='body2' fontWeight={600} color='error.main'>
+                            Overlapping Shifts Detected
+                          </Typography>
+                          {shiftOverlaps.map((overlap, idx) => (
+                            <Typography key={idx} variant='caption' color='error.dark' display='block'>
+                              {overlap.shift1 === overlap.shift2
+                                ? `Shift ${overlap.shift1 + 1}: End time must be after start time`
+                                : `Shift ${overlap.shift1 + 1} and Shift ${overlap.shift2 + 1} have overlapping times`}
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
                   </Box>
                 )}
               </Paper>
@@ -457,7 +571,36 @@ export function StaffEditWorkingHoursModal({ open, onClose, staffId, staffName, 
         <Button onClick={onClose} variant='outlined'>
           CANCEL
         </Button>
-        <Button onClick={handleSave} variant='contained'>
+        <Button
+          onClick={handleSave}
+          variant='contained'
+          disabled={DAYS_OF_WEEK.some(day => {
+            const dayHours = getStaffWorkingHours(staffId, day)
+            if (!dayHours.isWorking || dayHours.shifts.length <= 1) return false
+
+            // Check for overlaps
+            for (let i = 0; i < dayHours.shifts.length; i++) {
+              const shift1 = dayHours.shifts[i]
+              const [startH1, startM1] = shift1.start.split(':').map(Number)
+              const [endH1, endM1] = shift1.end.split(':').map(Number)
+              const start1 = startH1 * 60 + startM1
+              const end1 = endH1 * 60 + endM1
+
+              if (end1 <= start1) return true
+
+              for (let j = i + 1; j < dayHours.shifts.length; j++) {
+                const shift2 = dayHours.shifts[j]
+                const [startH2, startM2] = shift2.start.split(':').map(Number)
+                const [endH2, endM2] = shift2.end.split(':').map(Number)
+                const start2 = startH2 * 60 + startM2
+                const end2 = endH2 * 60 + endM2
+
+                if (start1 < end2 && end1 > start2) return true
+              }
+            }
+            return false
+          })}
+        >
           SAVE
         </Button>
       </DialogActions>

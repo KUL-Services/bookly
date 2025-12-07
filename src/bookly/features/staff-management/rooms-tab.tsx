@@ -27,6 +27,7 @@ import { useStaffManagementStore } from './staff-store'
 import { CalendarPopover } from './calendar-popover'
 import { RoomEditorDrawer } from './room-editor-drawer'
 import { RoomScheduleEditor } from './room-schedule-editor'
+import type { DayOfWeek } from '../calendar/types'
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -92,7 +93,8 @@ export function RoomsTab() {
   const calendarOpen = Boolean(calendarAnchor)
   const roomMenuOpen = Boolean(roomMenuAnchor)
 
-  const { rooms, getRoomsForBranch, getRoomSchedule, deleteRoom, updateRoomType } = useStaffManagementStore()
+  const { rooms, getRoomsForBranch, getRoomSchedule, deleteRoom, updateRoomType, getBusinessHours } =
+    useStaffManagementStore()
 
   // Filter rooms by branch
   const displayRooms = selectedBranch === 'all' ? rooms : getRoomsForBranch(selectedBranch)
@@ -163,7 +165,11 @@ export function RoomsTab() {
     setSelectedRoomForEdit(null)
   }
 
-  const handleEditShift = (room: any, shift: any | null, dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat') => {
+  const handleEditShift = (
+    room: any,
+    shift: any | null,
+    dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
+  ) => {
     setScheduleEditorContext({
       roomId: room.id,
       roomName: room.name,
@@ -297,6 +303,37 @@ export function RoomsTab() {
             <Typography variant='body2' fontWeight={600}>
               {getDateDisplay()}
             </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {(() => {
+                // Get business hours for the selected branch and date
+                if (selectedBranch === 'all') {
+                  return 'Multiple Branches'
+                }
+
+                const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as DayOfWeek
+                const businessHours = getBusinessHours(selectedBranch, dayOfWeek)
+
+                if (!businessHours.isOpen || businessHours.shifts.length === 0) {
+                  return 'Closed'
+                }
+
+                // Format time from 24h to 12h
+                const formatTime = (time24: string) => {
+                  const [hourStr, minStr] = time24.split(':')
+                  let hour = parseInt(hourStr)
+                  const minute = minStr
+                  const period = hour >= 12 ? 'pm' : 'am'
+                  if (hour === 0) hour = 12
+                  else if (hour > 12) hour -= 12
+                  return `${hour}:${minute} ${period}`
+                }
+
+                const firstShift = businessHours.shifts[0]
+                const lastShift = businessHours.shifts[businessHours.shifts.length - 1]
+
+                return `${formatTime(firstShift.start)} – ${formatTime(lastShift.end)}`
+              })()}
+            </Typography>
           </Box>
           <i className='ri-arrow-down-s-line' style={{ fontSize: '1.2rem' }} />
         </Box>
@@ -308,12 +345,7 @@ export function RoomsTab() {
       <Box sx={{ flexGrow: 1 }} />
 
       <Tooltip title='Add Room'>
-        <Button
-          variant='contained'
-          startIcon={<i className='ri-add-line' />}
-          size='small'
-          onClick={handleAddRoom}
-        >
+        <Button variant='contained' startIcon={<i className='ri-add-line' />} size='small' onClick={handleAddRoom}>
           Add Room
         </Button>
       </Tooltip>
@@ -377,7 +409,7 @@ export function RoomsTab() {
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Tooltip title='More Options'>
-              <IconButton size='small' onClick={(e) => handleOpenRoomMenu(e, room)}>
+              <IconButton size='small' onClick={e => handleOpenRoomMenu(e, room)}>
                 <i className='ri-more-2-fill' style={{ fontSize: 14 }} />
               </IconButton>
             </Tooltip>
@@ -401,10 +433,10 @@ export function RoomsTab() {
                     width: `${calculateWidth(shiftStart, shiftEnd)}%`,
                     top: idx * 48 + 2,
                     height: 42,
-                    bgcolor: theme => theme.palette.mode === 'dark' ? '#424242' : '#E8F5E9',
+                    bgcolor: theme => (theme.palette.mode === 'dark' ? '#424242' : '#E8F5E9'),
                     borderRadius: 1,
                     border: 1,
-                    borderColor: theme => theme.palette.mode === 'dark' ? '#616161' : '#81C784',
+                    borderColor: theme => (theme.palette.mode === 'dark' ? '#616161' : '#81C784'),
                     display: 'flex',
                     flexDirection: 'column',
                     p: 0.5,
@@ -412,14 +444,19 @@ export function RoomsTab() {
                     transition: 'all 0.2s',
                     overflow: 'hidden',
                     '&:hover': {
-                      bgcolor: theme => theme.palette.mode === 'dark' ? '#616161' : '#C8E6C9',
+                      bgcolor: theme => (theme.palette.mode === 'dark' ? '#616161' : '#C8E6C9'),
                       transform: 'translateY(-2px)',
                       boxShadow: 2,
                       zIndex: 10
                     }
                   }}
                 >
-                  <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                  <Typography
+                    variant='caption'
+                    fontWeight={500}
+                    color='text.primary'
+                    sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                  >
                     {shiftStart.toLowerCase()} - {shiftEnd.toLowerCase()}
                   </Typography>
                   {shiftServices.length > 0 && (
@@ -511,7 +548,17 @@ export function RoomsTab() {
         {renderHeader()}
 
         <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.paper' }}>
-          <Box sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', position: 'sticky', top: 0, bgcolor: 'background.paper', zIndex: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              borderBottom: 1,
+              borderColor: 'divider',
+              position: 'sticky',
+              top: 0,
+              bgcolor: 'background.paper',
+              zIndex: 2
+            }}
+          >
             <Box sx={{ width: 250, p: 2, flexShrink: 0, borderRight: 1, borderColor: 'divider' }}>
               <Typography variant='body2' fontWeight={600}>
                 Rooms
@@ -519,7 +566,16 @@ export function RoomsTab() {
             </Box>
             <Box sx={{ flex: 1, display: 'flex' }}>
               {timelineHours.map((hour, idx) => (
-                <Box key={idx} sx={{ flex: 1, textAlign: 'center', py: 1, borderRight: idx < timelineHours.length - 1 ? 1 : 0, borderColor: 'divider' }}>
+                <Box
+                  key={idx}
+                  sx={{
+                    flex: 1,
+                    textAlign: 'center',
+                    py: 1,
+                    borderRight: idx < timelineHours.length - 1 ? 1 : 0,
+                    borderColor: 'divider'
+                  }}
+                >
                   <Typography variant='caption' color='text.secondary'>
                     {hour}
                   </Typography>
@@ -655,7 +711,9 @@ export function RoomsTab() {
           <Divider />
           <MenuItem onClick={handleToggleRoomType}>
             <ListItemIcon>
-              <i className={selectedRoomForMenu?.roomType === 'static' ? 'ri-user-follow-line' : 'ri-calendar-2-line'} />
+              <i
+                className={selectedRoomForMenu?.roomType === 'static' ? 'ri-user-follow-line' : 'ri-calendar-2-line'}
+              />
             </ListItemIcon>
             <ListItemText>
               {selectedRoomForMenu?.roomType === 'static'
@@ -736,7 +794,7 @@ export function RoomsTab() {
                         </Typography>
                       </Box>
                       <Tooltip title='More Options'>
-                        <IconButton size='small' onClick={(e) => handleOpenRoomMenu(e, room)}>
+                        <IconButton size='small' onClick={e => handleOpenRoomMenu(e, room)}>
                           <i className='ri-more-2-fill' style={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
@@ -794,7 +852,14 @@ export function RoomsTab() {
 
                     {/* Room cells in this branch */}
                     {branchRooms.map(room => {
-                      const dayOfWeek = WEEK_DAYS[date.getDay()] as 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
+                      const dayOfWeek = WEEK_DAYS[date.getDay()] as
+                        | 'Sun'
+                        | 'Mon'
+                        | 'Tue'
+                        | 'Wed'
+                        | 'Thu'
+                        | 'Fri'
+                        | 'Sat'
                       const schedule = getRoomSchedule(room.id, dayOfWeek)
                       const hasAvailability = schedule.isAvailable && schedule.shifts.length > 0
                       const shiftServices = hasAvailability
@@ -822,19 +887,19 @@ export function RoomsTab() {
                               sx={{
                                 width: '100%',
                                 height: '100%',
-                                bgcolor: theme => theme.palette.mode === 'dark' ? '#424242' : '#E8F5E9',
+                                bgcolor: theme => (theme.palette.mode === 'dark' ? '#424242' : '#E8F5E9'),
                                 borderRadius: 1,
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 border: 1,
-                                borderColor: theme => theme.palette.mode === 'dark' ? '#616161' : '#81C784',
+                                borderColor: theme => (theme.palette.mode === 'dark' ? '#616161' : '#81C784'),
                                 cursor: 'pointer',
                                 transition: 'all 0.2s',
                                 p: 0.5,
                                 '&:hover': {
-                                  bgcolor: theme => theme.palette.mode === 'dark' ? '#616161' : '#C8E6C9',
+                                  bgcolor: theme => (theme.palette.mode === 'dark' ? '#616161' : '#C8E6C9'),
                                   transform: 'scale(1.02)'
                                 }
                               }}
@@ -959,12 +1024,7 @@ export function RoomsTab() {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteCancel}
-        maxWidth='xs'
-        fullWidth
-      >
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} maxWidth='xs' fullWidth>
         <DialogTitle>Delete Room</DialogTitle>
         <DialogContent>
           <DialogContentText>

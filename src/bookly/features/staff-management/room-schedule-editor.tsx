@@ -53,20 +53,24 @@ export function RoomScheduleEditor({
       setIsAvailable(schedule.isAvailable)
 
       if (schedule.shifts.length > 0) {
-        setShifts(schedule.shifts.map((s, idx) => ({
-          id: s.id || `shift-${idx}`,
-          start: s.start,
-          end: s.end,
-          serviceIds: s.serviceIds || []
-        })))
+        setShifts(
+          schedule.shifts.map((s, idx) => ({
+            id: s.id || `shift-${idx}`,
+            start: s.start,
+            end: s.end,
+            serviceIds: s.serviceIds || []
+          }))
+        )
       } else if (initialShift) {
         // If opening to create a new shift
-        setShifts([{
-          id: `shift-${Date.now()}`,
-          start: initialShift.start || '09:00',
-          end: initialShift.end || '17:00',
-          serviceIds: initialShift.serviceIds || []
-        }])
+        setShifts([
+          {
+            id: `shift-${Date.now()}`,
+            start: initialShift.start || '09:00',
+            end: initialShift.end || '17:00',
+            serviceIds: initialShift.serviceIds || []
+          }
+        ])
         setIsAvailable(true)
       } else {
         setShifts([])
@@ -91,8 +95,45 @@ export function RoomScheduleEditor({
   }
 
   const handleUpdateShift = (id: string, field: 'start' | 'end' | 'serviceIds', value: any) => {
-    setShifts(shifts.map(s => s.id === id ? { ...s, [field]: value } : s))
+    setShifts(shifts.map(s => (s.id === id ? { ...s, [field]: value } : s)))
   }
+
+  // Check for shift overlaps
+  const checkShiftOverlaps = () => {
+    const overlaps: Array<{ shift1: number; shift2: number }> = []
+
+    for (let i = 0; i < shifts.length; i++) {
+      const shift1 = shifts[i]
+      const [startH1, startM1] = shift1.start.split(':').map(Number)
+      const [endH1, endM1] = shift1.end.split(':').map(Number)
+      const start1 = startH1 * 60 + startM1
+      const end1 = endH1 * 60 + endM1
+
+      // Check if end time is before start time
+      if (end1 <= start1) {
+        overlaps.push({ shift1: i, shift2: i })
+        continue
+      }
+
+      for (let j = i + 1; j < shifts.length; j++) {
+        const shift2 = shifts[j]
+        const [startH2, startM2] = shift2.start.split(':').map(Number)
+        const [endH2, endM2] = shift2.end.split(':').map(Number)
+        const start2 = startH2 * 60 + startM2
+        const end2 = endH2 * 60 + endM2
+
+        // Check for overlap
+        if (start1 < end2 && end1 > start2) {
+          overlaps.push({ shift1: i, shift2: j })
+        }
+      }
+    }
+
+    return overlaps
+  }
+
+  const shiftOverlaps = checkShiftOverlaps()
+  const hasOverlaps = shiftOverlaps.length > 0
 
   const handleSave = () => {
     if (!roomId || !dayOfWeek) return
@@ -102,10 +143,43 @@ export function RoomScheduleEditor({
       return
     }
 
-    // Validate shift times
-    for (const shift of shifts) {
+    // Validate shift times and check for overlaps
+    if (shifts.length > 1) {
+      // Check all pairs of shifts for overlaps
+      for (let i = 0; i < shifts.length; i++) {
+        const shift1 = shifts[i]
+        const [startH1, startM1] = shift1.start.split(':').map(Number)
+        const [endH1, endM1] = shift1.end.split(':').map(Number)
+        const start1 = startH1 * 60 + startM1
+        const end1 = endH1 * 60 + endM1
+
+        // Validate end time is after start time
+        if (end1 <= start1) {
+          alert(`Shift ${i + 1}: End time must be after start time`)
+          return
+        }
+
+        for (let j = i + 1; j < shifts.length; j++) {
+          const shift2 = shifts[j]
+          const [startH2, startM2] = shift2.start.split(':').map(Number)
+          const [endH2, endM2] = shift2.end.split(':').map(Number)
+          const start2 = startH2 * 60 + startM2
+          const end2 = endH2 * 60 + endM2
+
+          // Check for overlap
+          if (start1 < end2 && end1 > start2) {
+            alert(
+              `Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`
+            )
+            return
+          }
+        }
+      }
+    } else if (shifts.length === 1) {
+      // Validate single shift
+      const shift = shifts[0]
       if (shift.start >= shift.end) {
-        alert('End time must be after start time for all shifts')
+        alert('End time must be after start time')
         return
       }
     }
@@ -143,7 +217,7 @@ export function RoomScheduleEditor({
             control={
               <Switch
                 checked={isAvailable}
-                onChange={(e) => {
+                onChange={e => {
                   setIsAvailable(e.target.checked)
                   if (!e.target.checked) {
                     setShifts([])
@@ -174,11 +248,7 @@ export function RoomScheduleEditor({
                   <Typography variant='subtitle1' fontWeight={600}>
                     Shifts ({shifts.length})
                   </Typography>
-                  <Button
-                    size='small'
-                    startIcon={<i className='ri-add-line' />}
-                    onClick={handleAddShift}
-                  >
+                  <Button size='small' startIcon={<i className='ri-add-line' />} onClick={handleAddShift}>
                     Add Shift
                   </Button>
                 </Box>
@@ -218,11 +288,7 @@ export function RoomScheduleEditor({
                           <Typography variant='subtitle2' fontWeight={600}>
                             Shift {idx + 1}
                           </Typography>
-                          <IconButton
-                            size='small'
-                            color='error'
-                            onClick={() => handleRemoveShift(shift.id)}
-                          >
+                          <IconButton size='small' color='error' onClick={() => handleRemoveShift(shift.id)}>
                             <i className='ri-delete-bin-line' />
                           </IconButton>
                         </Box>
@@ -231,13 +297,13 @@ export function RoomScheduleEditor({
                           <TimeSelectField
                             label='Start Time'
                             value={shift.start}
-                            onChange={(value) => handleUpdateShift(shift.id, 'start', value)}
+                            onChange={value => handleUpdateShift(shift.id, 'start', value)}
                             fullWidth
                           />
                           <TimeSelectField
                             label='End Time'
                             value={shift.end}
-                            onChange={(value) => handleUpdateShift(shift.id, 'end', value)}
+                            onChange={value => handleUpdateShift(shift.id, 'end', value)}
                             fullWidth
                           />
                         </Box>
@@ -247,23 +313,22 @@ export function RoomScheduleEditor({
                           <Select
                             multiple
                             value={shift.serviceIds}
-                            onChange={(e) => {
-                              const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                            onChange={e => {
+                              const value =
+                                typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
                               handleUpdateShift(shift.id, 'serviceIds', value)
                             }}
-                            input={<OutlinedInput label="Services for this shift" />}
-                            renderValue={(selected) => (
+                            input={<OutlinedInput label='Services for this shift' />}
+                            renderValue={selected => (
                               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                {selected.map((value) => {
+                                {selected.map(value => {
                                   const service = mockServices.find(s => s.id === value)
-                                  return (
-                                    <Chip key={value} label={service?.name || value} size="small" />
-                                  )
+                                  return <Chip key={value} label={service?.name || value} size='small' />
                                 })}
                               </Box>
                             )}
                           >
-                            {mockServices.map((service) => (
+                            {mockServices.map(service => (
                               <MenuItem key={service.id} value={service.id}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                                   <Typography>{service.name}</Typography>
@@ -281,6 +346,36 @@ export function RoomScheduleEditor({
                 )}
               </Box>
 
+              {/* Overlap Warning */}
+              {hasOverlaps && shifts.length > 1 && (
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: 'error.50',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'error.main',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
+                  }}
+                >
+                  <i className='ri-error-warning-line' style={{ color: '#d32f2f', fontSize: 20 }} />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant='body2' fontWeight={600} color='error.main'>
+                      Overlapping Shifts Detected
+                    </Typography>
+                    {shiftOverlaps.map((overlap, idx) => (
+                      <Typography key={idx} variant='caption' color='error.dark' display='block'>
+                        {overlap.shift1 === overlap.shift2
+                          ? `Shift ${overlap.shift1 + 1}: End time must be after start time`
+                          : `Shift ${overlap.shift1 + 1} and Shift ${overlap.shift2 + 1} have overlapping times`}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
               <Box
                 sx={{
                   p: 2,
@@ -291,8 +386,8 @@ export function RoomScheduleEditor({
                 }}
               >
                 <Typography variant='caption' color='info.dark'>
-                  <strong>Tip:</strong> You can add multiple shifts per day. Assign specific services
-                  to each shift to control which services are available during different time periods.
+                  <strong>Tip:</strong> You can add multiple shifts per day. Assign specific services to each shift to
+                  control which services are available during different time periods.
                 </Typography>
               </Box>
             </>
@@ -304,7 +399,7 @@ export function RoomScheduleEditor({
         <Button onClick={onClose} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant='contained'>
+        <Button onClick={handleSave} variant='contained' disabled={hasOverlaps}>
           Save Schedule
         </Button>
       </DialogActions>

@@ -60,7 +60,7 @@ const StaffManagement = () => {
           <Tab label='SHIFTS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
           <Tab label='RESOURCES' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
           <Tab label='ROOMS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
-          <Tab label='COMMISSIONS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
+          {/* <Tab label='COMMISSIONS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} /> */}
         </Tabs>
       </Box>
 

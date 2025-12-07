@@ -414,7 +414,7 @@ export function ShiftsTab() {
   const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
   const calendarOpen = Boolean(calendarAnchor)
 
-  const { timeOffRequests, getStaffWorkingHours, getBusinessHours } = useStaffManagementStore()
+  const { timeOffRequests, getStaffWorkingHours, getStaffShiftsForDate, getBusinessHours } = useStaffManagementStore()
 
   // Filter staff by branch and staff selection
   const displayStaff = useMemo(() => {
@@ -689,7 +689,35 @@ export function ShiftsTab() {
               {getDateDisplay()}
             </Typography>
             <Typography variant='caption' color='text.secondary'>
-              10:00 am – 7:00 pm
+              {(() => {
+                // Get business hours for the selected branch and date
+                if (selectedBranch === 'all') {
+                  return 'Multiple Branches'
+                }
+
+                const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as DayOfWeek
+                const businessHours = getBusinessHours(selectedBranch, dayOfWeek)
+
+                if (!businessHours.isOpen || businessHours.shifts.length === 0) {
+                  return 'Closed'
+                }
+
+                // Format time from 24h to 12h
+                const formatTime = (time24: string) => {
+                  const [hourStr, minStr] = time24.split(':')
+                  let hour = parseInt(hourStr)
+                  const minute = minStr
+                  const period = hour >= 12 ? 'pm' : 'am'
+                  if (hour === 0) hour = 12
+                  else if (hour > 12) hour -= 12
+                  return `${hour}:${minute} ${period}`
+                }
+
+                const firstShift = businessHours.shifts[0]
+                const lastShift = businessHours.shifts[businessHours.shifts.length - 1]
+
+                return `${formatTime(firstShift.start)} – ${formatTime(lastShift.end)}`
+              })()}
             </Typography>
           </Box>
           <i className='ri-arrow-down-s-line' style={{ fontSize: '1.2rem' }} />
@@ -727,8 +755,11 @@ export function ShiftsTab() {
       | 'Thu'
       | 'Fri'
       | 'Sat'
-    const workingHours = getStaffWorkingHours(staff.id, dayOfWeek)
-    const hasShift = !timeOff && workingHours.isWorking && workingHours.shifts.length > 0
+
+    // Get shifts for this specific date (includes date-specific overrides)
+    const dateStr = selectedDate.toISOString().split('T')[0]
+    const shifts = getStaffShiftsForDate(staff.id, dateStr)
+    const hasShift = !timeOff && shifts.length > 0 && shifts[0].start !== '00:00'
 
     // Helper function to convert 24h time to 12h format
     const formatTime12Hour = (time24: string) => {
@@ -743,8 +774,8 @@ export function ShiftsTab() {
       return `${hour}:${minute} ${period}`
     }
 
-    // Get shift times from working hours data
-    const firstShift = workingHours.shifts[0]
+    // Get shift times from actual shifts for this date
+    const firstShift = hasShift ? shifts[0] : null
     const shiftStart = firstShift ? formatTime12Hour(firstShift.start) : '10:00 AM'
     const shiftEnd = firstShift ? formatTime12Hour(firstShift.end) : '7:00 PM'
 
@@ -787,57 +818,116 @@ export function ShiftsTab() {
         </Box>
 
         <Box sx={{ flex: 1, position: 'relative', m: 1 }}>
-          {hasShift && !timeOff && (
-            <Box
-              onClick={() =>
-                openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, { start: shiftStart, end: shiftEnd })
-              }
-              sx={{
-                position: 'absolute',
-                left: `${timeToPosition(shiftStart, dayOfWeek)}%`,
-                width: `${calculateWidth(shiftStart, shiftEnd, dayOfWeek)}%`,
-                top: 0,
-                bottom: 0,
-                bgcolor: 'rgba(139, 195, 74, 0.3)',
-                borderRadius: 1,
-                border: 1,
-                borderColor: 'success.light',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  bgcolor: 'rgba(139, 195, 74, 0.4)',
-                  borderColor: 'success.main'
-                }
-              }}
-            >
-              <Typography variant='caption' fontWeight={500} color='text.primary'>
-                {shiftStart.toLowerCase()}
-              </Typography>
-              <Typography variant='caption' fontWeight={500} color='text.primary'>
-                {shiftEnd.toLowerCase()}
-              </Typography>
-              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
-                9h/9h
-              </Typography>
-              <IconButton
-                size='small'
-                sx={{ position: 'absolute', top: 2, right: 2, color: 'text.primary' }}
-                onClick={e => {
-                  e.stopPropagation()
-                  openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, {
-                    start: shiftStart,
-                    end: shiftEnd
-                  })
-                }}
-              >
-                <i className='ri-edit-line' style={{ fontSize: 14 }} />
-              </IconButton>
-            </Box>
-          )}
+          {hasShift &&
+            !timeOff &&
+            shifts.map((shift, idx) => {
+              const shiftStart = formatTime12Hour(shift.start)
+              const shiftEnd = formatTime12Hour(shift.end)
+              const [startH, startM] = shift.start.split(':').map(Number)
+              const [endH, endM] = shift.end.split(':').map(Number)
+              const durationMinutes = endH * 60 + endM - (startH * 60 + startM)
+              const hours = Math.floor(durationMinutes / 60)
+
+              return (
+                <Box key={shift.id}>
+                  {/* Main Shift Box */}
+                  <Box
+                    onClick={() =>
+                      openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, {
+                        start: shiftStart,
+                        end: shiftEnd
+                      })
+                    }
+                    sx={{
+                      position: 'absolute',
+                      left: `${timeToPosition(shiftStart, dayOfWeek)}%`,
+                      width: `${calculateWidth(shiftStart, shiftEnd, dayOfWeek)}%`,
+                      top: shifts.length > 1 ? `${idx * 45}%` : 0,
+                      height: shifts.length > 1 ? '45%' : '100%',
+                      bgcolor: 'rgba(139, 195, 74, 0.3)',
+                      borderRadius: 1,
+                      border: 1,
+                      borderColor: 'success.light',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: 'rgba(139, 195, 74, 0.4)',
+                        borderColor: 'success.main'
+                      }
+                    }}
+                  >
+                    <Typography variant='caption' fontWeight={500} color='text.primary'>
+                      {shiftStart.toLowerCase()}
+                    </Typography>
+                    <Typography variant='caption' fontWeight={500} color='text.primary'>
+                      {shiftEnd.toLowerCase()}
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
+                      {hours}h
+                    </Typography>
+                    {shifts.length > 1 && (
+                      <Chip
+                        label={`${idx + 1}/${shifts.length}`}
+                        size='small'
+                        sx={{ height: 16, fontSize: '0.6rem', position: 'absolute', top: 2, left: 2 }}
+                      />
+                    )}
+                    <IconButton
+                      size='small'
+                      sx={{ position: 'absolute', top: 2, right: 2, color: 'text.primary' }}
+                      onClick={e => {
+                        e.stopPropagation()
+                        openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, {
+                          start: shiftStart,
+                          end: shiftEnd
+                        })
+                      }}
+                    >
+                      <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Box>
+
+                  {/* Break Boxes */}
+                  {shift.breaks &&
+                    shift.breaks.map(breakItem => {
+                      const breakStart = formatTime12Hour(breakItem.start)
+                      const [breakStartH, breakStartM] = breakItem.start.split(':').map(Number)
+                      const [breakEndH, breakEndM] = breakItem.end.split(':').map(Number)
+                      const breakDurationMinutes = breakEndH * 60 + breakEndM - (breakStartH * 60 + breakStartM)
+
+                      return (
+                        <Box
+                          key={breakItem.id}
+                          sx={{
+                            position: 'absolute',
+                            left: `${timeToPosition(breakStart, dayOfWeek)}%`,
+                            width: `${calculateWidth(breakItem.start, breakItem.end, dayOfWeek)}%`,
+                            top: shifts.length > 1 ? `${idx * 45}%` : 0,
+                            height: shifts.length > 1 ? '45%' : '100%',
+                            bgcolor: 'background.paper',
+                            borderRadius: 1,
+                            border: 1,
+                            borderColor: 'divider',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            pointerEvents: 'none',
+                            zIndex: 1
+                          }}
+                        >
+                          <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
+                            Break ({breakDurationMinutes}min)
+                          </Typography>
+                        </Box>
+                      )
+                    })}
+                </Box>
+              )
+            })}
 
           {!hasShift && !timeOff && (
             <Box
@@ -962,80 +1052,84 @@ export function ShiftsTab() {
             </Box>
 
             {/* Business Hours - Only show when a specific branch is selected */}
-            {selectedBranch !== 'all' && (() => {
-              const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as DayOfWeek
-              const businessHours = getBusinessHours(selectedBranch, dayOfWeek)
-              const isOpen = businessHours.isOpen && businessHours.shifts.length > 0
+            {selectedBranch !== 'all' &&
+              (() => {
+                const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as DayOfWeek
+                const businessHours = getBusinessHours(selectedBranch, dayOfWeek)
+                const isOpen = businessHours.isOpen && businessHours.shifts.length > 0
 
-              // Format time from 24h to 12h
-              const formatTime = (time24: string) => {
-                const [hourStr, minStr] = time24.split(':')
-                let hour = parseInt(hourStr)
-                const minute = minStr
-                const period = hour >= 12 ? 'PM' : 'AM'
-                if (hour === 0) hour = 12
-                else if (hour > 12) hour -= 12
-                return `${hour}:${minute} ${period}`
-              }
+                // Format time from 24h to 12h
+                const formatTime = (time24: string) => {
+                  const [hourStr, minStr] = time24.split(':')
+                  let hour = parseInt(hourStr)
+                  const minute = minStr
+                  const period = hour >= 12 ? 'PM' : 'AM'
+                  if (hour === 0) hour = 12
+                  else if (hour > 12) hour -= 12
+                  return `${hour}:${minute} ${period}`
+                }
 
-              return (
-                <Box sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 60 }}>
-                  <Box sx={{ width: 200, display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
-                    <Typography variant='body2' fontWeight={600}>
-                      Business Hours
-                    </Typography>
-                    <Tooltip title='Edit Business Hours'>
-                      <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
+                return (
+                  <Box sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 60 }}>
+                    <Box sx={{ width: 200, display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
+                      <Typography variant='body2' fontWeight={600}>
+                        Business Hours
+                      </Typography>
+                      <Tooltip title='Edit Business Hours'>
+                        <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
+                          <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
+                      <Typography variant='caption' color='text.secondary'>
+                        {isOpen ? 'On' : 'Off'}
+                      </Typography>
+                    </Box>
+                    <Box
+                      onClick={handleOpenBusinessHoursModal}
+                      sx={{
+                        flex: 1,
+                        bgcolor: isOpen ? 'rgba(139, 195, 74, 0.2)' : '#424242',
+                        m: 1,
+                        borderRadius: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        position: 'relative',
+                        border: isOpen ? '1px solid' : 'none',
+                        borderColor: isOpen ? 'success.main' : 'transparent',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor: isOpen ? 'rgba(139, 195, 74, 0.3)' : '#333333'
+                        }
+                      }}
+                    >
+                      {isOpen ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <Typography variant='body2' fontWeight={500}>
+                            {formatTime(businessHours.shifts[0].start)} - {formatTime(businessHours.shifts[0].end)}
+                          </Typography>
+                          {businessHours.shifts.length > 1 && (
+                            <Typography variant='caption' color='text.secondary'>
+                              +{businessHours.shifts.length - 1} more shift{businessHours.shifts.length > 2 ? 's' : ''}
+                            </Typography>
+                          )}
+                        </Box>
+                      ) : (
+                        <Typography variant='body2' sx={{ color: '#fff' }}>
+                          Closed
+                        </Typography>
+                      )}
+                      <IconButton
+                        size='small'
+                        sx={{ position: 'absolute', right: 8, color: isOpen ? 'text.primary' : '#fff' }}
+                      >
                         <i className='ri-edit-line' style={{ fontSize: 16 }} />
                       </IconButton>
-                    </Tooltip>
-                    <Typography variant='caption' color='text.secondary'>
-                      {isOpen ? 'On' : 'Off'}
-                    </Typography>
+                    </Box>
                   </Box>
-                  <Box
-                    onClick={handleOpenBusinessHoursModal}
-                    sx={{
-                      flex: 1,
-                      bgcolor: isOpen ? 'rgba(139, 195, 74, 0.2)' : '#424242',
-                      m: 1,
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative',
-                      border: isOpen ? '1px solid' : 'none',
-                      borderColor: isOpen ? 'success.main' : 'transparent',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        bgcolor: isOpen ? 'rgba(139, 195, 74, 0.3)' : '#333333'
-                      }
-                    }}
-                  >
-                    {isOpen ? (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Typography variant='body2' fontWeight={500}>
-                          {formatTime(businessHours.shifts[0].start)} - {formatTime(businessHours.shifts[0].end)}
-                        </Typography>
-                        {businessHours.shifts.length > 1 && (
-                          <Typography variant='caption' color='text.secondary'>
-                            +{businessHours.shifts.length - 1} more shift{businessHours.shifts.length > 2 ? 's' : ''}
-                          </Typography>
-                        )}
-                      </Box>
-                    ) : (
-                      <Typography variant='body2' sx={{ color: '#fff' }}>
-                        Closed
-                      </Typography>
-                    )}
-                    <IconButton size='small' sx={{ position: 'absolute', right: 8, color: isOpen ? 'text.primary' : '#fff' }}>
-                      <i className='ri-edit-line' style={{ fontSize: 16 }} />
-                    </IconButton>
-                  </Box>
-                </Box>
-              )
-            })()}
+                )
+              })()}
 
             {/* Staff grouped by branches */}
             {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
@@ -1309,51 +1403,67 @@ export function ShiftsTab() {
             <Box sx={{ height: 60, borderBottom: 1, borderColor: 'divider' }} />
 
             {/* Business Hours - Only show when a specific branch is selected */}
-            {selectedBranch !== 'all' && (() => {
-              // Calculate total hours for the week
-              const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-              let weekTotalMinutes = 0
-              let daysOpen = 0
+            {selectedBranch !== 'all' &&
+              (() => {
+                // Calculate total hours for the week
+                const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                let weekTotalMinutes = 0
+                let daysOpen = 0
 
-              dayNames.forEach(day => {
-                const dayHours = getBusinessHours(selectedBranch, day)
-                if (dayHours.isOpen && dayHours.shifts.length > 0) {
-                  daysOpen++
-                  dayHours.shifts.forEach(shift => {
-                    const [startH, startM] = shift.start.split(':').map(Number)
-                    const [endH, endM] = shift.end.split(':').map(Number)
-                    const minutes = (endH * 60 + endM) - (startH * 60 + startM)
-                    weekTotalMinutes += minutes
-                  })
-                }
-              })
+                dayNames.forEach(day => {
+                  const dayHours = getBusinessHours(selectedBranch, day)
+                  if (dayHours.isOpen && dayHours.shifts.length > 0) {
+                    daysOpen++
+                    dayHours.shifts.forEach(shift => {
+                      const [startH, startM] = shift.start.split(':').map(Number)
+                      const [endH, endM] = shift.end.split(':').map(Number)
+                      const minutes = endH * 60 + endM - (startH * 60 + startM)
+                      weekTotalMinutes += minutes
+                    })
+                  }
+                })
 
-              const weekHours = Math.floor(weekTotalMinutes / 60)
-              const weekMinutes = weekTotalMinutes % 60
+                const weekHours = Math.floor(weekTotalMinutes / 60)
+                const weekMinutes = weekTotalMinutes % 60
 
-              return (
-                <Box
-                  sx={{ height: 70, display: 'flex', alignItems: 'center', px: 2, borderBottom: 1, borderColor: 'divider' }}
-                >
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant='body2' fontWeight={600}>
-                      Business Hours
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
-                      <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
-                        {daysOpen} days open
+                return (
+                  <Box
+                    sx={{
+                      height: 70,
+                      display: 'flex',
+                      alignItems: 'center',
+                      px: 2,
+                      borderBottom: 1,
+                      borderColor: 'divider'
+                    }}
+                  >
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant='body2' fontWeight={600}>
+                        Business Hours
                       </Typography>
-                      <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
-                        W {weekHours}h {weekMinutes > 0 ? `${weekMinutes}m` : ''}
-                      </Typography>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                        >
+                          {daysOpen} days open
+                        </Typography>
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                        >
+                          W {weekHours}h {weekMinutes > 0 ? `${weekMinutes}m` : ''}
+                        </Typography>
+                      </Box>
                     </Box>
+                    <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
+                      <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                    </IconButton>
                   </Box>
-                  <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
-                    <i className='ri-edit-line' style={{ fontSize: 16 }} />
-                  </IconButton>
-                </Box>
-              )
-            })()}
+                )
+              })()}
 
             {/* Staff grouped by branches */}
             {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
@@ -1405,15 +1515,26 @@ export function ShiftsTab() {
                           {staff.name}
                         </Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
-                          <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
+                            sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                          >
                             W 45h/45h
                           </Typography>
-                          <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
+                            sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                          >
                             M 149h 45min
                           </Typography>
                         </Box>
                       </Box>
-                      <IconButton size='small' onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}>
+                      <IconButton
+                        size='small'
+                        onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}
+                      >
                         <i className='ri-edit-line' style={{ fontSize: 16 }} />
                       </IconButton>
                     </Box>
@@ -1463,81 +1584,85 @@ export function ShiftsTab() {
                 </Box>
 
                 {/* Business Hours cells - Only show when a specific branch is selected */}
-                {selectedBranch !== 'all' && (() => {
-                  const dayOfWeek = WEEK_DAYS[dayIndex] as DayOfWeek
-                  const businessHours = getBusinessHours(selectedBranch, dayOfWeek)
-                  const isOpen = businessHours.isOpen && businessHours.shifts.length > 0
+                {selectedBranch !== 'all' &&
+                  (() => {
+                    const dayOfWeek = WEEK_DAYS[dayIndex] as DayOfWeek
+                    const businessHours = getBusinessHours(selectedBranch, dayOfWeek)
+                    const isOpen = businessHours.isOpen && businessHours.shifts.length > 0
 
-                  // Format time from 24h to 12h
-                  const formatTime = (time24: string) => {
-                    const [hourStr, minStr] = time24.split(':')
-                    let hour = parseInt(hourStr)
-                    const minute = minStr
-                    const period = hour >= 12 ? 'PM' : 'AM'
-                    if (hour === 0) hour = 12
-                    else if (hour > 12) hour -= 12
-                    return `${hour}:${minute} ${period}`
-                  }
+                    // Format time from 24h to 12h
+                    const formatTime = (time24: string) => {
+                      const [hourStr, minStr] = time24.split(':')
+                      let hour = parseInt(hourStr)
+                      const minute = minStr
+                      const period = hour >= 12 ? 'PM' : 'AM'
+                      if (hour === 0) hour = 12
+                      else if (hour > 12) hour -= 12
+                      return `${hour}:${minute} ${period}`
+                    }
 
-                  return (
-                    <Box
-                      sx={{
-                        height: 70,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderBottom: 1,
-                        borderColor: 'divider',
-                        p: 1
-                      }}
-                    >
+                    return (
                       <Box
-                        onClick={handleOpenBusinessHoursModal}
                         sx={{
-                          width: '100%',
-                          height: '100%',
-                          bgcolor: isOpen ? 'rgba(139, 195, 74, 0.2)' : 'grey.900',
-                          borderRadius: 1,
+                          height: 70,
                           display: 'flex',
-                          flexDirection: 'column',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          position: 'relative',
-                          border: isOpen ? '1px solid' : 'none',
-                          borderColor: isOpen ? 'success.main' : 'transparent',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          '&:hover': {
-                            bgcolor: isOpen ? 'rgba(139, 195, 74, 0.3)' : 'grey.800'
-                          }
+                          borderBottom: 1,
+                          borderColor: 'divider',
+                          p: 1
                         }}
                       >
-                        {isOpen ? (
-                          <>
-                            <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.65rem' }}>
-                              {formatTime(businessHours.shifts[0].start)}
-                            </Typography>
-                            <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.65rem' }}>
-                              {formatTime(businessHours.shifts[0].end)}
-                            </Typography>
-                            {businessHours.shifts.length > 1 && (
-                              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.55rem' }}>
-                                +{businessHours.shifts.length - 1}
+                        <Box
+                          onClick={handleOpenBusinessHoursModal}
+                          sx={{
+                            width: '100%',
+                            height: '100%',
+                            bgcolor: isOpen ? 'rgba(139, 195, 74, 0.2)' : 'grey.900',
+                            borderRadius: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                            border: isOpen ? '1px solid' : 'none',
+                            borderColor: isOpen ? 'success.main' : 'transparent',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                              bgcolor: isOpen ? 'rgba(139, 195, 74, 0.3)' : 'grey.800'
+                            }
+                          }}
+                        >
+                          {isOpen ? (
+                            <>
+                              <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.65rem' }}>
+                                {formatTime(businessHours.shifts[0].start)}
                               </Typography>
-                            )}
-                          </>
-                        ) : (
-                          <Typography variant='body2' color='white'>
-                            Closed
-                          </Typography>
-                        )}
-                        <IconButton size='small' sx={{ position: 'absolute', top: 2, right: 2, color: isOpen ? 'text.primary' : 'white' }}>
-                          <i className='ri-edit-line' style={{ fontSize: 14 }} />
-                        </IconButton>
+                              <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.65rem' }}>
+                                {formatTime(businessHours.shifts[0].end)}
+                              </Typography>
+                              {businessHours.shifts.length > 1 && (
+                                <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.55rem' }}>
+                                  +{businessHours.shifts.length - 1}
+                                </Typography>
+                              )}
+                            </>
+                          ) : (
+                            <Typography variant='body2' color='white'>
+                              Closed
+                            </Typography>
+                          )}
+                          <IconButton
+                            size='small'
+                            sx={{ position: 'absolute', top: 2, right: 2, color: isOpen ? 'text.primary' : 'white' }}
+                          >
+                            <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                          </IconButton>
+                        </Box>
                       </Box>
-                    </Box>
-                  )
-                })()}
+                    )
+                  })()}
 
                 {/* Staff cells grouped by branches */}
                 {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
@@ -1559,174 +1684,338 @@ export function ShiftsTab() {
 
                       {/* Staff cells in this branch */}
                       {branchStaff.map(staff => {
-                      const timeOff = timeOffRequests.find(
-                        req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
-                      )
+                        const timeOff = timeOffRequests.find(
+                          req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
+                        )
 
-                      // Get working hours for this specific day
-                      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()] as
-                        | 'Sun'
-                        | 'Mon'
-                        | 'Tue'
-                        | 'Wed'
-                        | 'Thu'
-                        | 'Fri'
-                        | 'Sat'
-                      const workingHours = getStaffWorkingHours(staff.id, dayOfWeek)
-                      const hasShift = !timeOff && workingHours.isWorking && workingHours.shifts.length > 0
+                        // Get shifts for this specific date (includes date-specific overrides)
+                        const dateStr = date.toISOString().split('T')[0]
+                        const shifts = getStaffShiftsForDate(staff.id, dateStr)
+                        const hasShift = !timeOff && shifts.length > 0 && shifts[0].start !== '00:00'
 
-                      // Helper function to convert 24h time to 12h format
-                      const formatTime12Hour = (time24: string) => {
-                        const [hourStr, minStr] = time24.split(':')
-                        let hour = parseInt(hourStr)
-                        const minute = minStr
-                        const period = hour >= 12 ? 'PM' : 'AM'
+                        // Helper function to convert 24h time to 12h format
+                        const formatTime12Hour = (time24: string) => {
+                          const [hourStr, minStr] = time24.split(':')
+                          let hour = parseInt(hourStr)
+                          const minute = minStr
+                          const period = hour >= 12 ? 'PM' : 'AM'
 
-                        if (hour === 0) hour = 12
-                        else if (hour > 12) hour -= 12
+                          if (hour === 0) hour = 12
+                          else if (hour > 12) hour -= 12
 
-                        return `${hour}:${minute} ${period}`
-                      }
+                          return `${hour}:${minute} ${period}`
+                        }
 
-                      // Get shift times from working hours data
-                      const firstShift = workingHours.shifts[0]
-                      const shiftStart = firstShift ? formatTime12Hour(firstShift.start) : '10:00 AM'
-                      const shiftEnd = firstShift ? formatTime12Hour(firstShift.end) : '7:00 PM'
-
-                      return (
-                        <Box
-                          key={staff.id}
-                          sx={{
-                            height: 80,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderBottom: 1,
-                            borderColor: 'divider',
-                            position: 'relative',
-                            p: 1
-                          }}
-                        >
-                      {hasShift && !timeOff && (
-                        <Box
-                          onClick={() =>
-                            openShiftEditor({ id: staff.id, name: staff.name }, date, {
-                              start: shiftStart,
-                              end: shiftEnd
-                            })
-                          }
-                          sx={{
-                            width: '100%',
-                            height: '100%',
-                            bgcolor: 'rgba(139, 195, 74, 0.3)',
-                            borderRadius: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: 1,
-                            borderColor: 'success.light',
-                            p: 0.5,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              bgcolor: 'rgba(139, 195, 74, 0.4)',
-                              borderColor: 'success.main'
-                            }
-                          }}
-                        >
-                          <Typography variant='caption' fontWeight={500} color='text.primary'>
-                            {shiftStart.toLowerCase()}
-                          </Typography>
-                          <Typography variant='caption' fontWeight={500} color='text.primary'>
-                            {shiftEnd.toLowerCase()}
-                          </Typography>
-                          <Typography variant='caption' color='text.secondary'>
-                            9h (9h)
-                          </Typography>
-                          <IconButton
-                            size='small'
-                            sx={{ position: 'absolute', top: 2, right: 2, color: 'text.primary' }}
-                            onClick={e => {
-                              e.stopPropagation()
-                              openShiftEditor({ id: staff.id, name: staff.name }, date, {
-                                start: shiftStart,
-                                end: shiftEnd
-                              })
+                        return (
+                          <Box
+                            key={staff.id}
+                            sx={{
+                              height: 80,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'stretch',
+                              justifyContent: 'center',
+                              borderBottom: 1,
+                              borderColor: 'divider',
+                              position: 'relative',
+                              p: 1
                             }}
                           >
-                            <i className='ri-edit-line' style={{ fontSize: 14 }} />
-                          </IconButton>
-                        </Box>
-                      )}
-                      {!hasShift && !timeOff && (
-                        <Box
-                          onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, null)}
-                          sx={{
-                            width: '100%',
-                            height: '100%',
-                            bgcolor: 'transparent',
-                            borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: '2px dashed',
-                            borderColor: 'divider',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              bgcolor: 'rgba(0, 0, 0, 0.02)',
-                              borderColor: 'primary.main'
-                            }
-                          }}
-                        >
-                          <Typography variant='body2' color='text.secondary' fontWeight={500}>
-                            No Shift
-                          </Typography>
-                          <IconButton
-                            size='small'
-                            sx={{ position: 'absolute', top: 2, right: 2, color: 'text.secondary' }}
-                            onClick={e => {
-                              e.stopPropagation()
-                              openShiftEditor({ id: staff.id, name: staff.name }, date, null)
-                            }}
-                          >
-                            <i className='ri-edit-line' style={{ fontSize: 14 }} />
-                          </IconButton>
-                        </Box>
-                      )}
-                      {timeOff && (
-                        <Box
-                          onClick={() => handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)}
-                          sx={{
-                            width: '100%',
-                            height: '100%',
-                            bgcolor: '#424242',
-                            borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            p: 0.5,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              bgcolor: '#333333'
-                            }
-                          }}
-                        >
-                          <Box sx={{ textAlign: 'center' }}>
-                            <Typography variant='caption' sx={{ color: '#fff' }} fontWeight={500}>
-                              {timeOff.reason}
-                            </Typography>
-                            <Typography variant='caption' sx={{ color: '#fff' }} display='block'>
-                              (9h) • Sick Day
-                            </Typography>
+                            {hasShift &&
+                              !timeOff &&
+                              shifts.map((shift, idx) => {
+                                const shiftStart = formatTime12Hour(shift.start)
+                                const shiftEnd = formatTime12Hour(shift.end)
+
+                                // Calculate duration
+                                const [startH, startM] = shift.start.split(':').map(Number)
+                                const [endH, endM] = shift.end.split(':').map(Number)
+                                const durationMinutes = endH * 60 + endM - (startH * 60 + startM)
+                                const hours = Math.floor(durationMinutes / 60)
+                                const minutes = durationMinutes % 60
+
+                                return (
+                                  <Box
+                                    key={shift.id}
+                                    onClick={() =>
+                                      openShiftEditor({ id: staff.id, name: staff.name }, date, {
+                                        start: shiftStart,
+                                        end: shiftEnd
+                                      })
+                                    }
+                                    sx={{
+                                      position: 'relative',
+                                      width: '100%',
+                                      height: shifts.length > 1 ? `calc(${100 / shifts.length}% - 4px)` : '100%',
+                                      mb: shifts.length > 1 && idx < shifts.length - 1 ? 0.5 : 0,
+                                      bgcolor: 'rgba(139, 195, 74, 0.3)',
+                                      borderRadius: 1,
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      border: 1,
+                                      borderColor: 'success.light',
+                                      px: 0.5,
+                                      py: shifts.length > 1 ? 0.25 : 0.5,
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s',
+                                      overflow: 'hidden',
+                                      '&:hover': {
+                                        bgcolor: 'rgba(139, 195, 74, 0.4)',
+                                        borderColor: 'success.main'
+                                      }
+                                    }}
+                                  >
+                                    {shifts.length > 1 && (
+                                      <Chip
+                                        label={`${idx + 1}/${shifts.length}`}
+                                        size='small'
+                                        sx={{
+                                          height: 14,
+                                          fontSize: '0.55rem',
+                                          position: 'absolute',
+                                          top: 1,
+                                          left: 1,
+                                          bgcolor: 'primary.main',
+                                          color: 'white',
+                                          '& .MuiChip-label': {
+                                            px: 0.5,
+                                            py: 0
+                                          }
+                                        }}
+                                      />
+                                    )}
+                                    <Box sx={{ width: '100%', px: shifts.length > 1 ? 1.5 : 0.5, textAlign: 'center' }}>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={500}
+                                        color='text.primary'
+                                        sx={{
+                                          fontSize: shifts.length > 1 ? '0.58rem' : '0.65rem',
+                                          lineHeight: 1.1,
+                                          display: 'block',
+                                          whiteSpace: 'nowrap',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis'
+                                        }}
+                                      >
+                                        {shiftStart.toLowerCase()}
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={500}
+                                        color='text.primary'
+                                        sx={{
+                                          fontSize: shifts.length > 1 ? '0.58rem' : '0.65rem',
+                                          lineHeight: 1.1,
+                                          display: 'block',
+                                          whiteSpace: 'nowrap',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis'
+                                        }}
+                                      >
+                                        {shiftEnd.toLowerCase()}
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        color='text.secondary'
+                                        sx={{
+                                          fontSize: shifts.length > 1 ? '0.52rem' : '0.6rem',
+                                          lineHeight: 1.1,
+                                          display: 'block',
+                                          whiteSpace: 'nowrap',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis'
+                                        }}
+                                      >
+                                        {hours}h{minutes > 0 ? `${minutes}m` : ''}
+                                      </Typography>
+                                      {shift.breaks && shift.breaks.length > 0 && (
+                                        <Box
+                                          sx={{
+                                            mt: 0.25,
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: 0.125,
+                                            width: '100%'
+                                          }}
+                                        >
+                                          {shift.breaks.map(breakItem => {
+                                            const [breakStartH, breakStartM] = breakItem.start.split(':').map(Number)
+                                            const [breakEndH, breakEndM] = breakItem.end.split(':').map(Number)
+                                            const breakDurationMinutes =
+                                              breakEndH * 60 + breakEndM - (breakStartH * 60 + breakStartM)
+
+                                            return (
+                                              <Box
+                                                key={breakItem.id}
+                                                sx={{
+                                                  bgcolor: 'background.paper',
+                                                  borderRadius: 0.5,
+                                                  border: '1px solid',
+                                                  borderColor: 'divider',
+                                                  py: 0.25,
+                                                  px: 0.5,
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  justifyContent: 'center',
+                                                  gap: 0.25
+                                                }}
+                                              >
+                                                <i className='ri-cup-line' style={{ fontSize: 8, opacity: 0.6 }} />
+                                                <Typography
+                                                  variant='caption'
+                                                  sx={{
+                                                    fontSize: '0.5rem',
+                                                    lineHeight: 1,
+                                                    color: 'text.secondary',
+                                                    whiteSpace: 'nowrap'
+                                                  }}
+                                                >
+                                                  Break ({breakDurationMinutes}min)
+                                                </Typography>
+                                              </Box>
+                                            )
+                                          })}
+                                        </Box>
+                                      )}
+                                    </Box>
+                                    <IconButton
+                                      size='small'
+                                      sx={{
+                                        position: 'absolute',
+                                        top: 1,
+                                        right: 1,
+                                        color: 'text.primary',
+                                        padding: '2px',
+                                        '& i': {
+                                          fontSize: 12
+                                        }
+                                      }}
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        openShiftEditor({ id: staff.id, name: staff.name }, date, {
+                                          start: shiftStart,
+                                          end: shiftEnd
+                                        })
+                                      }}
+                                    >
+                                      <i className='ri-edit-line' />
+                                    </IconButton>
+                                  </Box>
+                                )
+                              })}
+                            {!hasShift && !timeOff && (
+                              <Box
+                                onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, null)}
+                                sx={{
+                                  width: '100%',
+                                  height: '100%',
+                                  bgcolor: 'transparent',
+                                  borderRadius: 1,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  border: '2px dashed',
+                                  borderColor: 'divider',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                  '&:hover': {
+                                    bgcolor: 'rgba(0, 0, 0, 0.02)',
+                                    borderColor: 'primary.main'
+                                  }
+                                }}
+                              >
+                                <Typography variant='body2' color='text.secondary' fontWeight={500}>
+                                  No Shift
+                                </Typography>
+                                <IconButton
+                                  size='small'
+                                  sx={{ position: 'absolute', top: 2, right: 2, color: 'text.secondary' }}
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    openShiftEditor({ id: staff.id, name: staff.name }, date, null)
+                                  }}
+                                >
+                                  <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                                </IconButton>
+                              </Box>
+                            )}
+                            {timeOff && (
+                              <Box
+                                onClick={() => handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)}
+                                sx={{
+                                  width: '100%',
+                                  height: '100%',
+                                  bgcolor: 'grey.800',
+                                  borderRadius: 1,
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  p: 0.5,
+                                  cursor: 'pointer',
+                                  position: 'relative',
+                                  transition: 'all 0.2s',
+                                  overflow: 'hidden',
+                                  '&:hover': {
+                                    bgcolor: 'grey.700'
+                                  }
+                                }}
+                              >
+                                <Box sx={{ textAlign: 'center', width: '100%', px: 2 }}>
+                                  <Typography
+                                    variant='caption'
+                                    sx={{
+                                      color: '#fff',
+                                      fontSize: '0.65rem',
+                                      fontWeight: 500,
+                                      display: 'block',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis'
+                                    }}
+                                  >
+                                    {timeOff.reason}
+                                  </Typography>
+                                  <Typography
+                                    variant='caption'
+                                    sx={{
+                                      color: 'rgba(255, 255, 255, 0.7)',
+                                      fontSize: '0.6rem',
+                                      display: 'block',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis'
+                                    }}
+                                  >
+                                    All Day
+                                  </Typography>
+                                </Box>
+                                <IconButton
+                                  size='small'
+                                  sx={{
+                                    position: 'absolute',
+                                    top: 1,
+                                    right: 1,
+                                    color: 'white',
+                                    padding: '2px',
+                                    '& i': {
+                                      fontSize: 12
+                                    }
+                                  }}
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)
+                                  }}
+                                >
+                                  <i className='ri-edit-line' />
+                                </IconButton>
+                              </Box>
+                            )}
                           </Box>
-                        </Box>
-                      )}
-                    </Box>
-                  )
+                        )
                       })}
                     </Box>
                   )
