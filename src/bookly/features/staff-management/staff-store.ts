@@ -502,23 +502,43 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
   // Resource Actions
   createResource: (resource) => {
+    const newId = `room-${Date.now()}`
     set(state => ({
-      resources: [...state.resources, { ...resource, id: `room-${Date.now()}` }]
+      resources: [...state.resources, { ...resource, id: newId }],
+      // Also sync resourceServiceAssignments if serviceIds are provided
+      resourceServiceAssignments: resource.serviceIds && resource.serviceIds.length > 0
+        ? { ...state.resourceServiceAssignments, [newId]: resource.serviceIds }
+        : state.resourceServiceAssignments
     }))
   },
 
   updateResource: (id, updates) => {
-    set(state => ({
-      resources: state.resources.map(res =>
+    set(state => {
+      const updatedResources = state.resources.map(res =>
         res.id === id ? { ...res, ...updates } : res
       )
-    }))
+
+      // Also sync resourceServiceAssignments if serviceIds are being updated
+      const updatedResource = updatedResources.find(r => r.id === id)
+      const newAssignments = updatedResource?.serviceIds
+        ? { ...state.resourceServiceAssignments, [id]: updatedResource.serviceIds }
+        : state.resourceServiceAssignments
+
+      return {
+        resources: updatedResources,
+        resourceServiceAssignments: newAssignments
+      }
+    })
   },
 
   deleteResource: (id) => {
-    set(state => ({
-      resources: state.resources.filter(res => res.id !== id)
-    }))
+    set(state => {
+      const { [id]: removed, ...remainingAssignments } = state.resourceServiceAssignments
+      return {
+        resources: state.resources.filter(res => res.id !== id),
+        resourceServiceAssignments: remainingAssignments
+      }
+    })
   },
 
   getResourcesForBranch: (branchId) => {
@@ -589,7 +609,9 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   getResourceServices: (resourceId) => {
-    return get().resourceServiceAssignments[resourceId] || []
+    // Use the resource's serviceIds field as the source of truth
+    const resource = get().resources.find(r => r.id === resourceId)
+    return resource?.serviceIds || []
   },
 
   // Room Management Actions
