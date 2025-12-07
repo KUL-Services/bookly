@@ -136,6 +136,35 @@ export function ShiftEditorModal({
     return { isOutside: false, message: '' }
   }, [date, shifts, isWorking, staffId, getBusinessHours])
 
+  // Real-time shift overlap validation
+  const shiftOverlapValidation = useMemo(() => {
+    if (!isWorking || shifts.length < 2) return { hasOverlap: false, message: '' }
+
+    for (let i = 0; i < shifts.length; i++) {
+      const [startH1, startM1] = shifts[i].start.split(':').map(Number)
+      const [endH1, endM1] = shifts[i].end.split(':').map(Number)
+      const start1 = startH1 * 60 + startM1
+      const end1 = endH1 * 60 + endM1
+
+      for (let j = i + 1; j < shifts.length; j++) {
+        const [startH2, startM2] = shifts[j].start.split(':').map(Number)
+        const [endH2, endM2] = shifts[j].end.split(':').map(Number)
+        const start2 = startH2 * 60 + startM2
+        const end2 = endH2 * 60 + endM2
+
+        // Check if shifts overlap
+        if (start1 < end2 && end1 > start2) {
+          return {
+            hasOverlap: true,
+            message: `Shift ${i + 1} (${shifts[i].start} - ${shifts[i].end}) and Shift ${j + 1} (${shifts[j].start} - ${shifts[j].end}) have overlapping times. Please adjust the times so they don't intersect.`
+          }
+        }
+      }
+    }
+
+    return { hasOverlap: false, message: '' }
+  }, [shifts, isWorking])
+
   // Reset form when modal opens with new data
   useEffect(() => {
     if (open && staffId && date) {
@@ -228,6 +257,11 @@ export function ShiftEditorModal({
       return
     }
 
+    // Only allow save if no shift overlaps
+    if (shiftOverlapValidation.hasOverlap) {
+      return
+    }
+
     // Validate shift times
     for (const shift of shifts) {
       const [startH, startM] = shift.start.split(':').map(Number)
@@ -238,31 +272,6 @@ export function ShiftEditorModal({
       if (startMinutes >= endMinutes) {
         alert('End time must be after start time for all shifts')
         return
-      }
-    }
-
-    // Check for shift time intersections
-    if (shifts.length > 1) {
-      for (let i = 0; i < shifts.length; i++) {
-        const [startH1, startM1] = shifts[i].start.split(':').map(Number)
-        const [endH1, endM1] = shifts[i].end.split(':').map(Number)
-        const start1 = startH1 * 60 + startM1
-        const end1 = endH1 * 60 + endM1
-
-        for (let j = i + 1; j < shifts.length; j++) {
-          const [startH2, startM2] = shifts[j].start.split(':').map(Number)
-          const [endH2, endM2] = shifts[j].end.split(':').map(Number)
-          const start2 = startH2 * 60 + startM2
-          const end2 = endH2 * 60 + endM2
-
-          // Check if shifts overlap
-          if (start1 < end2 && end1 > start2) {
-            alert(
-              `Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't intersect.`
-            )
-            return
-          }
-        }
       }
     }
 
@@ -351,6 +360,16 @@ export function ShiftEditorModal({
                 Outside Business Hours
               </Typography>
               <Typography variant='body2'>{businessHoursValidation.message}</Typography>
+            </Alert>
+          )}
+
+          {/* Shift Overlap Validation Warning */}
+          {shiftOverlapValidation.hasOverlap && (
+            <Alert severity='error'>
+              <Typography variant='body2' fontWeight={600}>
+                Overlapping Shifts
+              </Typography>
+              <Typography variant='body2'>{shiftOverlapValidation.message}</Typography>
             </Alert>
           )}
 
@@ -518,7 +537,11 @@ export function ShiftEditorModal({
         <Button onClick={handleCancel} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant='contained' disabled={businessHoursValidation.isOutside}>
+        <Button
+          onClick={handleSave}
+          variant='contained'
+          disabled={businessHoursValidation.isOutside || shiftOverlapValidation.hasOverlap}
+        >
           Save
         </Button>
       </DialogActions>

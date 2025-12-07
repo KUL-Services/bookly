@@ -779,8 +779,14 @@ export function ShiftsTab() {
     const shiftStart = firstShift ? formatTime12Hour(firstShift.start) : '10:00 AM'
     const shiftEnd = firstShift ? formatTime12Hour(firstShift.end) : '7:00 PM'
 
+    // Calculate dynamic height based on number of shifts
+    const containerMinHeight = shifts.length > 1 ? 80 + (shifts.length - 1) * 50 : 80
+
     return (
-      <Box key={staff.id} sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 80 }}>
+      <Box
+        key={staff.id}
+        sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: containerMinHeight }}
+      >
         <Box sx={{ width: 200, display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
           {bulkMode && <Checkbox checked={isSelected} onChange={() => toggleStaffSelection(staff.id)} size='small' />}
 
@@ -842,8 +848,8 @@ export function ShiftsTab() {
                       position: 'absolute',
                       left: `${timeToPosition(shiftStart, dayOfWeek)}%`,
                       width: `${calculateWidth(shiftStart, shiftEnd, dayOfWeek)}%`,
-                      top: shifts.length > 1 ? `${idx * 45}%` : 0,
-                      height: shifts.length > 1 ? '45%' : '100%',
+                      top: shifts.length > 1 ? `${idx * (100 / shifts.length)}%` : 0,
+                      height: shifts.length > 1 ? `${Math.floor(90 / shifts.length)}%` : '100%',
                       bgcolor: 'rgba(139, 195, 74, 0.3)',
                       borderRadius: 1,
                       border: 1,
