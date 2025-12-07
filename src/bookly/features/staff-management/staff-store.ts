@@ -577,7 +577,11 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       resourceServiceAssignments: {
         ...state.resourceServiceAssignments,
         [resourceId]: serviceIds
-      }
+      },
+      // Also update the resource's serviceIds field
+      resources: state.resources.map(r =>
+        r.id === resourceId ? { ...r, serviceIds } : r
+      )
     }))
 
     return { success: true }
