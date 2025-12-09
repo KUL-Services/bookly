@@ -41,39 +41,40 @@ interface TimeOffModalProps {
 }
 
 const TIME_OFF_REASONS: Record<TimeOffReasonGroup, string[]> = {
-  'Vacation': ['Vacation', 'Holiday', 'Personal Travel'],
-  'Sick': ['Sick Leave', 'Medical Appointment', 'Family Emergency'],
-  'Personal': ['Personal Day', 'Family Event', 'Errands'],
-  'Training': ['Professional Development', 'Conference', 'Workshop'],
+  Vacation: ['Vacation', 'Holiday', 'Personal Travel'],
+  Sick: ['Sick Leave', 'Medical Appointment', 'Family Emergency'],
+  Personal: ['Personal Day', 'Family Event', 'Errands'],
+  Training: ['Professional Development', 'Conference', 'Workshop'],
   'No-Show': ['No Call No Show', 'Late Arrival'],
-  'Late': ['Tardy', 'Traffic', 'Transportation Issue'],
-  'Other': ['Other', 'Unpaid Leave', 'Bereavement']
+  Late: ['Tardy', 'Traffic', 'Transportation Issue'],
+  Other: ['Other', 'Unpaid Leave', 'Bereavement']
 }
 
 function calculateDuration(start: string, end: string): string {
   const [startHour, startMin] = start.split(':').map(Number)
   const [endHour, endMin] = end.split(':').map(Number)
-  const minutes = (endHour * 60 + endMin) - (startHour * 60 + startMin)
+  const minutes = endHour * 60 + endMin - (startHour * 60 + startMin)
   const hours = Math.floor(minutes / 60)
   const mins = minutes % 60
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
 }
 
-export function TimeOffModal({ open, onClose, editTimeOffId, initialStaffId, initialStaffName, initialDate }: TimeOffModalProps) {
+export function TimeOffModal({
+  open,
+  onClose,
+  editTimeOffId,
+  initialStaffId,
+  initialStaffName,
+  initialDate
+}: TimeOffModalProps) {
   const { createTimeOff, timeOffRequests, updateTimeOff, deleteTimeOff } = useStaffManagementStore()
 
   // Find existing time-off if editing
   const existingTimeOff = editTimeOffId ? timeOffRequests.find(t => t.id === editTimeOffId) : null
 
-  const [selectedStaffId, setSelectedStaffId] = useState<string>(
-    existingTimeOff?.staffId || initialStaffId || ''
-  )
-  const [startDate, setStartDate] = useState<Date>(
-    existingTimeOff?.range.start || initialDate || new Date()
-  )
-  const [endDate, setEndDate] = useState<Date>(
-    existingTimeOff?.range.end || initialDate || new Date()
-  )
+  const [selectedStaffId, setSelectedStaffId] = useState<string>(existingTimeOff?.staffId || initialStaffId || '')
+  const [startDate, setStartDate] = useState<Date>(existingTimeOff?.range.start || initialDate || new Date())
+  const [endDate, setEndDate] = useState<Date>(existingTimeOff?.range.end || initialDate || new Date())
   const [allDay, setAllDay] = useState(existingTimeOff?.allDay ?? true)
   const [startTime, setStartTime] = useState(() => {
     if (existingTimeOff && !existingTimeOff.allDay) {
@@ -198,42 +199,36 @@ export function TimeOffModal({ open, onClose, editTimeOffId, initialStaffId, ini
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleCancel}
-      maxWidth="md"
-      fullWidth
-    >
+    <Dialog open={open} onClose={handleCancel} maxWidth='md' fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
-            <Typography variant="h6" fontWeight={600}>
+            <Typography variant='h6' fontWeight={600}>
               {editTimeOffId ? `Edit Time Off • ${initialStaffName || 'Staff'}` : 'Add Time Off'}
             </Typography>
             {!editTimeOffId && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Request time off for staff members
               </Typography>
             )}
           </Box>
-          <IconButton size="small" onClick={handleCancel}>
-            <i className="ri-close-line" />
+          <IconButton size='small' onClick={handleCancel}>
+            <i className='ri-close-line' />
           </IconButton>
         </Box>
       </DialogTitle>
 
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Staff Selection - Dropdown */}
+          {/* Staff Selection - Always show dropdown when not editing */}
           {!editTimeOffId && (
             <FormControl fullWidth required>
               <InputLabel>Staff Member</InputLabel>
-              <Select
-                value={selectedStaffId}
-                onChange={(e) => setSelectedStaffId(e.target.value)}
-                label="Staff Member"
-              >
-                {mockStaff.map((staff) => (
+              <Select value={selectedStaffId} onChange={e => setSelectedStaffId(e.target.value)} label='Staff Member'>
+                <MenuItem value=''>
+                  <em>Select a staff member</em>
+                </MenuItem>
+                {mockStaff.map(staff => (
                   <MenuItem key={staff.id} value={staff.id}>
                     {staff.name}
                   </MenuItem>
@@ -242,13 +237,23 @@ export function TimeOffModal({ open, onClose, editTimeOffId, initialStaffId, ini
             </FormControl>
           )}
 
+          {/* Show staff name when editing */}
+          {editTimeOffId && initialStaffName && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
+              <i className='ri-user-line' />
+              <Typography variant='body2' fontWeight={600}>
+                {initialStaffName}
+              </Typography>
+            </Box>
+          )}
+
           {/* All Day Toggle + Duration */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <FormControlLabel
               control={
                 <Checkbox
                   checked={allDay}
-                  onChange={(e) => setAllDay(e.target.checked)}
+                  onChange={e => setAllDay(e.target.checked)}
                   sx={{
                     '&.Mui-checked': {
                       color: 'text.primary'
@@ -260,8 +265,8 @@ export function TimeOffModal({ open, onClose, editTimeOffId, initialStaffId, ini
             />
             {!allDay && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <i className="ri-time-line" style={{ fontSize: 20, opacity: 0.5 }} />
-                <Typography variant="body2" color="text.secondary">
+                <i className='ri-time-line' style={{ fontSize: 20, opacity: 0.5 }} />
+                <Typography variant='body2' color='text.secondary'>
                   {calculateDuration(startTime, endTime)}
                 </Typography>
               </Box>
@@ -270,14 +275,14 @@ export function TimeOffModal({ open, onClose, editTimeOffId, initialStaffId, ini
 
           {/* Select date */}
           <Box>
-            <Typography variant="subtitle2" gutterBottom fontWeight={600}>
+            <Typography variant='subtitle2' gutterBottom fontWeight={600}>
               Select date
             </Typography>
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <DatePickerField
-                label="DATE"
+                label='DATE'
                 value={startDate}
-                onChange={(date) => {
+                onChange={date => {
                   setStartDate(date)
                   if (!endDate || endDate < date) {
                     setEndDate(date)
@@ -289,46 +294,41 @@ export function TimeOffModal({ open, onClose, editTimeOffId, initialStaffId, ini
               {!allDay && (
                 <>
                   <TimeSelectField
-                    label="Start Time"
+                    label='Start Time'
                     value={startTime}
                     onChange={setStartTime}
-                    size="small"
+                    size='small'
                     sx={{ width: 140 }}
                   />
                   <TimeSelectField
-                    label="End Time"
+                    label='End Time'
                     value={endTime}
                     onChange={setEndTime}
-                    size="small"
+                    size='small'
                     sx={{ width: 140 }}
                   />
                 </>
               )}
               <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={hasRepeat}
-                    onChange={(e) => setHasRepeat(e.target.checked)}
-                  />
-                }
-                label="Repeat"
+                control={<Checkbox checked={hasRepeat} onChange={e => setHasRepeat(e.target.checked)} />}
+                label='Repeat'
               />
             </Box>
           </Box>
 
           {/* Reason Selection - Dropdown */}
           <Box>
-            <Typography variant="subtitle2" gutterBottom fontWeight={600}>
+            <Typography variant='subtitle2' gutterBottom fontWeight={600}>
               Select type
             </Typography>
             <FormControl fullWidth required>
               <InputLabel>REASON</InputLabel>
               <Select
                 value={reasonGroup}
-                onChange={(e) => setReasonGroup(e.target.value as TimeOffReasonGroup)}
-                label="REASON"
+                onChange={e => setReasonGroup(e.target.value as TimeOffReasonGroup)}
+                label='REASON'
               >
-                {Object.keys(TIME_OFF_REASONS).map((group) => (
+                {Object.keys(TIME_OFF_REASONS).map(group => (
                   <MenuItem key={group} value={group}>
                     {group}
                   </MenuItem>
@@ -343,7 +343,7 @@ export function TimeOffModal({ open, onClose, editTimeOffId, initialStaffId, ini
               control={
                 <Checkbox
                   checked={approved}
-                  onChange={(e) => setApproved(e.target.checked)}
+                  onChange={e => setApproved(e.target.checked)}
                   sx={{
                     '&.Mui-checked': {
                       color: 'text.primary'
@@ -353,9 +353,9 @@ export function TimeOffModal({ open, onClose, editTimeOffId, initialStaffId, ini
               }
               label={<Typography fontWeight={500}>Approved</Typography>}
             />
-            <Tooltip title="Mark as approved if this time off request has been reviewed and accepted by management">
-              <IconButton size="small">
-                <i className="ri-question-line" style={{ fontSize: 16 }} />
+            <Tooltip title='Mark as approved if this time off request has been reviewed and accepted by management'>
+              <IconButton size='small'>
+                <i className='ri-question-line' style={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -364,15 +364,20 @@ export function TimeOffModal({ open, onClose, editTimeOffId, initialStaffId, ini
 
       <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
         {editTimeOffId && (
-          <Button onClick={handleDelete} variant="outlined" color="error" startIcon={<i className="ri-delete-bin-line" />}>
+          <Button
+            onClick={handleDelete}
+            variant='outlined'
+            color='error'
+            startIcon={<i className='ri-delete-bin-line' />}
+          >
             Clear Time Off
           </Button>
         )}
         <Box sx={{ flexGrow: 1 }} />
-        <Button onClick={handleCancel} variant="outlined">
+        <Button onClick={handleCancel} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained">
+        <Button onClick={handleSave} variant='contained'>
           {editTimeOffId ? 'Save' : 'Add Time Off'}
         </Button>
       </DialogActions>

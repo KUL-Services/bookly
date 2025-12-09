@@ -525,7 +525,16 @@ export function ShiftsTab() {
 
   const handleOpenTimeOffModal = () => {
     setEditingTimeOffId(undefined)
-    setTimeOffModalContext(null)
+    // Keep the selected staff context when opening from staff menu
+    if (selectedStaffForEdit) {
+      setTimeOffModalContext({
+        staffId: selectedStaffForEdit.id,
+        staffName: selectedStaffForEdit.name,
+        date: selectedDate
+      })
+    } else {
+      setTimeOffModalContext(null)
+    }
     setIsTimeOffModalOpen(true)
     handleCloseStaffMenu()
   }
@@ -1494,6 +1503,20 @@ export function ShiftsTab() {
               </Box>
             </Box>
           </Box>
+
+          {/* Business Hours Day Editor Modal */}
+          {businessHoursDayEditorContext && (
+            <BusinessHoursDayEditorModal
+              open={isBusinessHoursDayEditorOpen}
+              onClose={() => {
+                setIsBusinessHoursDayEditorOpen(false)
+                setBusinessHoursDayEditorContext(null)
+              }}
+              branchId={businessHoursDayEditorContext.branchId}
+              date={businessHoursDayEditorContext.date}
+              dayOfWeek={businessHoursDayEditorContext.dayOfWeek}
+            />
+          )}
 
           {/* Calendar Picker Popover */}
           <CalendarPopover
