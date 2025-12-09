@@ -16,7 +16,8 @@ import {
   Paper,
   Select,
   MenuItem,
-  FormControl
+  FormControl,
+  TextField
 } from '@mui/material'
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns'
 import { useStaffManagementStore } from './staff-store'
@@ -28,6 +29,7 @@ interface StaffEditWorkingHoursModalProps {
   onClose: () => void
   staffId: string
   staffName: string
+  staffType?: 'dynamic' | 'static'
   referenceDate?: Date // The date/week being viewed
 }
 
@@ -62,11 +64,14 @@ export function StaffEditWorkingHoursModal({
   onClose,
   staffId,
   staffName,
+  staffType = 'dynamic',
   referenceDate
 }: StaffEditWorkingHoursModalProps) {
   const { getStaffWorkingHours, updateStaffWorkingHours, updateShiftsForDate } = useStaffManagementStore()
   const [effectiveDate, setEffectiveDate] = useState('immediately')
-  const [applyToAllWeeks, setApplyToAllWeeks] = useState(true) // Default: edit recurring schedule
+  // Dynamic staff: Default ON (apply to all future weeks)
+  // Static staff: Default OFF (this week only)
+  const [applyToAllWeeks, setApplyToAllWeeks] = useState(staffType === 'dynamic')
 
   // Calculate the current week dates
   const weekDates = referenceDate
@@ -285,6 +290,18 @@ export function StaffEditWorkingHoursModal({
               })
             }
 
+            const handleUpdateCapacity = (shiftIndex: number, capacity: number) => {
+              const newShifts = [...dayHours.shifts]
+              newShifts[shiftIndex] = {
+                ...newShifts[shiftIndex],
+                capacity
+              }
+              updateStaffWorkingHours(staffId, day, {
+                ...dayHours,
+                shifts: newShifts
+              })
+            }
+
             const handleAddShift = () => {
               const newShifts = [
                 ...dayHours.shifts,
@@ -435,6 +452,21 @@ export function StaffEditWorkingHoursModal({
                             label={calculateDuration(shift.start, shift.end)}
                             sx={{ ml: 1 }}
                           />
+
+                          {staffType === 'static' && (
+                            <TextField
+                              type='number'
+                              label='Capacity'
+                              value={shift.capacity || 10}
+                              onChange={e => handleUpdateCapacity(shiftIndex, Number(e.target.value))}
+                              size='small'
+                              InputProps={{
+                                inputProps: { min: 1, max: 100 },
+                                startAdornment: <i className='ri-group-line' style={{ marginRight: 8 }} />
+                              }}
+                              sx={{ minWidth: 140 }}
+                            />
+                          )}
 
                           <Button
                             size='small'

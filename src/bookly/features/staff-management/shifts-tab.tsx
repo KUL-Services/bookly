@@ -15,6 +15,7 @@ import {
   Paper,
   Checkbox,
   FormControlLabel,
+  Switch,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -31,6 +32,7 @@ import { mockStaff, mockBranches } from '@/bookly/data/mock-data'
 import { mockBusinessHours } from '@/bookly/data/staff-management-mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { BusinessHoursModal } from './business-hours-modal'
+import { BusinessHoursDayEditorModal } from './business-hours-day-editor-modal'
 import type { DayOfWeek } from '../calendar/types'
 import { StaffEditWorkingHoursModal } from './staff-edit-working-hours-modal'
 import { TimeOffModal } from './time-off-modal'
@@ -276,6 +278,9 @@ function BulkOperationsDialog({
   const [selectedDays, setSelectedDays] = useState<string[]>([])
   const [reason, setReason] = useState('')
 
+  // Get staff names from IDs
+  const selectedStaffNames = selectedStaff.map(id => mockStaff.find(s => s.id === id)?.name).filter(Boolean)
+
   const handleApply = () => {
     onApply(operation, {
       startTime,
@@ -292,7 +297,9 @@ function BulkOperationsDialog({
       <DialogTitle>
         Bulk Operations
         <Typography variant='caption' display='block' color='text.secondary'>
-          {selectedStaff.length} staff member(s) selected
+          {selectedStaffNames.length > 3
+            ? `${selectedStaffNames.slice(0, 3).join(', ')} +${selectedStaffNames.length - 3} more`
+            : selectedStaffNames.join(', ')}
         </Typography>
       </DialogTitle>
       <DialogContent>
@@ -384,6 +391,12 @@ export function ShiftsTab() {
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
 
   const [isBusinessHoursModalOpen, setIsBusinessHoursModalOpen] = useState(false)
+  const [isBusinessHoursDayEditorOpen, setIsBusinessHoursDayEditorOpen] = useState(false)
+  const [businessHoursDayEditorContext, setBusinessHoursDayEditorContext] = useState<{
+    branchId: string
+    date: Date
+    dayOfWeek: DayOfWeek
+  } | null>(null)
   const [isWorkingHoursModalOpen, setIsWorkingHoursModalOpen] = useState(false)
   const [isTimeOffModalOpen, setIsTimeOffModalOpen] = useState(false)
   const [selectedStaffForEdit, setSelectedStaffForEdit] = useState<{ id: string; name: string } | null>(null)
@@ -396,6 +409,7 @@ export function ShiftsTab() {
   const [shiftEditorContext, setShiftEditorContext] = useState<{
     staffId: string
     staffName: string
+    staffType: 'dynamic' | 'static'
     date: Date
     hasShift: boolean
     startTime: string
@@ -414,7 +428,15 @@ export function ShiftsTab() {
   const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
   const calendarOpen = Boolean(calendarAnchor)
 
-  const { timeOffRequests, getStaffWorkingHours, getStaffShiftsForDate, getBusinessHours } = useStaffManagementStore()
+  const {
+    timeOffRequests,
+    getStaffWorkingHours,
+    getStaffShiftsForDate,
+    getBusinessHours,
+    updateStaffType,
+    getStaffType,
+    updateCounter
+  } = useStaffManagementStore()
 
   // Filter staff by branch and staff selection
   const displayStaff = useMemo(() => {
@@ -523,9 +545,13 @@ export function ShiftsTab() {
     date: Date,
     existingShift?: { start: string; end: string } | null
   ) => {
+    // Get staff type from store
+    const staffType = getStaffType(staff.id)
+
     setShiftEditorContext({
       staffId: staff.id,
       staffName: staff.name,
+      staffType,
       date,
       hasShift: !!existingShift,
       startTime: existingShift?.start || '10:00',
@@ -787,39 +813,75 @@ export function ShiftsTab() {
         key={staff.id}
         sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: containerMinHeight }}
       >
-        <Box sx={{ width: 200, display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
-          {bulkMode && <Checkbox checked={isSelected} onChange={() => toggleStaffSelection(staff.id)} size='small' />}
+        <Box sx={{ width: 200, display: 'flex', flexDirection: 'column', gap: 0.5, p: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {bulkMode && <Checkbox checked={isSelected} onChange={() => toggleStaffSelection(staff.id)} size='small' />}
 
-          <Typography variant='body2' fontWeight={600}>
-            {staff.name}
-          </Typography>
-          <IconButton size='small' onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}>
-            <i className='ri-edit-line' style={{ fontSize: 16 }} />
-          </IconButton>
-          <Box
-            sx={{ display: 'flex', flexDirection: 'column', fontSize: '0.65rem', color: 'text.secondary', ml: 'auto' }}
-          >
-            {viewMode === 'Day' && (
-              <Typography variant='caption'>
-                {hasShift && firstShift
-                  ? `D ${Math.floor((parseInt(firstShift.end.split(':')[0]) * 60 + parseInt(firstShift.end.split(':')[1]) - (parseInt(firstShift.start.split(':')[0]) * 60 + parseInt(firstShift.start.split(':')[1]))) / 60)}h`
-                  : 'D 0h'}
-              </Typography>
-            )}
-            {viewMode === 'Week' && (
-              <>
-                <Typography variant='caption'>{hasShift ? 'D 8h' : 'D 0h'}</Typography>
+            <Typography variant='body2' fontWeight={600} noWrap sx={{ flex: 1 }}>
+              {staff.name}
+            </Typography>
+            <IconButton size='small' onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}>
+              <i className='ri-edit-line' style={{ fontSize: 16 }} />
+            </IconButton>
+          </Box>
+
+          {/* Staff Type Toggle */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={getStaffType(staff.id) === 'static'}
+                  onChange={e => {
+                    const newType = e.target.checked ? 'static' : 'dynamic'
+                    updateStaffType(staff.id, newType)
+                  }}
+                  size='small'
+                />
+              }
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <i
+                    className={getStaffType(staff.id) === 'static' ? 'ri-group-line' : 'ri-user-line'}
+                    style={{ fontSize: 12 }}
+                  />
+                  <Typography variant='caption' fontSize='0.65rem'>
+                    {getStaffType(staff.id) === 'static' ? 'Static' : 'Dynamic'}
+                  </Typography>
+                </Box>
+              }
+              sx={{ ml: 0, mr: 1 }}
+            />
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                fontSize: '0.65rem',
+                color: 'text.secondary',
+                ml: 'auto'
+              }}
+            >
+              {viewMode === 'Day' && (
                 <Typography variant='caption'>
-                  W{' '}
-                  {
-                    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].filter(
-                      day => getStaffWorkingHours(staff.id, day as any).isWorking
-                    ).length
-                  }
-                  d
+                  {hasShift && firstShift
+                    ? `D ${Math.floor((parseInt(firstShift.end.split(':')[0]) * 60 + parseInt(firstShift.end.split(':')[1]) - (parseInt(firstShift.start.split(':')[0]) * 60 + parseInt(firstShift.start.split(':')[1]))) / 60)}h`
+                    : 'D 0h'}
                 </Typography>
-              </>
-            )}
+              )}
+              {viewMode === 'Week' && (
+                <>
+                  <Typography variant='caption'>{hasShift ? 'D 8h' : 'D 0h'}</Typography>
+                  <Typography variant='caption'>
+                    W{' '}
+                    {
+                      ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].filter(
+                        day => getStaffWorkingHours(staff.id, day as any).isWorking
+                      ).length
+                    }
+                    d
+                  </Typography>
+                </>
+              )}
+            </Box>
           </Box>
         </Box>
 
@@ -897,13 +959,21 @@ export function ShiftsTab() {
                     </IconButton>
                   </Box>
 
-                  {/* Break Boxes */}
+                  {/* Break Boxes - Height is 1/3 of shift height */}
                   {shift.breaks &&
                     shift.breaks.map(breakItem => {
                       const breakStart = formatTime12Hour(breakItem.start)
                       const [breakStartH, breakStartM] = breakItem.start.split(':').map(Number)
                       const [breakEndH, breakEndM] = breakItem.end.split(':').map(Number)
                       const breakDurationMinutes = breakEndH * 60 + breakEndM - (breakStartH * 60 + breakStartM)
+
+                      // Break height is 1/3 of the shift height, centered vertically
+                      const shiftHeight = shifts.length > 1 ? 90 / shifts.length : 100
+                      const breakHeight = shiftHeight / 3
+                      const breakTop =
+                        shifts.length > 1
+                          ? idx * (100 / shifts.length) + (shiftHeight - breakHeight) / 2
+                          : 100 - breakHeight
 
                       return (
                         <Box
@@ -912,8 +982,8 @@ export function ShiftsTab() {
                             position: 'absolute',
                             left: `${timeToPosition(breakStart, dayOfWeek)}%`,
                             width: `${calculateWidth(breakItem.start, breakItem.end, dayOfWeek)}%`,
-                            top: shifts.length > 1 ? `${idx * 45}%` : 0,
-                            height: shifts.length > 1 ? '45%' : '100%',
+                            top: `${breakTop}%`,
+                            height: `${breakHeight}%`,
                             bgcolor: 'background.paper',
                             borderRadius: 1,
                             border: 1,
@@ -1077,7 +1147,9 @@ export function ShiftsTab() {
 
                 return (
                   <Box sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: 60 }}>
-                    <Box sx={{ width: 200, display: 'flex', alignItems: 'center', gap: 1, p: 2 }}>
+                    <Box
+                      sx={{ width: 200, display: 'flex', alignItems: 'center', gap: 1, p: 2, bgcolor: 'action.hover' }}
+                    >
                       <Typography variant='body2' fontWeight={600}>
                         Business Hours
                       </Typography>
@@ -1091,7 +1163,14 @@ export function ShiftsTab() {
                       </Typography>
                     </Box>
                     <Box
-                      onClick={handleOpenBusinessHoursModal}
+                      onClick={() => {
+                        setBusinessHoursDayEditorContext({
+                          branchId: selectedBranch,
+                          date: selectedDate,
+                          dayOfWeek
+                        })
+                        setIsBusinessHoursDayEditorOpen(true)
+                      }}
                       sx={{
                         flex: 1,
                         bgcolor: isOpen ? 'rgba(139, 195, 74, 0.2)' : '#424242',
@@ -1128,6 +1207,15 @@ export function ShiftsTab() {
                       )}
                       <IconButton
                         size='small'
+                        onClick={e => {
+                          e.stopPropagation()
+                          setBusinessHoursDayEditorContext({
+                            branchId: selectedBranch,
+                            date: selectedDate,
+                            dayOfWeek
+                          })
+                          setIsBusinessHoursDayEditorOpen(true)
+                        }}
                         sx={{ position: 'absolute', right: 8, color: isOpen ? 'text.primary' : '#fff' }}
                       >
                         <i className='ri-edit-line' style={{ fontSize: 16 }} />
@@ -1140,19 +1228,39 @@ export function ShiftsTab() {
             {/* Staff grouped by branches */}
             {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
               const branch = mockBranches.find(b => b.id === branchId)
-              const dayName = format(selectedDate, 'EEE')
-              const todayHours = branch?.openingHours?.[dayName as keyof typeof branch.openingHours]
               const showBranchHeader = selectedBranch === 'all' // Only show header when viewing all branches
+
+              // Get business hours for this specific day
+              const dayOfWeekForBranch = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][
+                selectedDate.getDay()
+              ] as DayOfWeek
+              const branchBusinessHours = getBusinessHours(branchId, dayOfWeekForBranch)
+              const isOpen = branchBusinessHours.isOpen && branchBusinessHours.shifts.length > 0
+
+              // Format time from 24h to 12h
+              const formatBranchTime = (time24: string) => {
+                const [hourStr, minStr] = time24.split(':')
+                let hour = parseInt(hourStr)
+                const minute = minStr
+                const period = hour >= 12 ? 'pm' : 'am'
+                if (hour === 0) hour = 12
+                else if (hour > 12) hour -= 12
+                return `${hour}:${minute}${period}`
+              }
+
+              const branchHoursDisplay = isOpen
+                ? `${formatBranchTime(branchBusinessHours.shifts[0].start)} - ${formatBranchTime(branchBusinessHours.shifts[0].end)}`
+                : 'Closed'
 
               return (
                 <Box key={branchId}>
-                  {/* Branch Header - only show when all branches selected */}
+                  {/* Branch Header with Business Hours - only show when all branches selected */}
                   {showBranchHeader && (
                     <Box
                       sx={{
                         px: 2,
                         py: 1.5,
-                        bgcolor: 'action.selected',
+                        bgcolor: 'action.hover',
                         borderBottom: 2,
                         borderColor: 'divider',
                         display: 'flex',
@@ -1170,14 +1278,15 @@ export function ShiftsTab() {
                           ({branchStaff.length} staff)
                         </Typography>
                       </Box>
-                      {todayHours && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <i className='ri-time-line' style={{ fontSize: 14 }} />
-                          <Typography variant='caption' color='text.secondary'>
-                            {todayHours}
-                          </Typography>
-                        </Box>
-                      )}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <i className='ri-time-line' style={{ fontSize: 14 }} />
+                        <Typography variant='caption' color={isOpen ? 'text.secondary' : 'error.main'}>
+                          {branchHoursDisplay}
+                        </Typography>
+                        <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
+                          <i className='ri-edit-line' style={{ fontSize: 12 }} />
+                        </IconButton>
+                      </Box>
                     </Box>
                   )}
 
@@ -1261,6 +1370,7 @@ export function ShiftsTab() {
               onClose={() => setIsWorkingHoursModalOpen(false)}
               staffId={selectedStaffForEdit.id}
               staffName={selectedStaffForEdit.name}
+              staffType={getStaffType(selectedStaffForEdit.id)}
               referenceDate={selectedDate}
             />
           )}
@@ -1283,6 +1393,7 @@ export function ShiftsTab() {
             onClose={closeShiftEditor}
             staffId={shiftEditorContext?.staffId}
             staffName={shiftEditorContext?.staffName}
+            staffType={shiftEditorContext?.staffType}
             date={shiftEditorContext?.date}
             hasShift={shiftEditorContext?.hasShift}
             initialStartTime={shiftEditorContext?.startTime}
@@ -1420,7 +1531,7 @@ export function ShiftsTab() {
                   const dayHours = getBusinessHours(selectedBranch, day)
                   if (dayHours.isOpen && dayHours.shifts.length > 0) {
                     daysOpen++
-                    dayHours.shifts.forEach(shift => {
+                    dayHours.shifts.forEach((shift: { start: string; end: string }) => {
                       const [startH, startM] = shift.start.split(':').map(Number)
                       const [endH, endM] = shift.end.split(':').map(Number)
                       const minutes = endH * 60 + endM - (startH * 60 + startM)
@@ -1440,7 +1551,8 @@ export function ShiftsTab() {
                       alignItems: 'center',
                       px: 2,
                       borderBottom: 1,
-                      borderColor: 'divider'
+                      borderColor: 'divider',
+                      bgcolor: 'action.hover'
                     }}
                   >
                     <Box sx={{ flex: 1 }}>
@@ -1476,15 +1588,37 @@ export function ShiftsTab() {
               const branch = mockBranches.find(b => b.id === branchId)
               const showBranchHeader = selectedBranch === 'all' // Only show header when viewing all branches
 
+              // Calculate business hours for this branch
+              const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+              let branchTotalMinutes = 0
+              let branchDaysOpen = 0
+
+              if (showBranchHeader) {
+                dayNames.forEach(day => {
+                  const dayHours = getBusinessHours(branchId, day)
+                  if (dayHours.isOpen && dayHours.shifts.length > 0) {
+                    branchDaysOpen++
+                    dayHours.shifts.forEach((shift: { start: string; end: string }) => {
+                      const [startH, startM] = shift.start.split(':').map(Number)
+                      const [endH, endM] = shift.end.split(':').map(Number)
+                      const minutes = endH * 60 + endM - (startH * 60 + startM)
+                      branchTotalMinutes += minutes
+                    })
+                  }
+                })
+              }
+
+              const branchHours = Math.floor(branchTotalMinutes / 60)
+
               return (
                 <Box key={branchId}>
-                  {/* Branch Header - only show when all branches selected */}
+                  {/* Branch Header with Business Hours - only show when all branches selected */}
                   {showBranchHeader && (
                     <Box
                       sx={{
                         px: 2,
                         py: 1,
-                        bgcolor: 'action.selected',
+                        bgcolor: 'action.hover',
                         borderBottom: 1,
                         borderColor: 'divider',
                         display: 'flex',
@@ -1499,6 +1633,14 @@ export function ShiftsTab() {
                       <Typography variant='caption' color='text.secondary' fontSize='0.65rem'>
                         ({branchStaff.length})
                       </Typography>
+                      <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
+                          {branchDaysOpen}d • {branchHours}h/wk
+                        </Typography>
+                        <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
+                          <i className='ri-edit-line' style={{ fontSize: 12 }} />
+                        </IconButton>
+                      </Box>
                     </Box>
                   )}
 
@@ -1620,7 +1762,14 @@ export function ShiftsTab() {
                         }}
                       >
                         <Box
-                          onClick={handleOpenBusinessHoursModal}
+                          onClick={() => {
+                            setBusinessHoursDayEditorContext({
+                              branchId: selectedBranch,
+                              date,
+                              dayOfWeek
+                            })
+                            setIsBusinessHoursDayEditorOpen(true)
+                          }}
                           sx={{
                             width: '100%',
                             height: '100%',
@@ -1661,6 +1810,15 @@ export function ShiftsTab() {
                           )}
                           <IconButton
                             size='small'
+                            onClick={e => {
+                              e.stopPropagation()
+                              setBusinessHoursDayEditorContext({
+                                branchId: selectedBranch,
+                                date,
+                                dayOfWeek
+                              })
+                              setIsBusinessHoursDayEditorOpen(true)
+                            }}
                             sx={{ position: 'absolute', top: 2, right: 2, color: isOpen ? 'text.primary' : 'white' }}
                           >
                             <i className='ri-edit-line' style={{ fontSize: 14 }} />
@@ -2099,12 +2257,26 @@ export function ShiftsTab() {
         branchId={selectedBranch !== 'all' ? selectedBranch : undefined}
       />
 
+      {businessHoursDayEditorContext && (
+        <BusinessHoursDayEditorModal
+          open={isBusinessHoursDayEditorOpen}
+          onClose={() => {
+            setIsBusinessHoursDayEditorOpen(false)
+            setBusinessHoursDayEditorContext(null)
+          }}
+          branchId={businessHoursDayEditorContext.branchId}
+          date={businessHoursDayEditorContext.date}
+          dayOfWeek={businessHoursDayEditorContext.dayOfWeek}
+        />
+      )}
+
       {selectedStaffForEdit && (
         <StaffEditWorkingHoursModal
           open={isWorkingHoursModalOpen}
           onClose={() => setIsWorkingHoursModalOpen(false)}
           staffId={selectedStaffForEdit.id}
           staffName={selectedStaffForEdit.name}
+          staffType={getStaffType(selectedStaffForEdit.id)}
           referenceDate={selectedDate}
         />
       )}
@@ -2127,6 +2299,7 @@ export function ShiftsTab() {
         onClose={closeShiftEditor}
         staffId={shiftEditorContext?.staffId}
         staffName={shiftEditorContext?.staffName}
+        staffType={shiftEditorContext?.staffType}
         date={shiftEditorContext?.date}
         hasShift={shiftEditorContext?.hasShift}
         initialStartTime={shiftEditorContext?.startTime}

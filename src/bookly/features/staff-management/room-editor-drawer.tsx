@@ -15,7 +15,12 @@ import {
   OutlinedInput,
   IconButton,
   Divider,
-  InputAdornment
+  InputAdornment,
+  ToggleButton,
+  ToggleButtonGroup,
+  Alert,
+  Checkbox,
+  ListItemText
 } from '@mui/material'
 import { mockBranches, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
@@ -75,6 +80,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
   const [serviceIds, setServiceIds] = useState<string[]>([])
   const [description, setDescription] = useState('')
   const [customAmenity, setCustomAmenity] = useState('')
+  const [roomType, setRoomType] = useState<'dynamic' | 'static'>('dynamic')
 
   // Load room data if editing
   useEffect(() => {
@@ -87,6 +93,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       setColor(room.color || '#1976d2')
       setServiceIds(room.serviceIds || [])
       setDescription(room.description || '')
+      setRoomType(room.roomType || 'dynamic')
     } else {
       // Reset for new room - use selectedBranchId if available
       setName('')
@@ -97,6 +104,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       setColor('#1976d2')
       setServiceIds([])
       setDescription('')
+      setRoomType('dynamic')
     }
   }, [room, open, selectedBranchId])
 
@@ -114,7 +122,8 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       amenities,
       color,
       serviceIds,
-      description: description || undefined
+      description: description || undefined,
+      roomType
     }
 
     if (room) {
@@ -159,7 +168,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
 
   return (
     <Drawer
-      anchor="right"
+      anchor='right'
       open={open}
       onClose={handleCancel}
       PaperProps={{
@@ -169,11 +178,11 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant='h5' fontWeight={600}>
             {room ? 'Edit Room' : 'Add Room'}
           </Typography>
           <IconButton onClick={handleCancel}>
-            <i className="ri-close-line" />
+            <i className='ri-close-line' />
           </IconButton>
         </Box>
 
@@ -182,21 +191,21 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
         {/* Form */}
         <Box sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Basic Information */}
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Basic Information
           </Typography>
 
           <TextField
-            label="Room Name"
+            label='Room Name'
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Main Studio, Yoga Room"
+            onChange={e => setName(e.target.value)}
+            placeholder='e.g., Main Studio, Yoga Room'
             required
             fullWidth
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
-                  <i className="ri-hotel-bed-line" />
+                <InputAdornment position='start'>
+                  <i className='ri-hotel-bed-line' />
                 </InputAdornment>
               )
             }}
@@ -204,69 +213,106 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
 
           <FormControl fullWidth required>
             <InputLabel>Branch</InputLabel>
-            <Select
-              value={branchId}
-              onChange={(e) => setBranchId(e.target.value)}
-              label="Branch"
-              disabled={!!room}
-            >
-              {mockBranches.map((branch) => (
+            <Select value={branchId} onChange={e => setBranchId(e.target.value)} label='Branch' disabled={!!room}>
+              {mockBranches.map(branch => (
                 <MenuItem key={branch.id} value={branch.id}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <i className="ri-building-line" style={{ fontSize: 16 }} />
+                    <i className='ri-building-line' style={{ fontSize: 16 }} />
                     {branch.name}
                   </Box>
                 </MenuItem>
               ))}
             </Select>
             {room && (
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+              <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
                 Branch cannot be changed after room creation
               </Typography>
             )}
           </FormControl>
 
+          {/* Scheduling Type */}
+          <Box>
+            <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 1 }}>
+              Capacity Mode
+            </Typography>
+            <ToggleButtonGroup
+              value={roomType}
+              exclusive
+              onChange={(_, value) => value && setRoomType(value)}
+              fullWidth
+              sx={{ mb: 1 }}
+            >
+              <ToggleButton value='dynamic' sx={{ textTransform: 'none', py: 1.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                  <i className='ri-equalizer-line' style={{ fontSize: 20 }} />
+                  <Typography variant='body2' fontWeight={600}>
+                    Flexible
+                  </Typography>
+                </Box>
+              </ToggleButton>
+              <ToggleButton value='static' sx={{ textTransform: 'none', py: 1.5 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                  <i className='ri-lock-line' style={{ fontSize: 20 }} />
+                  <Typography variant='body2' fontWeight={600}>
+                    Fixed
+                  </Typography>
+                </Box>
+              </ToggleButton>
+            </ToggleButtonGroup>
+            <Alert severity='info' sx={{ py: 0.5 }}>
+              <Typography variant='caption'>
+                {roomType === 'dynamic'
+                  ? 'Capacity can vary per time slot or service. Ideal for rooms with different configurations.'
+                  : 'Single fixed capacity for all bookings. The room always has the same capacity.'}
+              </Typography>
+            </Alert>
+          </Box>
+
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
-              type="number"
-              label="Capacity"
+              type='number'
+              label={roomType === 'static' ? 'Fixed Capacity' : 'Default Capacity'}
               value={capacity}
-              onChange={(e) => setCapacity(Number(e.target.value))}
+              onChange={e => setCapacity(Number(e.target.value))}
               InputProps={{
                 startAdornment: (
-                  <InputAdornment position="start">
-                    <i className="ri-group-line" />
+                  <InputAdornment position='start'>
+                    <i className='ri-group-line' />
                   </InputAdornment>
                 )
               }}
-              helperText="Maximum number of people"
+              helperText={
+                roomType === 'static'
+                  ? 'This capacity applies to all bookings'
+                  : 'Default capacity (can be overridden per slot)'
+              }
               required
               fullWidth
             />
 
             <TextField
-              label="Floor"
+              label='Floor'
               value={floor}
-              onChange={(e) => setFloor(e.target.value)}
-              placeholder="e.g., 1st Floor"
+              onChange={e => setFloor(e.target.value)}
+              placeholder='e.g., 1st Floor'
               fullWidth
             />
           </Box>
 
           <TextField
-            label="Description"
+            label='Description'
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={e => setDescription(e.target.value)}
             multiline
             rows={2}
-            placeholder="Brief description of the room..."
+            placeholder='Brief description of the room...'
             fullWidth
           />
 
           <Divider />
 
           {/* Appearance */}
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Appearance
           </Typography>
 
@@ -274,9 +320,9 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
             <InputLabel>Calendar Color</InputLabel>
             <Select
               value={color}
-              onChange={(e) => setColor(e.target.value)}
-              label="Calendar Color"
-              renderValue={(value) => (
+              onChange={e => setColor(e.target.value)}
+              label='Calendar Color'
+              renderValue={value => (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Box
                     sx={{
@@ -292,7 +338,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
                 </Box>
               )}
             >
-              {COLOR_OPTIONS.map((colorOption) => (
+              {COLOR_OPTIONS.map(colorOption => (
                 <MenuItem key={colorOption.value} value={colorOption.value}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box
@@ -315,7 +361,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
           <Divider />
 
           {/* Service Assignment */}
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Service Assignment
           </Typography>
 
@@ -324,57 +370,49 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
             <Select
               multiple
               value={serviceIds}
-              onChange={(e) => {
+              onChange={e => {
                 const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
                 // Check for conflicts
                 const conflicts = value.filter(id => isServiceAssigned(id))
                 if (conflicts.length > 0) {
-                  const conflictNames = conflicts.map(id => {
-                    const service = mockServices.find(s => s.id === id)
-                    const conflictRoom = getServiceConflict(id)
-                    return `${service?.name} (assigned to ${conflictRoom})`
-                  }).join(', ')
+                  const conflictNames = conflicts
+                    .map(id => {
+                      const service = mockServices.find(s => s.id === id)
+                      const conflictRoom = getServiceConflict(id)
+                      return `${service?.name} (assigned to ${conflictRoom})`
+                    })
+                    .join(', ')
                   alert(`Cannot assign: ${conflictNames}. Services can only be assigned to one room.`)
                   return
                 }
                 setServiceIds(value)
               }}
-              input={<OutlinedInput label="Assigned Services" />}
-              renderValue={(selected) => (
+              input={<OutlinedInput label='Assigned Services' />}
+              renderValue={selected => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => {
+                  {selected.map(value => {
                     const service = mockServices.find(s => s.id === value)
-                    return (
-                      <Chip key={value} label={service?.name || value} size="small" />
-                    )
+                    return <Chip key={value} label={service?.name || value} size='small' />
                   })}
                 </Box>
               )}
             >
-              {mockServices.map((service) => {
+              {mockServices.map(service => {
                 const assigned = isServiceAssigned(service.id)
                 const conflictRoom = getServiceConflict(service.id)
+                const isSelected = serviceIds.includes(service.id)
                 return (
-                  <MenuItem
-                    key={service.id}
-                    value={service.id}
-                    disabled={assigned}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                      <Typography>{service.name}</Typography>
-                      {assigned && conflictRoom && (
-                        <Chip
-                          label={`In ${conflictRoom}`}
-                          size="small"
-                          sx={{ ml: 1, height: 20, fontSize: '0.7rem' }}
-                        />
-                      )}
-                    </Box>
+                  <MenuItem key={service.id} value={service.id} disabled={assigned}>
+                    <Checkbox checked={isSelected} disabled={assigned} />
+                    <ListItemText primary={service.name} />
+                    {assigned && conflictRoom && (
+                      <Chip label={`In ${conflictRoom}`} size='small' sx={{ ml: 1, height: 20, fontSize: '0.7rem' }} />
+                    )}
                   </MenuItem>
                 )
               })}
             </Select>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
               Services assigned to this room will be scheduled here
             </Typography>
           </FormControl>
@@ -382,7 +420,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
           <Divider />
 
           {/* Amenities */}
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Amenities
           </Typography>
 
@@ -391,19 +429,22 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
             <Select
               multiple
               value={amenities}
-              onChange={(e) => setAmenities(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
-              input={<OutlinedInput label="Amenities" />}
-              renderValue={(selected) => (
+              onChange={e =>
+                setAmenities(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)
+              }
+              input={<OutlinedInput label='Amenities' />}
+              renderValue={selected => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip key={value} label={value} size="small" />
+                  {selected.map(value => (
+                    <Chip key={value} label={value} size='small' />
                   ))}
                 </Box>
               )}
             >
-              {AMENITIES_OPTIONS.map((amenity) => (
+              {AMENITIES_OPTIONS.map(amenity => (
                 <MenuItem key={amenity} value={amenity}>
-                  {amenity}
+                  <Checkbox checked={amenities.includes(amenity)} />
+                  <ListItemText primary={amenity} />
                 </MenuItem>
               ))}
             </Select>
@@ -412,13 +453,13 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
           {/* Add Custom Amenity */}
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
             <TextField
-              label="Add Other Amenity"
+              label='Add Other Amenity'
               value={customAmenity}
-              onChange={(e) => setCustomAmenity(e.target.value)}
-              placeholder="e.g., Coffee Machine"
-              size="small"
+              onChange={e => setCustomAmenity(e.target.value)}
+              placeholder='e.g., Coffee Machine'
+              size='small'
               fullWidth
-              onKeyPress={(e) => {
+              onKeyPress={e => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
                   handleAddCustomAmenity()
@@ -426,14 +467,14 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
               }}
               InputProps={{
                 endAdornment: (
-                  <InputAdornment position="end">
+                  <InputAdornment position='end'>
                     <IconButton
                       onClick={handleAddCustomAmenity}
-                      edge="end"
-                      size="small"
+                      edge='end'
+                      size='small'
                       disabled={!customAmenity.trim()}
                     >
-                      <i className="ri-add-line" />
+                      <i className='ri-add-line' />
                     </IconButton>
                   </InputAdornment>
                 )
@@ -451,10 +492,9 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
               borderColor: 'info.main'
             }}
           >
-            <Typography variant="caption" color="info.dark">
-              <strong>Note:</strong> Rooms are physical spaces where services are performed.
-              Assign services to rooms to enable room-based scheduling. You can configure
-              the room's weekly availability schedule after creation.
+            <Typography variant='caption' color='info.dark'>
+              <strong>Note:</strong> Rooms are physical spaces where services are performed. Assign services to rooms to
+              enable room-based scheduling. You can configure the room's weekly availability schedule after creation.
             </Typography>
           </Box>
         </Box>
@@ -463,18 +503,10 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
 
         {/* Actions */}
         <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            onClick={handleCancel}
-            fullWidth
-          >
+          <Button variant='outlined' onClick={handleCancel} fullWidth>
             Cancel
           </Button>
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            fullWidth
-          >
+          <Button variant='contained' onClick={handleSave} fullWidth>
             {room ? 'Save Changes' : 'Add Room'}
           </Button>
         </Box>

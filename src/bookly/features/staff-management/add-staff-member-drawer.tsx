@@ -18,14 +18,28 @@ import {
   FormControlLabel,
   Switch,
   Chip,
-  OutlinedInput
+  OutlinedInput,
+  Checkbox,
+  ListItemText
 } from '@mui/material'
-import { mockBranches } from '@/bookly/data/mock-data'
+import { mockBranches, mockStaff } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
+
+interface StaffMember {
+  id: string
+  name: string
+  title: string
+  email?: string
+  phone?: string
+  photo?: string
+  color?: string
+  branchId: string
+}
 
 interface AddStaffMemberDrawerProps {
   open: boolean
   onClose: () => void
+  editingStaff?: StaffMember | null // If provided, we're in edit mode
 }
 
 const COLOR_OPTIONS = [
@@ -63,7 +77,7 @@ const SKILLS_OPTIONS = [
   'Balayage',
   'Keratin Treatment',
   'Hair Extensions',
-  'Men\'s Grooming',
+  "Men's Grooming",
   'Beard Trimming',
   'Facial Treatments',
   'Waxing',
@@ -81,8 +95,9 @@ const SKILLS_OPTIONS = [
   'Nutrition Coaching'
 ]
 
-export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProps) {
-  const { createStaffMember } = useStaffManagementStore()
+export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMemberDrawerProps) {
+  const { createStaffMember, updateStaffMember } = useStaffManagementStore()
+  const isEditMode = !!editingStaff
 
   // Basic Information
   const [firstName, setFirstName] = useState('')
@@ -93,7 +108,9 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
   const [customTitle, setCustomTitle] = useState('')
 
   // Work Information
-  const [branchId, setBranchId] = useState('')
+  const [branchId, setBranchId] = useState('') // Main branch (for backward compat)
+  const [branchIds, setBranchIds] = useState<string[]>([]) // All assigned branches
+  const [mainBranchId, setMainBranchId] = useState('') // Main branch for shifts
   const [employeeId, setEmployeeId] = useState('')
   const [startDate, setStartDate] = useState('')
   const [color, setColor] = useState('#1976d2')
@@ -117,49 +134,83 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
   // Reset form when drawer opens
   useEffect(() => {
     if (open) {
-      setFirstName('')
-      setLastName('')
-      setEmail('')
-      setPhone('')
-      setTitle('')
-      setCustomTitle('')
-      setBranchId(mockBranches[0]?.id || '')
-      setEmployeeId('')
-      setStartDate(new Date().toISOString().split('T')[0])
-      setColor('#1976d2')
-      setSkills([])
-      setBio('')
-      setEmergencyContact('')
-      setEmergencyPhone('')
-      setCanBookOnline(true)
-      setIsActive(true)
-      setSendWelcomeEmail(true)
-      setPhotoPreview('')
+      if (editingStaff) {
+        // Edit mode - load existing values
+        const nameParts = editingStaff.name.split(' ')
+        setFirstName(nameParts[0] || '')
+        setLastName(nameParts.slice(1).join(' ') || '')
+        setEmail(editingStaff.email || '')
+        setPhone(editingStaff.phone || '')
+        setTitle(TITLE_OPTIONS.includes(editingStaff.title) ? editingStaff.title : 'Other')
+        setCustomTitle(TITLE_OPTIONS.includes(editingStaff.title) ? '' : editingStaff.title)
+        setBranchId(editingStaff.branchId || mockBranches[0]?.id || '')
+        setBranchIds([editingStaff.branchId || mockBranches[0]?.id || ''])
+        setMainBranchId(editingStaff.branchId || mockBranches[0]?.id || '')
+        setColor(editingStaff.color || '#1976d2')
+        setPhotoPreview(editingStaff.photo || '')
+        // Keep other fields at defaults for edit
+        setEmployeeId('')
+        setStartDate(new Date().toISOString().split('T')[0])
+        setSkills([])
+        setBio('')
+        setEmergencyContact('')
+        setEmergencyPhone('')
+        setCanBookOnline(true)
+        setIsActive(true)
+        setSendWelcomeEmail(false) // Don't send welcome email when editing
+      } else {
+        // Add mode - reset all fields
+        setFirstName('')
+        setLastName('')
+        setEmail('')
+        setPhone('')
+        setTitle('')
+        setCustomTitle('')
+        const defaultBranch = mockBranches[0]?.id || ''
+        setBranchId(defaultBranch)
+        setBranchIds([defaultBranch])
+        setMainBranchId(defaultBranch)
+        setEmployeeId('')
+        setStartDate(new Date().toISOString().split('T')[0])
+        setColor('#1976d2')
+        setSkills([])
+        setBio('')
+        setEmergencyContact('')
+        setEmergencyPhone('')
+        setCanBookOnline(true)
+        setIsActive(true)
+        setSendWelcomeEmail(true)
+        setPhotoPreview('')
+      }
     }
-  }, [open])
+  }, [open, editingStaff])
 
   const handleSave = () => {
-    // Validation
-    if (!firstName || !lastName || !email || !branchId) {
-      alert('Please fill in all required fields (First Name, Last Name, Email, Branch)')
+    // Validation - only first name, last name, and branch are required
+    if (!firstName || !lastName || !branchId) {
+      alert('Please fill in all required fields (First Name, Last Name, Branch)')
       return
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      alert('Please enter a valid email address')
-      return
+    // Email validation only if email is provided
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address')
+        return
+      }
     }
 
     const staffData = {
       name: `${firstName} ${lastName}`,
       firstName,
       lastName,
-      email,
+      email: email || undefined,
       phone,
-      title: title === 'Other' ? customTitle : title,
-      branchId,
+      title: title === 'Other' ? customTitle : title || '',
+      branchId: mainBranchId || branchIds[0] || branchId, // Use main branch as primary
+      branchIds, // All assigned branches
+      mainBranchId: mainBranchId || branchIds[0] || branchId, // Main branch for shifts
       employeeId,
       startDate,
       color,
@@ -172,11 +223,15 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
       photo: photoPreview || undefined
     }
 
-    createStaffMember(staffData)
+    if (isEditMode && editingStaff) {
+      updateStaffMember(editingStaff.id, staffData)
+    } else {
+      createStaffMember(staffData)
 
-    if (sendWelcomeEmail) {
-      console.log('Sending welcome email to:', email)
-      // TODO: Implement email sending
+      if (sendWelcomeEmail && email) {
+        console.log('Sending welcome email to:', email)
+        // TODO: Implement email sending
+      }
     }
 
     onClose()
@@ -203,7 +258,7 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
 
   return (
     <Drawer
-      anchor="right"
+      anchor='right'
       open={open}
       onClose={handleCancel}
       PaperProps={{
@@ -213,11 +268,11 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
       <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant="h5" fontWeight={600}>
-            Add Staff Member
+          <Typography variant='h5' fontWeight={600}>
+            {isEditMode ? 'Edit Staff Member' : 'Add Staff Member'}
           </Typography>
           <IconButton onClick={handleCancel}>
-            <i className="ri-close-line" />
+            <i className='ri-close-line' />
           </IconButton>
         </Box>
 
@@ -228,7 +283,6 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
           {/* Photo Upload Section */}
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
             <Avatar
-              src={photoPreview}
               sx={{
                 width: 100,
                 height: 100,
@@ -239,75 +293,64 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
             >
               {getInitials()}
             </Avatar>
-            <Button
-              component="label"
-              variant="outlined"
-              size="small"
-              startIcon={<i className="ri-upload-2-line" />}
-            >
+            <Button component='label' variant='outlined' size='small' startIcon={<i className='ri-upload-2-line' />}>
               Upload Photo
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handlePhotoUpload}
-              />
+              <input type='file' hidden accept='image/*' onChange={handlePhotoUpload} />
             </Button>
           </Box>
 
           <Divider />
 
           {/* Basic Information Section */}
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Basic Information
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
-              label="First Name"
+              label='First Name'
               value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              onChange={e => setFirstName(e.target.value)}
               required
               fullWidth
-              placeholder="John"
+              placeholder='John'
             />
             <TextField
-              label="Last Name"
+              label='Last Name'
               value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              onChange={e => setLastName(e.target.value)}
               required
               fullWidth
-              placeholder="Doe"
+              placeholder='Doe'
             />
           </Box>
 
           <TextField
-            label="Email"
-            type="email"
+            label='Email'
+            type='email'
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+            onChange={e => setEmail(e.target.value)}
             fullWidth
-            placeholder="john.doe@example.com"
+            placeholder='john.doe@example.com'
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
-                  <i className="ri-mail-line" />
+                <InputAdornment position='start'>
+                  <i className='ri-mail-line' />
                 </InputAdornment>
               )
             }}
           />
 
           <TextField
-            label="Phone Number"
+            label='Phone Number'
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={e => setPhone(e.target.value)}
             fullWidth
-            placeholder="+1 (555) 123-4567"
+            placeholder='+1 (555) 123-4567'
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
-                  <i className="ri-phone-line" />
+                <InputAdornment position='start'>
+                  <i className='ri-phone-line' />
                 </InputAdornment>
               )
             }}
@@ -316,18 +359,14 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
           <Divider />
 
           {/* Work Information Section */}
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Work Information
           </Typography>
 
-          <FormControl fullWidth required>
+          <FormControl fullWidth>
             <InputLabel>Job Title</InputLabel>
-            <Select
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              label="Job Title"
-            >
-              {TITLE_OPTIONS.map((titleOption) => (
+            <Select value={title} onChange={e => setTitle(e.target.value)} label='Job Title'>
+              {TITLE_OPTIONS.map(titleOption => (
                 <MenuItem key={titleOption} value={titleOption}>
                   {titleOption}
                 </MenuItem>
@@ -337,49 +376,103 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
 
           {title === 'Other' && (
             <TextField
-              label="Custom Title"
+              label='Custom Title'
               value={customTitle}
-              onChange={(e) => setCustomTitle(e.target.value)}
-              placeholder="Enter custom job title"
+              onChange={e => setCustomTitle(e.target.value)}
+              placeholder='Enter custom job title'
               fullWidth
             />
           )}
 
+          {/* Multi-Branch Assignment */}
           <FormControl fullWidth required>
-            <InputLabel>Branch</InputLabel>
+            <InputLabel>Assigned Branches</InputLabel>
             <Select
-              value={branchId}
-              onChange={(e) => setBranchId(e.target.value)}
-              label="Branch"
+              multiple
+              value={branchIds}
+              onChange={e => {
+                const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                setBranchIds(value)
+                // Auto-set main branch if only one selected or if main is no longer in list
+                if (value.length === 1) {
+                  setMainBranchId(value[0])
+                  setBranchId(value[0])
+                } else if (!value.includes(mainBranchId)) {
+                  setMainBranchId(value[0] || '')
+                  setBranchId(value[0] || '')
+                }
+              }}
+              input={<OutlinedInput label='Assigned Branches' />}
+              renderValue={selected => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map(value => {
+                    const branch = mockBranches.find(b => b.id === value)
+                    const isMain = value === mainBranchId
+                    return (
+                      <Chip
+                        key={value}
+                        label={isMain ? `${branch?.name} (Main)` : branch?.name}
+                        size='small'
+                        color={isMain ? 'primary' : 'default'}
+                      />
+                    )
+                  })}
+                </Box>
+              )}
             >
-              {mockBranches.map((branch) => (
+              {mockBranches.map(branch => (
                 <MenuItem key={branch.id} value={branch.id}>
-                  {branch.name}
+                  <Checkbox checked={branchIds.includes(branch.id)} />
+                  <ListItemText primary={branch.name} />
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
 
+          {/* Main Branch Selector - only show if multiple branches selected */}
+          {branchIds.length > 1 && (
+            <FormControl fullWidth>
+              <InputLabel>Main Branch (for shifts)</InputLabel>
+              <Select
+                value={mainBranchId}
+                onChange={e => {
+                  setMainBranchId(e.target.value)
+                  setBranchId(e.target.value)
+                }}
+                label='Main Branch (for shifts)'
+              >
+                {branchIds.map(id => {
+                  const branch = mockBranches.find(b => b.id === id)
+                  return (
+                    <MenuItem key={id} value={id}>
+                      {branch?.name}
+                    </MenuItem>
+                  )
+                })}
+              </Select>
+            </FormControl>
+          )}
+
           <TextField
-            label="Employee ID"
+            label='Employee ID'
             value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-            placeholder="EMP-001"
+            onChange={e => setEmployeeId(e.target.value)}
+            placeholder='EMP-001'
             fullWidth
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
-                  <i className="ri-barcode-line" />
+                <InputAdornment position='start'>
+                  <i className='ri-barcode-line' />
                 </InputAdornment>
               )
             }}
           />
 
           <TextField
-            label="Start Date"
-            type="date"
+            label='Start Date'
+            type='date'
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+            onChange={e => setStartDate(e.target.value)}
             fullWidth
             InputLabelProps={{ shrink: true }}
           />
@@ -388,9 +481,9 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
             <InputLabel>Calendar Color</InputLabel>
             <Select
               value={color}
-              onChange={(e) => setColor(e.target.value)}
-              label="Calendar Color"
-              renderValue={(value) => (
+              onChange={e => setColor(e.target.value)}
+              label='Calendar Color'
+              renderValue={value => (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Box
                     sx={{
@@ -406,7 +499,7 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
                 </Box>
               )}
             >
-              {COLOR_OPTIONS.map((colorOption) => (
+              {COLOR_OPTIONS.map(colorOption => (
                 <MenuItem key={colorOption.value} value={colorOption.value}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Box
@@ -429,7 +522,7 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
           <Divider />
 
           {/* Skills & Specialties Section */}
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Skills & Specialties
           </Typography>
 
@@ -438,59 +531,60 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
             <Select
               multiple
               value={skills}
-              onChange={(e) => setSkills(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
-              input={<OutlinedInput label="Skills" />}
-              renderValue={(selected) => (
+              onChange={e => setSkills(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
+              input={<OutlinedInput label='Skills' />}
+              renderValue={selected => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map((value) => (
-                    <Chip key={value} label={value} size="small" />
+                  {selected.map(value => (
+                    <Chip key={value} label={value} size='small' />
                   ))}
                 </Box>
               )}
             >
-              {SKILLS_OPTIONS.map((skill) => (
+              {SKILLS_OPTIONS.map(skill => (
                 <MenuItem key={skill} value={skill}>
-                  {skill}
+                  <Checkbox checked={skills.includes(skill)} />
+                  <ListItemText primary={skill} />
                 </MenuItem>
               ))}
             </Select>
           </FormControl>
 
           <TextField
-            label="Bio / About"
+            label='Bio / About'
             value={bio}
-            onChange={(e) => setBio(e.target.value)}
+            onChange={e => setBio(e.target.value)}
             multiline
             rows={3}
             fullWidth
-            placeholder="Write a brief description about this staff member..."
+            placeholder='Write a brief description about this staff member...'
           />
 
           <Divider />
 
           {/* Emergency Contact Section */}
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Emergency Contact
           </Typography>
 
           <TextField
-            label="Emergency Contact Name"
+            label='Emergency Contact Name'
             value={emergencyContact}
-            onChange={(e) => setEmergencyContact(e.target.value)}
+            onChange={e => setEmergencyContact(e.target.value)}
             fullWidth
-            placeholder="Jane Doe"
+            placeholder='Jane Doe'
           />
 
           <TextField
-            label="Emergency Contact Phone"
+            label='Emergency Contact Phone'
             value={emergencyPhone}
-            onChange={(e) => setEmergencyPhone(e.target.value)}
+            onChange={e => setEmergencyPhone(e.target.value)}
             fullWidth
-            placeholder="+1 (555) 987-6543"
+            placeholder='+1 (555) 987-6543'
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
-                  <i className="ri-phone-line" />
+                <InputAdornment position='start'>
+                  <i className='ri-phone-line' />
                 </InputAdornment>
               )
             }}
@@ -499,24 +593,20 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
           <Divider />
 
           {/* Settings Section */}
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Settings
           </Typography>
 
           <FormControlLabel
             control={
-              <Switch
-                checked={canBookOnline}
-                onChange={(e) => setCanBookOnline(e.target.checked)}
-                color="primary"
-              />
+              <Switch checked={canBookOnline} onChange={e => setCanBookOnline(e.target.checked)} color='primary' />
             }
             label={
               <Box>
-                <Typography variant="body2" fontWeight={500}>
+                <Typography variant='body2' fontWeight={500}>
                   Accept Online Bookings
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant='caption' color='text.secondary'>
                   Allow customers to book appointments with this staff member online
                 </Typography>
               </Box>
@@ -524,19 +614,13 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
           />
 
           <FormControlLabel
-            control={
-              <Switch
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                color="primary"
-              />
-            }
+            control={<Switch checked={isActive} onChange={e => setIsActive(e.target.checked)} color='primary' />}
             label={
               <Box>
-                <Typography variant="body2" fontWeight={500}>
+                <Typography variant='body2' fontWeight={500}>
                   Active Status
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant='caption' color='text.secondary'>
                   Set staff member as active and available for scheduling
                 </Typography>
               </Box>
@@ -547,16 +631,16 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
             control={
               <Switch
                 checked={sendWelcomeEmail}
-                onChange={(e) => setSendWelcomeEmail(e.target.checked)}
-                color="primary"
+                onChange={e => setSendWelcomeEmail(e.target.checked)}
+                color='primary'
               />
             }
             label={
               <Box>
-                <Typography variant="body2" fontWeight={500}>
+                <Typography variant='body2' fontWeight={500}>
                   Send Welcome Email
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant='caption' color='text.secondary'>
                   Send an automated welcome email with login credentials
                 </Typography>
               </Box>
@@ -573,9 +657,9 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
               borderColor: 'info.main'
             }}
           >
-            <Typography variant="caption" color="info.dark">
-              <strong>Note:</strong> After adding the staff member, you can configure their working hours,
-              assign services, and set up their schedule in the Staff Management section.
+            <Typography variant='caption' color='info.dark'>
+              <strong>Note:</strong> After adding the staff member, you can configure their working hours, assign
+              services, and set up their schedule in the Staff Management section.
             </Typography>
           </Box>
         </Box>
@@ -584,19 +668,11 @@ export function AddStaffMemberDrawer({ open, onClose }: AddStaffMemberDrawerProp
 
         {/* Actions */}
         <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            onClick={handleCancel}
-            fullWidth
-          >
+          <Button variant='outlined' onClick={handleCancel} fullWidth>
             Cancel
           </Button>
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            fullWidth
-          >
-            Add Staff Member
+          <Button variant='contained' onClick={handleSave} fullWidth>
+            {isEditMode ? 'Save Changes' : 'Add Staff Member'}
           </Button>
         </Box>
       </Box>

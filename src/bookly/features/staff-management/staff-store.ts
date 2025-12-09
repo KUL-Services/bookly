@@ -33,11 +33,13 @@ import type { StaffType, RoomAssignment } from '@/bookly/data/types'
 // Helper to sync changes with calendar
 function syncWithCalendar() {
   // Use dynamic import to avoid circular dependency
-  import('../calendar/state').then(({ useCalendarStore }) => {
-    useCalendarStore.getState().syncStaffManagementData()
-  }).catch(() => {
-    // Silently fail if calendar store is not available
-  })
+  import('../calendar/state')
+    .then(({ useCalendarStore }) => {
+      useCalendarStore.getState().syncStaffManagementData()
+    })
+    .catch(() => {
+      // Silently fail if calendar store is not available
+    })
 }
 
 // ============================================================================
@@ -46,24 +48,26 @@ function syncWithCalendar() {
 
 export interface StaffManagementState {
   // Business hours (branch-specific)
-  businessHours: Record<string, WeeklyBusinessHours>  // branchId -> WeeklyBusinessHours
+  businessHours: Record<string, WeeklyBusinessHours> // branchId -> WeeklyBusinessHours
 
   // Staff data
   staffWorkingHours: Record<string, WeeklyStaffHours>
-  staffServiceAssignments: Record<string, string[]>  // staffId -> serviceIds[]
+  staffServiceAssignments: Record<string, string[]> // staffId -> serviceIds[]
+  staffTypeUpdates: Record<string, StaffType> // Track staff type changes for re-rendering
+  updateCounter: number // Force re-render counter
 
   // Time management
   timeReservations: TimeReservation[]
   timeOffRequests: TimeOffRequest[]
-  shiftOverrides: Record<string, StaffShiftInstance[]>  // staffId -> overrides[]
+  shiftOverrides: Record<string, StaffShiftInstance[]> // staffId -> overrides[]
 
   // Resources
   resources: Resource[]
-  resourceServiceAssignments: Record<string, string[]>  // resourceId -> serviceIds[]
+  resourceServiceAssignments: Record<string, string[]> // resourceId -> serviceIds[]
 
   // Rooms
   rooms: ManagedRoom[]
-  roomShiftOverrides: Record<string, RoomShiftInstance[]>  // roomId -> overrides[]
+  roomShiftOverrides: Record<string, RoomShiftInstance[]> // roomId -> overrides[]
 
   // Commissions
   commissionPolicies: CommissionPolicy[]
@@ -120,7 +124,7 @@ export interface StaffManagementState {
   // Actions - Resource Service Assignments
   assignServicesToResource: (resourceId: string, serviceIds: string[]) => { success: boolean; conflicts?: string[] }
   getResourceServices: (resourceId: string) => string[]
-  getServiceResourceAssignments: () => Record<string, string>  // serviceId -> resourceId
+  getServiceResourceAssignments: () => Record<string, string> // serviceId -> resourceId
   isServiceAssigned: (serviceId: string) => boolean
   getResourceForService: (serviceId: string) => string | null
 
@@ -142,6 +146,7 @@ export interface StaffManagementState {
   getCommissionPolicies: (scope?: CommissionPolicy['scope']) => CommissionPolicy[]
 
   // Actions - Staff Type & Room Assignments
+  getStaffType: (staffId: string) => StaffType
   updateStaffType: (staffId: string, staffType: StaffType) => void
   updateRoomType: (roomId: string, roomType: 'dynamic' | 'static') => void
   assignStaffToRoom: (staffId: string, roomAssignment: RoomAssignment) => void
@@ -152,6 +157,7 @@ export interface StaffManagementState {
 
   // Actions - Staff Management
   createStaffMember: (staffData: any) => void
+  updateStaffMember: (staffId: string, staffData: any) => void
   deleteStaffMember: (staffId: string) => void
 
   // Actions - UI
@@ -184,10 +190,12 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     '1-1': mockBusinessHours, // Luxe Hair Studio - Oxford
     '1-2': mockBusinessHours, // Luxe Hair Studio - Soho
     '1-3': mockBusinessHours, // Luxe Hair Studio - Kensington
-    '2-1': mockBusinessHours  // Bliss Nail Bar - King's Road
+    '2-1': mockBusinessHours // Bliss Nail Bar - King's Road
   },
   staffWorkingHours: mockStaffWorkingHours,
   staffServiceAssignments: mockStaffServiceAssignments,
+  staffTypeUpdates: {},
+  updateCounter: 0,
   timeReservations: mockTimeReservations,
   timeOffRequests: mockTimeOffRequests,
   shiftOverrides: {},
@@ -398,43 +406,38 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     }))
   },
 
-  getStaffServices: (staffId) => {
+  getStaffServices: staffId => {
     return get().staffServiceAssignments[staffId] || []
   },
 
   // Time Reservation Actions
-  createTimeReservation: (reservation) => {
+  createTimeReservation: reservation => {
     set(state => ({
-      timeReservations: [
-        ...state.timeReservations,
-        { ...reservation, id: `res-${Date.now()}` }
-      ]
+      timeReservations: [...state.timeReservations, { ...reservation, id: `res-${Date.now()}` }]
     }))
     syncWithCalendar()
   },
 
   updateTimeReservation: (id, updates) => {
     set(state => ({
-      timeReservations: state.timeReservations.map(res =>
-        res.id === id ? { ...res, ...updates } : res
-      )
+      timeReservations: state.timeReservations.map(res => (res.id === id ? { ...res, ...updates } : res))
     }))
     syncWithCalendar()
   },
 
-  deleteTimeReservation: (id) => {
+  deleteTimeReservation: id => {
     set(state => ({
       timeReservations: state.timeReservations.filter(res => res.id !== id)
     }))
     syncWithCalendar()
   },
 
-  getTimeReservationsForStaff: (staffId) => {
+  getTimeReservationsForStaff: staffId => {
     return get().timeReservations.filter(res => res.staffId === staffId)
   },
 
   // Time Off Actions
-  createTimeOff: (request) => {
+  createTimeOff: request => {
     const newRequest: TimeOffRequest = {
       ...request,
       id: `off-${Date.now()}`
@@ -473,50 +476,45 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
   updateTimeOff: (id, updates) => {
     set(state => ({
-      timeOffRequests: state.timeOffRequests.map(req =>
-        req.id === id ? { ...req, ...updates } : req
-      )
+      timeOffRequests: state.timeOffRequests.map(req => (req.id === id ? { ...req, ...updates } : req))
     }))
     syncWithCalendar()
   },
 
-  deleteTimeOff: (id) => {
+  deleteTimeOff: id => {
     set(state => ({
       timeOffRequests: state.timeOffRequests.filter(req => req.id !== id)
     }))
     syncWithCalendar()
   },
 
-  toggleApproval: (id) => {
+  toggleApproval: id => {
     set(state => ({
-      timeOffRequests: state.timeOffRequests.map(req =>
-        req.id === id ? { ...req, approved: !req.approved } : req
-      )
+      timeOffRequests: state.timeOffRequests.map(req => (req.id === id ? { ...req, approved: !req.approved } : req))
     }))
     syncWithCalendar()
   },
 
-  getTimeOffForStaff: (staffId) => {
+  getTimeOffForStaff: staffId => {
     return get().timeOffRequests.filter(req => req.staffId === staffId)
   },
 
   // Resource Actions
-  createResource: (resource) => {
+  createResource: resource => {
     const newId = `room-${Date.now()}`
     set(state => ({
       resources: [...state.resources, { ...resource, id: newId }],
       // Also sync resourceServiceAssignments if serviceIds are provided
-      resourceServiceAssignments: resource.serviceIds && resource.serviceIds.length > 0
-        ? { ...state.resourceServiceAssignments, [newId]: resource.serviceIds }
-        : state.resourceServiceAssignments
+      resourceServiceAssignments:
+        resource.serviceIds && resource.serviceIds.length > 0
+          ? { ...state.resourceServiceAssignments, [newId]: resource.serviceIds }
+          : state.resourceServiceAssignments
     }))
   },
 
   updateResource: (id, updates) => {
     set(state => {
-      const updatedResources = state.resources.map(res =>
-        res.id === id ? { ...res, ...updates } : res
-      )
+      const updatedResources = state.resources.map(res => (res.id === id ? { ...res, ...updates } : res))
 
       // Also sync resourceServiceAssignments if serviceIds are being updated
       const updatedResource = updatedResources.find(r => r.id === id)
@@ -531,7 +529,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     })
   },
 
-  deleteResource: (id) => {
+  deleteResource: id => {
     set(state => {
       const { [id]: removed, ...remainingAssignments } = state.resourceServiceAssignments
       return {
@@ -541,7 +539,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     })
   },
 
-  getResourcesForBranch: (branchId) => {
+  getResourcesForBranch: branchId => {
     return get().resources.filter(res => res.branchId === branchId)
   },
 
@@ -569,12 +567,12 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     return assignments
   },
 
-  isServiceAssigned: (serviceId) => {
+  isServiceAssigned: serviceId => {
     const assignments = get().getServiceResourceAssignments()
     return serviceId in assignments
   },
 
-  getResourceForService: (serviceId) => {
+  getResourceForService: serviceId => {
     const assignments = get().getServiceResourceAssignments()
     return assignments[serviceId] || null
   },
@@ -600,22 +598,20 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
         [resourceId]: serviceIds
       },
       // Also update the resource's serviceIds field
-      resources: state.resources.map(r =>
-        r.id === resourceId ? { ...r, serviceIds } : r
-      )
+      resources: state.resources.map(r => (r.id === resourceId ? { ...r, serviceIds } : r))
     }))
 
     return { success: true }
   },
 
-  getResourceServices: (resourceId) => {
+  getResourceServices: resourceId => {
     // Use the resource's serviceIds field as the source of truth
     const resource = get().resources.find(r => r.id === resourceId)
     return resource?.serviceIds || []
   },
 
   // Room Management Actions
-  createRoom: (room) => {
+  createRoom: room => {
     const defaultSchedule: WeeklyRoomSchedule = {
       Sun: { isAvailable: false, shifts: [] },
       Mon: { isAvailable: false, shifts: [] },
@@ -642,13 +638,11 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
   updateRoom: (id, updates) => {
     set(state => ({
-      rooms: state.rooms.map(room =>
-        room.id === id ? { ...room, ...updates } : room
-      )
+      rooms: state.rooms.map(room => (room.id === id ? { ...room, ...updates } : room))
     }))
   },
 
-  deleteRoom: (id) => {
+  deleteRoom: id => {
     set(state => ({
       rooms: state.rooms.filter(room => room.id !== id),
       roomShiftOverrides: Object.fromEntries(
@@ -657,7 +651,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     }))
   },
 
-  getRoomsForBranch: (branchId) => {
+  getRoomsForBranch: branchId => {
     return get().rooms.filter(room => room.branchId === branchId)
   },
 
@@ -753,7 +747,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   // Commission Actions
-  createCommissionPolicy: (policy) => {
+  createCommissionPolicy: policy => {
     set(state => ({
       commissionPolicies: [...state.commissionPolicies, { ...policy, id: `comm-${Date.now()}` }]
     }))
@@ -761,24 +755,33 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
   updateCommissionPolicy: (id, updates) => {
     set(state => ({
-      commissionPolicies: state.commissionPolicies.map(pol =>
-        pol.id === id ? { ...pol, ...updates } : pol
-      )
+      commissionPolicies: state.commissionPolicies.map(pol => (pol.id === id ? { ...pol, ...updates } : pol))
     }))
   },
 
-  deleteCommissionPolicy: (id) => {
+  deleteCommissionPolicy: id => {
     set(state => ({
       commissionPolicies: state.commissionPolicies.filter(pol => pol.id !== id)
     }))
   },
 
-  getCommissionPolicies: (scope) => {
+  getCommissionPolicies: scope => {
     const policies = get().commissionPolicies
     return scope ? policies.filter(p => p.scope === scope) : policies
   },
 
   // Staff Type & Room Assignment Actions
+  getStaffType: staffId => {
+    const state = get()
+    // Check if there's an override in state
+    if (state.staffTypeUpdates[staffId]) {
+      return state.staffTypeUpdates[staffId]
+    }
+    // Fall back to mockStaff
+    const staff = mockStaff.find(s => s.id === staffId)
+    return staff?.staffType || 'dynamic'
+  },
+
   updateStaffType: (staffId, staffType) => {
     const staff = mockStaff.find(s => s.id === staffId)
     if (staff) {
@@ -787,17 +790,21 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       if (staffType === 'dynamic') {
         staff.roomAssignments = []
       }
+      // Update state to trigger re-render
+      set(state => ({
+        staffTypeUpdates: {
+          ...state.staffTypeUpdates,
+          [staffId]: staffType
+        },
+        updateCounter: state.updateCounter + 1
+      }))
       syncWithCalendar()
     }
   },
 
   updateRoomType: (roomId, roomType) => {
     set(state => ({
-      rooms: state.rooms.map(room =>
-        room.id === roomId
-          ? { ...room, roomType }
-          : room
-      )
+      rooms: state.rooms.map(room => (room.id === roomId ? { ...room, roomType } : room))
     }))
     syncWithCalendar()
   },
@@ -836,7 +843,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     }
   },
 
-  getStaffRoomAssignments: (staffId) => {
+  getStaffRoomAssignments: staffId => {
     const staff = mockStaff.find(s => s.id === staffId)
     return staff?.roomAssignments || []
   },
@@ -873,7 +880,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   // Staff Management Actions
-  createStaffMember: (staffData) => {
+  createStaffMember: staffData => {
     const newStaffId = `staff-${Date.now()}`
 
     // Initialize staff working hours (all days off by default)
@@ -911,7 +918,27 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     syncWithCalendar()
   },
 
-  deleteStaffMember: (staffId) => {
+  updateStaffMember: (staffId, staffData) => {
+    // Find and update staff in mockStaff array
+    const staffIndex = mockStaff.findIndex(s => s.id === staffId)
+    if (staffIndex !== -1) {
+      mockStaff[staffIndex] = {
+        ...mockStaff[staffIndex],
+        name: staffData.name,
+        title: staffData.title || '',
+        email: staffData.email,
+        phone: staffData.phone,
+        photo: staffData.photo,
+        color: staffData.color,
+        branchId: staffData.branchId,
+        isActive: staffData.isActive
+      }
+      console.log('Updated staff member:', staffId, staffData)
+      syncWithCalendar()
+    }
+  },
+
+  deleteStaffMember: staffId => {
     // Find and remove staff from mockStaff array
     const staffIndex = mockStaff.findIndex(s => s.id === staffId)
     if (staffIndex !== -1) {
@@ -919,15 +946,11 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
       // Clean up related data
       set(state => ({
-        staffWorkingHours: Object.fromEntries(
-          Object.entries(state.staffWorkingHours).filter(([id]) => id !== staffId)
-        ),
+        staffWorkingHours: Object.fromEntries(Object.entries(state.staffWorkingHours).filter(([id]) => id !== staffId)),
         staffServiceAssignments: Object.fromEntries(
           Object.entries(state.staffServiceAssignments).filter(([id]) => id !== staffId)
         ),
-        shiftOverrides: Object.fromEntries(
-          Object.entries(state.shiftOverrides).filter(([id]) => id !== staffId)
-        ),
+        shiftOverrides: Object.fromEntries(Object.entries(state.shiftOverrides).filter(([id]) => id !== staffId)),
         timeReservations: state.timeReservations.filter(res => res.staffId !== staffId),
         timeOffRequests: state.timeOffRequests.filter(req => req.staffId !== staffId),
         selectedStaffId: state.selectedStaffId === staffId ? null : state.selectedStaffId
@@ -938,7 +961,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   // UI Actions
-  selectStaff: (staffId) => set({ selectedStaffId: staffId }),
+  selectStaff: staffId => set({ selectedStaffId: staffId }),
   openEditServices: () => set({ isEditServicesOpen: true }),
   closeEditServices: () => set({ isEditServicesOpen: false }),
   openShiftEditor: () => set({ isShiftEditorOpen: true }),
@@ -953,7 +976,8 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   closeResourceEditor: () => set({ isResourceEditorOpen: false }),
   openCommissionEditor: () => set({ isCommissionEditorOpen: true }),
   closeCommissionEditor: () => set({ isCommissionEditorOpen: false }),
-  markTutorialSeen: () => set(state => ({
-    shiftRules: { ...state.shiftRules, tutorialsSeen: true }
-  }))
+  markTutorialSeen: () =>
+    set(state => ({
+      shiftRules: { ...state.shiftRules, tutorialsSeen: true }
+    }))
 }))

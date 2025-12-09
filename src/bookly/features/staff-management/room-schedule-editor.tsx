@@ -18,7 +18,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  OutlinedInput
+  OutlinedInput,
+  TextField,
+  Alert
 } from '@mui/material'
 import { mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
@@ -32,6 +34,8 @@ interface RoomScheduleEditorProps {
   roomName: string
   dayOfWeek: DayOfWeek | null
   initialShift?: { start: string; end: string; serviceIds: string[] } | null
+  roomType?: 'dynamic' | 'static' // Flexible vs Fixed capacity
+  defaultCapacity?: number // Room's default capacity
 }
 
 export function RoomScheduleEditor({
@@ -40,12 +44,17 @@ export function RoomScheduleEditor({
   roomId,
   roomName,
   dayOfWeek,
-  initialShift
+  initialShift,
+  roomType = 'dynamic',
+  defaultCapacity = 10
 }: RoomScheduleEditorProps) {
   const { updateRoomSchedule, getRoomSchedule } = useStaffManagementStore()
 
   const [isAvailable, setIsAvailable] = useState(false)
-  const [shifts, setShifts] = useState<Array<{ id: string; start: string; end: string; serviceIds: string[] }>>([])
+  const [shifts, setShifts] = useState<
+    Array<{ id: string; start: string; end: string; serviceIds: string[]; capacity?: number }>
+  >([])
+  const isFlexibleCapacity = roomType === 'dynamic'
 
   useEffect(() => {
     if (open && roomId && dayOfWeek) {
@@ -58,7 +67,8 @@ export function RoomScheduleEditor({
             id: s.id || `shift-${idx}`,
             start: s.start,
             end: s.end,
-            serviceIds: s.serviceIds || []
+            serviceIds: s.serviceIds || [],
+            capacity: s.capacity
           }))
         )
       } else if (initialShift) {
@@ -68,7 +78,8 @@ export function RoomScheduleEditor({
             id: `shift-${Date.now()}`,
             start: initialShift.start || '09:00',
             end: initialShift.end || '17:00',
-            serviceIds: initialShift.serviceIds || []
+            serviceIds: initialShift.serviceIds || [],
+            capacity: undefined
           }
         ])
         setIsAvailable(true)
@@ -85,7 +96,8 @@ export function RoomScheduleEditor({
         id: `shift-${Date.now()}`,
         start: '09:00',
         end: '17:00',
-        serviceIds: []
+        serviceIds: [],
+        capacity: undefined
       }
     ])
   }
@@ -94,7 +106,7 @@ export function RoomScheduleEditor({
     setShifts(shifts.filter(s => s.id !== id))
   }
 
-  const handleUpdateShift = (id: string, field: 'start' | 'end' | 'serviceIds', value: any) => {
+  const handleUpdateShift = (id: string, field: 'start' | 'end' | 'serviceIds' | 'capacity', value: any) => {
     setShifts(shifts.map(s => (s.id === id ? { ...s, [field]: value } : s)))
   }
 
@@ -212,6 +224,16 @@ export function RoomScheduleEditor({
 
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
+          {/* Capacity Mode Info */}
+          <Alert severity='info' sx={{ py: 0.5 }}>
+            <Typography variant='caption'>
+              <strong>{isFlexibleCapacity ? 'Flexible Capacity' : 'Fixed Capacity'}</strong>
+              {isFlexibleCapacity
+                ? ` — Each time slot can have a different capacity. Default: ${defaultCapacity} people.`
+                : ` — All slots use the room's fixed capacity of ${defaultCapacity} people.`}
+            </Typography>
+          </Alert>
+
           {/* Availability Toggle */}
           <FormControlLabel
             control={
@@ -340,6 +362,32 @@ export function RoomScheduleEditor({
                             ))}
                           </Select>
                         </FormControl>
+
+                        {/* Per-slot capacity for flexible rooms */}
+                        {isFlexibleCapacity && (
+                          <Box sx={{ mt: 2 }}>
+                            <TextField
+                              type='number'
+                              label='Capacity for this slot'
+                              value={shift.capacity ?? ''}
+                              onChange={e => {
+                                const val = e.target.value ? Number(e.target.value) : undefined
+                                handleUpdateShift(shift.id, 'capacity', val)
+                              }}
+                              placeholder={`Default: ${defaultCapacity}`}
+                              size='small'
+                              fullWidth
+                              helperText={
+                                shift.capacity
+                                  ? `Override: ${shift.capacity} people`
+                                  : `Uses room default: ${defaultCapacity} people`
+                              }
+                              InputProps={{
+                                startAdornment: <i className='ri-group-line' style={{ marginRight: 8, opacity: 0.5 }} />
+                              }}
+                            />
+                          </Box>
+                        )}
                       </Box>
                     ))}
                   </Box>

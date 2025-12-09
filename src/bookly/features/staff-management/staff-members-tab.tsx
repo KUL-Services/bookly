@@ -71,6 +71,7 @@ export function StaffMembersTab() {
   const [branchFilter, setBranchFilter] = useState<string>('all')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [staffToDelete, setStaffToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [editingStaff, setEditingStaff] = useState<(typeof mockStaff)[0] | null>(null)
 
   const {
     selectedStaffId,
@@ -99,17 +100,17 @@ export function StaffMembersTab() {
   )
 
   // Filter by branch if selected
-  const filteredByBranch = branchFilter !== 'all'
-    ? filteredStaff.filter(staff => staff.branchId === branchFilter)
-    : filteredStaff
+  const filteredByBranch =
+    branchFilter !== 'all' ? filteredStaff.filter(staff => staff.branchId === branchFilter) : filteredStaff
 
   // Filter by service if selected
-  const filteredByService = serviceFilter !== 'all'
-    ? filteredByBranch.filter(staff => {
-        const assignedServices = getStaffServices(staff.id)
-        return assignedServices.includes(serviceFilter)
-      })
-    : filteredByBranch
+  const filteredByService =
+    serviceFilter !== 'all'
+      ? filteredByBranch.filter(staff => {
+          const assignedServices = getStaffServices(staff.id)
+          return assignedServices.includes(serviceFilter)
+        })
+      : filteredByBranch
 
   // Always group by branch
   const groupedStaff: Record<string, { name: string; staff: typeof mockStaff }> = {}
@@ -183,7 +184,16 @@ export function StaffMembersTab() {
         }}
       >
         {/* Search and Filters */}
-        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box
+          sx={{
+            p: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2
+          }}
+        >
           <TextField
             fullWidth
             size='small'
@@ -201,11 +211,7 @@ export function StaffMembersTab() {
 
           <FormControl fullWidth size='small'>
             <InputLabel>Branch</InputLabel>
-            <Select
-              value={branchFilter}
-              onChange={e => setBranchFilter(e.target.value)}
-              label='Branch'
-            >
+            <Select value={branchFilter} onChange={e => setBranchFilter(e.target.value)} label='Branch'>
               <MenuItem value='all'>
                 <em>All Branches</em>
               </MenuItem>
@@ -219,11 +225,7 @@ export function StaffMembersTab() {
 
           <FormControl fullWidth size='small'>
             <InputLabel>Service</InputLabel>
-            <Select
-              value={serviceFilter}
-              onChange={e => setServiceFilter(e.target.value)}
-              label='Service'
-            >
+            <Select value={serviceFilter} onChange={e => setServiceFilter(e.target.value)} label='Service'>
               <MenuItem value='all'>
                 <em>All Services</em>
               </MenuItem>
@@ -307,7 +309,7 @@ export function StaffMembersTab() {
                   <IconButton
                     edge='end'
                     size='small'
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation()
                       handleDeleteClick(staff)
                     }}
@@ -361,12 +363,13 @@ export function StaffMembersTab() {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <Avatar
-                src={selectedStaff.photo}
                 alt={selectedStaff.name}
                 sx={{
                   bgcolor: selectedStaff.color || 'primary.main',
                   width: 64,
-                  height: 64
+                  height: 64,
+                  fontSize: '1.5rem',
+                  fontWeight: 600
                 }}
               >
                 {getInitials(selectedStaff.name)}
@@ -379,6 +382,16 @@ export function StaffMembersTab() {
                   {selectedStaff.title}
                 </Typography>
               </Box>
+              <Button
+                variant='outlined'
+                startIcon={<i className='ri-edit-line' />}
+                onClick={() => {
+                  setEditingStaff(selectedStaff)
+                  setIsAddStaffDrawerOpen(true)
+                }}
+              >
+                Edit
+              </Button>
               <Button variant='outlined' startIcon={<i className='ri-calendar-line' />} onClick={handleShowCalendar}>
                 Show Calendar
               </Button>
@@ -502,16 +515,15 @@ export function StaffMembersTab() {
       {/* Add Staff Member Drawer */}
       <AddStaffMemberDrawer
         open={isAddStaffDrawerOpen}
-        onClose={() => setIsAddStaffDrawerOpen(false)}
+        onClose={() => {
+          setIsAddStaffDrawerOpen(false)
+          setEditingStaff(null)
+        }}
+        editingStaff={editingStaff}
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteCancel}
-        maxWidth='xs'
-        fullWidth
-      >
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} maxWidth='xs' fullWidth>
         <DialogTitle>Delete Staff Member</DialogTitle>
         <DialogContent>
           <DialogContentText>

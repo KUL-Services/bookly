@@ -84,6 +84,8 @@ export function RoomsTab() {
     roomName: string
     dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
     initialShift?: { start: string; end: string; serviceIds: string[] } | null
+    roomType?: 'dynamic' | 'static'
+    defaultCapacity?: number
   } | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [roomToDelete, setRoomToDelete] = useState<{ id: string; name: string } | null>(null)
@@ -174,7 +176,9 @@ export function RoomsTab() {
       roomId: room.id,
       roomName: room.name,
       dayOfWeek,
-      initialShift: shift
+      initialShift: shift,
+      roomType: room.roomType || 'dynamic',
+      defaultCapacity: room.capacity || 10
     })
     setIsScheduleEditorOpen(true)
   }
@@ -362,6 +366,10 @@ export function RoomsTab() {
       | 'Fri'
       | 'Sat'
     const schedule = getRoomSchedule(room.id, dayOfWeek)
+    const isFlexible = room.roomType !== 'static'
+
+    // For flexible rooms, get business hours instead of room schedule
+    const businessHours = isFlexible ? getBusinessHours(room.branchId, dayOfWeek) : null
 
     // Helper function to convert 24h time to 12h format
     const formatTime12Hour = (time24: string) => {
@@ -376,8 +384,8 @@ export function RoomsTab() {
       return `${hour}:${minute} ${period}`
     }
 
-    // Calculate dynamic height based on number of shifts
-    const rowHeight = schedule.shifts.length > 0 ? Math.max(80, schedule.shifts.length * 50) : 80
+    // Calculate dynamic height based on number of shifts (or 80 for flexible rooms)
+    const rowHeight = isFlexible ? 80 : schedule.shifts.length > 0 ? Math.max(80, schedule.shifts.length * 50) : 80
 
     return (
       <Box key={room.id} sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: rowHeight }}>
@@ -392,12 +400,32 @@ export function RoomsTab() {
             }}
           />
           <Box sx={{ flex: 1 }}>
-            <Typography variant='body2' fontWeight={600}>
-              {room.name}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant='body2' fontWeight={600}>
+                {room.name}
+              </Typography>
+              <Chip
+                label={room.roomType === 'static' ? 'Fixed Cap.' : 'Flexible Cap.'}
+                size='small'
+                color={room.roomType === 'static' ? 'primary' : 'success'}
+                variant='outlined'
+                icon={
+                  <i
+                    className={room.roomType === 'static' ? 'ri-lock-line' : 'ri-equalizer-line'}
+                    style={{ fontSize: 10, marginLeft: 4 }}
+                  />
+                }
+                sx={{
+                  height: 18,
+                  fontSize: '0.6rem',
+                  fontWeight: 600,
+                  '& .MuiChip-label': { px: 0.5 }
+                }}
+              />
+            </Box>
             <Typography variant='caption' color='text.secondary' display='block'>
               <i className='ri-group-line' style={{ fontSize: 12, marginRight: 2 }} />
-              Capacity: {room.capacity}
+              {room.roomType === 'static' ? 'Fixed' : 'Default'} Capacity: {room.capacity}
             </Typography>
             {room.serviceIds && room.serviceIds.length > 0 && (
               <Chip
@@ -417,7 +445,67 @@ export function RoomsTab() {
         </Box>
 
         <Box sx={{ flex: 1, position: 'relative', m: 1 }}>
-          {schedule.isAvailable && schedule.shifts.length > 0 ? (
+          {/* Flexible Room - Show business hours */}
+          {isFlexible ? (
+            businessHours?.isOpen && businessHours.shifts.length > 0 ? (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: `${timeToPosition(formatTime12Hour(businessHours.shifts[0].start))}%`,
+                  width: `${calculateWidth(formatTime12Hour(businessHours.shifts[0].start), formatTime12Hour(businessHours.shifts[0].end))}%`,
+                  top: 2,
+                  height: 42,
+                  bgcolor: theme => (theme.palette.mode === 'dark' ? '#1a237e' : '#E3F2FD'),
+                  borderRadius: 1,
+                  border: 1,
+                  borderColor: theme => (theme.palette.mode === 'dark' ? '#3949ab' : '#64B5F6'),
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  p: 0.5,
+                  overflow: 'hidden'
+                }}
+              >
+                <Typography
+                  variant='caption'
+                  fontWeight={500}
+                  color='text.primary'
+                  sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                >
+                  {formatTime12Hour(businessHours.shifts[0].start).toLowerCase()} -{' '}
+                  {formatTime12Hour(businessHours.shifts[0].end).toLowerCase()}
+                </Typography>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ fontSize: '0.6rem', display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <i className='ri-time-line' style={{ fontSize: 10 }} />
+                  Follows Business Hours
+                </Typography>
+              </Box>
+            ) : (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  bgcolor: 'transparent',
+                  borderRadius: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Typography variant='body2' color='text.secondary' fontWeight={500}>
+                  Branch closed
+                </Typography>
+              </Box>
+            )
+          ) : schedule.isAvailable && schedule.shifts.length > 0 ? (
             schedule.shifts.map((shift, idx) => {
               const shiftStart = formatTime12Hour(shift.start)
               const shiftEnd = formatTime12Hour(shift.end)
@@ -680,6 +768,8 @@ export function RoomsTab() {
           roomName={scheduleEditorContext?.roomName || ''}
           dayOfWeek={scheduleEditorContext?.dayOfWeek || null}
           initialShift={scheduleEditorContext?.initialShift}
+          roomType={scheduleEditorContext?.roomType}
+          defaultCapacity={scheduleEditorContext?.defaultCapacity}
         />
 
         {/* Room Actions Menu */}
@@ -711,14 +801,10 @@ export function RoomsTab() {
           <Divider />
           <MenuItem onClick={handleToggleRoomType}>
             <ListItemIcon>
-              <i
-                className={selectedRoomForMenu?.roomType === 'static' ? 'ri-user-follow-line' : 'ri-calendar-2-line'}
-              />
+              <i className={selectedRoomForMenu?.roomType === 'static' ? 'ri-equalizer-line' : 'ri-lock-line'} />
             </ListItemIcon>
             <ListItemText>
-              {selectedRoomForMenu?.roomType === 'static'
-                ? 'SWITCH TO FLEXIBLE SCHEDULING'
-                : 'SWITCH TO SHIFT-BASED SCHEDULING'}
+              {selectedRoomForMenu?.roomType === 'static' ? 'SWITCH TO FLEXIBLE CAPACITY' : 'SWITCH TO FIXED CAPACITY'}
             </ListItemText>
           </MenuItem>
         </Menu>
@@ -786,9 +872,26 @@ export function RoomsTab() {
                         }}
                       />
                       <Box sx={{ flex: 1 }}>
-                        <Typography variant='body2' fontWeight={600} noWrap>
-                          {room.name}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography variant='body2' fontWeight={600} noWrap>
+                            {room.name}
+                          </Typography>
+                          <Tooltip title={room.roomType === 'static' ? 'Fixed Capacity' : 'Flexible Capacity'}>
+                            <Chip
+                              label={room.roomType === 'static' ? 'Fix' : 'Flex'}
+                              size='small'
+                              color={room.roomType === 'static' ? 'primary' : 'success'}
+                              variant='outlined'
+                              sx={{
+                                height: 16,
+                                minWidth: 20,
+                                fontSize: '0.55rem',
+                                fontWeight: 700,
+                                '& .MuiChip-label': { px: 0.4 }
+                              }}
+                            />
+                          </Tooltip>
+                        </Box>
                         <Typography variant='caption' color='text.secondary' display='block'>
                           Cap: {room.capacity}
                         </Typography>
@@ -1021,6 +1124,8 @@ export function RoomsTab() {
         roomName={scheduleEditorContext?.roomName || ''}
         dayOfWeek={scheduleEditorContext?.dayOfWeek || null}
         initialShift={scheduleEditorContext?.initialShift}
+        roomType={scheduleEditorContext?.roomType}
+        defaultCapacity={scheduleEditorContext?.defaultCapacity}
       />
 
       {/* Delete Confirmation Dialog */}
@@ -1070,12 +1175,10 @@ export function RoomsTab() {
         <Divider />
         <MenuItem onClick={handleToggleRoomType}>
           <ListItemIcon>
-            <i className={selectedRoomForMenu?.roomType === 'static' ? 'ri-user-follow-line' : 'ri-calendar-2-line'} />
+            <i className={selectedRoomForMenu?.roomType === 'static' ? 'ri-equalizer-line' : 'ri-lock-line'} />
           </ListItemIcon>
           <ListItemText>
-            {selectedRoomForMenu?.roomType === 'static'
-              ? 'SWITCH TO FLEXIBLE SCHEDULING'
-              : 'SWITCH TO SHIFT-BASED SCHEDULING'}
+            {selectedRoomForMenu?.roomType === 'static' ? 'SWITCH TO FLEXIBLE CAPACITY' : 'SWITCH TO FIXED CAPACITY'}
           </ListItemText>
         </MenuItem>
       </Menu>

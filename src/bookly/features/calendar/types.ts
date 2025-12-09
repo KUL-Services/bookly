@@ -57,24 +57,24 @@ export interface StaticServiceSlot {
   id: string
   roomId: string
   branchId: string
-  dayOfWeek?: DayOfWeek  // For recurring weekly slots
-  date?: string          // For specific date slots (YYYY-MM-DD)
-  startTime: string      // Format: "HH:MM"
-  endTime: string        // Format: "HH:MM"
+  dayOfWeek?: DayOfWeek // For recurring weekly slots
+  date?: string // For specific date slots (YYYY-MM-DD)
+  startTime: string // Format: "HH:MM"
+  endTime: string // Format: "HH:MM"
   serviceId: string
   serviceName: string
   capacity: number
   instructorStaffId?: string
   price: number
-  templateId?: string    // If generated from a template
-  isOverride?: boolean   // If overriding a template occurrence
-  isCancelled?: boolean  // If cancelling a template occurrence
-  overrideDate?: string  // Specific date this override applies to (YYYY-MM-DD)
+  templateId?: string // If generated from a template
+  isOverride?: boolean // If overriding a template occurrence
+  isCancelled?: boolean // If cancelling a template occurrence
+  overrideDate?: string // Specific date this override applies to (YYYY-MM-DD)
 }
 
 // Weekly pattern definition for schedule templates
 export interface WeeklySlotPattern {
-  id: string  // Unique ID for this pattern slot
+  id: string // Unique ID for this pattern slot
   dayOfWeek: DayOfWeek
   startTime: string
   endTime: string
@@ -93,9 +93,9 @@ export interface ScheduleTemplate {
   businessId: string
   branchId: string
   activeFrom: Date
-  activeUntil: Date | null  // null = ongoing
+  activeUntil: Date | null // null = ongoing
   isActive: boolean
-  weeklyPattern: WeeklySlotPattern[]  // All slots for the week
+  weeklyPattern: WeeklySlotPattern[] // All slots for the week
   createdAt: Date
   updatedAt: Date
 }
@@ -117,18 +117,18 @@ export interface CalendarEvent extends EventInput {
     price: number
     notes?: string
     bookingId: string
-    slotId?: string  // For static scheduling mode - links booking to a specific slot
-    roomId?: string  // For static scheduling mode - indicates which room
-    partySize?: number  // For group bookings (default 1)
-    branchId?: string  // Branch where this appointment takes place
-    branchName?: string  // Branch name for display
-    type?: 'booking' | 'timeOff' | 'reservation'  // Event type for filtering
-    timeOffId?: string  // ID of time off request
-    reservationId?: string  // ID of time reservation
-    reason?: string  // Reason for time off/reservation
-    approved?: boolean  // For time off approval status
-    allDay?: boolean  // For all-day time off
-    note?: string  // Additional notes
+    slotId?: string // For static scheduling mode - links booking to a specific slot
+    roomId?: string // For static scheduling mode - indicates which room
+    partySize?: number // For group bookings (default 1)
+    branchId?: string // Branch where this appointment takes place
+    branchName?: string // Branch name for display
+    type?: 'booking' | 'timeOff' | 'reservation' // Event type for filtering
+    timeOffId?: string // ID of time off request
+    reservationId?: string // ID of time reservation
+    reason?: string // Reason for time off/reservation
+    approved?: boolean // For time off approval status
+    allDay?: boolean // For all-day time off
+    note?: string // Additional notes
   }
 }
 
@@ -172,17 +172,17 @@ export interface CalendarState {
   isNotificationsOpen: boolean
   isSidebarOpen: boolean
   isNewBookingOpen: boolean
-  isAppointmentDrawerOpen: boolean  // Unified drawer for view + edit
+  isAppointmentDrawerOpen: boolean // Unified drawer for view + edit
   selectedDate: Date | null
   selectedDateRange: { start: Date; end: Date } | null
   previousStaffFilters: StaffFilter | null // For back navigation
-  lastActionError: string | null  // For error handling (capacity, validation, etc.)
+  lastActionError: string | null // For error handling (capacity, validation, etc.)
   // Static/Dynamic scheduling
   schedulingMode: SchedulingMode
   rooms: Room[]
   staticSlots: StaticServiceSlot[]
   scheduleTemplates: ScheduleTemplate[]
-  isTemplateManagementOpen: boolean  // For template management drawer
+  isTemplateManagementOpen: boolean // For template management drawer
 }
 
 export interface CalendarPreferences {
@@ -207,19 +207,20 @@ export interface DateRange {
 
 export interface BreakRange {
   id: string
-  start: string  // "HH:MM"
-  end: string    // "HH:MM"
+  start: string // "HH:MM"
+  end: string // "HH:MM"
 }
 
 export interface StaffShift {
   id: string
-  start: string  // "HH:MM"
-  end: string    // "HH:MM"
+  start: string // "HH:MM"
+  end: string // "HH:MM"
   breaks?: BreakRange[]
+  capacity?: number // For static staff - max number of concurrent bookings for this shift
 }
 
 export interface StaffShiftInstance extends StaffShift {
-  date: string  // "YYYY-MM-DD"
+  date: string // "YYYY-MM-DD"
   reason?: 'manual' | 'business_hours_change' | 'copy'
 }
 
@@ -264,7 +265,7 @@ export interface Resource {
   branchId: string
   name: string
   capacity: number
-  serviceIds?: string[]  // Services assigned to this resource
+  serviceIds?: string[] // Services assigned to this resource
 }
 
 export interface CommissionPolicy {
@@ -288,13 +289,14 @@ export interface ShiftRuleSet {
 
 export interface RoomShift {
   id: string
-  start: string  // "HH:MM"
-  end: string    // "HH:MM"
-  serviceIds: string[]  // Services available during this shift
+  start: string // "HH:MM"
+  end: string // "HH:MM"
+  serviceIds: string[] // Services available during this shift
+  capacity?: number // Optional per-slot capacity override (for flexible capacity rooms)
 }
 
 export interface RoomShiftInstance extends RoomShift {
-  date: string  // "YYYY-MM-DD"
+  date: string // "YYYY-MM-DD"
   reason?: 'manual' | 'copy'
 }
 
@@ -318,6 +320,7 @@ export interface ManagedRoom extends Resource {
   amenities?: string[]
   color?: string
   description?: string
+  roomType?: RoomType
   weeklySchedule: WeeklyRoomSchedule
   shiftOverrides: RoomShiftInstance[]
 }

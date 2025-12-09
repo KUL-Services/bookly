@@ -39,12 +39,19 @@ interface ShiftEditorModalProps {
   onClose: () => void
   staffId?: string
   staffName?: string
+  staffType?: 'dynamic' | 'static' // Staff scheduling type
   date?: Date
   hasShift?: boolean
   initialStartTime?: string
   initialEndTime?: string
   initialBreaks?: BreakRange[]
-  onSave?: (data: { hasShift: boolean; startTime: string; endTime: string; breaks: BreakRange[] }) => void
+  onSave?: (data: {
+    hasShift: boolean
+    startTime: string
+    endTime: string
+    breaks: BreakRange[]
+    capacity?: number
+  }) => void
 }
 
 function calculateDuration(start: string, end: string): string {
@@ -61,6 +68,7 @@ export function ShiftEditorModal({
   onClose,
   staffId,
   staffName = 'Staff Member',
+  staffType = 'dynamic',
   date,
   hasShift = true,
   initialStartTime = '09:00',
@@ -70,6 +78,7 @@ export function ShiftEditorModal({
 }: ShiftEditorModalProps) {
   const { updateShiftsForDate, getStaffShiftsForDate, getBusinessHours } = useStaffManagementStore()
   const [isWorking, setIsWorking] = useState(hasShift)
+  const [capacity, setCapacity] = useState<number>(10) // Default capacity for static staff
   const [shifts, setShifts] = useState<ShiftData[]>([
     {
       id: crypto.randomUUID(),
@@ -163,6 +172,43 @@ export function ShiftEditorModal({
     }
 
     return { hasOverlap: false, message: '' }
+  }, [shifts, isWorking])
+
+  // Real-time reverse time validation (start must be before end)
+  const reverseTimeValidation = useMemo(() => {
+    if (!isWorking) return { hasReverse: false, message: '' }
+
+    for (let i = 0; i < shifts.length; i++) {
+      const [startH, startM] = shifts[i].start.split(':').map(Number)
+      const [endH, endM] = shifts[i].end.split(':').map(Number)
+      const startMinutes = startH * 60 + startM
+      const endMinutes = endH * 60 + endM
+
+      if (startMinutes >= endMinutes) {
+        return {
+          hasReverse: true,
+          message: `Shift ${i + 1}: End time (${shifts[i].end}) must be after start time (${shifts[i].start}).`
+        }
+      }
+
+      // Also check breaks
+      for (let j = 0; j < shifts[i].breaks.length; j++) {
+        const breakItem = shifts[i].breaks[j]
+        const [breakStartH, breakStartM] = breakItem.start.split(':').map(Number)
+        const [breakEndH, breakEndM] = breakItem.end.split(':').map(Number)
+        const breakStartMinutes = breakStartH * 60 + breakStartM
+        const breakEndMinutes = breakEndH * 60 + breakEndM
+
+        if (breakStartMinutes >= breakEndMinutes) {
+          return {
+            hasReverse: true,
+            message: `Shift ${i + 1} Break ${j + 1}: End time must be after start time.`
+          }
+        }
+      }
+    }
+
+    return { hasReverse: false, message: '' }
   }, [shifts, isWorking])
 
   // Reset form when modal opens with new data
@@ -262,6 +308,11 @@ export function ShiftEditorModal({
       return
     }
 
+    // Only allow save if no reverse times
+    if (reverseTimeValidation.hasReverse) {
+      return
+    }
+
     // Validate shift times
     for (const shift of shifts) {
       const [startH, startM] = shift.start.split(':').map(Number)
@@ -312,7 +363,8 @@ export function ShiftEditorModal({
         hasShift: isWorking,
         startTime: firstShift.start,
         endTime: firstShift.end,
-        breaks: firstShift.breaks
+        breaks: firstShift.breaks,
+        capacity: staffType === 'static' ? capacity : undefined
       })
     }
     onClose()
@@ -370,6 +422,16 @@ export function ShiftEditorModal({
                 Overlapping Shifts
               </Typography>
               <Typography variant='body2'>{shiftOverlapValidation.message}</Typography>
+            </Alert>
+          )}
+
+          {/* Reverse Time Validation Warning */}
+          {reverseTimeValidation.hasReverse && (
+            <Alert severity='error'>
+              <Typography variant='body2' fontWeight={600}>
+                Invalid Time Range
+              </Typography>
+              <Typography variant='body2'>{reverseTimeValidation.message}</Typography>
             </Alert>
           )}
 
@@ -464,6 +526,29 @@ export function ShiftEditorModal({
                   </Button>
                 </Box>
 
+                {/* Capacity Input - Only for Static Staff */}
+                {staffType === 'static' && (
+                  <Box sx={{ mb: 2 }}>
+                    <TextField
+                      type='number'
+                      label='Capacity (people)'
+                      value={capacity}
+                      onChange={e => setCapacity(Number(e.target.value))}
+                      size='small'
+                      fullWidth
+                      InputProps={{
+                        inputProps: { min: 1, max: 100 },
+                        startAdornment: (
+                          <InputAdornment position='start'>
+                            <i className='ri-group-line' />
+                          </InputAdornment>
+                        )
+                      }}
+                      helperText='Maximum number of concurrent bookings for this shift'
+                    />
+                  </Box>
+                )}
+
                 {/* Breaks for this shift */}
                 {shift.breaks.length > 0 && (
                   <List sx={{ p: 0 }}>
@@ -540,7 +625,9 @@ export function ShiftEditorModal({
         <Button
           onClick={handleSave}
           variant='contained'
-          disabled={businessHoursValidation.isOutside || shiftOverlapValidation.hasOverlap}
+          disabled={
+            businessHoursValidation.isOutside || shiftOverlapValidation.hasOverlap || reverseTimeValidation.hasReverse
+          }
         >
           Save
         </Button>
