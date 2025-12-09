@@ -92,12 +92,14 @@ export function StaffMembersTab() {
   // Get selected staff
   const selectedStaff = mockStaff.find(s => s.id === selectedStaffId)
 
-  // Filter staff by search
-  const filteredStaff = mockStaff.filter(
-    staff =>
-      staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      staff.title.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Filter staff by search - only show base staff members (IDs 1-7) matching other tabs
+  const filteredStaff = mockStaff
+    .filter(s => ['1', '2', '3', '4', '5', '6', '7'].includes(s.id))
+    .filter(
+      staff =>
+        staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        staff.title.toLowerCase().includes(searchQuery.toLowerCase())
+    )
 
   // Filter by branch if selected
   const filteredByBranch =

@@ -921,10 +921,14 @@ export function ShiftsTab() {
                       width: `${calculateWidth(shiftStart, shiftEnd, dayOfWeek)}%`,
                       top: shifts.length > 1 ? `${idx * (100 / shifts.length)}%` : 0,
                       height: shifts.length > 1 ? `${Math.floor(90 / shifts.length)}%` : '100%',
-                      bgcolor: 'rgba(139, 195, 74, 0.3)',
+                      bgcolor:
+                        getStaffType(staff.id) === 'dynamic'
+                          ? 'rgba(139, 195, 74, 0.3)'
+                          : theme =>
+                              theme.palette.mode === 'dark' ? 'rgba(120, 120, 120, 0.3)' : 'rgba(158, 158, 158, 0.25)',
                       borderRadius: 1,
                       border: 1,
-                      borderColor: 'success.light',
+                      borderColor: getStaffType(staff.id) === 'dynamic' ? 'success.light' : 'grey.400',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -932,8 +936,14 @@ export function ShiftsTab() {
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       '&:hover': {
-                        bgcolor: 'rgba(139, 195, 74, 0.4)',
-                        borderColor: 'success.main'
+                        bgcolor:
+                          getStaffType(staff.id) === 'dynamic'
+                            ? 'rgba(139, 195, 74, 0.4)'
+                            : theme =>
+                                theme.palette.mode === 'dark'
+                                  ? 'rgba(120, 120, 120, 0.4)'
+                                  : 'rgba(158, 158, 158, 0.35)',
+                        borderColor: getStaffType(staff.id) === 'dynamic' ? 'success.main' : 'grey.500'
                       }
                     }}
                   >

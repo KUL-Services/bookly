@@ -293,6 +293,7 @@ export interface RoomShift {
   end: string // "HH:MM"
   serviceIds: string[] // Services available during this shift
   capacity?: number // Optional per-slot capacity override (for flexible capacity rooms)
+  staffIds?: string[] // Staff assigned to this shift (for static/fixed capacity rooms)
 }
 
 export interface RoomShiftInstance extends RoomShift {

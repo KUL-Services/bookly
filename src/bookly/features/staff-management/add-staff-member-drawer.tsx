@@ -15,14 +15,12 @@ import {
   Divider,
   Avatar,
   InputAdornment,
-  FormControlLabel,
-  Switch,
   Chip,
   OutlinedInput,
   Checkbox,
   ListItemText
 } from '@mui/material'
-import { mockBranches, mockStaff } from '@/bookly/data/mock-data'
+import { mockBranches, mockStaff, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 
 interface StaffMember {
@@ -70,31 +68,6 @@ const TITLE_OPTIONS = [
   'Other'
 ]
 
-const SKILLS_OPTIONS = [
-  'Hair Coloring',
-  'Hair Cutting',
-  'Hair Styling',
-  'Balayage',
-  'Keratin Treatment',
-  'Hair Extensions',
-  "Men's Grooming",
-  'Beard Trimming',
-  'Facial Treatments',
-  'Waxing',
-  'Manicure',
-  'Pedicure',
-  'Gel Nails',
-  'Acrylic Nails',
-  'Massage',
-  'Deep Tissue',
-  'Swedish Massage',
-  'Hot Stone',
-  'Yoga',
-  'Pilates',
-  'Personal Training',
-  'Nutrition Coaching'
-]
-
 export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMemberDrawerProps) {
   const { createStaffMember, updateStaffMember } = useStaffManagementStore()
   const isEditMode = !!editingStaff
@@ -115,18 +88,9 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
   const [startDate, setStartDate] = useState('')
   const [color, setColor] = useState('#1976d2')
 
-  // Skills & Specialties
-  const [skills, setSkills] = useState<string[]>([])
-  const [bio, setBio] = useState('')
-
   // Contact & Emergency
   const [emergencyContact, setEmergencyContact] = useState('')
   const [emergencyPhone, setEmergencyPhone] = useState('')
-
-  // Settings
-  const [canBookOnline, setCanBookOnline] = useState(true)
-  const [isActive, setIsActive] = useState(true)
-  const [sendWelcomeEmail, setSendWelcomeEmail] = useState(true)
 
   // Photo upload (mock for now)
   const [photoPreview, setPhotoPreview] = useState('')
@@ -143,21 +107,26 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         setPhone(editingStaff.phone || '')
         setTitle(TITLE_OPTIONS.includes(editingStaff.title) ? editingStaff.title : 'Other')
         setCustomTitle(TITLE_OPTIONS.includes(editingStaff.title) ? '' : editingStaff.title)
-        setBranchId(editingStaff.branchId || mockBranches[0]?.id || '')
-        setBranchIds([editingStaff.branchId || mockBranches[0]?.id || ''])
-        setMainBranchId(editingStaff.branchId || mockBranches[0]?.id || '')
+
+        // Handle branch assignments - support both old (branchId) and new (mainBranchId + branchIds) formats
+        const staffMainBranch = (editingStaff as any).mainBranchId || editingStaff.branchId || mockBranches[0]?.id || ''
+        const staffBranchIds = (editingStaff as any).branchIds || [editingStaff.branchId] || [mockBranches[0]?.id || '']
+
+        // Ensure main branch is set
+        if (staffMainBranch) {
+          setMainBranchId(staffMainBranch)
+          setBranchId(staffMainBranch)
+        }
+        // Additional branches exclude main
+        setBranchIds(staffBranchIds.filter((id: string) => id !== staffMainBranch))
+
         setColor(editingStaff.color || '#1976d2')
         setPhotoPreview(editingStaff.photo || '')
         // Keep other fields at defaults for edit
         setEmployeeId('')
         setStartDate(new Date().toISOString().split('T')[0])
-        setSkills([])
-        setBio('')
         setEmergencyContact('')
         setEmergencyPhone('')
-        setCanBookOnline(true)
-        setIsActive(true)
-        setSendWelcomeEmail(false) // Don't send welcome email when editing
       } else {
         // Add mode - reset all fields
         setFirstName('')
@@ -173,22 +142,17 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         setEmployeeId('')
         setStartDate(new Date().toISOString().split('T')[0])
         setColor('#1976d2')
-        setSkills([])
-        setBio('')
         setEmergencyContact('')
         setEmergencyPhone('')
-        setCanBookOnline(true)
-        setIsActive(true)
-        setSendWelcomeEmail(true)
         setPhotoPreview('')
       }
     }
   }, [open, editingStaff])
 
   const handleSave = () => {
-    // Validation - only first name, last name, and branch are required
-    if (!firstName || !lastName || !branchId) {
-      alert('Please fill in all required fields (First Name, Last Name, Branch)')
+    // Validation - only first name, last name, and main branch are required
+    if (!firstName || !lastName || !mainBranchId) {
+      alert('Please fill in all required fields (First Name, Last Name, Main Branch)')
       return
     }
 
@@ -201,6 +165,9 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
       }
     }
 
+    // Combine main branch with additional branches
+    const allBranchIds = [mainBranchId, ...branchIds].filter(Boolean)
+
     const staffData = {
       name: `${firstName} ${lastName}`,
       firstName,
@@ -208,18 +175,14 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
       email: email || undefined,
       phone,
       title: title === 'Other' ? customTitle : title || '',
-      branchId: mainBranchId || branchIds[0] || branchId, // Use main branch as primary
-      branchIds, // All assigned branches
-      mainBranchId: mainBranchId || branchIds[0] || branchId, // Main branch for shifts
+      branchId: mainBranchId, // Main branch as primary (for backward compatibility)
+      branchIds: allBranchIds, // All assigned branches (main + additional)
+      mainBranchId: mainBranchId, // Main branch for shifts
       employeeId,
       startDate,
       color,
-      skills,
-      bio,
       emergencyContact,
       emergencyPhone,
-      canBookOnline,
-      isActive,
       photo: photoPreview || undefined
     }
 
@@ -227,11 +190,6 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
       updateStaffMember(editingStaff.id, staffData)
     } else {
       createStaffMember(staffData)
-
-      if (sendWelcomeEmail && email) {
-        console.log('Sending welcome email to:', email)
-        // TODO: Implement email sending
-      }
     }
 
     onClose()
@@ -384,74 +342,71 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
             />
           )}
 
-          {/* Multi-Branch Assignment */}
+          {/* Main Branch - Required Single Select */}
           <FormControl fullWidth required>
-            <InputLabel>Assigned Branches</InputLabel>
+            <InputLabel>Main Branch</InputLabel>
+            <Select
+              value={mainBranchId}
+              onChange={e => {
+                const newMainBranch = e.target.value
+                setMainBranchId(newMainBranch)
+                setBranchId(newMainBranch)
+                // Remove from additional branches if it was there
+                setBranchIds(branchIds.filter(id => id !== newMainBranch))
+              }}
+              label='Main Branch'
+            >
+              {mockBranches.map(branch => (
+                <MenuItem key={branch.id} value={branch.id}>
+                  {branch.name}
+                </MenuItem>
+              ))}
+            </Select>
+            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
+              Primary branch for this staff member's schedule and shifts
+            </Typography>
+          </FormControl>
+
+          {/* Additional Branches - Optional Multi-Select */}
+          <FormControl fullWidth>
+            <InputLabel>Additional Branches (Optional)</InputLabel>
             <Select
               multiple
               value={branchIds}
               onChange={e => {
                 const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
-                setBranchIds(value)
-                // Auto-set main branch if only one selected or if main is no longer in list
-                if (value.length === 1) {
-                  setMainBranchId(value[0])
-                  setBranchId(value[0])
-                } else if (!value.includes(mainBranchId)) {
-                  setMainBranchId(value[0] || '')
-                  setBranchId(value[0] || '')
-                }
+                // Ensure main branch is not in additional branches
+                setBranchIds(value.filter(id => id !== mainBranchId))
               }}
-              input={<OutlinedInput label='Assigned Branches' />}
+              input={<OutlinedInput label='Additional Branches (Optional)' />}
               renderValue={selected => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map(value => {
-                    const branch = mockBranches.find(b => b.id === value)
-                    const isMain = value === mainBranchId
-                    return (
-                      <Chip
-                        key={value}
-                        label={isMain ? `${branch?.name} (Main)` : branch?.name}
-                        size='small'
-                        color={isMain ? 'primary' : 'default'}
-                      />
-                    )
-                  })}
+                  {selected.length === 0 ? (
+                    <Typography variant='body2' color='text.secondary'>
+                      None
+                    </Typography>
+                  ) : (
+                    selected.map(value => {
+                      const branch = mockBranches.find(b => b.id === value)
+                      return <Chip key={value} label={branch?.name} size='small' />
+                    })
+                  )}
                 </Box>
               )}
             >
-              {mockBranches.map(branch => (
-                <MenuItem key={branch.id} value={branch.id}>
-                  <Checkbox checked={branchIds.includes(branch.id)} />
-                  <ListItemText primary={branch.name} />
-                </MenuItem>
-              ))}
+              {mockBranches
+                .filter(branch => branch.id !== mainBranchId) // Exclude main branch
+                .map(branch => (
+                  <MenuItem key={branch.id} value={branch.id}>
+                    <Checkbox checked={branchIds.includes(branch.id)} />
+                    <ListItemText primary={branch.name} />
+                  </MenuItem>
+                ))}
             </Select>
+            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
+              Staff member can work at these branches in addition to their main branch
+            </Typography>
           </FormControl>
-
-          {/* Main Branch Selector - only show if multiple branches selected */}
-          {branchIds.length > 1 && (
-            <FormControl fullWidth>
-              <InputLabel>Main Branch (for shifts)</InputLabel>
-              <Select
-                value={mainBranchId}
-                onChange={e => {
-                  setMainBranchId(e.target.value)
-                  setBranchId(e.target.value)
-                }}
-                label='Main Branch (for shifts)'
-              >
-                {branchIds.map(id => {
-                  const branch = mockBranches.find(b => b.id === id)
-                  return (
-                    <MenuItem key={id} value={id}>
-                      {branch?.name}
-                    </MenuItem>
-                  )
-                })}
-              </Select>
-            </FormControl>
-          )}
 
           <TextField
             label='Employee ID'
@@ -521,47 +476,6 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
 
           <Divider />
 
-          {/* Skills & Specialties Section */}
-          <Typography variant='subtitle1' fontWeight={600} color='primary'>
-            Skills & Specialties
-          </Typography>
-
-          <FormControl fullWidth>
-            <InputLabel>Skills</InputLabel>
-            <Select
-              multiple
-              value={skills}
-              onChange={e => setSkills(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
-              input={<OutlinedInput label='Skills' />}
-              renderValue={selected => (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                  {selected.map(value => (
-                    <Chip key={value} label={value} size='small' />
-                  ))}
-                </Box>
-              )}
-            >
-              {SKILLS_OPTIONS.map(skill => (
-                <MenuItem key={skill} value={skill}>
-                  <Checkbox checked={skills.includes(skill)} />
-                  <ListItemText primary={skill} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <TextField
-            label='Bio / About'
-            value={bio}
-            onChange={e => setBio(e.target.value)}
-            multiline
-            rows={3}
-            fullWidth
-            placeholder='Write a brief description about this staff member...'
-          />
-
-          <Divider />
-
           {/* Emergency Contact Section */}
           <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Emergency Contact
@@ -588,63 +502,6 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
                 </InputAdornment>
               )
             }}
-          />
-
-          <Divider />
-
-          {/* Settings Section */}
-          <Typography variant='subtitle1' fontWeight={600} color='primary'>
-            Settings
-          </Typography>
-
-          <FormControlLabel
-            control={
-              <Switch checked={canBookOnline} onChange={e => setCanBookOnline(e.target.checked)} color='primary' />
-            }
-            label={
-              <Box>
-                <Typography variant='body2' fontWeight={500}>
-                  Accept Online Bookings
-                </Typography>
-                <Typography variant='caption' color='text.secondary'>
-                  Allow customers to book appointments with this staff member online
-                </Typography>
-              </Box>
-            }
-          />
-
-          <FormControlLabel
-            control={<Switch checked={isActive} onChange={e => setIsActive(e.target.checked)} color='primary' />}
-            label={
-              <Box>
-                <Typography variant='body2' fontWeight={500}>
-                  Active Status
-                </Typography>
-                <Typography variant='caption' color='text.secondary'>
-                  Set staff member as active and available for scheduling
-                </Typography>
-              </Box>
-            }
-          />
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={sendWelcomeEmail}
-                onChange={e => setSendWelcomeEmail(e.target.checked)}
-                color='primary'
-              />
-            }
-            label={
-              <Box>
-                <Typography variant='body2' fontWeight={500}>
-                  Send Welcome Email
-                </Typography>
-                <Typography variant='caption' color='text.secondary'>
-                  Send an automated welcome email with login credentials
-                </Typography>
-              </Box>
-            }
           />
 
           {/* Info Box */}

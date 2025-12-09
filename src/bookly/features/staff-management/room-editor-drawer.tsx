@@ -149,21 +149,10 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
     }
   }
 
-  // Check if a service is already assigned to another room in the same branch
-  const isServiceAssigned = (serviceId: string): boolean => {
-    if (room && room.serviceIds?.includes(serviceId)) {
-      return false // Current room can keep its services
-    }
-    // Only check for conflicts within the same branch
+  // Get all rooms that have this service assigned (in the same branch)
+  const getRoomsWithService = (serviceId: string): string[] => {
     const roomsInSameBranch = rooms.filter(r => r.branchId === branchId && r.id !== room?.id)
-    return roomsInSameBranch.some(r => r.serviceIds?.includes(serviceId))
-  }
-
-  const getServiceConflict = (serviceId: string): string | null => {
-    // Only check for conflicts within the same branch
-    const roomsInSameBranch = rooms.filter(r => r.branchId === branchId && r.id !== room?.id)
-    const conflictRoom = roomsInSameBranch.find(r => r.serviceIds?.includes(serviceId))
-    return conflictRoom ? conflictRoom.name : null
+    return roomsInSameBranch.filter(r => r.serviceIds?.includes(serviceId)).map(r => r.name)
   }
 
   return (
@@ -372,19 +361,6 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
               value={serviceIds}
               onChange={e => {
                 const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
-                // Check for conflicts
-                const conflicts = value.filter(id => isServiceAssigned(id))
-                if (conflicts.length > 0) {
-                  const conflictNames = conflicts
-                    .map(id => {
-                      const service = mockServices.find(s => s.id === id)
-                      const conflictRoom = getServiceConflict(id)
-                      return `${service?.name} (assigned to ${conflictRoom})`
-                    })
-                    .join(', ')
-                  alert(`Cannot assign: ${conflictNames}. Services can only be assigned to one room.`)
-                  return
-                }
                 setServiceIds(value)
               }}
               input={<OutlinedInput label='Assigned Services' />}
@@ -398,15 +374,18 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
               )}
             >
               {mockServices.map(service => {
-                const assigned = isServiceAssigned(service.id)
-                const conflictRoom = getServiceConflict(service.id)
+                const roomsWithService = getRoomsWithService(service.id)
                 const isSelected = serviceIds.includes(service.id)
                 return (
-                  <MenuItem key={service.id} value={service.id} disabled={assigned}>
-                    <Checkbox checked={isSelected} disabled={assigned} />
+                  <MenuItem key={service.id} value={service.id}>
+                    <Checkbox checked={isSelected} />
                     <ListItemText primary={service.name} />
-                    {assigned && conflictRoom && (
-                      <Chip label={`In ${conflictRoom}`} size='small' sx={{ ml: 1, height: 20, fontSize: '0.7rem' }} />
+                    {roomsWithService.length > 0 && (
+                      <Box sx={{ display: 'flex', gap: 0.5, ml: 1 }}>
+                        {roomsWithService.map((roomName, idx) => (
+                          <Chip key={idx} label={roomName} size='small' sx={{ height: 20, fontSize: '0.7rem' }} />
+                        ))}
+                      </Box>
                     )}
                   </MenuItem>
                 )

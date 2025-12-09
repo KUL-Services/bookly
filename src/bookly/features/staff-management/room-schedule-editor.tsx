@@ -20,9 +20,11 @@ import {
   MenuItem,
   OutlinedInput,
   TextField,
-  Alert
+  Alert,
+  Checkbox,
+  ListItemText
 } from '@mui/material'
-import { mockServices } from '@/bookly/data/mock-data'
+import { mockServices, mockStaff } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { TimeSelectField } from './time-select-field'
 import type { DayOfWeek } from '../calendar/types'
@@ -36,6 +38,7 @@ interface RoomScheduleEditorProps {
   initialShift?: { start: string; end: string; serviceIds: string[] } | null
   roomType?: 'dynamic' | 'static' // Flexible vs Fixed capacity
   defaultCapacity?: number // Room's default capacity
+  roomServiceIds?: string[] // Services assigned to this room - only these can be selected per shift
 }
 
 export function RoomScheduleEditor({
@@ -46,15 +49,21 @@ export function RoomScheduleEditor({
   dayOfWeek,
   initialShift,
   roomType = 'dynamic',
-  defaultCapacity = 10
+  defaultCapacity = 10,
+  roomServiceIds = []
 }: RoomScheduleEditorProps) {
   const { updateRoomSchedule, getRoomSchedule } = useStaffManagementStore()
 
+  // Filter available services to only those assigned to this room
+  const availableServices =
+    roomServiceIds.length > 0 ? mockServices.filter(s => roomServiceIds.includes(s.id)) : mockServices
+
   const [isAvailable, setIsAvailable] = useState(false)
   const [shifts, setShifts] = useState<
-    Array<{ id: string; start: string; end: string; serviceIds: string[]; capacity?: number }>
+    Array<{ id: string; start: string; end: string; serviceIds: string[]; capacity?: number; staffIds?: string[] }>
   >([])
   const isFlexibleCapacity = roomType === 'dynamic'
+  const isStaticCapacity = roomType === 'static'
 
   useEffect(() => {
     if (open && roomId && dayOfWeek) {
@@ -97,7 +106,8 @@ export function RoomScheduleEditor({
         start: '09:00',
         end: '17:00',
         serviceIds: [],
-        capacity: undefined
+        capacity: undefined,
+        staffIds: []
       }
     ])
   }
@@ -106,7 +116,11 @@ export function RoomScheduleEditor({
     setShifts(shifts.filter(s => s.id !== id))
   }
 
-  const handleUpdateShift = (id: string, field: 'start' | 'end' | 'serviceIds' | 'capacity', value: any) => {
+  const handleUpdateShift = (
+    id: string,
+    field: 'start' | 'end' | 'serviceIds' | 'capacity' | 'staffIds',
+    value: any
+  ) => {
     setShifts(shifts.map(s => (s.id === id ? { ...s, [field]: value } : s)))
   }
 
@@ -344,23 +358,24 @@ export function RoomScheduleEditor({
                             renderValue={selected => (
                               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                 {selected.map(value => {
-                                  const service = mockServices.find(s => s.id === value)
+                                  const service = availableServices.find(s => s.id === value)
                                   return <Chip key={value} label={service?.name || value} size='small' />
                                 })}
                               </Box>
                             )}
                           >
-                            {mockServices.map(service => (
+                            {availableServices.map(service => (
                               <MenuItem key={service.id} value={service.id}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                                  <Typography>{service.name}</Typography>
-                                  <Typography variant='caption' color='text.secondary'>
-                                    {service.duration} min
-                                  </Typography>
-                                </Box>
+                                <Checkbox checked={shift.serviceIds.includes(service.id)} />
+                                <ListItemText primary={service.name} secondary={`${service.duration} min`} />
                               </MenuItem>
                             ))}
                           </Select>
+                          {roomServiceIds.length > 0 && (
+                            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
+                              Only services assigned to this room are shown
+                            </Typography>
+                          )}
                         </FormControl>
 
                         {/* Per-slot capacity for flexible rooms */}
@@ -387,6 +402,64 @@ export function RoomScheduleEditor({
                               }}
                             />
                           </Box>
+                        )}
+
+                        {/* Capacity and Staff Assignment for static rooms */}
+                        {isStaticCapacity && (
+                          <>
+                            <Box sx={{ mt: 2 }}>
+                              <TextField
+                                type='number'
+                                label='Capacity for this shift'
+                                value={shift.capacity ?? defaultCapacity}
+                                onChange={e => {
+                                  const val = e.target.value ? Number(e.target.value) : defaultCapacity
+                                  handleUpdateShift(shift.id, 'capacity', val)
+                                }}
+                                size='small'
+                                fullWidth
+                                helperText='Fixed capacity for this time slot'
+                                InputProps={{
+                                  startAdornment: (
+                                    <i className='ri-group-line' style={{ marginRight: 8, opacity: 0.5 }} />
+                                  )
+                                }}
+                              />
+                            </Box>
+                            <FormControl fullWidth sx={{ mt: 2 }}>
+                              <InputLabel>Staff Assigned</InputLabel>
+                              <Select
+                                multiple
+                                value={shift.staffIds || []}
+                                onChange={e => {
+                                  const value =
+                                    typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                                  handleUpdateShift(shift.id, 'staffIds', value)
+                                }}
+                                input={<OutlinedInput label='Staff Assigned' />}
+                                renderValue={selected => (
+                                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                    {selected.map(value => {
+                                      const staff = mockStaff.find(s => s.id === value)
+                                      return <Chip key={value} label={staff?.name || value} size='small' />
+                                    })}
+                                  </Box>
+                                )}
+                              >
+                                {mockStaff
+                                  .filter(s => ['1', '2', '3', '4', '5', '6', '7'].includes(s.id))
+                                  .map(staff => (
+                                    <MenuItem key={staff.id} value={staff.id}>
+                                      <Checkbox checked={(shift.staffIds || []).includes(staff.id)} />
+                                      <ListItemText primary={staff.name} secondary={staff.title} />
+                                    </MenuItem>
+                                  ))}
+                              </Select>
+                              <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
+                                Assign staff members to this shift
+                              </Typography>
+                            </FormControl>
+                          </>
                         )}
                       </Box>
                     ))}
