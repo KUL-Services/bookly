@@ -258,26 +258,25 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <TextField
-              type='number'
-              label={roomType === 'static' ? 'Fixed Capacity' : 'Default Capacity'}
-              value={capacity}
-              onChange={e => setCapacity(Number(e.target.value))}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>
-                    <i className='ri-group-line' />
-                  </InputAdornment>
-                )
-              }}
-              helperText={
-                roomType === 'static'
-                  ? 'This capacity applies to all bookings'
-                  : 'Default capacity (can be overridden per slot)'
-              }
-              required
-              fullWidth
-            />
+            {/* Capacity field only for static rooms */}
+            {roomType === 'static' && (
+              <TextField
+                type='number'
+                label='Fixed Capacity'
+                value={capacity}
+                onChange={e => setCapacity(Number(e.target.value))}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <i className='ri-group-line' />
+                    </InputAdornment>
+                  )
+                }}
+                helperText='This capacity applies to all bookings'
+                required
+                fullWidth
+              />
+            )}
 
             <TextField
               label='Floor'

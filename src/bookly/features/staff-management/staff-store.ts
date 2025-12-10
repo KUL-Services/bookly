@@ -190,7 +190,10 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     '1-1': mockBusinessHours, // Luxe Hair Studio - Oxford
     '1-2': mockBusinessHours, // Luxe Hair Studio - Soho
     '1-3': mockBusinessHours, // Luxe Hair Studio - Kensington
-    '2-1': mockBusinessHours // Bliss Nail Bar - King's Road
+    '2-1': mockBusinessHours, // Bliss Nail Bar - King's Road
+    '2-2': mockBusinessHours, // Bliss Nail Bar - Camden
+    '3-1': mockBusinessHours, // Urban Barber Co. - Shoreditch
+    '3-2': mockBusinessHours // Urban Barber Co. - Brixton
   },
   staffWorkingHours: mockStaffWorkingHours,
   staffServiceAssignments: mockStaffServiceAssignments,

@@ -53,21 +53,6 @@ const COLOR_OPTIONS = [
   { value: '#f9a825', label: 'Yellow' }
 ]
 
-const TITLE_OPTIONS = [
-  'Stylist',
-  'Senior Stylist',
-  'Barber',
-  'Massage Therapist',
-  'Esthetician',
-  'Nail Technician',
-  'Yoga Instructor',
-  'Personal Trainer',
-  'Receptionist',
-  'Manager',
-  'Owner',
-  'Other'
-]
-
 export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMemberDrawerProps) {
   const { createStaffMember, updateStaffMember } = useStaffManagementStore()
   const isEditMode = !!editingStaff
@@ -78,7 +63,6 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [title, setTitle] = useState('')
-  const [customTitle, setCustomTitle] = useState('')
 
   // Work Information
   const [branchId, setBranchId] = useState('') // Main branch (for backward compat)
@@ -105,8 +89,7 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         setLastName(nameParts.slice(1).join(' ') || '')
         setEmail(editingStaff.email || '')
         setPhone(editingStaff.phone || '')
-        setTitle(TITLE_OPTIONS.includes(editingStaff.title) ? editingStaff.title : 'Other')
-        setCustomTitle(TITLE_OPTIONS.includes(editingStaff.title) ? '' : editingStaff.title)
+        setTitle(editingStaff.title || '')
 
         // Handle branch assignments - support both old (branchId) and new (mainBranchId + branchIds) formats
         const staffMainBranch = (editingStaff as any).mainBranchId || editingStaff.branchId || mockBranches[0]?.id || ''
@@ -134,7 +117,6 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         setEmail('')
         setPhone('')
         setTitle('')
-        setCustomTitle('')
         const defaultBranch = mockBranches[0]?.id || ''
         setBranchId(defaultBranch)
         setBranchIds([defaultBranch])
@@ -174,7 +156,7 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
       lastName,
       email: email || undefined,
       phone,
-      title: title === 'Other' ? customTitle : title || '',
+      title: title || '',
       branchId: mainBranchId, // Main branch as primary (for backward compatibility)
       branchIds: allBranchIds, // All assigned branches (main + additional)
       mainBranchId: mainBranchId, // Main branch for shifts
@@ -321,26 +303,20 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
             Work Information
           </Typography>
 
-          <FormControl fullWidth>
-            <InputLabel>Job Title</InputLabel>
-            <Select value={title} onChange={e => setTitle(e.target.value)} label='Job Title'>
-              {TITLE_OPTIONS.map(titleOption => (
-                <MenuItem key={titleOption} value={titleOption}>
-                  {titleOption}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          {title === 'Other' && (
-            <TextField
-              label='Custom Title'
-              value={customTitle}
-              onChange={e => setCustomTitle(e.target.value)}
-              placeholder='Enter custom job title'
-              fullWidth
-            />
-          )}
+          <TextField
+            label='Job Title / Role'
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder='e.g., Stylist, Barber, Manager'
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position='start'>
+                  <i className='ri-user-star-line' />
+                </InputAdornment>
+              )
+            }}
+          />
 
           {/* Main Branch - Required Single Select */}
           <FormControl fullWidth required>

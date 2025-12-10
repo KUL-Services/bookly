@@ -17,10 +17,15 @@ import {
   Select,
   MenuItem,
   FormControl,
-  TextField
+  TextField,
+  InputLabel,
+  OutlinedInput,
+  Checkbox,
+  ListItemText
 } from '@mui/material'
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns'
 import { useStaffManagementStore } from './staff-store'
+import { mockServices } from '@/bookly/data/mock-data'
 import type { DayOfWeek } from '../calendar/types'
 import { TimeSelectField } from './time-select-field'
 
@@ -302,6 +307,18 @@ export function StaffEditWorkingHoursModal({
               })
             }
 
+            const handleUpdateServices = (shiftIndex: number, serviceIds: string[]) => {
+              const newShifts = [...dayHours.shifts]
+              newShifts[shiftIndex] = {
+                ...newShifts[shiftIndex],
+                serviceIds
+              }
+              updateStaffWorkingHours(staffId, day, {
+                ...dayHours,
+                shifts: newShifts
+              })
+            }
+
             const handleAddShift = () => {
               const newShifts = [
                 ...dayHours.shifts,
@@ -454,18 +471,46 @@ export function StaffEditWorkingHoursModal({
                           />
 
                           {staffType === 'static' && (
-                            <TextField
-                              type='number'
-                              label='Capacity'
-                              value={shift.capacity || 10}
-                              onChange={e => handleUpdateCapacity(shiftIndex, Number(e.target.value))}
-                              size='small'
-                              InputProps={{
-                                inputProps: { min: 1, max: 100 },
-                                startAdornment: <i className='ri-group-line' style={{ marginRight: 8 }} />
-                              }}
-                              sx={{ minWidth: 140 }}
-                            />
+                            <>
+                              <TextField
+                                type='number'
+                                label='Capacity'
+                                value={shift.capacity || 10}
+                                onChange={e => handleUpdateCapacity(shiftIndex, Number(e.target.value))}
+                                size='small'
+                                InputProps={{
+                                  inputProps: { min: 1, max: 100 },
+                                  startAdornment: <i className='ri-group-line' style={{ marginRight: 8 }} />
+                                }}
+                                sx={{ minWidth: 140 }}
+                              />
+                              <FormControl size='small' sx={{ minWidth: 200 }}>
+                                <InputLabel>Services</InputLabel>
+                                <Select
+                                  multiple
+                                  value={shift.serviceIds || []}
+                                  onChange={e =>
+                                    handleUpdateServices(
+                                      shiftIndex,
+                                      typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                                    )
+                                  }
+                                  input={<OutlinedInput label='Services' />}
+                                  renderValue={selected => {
+                                    if (selected.length === 0) return 'All Services'
+                                    if (selected.length === mockServices.length) return 'All Services'
+                                    return `${selected.length} selected`
+                                  }}
+                                >
+                                  {mockServices.map(service => (
+                                    <MenuItem key={service.id} value={service.id}>
+                                      <Checkbox checked={(shift.serviceIds || []).includes(service.id)} />
+                                      <ListItemText primary={service.name} />
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            </>
                           )}
 
                           <Button

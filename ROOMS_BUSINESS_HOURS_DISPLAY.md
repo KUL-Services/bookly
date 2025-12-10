@@ -1,7 +1,7 @@
 # Business Hours Display in Rooms Tab - Implementation Summary
 
-**Date**: December 7, 2025  
-**Status**: ✅ **COMPLETE**
+**Date**: December 10, 2025  
+**Status**: ✅ **COMPLETE** - Week View Business Hours Row Added
 
 ---
 
@@ -379,3 +379,136 @@ Date picker now shows **date + business hours**, providing **contextual informat
 ---
 
 **Status**: 🚀 **READY FOR USE**
+
+---
+
+## 🆕 UPDATE: Week View Business Hours Row (December 10, 2025)
+
+### New Issue Resolved
+
+The rooms tab weekly view was missing the business hours row that exists in the shifts tab, causing layout inconsistency.
+
+### Solution Implemented
+
+#### 1. **Business Hours Row in Sidebar** (When Specific Branch Selected)
+
+- Added 70px height business hours summary row
+- Shows total days open and weekly hours
+- Format: "5 days open, W 40h 30m"
+- Matches shifts tab exactly
+
+```tsx
+{selectedBranch !== 'all' && (
+  <Box sx={{ height: 70, bgcolor: 'action.hover', ... }}>
+    <Typography variant='body2' fontWeight={600}>Business Hours</Typography>
+    <Typography variant='caption'>
+      {daysOpen} days open
+    </Typography>
+    <Typography variant='caption'>
+      W {weekHours}h {weekMinutes > 0 ? `${weekMinutes}m` : ''}
+    </Typography>
+  </Box>
+)}
+```
+
+#### 2. **Business Hours Cells in Day Columns**
+
+- 70px height cells below day headers
+- Shows daily business hours for each day
+- Green background when open, dark grey when closed
+- Displays start/end times in 12-hour format
+- Shows "+N" for multiple shifts
+
+```tsx
+{selectedBranch !== 'all' && (
+  <Box sx={{ height: 70, ... }}>
+    {isOpen ? (
+      <>
+        <Typography>{formatTime(shifts[0].start)}</Typography>
+        <Typography>{formatTime(shifts[0].end)}</Typography>
+        {shifts.length > 1 && <Typography>+{shifts.length - 1}</Typography>}
+      </>
+    ) : (
+      <Typography color='white'>Closed</Typography>
+    )}
+  </Box>
+)}
+```
+
+#### 3. **Enhanced Branch Headers** (When All Branches Selected)
+
+- Added business hours summary to branch headers
+- Format: "5d • 40h/wk"
+- Only visible when viewing all branches
+- Maintains proper alignment
+
+#### 4. **Conditional Branch Spacer Cells**
+
+- 33px branch header cells in day columns
+- Only shown when viewing all branches
+- Ensures perfect alignment with sidebar
+
+### Visual Comparison
+
+**Before:**
+
+```
+┌─────────────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┐
+│ Room Name   │ Mon  │ Tue  │ Wed  │ Thu  │ Fri  │ Sat  │ Sun  │
+├─────────────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ Room 1      │ [==] │ [==] │ [==] │ [==] │ [==] │      │      │
+│ Room 2      │ [==] │      │ [==] │ [==] │ [==] │ [==] │      │
+└─────────────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┘
+         ❌ No business hours row
+```
+
+**After:**
+
+```
+┌─────────────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┐
+│ Room Name   │ Mon  │ Tue  │ Wed  │ Thu  │ Fri  │ Sat  │ Sun  │
+├─────────────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ Bus. Hours  │ 9-5  │ 9-5  │ 9-5  │ 9-5  │ 9-5  │Closed│Closed│ ← NEW
+├─────────────┼──────┼──────┼──────┼──────┼──────┼──────┼──────┤
+│ Room 1      │ [==] │ [==] │ [==] │ [==] │ [==] │      │      │
+│ Room 2      │ [==] │      │ [==] │ [==] │ [==] │ [==] │      │
+└─────────────┴──────┴──────┴──────┴──────┴──────┴──────┴──────┘
+         ✅ Business hours row now visible
+```
+
+### Behavior Details
+
+**When Specific Branch Selected:**
+
+- Business hours row appears (70px height)
+- Shows daily hours for each day of week
+- Sidebar shows weekly hours summary
+
+**When All Branches Selected:**
+
+- Business hours row is hidden
+- Branch headers show hours summary (e.g., "5d • 40h/wk")
+- Maintains proper spacing with 33px header cells
+
+### Technical Implementation
+
+**Files Modified:**
+
+- `src/bookly/features/staff-management/rooms-tab.tsx`
+
+**Key Features:**
+
+1. ✅ Time formatting (12-hour with AM/PM)
+2. ✅ Color coding (green for open, dark grey for closed)
+3. ✅ Multiple shifts indicator (+N)
+4. ✅ Conditional rendering based on branch selection
+5. ✅ Perfect alignment between sidebar and day columns
+6. ✅ Matches shifts tab layout exactly
+
+**Lines Added:** ~120 lines
+**Breaking Changes:** None
+**TypeScript Errors:** 0
+
+---
+
+## 🎯 Implementation
