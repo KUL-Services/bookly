@@ -550,25 +550,21 @@ export function RoomsTab() {
                 <i className='ri-information-line' style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }} />
               </IconButton>
             </Tooltip>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                fontSize: '0.65rem',
-                color: 'text.secondary',
-                ml: 'auto'
-              }}
-            >
-              <Typography variant='caption'>
-                <i className='ri-group-line' style={{ fontSize: 10, marginRight: 2 }} />
-                Cap: {room.capacity}
-              </Typography>
-              {roomServices.length > 0 && (
+            {roomServices.length > 0 && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontSize: '0.65rem',
+                  color: 'text.secondary',
+                  ml: 'auto'
+                }}
+              >
                 <Typography variant='caption'>
                   {roomServices.length} service{roomServices.length > 1 ? 's' : ''}
                 </Typography>
-              )}
-            </Box>
+              </Box>
+            )}
           </Box>
         </Box>
 
@@ -880,8 +876,155 @@ export function RoomsTab() {
                     </Box>
                   )}
 
-                  {/* Rooms in this branch */}
-                  {branchRooms.map(renderRoomRow)}
+                  {/* Rooms in this branch - grouped by type */}
+                  {(() => {
+                    const flexibleRooms = branchRooms.filter(r => r.roomType !== 'static')
+                    const fixedRooms = branchRooms.filter(r => r.roomType === 'static')
+
+                    return (
+                      <>
+                        {/* Flexible Rooms Section */}
+                        {flexibleRooms.length > 0 && (
+                          <>
+                            <Box
+                              sx={{
+                                height: '33px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                px: 2,
+                                bgcolor: 'rgba(76, 175, 80, 0.08)',
+                                borderBottom: 1,
+                                borderColor: 'divider'
+                              }}
+                            >
+                              <i className='ri-equalizer-line' style={{ fontSize: 14, color: '#4caf50' }} />
+                              <Typography variant='caption' fontWeight={600} fontSize='0.75rem'>
+                                Flexible Rooms
+                              </Typography>
+                              <Typography variant='caption' color='text.secondary' fontSize='0.7rem'>
+                                ({flexibleRooms.length})
+                              </Typography>
+                              <Tooltip
+                                title={
+                                  <Box sx={{ p: 1 }}>
+                                    <Typography
+                                      variant='caption'
+                                      fontWeight={600}
+                                      display='block'
+                                      gutterBottom
+                                      sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                    >
+                                      Flexible Rooms
+                                    </Typography>
+                                    <Typography
+                                      variant='caption'
+                                      display='block'
+                                      sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                                    >
+                                      Rooms with flexible capacity that can be adjusted based on demand. Their
+                                      availability follows business hours.
+                                    </Typography>
+                                  </Box>
+                                }
+                                arrow
+                                placement='right'
+                                componentsProps={{
+                                  tooltip: {
+                                    sx: {
+                                      bgcolor: 'rgba(0, 0, 0, 0.9)',
+                                      maxWidth: 300,
+                                      '& .MuiTooltip-arrow': {
+                                        color: 'rgba(0, 0, 0, 0.9)'
+                                      }
+                                    }
+                                  }
+                                }}
+                              >
+                                <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
+                                  <i
+                                    className='ri-information-line'
+                                    style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }}
+                                  />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                            {flexibleRooms.map(renderRoomRow)}
+                          </>
+                        )}
+
+                        {/* Fixed Rooms Section */}
+                        {fixedRooms.length > 0 && (
+                          <>
+                            <Box
+                              sx={{
+                                height: '33px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                px: 2,
+                                bgcolor: 'rgba(158, 158, 158, 0.08)',
+                                borderBottom: 1,
+                                borderColor: 'divider'
+                              }}
+                            >
+                              <i className='ri-lock-line' style={{ fontSize: 14, color: '#9e9e9e' }} />
+                              <Typography variant='caption' fontWeight={600} fontSize='0.75rem'>
+                                Fixed Rooms
+                              </Typography>
+                              <Typography variant='caption' color='text.secondary' fontSize='0.7rem'>
+                                ({fixedRooms.length})
+                              </Typography>
+                              <Tooltip
+                                title={
+                                  <Box sx={{ p: 1 }}>
+                                    <Typography
+                                      variant='caption'
+                                      fontWeight={600}
+                                      display='block'
+                                      gutterBottom
+                                      sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                    >
+                                      Fixed Rooms
+                                    </Typography>
+                                    <Typography
+                                      variant='caption'
+                                      display='block'
+                                      sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                                    >
+                                      Rooms with fixed capacity that remains constant. They have dedicated schedules
+                                      that can differ from business hours.
+                                    </Typography>
+                                  </Box>
+                                }
+                                arrow
+                                placement='right'
+                                componentsProps={{
+                                  tooltip: {
+                                    sx: {
+                                      bgcolor: 'rgba(0, 0, 0, 0.9)',
+                                      maxWidth: 300,
+                                      '& .MuiTooltip-arrow': {
+                                        color: 'rgba(0, 0, 0, 0.9)'
+                                      }
+                                    }
+                                  }
+                                }}
+                              >
+                                <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
+                                  <i
+                                    className='ri-information-line'
+                                    style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }}
+                                  />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                            {fixedRooms.map(renderRoomRow)}
+                          </>
+                        )}
+                      </>
+                    )
+                  })()}
                 </Box>
               )
             })}
@@ -998,12 +1141,12 @@ export function RoomsTab() {
             </ListItemIcon>
             <ListItemText>EDIT WEEKLY HOURS</ListItemText>
           </MenuItem>
-          <MenuItem onClick={handleEditScheduleFromMenu}>
+          {/* <MenuItem onClick={handleEditScheduleFromMenu}>
             <ListItemIcon>
               <i className='ri-time-line' />
             </ListItemIcon>
             <ListItemText>EDIT TODAY'S SCHEDULE</ListItemText>
-          </MenuItem>
+          </MenuItem> */}
           <MenuItem onClick={handleEditRoomFromMenu}>
             <ListItemIcon>
               <i className='ri-edit-line' />
@@ -1218,61 +1361,228 @@ export function RoomsTab() {
                       </Box>
                     )}
 
-                    {/* Rooms in this branch */}
-                    {branchRooms.map(room => (
-                      <Box
-                        key={room.id}
-                        sx={{
-                          height: 80,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          px: 2,
-                          borderBottom: 1,
-                          borderColor: 'divider'
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: 6,
-                            height: 30,
-                            borderRadius: 1,
-                            bgcolor: room.color || 'primary.main',
-                            mr: 0.5
-                          }}
-                        />
-                        <Box sx={{ flex: 1 }}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            <Typography variant='body2' fontWeight={600} noWrap>
-                              {room.name}
-                            </Typography>
-                            <Tooltip title={room.roomType === 'static' ? 'Fixed Capacity' : 'Flexible Capacity'}>
-                              <Chip
-                                label={room.roomType === 'static' ? 'Fix' : 'Flex'}
-                                size='small'
-                                color={room.roomType === 'static' ? 'primary' : 'success'}
-                                variant='outlined'
+                    {/* Rooms in this branch - grouped by type */}
+                    {(() => {
+                      const flexibleRooms = branchRooms.filter(r => r.roomType !== 'static')
+                      const fixedRooms = branchRooms.filter(r => r.roomType === 'static')
+
+                      return (
+                        <>
+                          {/* Flexible Rooms Section */}
+                          {flexibleRooms.length > 0 && (
+                            <>
+                              <Box
                                 sx={{
-                                  height: 16,
-                                  minWidth: 20,
-                                  fontSize: '0.55rem',
-                                  fontWeight: 700,
-                                  '& .MuiChip-label': { px: 0.4 }
+                                  px: 2,
+                                  py: 0.75,
+                                  bgcolor: 'rgba(76, 175, 80, 0.08)',
+                                  borderBottom: 1,
+                                  borderTop: showBranchHeader ? 0 : 1,
+                                  borderColor: 'divider',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5
                                 }}
-                              />
-                            </Tooltip>
-                          </Box>
-                          <Typography variant='caption' color='text.secondary' display='block'>
-                            Cap: {room.capacity}
-                          </Typography>
-                        </Box>
-                        <Tooltip title='More Options'>
-                          <IconButton size='small' onClick={e => handleOpenRoomMenu(e, room)}>
-                            <i className='ri-more-2-fill' style={{ fontSize: 16 }} />
-                          </IconButton>
-                        </Tooltip>
-                      </Box>
-                    ))}
+                              >
+                                <i className='ri-equalizer-line' style={{ fontSize: 12, color: '#4caf50' }} />
+                                <Typography variant='caption' fontWeight={600} fontSize='0.65rem' color='success.main'>
+                                  Flexible
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
+                                  ({flexibleRooms.length})
+                                </Typography>
+                                <Tooltip
+                                  title={
+                                    <Box sx={{ p: 1 }}>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={600}
+                                        display='block'
+                                        gutterBottom
+                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                      >
+                                        Flexible Rooms
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        display='block'
+                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                                      >
+                                        Rooms with flexible capacity that can be adjusted based on demand. Their
+                                        availability follows business hours.
+                                      </Typography>
+                                    </Box>
+                                  }
+                                  arrow
+                                  placement='right'
+                                  componentsProps={{
+                                    tooltip: {
+                                      sx: {
+                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
+                                        maxWidth: 300,
+                                        '& .MuiTooltip-arrow': {
+                                          color: 'rgba(0, 0, 0, 0.9)'
+                                        }
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
+                                    <i
+                                      className='ri-information-line'
+                                      style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                              {flexibleRooms.map(room => (
+                                <Box
+                                  key={room.id}
+                                  sx={{
+                                    height: 80,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    px: 2,
+                                    borderBottom: 1,
+                                    borderColor: 'divider'
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      width: 6,
+                                      height: 30,
+                                      borderRadius: 1,
+                                      bgcolor: room.color || 'primary.main',
+                                      mr: 0.5
+                                    }}
+                                  />
+                                  <Box sx={{ flex: 1 }}>
+                                    <Typography variant='body2' fontWeight={600} noWrap>
+                                      {room.name}
+                                    </Typography>
+                                  </Box>
+                                  <Tooltip title='More Options'>
+                                    <IconButton size='small' onClick={e => handleOpenRoomMenu(e, room)}>
+                                      <i className='ri-more-2-fill' style={{ fontSize: 16 }} />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
+                              ))}
+                            </>
+                          )}
+
+                          {/* Fixed Rooms Section */}
+                          {fixedRooms.length > 0 && (
+                            <>
+                              <Box
+                                sx={{
+                                  px: 2,
+                                  py: 0.75,
+                                  bgcolor: 'rgba(158, 158, 158, 0.08)',
+                                  borderBottom: 1,
+                                  borderTop: 1,
+                                  borderColor: 'divider',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5
+                                }}
+                              >
+                                <i className='ri-lock-line' style={{ fontSize: 12, color: '#9e9e9e' }} />
+                                <Typography
+                                  variant='caption'
+                                  fontWeight={600}
+                                  fontSize='0.65rem'
+                                  color='text.secondary'
+                                >
+                                  Fixed
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
+                                  ({fixedRooms.length})
+                                </Typography>
+                                <Tooltip
+                                  title={
+                                    <Box sx={{ p: 1 }}>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={600}
+                                        display='block'
+                                        gutterBottom
+                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                      >
+                                        Fixed Rooms
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        display='block'
+                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                                      >
+                                        Rooms with fixed capacity that remains constant. They have dedicated schedules
+                                        that can differ from business hours.
+                                      </Typography>
+                                    </Box>
+                                  }
+                                  arrow
+                                  placement='right'
+                                  componentsProps={{
+                                    tooltip: {
+                                      sx: {
+                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
+                                        maxWidth: 300,
+                                        '& .MuiTooltip-arrow': {
+                                          color: 'rgba(0, 0, 0, 0.9)'
+                                        }
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
+                                    <i
+                                      className='ri-information-line'
+                                      style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                              {fixedRooms.map(room => (
+                                <Box
+                                  key={room.id}
+                                  sx={{
+                                    height: 80,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    px: 2,
+                                    borderBottom: 1,
+                                    borderColor: 'divider'
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      width: 6,
+                                      height: 30,
+                                      borderRadius: 1,
+                                      bgcolor: room.color || 'primary.main',
+                                      mr: 0.5
+                                    }}
+                                  />
+                                  <Box sx={{ flex: 1 }}>
+                                    <Typography variant='body2' fontWeight={600} noWrap>
+                                      {room.name}
+                                    </Typography>
+                                  </Box>
+                                  <Tooltip title='More Options'>
+                                    <IconButton size='small' onClick={e => handleOpenRoomMenu(e, room)}>
+                                      <i className='ri-more-2-fill' style={{ fontSize: 16 }} />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Box>
+                              ))}
+                            </>
+                          )}
+                        </>
+                      )
+                    })()}
                   </Box>
                 )
               })}
@@ -1409,6 +1719,10 @@ export function RoomsTab() {
                   .map(([branchId, branchRooms]) => {
                     const showBranchHeader = selectedBranch === 'all' // Only show header when viewing all branches
 
+                    // Group rooms by type
+                    const flexibleRooms = branchRooms.filter(r => r.roomType !== 'static')
+                    const fixedRooms = branchRooms.filter(r => r.roomType === 'static')
+
                     return (
                       <Box key={branchId}>
                         {/* Branch header cell - matches left sidebar branch header height - only show when all branches selected */}
@@ -1423,128 +1737,239 @@ export function RoomsTab() {
                           />
                         )}
 
-                        {/* Room cells in this branch */}
-                        {branchRooms.map(room => {
-                          const dayOfWeek = WEEK_DAYS[date.getDay()] as DayOfWeek
-                          const schedule = getRoomSchedule(room.id, dayOfWeek)
-                          const isFlexible = room.roomType !== 'static'
-                          const businessHours = isFlexible ? getBusinessHours(room.branchId, dayOfWeek) : null
-                          const hasSchedule = isFlexible
-                            ? businessHours?.isOpen && businessHours.shifts.length > 0
-                            : schedule.isAvailable && schedule.shifts.length > 0
-                          const shiftServices =
-                            hasSchedule && !isFlexible
-                              ? mockServices.filter(s => schedule.shifts.some(shift => shift.serviceIds.includes(s.id)))
-                              : []
-
-                          return (
+                        {/* Flexible Rooms Section */}
+                        {flexibleRooms.length > 0 && (
+                          <>
+                            {/* Flexible room type header cell */}
                             <Box
-                              key={room.id}
                               sx={{
-                                height: 80,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                justifyContent: 'center',
+                                height: '27px',
                                 borderBottom: 1,
                                 borderColor: 'divider',
-                                position: 'relative',
-                                p: 1
+                                bgcolor: 'rgba(76, 175, 80, 0.08)'
                               }}
-                            >
-                              {hasSchedule ? (
+                            />
+
+                            {/* Flexible room cells */}
+                            {flexibleRooms.map(room => {
+                              const dayOfWeek = WEEK_DAYS[date.getDay()] as DayOfWeek
+                              const schedule = getRoomSchedule(room.id, dayOfWeek)
+                              const isFlexible = true
+                              const businessHours = getBusinessHours(room.branchId, dayOfWeek)
+                              const hasSchedule = businessHours?.isOpen && businessHours.shifts.length > 0
+                              const shiftServices: any[] = []
+
+                              return (
                                 <Box
-                                  onClick={() => handleEditShift(room, schedule.shifts[0] || null, dayOfWeek)}
+                                  key={room.id}
                                   sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    bgcolor: isFlexible
-                                      ? theme => (theme.palette.mode === 'dark' ? '#1a237e' : '#E3F2FD')
-                                      : 'rgba(139, 195, 74, 0.3)',
-                                    borderRadius: 1,
+                                    height: 80,
                                     display: 'flex',
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    border: 1,
-                                    borderColor: isFlexible
-                                      ? theme => (theme.palette.mode === 'dark' ? '#3949ab' : '#64B5F6')
-                                      : 'success.light',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                    p: 0.5,
-                                    '&:hover': {
-                                      bgcolor: isFlexible
-                                        ? theme => (theme.palette.mode === 'dark' ? '#283593' : '#BBDEFB')
-                                        : 'rgba(139, 195, 74, 0.4)',
-                                      transform: 'scale(1.02)'
-                                    }
+                                    borderBottom: 1,
+                                    borderColor: 'divider',
+                                    position: 'relative',
+                                    p: 1
                                   }}
                                 >
-                                  <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ mb: 0.5 }}>
-                                    {isFlexible
-                                      ? 'Open'
-                                      : `${schedule.shifts.length} shift${schedule.shifts.length > 1 ? 's' : ''}`}
-                                  </Typography>
-                                  {shiftServices.length > 0 && (
-                                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3, justifyContent: 'center' }}>
-                                      {shiftServices.slice(0, 2).map(service => (
-                                        <Chip
-                                          key={service.id}
-                                          label={service.name}
-                                          size='small'
-                                          sx={{
-                                            height: 14,
-                                            fontSize: '0.55rem',
-                                            bgcolor: service.color ? `${service.color}20` : 'rgba(0,0,0,0.08)',
-                                            color: service.color || 'text.primary',
-                                            border: service.color ? `1px solid ${service.color}40` : 'none',
-                                            fontWeight: 500,
-                                            '& .MuiChip-label': { px: 0.5 }
-                                          }}
-                                        />
-                                      ))}
-                                      {shiftServices.length > 2 && (
-                                        <Chip
-                                          label={`+${shiftServices.length - 2}`}
-                                          size='small'
-                                          sx={{
-                                            height: 14,
-                                            fontSize: '0.55rem',
-                                            bgcolor: 'rgba(0,0,0,0.08)',
-                                            '& .MuiChip-label': { px: 0.5 }
-                                          }}
-                                        />
-                                      )}
+                                  {hasSchedule ? (
+                                    <Box
+                                      onClick={() => handleEditShift(room, schedule.shifts[0] || null, dayOfWeek)}
+                                      sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        bgcolor: theme => (theme.palette.mode === 'dark' ? '#1a237e' : '#E3F2FD'),
+                                        borderRadius: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        border: 1,
+                                        borderColor: theme => (theme.palette.mode === 'dark' ? '#3949ab' : '#64B5F6'),
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        p: 0.5,
+                                        '&:hover': {
+                                          bgcolor: theme => (theme.palette.mode === 'dark' ? '#283593' : '#BBDEFB'),
+                                          transform: 'scale(1.02)'
+                                        }
+                                      }}
+                                    >
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={500}
+                                        color='text.primary'
+                                        sx={{ mb: 0.5 }}
+                                      >
+                                        Open
+                                      </Typography>
+                                    </Box>
+                                  ) : (
+                                    <Box
+                                      onClick={() => handleEditShift(room, null, dayOfWeek)}
+                                      sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        bgcolor: 'grey.200',
+                                        borderRadius: 1,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        '&:hover': {
+                                          bgcolor: 'grey.300'
+                                        }
+                                      }}
+                                    >
+                                      <Typography variant='caption' color='text.disabled'>
+                                        Closed
+                                      </Typography>
                                     </Box>
                                   )}
                                 </Box>
-                              ) : (
+                              )
+                            })}
+                          </>
+                        )}
+
+                        {/* Fixed Rooms Section */}
+                        {fixedRooms.length > 0 && (
+                          <>
+                            {/* Fixed room type header cell */}
+                            <Box
+                              sx={{
+                                height: '27px',
+                                borderBottom: 1,
+                                borderColor: 'divider',
+                                bgcolor: 'rgba(158, 158, 158, 0.08)'
+                              }}
+                            />
+
+                            {/* Fixed room cells */}
+                            {fixedRooms.map(room => {
+                              const dayOfWeek = WEEK_DAYS[date.getDay()] as DayOfWeek
+                              const schedule = getRoomSchedule(room.id, dayOfWeek)
+                              const isFlexible = false
+                              const hasSchedule = schedule.isAvailable && schedule.shifts.length > 0
+                              const shiftServices = hasSchedule
+                                ? mockServices.filter(s =>
+                                    schedule.shifts.some(shift => shift.serviceIds.includes(s.id))
+                                  )
+                                : []
+
+                              return (
                                 <Box
-                                  onClick={() => handleEditShift(room, null, dayOfWeek)}
+                                  key={room.id}
                                   sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    bgcolor: 'grey.200',
-                                    borderRadius: 1,
+                                    height: 80,
                                     display: 'flex',
+                                    flexDirection: 'column',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                    '&:hover': {
-                                      bgcolor: 'grey.300'
-                                    }
+                                    borderBottom: 1,
+                                    borderColor: 'divider',
+                                    position: 'relative',
+                                    p: 1
                                   }}
                                 >
-                                  <Typography variant='caption' color='text.disabled'>
-                                    Closed
-                                  </Typography>
+                                  {hasSchedule ? (
+                                    <Box
+                                      onClick={() => handleEditShift(room, schedule.shifts[0] || null, dayOfWeek)}
+                                      sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        bgcolor: 'rgba(139, 195, 74, 0.3)',
+                                        borderRadius: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        border: 1,
+                                        borderColor: 'success.light',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        p: 0.5,
+                                        '&:hover': {
+                                          bgcolor: 'rgba(139, 195, 74, 0.4)',
+                                          transform: 'scale(1.02)'
+                                        }
+                                      }}
+                                    >
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={500}
+                                        color='text.primary'
+                                        sx={{ mb: 0.5 }}
+                                      >
+                                        {schedule.shifts.length}{' '}
+                                        {getShiftLabel(room.roomType, schedule.shifts.length > 1)}
+                                      </Typography>
+                                      {shiftServices.length > 0 && (
+                                        <Box
+                                          sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3, justifyContent: 'center' }}
+                                        >
+                                          {shiftServices.slice(0, 2).map(service => (
+                                            <Chip
+                                              key={service.id}
+                                              label={service.name}
+                                              size='small'
+                                              sx={{
+                                                height: 14,
+                                                fontSize: '0.55rem',
+                                                bgcolor: service.color ? `${service.color}20` : 'rgba(0,0,0,0.08)',
+                                                color: service.color || 'text.primary',
+                                                border: service.color ? `1px solid ${service.color}40` : 'none',
+                                                fontWeight: 500,
+                                                '& .MuiChip-label': { px: 0.5 }
+                                              }}
+                                            />
+                                          ))}
+                                          {shiftServices.length > 2 && (
+                                            <Chip
+                                              label={`+${shiftServices.length - 2}`}
+                                              size='small'
+                                              sx={{
+                                                height: 14,
+                                                fontSize: '0.55rem',
+                                                bgcolor: 'rgba(0,0,0,0.08)',
+                                                '& .MuiChip-label': { px: 0.5 }
+                                              }}
+                                            />
+                                          )}
+                                        </Box>
+                                      )}
+                                    </Box>
+                                  ) : (
+                                    <Box
+                                      onClick={() => handleEditShift(room, null, dayOfWeek)}
+                                      sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        bgcolor: 'grey.200',
+                                        borderRadius: 1,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        '&:hover': {
+                                          bgcolor: 'grey.300'
+                                        }
+                                      }}
+                                    >
+                                      <Typography variant='caption' color='text.disabled'>
+                                        Closed
+                                      </Typography>
+                                    </Box>
+                                  )}
                                 </Box>
-                              )}
-                            </Box>
-                          )
-                        })}
+                              )
+                            })}
+                          </>
+                        )}
                       </Box>
                     )
                   })}
@@ -1645,12 +2070,12 @@ export function RoomsTab() {
           </ListItemIcon>
           <ListItemText>EDIT WEEKLY HOURS</ListItemText>
         </MenuItem>
-        <MenuItem onClick={handleEditScheduleFromMenu}>
+        {/* <MenuItem onClick={handleEditScheduleFromMenu}>
           <ListItemIcon>
             <i className='ri-time-line' />
           </ListItemIcon>
           <ListItemText>EDIT TODAY'S SCHEDULE</ListItemText>
-        </MenuItem>
+        </MenuItem> */}
         <MenuItem onClick={handleEditRoomFromMenu}>
           <ListItemIcon>
             <i className='ri-edit-line' />

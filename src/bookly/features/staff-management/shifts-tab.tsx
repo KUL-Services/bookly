@@ -260,127 +260,6 @@ function DroppableTimeSlot({ dropData, children }: { dropData: DropData; childre
   )
 }
 
-// Bulk Operations Dialog
-function BulkOperationsDialog({
-  open,
-  onClose,
-  selectedStaff,
-  onApply
-}: {
-  open: boolean
-  onClose: () => void
-  selectedStaff: string[]
-  onApply: (operation: string, params: any) => void
-}) {
-  const [operation, setOperation] = useState('')
-  const [startTime, setStartTime] = useState('09:00')
-  const [endTime, setEndTime] = useState('17:00')
-  const [selectedDays, setSelectedDays] = useState<string[]>([])
-  const [reason, setReason] = useState('')
-
-  // Get staff names from IDs
-  const selectedStaffNames = selectedStaff.map(id => mockStaff.find(s => s.id === id)?.name).filter(Boolean)
-
-  const handleApply = () => {
-    onApply(operation, {
-      startTime,
-      endTime,
-      selectedDays,
-      reason,
-      staffIds: selectedStaff
-    })
-    onClose()
-  }
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
-      <DialogTitle>
-        Bulk Operations
-        <Typography variant='caption' display='block' color='text.secondary'>
-          {selectedStaffNames.length > 3
-            ? `${selectedStaffNames.slice(0, 3).join(', ')} +${selectedStaffNames.length - 3} more`
-            : selectedStaffNames.join(', ')}
-        </Typography>
-      </DialogTitle>
-      <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2 }}>
-          <FormControl fullWidth>
-            <Select value={operation} onChange={e => setOperation(e.target.value)} displayEmpty>
-              <MenuItem value=''>Select Operation</MenuItem>
-              <MenuItem value='setWorkingHours'>Set Working Hours</MenuItem>
-              <MenuItem value='addTimeOff'>Add Time Off</MenuItem>
-              <MenuItem value='copySchedule'>Copy Schedule</MenuItem>
-              <MenuItem value='clearSchedule'>Clear Schedule</MenuItem>
-            </Select>
-          </FormControl>
-
-          {operation === 'setWorkingHours' && (
-            <>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  label='Start Time'
-                  type='time'
-                  value={startTime}
-                  onChange={e => setStartTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                />
-                <TextField
-                  label='End Time'
-                  type='time'
-                  value={endTime}
-                  onChange={e => setEndTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                />
-              </Box>
-              <Box>
-                <Typography variant='body2' gutterBottom>
-                  Apply to days:
-                </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                    <FormControlLabel
-                      key={day}
-                      control={
-                        <Checkbox
-                          checked={selectedDays.includes(day)}
-                          onChange={e => {
-                            if (e.target.checked) {
-                              setSelectedDays([...selectedDays, day])
-                            } else {
-                              setSelectedDays(selectedDays.filter(d => d !== day))
-                            }
-                          }}
-                        />
-                      }
-                      label={day}
-                    />
-                  ))}
-                </Box>
-              </Box>
-            </>
-          )}
-
-          {operation === 'addTimeOff' && (
-            <TextField label='Reason' value={reason} onChange={e => setReason(e.target.value)} fullWidth />
-          )}
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button
-          onClick={handleApply}
-          variant='contained'
-          disabled={!operation || (operation === 'setWorkingHours' && selectedDays.length === 0)}
-        >
-          Apply to {selectedStaff.length} Staff
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
-}
-
 export function ShiftsTab() {
   const [viewMode, setViewMode] = useState('Day')
   const [selectedStaff, setSelectedStaff] = useState('Staff')
@@ -388,7 +267,6 @@ export function ShiftsTab() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
   const [bulkMode, setBulkMode] = useState(false)
-  const [bulkDialogOpen, setBulkDialogOpen] = useState(false)
 
   const [isBusinessHoursModalOpen, setIsBusinessHoursModalOpen] = useState(false)
   const [isBusinessHoursDayEditorOpen, setIsBusinessHoursDayEditorOpen] = useState(false)
@@ -694,7 +572,17 @@ export function ShiftsTab() {
           <Button
             variant='outlined'
             startIcon={<i className='ri-edit-box-line' />}
-            onClick={() => setBulkDialogOpen(true)}
+            onClick={() => {
+              // Open working hours modal in bulk mode
+              if (selectedStaffIds.length > 0) {
+                const firstStaff = mockStaff.find(s => s.id === selectedStaffIds[0])
+                setSelectedStaffForEdit({
+                  id: selectedStaffIds[0],
+                  name: firstStaff?.name || 'Staff'
+                })
+                setIsWorkingHoursModalOpen(true)
+              }
+            }}
             disabled={selectedStaffIds.length === 0}
           >
             Bulk Operations
@@ -1344,8 +1232,158 @@ export function ShiftsTab() {
                       </Box>
                     )}
 
-                    {/* Staff in this branch */}
-                    {branchStaff.map(renderEnhancedStaffRow)}
+                    {/* Staff in this branch - grouped by type */}
+                    {(() => {
+                      // Group staff by type
+                      const dynamicStaff = branchStaff.filter(s => getStaffType(s.id) === 'dynamic')
+                      const staticStaff = branchStaff.filter(s => getStaffType(s.id) === 'static')
+
+                      return (
+                        <>
+                          {/* Dynamic Staff Section */}
+                          {dynamicStaff.length > 0 && (
+                            <>
+                              <Box
+                                sx={{
+                                  px: 2,
+                                  py: 1,
+                                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                                  borderBottom: 1,
+                                  borderTop: showBranchHeader ? 0 : 1,
+                                  borderColor: 'divider',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1
+                                }}
+                              >
+                                <i className='ri-user-line' style={{ fontSize: 14, color: '#1976d2' }} />
+                                <Typography variant='caption' fontWeight={600} color='primary'>
+                                  Dynamic Staff
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary'>
+                                  ({dynamicStaff.length})
+                                </Typography>
+                                <Tooltip
+                                  title={
+                                    <Box sx={{ p: 1 }}>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={600}
+                                        display='block'
+                                        gutterBottom
+                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                      >
+                                        Dynamic Staff
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        display='block'
+                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                                      >
+                                        Staff members who work flexible hours. Their working hours can vary by day, and
+                                        they can have multiple shifts or breaks during the day.
+                                      </Typography>
+                                    </Box>
+                                  }
+                                  arrow
+                                  placement='right'
+                                  componentsProps={{
+                                    tooltip: {
+                                      sx: {
+                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
+                                        maxWidth: 300,
+                                        '& .MuiTooltip-arrow': {
+                                          color: 'rgba(0, 0, 0, 0.9)'
+                                        }
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
+                                    <i
+                                      className='ri-information-line'
+                                      style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }}
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                              {dynamicStaff.map(renderEnhancedStaffRow)}
+                            </>
+                          )}
+
+                          {/* Static Staff/Rooms Section */}
+                          {staticStaff.length > 0 && (
+                            <>
+                              <Box
+                                sx={{
+                                  px: 2,
+                                  py: 1,
+                                  bgcolor: 'rgba(158, 158, 158, 0.08)',
+                                  borderBottom: 1,
+                                  borderTop: 1,
+                                  borderColor: 'divider',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1
+                                }}
+                              >
+                                <i className='ri-group-line' style={{ fontSize: 14, color: '#757575' }} />
+                                <Typography variant='caption' fontWeight={600} color='text.secondary'>
+                                  Static Staff / Rooms
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary'>
+                                  ({staticStaff.length})
+                                </Typography>
+                                <Tooltip
+                                  title={
+                                    <Box sx={{ p: 1 }}>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={600}
+                                        display='block'
+                                        gutterBottom
+                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                      >
+                                        Static Staff / Rooms
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        display='block'
+                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                                      >
+                                        Resources with fixed, consistent schedules. They work the same hours every day
+                                        (e.g., treatment rooms, equipment, or staff with fixed schedules).
+                                      </Typography>
+                                    </Box>
+                                  }
+                                  arrow
+                                  placement='right'
+                                  componentsProps={{
+                                    tooltip: {
+                                      sx: {
+                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
+                                        maxWidth: 300,
+                                        '& .MuiTooltip-arrow': {
+                                          color: 'rgba(0, 0, 0, 0.9)'
+                                        }
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
+                                    <i
+                                      className='ri-information-line'
+                                      style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }}
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                              {staticStaff.map(renderEnhancedStaffRow)}
+                            </>
+                          )}
+                        </>
+                      )
+                    })()}
                   </Box>
                 )
               })}
@@ -1384,13 +1422,6 @@ export function ShiftsTab() {
             </Button>
           </Box>
 
-          <BulkOperationsDialog
-            open={bulkDialogOpen}
-            onClose={() => setBulkDialogOpen(false)}
-            selectedStaff={selectedStaffIds}
-            onApply={handleBulkApply}
-          />
-
           <Menu
             anchorEl={staffMenuAnchor}
             open={staffMenuOpen}
@@ -1426,6 +1457,7 @@ export function ShiftsTab() {
               staffName={selectedStaffForEdit.name}
               staffType={getStaffType(selectedStaffForEdit.id)}
               referenceDate={selectedDate}
+              bulkStaffIds={bulkMode && selectedStaffIds.length > 1 ? selectedStaffIds : undefined}
             />
           )}
 
@@ -1729,49 +1761,245 @@ export function ShiftsTab() {
                       </Box>
                     )}
 
-                    {/* Staff in this branch */}
-                    {branchStaff.map(staff => (
-                      <Box
-                        key={staff.id}
-                        sx={{
-                          height: 80,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          px: 2,
-                          borderBottom: 1,
-                          borderColor: 'divider'
-                        }}
-                      >
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant='body2' fontWeight={600} noWrap>
-                            {staff.name}
-                          </Typography>
-                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
-                            <Typography
-                              variant='caption'
-                              color='text.secondary'
-                              sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
-                            >
-                              W 45h/45h
-                            </Typography>
-                            <Typography
-                              variant='caption'
-                              color='text.secondary'
-                              sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
-                            >
-                              M 149h 45min
-                            </Typography>
-                          </Box>
-                        </Box>
-                        <IconButton
-                          size='small'
-                          onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}
-                        >
-                          <i className='ri-edit-line' style={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Box>
-                    ))}
+                    {/* Staff in this branch - grouped by type */}
+                    {(() => {
+                      // Group staff by type
+                      const dynamicStaff = branchStaff.filter(s => getStaffType(s.id) === 'dynamic')
+                      const staticStaff = branchStaff.filter(s => getStaffType(s.id) === 'static')
+
+                      return (
+                        <>
+                          {/* Dynamic Staff Section */}
+                          {dynamicStaff.length > 0 && (
+                            <>
+                              <Box
+                                sx={{
+                                  px: 2,
+                                  py: 0.75,
+                                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                                  borderBottom: 1,
+                                  borderTop: showBranchHeader ? 0 : 1,
+                                  borderColor: 'divider',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5
+                                }}
+                              >
+                                <i className='ri-user-line' style={{ fontSize: 12, color: '#1976d2' }} />
+                                <Typography variant='caption' fontWeight={600} fontSize='0.65rem' color='primary'>
+                                  Dynamic
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
+                                  ({dynamicStaff.length})
+                                </Typography>
+                                <Tooltip
+                                  title={
+                                    <Box sx={{ p: 1 }}>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={600}
+                                        display='block'
+                                        gutterBottom
+                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                      >
+                                        Dynamic Staff
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        display='block'
+                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                                      >
+                                        Staff members who work flexible hours. Their working hours can vary by day, and
+                                        they can have multiple shifts or breaks during the day.
+                                      </Typography>
+                                    </Box>
+                                  }
+                                  arrow
+                                  placement='right'
+                                  componentsProps={{
+                                    tooltip: {
+                                      sx: {
+                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
+                                        maxWidth: 300,
+                                        '& .MuiTooltip-arrow': {
+                                          color: 'rgba(0, 0, 0, 0.9)'
+                                        }
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
+                                    <i
+                                      className='ri-information-line'
+                                      style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                              {dynamicStaff.map(staff => (
+                                <Box
+                                  key={staff.id}
+                                  sx={{
+                                    height: 80,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    px: 2,
+                                    borderBottom: 1,
+                                    borderColor: 'divider'
+                                  }}
+                                >
+                                  <Box sx={{ flex: 1 }}>
+                                    <Typography variant='body2' fontWeight={600} noWrap>
+                                      {staff.name}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
+                                      <Typography
+                                        variant='caption'
+                                        color='text.secondary'
+                                        sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                      >
+                                        W 45h/45h
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        color='text.secondary'
+                                        sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                      >
+                                        M 149h 45min
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                  <IconButton
+                                    size='small'
+                                    onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}
+                                  >
+                                    <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </Box>
+                              ))}
+                            </>
+                          )}
+
+                          {/* Static Staff/Rooms Section */}
+                          {staticStaff.length > 0 && (
+                            <>
+                              <Box
+                                sx={{
+                                  px: 2,
+                                  py: 0.75,
+                                  bgcolor: 'rgba(158, 158, 158, 0.08)',
+                                  borderBottom: 1,
+                                  borderTop: 1,
+                                  borderColor: 'divider',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 0.5
+                                }}
+                              >
+                                <i className='ri-group-line' style={{ fontSize: 12, color: '#757575' }} />
+                                <Typography
+                                  variant='caption'
+                                  fontWeight={600}
+                                  fontSize='0.65rem'
+                                  color='text.secondary'
+                                >
+                                  Static / Rooms
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
+                                  ({staticStaff.length})
+                                </Typography>
+                                <Tooltip
+                                  title={
+                                    <Box sx={{ p: 1 }}>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={600}
+                                        display='block'
+                                        gutterBottom
+                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                      >
+                                        Static Staff / Rooms
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        display='block'
+                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                                      >
+                                        Staff members and rooms with fixed working hours that remain the same every day.
+                                        They work single continuous shifts without breaks.
+                                      </Typography>
+                                    </Box>
+                                  }
+                                  arrow
+                                  placement='right'
+                                  componentsProps={{
+                                    tooltip: {
+                                      sx: {
+                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
+                                        maxWidth: 300,
+                                        '& .MuiTooltip-arrow': {
+                                          color: 'rgba(0, 0, 0, 0.9)'
+                                        }
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
+                                    <i
+                                      className='ri-information-line'
+                                      style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}
+                                    />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                              {staticStaff.map(staff => (
+                                <Box
+                                  key={staff.id}
+                                  sx={{
+                                    height: 80,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    px: 2,
+                                    borderBottom: 1,
+                                    borderColor: 'divider'
+                                  }}
+                                >
+                                  <Box sx={{ flex: 1 }}>
+                                    <Typography variant='body2' fontWeight={600} noWrap>
+                                      {staff.name}
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mt: 0.5 }}>
+                                      <Typography
+                                        variant='caption'
+                                        color='text.secondary'
+                                        sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                      >
+                                        W 45h/45h
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        color='text.secondary'
+                                        sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                      >
+                                        M 149h 45min
+                                      </Typography>
+                                    </Box>
+                                  </Box>
+                                  <IconButton
+                                    size='small'
+                                    onClick={e => handleOpenStaffMenu(e, { id: staff.id, name: staff.name })}
+                                  >
+                                    <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </Box>
+                              ))}
+                            </>
+                          )}
+                        </>
+                      )
+                    })()}
                   </Box>
                 )
               })}
@@ -1917,6 +2145,10 @@ export function ShiftsTab() {
                 {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
                   const showBranchHeader = selectedBranch === 'all' // Only show header when viewing all branches
 
+                  // Group staff by type
+                  const dynamicStaff = branchStaff.filter(s => getStaffType(s.id) === 'dynamic')
+                  const staticStaff = branchStaff.filter(s => getStaffType(s.id) === 'static')
+
                   return (
                     <Box key={branchId}>
                       {/* Branch header cell - matches left sidebar branch header height - only show when all branches selected */}
@@ -1931,204 +2163,335 @@ export function ShiftsTab() {
                         />
                       )}
 
-                      {/* Staff cells in this branch */}
-                      {branchStaff.map(staff => {
-                        const timeOff = timeOffRequests.find(
-                          req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
-                        )
-
-                        // Get shifts for this specific date (includes date-specific overrides)
-                        const dateStr = date.toISOString().split('T')[0]
-                        const shifts = getStaffShiftsForDate(staff.id, dateStr)
-                        const hasShift = !timeOff && shifts.length > 0 && shifts[0].start !== '00:00'
-
-                        // Helper function to convert 24h time to 12h format
-                        const formatTime12Hour = (time24: string) => {
-                          const [hourStr, minStr] = time24.split(':')
-                          let hour = parseInt(hourStr)
-                          const minute = minStr
-                          const period = hour >= 12 ? 'PM' : 'AM'
-
-                          if (hour === 0) hour = 12
-                          else if (hour > 12) hour -= 12
-
-                          return `${hour}:${minute} ${period}`
-                        }
-
-                        return (
+                      {/* Dynamic Staff Section */}
+                      {dynamicStaff.length > 0 && (
+                        <>
+                          {/* Dynamic staff type header cell */}
                           <Box
-                            key={staff.id}
                             sx={{
-                              height: 80,
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'stretch',
-                              justifyContent: 'center',
+                              height: '27px',
                               borderBottom: 1,
                               borderColor: 'divider',
-                              position: 'relative',
-                              p: 1
+                              bgcolor: 'rgba(25, 118, 210, 0.08)'
                             }}
-                          >
-                            {hasShift &&
-                              !timeOff &&
-                              shifts.map((shift, idx) => {
-                                const shiftStart = formatTime12Hour(shift.start)
-                                const shiftEnd = formatTime12Hour(shift.end)
+                          />
 
-                                // Calculate duration
-                                const [startH, startM] = shift.start.split(':').map(Number)
-                                const [endH, endM] = shift.end.split(':').map(Number)
-                                const durationMinutes = endH * 60 + endM - (startH * 60 + startM)
-                                const hours = Math.floor(durationMinutes / 60)
-                                const minutes = durationMinutes % 60
+                          {/* Dynamic staff cells */}
+                          {dynamicStaff.map(staff => {
+                            const timeOff = timeOffRequests.find(
+                              req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
+                            )
 
-                                return (
+                            // Get shifts for this specific date (includes date-specific overrides)
+                            const dateStr = date.toISOString().split('T')[0]
+                            const shifts = getStaffShiftsForDate(staff.id, dateStr)
+                            const hasShift = !timeOff && shifts.length > 0 && shifts[0].start !== '00:00'
+
+                            // Helper function to convert 24h time to 12h format
+                            const formatTime12Hour = (time24: string) => {
+                              const [hourStr, minStr] = time24.split(':')
+                              let hour = parseInt(hourStr)
+                              const minute = minStr
+                              const period = hour >= 12 ? 'PM' : 'AM'
+
+                              if (hour === 0) hour = 12
+                              else if (hour > 12) hour -= 12
+
+                              return `${hour}:${minute} ${period}`
+                            }
+
+                            return (
+                              <Box
+                                key={staff.id}
+                                sx={{
+                                  height: 80,
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'stretch',
+                                  justifyContent: 'center',
+                                  borderBottom: 1,
+                                  borderColor: 'divider',
+                                  position: 'relative',
+                                  p: 1
+                                }}
+                              >
+                                {hasShift &&
+                                  !timeOff &&
+                                  shifts.map((shift, idx) => {
+                                    const shiftStart = formatTime12Hour(shift.start)
+                                    const shiftEnd = formatTime12Hour(shift.end)
+
+                                    // Calculate duration
+                                    const [startH, startM] = shift.start.split(':').map(Number)
+                                    const [endH, endM] = shift.end.split(':').map(Number)
+                                    const durationMinutes = endH * 60 + endM - (startH * 60 + startM)
+                                    const hours = Math.floor(durationMinutes / 60)
+                                    const minutes = durationMinutes % 60
+
+                                    return (
+                                      <Box
+                                        key={shift.id}
+                                        onClick={() =>
+                                          openShiftEditor({ id: staff.id, name: staff.name }, date, {
+                                            start: shiftStart,
+                                            end: shiftEnd
+                                          })
+                                        }
+                                        sx={{
+                                          position: 'relative',
+                                          width: '100%',
+                                          height: shifts.length > 1 ? `calc(${100 / shifts.length}% - 4px)` : '100%',
+                                          mb: shifts.length > 1 && idx < shifts.length - 1 ? 0.5 : 0,
+                                          bgcolor: 'rgba(139, 195, 74, 0.3)',
+                                          borderRadius: 1,
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          border: 1,
+                                          borderColor: 'success.light',
+                                          px: 0.5,
+                                          py: shifts.length > 1 ? 0.25 : 0.5,
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s',
+                                          overflow: 'hidden',
+                                          '&:hover': {
+                                            bgcolor: 'rgba(139, 195, 74, 0.4)',
+                                            borderColor: 'success.main'
+                                          }
+                                        }}
+                                      >
+                                        {shifts.length > 1 && (
+                                          <Chip
+                                            label={`${idx + 1}/${shifts.length}`}
+                                            size='small'
+                                            sx={{
+                                              height: 14,
+                                              fontSize: '0.55rem',
+                                              position: 'absolute',
+                                              top: 1,
+                                              left: 1,
+                                              bgcolor: 'primary.main',
+                                              color: 'white',
+                                              '& .MuiChip-label': {
+                                                px: 0.5,
+                                                py: 0
+                                              }
+                                            }}
+                                          />
+                                        )}
+                                        <Box
+                                          sx={{ width: '100%', px: shifts.length > 1 ? 1.5 : 0.5, textAlign: 'center' }}
+                                        >
+                                          <Typography
+                                            variant='caption'
+                                            fontWeight={500}
+                                            color='text.primary'
+                                            sx={{
+                                              fontSize: shifts.length > 1 ? '0.58rem' : '0.65rem',
+                                              lineHeight: 1.1,
+                                              display: 'block',
+                                              whiteSpace: 'nowrap',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis'
+                                            }}
+                                          >
+                                            {shiftStart.toLowerCase()}
+                                          </Typography>
+                                          <Typography
+                                            variant='caption'
+                                            fontWeight={500}
+                                            color='text.primary'
+                                            sx={{
+                                              fontSize: shifts.length > 1 ? '0.58rem' : '0.65rem',
+                                              lineHeight: 1.1,
+                                              display: 'block',
+                                              whiteSpace: 'nowrap',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis'
+                                            }}
+                                          >
+                                            {shiftEnd.toLowerCase()}
+                                          </Typography>
+                                          <Typography
+                                            variant='caption'
+                                            color='text.secondary'
+                                            sx={{
+                                              fontSize: shifts.length > 1 ? '0.52rem' : '0.6rem',
+                                              lineHeight: 1.1,
+                                              display: 'block',
+                                              whiteSpace: 'nowrap',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis'
+                                            }}
+                                          >
+                                            {hours}h{minutes > 0 ? `${minutes}m` : ''}
+                                          </Typography>
+                                          {shift.breaks && shift.breaks.length > 0 && (
+                                            <Box
+                                              sx={{
+                                                mt: 0.25,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 0.125,
+                                                width: '100%'
+                                              }}
+                                            >
+                                              {shift.breaks.map(breakItem => {
+                                                const [breakStartH, breakStartM] = breakItem.start
+                                                  .split(':')
+                                                  .map(Number)
+                                                const [breakEndH, breakEndM] = breakItem.end.split(':').map(Number)
+                                                const breakDurationMinutes =
+                                                  breakEndH * 60 + breakEndM - (breakStartH * 60 + breakStartM)
+
+                                                return (
+                                                  <Box
+                                                    key={breakItem.id}
+                                                    sx={{
+                                                      bgcolor: 'background.paper',
+                                                      borderRadius: 0.5,
+                                                      border: '1px solid',
+                                                      borderColor: 'divider',
+                                                      py: 0.25,
+                                                      px: 0.5,
+                                                      display: 'flex',
+                                                      alignItems: 'center',
+                                                      justifyContent: 'center',
+                                                      gap: 0.25
+                                                    }}
+                                                  >
+                                                    <i className='ri-cup-line' style={{ fontSize: 8, opacity: 0.6 }} />
+                                                    <Typography
+                                                      variant='caption'
+                                                      sx={{
+                                                        fontSize: '0.5rem',
+                                                        lineHeight: 1,
+                                                        color: 'text.secondary',
+                                                        whiteSpace: 'nowrap'
+                                                      }}
+                                                    >
+                                                      Break ({breakDurationMinutes}min)
+                                                    </Typography>
+                                                  </Box>
+                                                )
+                                              })}
+                                            </Box>
+                                          )}
+                                        </Box>
+                                        <IconButton
+                                          size='small'
+                                          sx={{
+                                            position: 'absolute',
+                                            top: 1,
+                                            right: 1,
+                                            color: 'text.primary',
+                                            padding: '2px',
+                                            '& i': {
+                                              fontSize: 12
+                                            }
+                                          }}
+                                          onClick={e => {
+                                            e.stopPropagation()
+                                            openShiftEditor({ id: staff.id, name: staff.name }, date, {
+                                              start: shiftStart,
+                                              end: shiftEnd
+                                            })
+                                          }}
+                                        >
+                                          <i className='ri-edit-line' />
+                                        </IconButton>
+                                      </Box>
+                                    )
+                                  })}
+                                {!hasShift && !timeOff && (
                                   <Box
-                                    key={shift.id}
+                                    onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, null)}
+                                    sx={{
+                                      width: '100%',
+                                      height: '100%',
+                                      bgcolor: 'transparent',
+                                      borderRadius: 1,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      border: '2px dashed',
+                                      borderColor: 'divider',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s',
+                                      '&:hover': {
+                                        bgcolor: 'rgba(0, 0, 0, 0.02)',
+                                        borderColor: 'primary.main'
+                                      }
+                                    }}
+                                  >
+                                    <Typography variant='body2' color='text.secondary' fontWeight={500}>
+                                      No Shift
+                                    </Typography>
+                                    <IconButton
+                                      size='small'
+                                      sx={{ position: 'absolute', top: 2, right: 2, color: 'text.secondary' }}
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        openShiftEditor({ id: staff.id, name: staff.name }, date, null)
+                                      }}
+                                    >
+                                      <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                                    </IconButton>
+                                  </Box>
+                                )}
+                                {timeOff && (
+                                  <Box
                                     onClick={() =>
-                                      openShiftEditor({ id: staff.id, name: staff.name }, date, {
-                                        start: shiftStart,
-                                        end: shiftEnd
-                                      })
+                                      handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)
                                     }
                                     sx={{
-                                      position: 'relative',
                                       width: '100%',
-                                      height: shifts.length > 1 ? `calc(${100 / shifts.length}% - 4px)` : '100%',
-                                      mb: shifts.length > 1 && idx < shifts.length - 1 ? 0.5 : 0,
-                                      bgcolor: 'rgba(139, 195, 74, 0.3)',
+                                      height: '100%',
+                                      bgcolor: 'grey.800',
                                       borderRadius: 1,
                                       display: 'flex',
                                       flexDirection: 'column',
                                       alignItems: 'center',
                                       justifyContent: 'center',
-                                      border: 1,
-                                      borderColor: 'success.light',
-                                      px: 0.5,
-                                      py: shifts.length > 1 ? 0.25 : 0.5,
+                                      p: 0.5,
                                       cursor: 'pointer',
+                                      position: 'relative',
                                       transition: 'all 0.2s',
                                       overflow: 'hidden',
                                       '&:hover': {
-                                        bgcolor: 'rgba(139, 195, 74, 0.4)',
-                                        borderColor: 'success.main'
+                                        bgcolor: 'grey.700'
                                       }
                                     }}
                                   >
-                                    {shifts.length > 1 && (
-                                      <Chip
-                                        label={`${idx + 1}/${shifts.length}`}
-                                        size='small'
-                                        sx={{
-                                          height: 14,
-                                          fontSize: '0.55rem',
-                                          position: 'absolute',
-                                          top: 1,
-                                          left: 1,
-                                          bgcolor: 'primary.main',
-                                          color: 'white',
-                                          '& .MuiChip-label': {
-                                            px: 0.5,
-                                            py: 0
-                                          }
-                                        }}
-                                      />
-                                    )}
-                                    <Box sx={{ width: '100%', px: shifts.length > 1 ? 1.5 : 0.5, textAlign: 'center' }}>
+                                    <Box sx={{ textAlign: 'center', width: '100%', px: 2 }}>
                                       <Typography
                                         variant='caption'
-                                        fontWeight={500}
-                                        color='text.primary'
                                         sx={{
-                                          fontSize: shifts.length > 1 ? '0.58rem' : '0.65rem',
-                                          lineHeight: 1.1,
+                                          color: '#fff',
+                                          fontSize: '0.65rem',
+                                          fontWeight: 500,
                                           display: 'block',
                                           whiteSpace: 'nowrap',
                                           overflow: 'hidden',
                                           textOverflow: 'ellipsis'
                                         }}
                                       >
-                                        {shiftStart.toLowerCase()}
+                                        {timeOff.reason}
                                       </Typography>
                                       <Typography
                                         variant='caption'
-                                        fontWeight={500}
-                                        color='text.primary'
                                         sx={{
-                                          fontSize: shifts.length > 1 ? '0.58rem' : '0.65rem',
-                                          lineHeight: 1.1,
+                                          color: 'rgba(255, 255, 255, 0.7)',
+                                          fontSize: '0.6rem',
                                           display: 'block',
                                           whiteSpace: 'nowrap',
                                           overflow: 'hidden',
                                           textOverflow: 'ellipsis'
                                         }}
                                       >
-                                        {shiftEnd.toLowerCase()}
+                                        All Day
                                       </Typography>
-                                      <Typography
-                                        variant='caption'
-                                        color='text.secondary'
-                                        sx={{
-                                          fontSize: shifts.length > 1 ? '0.52rem' : '0.6rem',
-                                          lineHeight: 1.1,
-                                          display: 'block',
-                                          whiteSpace: 'nowrap',
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis'
-                                        }}
-                                      >
-                                        {hours}h{minutes > 0 ? `${minutes}m` : ''}
-                                      </Typography>
-                                      {shift.breaks && shift.breaks.length > 0 && (
-                                        <Box
-                                          sx={{
-                                            mt: 0.25,
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: 0.125,
-                                            width: '100%'
-                                          }}
-                                        >
-                                          {shift.breaks.map(breakItem => {
-                                            const [breakStartH, breakStartM] = breakItem.start.split(':').map(Number)
-                                            const [breakEndH, breakEndM] = breakItem.end.split(':').map(Number)
-                                            const breakDurationMinutes =
-                                              breakEndH * 60 + breakEndM - (breakStartH * 60 + breakStartM)
-
-                                            return (
-                                              <Box
-                                                key={breakItem.id}
-                                                sx={{
-                                                  bgcolor: 'background.paper',
-                                                  borderRadius: 0.5,
-                                                  border: '1px solid',
-                                                  borderColor: 'divider',
-                                                  py: 0.25,
-                                                  px: 0.5,
-                                                  display: 'flex',
-                                                  alignItems: 'center',
-                                                  justifyContent: 'center',
-                                                  gap: 0.25
-                                                }}
-                                              >
-                                                <i className='ri-cup-line' style={{ fontSize: 8, opacity: 0.6 }} />
-                                                <Typography
-                                                  variant='caption'
-                                                  sx={{
-                                                    fontSize: '0.5rem',
-                                                    lineHeight: 1,
-                                                    color: 'text.secondary',
-                                                    whiteSpace: 'nowrap'
-                                                  }}
-                                                >
-                                                  Break ({breakDurationMinutes}min)
-                                                </Typography>
-                                              </Box>
-                                            )
-                                          })}
-                                        </Box>
-                                      )}
                                     </Box>
                                     <IconButton
                                       size='small'
@@ -2136,7 +2499,7 @@ export function ShiftsTab() {
                                         position: 'absolute',
                                         top: 1,
                                         right: 1,
-                                        color: 'text.primary',
+                                        color: 'white',
                                         padding: '2px',
                                         '& i': {
                                           fontSize: 12
@@ -2144,128 +2507,375 @@ export function ShiftsTab() {
                                       }}
                                       onClick={e => {
                                         e.stopPropagation()
-                                        openShiftEditor({ id: staff.id, name: staff.name }, date, {
-                                          start: shiftStart,
-                                          end: shiftEnd
-                                        })
+                                        handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)
                                       }}
                                     >
                                       <i className='ri-edit-line' />
                                     </IconButton>
                                   </Box>
-                                )
-                              })}
-                            {!hasShift && !timeOff && (
-                              <Box
-                                onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, null)}
-                                sx={{
-                                  width: '100%',
-                                  height: '100%',
-                                  bgcolor: 'transparent',
-                                  borderRadius: 1,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  border: '2px dashed',
-                                  borderColor: 'divider',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s',
-                                  '&:hover': {
-                                    bgcolor: 'rgba(0, 0, 0, 0.02)',
-                                    borderColor: 'primary.main'
-                                  }
-                                }}
-                              >
-                                <Typography variant='body2' color='text.secondary' fontWeight={500}>
-                                  No Shift
-                                </Typography>
-                                <IconButton
-                                  size='small'
-                                  sx={{ position: 'absolute', top: 2, right: 2, color: 'text.secondary' }}
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    openShiftEditor({ id: staff.id, name: staff.name }, date, null)
-                                  }}
-                                >
-                                  <i className='ri-edit-line' style={{ fontSize: 14 }} />
-                                </IconButton>
+                                )}
                               </Box>
-                            )}
-                            {timeOff && (
+                            )
+                          })}
+                        </>
+                      )}
+
+                      {/* Static Staff/Rooms Section */}
+                      {staticStaff.length > 0 && (
+                        <>
+                          {/* Static staff type header cell */}
+                          <Box
+                            sx={{
+                              height: '27px',
+                              borderBottom: 1,
+                              borderColor: 'divider',
+                              bgcolor: 'rgba(158, 158, 158, 0.08)'
+                            }}
+                          />
+
+                          {/* Static staff cells */}
+                          {staticStaff.map(staff => {
+                            const timeOff = timeOffRequests.find(
+                              req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
+                            )
+
+                            // Get shifts for this specific date (includes date-specific overrides)
+                            const dateStr = date.toISOString().split('T')[0]
+                            const shifts = getStaffShiftsForDate(staff.id, dateStr)
+                            const hasShift = !timeOff && shifts.length > 0 && shifts[0].start !== '00:00'
+
+                            // Helper function to convert 24h time to 12h format
+                            const formatTime12Hour = (time24: string) => {
+                              const [hourStr, minStr] = time24.split(':')
+                              let hour = parseInt(hourStr)
+                              const minute = minStr
+                              const period = hour >= 12 ? 'PM' : 'AM'
+
+                              if (hour === 0) hour = 12
+                              else if (hour > 12) hour -= 12
+
+                              return `${hour}:${minute} ${period}`
+                            }
+
+                            return (
                               <Box
-                                onClick={() => handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)}
+                                key={staff.id}
                                 sx={{
-                                  width: '100%',
-                                  height: '100%',
-                                  bgcolor: 'grey.800',
-                                  borderRadius: 1,
+                                  height: 80,
                                   display: 'flex',
                                   flexDirection: 'column',
-                                  alignItems: 'center',
+                                  alignItems: 'stretch',
                                   justifyContent: 'center',
-                                  p: 0.5,
-                                  cursor: 'pointer',
+                                  borderBottom: 1,
+                                  borderColor: 'divider',
                                   position: 'relative',
-                                  transition: 'all 0.2s',
-                                  overflow: 'hidden',
-                                  '&:hover': {
-                                    bgcolor: 'grey.700'
-                                  }
+                                  p: 1
                                 }}
                               >
-                                <Box sx={{ textAlign: 'center', width: '100%', px: 2 }}>
-                                  <Typography
-                                    variant='caption'
+                                {hasShift &&
+                                  !timeOff &&
+                                  shifts.map((shift, idx) => {
+                                    const shiftStart = formatTime12Hour(shift.start)
+                                    const shiftEnd = formatTime12Hour(shift.end)
+
+                                    // Calculate duration
+                                    const [startH, startM] = shift.start.split(':').map(Number)
+                                    const [endH, endM] = shift.end.split(':').map(Number)
+                                    const durationMinutes = endH * 60 + endM - (startH * 60 + startM)
+                                    const hours = Math.floor(durationMinutes / 60)
+                                    const minutes = durationMinutes % 60
+
+                                    return (
+                                      <Box
+                                        key={shift.id}
+                                        onClick={() =>
+                                          openShiftEditor({ id: staff.id, name: staff.name }, date, {
+                                            start: shiftStart,
+                                            end: shiftEnd
+                                          })
+                                        }
+                                        sx={{
+                                          position: 'relative',
+                                          width: '100%',
+                                          height: shifts.length > 1 ? `calc(${100 / shifts.length}% - 4px)` : '100%',
+                                          mb: shifts.length > 1 && idx < shifts.length - 1 ? 0.5 : 0,
+                                          bgcolor: 'rgba(139, 195, 74, 0.3)',
+                                          borderRadius: 1,
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          border: 1,
+                                          borderColor: 'success.light',
+                                          px: 0.5,
+                                          py: shifts.length > 1 ? 0.25 : 0.5,
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s',
+                                          overflow: 'hidden',
+                                          '&:hover': {
+                                            bgcolor: 'rgba(139, 195, 74, 0.4)',
+                                            borderColor: 'success.main'
+                                          }
+                                        }}
+                                      >
+                                        {shifts.length > 1 && (
+                                          <Chip
+                                            label={`${idx + 1}/${shifts.length}`}
+                                            size='small'
+                                            sx={{
+                                              height: 14,
+                                              fontSize: '0.55rem',
+                                              position: 'absolute',
+                                              top: 1,
+                                              left: 1,
+                                              bgcolor: 'primary.main',
+                                              color: 'white',
+                                              '& .MuiChip-label': {
+                                                px: 0.5,
+                                                py: 0
+                                              }
+                                            }}
+                                          />
+                                        )}
+                                        <Box
+                                          sx={{ width: '100%', px: shifts.length > 1 ? 1.5 : 0.5, textAlign: 'center' }}
+                                        >
+                                          <Typography
+                                            variant='caption'
+                                            fontWeight={500}
+                                            color='text.primary'
+                                            sx={{
+                                              fontSize: shifts.length > 1 ? '0.58rem' : '0.65rem',
+                                              lineHeight: 1.1,
+                                              display: 'block',
+                                              whiteSpace: 'nowrap',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis'
+                                            }}
+                                          >
+                                            {shiftStart.toLowerCase()}
+                                          </Typography>
+                                          <Typography
+                                            variant='caption'
+                                            fontWeight={500}
+                                            color='text.primary'
+                                            sx={{
+                                              fontSize: shifts.length > 1 ? '0.58rem' : '0.65rem',
+                                              lineHeight: 1.1,
+                                              display: 'block',
+                                              whiteSpace: 'nowrap',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis'
+                                            }}
+                                          >
+                                            {shiftEnd.toLowerCase()}
+                                          </Typography>
+                                          <Typography
+                                            variant='caption'
+                                            color='text.secondary'
+                                            sx={{
+                                              fontSize: shifts.length > 1 ? '0.52rem' : '0.6rem',
+                                              lineHeight: 1.1,
+                                              display: 'block',
+                                              whiteSpace: 'nowrap',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis'
+                                            }}
+                                          >
+                                            {hours}h{minutes > 0 ? `${minutes}m` : ''}
+                                          </Typography>
+                                          {shift.breaks && shift.breaks.length > 0 && (
+                                            <Box
+                                              sx={{
+                                                mt: 0.25,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 0.125,
+                                                width: '100%'
+                                              }}
+                                            >
+                                              {shift.breaks.map(breakItem => {
+                                                const [breakStartH, breakStartM] = breakItem.start
+                                                  .split(':')
+                                                  .map(Number)
+                                                const [breakEndH, breakEndM] = breakItem.end.split(':').map(Number)
+                                                const breakDurationMinutes =
+                                                  breakEndH * 60 + breakEndM - (breakStartH * 60 + breakStartM)
+
+                                                return (
+                                                  <Box
+                                                    key={breakItem.id}
+                                                    sx={{
+                                                      bgcolor: 'background.paper',
+                                                      borderRadius: 0.5,
+                                                      border: '1px solid',
+                                                      borderColor: 'divider',
+                                                      py: 0.25,
+                                                      px: 0.5,
+                                                      display: 'flex',
+                                                      alignItems: 'center',
+                                                      justifyContent: 'center',
+                                                      gap: 0.25
+                                                    }}
+                                                  >
+                                                    <i className='ri-cup-line' style={{ fontSize: 8, opacity: 0.6 }} />
+                                                    <Typography
+                                                      variant='caption'
+                                                      sx={{
+                                                        fontSize: '0.5rem',
+                                                        lineHeight: 1,
+                                                        color: 'text.secondary',
+                                                        whiteSpace: 'nowrap'
+                                                      }}
+                                                    >
+                                                      Break ({breakDurationMinutes}min)
+                                                    </Typography>
+                                                  </Box>
+                                                )
+                                              })}
+                                            </Box>
+                                          )}
+                                        </Box>
+                                        <IconButton
+                                          size='small'
+                                          sx={{
+                                            position: 'absolute',
+                                            top: 1,
+                                            right: 1,
+                                            color: 'text.primary',
+                                            padding: '2px',
+                                            '& i': {
+                                              fontSize: 12
+                                            }
+                                          }}
+                                          onClick={e => {
+                                            e.stopPropagation()
+                                            openShiftEditor({ id: staff.id, name: staff.name }, date, {
+                                              start: shiftStart,
+                                              end: shiftEnd
+                                            })
+                                          }}
+                                        >
+                                          <i className='ri-edit-line' />
+                                        </IconButton>
+                                      </Box>
+                                    )
+                                  })}
+                                {!hasShift && !timeOff && (
+                                  <Box
+                                    onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, null)}
                                     sx={{
-                                      color: '#fff',
-                                      fontSize: '0.65rem',
-                                      fontWeight: 500,
-                                      display: 'block',
-                                      whiteSpace: 'nowrap',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis'
+                                      width: '100%',
+                                      height: '100%',
+                                      bgcolor: 'transparent',
+                                      borderRadius: 1,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      border: '2px dashed',
+                                      borderColor: 'divider',
+                                      cursor: 'pointer',
+                                      transition: 'all 0.2s',
+                                      '&:hover': {
+                                        bgcolor: 'rgba(0, 0, 0, 0.02)',
+                                        borderColor: 'primary.main'
+                                      }
                                     }}
                                   >
-                                    {timeOff.reason}
-                                  </Typography>
-                                  <Typography
-                                    variant='caption'
-                                    sx={{
-                                      color: 'rgba(255, 255, 255, 0.7)',
-                                      fontSize: '0.6rem',
-                                      display: 'block',
-                                      whiteSpace: 'nowrap',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis'
-                                    }}
-                                  >
-                                    All Day
-                                  </Typography>
-                                </Box>
-                                <IconButton
-                                  size='small'
-                                  sx={{
-                                    position: 'absolute',
-                                    top: 1,
-                                    right: 1,
-                                    color: 'white',
-                                    padding: '2px',
-                                    '& i': {
-                                      fontSize: 12
+                                    <Typography variant='body2' color='text.secondary' fontWeight={500}>
+                                      No Shift
+                                    </Typography>
+                                    <IconButton
+                                      size='small'
+                                      sx={{ position: 'absolute', top: 2, right: 2, color: 'text.secondary' }}
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        openShiftEditor({ id: staff.id, name: staff.name }, date, null)
+                                      }}
+                                    >
+                                      <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                                    </IconButton>
+                                  </Box>
+                                )}
+                                {timeOff && (
+                                  <Box
+                                    onClick={() =>
+                                      handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)
                                     }
-                                  }}
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)
-                                  }}
-                                >
-                                  <i className='ri-edit-line' />
-                                </IconButton>
+                                    sx={{
+                                      width: '100%',
+                                      height: '100%',
+                                      bgcolor: 'grey.800',
+                                      borderRadius: 1,
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      p: 0.5,
+                                      cursor: 'pointer',
+                                      position: 'relative',
+                                      transition: 'all 0.2s',
+                                      overflow: 'hidden',
+                                      '&:hover': {
+                                        bgcolor: 'grey.700'
+                                      }
+                                    }}
+                                  >
+                                    <Box sx={{ textAlign: 'center', width: '100%', px: 2 }}>
+                                      <Typography
+                                        variant='caption'
+                                        sx={{
+                                          color: '#fff',
+                                          fontSize: '0.65rem',
+                                          fontWeight: 500,
+                                          display: 'block',
+                                          whiteSpace: 'nowrap',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis'
+                                        }}
+                                      >
+                                        {timeOff.reason}
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        sx={{
+                                          color: 'rgba(255, 255, 255, 0.7)',
+                                          fontSize: '0.6rem',
+                                          display: 'block',
+                                          whiteSpace: 'nowrap',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis'
+                                        }}
+                                      >
+                                        All Day
+                                      </Typography>
+                                    </Box>
+                                    <IconButton
+                                      size='small'
+                                      sx={{
+                                        position: 'absolute',
+                                        top: 1,
+                                        right: 1,
+                                        color: 'white',
+                                        padding: '2px',
+                                        '& i': {
+                                          fontSize: 12
+                                        }
+                                      }}
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        handleEditTimeOff(timeOff.id, { id: staff.id, name: staff.name }, date)
+                                      }}
+                                    >
+                                      <i className='ri-edit-line' />
+                                    </IconButton>
+                                  </Box>
+                                )}
                               </Box>
-                            )}
-                          </Box>
-                        )
-                      })}
+                            )
+                          })}
+                        </>
+                      )}
                     </Box>
                   )
                 })}
@@ -2307,13 +2917,6 @@ export function ShiftsTab() {
           Add Time Off
         </Button>
       </Box>
-
-      <BulkOperationsDialog
-        open={bulkDialogOpen}
-        onClose={() => setBulkDialogOpen(false)}
-        selectedStaff={selectedStaffIds}
-        onApply={handleBulkApply}
-      />
 
       <Menu
         anchorEl={staffMenuAnchor}
@@ -2358,11 +2961,18 @@ export function ShiftsTab() {
       {selectedStaffForEdit && (
         <StaffEditWorkingHoursModal
           open={isWorkingHoursModalOpen}
-          onClose={() => setIsWorkingHoursModalOpen(false)}
+          onClose={() => {
+            setIsWorkingHoursModalOpen(false)
+            // Clear bulk mode selections when closing
+            if (bulkMode && selectedStaffIds.length > 1) {
+              // Keep bulk mode active but don't clear selections
+            }
+          }}
           staffId={selectedStaffForEdit.id}
           staffName={selectedStaffForEdit.name}
           staffType={getStaffType(selectedStaffForEdit.id)}
           referenceDate={selectedDate}
+          bulkStaffIds={bulkMode && selectedStaffIds.length > 1 ? selectedStaffIds : undefined}
         />
       )}
 

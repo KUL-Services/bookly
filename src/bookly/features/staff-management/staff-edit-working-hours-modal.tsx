@@ -21,11 +21,12 @@ import {
   InputLabel,
   OutlinedInput,
   Checkbox,
-  ListItemText
+  ListItemText,
+  Avatar
 } from '@mui/material'
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns'
 import { useStaffManagementStore } from './staff-store'
-import { mockServices } from '@/bookly/data/mock-data'
+import { mockServices, mockStaff } from '@/bookly/data/mock-data'
 import type { DayOfWeek } from '../calendar/types'
 import { TimeSelectField } from './time-select-field'
 
@@ -36,6 +37,7 @@ interface StaffEditWorkingHoursModalProps {
   staffName: string
   staffType?: 'dynamic' | 'static'
   referenceDate?: Date // The date/week being viewed
+  bulkStaffIds?: string[] // For bulk editing multiple staff
 }
 
 const DAYS_OF_WEEK: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -70,13 +72,29 @@ export function StaffEditWorkingHoursModal({
   staffId,
   staffName,
   staffType = 'dynamic',
-  referenceDate
+  referenceDate,
+  bulkStaffIds
 }: StaffEditWorkingHoursModalProps) {
   const { getStaffWorkingHours, updateStaffWorkingHours, updateShiftsForDate } = useStaffManagementStore()
   const [effectiveDate, setEffectiveDate] = useState('immediately')
   // Dynamic staff: Default ON (apply to all future weeks)
   // Static staff: Default OFF (this week only)
   const [applyToAllWeeks, setApplyToAllWeeks] = useState(staffType === 'dynamic')
+
+  // Determine if this is bulk mode
+  const isBulkMode = bulkStaffIds && bulkStaffIds.length > 0
+
+  // Get all staff details for bulk mode
+  const bulkStaffDetails = isBulkMode ? bulkStaffIds.map(id => mockStaff.find(s => s.id === id)).filter(Boolean) : []
+
+  // Helper function to get initials
+  const getInitials = (name: string): string => {
+    const parts = name.trim().split(/\s+/)
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase()
+    }
+    return parts[0].substring(0, 2).toUpperCase()
+  }
 
   // Calculate the current week dates
   const weekDates = referenceDate
@@ -87,38 +105,43 @@ export function StaffEditWorkingHoursModal({
     : []
 
   const handleSave = () => {
+    // Determine which staff to update
+    const staffIdsToUpdate = isBulkMode ? bulkStaffIds : [staffId]
+
     // Validate all shifts for overlaps before saving
-    for (const day of DAYS_OF_WEEK) {
-      const dayHours = getStaffWorkingHours(staffId, day)
+    for (const currentStaffId of staffIdsToUpdate) {
+      for (const day of DAYS_OF_WEEK) {
+        const dayHours = getStaffWorkingHours(currentStaffId, day)
 
-      if (dayHours.isWorking && dayHours.shifts.length > 1) {
-        // Check all pairs of shifts for overlaps
-        for (let i = 0; i < dayHours.shifts.length; i++) {
-          const shift1 = dayHours.shifts[i]
-          const [startH1, startM1] = shift1.start.split(':').map(Number)
-          const [endH1, endM1] = shift1.end.split(':').map(Number)
-          const start1 = startH1 * 60 + startM1
-          const end1 = endH1 * 60 + endM1
+        if (dayHours.isWorking && dayHours.shifts.length > 1) {
+          // Check all pairs of shifts for overlaps
+          for (let i = 0; i < dayHours.shifts.length; i++) {
+            const shift1 = dayHours.shifts[i]
+            const [startH1, startM1] = shift1.start.split(':').map(Number)
+            const [endH1, endM1] = shift1.end.split(':').map(Number)
+            const start1 = startH1 * 60 + startM1
+            const end1 = endH1 * 60 + endM1
 
-          // Validate end time is after start time
-          if (end1 <= start1) {
-            alert(`${DAY_LABELS[day]}: Shift ${i + 1} end time must be after start time`)
-            return
-          }
-
-          for (let j = i + 1; j < dayHours.shifts.length; j++) {
-            const shift2 = dayHours.shifts[j]
-            const [startH2, startM2] = shift2.start.split(':').map(Number)
-            const [endH2, endM2] = shift2.end.split(':').map(Number)
-            const start2 = startH2 * 60 + startM2
-            const end2 = endH2 * 60 + endM2
-
-            // Check for overlap
-            if (start1 < end2 && end1 > start2) {
-              alert(
-                `${DAY_LABELS[day]}: Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`
-              )
+            // Validate end time is after start time
+            if (end1 <= start1) {
+              alert(`${DAY_LABELS[day]}: Shift ${i + 1} end time must be after start time`)
               return
+            }
+
+            for (let j = i + 1; j < dayHours.shifts.length; j++) {
+              const shift2 = dayHours.shifts[j]
+              const [startH2, startM2] = shift2.start.split(':').map(Number)
+              const [endH2, endM2] = shift2.end.split(':').map(Number)
+              const start2 = startH2 * 60 + startM2
+              const end2 = endH2 * 60 + endM2
+
+              // Check for overlap
+              if (start1 < end2 && end1 > start2) {
+                alert(
+                  `${DAY_LABELS[day]}: Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`
+                )
+                return
+              }
             }
           }
         }
@@ -137,36 +160,39 @@ export function StaffEditWorkingHoursModal({
         return
       }
 
-      // Create shift instances for each day of the week
-      weekDates.forEach((date, index) => {
-        const dayOfWeek = DAYS_OF_WEEK[index]
-        const dayHours = getStaffWorkingHours(staffId, dayOfWeek)
-        const dateStr = date.toISOString().split('T')[0]
+      // Apply to all staff (bulk mode) or just the single staff
+      staffIdsToUpdate.forEach(currentStaffId => {
+        // Create shift instances for each day of the week
+        weekDates.forEach((date, index) => {
+          const dayOfWeek = DAYS_OF_WEEK[index]
+          const dayHours = getStaffWorkingHours(currentStaffId, dayOfWeek)
+          const dateStr = date.toISOString().split('T')[0]
 
-        if (dayHours.isWorking && dayHours.shifts.length > 0) {
-          // Create shift instances for all shifts on this day
-          const shiftInstances = dayHours.shifts.map(shift => ({
-            id: shift.id,
-            date: dateStr,
-            start: shift.start,
-            end: shift.end,
-            breaks: shift.breaks && shift.breaks.length > 0 ? shift.breaks : undefined,
-            reason: 'manual' as const
-          }))
-          updateShiftsForDate(staffId, dateStr, shiftInstances)
-        } else {
-          // Create no-shift instance for this specific date
-          updateShiftsForDate(staffId, dateStr, [
-            {
-              id: crypto.randomUUID(),
+          if (dayHours.isWorking && dayHours.shifts.length > 0) {
+            // Create shift instances for all shifts on this day
+            const shiftInstances = dayHours.shifts.map(shift => ({
+              id: shift.id,
               date: dateStr,
-              start: '00:00',
-              end: '00:00',
-              breaks: undefined,
-              reason: 'manual'
-            }
-          ])
-        }
+              start: shift.start,
+              end: shift.end,
+              breaks: shift.breaks && shift.breaks.length > 0 ? shift.breaks : undefined,
+              reason: 'manual' as const
+            }))
+            updateShiftsForDate(currentStaffId, dateStr, shiftInstances)
+          } else {
+            // Create no-shift instance for this specific date
+            updateShiftsForDate(currentStaffId, dateStr, [
+              {
+                id: crypto.randomUUID(),
+                date: dateStr,
+                start: '00:00',
+                end: '00:00',
+                breaks: undefined,
+                reason: 'manual'
+              }
+            ])
+          }
+        })
       })
 
       onClose()
@@ -177,11 +203,48 @@ export function StaffEditWorkingHoursModal({
     <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
       <DialogTitle>
         <Typography variant='h6' fontWeight={600}>
-          Edit • Working Hours • {staffName}
+          {isBulkMode ? 'Bulk Edit • Working Hours' : `Edit • Working Hours • ${staffName}`}
         </Typography>
         <Typography variant='body2' color='text.secondary'>
-          Set working hours for {staffName}
+          {isBulkMode ? 'Set working hours for multiple staff members' : `Set working hours for ${staffName}`}
         </Typography>
+
+        {/* Bulk Staff Chips Display */}
+        {isBulkMode && (
+          <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {bulkStaffDetails.map(staff => {
+              if (!staff) return null
+              return (
+                <Chip
+                  key={staff.id}
+                  avatar={
+                    <Avatar
+                      sx={{
+                        bgcolor: staff.color || '#1976d2',
+                        width: 24,
+                        height: 24,
+                        fontSize: 11,
+                        fontWeight: 600
+                      }}
+                    >
+                      {getInitials(staff.name)}
+                    </Avatar>
+                  }
+                  label={staff.name}
+                  sx={{
+                    bgcolor: `${staff.color || '#1976d2'}20`,
+                    borderColor: staff.color || '#1976d2',
+                    '& .MuiChip-label': {
+                      color: 'text.primary',
+                      fontWeight: 500
+                    }
+                  }}
+                  variant='outlined'
+                />
+              )
+            })}
+          </Box>
+        )}
       </DialogTitle>
 
       <DialogContent dividers>
