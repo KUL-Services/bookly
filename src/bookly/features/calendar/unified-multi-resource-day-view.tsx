@@ -4,10 +4,10 @@ import { Box, Typography, Avatar, Chip, Divider } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, addMinutes, isSameDay, isToday } from 'date-fns'
 import { useState, useEffect, useMemo } from 'react'
-import { mockStaff, mockServices } from '@/bookly/data/mock-data'
+import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
-import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms } from './utils'
+import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms, getStaffAvailableCapacity, getCapacityColor } from './utils'
 import type { CalendarEvent, DayOfWeek } from './types'
 
 interface UnifiedMultiResourceDayViewProps {
@@ -555,7 +555,22 @@ export default function UnifiedMultiResourceDayView({
                         {resource.name}
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, justifyContent: 'center', mt: 0.25 }}>
-                        {resource.type === 'staff' && resource.maxConcurrentBookings && (
+                        {resource.type === 'staff' && resource.staffType === 'dynamic' && (
+                          (() => {
+                            const availableCapacity = getStaffAvailableCapacity(resource.id, currentDate, mockBookings)
+                            const capacityColor = getCapacityColor(availableCapacity)
+                            return availableCapacity !== null ? (
+                              <Chip
+                                label={`${availableCapacity}/${resource.maxConcurrentBookings || 1}`}
+                                size='small'
+                                variant='outlined'
+                                color={capacityColor}
+                                sx={{ height: 16, fontSize: '0.55rem' }}
+                              />
+                            ) : null
+                          })()
+                        )}
+                        {resource.type === 'staff' && resource.staffType === 'static' && resource.maxConcurrentBookings && (
                           <Chip
                             label={`Cap: ${resource.maxConcurrentBookings}`}
                             size='small'
@@ -568,6 +583,7 @@ export default function UnifiedMultiResourceDayView({
                             label={`Cap: ${resource.capacity}`}
                             size='small'
                             variant='outlined'
+                            color={resource.roomType === 'dynamic' ? 'success' : 'default'}
                             sx={{ height: 16, fontSize: '0.55rem', bgcolor: isDark ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)' }}
                           />
                         )}
