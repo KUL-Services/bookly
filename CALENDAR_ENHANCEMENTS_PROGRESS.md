@@ -1,7 +1,7 @@
 # Calendar Enhancements Progress Report
 
 **Date**: 2025-12-14
-**Status**: In Progress - 3 of 9 tasks completed
+**Status**: In Progress - 5 of 9 tasks completed (56%)
 
 ---
 
@@ -56,13 +56,43 @@
 
 - **Lines Modified**: ~1486-1663
 
+### 4. Added "Available Now" Filter for Staff
+- **File**: `src/bookly/features/calendar/calendar-sidebar.tsx` and `types.ts`
+- **Changes**:
+  - Added `availableNow?: boolean` property to `StaffFilter` type
+  - Implemented `getAvailableStaffNow()` callback that checks current time against working hours
+  - Added "Available now" checkbox in staff filter section
+  - Filter automatically selects staff currently working
+- **How It Works**:
+  - Gets current day and time
+  - Checks each staff member's working hours for that day
+  - Compares current time against active shifts
+  - Shows only staff with overlapping shifts
+- **Commit**: `85410f5`
+
+### 5. Implemented Capacity Logic Functions
+- **File**: `src/bookly/features/calendar/utils.ts`
+- **New Functions**:
+  - `getStaffAvailableCapacity()` - Calculate available slots for dynamic staff based on `maxConcurrentBookings`
+  - `getCapacityColor()` - Return color code based on available capacity (error/warning/success)
+  - `checkSlotAvailabilityByTime()` - Check if time slot is available by comparing against bookings
+  - `getDynamicRoomAvailability()` - Get total capacity for dynamic/flexible rooms
+- **Features**:
+  - Supports real-time capacity checking
+  - Color coding: Red (0 slots), Yellow (1 slot), Green (2+ slots)
+  - Works with both dynamic and static resource types
+  - Time-aware availability checks
+- **Commit**: `4360a00`
+
 ---
 
 ## ⏳ Pending Tasks
 
-### 4. Add "Available Staff at Current Moment" Filter
+### 6. Integrate Capacity Display in Calendar Views
 
-**Location**: `src/bookly/features/calendar/calendar-sidebar.tsx`
+**Locations**:
+- `src/bookly/features/calendar/unified-multi-resource-day-view.tsx`
+- `src/bookly/features/calendar/unified-multi-resource-week-view.tsx`
 
 **Implementation Plan**:
 ```typescript
