@@ -21,11 +21,11 @@ import {
   Chip,
   InputAdornment
 } from '@mui/material'
-import { mockStaff, mockServices } from '@/bookly/data/mock-data'
+import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
 import type { DateRange } from './types'
 import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
-import { isStaffAvailable, hasConflict, getServiceDuration } from './utils'
+import { isStaffAvailable, hasConflict, getServiceDuration, getStaffAvailableCapacity, getCapacityColor } from './utils'
 import ClientPickerDialog from './client-picker-dialog'
 
 // Helper function to get 2 initials from a name
@@ -80,6 +80,8 @@ export default function NewAppointmentDrawer({
   const [staffManuallyChosen, setStaffManuallyChosen] = useState(!!initialStaffId)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
+  const [capacityWarning, setCapacityWarning] = useState<string | null>(null)
+  const [staffCapacityInfo, setStaffCapacityInfo] = useState<{available: number, max: number, isLow: boolean} | null>(null)
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
 
   // Static mode state
@@ -119,6 +121,8 @@ export default function NewAppointmentDrawer({
   useEffect(() => {
     if (!staffId || !startTime || !endTime) {
       setAvailabilityWarning(null)
+      setCapacityWarning(null)
+      setStaffCapacityInfo(null)
       return
     }
 
@@ -139,8 +143,38 @@ export default function NewAppointmentDrawer({
       return
     }
 
+    // Check capacity for dynamic staff in dynamic mode
+    if (schedulingMode === 'dynamic') {
+      const staff = mockStaff.find(s => s.id === staffId)
+      if (staff && staff.staffType === 'dynamic') {
+        const appointmentTime = new Date(date)
+        const [hours, minutes] = startTime.split(':').map(Number)
+        appointmentTime.setHours(hours, minutes, 0, 0)
+
+        const availableCapacity = getStaffAvailableCapacity(staffId, appointmentTime, mockBookings)
+        const maxCapacity = staff.maxConcurrentBookings || 1
+
+        if (availableCapacity !== null) {
+          const isLowCapacity = availableCapacity > 0 && availableCapacity < maxCapacity * 0.3
+          setStaffCapacityInfo({
+            available: availableCapacity,
+            max: maxCapacity,
+            isLow: isLowCapacity
+          })
+
+          if (availableCapacity === 0) {
+            setCapacityWarning(`No capacity available at this time. ${staff.name} has ${maxCapacity} concurrent booking(s) already booked.`)
+          } else if (isLowCapacity) {
+            setCapacityWarning(`Limited capacity. Only ${availableCapacity} slot(s) remaining.`)
+          } else {
+            setCapacityWarning(null)
+          }
+        }
+      }
+    }
+
     setAvailabilityWarning(null)
-  }, [staffId, date, startTime, endTime, events])
+  }, [staffId, date, startTime, endTime, events, schedulingMode])
 
   const handleSave = () => {
     // Clear previous validation errors
@@ -276,6 +310,8 @@ export default function NewAppointmentDrawer({
     setRequestedByClient(false)
     setValidationError(null)
     setAvailabilityWarning(null)
+    setCapacityWarning(null)
+    setStaffCapacityInfo(null)
     setSelectedSlotId(null)
     setSelectedRoomId(null)
     setPartySize(1)
@@ -604,16 +640,44 @@ export default function NewAppointmentDrawer({
                       setStaffManuallyChosen(true)
                     }}
                   >
-                    {mockStaff.slice(0, 7).map((staff) => (
-                      <MenuItem key={staff.id} value={staff.id}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Avatar sx={{ width: 24, height: 24 }}>
-                            {getInitials(staff.name)}
-                          </Avatar>
-                          {staff.name}
-                        </Box>
-                      </MenuItem>
-                    ))}
+                    {mockStaff.slice(0, 7).map((staff) => {
+                      // Calculate capacity for dynamic staff in dynamic mode
+                      const showCapacity = schedulingMode === 'dynamic' && staff.staffType === 'dynamic' && startTime && endTime
+                      let availableCapacity = null
+                      if (showCapacity) {
+                        const appointmentTime = new Date(date)
+                        const [hours, minutes] = startTime.split(':').map(Number)
+                        appointmentTime.setHours(hours, minutes, 0, 0)
+                        availableCapacity = getStaffAvailableCapacity(staff.id, appointmentTime, mockBookings)
+                      }
+
+                      return (
+                        <MenuItem key={staff.id} value={staff.id}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                            <Avatar sx={{ width: 24, height: 24 }}>
+                              {getInitials(staff.name)}
+                            </Avatar>
+                            <Box sx={{ flex: 1 }}>
+                              {staff.name}
+                            </Box>
+                            {showCapacity && availableCapacity !== null && (
+                              <Chip
+                                icon={<i className="ri-user-line" style={{ fontSize: '0.65rem' }} />}
+                                label={`${availableCapacity}/${staff.maxConcurrentBookings || 1}`}
+                                size="small"
+                                color={availableCapacity === 0 ? 'error' : availableCapacity < (staff.maxConcurrentBookings || 1) * 0.3 ? 'warning' : 'success'}
+                                sx={{
+                                  fontWeight: 600,
+                                  height: 20,
+                                  fontSize: '0.65rem',
+                                  '& .MuiChip-icon': { marginLeft: '2px' }
+                                }}
+                              />
+                            )}
+                          </Box>
+                        </MenuItem>
+                      )
+                    })}
                   </Select>
                 </FormControl>
               )}
@@ -649,6 +713,68 @@ export default function NewAppointmentDrawer({
                   <i className="ri-information-line" />
                   <Typography variant="body2" color="warning.dark">
                     {availabilityWarning}
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Capacity Display - Dynamic Staff */}
+              {schedulingMode === 'dynamic' && staffCapacityInfo && (
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 1,
+                    bgcolor: staffCapacityInfo.available === 0
+                      ? theme => (theme.palette.mode === 'dark' ? 'error.dark' : 'error.light')
+                      : staffCapacityInfo.isLow
+                      ? theme => (theme.palette.mode === 'dark' ? 'warning.dark' : 'warning.light')
+                      : theme => (theme.palette.mode === 'dark' ? 'success.dark' : 'success.light'),
+                    border: 1,
+                    borderColor: staffCapacityInfo.available === 0
+                      ? 'error.main'
+                      : staffCapacityInfo.isLow
+                      ? 'warning.main'
+                      : 'success.main'
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Typography variant="body2" fontWeight={600} color={staffCapacityInfo.available === 0 ? 'error.dark' : staffCapacityInfo.isLow ? 'warning.dark' : 'success.dark'}>
+                      <i className={`ri-${staffCapacityInfo.available === 0 ? 'error-warning' : staffCapacityInfo.isLow ? 'alert' : 'checkbox-circle'}-line`} style={{ marginRight: 4 }} />
+                      Staff Capacity Status
+                    </Typography>
+                    <Chip
+                      icon={<i className="ri-user-line" style={{ fontSize: '0.7rem' }} />}
+                      label={`${staffCapacityInfo.available}/${staffCapacityInfo.max} available`}
+                      size="small"
+                      color={staffCapacityInfo.available === 0 ? 'error' : staffCapacityInfo.isLow ? 'warning' : 'success'}
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </Box>
+                  <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: 'text.secondary' }}>
+                    {staffCapacityInfo.available === 0
+                      ? `This staff member is fully booked at this time (${staffCapacityInfo.max} concurrent bookings)`
+                      : staffCapacityInfo.isLow
+                      ? `Limited availability - ${staffCapacityInfo.available} concurrent booking slot(s) remaining`
+                      : `${staffCapacityInfo.available} concurrent booking slot(s) available`}
+                  </Typography>
+                </Box>
+              )}
+
+              {/* Capacity Warning for Dynamic Staff */}
+              {capacityWarning && (
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: theme => (theme.palette.mode === 'dark' ? 'error.dark' : 'error.light'),
+                    borderRadius: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    border: theme => `1px solid ${theme.palette.error.main}`
+                  }}
+                >
+                  <i className="ri-alert-line" />
+                  <Typography variant="body2" color="error.dark">
+                    {capacityWarning}
                   </Typography>
                 </Box>
               )}
