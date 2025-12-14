@@ -1,13 +1,13 @@
 'use client'
 
-import { Box, Typography, Avatar, Chip } from '@mui/material'
+import { Box, Typography, Avatar, Chip, Divider } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, addMinutes, isSameDay, isToday } from 'date-fns'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { mockStaff, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
-import { getBranchName, buildEventColors } from './utils'
+import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms } from './utils'
 import type { CalendarEvent, DayOfWeek } from './types'
 
 interface UnifiedMultiResourceDayViewProps {
@@ -30,20 +30,78 @@ export default function UnifiedMultiResourceDayView({
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const colorScheme = useCalendarStore(state => state.colorScheme)
-  const { rooms } = useStaffManagementStore()
+  const { rooms, staffWorkingHours } = useStaffManagementStore()
 
-  // Combine staff and rooms into resource list
-  const staffResources = mockStaff.map(staff => ({
-    ...staff,
-    type: 'staff' as const
-  }))
+  // Group staff by type and static staff by room
+  const staffGrouping = useMemo(() => groupStaffByType(mockStaff), [])
 
-  const roomResources = rooms.map(room => ({
-    ...room,
-    type: 'room' as const,
-    name: room.name,
-    photo: undefined
-  }))
+  // Static staff are already grouped by room in staffGrouping
+  const staticStaffByRoom = useMemo(() => {
+    return staffGrouping.staticByRoom
+  }, [staffGrouping])
+
+  // Group rooms by type
+  const roomGrouping = useMemo(() => categorizeRooms(rooms), [rooms])
+
+  // Build ordered resource list with two-layer grouping
+  // Layer 1: Staff vs Rooms
+  // Layer 2: Within Staff (Dynamic vs Static), Within Rooms (Fixed vs Flexible)
+  const orderedResources = useMemo(() => {
+    const resources: Array<any> = []
+
+    // Layer 1: STAFF
+    // Layer 2: Dynamic staff
+    staffGrouping.dynamic.forEach(staff => {
+      resources.push({
+        ...staff,
+        type: 'staff' as const,
+        staffType: staff.staffType || 'dynamic',
+        primaryGroup: 'staff',
+        secondaryGroup: 'dynamic-staff'
+      })
+    })
+
+    // Layer 2: Static staff grouped by room
+    Object.entries(staticStaffByRoom).forEach(([roomName, staffList]) => {
+      staffList.forEach(staff => {
+        resources.push({
+          ...staff,
+          type: 'staff' as const,
+          staffType: 'static',
+          primaryGroup: 'staff',
+          secondaryGroup: 'static-staff',
+          roomName
+        })
+      })
+    })
+
+    // Layer 1: ROOMS
+    // Layer 2: Fixed capacity rooms
+    roomGrouping.fixed.forEach(room => {
+      resources.push({
+        ...room,
+        type: 'room' as const,
+        roomType: room.roomType || 'fixed',
+        primaryGroup: 'rooms',
+        secondaryGroup: 'fixed-rooms',
+        photo: undefined
+      })
+    })
+
+    // Layer 2: Flexible rooms
+    roomGrouping.flexible.forEach(room => {
+      resources.push({
+        ...room,
+        type: 'room' as const,
+        roomType: room.roomType || 'flexible',
+        primaryGroup: 'rooms',
+        secondaryGroup: 'flexible-rooms',
+        photo: undefined
+      })
+    })
+
+    return resources
+  }, [staffGrouping, staticStaffByRoom, roomGrouping])
 
   // Filter events for current date
   const todayEvents = events.filter(event => isSameDay(new Date(event.start), currentDate))
@@ -63,6 +121,23 @@ export default function UnifiedMultiResourceDayView({
       timeSlots.push(slot)
     }
   }
+
+  // Build two-layer grouping structure for rendering
+  const groupingStructure = useMemo(() => {
+    const structure: Record<string, Record<string, any[]>> = {}
+
+    orderedResources.forEach(resource => {
+      if (!structure[resource.primaryGroup]) {
+        structure[resource.primaryGroup] = {}
+      }
+      if (!structure[resource.primaryGroup][resource.secondaryGroup]) {
+        structure[resource.primaryGroup][resource.secondaryGroup] = []
+      }
+      structure[resource.primaryGroup][resource.secondaryGroup].push(resource)
+    })
+
+    return structure
+  }, [orderedResources])
 
   // Current time tracking
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -283,109 +358,229 @@ export default function UnifiedMultiResourceDayView({
     )
   }
 
+  // Helper to get primary grouping label
+  const getPrimaryGroupLabel = (group: string) => {
+    if (group === 'staff') return 'Staff'
+    if (group === 'rooms') return 'Rooms'
+    return group
+  }
+
+  // Helper to get secondary grouping label
+  const getSecondaryGroupLabel = (group: string) => {
+    if (group === 'dynamic-staff') return 'Dynamic'
+    if (group === 'static-staff') return 'Static'
+    if (group === 'fixed-rooms') return 'Fixed Capacity'
+    if (group === 'flexible-rooms') return 'Flexible'
+    return group
+  }
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <Box sx={{ minWidth: { xs: `${60 + (staffResources.length + roomResources.length) * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1 }}>
-          {/* Header */}
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: `60px repeat(${staffResources.length + roomResources.length}, 150px)`,
-                md: `60px repeat(${staffResources.length + roomResources.length}, minmax(180px, 1fr))`
-              },
-              borderBottom: 1,
-              borderColor: 'divider',
-              bgcolor: 'background.paper',
-              position: 'sticky',
-              top: 0,
-              zIndex: 10,
-              '& > *': {
-                minWidth: 0,
-                overflow: 'hidden'
-              }
-            }}
-          >
-            {/* Time column header */}
-            <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider' }} />
+        <Box sx={{ minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1 }}>
+          {/* Header with two-layer grouping */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', position: 'sticky', top: 0, zIndex: 10 }}>
+            {/* Layer 1: Primary grouping (Staff vs Rooms) */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: `60px repeat(${orderedResources.length}, 150px)`,
+                  md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
+                },
+                borderBottom: 1,
+                borderColor: 'divider',
+                '& > *': {
+                  minWidth: 0,
+                  overflow: 'hidden'
+                }
+              }}
+            >
+              {/* Empty time column for primary grouping row */}
+              <Box />
 
-            {/* Staff headers */}
-            {staffResources.map(staff => (
-              <Box
-                key={staff.id}
-                sx={{
-                  p: 2,
-                  borderRight: 1,
-                  borderColor: 'divider',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 1,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'
-                  }
-                }}
-                onClick={() => onStaffClick?.(staff.id)}
-              >
-                <Avatar sx={{ width: 32, height: 32 }}>
-                  {staff.name.split(' ').map(n => n[0]).join('')}
-                </Avatar>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant='body2' fontWeight={600} noWrap>
-                    {staff.name}
-                  </Typography>
-                  {staff.staffType && (
-                    <Chip
-                      label={staff.staffType}
-                      size='small'
-                      sx={{ height: 16, fontSize: '0.6rem', mt: 0.5 }}
-                    />
-                  )}
-                </Box>
-              </Box>
-            ))}
-
-            {/* Room headers */}
-            {roomResources.map(room => (
-              <Box
-                key={room.id}
-                sx={{
-                  p: 2,
-                  borderRight: 1,
-                  borderColor: 'divider',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 1,
-                  cursor: 'pointer',
-                  bgcolor: isDark ? 'rgba(76, 175, 80, 0.05)' : 'rgba(76, 175, 80, 0.02)',
-                  '&:hover': {
-                    bgcolor: isDark ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)'
-                  }
-                }}
-                onClick={() => onRoomClick?.(room.id)}
-              >
-                <Box sx={{ width: 32, height: 32, borderRadius: '50%', bgcolor: 'success.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className='ri-tools-line' style={{ color: '#fff', fontSize: 16 }} />
-                </Box>
-                <Box sx={{ textAlign: 'center' }}>
-                  <Typography variant='body2' fontWeight={600} noWrap>
-                    {room.name}
-                  </Typography>
-                  {room.capacity && (
-                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
-                      Cap: {room.capacity}
+              {/* Primary group headers (Staff, Rooms) */}
+              {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], groupIndex) => {
+                const resourcesInPrimaryGroup = Object.values(secondaryGroups).flat()
+                const isStaffGroup = primaryGroup === 'staff'
+                const isFirstGroup = groupIndex === 0
+                return (
+                  <Box
+                    key={`primary-${primaryGroup}`}
+                    sx={{
+                      gridColumn: `span ${resourcesInPrimaryGroup.length}`,
+                      p: 1.5,
+                      bgcolor: isStaffGroup
+                        ? (isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)')
+                        : (isDark ? 'rgba(76, 175, 80, 0.12)' : 'rgba(76, 175, 80, 0.08)'),
+                      borderRight: isFirstGroup ? 3 : 1,
+                      borderColor: isFirstGroup ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 1
+                    }}
+                  >
+                    <i className={isStaffGroup ? 'ri-team-line' : 'ri-tools-line'} style={{ fontSize: 16 }} />
+                    <Typography variant='body2' fontWeight={700} color='text.primary'>
+                      {getPrimaryGroupLabel(primaryGroup)}
                     </Typography>
-                  )}
-                </Box>
-              </Box>
-            ))}
+                    <Chip
+                      label={resourcesInPrimaryGroup.length}
+                      size='small'
+                      sx={{
+                        height: 18,
+                        fontSize: '0.65rem',
+                        bgcolor: isStaffGroup ? 'primary.main' : 'success.main',
+                        color: 'white',
+                        fontWeight: 600
+                      }}
+                    />
+                  </Box>
+                )
+              })}
+            </Box>
+
+            {/* Layer 2: Secondary grouping (Dynamic/Static staff, Fixed/Flexible rooms) */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: `60px repeat(${orderedResources.length}, 150px)`,
+                  md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
+                },
+                borderBottom: 1,
+                borderColor: 'divider',
+                '& > *': {
+                  minWidth: 0,
+                  overflow: 'hidden'
+                }
+              }}
+            >
+              {/* Empty time column for secondary grouping row */}
+              <Box />
+
+              {/* Secondary group headers */}
+              {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], primaryIndex) => {
+                return Object.entries(secondaryGroups).map(([secondaryGroup, resources], secondaryIndex) => {
+                  const isStaffGroup = primaryGroup === 'staff'
+                  const isFirstSecondaryOfRooms = !isStaffGroup && secondaryIndex === 0
+                  return (
+                    <Box
+                      key={`secondary-${primaryGroup}-${secondaryGroup}`}
+                      sx={{
+                        gridColumn: `span ${resources.length}`,
+                        p: 0.75,
+                        bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
+                        borderRight: isFirstSecondaryOfRooms ? 3 : 1,
+                        borderColor: isFirstSecondaryOfRooms ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.7rem' }}>
+                        {getSecondaryGroupLabel(secondaryGroup)}
+                      </Typography>
+                      <Chip
+                        label={resources.length}
+                        size='small'
+                        variant='outlined'
+                        sx={{
+                          height: 14,
+                          fontSize: '0.6rem',
+                          ml: 0.5,
+                          '& .MuiChip-label': { px: 0.5 }
+                        }}
+                      />
+                    </Box>
+                  )
+                })
+              })}
+            </Box>
+
+            {/* Resource headers row */}
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: `60px repeat(${orderedResources.length}, 150px)`,
+                  md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
+                },
+                '& > *': {
+                  minWidth: 0,
+                  overflow: 'hidden'
+                }
+              }}
+            >
+              {/* Time column header */}
+              <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider' }} />
+
+              {/* Resource headers */}
+              {orderedResources.map((resource) => {
+                const isRoom = resource.type === 'room'
+
+                return (
+                  <Box
+                    key={resource.id}
+                    sx={{
+                      p: 1.5,
+                      borderRight: 1,
+                      borderColor: 'divider',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      cursor: 'pointer',
+                      bgcolor: isRoom ? (isDark ? 'rgba(76, 175, 80, 0.03)' : 'rgba(76, 175, 80, 0.01)') : 'transparent',
+                      '&:hover': {
+                        bgcolor: isRoom
+                          ? (isDark ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)')
+                          : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)')
+                      }
+                    }}
+                    onClick={() => {
+                      if (resource.type === 'staff' && onStaffClick) onStaffClick(resource.id)
+                      else if (resource.type === 'room' && onRoomClick) onRoomClick(resource.id)
+                    }}
+                  >
+                    <Avatar sx={{ width: 28, height: 28, bgcolor: resource.type === 'staff' ? 'primary.main' : 'success.main', fontSize: '0.7rem', fontWeight: 600 }}>
+                      {resource.type === 'staff'
+                        ? resource.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)
+                        : <i className='ri-tools-line' style={{ color: '#fff', fontSize: 14 }} />
+                      }
+                    </Avatar>
+                    <Box sx={{ textAlign: 'center', width: '100%' }}>
+                      <Typography variant='body2' fontWeight={600} noWrap fontSize='0.8rem'>
+                        {resource.name}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, justifyContent: 'center', mt: 0.25 }}>
+                        {resource.type === 'staff' && resource.maxConcurrentBookings && (
+                          <Chip
+                            label={`Cap: ${resource.maxConcurrentBookings}`}
+                            size='small'
+                            variant='outlined'
+                            sx={{ height: 16, fontSize: '0.55rem' }}
+                          />
+                        )}
+                        {resource.type === 'room' && resource.capacity && (
+                          <Chip
+                            label={`Cap: ${resource.capacity}`}
+                            size='small'
+                            variant='outlined'
+                            sx={{ height: 16, fontSize: '0.55rem', bgcolor: isDark ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)' }}
+                          />
+                        )}
+                      </Box>
+                    </Box>
+                  </Box>
+                )
+              })}
+            </Box>
           </Box>
 
           {/* Time grid */}
-          <Box sx={{ position: 'relative', flex: 1, display: 'grid', gridTemplateColumns: { xs: `60px repeat(${staffResources.length + roomResources.length}, 150px)`, md: `60px repeat(${staffResources.length + roomResources.length}, minmax(180px, 1fr))` } }}>
+          <Box sx={{ position: 'relative', flex: 1, display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` } }}>
             {/* Time labels column */}
             <Box sx={{ borderRight: 1, borderColor: 'divider' }}>
               {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
@@ -407,46 +602,33 @@ export default function UnifiedMultiResourceDayView({
               ))}
             </Box>
 
-            {/* Staff columns */}
-            {staffResources.map((staff, index) => (
-              <Box key={staff.id} sx={{ position: 'relative' }}>
-                {timeSlots.filter((_, i) => i % 4 === 0).map((_, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      height: 160,
-                      borderBottom: 1,
-                      borderRight: 1,
-                      borderColor: 'divider'
-                    }}
-                  />
-                ))}
-                <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                  {renderResourceColumn(staff, index)}
-                </Box>
-              </Box>
-            ))}
+            {/* Resource columns */}
+            {orderedResources.map((resource, index) => {
+              const isRoom = resource.type === 'room'
+              const bgColor = isRoom
+                ? (isDark ? 'rgba(76, 175, 80, 0.01)' : 'rgba(76, 175, 80, 0.005)')
+                : 'transparent'
 
-            {/* Room columns */}
-            {roomResources.map((room, index) => (
-              <Box key={room.id} sx={{ position: 'relative' }}>
-                {timeSlots.filter((_, i) => i % 4 === 0).map((_, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      height: 160,
-                      borderBottom: 1,
-                      borderRight: 1,
-                      borderColor: 'divider',
-                      bgcolor: isDark ? 'rgba(76, 175, 80, 0.02)' : 'rgba(76, 175, 80, 0.01)'
-                    }}
-                  />
-                ))}
-                <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                  {renderResourceColumn(room, index)}
+              return (
+                <Box key={resource.id} sx={{ position: 'relative' }}>
+                  {timeSlots.filter((_, i) => i % 4 === 0).map((_, slotIndex) => (
+                    <Box
+                      key={slotIndex}
+                      sx={{
+                        height: 160,
+                        borderBottom: 1,
+                        borderRight: 1,
+                        borderColor: 'divider',
+                        bgcolor: bgColor
+                      }}
+                    />
+                  ))}
+                  <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                    {renderResourceColumn(resource, index)}
+                  </Box>
                 </Box>
-              </Box>
-            ))}
+              )
+            })}
 
             {/* Current time indicator */}
             {currentTimeIndicator && (

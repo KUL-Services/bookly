@@ -469,6 +469,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     branchId: '1-1',
     name: 'Main Studio',
     capacity: 20,
+    roomType: 'static',
     floor: '1st Floor',
     amenities: ['Air Conditioning', 'Mirrors', 'Sound System', 'WiFi'],
     color: '#1976d2',
@@ -527,6 +528,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     branchId: '1-1',
     name: 'Yoga Room',
     capacity: 15,
+    roomType: 'dynamic',
     floor: '2nd Floor',
     amenities: ['Air Conditioning', 'Yoga Mats', 'Mirrors', 'Sound System'],
     color: '#388e3c',
@@ -572,6 +574,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     branchId: '1-1',
     name: 'Private Room',
     capacity: 5,
+    roomType: 'static',
     floor: '1st Floor',
     amenities: ['Air Conditioning', 'Mirrors'],
     color: '#d32f2f',
@@ -614,6 +617,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     branchId: '1-2',
     name: 'Spin Studio',
     capacity: 12,
+    roomType: 'dynamic',
     floor: 'Ground Floor',
     amenities: ['Air Conditioning', 'Sound System', 'Lockers', 'Showers', 'WiFi'],
     color: '#f57c00',
@@ -649,184 +653,6 @@ export const mockManagedRooms: ManagedRoom[] = [
       }
     },
     shiftOverrides: []
-  },
-  // Nail Station 1 - Bliss Nail Bar King's Road (2-1)
-  {
-    id: 'room-5',
-    branchId: '2-1',
-    name: 'Station 1',
-    capacity: 1,
-    floor: 'Main Floor',
-    amenities: ['UV Lamp', 'Massage Chair', 'Music'],
-    color: '#e91e63',
-    serviceIds: ['4'], // Gel Manicure
-    weeklySchedule: {
-      Sun: {
-        isAvailable: true,
-        shifts: [createRoomShift('11:00', '18:00', ['4'])]
-      },
-      Mon: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['4'])]
-      },
-      Tue: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['4'])]
-      },
-      Wed: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['4'])]
-      },
-      Thu: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '21:00', ['4'])]
-      },
-      Fri: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '21:00', ['4'])]
-      },
-      Sat: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '19:00', ['4'])]
-      }
-    },
-    shiftOverrides: []
-  },
-  // Nail Station 2 - Bliss Nail Bar King's Road (2-1)
-  {
-    id: 'room-6',
-    branchId: '2-1',
-    name: 'Station 2',
-    capacity: 1,
-    floor: 'Main Floor',
-    amenities: ['UV Lamp', 'Massage Chair', 'Music'],
-    color: '#9c27b0',
-    serviceIds: ['5'], // Luxury Pedicure
-    weeklySchedule: {
-      Sun: {
-        isAvailable: true,
-        shifts: [createRoomShift('11:00', '18:00', ['5'])]
-      },
-      Mon: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['5'])]
-      },
-      Tue: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['5'])]
-      },
-      Wed: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['5'])]
-      },
-      Thu: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '21:00', ['5'])]
-      },
-      Fri: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '21:00', ['5'])]
-      },
-      Sat: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '19:00', ['5'])]
-      }
-    },
-    shiftOverrides: []
-  },
-  // Barber Chair 1 - Urban Barber Shoreditch (3-1)
-  {
-    id: 'room-7',
-    branchId: '3-1',
-    name: 'Chair 1',
-    capacity: 1,
-    floor: 'Ground Floor',
-    amenities: ['Hot Towel Station', 'Shaving Tools', 'Music'],
-    color: '#795548',
-    serviceIds: ['6', '7'], // Classic Cut & Hot Towel Shave
-    weeklySchedule: {
-      Sun: {
-        isAvailable: false,
-        shifts: []
-      },
-      Mon: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '19:00', ['6', '7'])]
-      },
-      Tue: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '19:00', ['6', '7'])]
-      },
-      Wed: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '19:00', ['6', '7'])]
-      },
-      Thu: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['6', '7'])]
-      },
-      Fri: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['6', '7'])]
-      },
-      Sat: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '18:00', ['6', '7'])]
-      }
-    },
-    shiftOverrides: []
-  },
-  // Barber Chair 2 - Urban Barber Brixton (3-2)
-  {
-    id: 'room-8',
-    branchId: '3-2',
-    name: 'Chair 2',
-    capacity: 1,
-    floor: 'Ground Floor',
-    amenities: ['Hot Towel Station', 'Shaving Tools', 'Music'],
-    color: '#607d8b',
-    serviceIds: ['6'], // Classic Cut only
-    weeklySchedule: {
-      Sun: {
-        isAvailable: false,
-        shifts: []
-      },
-      Mon: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '19:00', ['6'])]
-      },
-      Tue: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '19:00', ['6'])]
-      },
-      Wed: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '19:00', ['6'])]
-      },
-      Thu: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['6'])]
-      },
-      Fri: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['6'])]
-      },
-      Sat: {
-        isAvailable: true,
-        shifts: [createRoomShift('09:00', '18:00', ['6'])]
-      }
-    },
-    shiftOverrides: [
-      // Example: Room closed for maintenance on a specific date
-      {
-        id: crypto.randomUUID(),
-        date: '2025-12-10',
-        start: '08:00',
-        end: '12:00',
-        serviceIds: [],
-        reason: 'manual'
-      }
-    ]
   }
 ]
 

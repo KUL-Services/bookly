@@ -6,8 +6,9 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday }
 import { mockStaff, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
-import { getBranchName, buildEventColors } from './utils'
+import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms } from './utils'
 import type { CalendarEvent, DayOfWeek } from './types'
+import { useMemo } from 'react'
 
 interface UnifiedMultiResourceWeekViewProps {
   events: CalendarEvent[]
@@ -38,18 +39,16 @@ export default function UnifiedMultiResourceWeekView({
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd })
 
-  // Combine staff and rooms
-  const staffResources = mockStaff.map(staff => ({
-    ...staff,
-    type: 'staff' as const
-  }))
+  // Group staff by type
+  const staffGrouping = useMemo(() => groupStaffByType(mockStaff), [])
 
-  const roomResources = rooms.map(room => ({
-    ...room,
-    type: 'room' as const,
-    name: room.name,
-    photo: undefined
-  }))
+  // Count total static staff for index calculations
+  const totalStaticStaff = useMemo(() => {
+    return Object.values(staffGrouping.staticByRoom).flat().length
+  }, [staffGrouping])
+
+  // Group rooms by type
+  const roomGrouping = useMemo(() => categorizeRooms(rooms), [rooms])
 
   // Get events for a specific resource and day
   const getResourceDayEvents = (resourceId: string, resourceType: 'staff' | 'room', day: Date) => {
@@ -123,31 +122,43 @@ export default function UnifiedMultiResourceWeekView({
             }
           }}
         >
-          {isStaff ? (
-            <Avatar sx={{ width: 40, height: 40 }}>
-              {resource.name.split(' ').map((n: string) => n[0]).join('')}
-            </Avatar>
-          ) : (
-            <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: 'success.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <i className='ri-tools-line' style={{ color: '#fff', fontSize: 18 }} />
-            </Box>
-          )}
+          <Avatar sx={{ width: 40, height: 40, bgcolor: isStaff ? 'primary.main' : 'success.main', fontSize: '0.9rem', fontWeight: 600 }}>
+            {isStaff
+              ? resource.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)
+              : <i className='ri-tools-line' style={{ color: '#fff', fontSize: 18 }} />
+            }
+          </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant='body2' fontWeight={600} noWrap>
               {resource.name}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
               {isStaff && resource.staffType && (
                 <Chip
                   label={resource.staffType}
                   size='small'
-                  sx={{ height: 16, fontSize: '0.6rem' }}
+                  sx={{ height: 18, fontSize: '0.6rem' }}
+                />
+              )}
+              {isStaff && resource.maxConcurrentBookings && (
+                <Chip
+                  label={`Cap: ${resource.maxConcurrentBookings}`}
+                  size='small'
+                  variant='outlined'
+                  sx={{ height: 18, fontSize: '0.6rem' }}
                 />
               )}
               {isRoom && resource.capacity && (
-                <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
-                  Cap: {resource.capacity}
-                </Typography>
+                <Chip
+                  label={`Cap: ${resource.capacity}`}
+                  size='small'
+                  variant='outlined'
+                  sx={{
+                    height: 18,
+                    fontSize: '0.6rem',
+                    bgcolor: isDark ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)'
+                  }}
+                />
               )}
             </Box>
           </Box>
@@ -350,43 +361,147 @@ export default function UnifiedMultiResourceWeekView({
             ))}
           </Box>
 
-          {/* Staff section */}
-          {staffResources.length > 0 && (
+          {/* Dynamic Staff Section */}
+          {staffGrouping.dynamic.length > 0 && (
             <Box>
               <Box
                 sx={{
                   px: 2,
                   py: 1,
-                  bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)',
+                  bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
                   borderBottom: 1,
                   borderColor: 'divider'
                 }}
               >
-                <Typography variant='caption' fontWeight={600} color='text.secondary'>
-                  STAFF ({staffResources.length})
+                <Typography variant='caption' fontWeight={700} color='text.secondary'>
+                  DYNAMIC STAFF ({staffGrouping.dynamic.length})
                 </Typography>
               </Box>
-              {staffResources.map((staff, index) => renderResourceRow(staff, index))}
+              {staffGrouping.dynamic.map((staff, index) => {
+                const staffResource = { ...staff, type: 'staff' as const }
+                return renderResourceRow(staffResource, index)
+              })}
             </Box>
           )}
 
-          {/* Rooms section */}
-          {roomResources.length > 0 && (
+          {/* Static Staff Grouped by Room Section */}
+          {staffGrouping.static.length > 0 && (
+            <Box>
+              {/* Outer section header for static staff */}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  bgcolor: isDark ? 'rgba(255, 152, 0, 0.12)' : 'rgba(255, 152, 0, 0.1)',
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}
+              >
+                <i className='ri-home-office-line' style={{ fontSize: 14, color: isDark ? '#ffb74d' : '#ff9800' }} />
+                <Typography variant='body2' fontWeight={700} color='warning.dark'>
+                  STATIC STAFF - ASSIGNED TO ROOMS
+                </Typography>
+                <Chip
+                  label={staffGrouping.static.length}
+                  size='small'
+                  sx={{
+                    height: 18,
+                    fontSize: '0.65rem',
+                    bgcolor: 'warning.main',
+                    color: 'white',
+                    fontWeight: 600,
+                    ml: 'auto'
+                  }}
+                />
+              </Box>
+
+              {/* Inner groupings by room */}
+              {Object.entries(staffGrouping.staticByRoom).map(([roomName, staffList], roomIndex) => {
+                let staffIndexOffset = staffGrouping.dynamic.length
+                return (
+                  <Box key={`static-room-${roomIndex}`}>
+                    {/* Room-specific sub-header */}
+                    <Box
+                      sx={{
+                        px: 3,
+                        py: 0.75,
+                        bgcolor: isDark ? 'rgba(255, 152, 0, 0.08)' : 'rgba(255, 152, 0, 0.05)',
+                        borderBottom: 1,
+                        borderColor: 'divider'
+                      }}
+                    >
+                      <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.75rem' }}>
+                        {roomName} ({staffList.length})
+                      </Typography>
+                    </Box>
+
+                    {/* Staff in this room */}
+                    {staffList.map((staff, index) => {
+                      const staffResource = { ...staff, type: 'staff' as const, staffType: 'static', roomName }
+                      return renderResourceRow(staffResource, staffIndexOffset + index)
+                    })}
+                  </Box>
+                )
+              })}
+            </Box>
+          )}
+
+          {/* Divider between STAFF and ROOMS sections */}
+          <Box
+            sx={{
+              height: 3,
+              bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
+              borderBottom: 1,
+              borderColor: 'divider'
+            }}
+          />
+
+          {/* Fixed Capacity Rooms Section */}
+          {roomGrouping.fixed.length > 0 && (
             <Box>
               <Box
                 sx={{
                   px: 2,
                   py: 1,
-                  bgcolor: isDark ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)',
+                  bgcolor: isDark ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.08)',
                   borderBottom: 1,
                   borderColor: 'divider'
                 }}
               >
-                <Typography variant='caption' fontWeight={600} color='text.secondary'>
-                  ROOMS ({roomResources.length})
+                <Typography variant='caption' fontWeight={700} color='success.dark'>
+                  FIXED CAPACITY ROOMS ({roomGrouping.fixed.length})
                 </Typography>
               </Box>
-              {roomResources.map((room, index) => renderResourceRow(room, staffResources.length + index))}
+              {roomGrouping.fixed.map((room, index) => {
+                const roomResource = { ...room, type: 'room' as const, photo: undefined }
+                return renderResourceRow(roomResource, staffGrouping.dynamic.length + totalStaticStaff + index)
+              })}
+            </Box>
+          )}
+
+          {/* Flexible Rooms Section */}
+          {roomGrouping.flexible.length > 0 && (
+            <Box>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1,
+                  bgcolor: isDark ? 'rgba(76, 175, 80, 0.05)' : 'rgba(76, 175, 80, 0.03)',
+                  borderBottom: 1,
+                  borderColor: 'divider'
+                }}
+              >
+                <Typography variant='caption' fontWeight={700} color='text.secondary'>
+                  FLEXIBLE ROOMS ({roomGrouping.flexible.length})
+                </Typography>
+              </Box>
+              {roomGrouping.flexible.map((room, index) => {
+                const roomResource = { ...room, type: 'room' as const, photo: undefined }
+                return renderResourceRow(roomResource, staffGrouping.dynamic.length + totalStaticStaff + roomGrouping.fixed.length + index)
+              })}
             </Box>
           )}
         </Box>

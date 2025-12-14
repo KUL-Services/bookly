@@ -234,25 +234,25 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     openAppointmentDrawer(event)
   }
 
-  const handleSelectRange = (
-    start: Date,
-    end: Date,
-    jsEvent?: MouseEvent,
-    dimensions?: { top: number; left: number; width: number; height: number } | null
-  ) => {
-    setSelectedTimeRange({ start, end })
-    setMenuAnchorPosition({
-      top: mousePositionRef.current.y,
-      left: mousePositionRef.current.x
-    })
+  // const handleSelectRange = (
+  //   start: Date,
+  //   end: Date,
+  //   jsEvent?: MouseEvent,
+  //   dimensions?: { top: number; left: number; width: number; height: number } | null
+  // ) => {
+  //   setSelectedTimeRange({ start, end })
+  //   setMenuAnchorPosition({
+  //     top: mousePositionRef.current.y,
+  //     left: mousePositionRef.current.x
+  //   })
 
-    // Use the dimensions captured synchronously by the FullCalendar callback
-    if (dimensions) {
-      setSelectionOverlay(dimensions)
-    }
+  //   // Use the dimensions captured synchronously by the FullCalendar callback
+  //   if (dimensions) {
+  //     setSelectionOverlay(dimensions)
+  //   }
 
-    setIsQuickActionMenuOpen(true)
-  }
+  //   setIsQuickActionMenuOpen(true)
+  // }
 
   const handleQuickMenuNewAppointment = () => {
     if (selectedTimeRange) {
@@ -412,7 +412,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           currentDate={currentDate}
           onEventClick={handleEventClick}
           onBack={handleBackToAllStaff}
-          onTimeRangeSelect={handleSelectRange}
+          // onTimeRangeSelect={handleSelectRange}
           staffOptions={availableStaffForDropdown}
           onStaffChange={handleStaffClick}
         />
@@ -481,7 +481,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         onDateRangeChange={handleDateRangeChange}
         onDateClick={handleDateClick}
         onEventClick={handleEventClick}
-        onSelectRange={handleSelectRange}
+        // onSelectRange={handleSelectRange}
         onEventDrop={handleEventDrop}
         onEventResize={handleEventResize}
       />

@@ -619,3 +619,108 @@ export function getSlotRemaining(
 
   return { remaining, total: capacity, occupied }
 }
+
+/**
+ * TWO-LAYER GROUPING FOR STAFF
+ * Layer 1: Separates Staff from Rooms
+ * Layer 2: Separates staff by type (Dynamic/Static), and static staff further by room
+ *
+ * Returns:
+ * - dynamic: Dynamic staff (no fixed room)
+ * - static: All static staff with room assignments
+ * - staticByRoom: Static staff grouped by assigned room name
+ */
+export function groupStaffByType(staff: typeof mockStaff) {
+  const dynamic = staff.filter(s => s.staffType !== 'static' || !s.roomAssignments?.length)
+  const staticStaff = staff.filter(s => s.staffType === 'static' && s.roomAssignments?.length)
+
+  // Layer 2: Group static staff by room
+  const staticByRoom: Record<string, typeof staff> = {}
+  staticStaff.forEach(s => {
+    const roomName = s.roomAssignments?.[0]?.roomName || 'Unassigned'
+    if (!staticByRoom[roomName]) {
+      staticByRoom[roomName] = []
+    }
+    staticByRoom[roomName].push(s)
+  })
+
+  return {
+    // Layer 1 + Layer 2 Structure
+    dynamic, // Layer 2: Dynamic staff
+    static: staticStaff, // Layer 2: All static staff
+    staticByRoom, // Layer 2: Static staff grouped by room name
+    allStaff: staff // Complete list for reference
+  }
+}
+
+/**
+ * Group static staff assignments by room
+ */
+export function groupStaticStaffByRoom(staff: typeof mockStaff) {
+  const staffByRoom: Record<string, typeof staff> = {}
+
+  staff.forEach(s => {
+    if (s.staffType === 'static' && s.roomAssignments?.length) {
+      s.roomAssignments.forEach(assignment => {
+        const key = assignment.roomName
+        if (!staffByRoom[key]) {
+          staffByRoom[key] = []
+        }
+        staffByRoom[key].push(s)
+      })
+    }
+  })
+
+  return staffByRoom
+}
+
+/**
+ * Get staff capacity (max concurrent bookings) for a specific shift
+ */
+export function getStaffShiftCapacity(
+  staffId: string,
+  workingHours: Record<string, any>
+): number {
+  const staff = mockStaff.find(s => s.id === staffId)
+  if (!staff) return 1
+
+  return staff.maxConcurrentBookings || 1
+}
+
+/**
+ * Check if staff is working at a specific time on a given date
+ */
+export function isStaffWorkingAtTime(
+  staffId: string,
+  date: Date,
+  time: string,
+  workingHours: Record<string, any>
+): boolean {
+  const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+  const schedule = workingHours[staffId]?.[dayOfWeek]
+
+  if (!schedule || !schedule.isWorking) return false
+
+  const [hours, minutes] = time.split(':').map(Number)
+  const timeInMinutes = hours * 60 + minutes
+
+  return schedule.shifts?.some((shift: any) => {
+    const [startH, startM] = shift.start.split(':').map(Number)
+    const [endH, endM] = shift.end.split(':').map(Number)
+    const startMins = startH * 60 + startM
+    const endMins = endH * 60 + endM
+
+    return timeInMinutes >= startMins && timeInMinutes < endMins
+  })
+}
+
+/**
+ * Get room type categorization with counts
+ */
+export function categorizeRooms(rooms: any[]) {
+  return {
+    fixed: rooms.filter(r => r.roomType === 'static' || r.roomType === 'fixed'),
+    flexible: rooms.filter(r => r.roomType === 'dynamic' || r.roomType === 'flexible'),
+    unspecified: rooms.filter(r => !r.roomType)
+  }
+}
