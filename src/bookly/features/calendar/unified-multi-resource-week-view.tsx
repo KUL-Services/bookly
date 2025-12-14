@@ -3,10 +3,10 @@
 import { Box, Typography, Avatar, Chip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday } from 'date-fns'
-import { mockStaff, mockServices } from '@/bookly/data/mock-data'
+import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
-import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms } from './utils'
+import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms, getStaffAvailableCapacity, getCapacityColor } from './utils'
 import type { CalendarEvent, DayOfWeek } from './types'
 import { useMemo } from 'react'
 
@@ -140,7 +140,22 @@ export default function UnifiedMultiResourceWeekView({
                   sx={{ height: 18, fontSize: '0.6rem' }}
                 />
               )}
-              {isStaff && resource.maxConcurrentBookings && (
+              {isStaff && resource.staffType === 'dynamic' && (
+                (() => {
+                  const availableCapacity = getStaffAvailableCapacity(resource.id, currentDate, mockBookings)
+                  const capacityColor = getCapacityColor(availableCapacity)
+                  return availableCapacity !== null ? (
+                    <Chip
+                      label={`${availableCapacity}/${resource.maxConcurrentBookings || 1}`}
+                      size='small'
+                      variant='outlined'
+                      color={capacityColor}
+                      sx={{ height: 18, fontSize: '0.6rem' }}
+                    />
+                  ) : null
+                })()
+              )}
+              {isStaff && resource.staffType === 'static' && resource.maxConcurrentBookings && (
                 <Chip
                   label={`Cap: ${resource.maxConcurrentBookings}`}
                   size='small'
@@ -153,6 +168,7 @@ export default function UnifiedMultiResourceWeekView({
                   label={`Cap: ${resource.capacity}`}
                   size='small'
                   variant='outlined'
+                  color={resource.roomType === 'dynamic' ? 'success' : 'default'}
                   sx={{
                     height: 18,
                     fontSize: '0.6rem',
