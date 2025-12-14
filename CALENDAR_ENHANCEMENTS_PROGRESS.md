@@ -1,7 +1,7 @@
 # Calendar Enhancements Progress Report
 
 **Date**: 2025-12-14
-**Status**: In Progress - 5 of 9 tasks completed (56%)
+**Status**: In Progress - 7 of 9 tasks completed (78%)
 
 ---
 
@@ -84,15 +84,50 @@
   - Time-aware availability checks
 - **Commit**: `4360a00`
 
+### 6. Integrated Capacity Display in Day View
+- **File**: `src/bookly/features/calendar/unified-multi-resource-day-view.tsx`
+- **Changes**:
+  - Added imports for capacity functions
+  - Enhanced capacity chip display for dynamic staff
+  - Shows format: "available/max" (e.g., "1/2")
+  - Color-coded based on available capacity
+  - Maintains original display for static staff and rooms
+- **Display Logic**:
+  - Dynamic staff: Real-time available capacity with color coding
+  - Static staff: Original max capacity display
+  - Rooms: Original capacity display with room type indicator
+- **Commit**: `6f0da85`
+
+### 7. Integrated Capacity Display in Week View
+- **File**: `src/bookly/features/calendar/unified-multi-resource-week-view.tsx`
+- **Changes**:
+  - Consistent with day view implementation
+  - Dynamic staff shows available capacity with color codes
+  - Enhanced resource headers with real-time capacity info
+  - Visual feedback matches day view for consistency
+- **Display Consistency**:
+  - Same "available/max" format across both views
+  - Identical color coding scheme
+  - Seamless user experience across calendar views
+- **Commit**: `622f215`
+
 ---
 
 ## ⏳ Pending Tasks
 
-### 6. Integrate Capacity Display in Calendar Views
+### 8. Implement Dynamic Room Capacity Display
 
-**Locations**:
-- `src/bookly/features/calendar/unified-multi-resource-day-view.tsx`
-- `src/bookly/features/calendar/unified-multi-resource-week-view.tsx`
+**Status**: Function created, awaiting integration
+
+**What's Done**:
+- `getDynamicRoomAvailability()` function implemented in utils.ts
+- Returns room availability object with total capacity
+- Works for both 'dynamic' and 'flexible' roomType values
+
+**What's Needed**:
+- Integrate display in day and week views using the getDynamicRoomAvailability() function
+- Show total capacity for dynamic rooms (consistent with static room display)
+- Consider additional styling for dynamic room indicators
 
 **Implementation Plan**:
 ```typescript
