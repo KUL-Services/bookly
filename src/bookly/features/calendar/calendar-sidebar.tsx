@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   Box,
   Typography,
@@ -23,6 +23,7 @@ import { Calendar } from '@/bookly/components/ui/calendar'
 import { useCalendarStore } from './state'
 import { addWeeks } from './utils'
 import { mockStaff, mockBusinesses } from '@/bookly/data/mock-data'
+import { format } from 'date-fns'
 import type { BranchFilter, StaffFilter, RoomFilter, HighlightFilters, PaymentStatus, AppointmentStatus, SelectionMethod } from './types'
 
 interface CalendarSidebarProps {
@@ -226,6 +227,39 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     applyFilters(pendingBranches, pendingStaff, pendingRooms, newHighlights)
   }
 
+  // Get staff available at current moment
+  const getAvailableStaffNow = useCallback(() => {
+    const now = new Date()
+    return mockStaff.filter(staff => {
+      // Check if staff is working right now
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][now.getDay()]
+      const currentTime = format(now, 'HH:mm')
+
+      // Check staff's working hours
+      const schedule = staff.workingHours?.[dayOfWeek as keyof typeof staff.workingHours]
+      if (!schedule || !schedule.isWorking) return false
+
+      // Check if current time falls within any shift
+      return schedule.shifts?.some((shift: any) => {
+        const [startH, startM] = shift.start.split(':').map(Number)
+        const [endH, endM] = shift.end.split(':').map(Number)
+        const startMins = startH * 60 + startM
+        const endMins = endH * 60 + endM
+        const currentMins = now.getHours() * 60 + now.getMinutes()
+        return currentMins >= startMins && currentMins < endMins
+      })
+    })
+  }, [])
+
+  const handleAvailableNowToggle = (checked: boolean) => {
+    const newStaff = { ...pendingStaff, availableNow: checked }
+    if (checked) {
+      newStaff.staffIds = getAvailableStaffNow().map(s => s.id)
+    }
+    setPendingStaff(newStaff)
+    applyFilters(pendingBranches, newStaff, pendingRooms, pendingHighlights)
+  }
+
   // Apply filters instantly without needing to click Apply button
   const applyFilters = (
     branches: BranchFilter,
@@ -241,7 +275,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
   const handleClear = () => {
     const clearedBranches: BranchFilter = { allBranches: true, branchIds: [] }
-    const cleared: StaffFilter = { onlyMe: false, staffIds: [], selectedStaffId: null, workingStaffOnly: false }
+    const cleared: StaffFilter = { onlyMe: false, staffIds: [], selectedStaffId: null, workingStaffOnly: false, availableNow: false }
     const clearedRooms: RoomFilter = { allRooms: true, roomIds: [] }
     const clearedHighlights: HighlightFilters = { payments: [], statuses: [], selection: [], details: [] }
     setPendingBranches(clearedBranches)
@@ -693,6 +727,15 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
               <FormControlLabel
                 control={<Checkbox checked={pendingStaff.onlyMe} onChange={e => handleOnlyMeChange(e.target.checked)} />}
                 label={<Typography variant='body2' sx={{ fontWeight: 500 }}>Only me</Typography>}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingStaff.availableNow || false}
+                    onChange={e => handleAvailableNowToggle(e.target.checked)}
+                  />
+                }
+                label={<Typography variant='body2'>Available now</Typography>}
               />
               <FormControlLabel
                 control={

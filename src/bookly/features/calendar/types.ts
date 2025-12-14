@@ -142,6 +142,7 @@ export interface StaffFilter {
   staffIds: string[]
   selectedStaffId?: string | null // For single-staff view mode
   workingStaffOnly: boolean // Filter to show only staff working on current date/week
+  availableNow?: boolean // Filter to show only staff available at the current moment
 }
 
 export interface RoomFilter {
