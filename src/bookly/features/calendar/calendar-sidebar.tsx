@@ -114,14 +114,14 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   // Branch handlers
   const handleAllBranches = () => {
     const newAllBranches = !pendingBranches.allBranches
-    setPendingBranches({
+    const newBranches = {
       allBranches: newAllBranches,
       branchIds: newAllBranches ? [] : pendingBranches.branchIds
-    })
-    // Reset staff selection when changing branches
-    if (newAllBranches) {
-      setPendingStaff({ ...pendingStaff, staffIds: [] })
     }
+    const clearedStaff = newAllBranches ? { ...pendingStaff, staffIds: [] } : pendingStaff
+    setPendingBranches(newBranches)
+    setPendingStaff(clearedStaff)
+    applyFilters(newBranches, clearedStaff, pendingRooms, pendingHighlights)
   }
 
   const handleBranchToggle = (branchId: string) => {
@@ -129,90 +129,114 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
       ? pendingBranches.branchIds.filter(id => id !== branchId)
       : [...pendingBranches.branchIds, branchId]
 
-    setPendingBranches({
-      allBranches: false, // Always uncheck "All Branches" when selecting individual branches
+    const newBranches = {
+      allBranches: false,
       branchIds: newBranchIds
-    })
-
-    // Reset staff selection when changing branches
-    setPendingStaff({ ...pendingStaff, staffIds: [] })
+    }
+    const clearedStaff = { ...pendingStaff, staffIds: [] }
+    setPendingBranches(newBranches)
+    setPendingStaff(clearedStaff)
+    applyFilters(newBranches, clearedStaff, pendingRooms, pendingHighlights)
   }
 
   const handleOnlyMeChange = (checked: boolean) => {
-    setPendingStaff({ ...pendingStaff, onlyMe: checked, staffIds: checked ? [] : pendingStaff.staffIds })
+    const newStaff = { ...pendingStaff, onlyMe: checked, staffIds: checked ? [] : pendingStaff.staffIds }
+    setPendingStaff(newStaff)
+    applyFilters(pendingBranches, newStaff, pendingRooms, pendingHighlights)
   }
 
   const handleSelectAllStaff = () => {
-    setPendingStaff({
+    const newStaff = {
       ...pendingStaff,
       onlyMe: false,
       staffIds: availableStaff.map(s => s.id)
-    })
+    }
+    setPendingStaff(newStaff)
+    applyFilters(pendingBranches, newStaff, pendingRooms, pendingHighlights)
   }
 
   const handleStaffToggle = (staffId: string) => {
     const newIds = pendingStaff.staffIds.includes(staffId)
       ? pendingStaff.staffIds.filter(id => id !== staffId)
       : [...pendingStaff.staffIds, staffId]
-    setPendingStaff({ ...pendingStaff, staffIds: newIds })
+    const newStaff = { ...pendingStaff, staffIds: newIds }
+    setPendingStaff(newStaff)
+    applyFilters(pendingBranches, newStaff, pendingRooms, pendingHighlights)
   }
 
   // Room handlers
   const handleAllRooms = () => {
-    setPendingRooms({ ...pendingRooms, allRooms: !pendingRooms.allRooms })
+    const newRooms = { ...pendingRooms, allRooms: !pendingRooms.allRooms }
+    setPendingRooms(newRooms)
+    applyFilters(pendingBranches, pendingStaff, newRooms, pendingHighlights)
   }
 
   const handleSelectAllRooms = () => {
-    setPendingRooms({
+    const newRooms = {
       ...pendingRooms,
       allRooms: false,
       roomIds: availableRooms.map(r => r.id)
-    })
+    }
+    setPendingRooms(newRooms)
+    applyFilters(pendingBranches, pendingStaff, newRooms, pendingHighlights)
   }
 
   const handleRoomToggle = (roomId: string) => {
     const newIds = pendingRooms.roomIds.includes(roomId)
       ? pendingRooms.roomIds.filter(id => id !== roomId)
       : [...pendingRooms.roomIds, roomId]
-    setPendingRooms({ ...pendingRooms, allRooms: false, roomIds: newIds })
+    const newRooms = { ...pendingRooms, allRooms: false, roomIds: newIds }
+    setPendingRooms(newRooms)
+    applyFilters(pendingBranches, pendingStaff, newRooms, pendingHighlights)
   }
 
   const handlePaymentToggle = (payment: PaymentStatus) => {
     const newPayments = pendingHighlights.payments.includes(payment)
       ? pendingHighlights.payments.filter(p => p !== payment)
       : [...pendingHighlights.payments, payment]
-    setPendingHighlights({ ...pendingHighlights, payments: newPayments })
+    const newHighlights = { ...pendingHighlights, payments: newPayments }
+    setPendingHighlights(newHighlights)
+    applyFilters(pendingBranches, pendingStaff, pendingRooms, newHighlights)
   }
 
   const handleStatusToggle = (status: AppointmentStatus) => {
     const newStatuses = pendingHighlights.statuses.includes(status)
       ? pendingHighlights.statuses.filter(s => s !== status)
       : [...pendingHighlights.statuses, status]
-    setPendingHighlights({ ...pendingHighlights, statuses: newStatuses })
+    const newHighlights = { ...pendingHighlights, statuses: newStatuses }
+    setPendingHighlights(newHighlights)
+    applyFilters(pendingBranches, pendingStaff, pendingRooms, newHighlights)
   }
 
   const handleSelectionToggle = (selection: SelectionMethod) => {
     const newSelection = pendingHighlights.selection.includes(selection)
       ? pendingHighlights.selection.filter(s => s !== selection)
       : [...pendingHighlights.selection, selection]
-    setPendingHighlights({ ...pendingHighlights, selection: newSelection })
+    const newHighlights = { ...pendingHighlights, selection: newSelection }
+    setPendingHighlights(newHighlights)
+    applyFilters(pendingBranches, pendingStaff, pendingRooms, newHighlights)
   }
 
   const handleDetailToggle = (detail: 'starred' | 'unstarred') => {
     const newDetails = pendingHighlights.details.includes(detail)
       ? pendingHighlights.details.filter(d => d !== detail)
       : [...pendingHighlights.details, detail]
-    setPendingHighlights({ ...pendingHighlights, details: newDetails })
+    const newHighlights = { ...pendingHighlights, details: newDetails }
+    setPendingHighlights(newHighlights)
+    applyFilters(pendingBranches, pendingStaff, pendingRooms, newHighlights)
   }
 
-  const handleApply = () => {
-    setBranchFilters(pendingBranches)
-    setStaffFilters(pendingStaff)
-    setRoomFilters(pendingRooms)
-    setHighlights(pendingHighlights)
-    if (isMobile) {
-      toggleSidebar()
-    }
+  // Apply filters instantly without needing to click Apply button
+  const applyFilters = (
+    branches: BranchFilter,
+    staff: StaffFilter,
+    rooms: RoomFilter,
+    highlights: HighlightFilters
+  ) => {
+    setBranchFilters(branches)
+    setStaffFilters(staff)
+    setRoomFilters(rooms)
+    setHighlights(highlights)
   }
 
   const handleClear = () => {
@@ -893,7 +917,6 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                 { value: 'confirmed', label: 'Confirmed' },
                 { value: 'need_confirm', label: 'Need confirm' },
                 { value: 'no_show', label: 'No-show' },
-                { value: 'pending', label: 'Pending' },
                 { value: 'completed', label: 'Completed' },
                 { value: 'cancelled', label: 'Cancelled' }
               ].map(status => (
@@ -965,14 +988,15 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
       {/* Footer Actions */}
       <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant='outlined' fullWidth onClick={handleClear}>
-            Clear
-          </Button>
-          <Button variant='contained' fullWidth onClick={handleApply}>
-            Apply
-          </Button>
-        </Box>
+        <Button
+          variant='outlined'
+          fullWidth
+          onClick={handleClear}
+          startIcon={<i className='ri-delete-bin-line' />}
+          sx={{ textTransform: 'uppercase', fontWeight: 600, fontSize: '0.75rem' }}
+        >
+          Clear All Filters
+        </Button>
       </Box>
     </Box>
   )
