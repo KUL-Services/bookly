@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
-import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms, getStaffAvailableCapacity, getCapacityColor } from './utils'
+import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms, getStaffAvailableCapacity, getCapacityColor, getDynamicRoomAvailability } from './utils'
 import type { CalendarEvent, DayOfWeek } from './types'
 
 interface UnifiedMultiResourceDayViewProps {
@@ -579,13 +579,26 @@ export default function UnifiedMultiResourceDayView({
                           />
                         )}
                         {resource.type === 'room' && resource.capacity && (
-                          <Chip
-                            label={`Cap: ${resource.capacity}`}
-                            size='small'
-                            variant='outlined'
-                            color={resource.roomType === 'dynamic' ? 'success' : 'default'}
-                            sx={{ height: 16, fontSize: '0.55rem', bgcolor: isDark ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)' }}
-                          />
+                          (() => {
+                            const isDynamicRoom = resource.roomType === 'dynamic' || resource.roomType === 'flexible'
+                            const dynamicInfo = isDynamicRoom ? getDynamicRoomAvailability(resource.id, [resource]) : null
+                            return (
+                              <Chip
+                                label={`${dynamicInfo?.totalCapacity || resource.capacity}`}
+                                size='small'
+                                variant='outlined'
+                                color={isDynamicRoom ? 'success' : 'default'}
+                                sx={{
+                                  height: 16,
+                                  fontSize: '0.55rem',
+                                  bgcolor: isDark
+                                    ? isDynamicRoom ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.1)'
+                                    : isDynamicRoom ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)',
+                                  fontWeight: isDynamicRoom ? 600 : 500
+                                }}
+                              />
+                            )
+                          })()
                         )}
                       </Box>
                     </Box>
