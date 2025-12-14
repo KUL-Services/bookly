@@ -1,7 +1,7 @@
 # Calendar Enhancements Progress Report
 
 **Date**: 2025-12-14
-**Status**: In Progress - 7 of 9 tasks completed (78%)
+**Status**: In Progress - 8 of 9 tasks completed (89%)
 
 ---
 
@@ -111,23 +111,67 @@
   - Seamless user experience across calendar views
 - **Commit**: `622f215`
 
+### 8. Integrated Dynamic Room Capacity Display
+- **Files**:
+  - `src/bookly/features/calendar/unified-multi-resource-day-view.tsx`
+  - `src/bookly/features/calendar/unified-multi-resource-week-view.tsx`
+- **Changes**:
+  - Added getDynamicRoomAvailability() imports to both views
+  - Enhanced room capacity display with visual distinction
+  - Dynamic rooms get bolder, more saturated styling
+  - Fixed rooms maintain subtle styling
+  - Improved visual hierarchy for room type differentiation
+- **Display Improvements**:
+  - Dynamic/Flexible rooms: Bold capacity with enhanced green background
+  - Fixed rooms: Standard capacity display with subtle background
+  - Better visual distinction helps users understand room types quickly
+  - Dark mode support with appropriate color adjustments
+- **Commit**: `29348ca`
+
 ---
 
 ## ⏳ Pending Tasks
 
-### 8. Implement Dynamic Room Capacity Display
+### 9. Final Business Flow Alignment & Testing
 
-**Status**: Function created, awaiting integration
-
-**What's Done**:
-- `getDynamicRoomAvailability()` function implemented in utils.ts
-- Returns room availability object with total capacity
-- Works for both 'dynamic' and 'flexible' roomType values
+**Status**: Validation and integration testing
 
 **What's Needed**:
-- Integrate display in day and week views using the getDynamicRoomAvailability() function
-- Show total capacity for dynamic rooms (consistent with static room display)
-- Consider additional styling for dynamic room indicators
+- Verify all filters work correctly with capacity display
+- Test "Available Now" filter with different times
+- Validate capacity calculations with bookings
+- Ensure consistent display across all views
+- Test dark mode support
+- Verify responsive design on mobile/tablet
+- Integration testing of booking creation flow with capacity checks
+
+**What to Verify**:
+1. **Filters**:
+   - "Available Now" correctly identifies staff working at current time
+   - Branch filtering applies to all resources
+   - Status filters work correctly (pending removed)
+   - All filters apply instantly without apply button
+   - Clear All Filters works properly
+
+2. **Capacity Display**:
+   - Dynamic staff shows "available/max" format correctly
+   - Color coding matches availability (red/yellow/green)
+   - Static staff shows max capacity
+   - Dynamic rooms show enhanced styling
+   - Fixed rooms show standard styling
+   - Room types are visually distinguishable
+
+3. **Data**:
+   - Mock bookings load correctly
+   - Booking data is used for capacity calculations
+   - Real-time capacity updates based on current time
+   - No stale data or caching issues
+
+4. **Performance**:
+   - Calendar loads quickly
+   - No unnecessary re-renders
+   - Smooth interactions
+   - Build size remains acceptable
 
 **Implementation Plan**:
 ```typescript
