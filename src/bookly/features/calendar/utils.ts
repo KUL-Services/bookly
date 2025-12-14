@@ -724,3 +724,105 @@ export function categorizeRooms(rooms: any[]) {
     unspecified: rooms.filter(r => !r.roomType)
   }
 }
+
+/**
+ * Get available capacity for dynamic staff at a specific time
+ * Dynamic staff capacity is booking-based (maxConcurrentBookings)
+ * @param staffId - Staff member ID
+ * @param time - Current time or check time
+ * @param bookings - Array of all bookings
+ * @returns Available capacity (remaining slots) or null if not dynamic staff
+ */
+export function getStaffAvailableCapacity(staffId: string, time: Date, bookings: Booking[]): number | null {
+  const staff = mockStaff.find(s => s.id === staffId)
+  if (!staff || staff.staffType !== 'dynamic') return null
+
+  const maxCapacity = staff.maxConcurrentBookings || 1
+
+  // Count how many bookings this staff has at this time
+  const bookingsAtTime = bookings.filter(booking => {
+    if (booking.staffMemberName !== staff.name) return false
+
+    const bookingStart = new Date(booking.date)
+    const { hours, minutes } = parseTime12h(booking.time)
+    bookingStart.setHours(hours, minutes, 0, 0)
+
+    const bookingEnd = new Date(bookingStart)
+    bookingEnd.setMinutes(bookingEnd.getMinutes() + booking.duration)
+
+    return bookingStart <= time && time < bookingEnd
+  }).length
+
+  return Math.max(0, maxCapacity - bookingsAtTime)
+}
+
+/**
+ * Get capacity color based on available slots
+ * @param availableCapacity - Number of available slots
+ * @returns Color code: 'error' (red, 0), 'warning' (yellow, 1), or 'success' (green, 2+)
+ */
+export function getCapacityColor(availableCapacity: number | null): 'error' | 'warning' | 'success' {
+  if (availableCapacity === 0) return 'error'
+  if (availableCapacity === 1) return 'warning'
+  return 'success'
+}
+
+/**
+ * Check if a specific time slot is available for booking
+ * For runtime availability checking against bookings
+ * @param resourceId - Staff ID or Room ID
+ * @param date - Date to check
+ * @param timeSlot - Time slot in "HH:MM" format
+ * @param duration - Duration in minutes
+ * @param bookings - Array of all bookings
+ * @returns Whether the slot is available
+ */
+export function checkSlotAvailabilityByTime(
+  resourceId: string,
+  date: Date,
+  timeSlot: string,
+  duration: number,
+  bookings: Booking[]
+): boolean {
+  const [slotHours, slotMinutes] = timeSlot.split(':').map(Number)
+  const slotStart = new Date(date)
+  slotStart.setHours(slotHours, slotMinutes, 0, 0)
+
+  const slotEnd = new Date(slotStart)
+  slotEnd.setMinutes(slotEnd.getMinutes() + duration)
+
+  // Check for booking conflicts at this time
+  const conflictingBookings = bookings.filter(booking => {
+    const bookingStart = new Date(booking.date)
+    const { hours, minutes } = parseTime12h(booking.time)
+    bookingStart.setHours(hours, minutes, 0, 0)
+
+    const bookingEnd = new Date(bookingStart)
+    bookingEnd.setMinutes(bookingEnd.getMinutes() + booking.duration)
+
+    // Check for time overlap
+    return !(slotEnd <= bookingStart || slotStart >= bookingEnd)
+  })
+
+  return conflictingBookings.length === 0
+}
+
+/**
+ * Get dynamic room availability (total capacity only, not per-slot)
+ * @param roomId - Room ID
+ * @param rooms - Array of all rooms
+ * @returns Room availability object or null if not dynamic room
+ */
+export function getDynamicRoomAvailability(
+  roomId: string,
+  rooms: any[]
+): { totalCapacity: number; roomName: string; status: 'Available' } | null {
+  const room = rooms.find(r => r.id === roomId && (r.roomType === 'dynamic' || r.roomType === 'flexible'))
+  if (!room) return null
+
+  return {
+    totalCapacity: room.capacity || 1,
+    roomName: room.name,
+    status: 'Available'
+  }
+}
