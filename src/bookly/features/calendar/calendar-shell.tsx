@@ -396,16 +396,17 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   }
 
   const handleResourceCellClick = (resourceId: string, resourceType: 'staff' | 'room', date: Date) => {
-    // Handle cell click for unified resource view
+    // Open unified booking drawer for new booking
+    setBookingDrawerMode('create')
+    setBookingDrawerOpen(true)
+    setSelectedEventForEdit(null)
+
+    // Pre-populate with the resource that was clicked
     if (resourceType === 'staff') {
-      // Navigate to single-staff day view
       selectSingleStaff(resourceId)
-      useCalendarStore.getState().setView('timeGridDay')
-      setCurrentDate(date)
-    } else {
-      // For rooms, just open new booking
-      openNewBooking(date)
     }
+
+    openNewBooking(date)
   }
 
   // Render the appropriate calendar view
