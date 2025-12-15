@@ -14,8 +14,7 @@ import SingleStaffWeekView from './single-staff-week-view'
 import UnifiedMultiResourceDayView from './unified-multi-resource-day-view'
 import UnifiedMultiResourceWeekView from './unified-multi-resource-week-view'
 import AppointmentListView from './appointment-list-view'
-import AppointmentDrawer from './appointment-drawer'
-import NewAppointmentDrawer from './new-appointment-drawer'
+import UnifiedBookingDrawer from './unified-booking-drawer'
 import CalendarSettings from './calendar-settings'
 import CalendarNotifications from './calendar-notifications'
 import TemplateManagementDrawer from './template-management-drawer'
@@ -71,6 +70,9 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     width: number
     height: number
   } | null>(null)
+  const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false)
+  const [bookingDrawerMode, setBookingDrawerMode] = useState<'create' | 'edit'>('create')
+  const [selectedEventForEdit, setSelectedEventForEdit] = useState<CalendarEvent | null>(null)
 
   // Track mouse position for popover
   const mousePositionRef = useRef({ x: 0, y: 0 })
@@ -225,12 +227,18 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       useCalendarStore.getState().setView('timeGridDay')
       setCurrentDate(date)
     } else {
-      // In day view, clicking opens new booking (but drag selections handled by handleSelectRange)
+      // In day view, clicking opens new booking
+      setBookingDrawerMode('create')
+      setBookingDrawerOpen(true)
+      setSelectedEventForEdit(null)
       openNewBooking(date)
     }
   }
 
   const handleEventClick = (event: CalendarEvent) => {
+    setBookingDrawerMode('edit')
+    setBookingDrawerOpen(true)
+    setSelectedEventForEdit(event)
     openAppointmentDrawer(event)
   }
 
@@ -525,8 +533,31 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         </Box>
       </Box>
 
-      {/* Unified Appointment Drawer */}
-      <AppointmentDrawer />
+      {/* Unified Booking Drawer */}
+      <UnifiedBookingDrawer
+        open={bookingDrawerOpen || isNewBookingOpen}
+        mode={bookingDrawerMode}
+        initialDate={useCalendarStore.getState().selectedDate}
+        initialDateRange={useCalendarStore.getState().selectedDateRange}
+        initialStaffId={staffFilters.selectedStaffId}
+        existingEvent={selectedEventForEdit}
+        onClose={() => {
+          setBookingDrawerOpen(false)
+          handleCloseNewBooking()
+          setSelectedEventForEdit(null)
+        }}
+        onSave={(booking) => {
+          if (bookingDrawerMode === 'create') {
+            handleSaveNewAppointment(booking)
+          } else {
+            handleSaveNewAppointment(booking)
+          }
+        }}
+        onDelete={(bookingId) => {
+          // Handle delete
+          console.log('Delete booking:', bookingId)
+        }}
+      />
 
       {/* Settings Drawer */}
       <CalendarSettings open={isSettingsOpen} onClose={toggleSettings} />
@@ -545,16 +576,6 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         onNewAppointment={handleQuickMenuNewAppointment}
         onTimeReservation={handleQuickMenuTimeReservation}
         onTimeOff={handleQuickMenuTimeOff}
-      />
-
-      {/* New Appointment Drawer */}
-      <NewAppointmentDrawer
-        open={isNewBookingOpen}
-        initialDate={useCalendarStore.getState().selectedDate}
-        initialDateRange={useCalendarStore.getState().selectedDateRange}
-        initialStaffId={staffFilters.selectedStaffId}
-        onClose={handleCloseNewBooking}
-        onSave={handleSaveNewAppointment}
       />
 
       {/* Error Snackbar */}
