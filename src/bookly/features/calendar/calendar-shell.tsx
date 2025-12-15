@@ -73,6 +73,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const [bookingDrawerOpen, setBookingDrawerOpen] = useState(false)
   const [bookingDrawerMode, setBookingDrawerMode] = useState<'create' | 'edit'>('create')
   const [selectedEventForEdit, setSelectedEventForEdit] = useState<CalendarEvent | null>(null)
+  const [bookingDrawerInitialServiceId, setBookingDrawerInitialServiceId] = useState<string | null>(null)
 
   // Track mouse position for popover
   const mousePositionRef = useRef({ x: 0, y: 0 })
@@ -541,11 +542,13 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         initialDate={useCalendarStore.getState().selectedDate}
         initialDateRange={useCalendarStore.getState().selectedDateRange}
         initialStaffId={staffFilters.selectedStaffId}
+        initialServiceId={bookingDrawerInitialServiceId}
         existingEvent={selectedEventForEdit}
         onClose={() => {
           setBookingDrawerOpen(false)
           handleCloseNewBooking()
           setSelectedEventForEdit(null)
+          setBookingDrawerInitialServiceId(null)
         }}
         onSave={(booking) => {
           if (bookingDrawerMode === 'create') {

@@ -44,6 +44,7 @@ interface UnifiedBookingDrawerProps {
   initialDate?: Date | null
   initialDateRange?: DateRange | null
   initialStaffId?: string | null
+  initialServiceId?: string | null // Pre-select service when opening
   existingEvent?: CalendarEvent | null // For edit mode
   onClose: () => void
   onSave?: (booking: any) => void
@@ -56,6 +57,7 @@ export default function UnifiedBookingDrawer({
   initialDate,
   initialDateRange,
   initialStaffId,
+  initialServiceId,
   existingEvent,
   onClose,
   onSave,
@@ -145,6 +147,28 @@ export default function UnifiedBookingDrawer({
       }
     }
   }, [mode, existingEvent])
+
+  // Pre-select service when drawer opens with initialServiceId
+  useEffect(() => {
+    if (open && initialServiceId && mode === 'create') {
+      const selectedService = mockServices.find(s => s.id === initialServiceId)
+      if (selectedService) {
+        setServiceId(initialServiceId)
+        setService(selectedService.name)
+        setServicePrice(selectedService.price)
+
+        // Auto-calculate end time for dynamic mode
+        if (schedulingMode === 'dynamic' && startTime) {
+          const [hours, minutes] = startTime.split(':').map(Number)
+          const startMinutes = hours * 60 + minutes
+          const endMinutes = startMinutes + selectedService.duration
+          const endHours = Math.floor(endMinutes / 60)
+          const endMins = endMinutes % 60
+          setEndTime(`${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}`)
+        }
+      }
+    }
+  }, [open, initialServiceId, mode, schedulingMode, startTime])
 
   // Check availability in real-time
   useEffect(() => {
