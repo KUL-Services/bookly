@@ -611,7 +611,7 @@ export default function UnifiedMultiResourceDayView({
           {/* Content area - scrolled by parent container */}
           <Box sx={{ flex: 1, overflow: 'visible', display: 'flex', position: 'relative' }}>
             {/* Time grid */}
-            <Box sx={{ position: 'relative', display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` }, width: '100%', minHeight: '100%' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` }, width: '100%', minHeight: '100%' }}>
               {/* Time labels column - sticky on left */}
               <Box sx={{ position: 'sticky', left: 0, top: 'auto', width: '60px', zIndex: 50, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
                 {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
