@@ -32,24 +32,8 @@ export default function UnifiedMultiResourceDayView({
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const { rooms, staffWorkingHours } = useStaffManagementStore()
 
-  // Refs for scroll synchronization
+  // Ref for scroll container
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const timeColumnRef = useRef<HTMLDivElement>(null)
-
-  // Sync time column vertical scroll with main container
-  useEffect(() => {
-    const scrollContainer = scrollContainerRef.current
-    if (!scrollContainer) return
-
-    const handleScroll = () => {
-      if (timeColumnRef.current) {
-        timeColumnRef.current.scrollTop = scrollContainer.scrollTop
-      }
-    }
-
-    scrollContainer.addEventListener('scroll', handleScroll)
-    return () => scrollContainer.removeEventListener('scroll', handleScroll)
-  }, [])
 
   // Group staff by type and static staff by room
   const staffGrouping = useMemo(() => groupStaffByType(mockStaff), [])
@@ -397,8 +381,8 @@ export default function UnifiedMultiResourceDayView({
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Box ref={scrollContainerRef} sx={{ minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto' }}>
-          {/* Header with two-layer grouping */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', flexShrink: 0 }}>
+          {/* Header with two-layer grouping - sticky at top */}
+          <Box sx={{ position: 'sticky', top: 0, zIndex: 20, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', flexShrink: 0 }}>
             {/* Layer 1: Primary grouping (Staff vs Rooms) */}
             <Box
               sx={{
@@ -631,8 +615,8 @@ export default function UnifiedMultiResourceDayView({
           <Box sx={{ flex: 1, overflow: 'visible', display: 'flex', position: 'relative' }}>
             {/* Time grid */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` }, width: '100%', minHeight: '100%' }}>
-              {/* Time labels column - sticky on left */}
-              <Box ref={timeColumnRef} sx={{ position: 'fixed', left: 0, top: '0', width: '60px', zIndex: 50, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+              {/* Time labels column - sticky on left, scrolls vertically */}
+              <Box sx={{ position: 'sticky', left: 0, top: 'auto', width: '60px', zIndex: 50, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
                 {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
                   <Box
                     key={index}
