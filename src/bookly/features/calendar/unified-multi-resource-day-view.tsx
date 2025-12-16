@@ -387,9 +387,9 @@ export default function UnifiedMultiResourceDayView({
       <Box ref={scrollContainerRef} sx={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', position: 'relative', bgcolor: 'background.paper' }}>
 
         {/* HEADER - Sticky at top, scrollable horizontally with content */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 0, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 0, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
           {/* Time column corner - sticky left */}
-          <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
+          <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 70, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0, isolation: 'isolate' }} />
 
           {/* Primary group headers - scrollable */}
           <Box sx={{ display: 'contents' }}>
@@ -438,9 +438,9 @@ export default function UnifiedMultiResourceDayView({
         </Box>
 
         {/* SECONDARY HEADER ROW - Sticky, scrolls horizontally */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 56, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 56, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
           {/* Time column corner */}
-          <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
+          <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 70, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0, isolation: 'isolate' }} />
 
           {/* Secondary group headers */}
           <Box sx={{ display: 'contents' }}>
@@ -486,9 +486,9 @@ export default function UnifiedMultiResourceDayView({
         </Box>
 
         {/* RESOURCE NAMES HEADER ROW - Sticky, scrolls horizontally */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 102, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 102, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
           {/* Time column header - sticky left */}
-          <Box sx={{ width: '60px', p: 2, position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
+          <Box sx={{ width: '60px', p: 2, position: 'sticky', left: 0, zIndex: 70, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0, isolation: 'isolate' }} />
 
           {/* Resource headers */}
           <Box sx={{ display: 'contents' }}>
@@ -588,7 +588,7 @@ export default function UnifiedMultiResourceDayView({
         {/* CONTENT AREA - Inside scrollable container */}
         <Box sx={{ display: 'flex', flex: 1, position: 'relative' }}>
           {/* Time column - sticky left */}
-          <Box sx={{ position: 'sticky', left: 0, zIndex: 60, width: '60px', flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
+          <Box sx={{ position: 'sticky', left: 0, zIndex: 60, width: '60px', flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', isolation: 'isolate' }}>
             {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
               <Box
                 key={index}
