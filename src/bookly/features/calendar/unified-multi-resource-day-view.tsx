@@ -402,7 +402,8 @@ export default function UnifiedMultiResourceDayView({
                   key={`primary-${primaryGroup}`}
                   sx={{
                     gridColumn: `span ${resourcesInPrimaryGroup.length}`,
-                    p: 1.5,
+                    px: 0.5,
+                    py: 0,
                     bgcolor: isStaffGroup
                       ? (isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)')
                       : (isDark ? 'rgba(76, 175, 80, 0.12)' : 'rgba(76, 175, 80, 0.08)'),
@@ -411,7 +412,7 @@ export default function UnifiedMultiResourceDayView({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 1,
+                    gap: 0.25,
                     minWidth: 0,
                     overflow: 'hidden',
                     width: '100%',
@@ -455,13 +456,15 @@ export default function UnifiedMultiResourceDayView({
                     key={`secondary-${primaryGroup}-${secondaryGroup}`}
                     sx={{
                       gridColumn: `span ${resources.length}`,
-                      p: 0.75,
+                      px: 0.25,
+                      py: 0,
                       bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
                       borderRight: isFirstSecondaryOfRooms ? 3 : 1,
                       borderColor: isFirstSecondaryOfRooms ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      gap: 0.25,
                       minWidth: 0,
                       overflow: 'hidden',
                       width: '100%',
@@ -503,13 +506,14 @@ export default function UnifiedMultiResourceDayView({
               <Box
                 key={resource.id}
                 sx={{
-                  p: 1.5,
+                  px: 0.5,
+                  py: 0.25,
                   borderRight: 1,
                   borderColor: 'divider',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 0.75,
+                  gap: 0.125,
                   cursor: 'pointer',
                   bgcolor: isRoom ? (isDark ? 'rgba(76, 175, 80, 0.03)' : 'rgba(76, 175, 80, 0.01)') : 'transparent',
                   '&:hover': {
