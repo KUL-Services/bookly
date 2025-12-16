@@ -77,7 +77,7 @@ export default function CalendarSettings({ open, onClose }: CalendarSettingsProp
         <Box className='flex-1 overflow-y-auto p-4'>
           <div className='space-y-6'>
             {/* Scheduling Mode */}
-            <FormControl component='fieldset' fullWidth>
+            {/* <FormControl component='fieldset' fullWidth>
               <FormLabel component='legend' className='mb-3 font-semibold text-textPrimary'>
                 Scheduling Mode
               </FormLabel>
@@ -103,7 +103,7 @@ export default function CalendarSettings({ open, onClose }: CalendarSettingsProp
               </RadioGroup>
             </FormControl>
 
-            <Divider />
+            <Divider /> */}
 
             {/* Default View */}
             <FormControl component='fieldset' fullWidth>

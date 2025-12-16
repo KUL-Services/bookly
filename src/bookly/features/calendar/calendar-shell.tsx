@@ -358,6 +358,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       extendedProps: {
         staffId: appointment.staffId,
         staffName: mockStaff.find(s => s.id === appointment.staffId)?.name || 'Unknown Staff',
+        serviceId: appointment.serviceId || undefined,
         serviceName: appointment.service || 'No service selected',
         customerName: appointment.clientName || 'Walk-in',
         price: appointment.servicePrice || 0,

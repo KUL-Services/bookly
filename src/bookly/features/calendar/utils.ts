@@ -654,6 +654,64 @@ export function groupStaffByType(staff: typeof mockStaff) {
 }
 
 /**
+ * Group staff by type AND assignment status (4 categories)
+ * Creates a comprehensive grouping structure for calendar display:
+ * 1. Dynamic Unassigned - flexible booking, no room assignment
+ * 2. Dynamic Assigned - flexible booking, from specific workspace(s)
+ * 3. Static Unassigned - fixed slot scheduling, no room assignment (pool/flexible location)
+ * 4. Static Assigned - fixed slot scheduling, assigned to specific room(s)
+ */
+export function groupStaffByTypeAndAssignment(staff: typeof mockStaff) {
+  // Category 1: Dynamic unassigned (flexible booking, no room assignment)
+  const dynamicUnassigned = staff.filter(
+    s => s.staffType !== 'static' && (!s.roomAssignments || s.roomAssignments.length === 0)
+  )
+
+  // Category 2: Dynamic assigned (flexible booking, with room assignment(s))
+  const dynamicAssigned = staff.filter(
+    s => s.staffType !== 'static' && s.roomAssignments && s.roomAssignments.length > 0
+  )
+
+  // Category 3: Static unassigned (fixed slots, no room assignment)
+  const staticUnassigned = staff.filter(
+    s => s.staffType === 'static' && (!s.roomAssignments || s.roomAssignments.length === 0)
+  )
+
+  // Category 4: Static assigned (fixed slots, with room assignment(s))
+  const staticAssigned = staff.filter(
+    s => s.staffType === 'static' && s.roomAssignments && s.roomAssignments.length > 0
+  )
+
+  // Group assigned static staff by room for secondary grouping
+  const staticAssignedByRoom: Record<string, typeof staff> = {}
+  staticAssigned.forEach(s => {
+    const roomName = s.roomAssignments?.[0]?.roomName || 'Unassigned'
+    if (!staticAssignedByRoom[roomName]) {
+      staticAssignedByRoom[roomName] = []
+    }
+    staticAssignedByRoom[roomName].push(s)
+  })
+
+  return {
+    // 4 Primary Categories
+    dynamicUnassigned,  // Flexible staff without room assignments
+    dynamicAssigned,    // Flexible staff with room assignments
+    staticUnassigned,   // Fixed slot staff without room assignments
+    staticAssigned,     // Fixed slot staff with room assignments
+
+    // Secondary grouping for assigned staff
+    staticAssignedByRoom, // Static assigned staff grouped by room
+
+    // Convenience groupings
+    allDynamic: [...dynamicUnassigned, ...dynamicAssigned],
+    allStatic: [...staticUnassigned, ...staticAssigned],
+    allAssigned: [...dynamicAssigned, ...staticAssigned],
+    allUnassigned: [...dynamicUnassigned, ...staticUnassigned],
+    allStaff: staff
+  }
+}
+
+/**
  * Group static staff assignments by room
  */
 export function groupStaticStaffByRoom(staff: typeof mockStaff) {

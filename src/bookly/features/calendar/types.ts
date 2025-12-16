@@ -112,6 +112,7 @@ export interface CalendarEvent extends EventInput {
     staffName: string
     selectionMethod: SelectionMethod
     starred: boolean
+    serviceId?: string // Service ID for pre-selection
     serviceName: string
     customerName: string
     price: number

@@ -6,7 +6,7 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday }
 import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
-import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms, getStaffAvailableCapacity, getCapacityColor, getDynamicRoomAvailability } from './utils'
+import { getBranchName, buildEventColors, groupStaffByType, groupStaffByTypeAndAssignment, categorizeRooms, getStaffAvailableCapacity, getCapacityColor, getDynamicRoomAvailability } from './utils'
 import type { CalendarEvent, DayOfWeek } from './types'
 import { useMemo } from 'react'
 
@@ -39,12 +39,12 @@ export default function UnifiedMultiResourceWeekView({
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd })
 
-  // Group staff by type
-  const staffGrouping = useMemo(() => groupStaffByType(mockStaff), [])
+  // Group staff by type AND assignment status (4 categories)
+  const staffGrouping = useMemo(() => groupStaffByTypeAndAssignment(mockStaff), [])
 
-  // Count total static staff for index calculations
-  const totalStaticStaff = useMemo(() => {
-    return Object.values(staffGrouping.staticByRoom).flat().length
+  // Count total assigned static staff for index calculations
+  const totalAssignedStaticStaff = useMemo(() => {
+    return Object.values(staffGrouping.staticAssignedByRoom).flat().length
   }, [staffGrouping])
 
   // Group rooms by type
@@ -63,16 +63,17 @@ export default function UnifiedMultiResourceWeekView({
     }
   }
 
-  // Get room assignment for static staff on a specific day
+  // Get room assignment for BOTH dynamic and static assigned staff on a specific day
   const getStaffRoomAssignment = (staffId: string, day: Date) => {
     const staff = mockStaff.find(s => s.id === staffId)
-    if (!staff || staff.staffType !== 'static' || !staff.roomAssignments) {
+    if (!staff || !staff.roomAssignments || staff.roomAssignments.length === 0) {
       return null
     }
 
     const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const dayOfWeek = dayNames[day.getDay()]
 
+    // Return room assignment for BOTH dynamic and static staff
     return staff.roomAssignments.find(assignment => assignment.dayOfWeek === dayOfWeek)
   }
 
@@ -386,33 +387,83 @@ export default function UnifiedMultiResourceWeekView({
             ))}
           </Box>
 
-          {/* Dynamic Staff Section */}
-          {staffGrouping.dynamic.length > 0 && (
+          {/* Dynamic Unassigned Staff Section */}
+          {staffGrouping.dynamicUnassigned.length > 0 && (
             <Box>
               <Box
                 sx={{
                   px: 2,
                   py: 1,
-                  bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                  bgcolor: isDark ? 'rgba(33, 150, 243, 0.08)' : 'rgba(33, 150, 243, 0.05)',
                   borderBottom: 1,
                   borderColor: 'divider'
                 }}
               >
-                <Typography variant='caption' fontWeight={700} color='text.secondary'>
-                  DYNAMIC STAFF ({staffGrouping.dynamic.length})
+                <Typography variant='caption' fontWeight={700} color='info.dark'>
+                  DYNAMIC UNASSIGNED ({staffGrouping.dynamicUnassigned.length})
                 </Typography>
               </Box>
-              {staffGrouping.dynamic.map((staff, index) => {
-                const staffResource = { ...staff, type: 'staff' as const }
+              {staffGrouping.dynamicUnassigned.map((staff, index) => {
+                const staffResource = { ...staff, type: 'staff' as const, assignmentStatus: 'unassigned' }
                 return renderResourceRow(staffResource, index)
               })}
             </Box>
           )}
 
-          {/* Static Staff Grouped by Room Section */}
-          {staffGrouping.static.length > 0 && (
+          {/* Dynamic Assigned Staff Section */}
+          {staffGrouping.dynamicAssigned.length > 0 && (
             <Box>
-              {/* Outer section header for static staff */}
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1,
+                  bgcolor: isDark ? 'rgba(76, 175, 80, 0.12)' : 'rgba(76, 175, 80, 0.1)',
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1
+                }}
+              >
+                <i className='ri-home-office-line' style={{ fontSize: 14, color: isDark ? '#81c784' : '#4caf50' }} />
+                <Typography variant='caption' fontWeight={700} color='success.dark'>
+                  DYNAMIC ASSIGNED TO ROOMS ({staffGrouping.dynamicAssigned.length})
+                </Typography>
+              </Box>
+              {staffGrouping.dynamicAssigned.map((staff, index) => {
+                const staffResource = { ...staff, type: 'staff' as const, assignmentStatus: 'assigned' }
+                return renderResourceRow(staffResource, staffGrouping.dynamicUnassigned.length + index)
+              })}
+            </Box>
+          )}
+
+          {/* Static Unassigned Staff Section */}
+          {staffGrouping.staticUnassigned.length > 0 && (
+            <Box>
+              <Box
+                sx={{
+                  px: 2,
+                  py: 1,
+                  bgcolor: isDark ? 'rgba(156, 39, 176, 0.08)' : 'rgba(156, 39, 176, 0.05)',
+                  borderBottom: 1,
+                  borderColor: 'divider'
+                }}
+              >
+                <Typography variant='caption' fontWeight={700} color='text.secondary'>
+                  STATIC UNASSIGNED ({staffGrouping.staticUnassigned.length})
+                </Typography>
+              </Box>
+              {staffGrouping.staticUnassigned.map((staff, index) => {
+                const staffResource = { ...staff, type: 'staff' as const, staffType: 'static', assignmentStatus: 'unassigned' }
+                return renderResourceRow(staffResource, staffGrouping.dynamicUnassigned.length + staffGrouping.dynamicAssigned.length + index)
+              })}
+            </Box>
+          )}
+
+          {/* Static Assigned Staff Grouped by Room Section */}
+          {staffGrouping.staticAssigned.length > 0 && (
+            <Box>
+              {/* Outer section header for static assigned staff */}
               <Box
                 sx={{
                   px: 2,
@@ -427,10 +478,10 @@ export default function UnifiedMultiResourceWeekView({
               >
                 <i className='ri-home-office-line' style={{ fontSize: 14, color: isDark ? '#ffb74d' : '#ff9800' }} />
                 <Typography variant='body2' fontWeight={700} color='warning.dark'>
-                  STATIC STAFF - ASSIGNED TO ROOMS
+                  STATIC ASSIGNED TO ROOMS
                 </Typography>
                 <Chip
-                  label={staffGrouping.static.length}
+                  label={staffGrouping.staticAssigned.length}
                   size='small'
                   sx={{
                     height: 18,
@@ -444,10 +495,10 @@ export default function UnifiedMultiResourceWeekView({
               </Box>
 
               {/* Inner groupings by room */}
-              {Object.entries(staffGrouping.staticByRoom).map(([roomName, staffList], roomIndex) => {
-                let staffIndexOffset = staffGrouping.dynamic.length
+              {Object.entries(staffGrouping.staticAssignedByRoom).map(([roomName, staffList], roomIndex) => {
+                let staffIndexOffset = staffGrouping.dynamicUnassigned.length + staffGrouping.dynamicAssigned.length + staffGrouping.staticUnassigned.length
                 return (
-                  <Box key={`static-room-${roomIndex}`}>
+                  <Box key={`static-assigned-room-${roomIndex}`}>
                     {/* Room-specific sub-header */}
                     <Box
                       sx={{
@@ -465,7 +516,7 @@ export default function UnifiedMultiResourceWeekView({
 
                     {/* Staff in this room */}
                     {staffList.map((staff, index) => {
-                      const staffResource = { ...staff, type: 'staff' as const, staffType: 'static', roomName }
+                      const staffResource = { ...staff, type: 'staff' as const, staffType: 'static', assignmentStatus: 'assigned', roomName }
                       return renderResourceRow(staffResource, staffIndexOffset + index)
                     })}
                   </Box>
@@ -502,7 +553,8 @@ export default function UnifiedMultiResourceWeekView({
               </Box>
               {roomGrouping.fixed.map((room, index) => {
                 const roomResource = { ...room, type: 'room' as const, photo: undefined }
-                return renderResourceRow(roomResource, staffGrouping.dynamic.length + totalStaticStaff + index)
+                const staffIndexOffset = staffGrouping.dynamicUnassigned.length + staffGrouping.dynamicAssigned.length + staffGrouping.staticUnassigned.length + totalAssignedStaticStaff
+                return renderResourceRow(roomResource, staffIndexOffset + index)
               })}
             </Box>
           )}
@@ -525,7 +577,8 @@ export default function UnifiedMultiResourceWeekView({
               </Box>
               {roomGrouping.flexible.map((room, index) => {
                 const roomResource = { ...room, type: 'room' as const, photo: undefined }
-                return renderResourceRow(roomResource, staffGrouping.dynamic.length + totalStaticStaff + roomGrouping.fixed.length + index)
+                const staffIndexOffset = staffGrouping.dynamicUnassigned.length + staffGrouping.dynamicAssigned.length + staffGrouping.staticUnassigned.length + totalAssignedStaticStaff
+                return renderResourceRow(roomResource, staffIndexOffset + roomGrouping.fixed.length + index)
               })}
             </Box>
           )}

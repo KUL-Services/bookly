@@ -674,10 +674,46 @@ const baseStaff: StaffMember[] = [
     phone: '+44 7700 900007',
     color: '#00897b',
     isActive: true,
-    staffType: 'dynamic', // Traditional booking
+    staffType: 'dynamic', // Traditional booking - NO room assignment (freelance/flexible)
     schedule: partTimeSchedule,
     workingHours: getWorkingHoursFromSchedule(partTimeSchedule),
     appointments: generateStaffAppointments('7', 'hair')
+  },
+  {
+    id: '8',
+    name: 'Rebecca Foster',
+    title: 'Senior Colorist',
+    photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop&crop=face',
+    businessId: '1',
+    branchId: '1-1',
+    email: 'rebecca.foster@luxehair.com',
+    phone: '+44 7700 900008',
+    color: '#ff6b6b',
+    isActive: true,
+    staffType: 'static', // Works in fixed time slots - NO room assignment (pool staff, flexible location)
+    schedule: standardSchedule,
+    workingHours: getWorkingHoursFromSchedule(standardSchedule),
+    appointments: generateStaffAppointments('8', 'hair'),
+    maxConcurrentBookings: 1
+    // NO roomAssignments - static staff without fixed room assignment
+  },
+  {
+    id: '9',
+    name: 'Oliver Price',
+    title: 'Specialist Colorist',
+    photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face',
+    businessId: '1',
+    branchId: '1-2',
+    email: 'oliver.price@luxehair.com',
+    phone: '+44 7700 900009',
+    color: '#4ecdc4',
+    isActive: true,
+    staffType: 'static', // Works in fixed time slots - NO room assignment
+    schedule: extendedSchedule,
+    workingHours: getWorkingHoursFromSchedule(extendedSchedule),
+    appointments: generateStaffAppointments('9', 'hair'),
+    maxConcurrentBookings: 1
+    // NO roomAssignments - static staff without fixed room assignment
   }
 ]
 
