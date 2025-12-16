@@ -826,3 +826,85 @@ export function getDynamicRoomAvailability(
     status: 'Available'
   }
 }
+
+/**
+ * Check if staff is working in a specific room on a given date
+ * Works for both dynamic and static staff with room assignments
+ * @param staffId - Staff member ID
+ * @param roomId - Room ID
+ * @param date - Date to check
+ * @returns true if staff is assigned to work in room on that date
+ */
+export function isStaffWorkingInRoom(staffId: string, roomId: string, date: Date): boolean {
+  const staff = mockStaff.find(s => s.id === staffId)
+  if (!staff || !staff.roomAssignments) return false
+
+  const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+
+  return staff.roomAssignments.some(assignment =>
+    assignment.roomId === roomId && assignment.dayOfWeek === dayName
+  )
+}
+
+/**
+ * Get staff's room assignment for a specific date and time
+ * @param staffId - Staff member ID
+ * @param date - Date to check
+ * @param timeStr - Time string in HH:MM format (optional, for time-specific check)
+ * @returns First matching room assignment or null
+ */
+export function getStaffRoomAssignment(staffId: string, date: Date, timeStr?: string): any | null {
+  const staff = mockStaff.find(s => s.id === staffId)
+  if (!staff || !staff.roomAssignments) return null
+
+  const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+
+  return staff.roomAssignments.find(assignment => {
+    if (assignment.dayOfWeek !== dayName) return false
+
+    // If time provided, check if it falls within assignment hours
+    if (timeStr) {
+      const [hours, minutes] = timeStr.split(':').map(Number)
+      const timeInMinutes = hours * 60 + minutes
+      const [startHours, startMins] = assignment.startTime.split(':').map(Number)
+      const [endHours, endMins] = assignment.endTime.split(':').map(Number)
+      const startInMinutes = startHours * 60 + startMins
+      const endInMinutes = endHours * 60 + endMins
+
+      return timeInMinutes >= startInMinutes && timeInMinutes < endInMinutes
+    }
+
+    return true
+  })
+}
+
+/**
+ * Get all staff assigned to a specific room on a given date
+ * @param roomId - Room ID
+ * @param date - Date to check
+ * @returns Array of staff members assigned to that room
+ */
+export function getStaffAssignedToRoom(roomId: string, date: Date): any[] {
+  const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+
+  return mockStaff.filter(staff =>
+    staff.roomAssignments?.some(
+      assignment => assignment.roomId === roomId && assignment.dayOfWeek === dayName
+    )
+  )
+}
+
+/**
+ * Get all rooms a staff member is assigned to on a given date
+ * @param staffId - Staff member ID
+ * @param date - Date to check
+ * @returns Array of room assignments
+ */
+export function getStaffRoomsForDate(staffId: string, date: Date): any[] {
+  const staff = mockStaff.find(s => s.id === staffId)
+  if (!staff || !staff.roomAssignments) return []
+
+  const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+
+  return staff.roomAssignments.filter(assignment => assignment.dayOfWeek === dayName)
+}
