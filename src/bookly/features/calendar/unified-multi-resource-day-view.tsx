@@ -384,10 +384,10 @@ export default function UnifiedMultiResourceDayView({
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
       {/* SCROLLABLE CONTAINER - Headers and content scroll together */}
-      <Box ref={scrollContainerRef} sx={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <Box ref={scrollContainerRef} sx={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', position: 'relative', bgcolor: 'background.paper' }}>
 
         {/* HEADER - Sticky at top, scrollable horizontally with content */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 0, zIndex: 30, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 0, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
           {/* Time column corner - sticky left */}
           <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
 
@@ -438,7 +438,7 @@ export default function UnifiedMultiResourceDayView({
         </Box>
 
         {/* SECONDARY HEADER ROW - Sticky, scrolls horizontally */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 56, zIndex: 30, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 56, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
           {/* Time column corner */}
           <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
 
@@ -486,7 +486,7 @@ export default function UnifiedMultiResourceDayView({
         </Box>
 
         {/* RESOURCE NAMES HEADER ROW - Sticky, scrolls horizontally */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 102, zIndex: 30, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 102, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
           {/* Time column header - sticky left */}
           <Box sx={{ width: '60px', p: 2, position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
 
@@ -588,7 +588,7 @@ export default function UnifiedMultiResourceDayView({
         {/* CONTENT AREA - Inside scrollable container */}
         <Box sx={{ display: 'flex', flex: 1, position: 'relative' }}>
           {/* Time column - sticky left */}
-          <Box sx={{ position: 'sticky', left: 0, zIndex: 50, width: '60px', flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
+          <Box sx={{ position: 'sticky', left: 0, zIndex: 60, width: '60px', flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
             {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
               <Box
                 key={index}
