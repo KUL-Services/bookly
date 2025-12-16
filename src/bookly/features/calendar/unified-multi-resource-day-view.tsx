@@ -7,7 +7,15 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
-import { getBranchName, buildEventColors, groupStaffByType, categorizeRooms, getStaffAvailableCapacity, getCapacityColor, getDynamicRoomAvailability } from './utils'
+import {
+  getBranchName,
+  buildEventColors,
+  groupStaffByType,
+  categorizeRooms,
+  getStaffAvailableCapacity,
+  getCapacityColor,
+  getDynamicRoomAvailability
+} from './utils'
 import type { CalendarEvent, DayOfWeek } from './types'
 
 interface UnifiedMultiResourceDayViewProps {
@@ -290,7 +298,7 @@ export default function UnifiedMultiResourceDayView({
           return (
             <Box
               key={event.id}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation()
                 onEventClick?.(event)
               }}
@@ -382,14 +390,58 @@ export default function UnifiedMultiResourceDayView({
   const gridTemplateColumnsMd = `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.default',
+        overflow: 'hidden'
+      }}
+    >
       {/* SCROLLABLE CONTAINER - Headers and content scroll together */}
-      <Box ref={scrollContainerRef} sx={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', position: 'relative', bgcolor: 'background.paper' }}>
-
+      <Box
+        ref={scrollContainerRef}
+        sx={{
+          flex: 1,
+          overflow: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          position: 'relative',
+          bgcolor: 'background.paper'
+        }}
+      >
         {/* HEADER - Sticky at top, scrollable horizontally with content */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 0, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: gridTemplateColumnsXs,
+            position: 'sticky',
+            top: 0,
+            zIndex: 50,
+            bgcolor: 'background.paper',
+            borderBottom: 1,
+            borderColor: 'divider',
+            flexShrink: 0,
+            minWidth: `${totalWidth}px`,
+            width: '100%',
+            isolation: 'isolate'
+          }}
+        >
           {/* Time column corner - sticky left */}
-          <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 70, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0, isolation: 'isolate' }} />
+          <Box
+            sx={{
+              width: '60px',
+              position: 'sticky',
+              left: 0,
+              zIndex: 70,
+              bgcolor: 'background.paper',
+              borderRight: 1,
+              borderColor: 'divider',
+              flexShrink: 0,
+              isolation: 'isolate'
+            }}
+          />
 
           {/* Primary group headers - scrollable */}
           <Box sx={{ display: 'contents' }}>
@@ -405,8 +457,12 @@ export default function UnifiedMultiResourceDayView({
                     px: 0.5,
                     py: 0,
                     bgcolor: isStaffGroup
-                      ? (isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)')
-                      : (isDark ? 'rgba(76, 175, 80, 0.12)' : 'rgba(76, 175, 80, 0.08)'),
+                      ? isDark
+                        ? 'rgba(33, 150, 243, 0.12)'
+                        : 'rgba(33, 150, 243, 0.08)'
+                      : isDark
+                        ? 'rgba(76, 175, 80, 0.12)'
+                        : 'rgba(76, 175, 80, 0.08)',
                     borderRight: isFirstGroup ? 3 : 1,
                     borderColor: isFirstGroup ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
                     display: 'flex',
@@ -441,9 +497,36 @@ export default function UnifiedMultiResourceDayView({
         </Box>
 
         {/* SECONDARY HEADER ROW - Sticky, scrolls horizontally */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 32, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: gridTemplateColumnsXs,
+            position: 'sticky',
+            top: 22,
+            zIndex: 50,
+            bgcolor: 'background.paper',
+            borderBottom: 1,
+            borderColor: 'divider',
+            flexShrink: 0,
+            minWidth: `${totalWidth}px`,
+            width: '100%',
+            isolation: 'isolate'
+          }}
+        >
           {/* Time column corner */}
-          <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 70, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0, isolation: 'isolate' }} />
+          <Box
+            sx={{
+              width: '60px',
+              position: 'sticky',
+              left: 0,
+              zIndex: 70,
+              bgcolor: 'background.paper',
+              borderRight: 1,
+              borderColor: 'divider',
+              flexShrink: 0,
+              isolation: 'isolate'
+            }}
+          />
 
           {/* Secondary group headers */}
           <Box sx={{ display: 'contents' }}>
@@ -460,7 +543,11 @@ export default function UnifiedMultiResourceDayView({
                       py: 0,
                       bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
                       borderRight: isFirstSecondaryOfRooms ? 3 : 1,
-                      borderColor: isFirstSecondaryOfRooms ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
+                      borderColor: isFirstSecondaryOfRooms
+                        ? isDark
+                          ? 'rgba(255,255,255,0.2)'
+                          : 'rgba(0,0,0,0.1)'
+                        : 'divider',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -493,155 +580,228 @@ export default function UnifiedMultiResourceDayView({
         </Box>
 
         {/* RESOURCE NAMES HEADER ROW - Sticky, scrolls horizontally */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 54, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: gridTemplateColumnsXs,
+            position: 'sticky',
+            top: 40,
+            zIndex: 50,
+            bgcolor: 'background.paper',
+            borderBottom: 1,
+            borderColor: 'divider',
+            flexShrink: 0,
+            minWidth: `${totalWidth}px`,
+            width: '100%',
+            isolation: 'isolate'
+          }}
+        >
           {/* Time column header - sticky left */}
-          <Box sx={{ width: '60px', p: 2, position: 'sticky', left: 0, zIndex: 70, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0, isolation: 'isolate' }} />
+          <Box
+            sx={{
+              width: '60px',
+              p: 2,
+              position: 'sticky',
+              left: 0,
+              zIndex: 70,
+              bgcolor: 'background.paper',
+              borderRight: 1,
+              borderColor: 'divider',
+              flexShrink: 0,
+              isolation: 'isolate'
+            }}
+          />
 
           {/* Resource headers */}
           <Box sx={{ display: 'contents' }}>
-          {orderedResources.map((resource) => {
-            const isRoom = resource.type === 'room'
+            {orderedResources.map(resource => {
+              const isRoom = resource.type === 'room'
 
-            return (
-              <Box
-                key={resource.id}
-                sx={{
-                  px: 0.5,
-                  py: 0.25,
-                  borderRight: 1,
-                  borderColor: 'divider',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 0.125,
-                  cursor: 'pointer',
-                  bgcolor: isRoom ? (isDark ? 'rgba(76, 175, 80, 0.03)' : 'rgba(76, 175, 80, 0.01)') : 'transparent',
-                  '&:hover': {
-                    bgcolor: isRoom
-                      ? (isDark ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)')
-                      : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)')
-                  },
-                  minWidth: 0,
-                  overflow: 'hidden',
-                  width: '100%',
-                  height: '100%'
-                }}
-                onClick={() => {
-                  if (resource.type === 'staff' && onStaffClick) onStaffClick(resource.id)
-                  else if (resource.type === 'room' && onRoomClick) onRoomClick(resource.id)
-                }}
-              >
-                <Avatar sx={{ width: 28, height: 28, bgcolor: resource.type === 'staff' ? 'primary.main' : 'success.main', fontSize: '0.7rem', fontWeight: 600 }}>
-                  {resource.type === 'staff'
-                    ? resource.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)
-                    : <i className='ri-tools-line' style={{ color: '#fff', fontSize: 14 }} />
-                  }
-                </Avatar>
-                <Box sx={{ textAlign: 'center', width: '100%' }}>
-                  <Typography variant='body2' fontWeight={600} noWrap fontSize='0.8rem'>
-                    {resource.name}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, justifyContent: 'center', mt: 0.25 }}>
-                    {resource.type === 'staff' && resource.staffType === 'dynamic' && (
-                      (() => {
-                        const availableCapacity = getStaffAvailableCapacity(resource.id, currentDate, mockBookings)
-                        const capacityColor = getCapacityColor(availableCapacity)
-                        return availableCapacity !== null ? (
+              return (
+                <Box
+                  key={resource.id}
+                  sx={{
+                    px: 0.5,
+                    py: 0.25,
+                    borderRight: 1,
+                    borderColor: 'divider',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 0.125,
+                    cursor: 'pointer',
+                    bgcolor: isRoom ? (isDark ? 'rgba(76, 175, 80, 0.03)' : 'rgba(76, 175, 80, 0.01)') : 'transparent',
+                    '&:hover': {
+                      bgcolor: isRoom
+                        ? isDark
+                          ? 'rgba(76, 175, 80, 0.08)'
+                          : 'rgba(76, 175, 80, 0.05)'
+                        : isDark
+                          ? 'rgba(255,255,255,0.05)'
+                          : 'rgba(0,0,0,0.03)'
+                    },
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    width: '100%',
+                    height: '100%'
+                  }}
+                  onClick={() => {
+                    if (resource.type === 'staff' && onStaffClick) onStaffClick(resource.id)
+                    else if (resource.type === 'room' && onRoomClick) onRoomClick(resource.id)
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      width: 28,
+                      height: 28,
+                      bgcolor: resource.type === 'staff' ? 'primary.main' : 'success.main',
+                      fontSize: '0.7rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    {resource.type === 'staff' ? (
+                      resource.name
+                        .split(' ')
+                        .map((n: string) => n[0])
+                        .join('')
+                        .substring(0, 2)
+                    ) : (
+                      <i className='ri-tools-line' style={{ color: '#fff', fontSize: 14 }} />
+                    )}
+                  </Avatar>
+                  <Box sx={{ textAlign: 'center', width: '100%' }}>
+                    <Typography variant='body2' fontWeight={600} noWrap fontSize='0.8rem'>
+                      {resource.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, justifyContent: 'center', mt: 0.25 }}>
+                      {resource.type === 'staff' &&
+                        resource.staffType === 'dynamic' &&
+                        (() => {
+                          const availableCapacity = getStaffAvailableCapacity(resource.id, currentDate, mockBookings)
+                          const capacityColor = getCapacityColor(availableCapacity)
+                          return availableCapacity !== null ? (
+                            <Chip
+                              label={`${availableCapacity}/${resource.maxConcurrentBookings || 1}`}
+                              size='small'
+                              variant='outlined'
+                              color={capacityColor}
+                              sx={{ height: 16, fontSize: '0.55rem' }}
+                            />
+                          ) : null
+                        })()}
+                      {resource.type === 'staff' &&
+                        resource.staffType === 'static' &&
+                        resource.maxConcurrentBookings && (
                           <Chip
-                            label={`${availableCapacity}/${resource.maxConcurrentBookings || 1}`}
+                            label={`Cap: ${resource.maxConcurrentBookings}`}
                             size='small'
                             variant='outlined'
-                            color={capacityColor}
                             sx={{ height: 16, fontSize: '0.55rem' }}
                           />
-                        ) : null
-                      })()
-                    )}
-                    {resource.type === 'staff' && resource.staffType === 'static' && resource.maxConcurrentBookings && (
-                      <Chip
-                        label={`Cap: ${resource.maxConcurrentBookings}`}
-                        size='small'
-                        variant='outlined'
-                        sx={{ height: 16, fontSize: '0.55rem' }}
-                      />
-                    )}
-                    {resource.type === 'room' && resource.capacity && (
-                      (() => {
-                        const isDynamicRoom = resource.roomType === 'dynamic' || resource.roomType === 'flexible'
-                        const dynamicInfo = isDynamicRoom ? getDynamicRoomAvailability(resource.id, [resource]) : null
-                        return (
-                          <Chip
-                            label={`${dynamicInfo?.totalCapacity || resource.capacity}`}
-                            size='small'
-                            variant='outlined'
-                            color={isDynamicRoom ? 'success' : 'default'}
-                            sx={{
-                              height: 16,
-                              fontSize: '0.55rem',
-                              bgcolor: isDark
-                                ? isDynamicRoom ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.1)'
-                                : isDynamicRoom ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)',
-                              fontWeight: isDynamicRoom ? 600 : 500
-                            }}
-                          />
-                        )
-                      })()
-                    )}
+                        )}
+                      {resource.type === 'room' &&
+                        resource.capacity &&
+                        (() => {
+                          const isDynamicRoom = resource.roomType === 'dynamic' || resource.roomType === 'flexible'
+                          const dynamicInfo = isDynamicRoom ? getDynamicRoomAvailability(resource.id, [resource]) : null
+                          return (
+                            <Chip
+                              label={`${dynamicInfo?.totalCapacity || resource.capacity}`}
+                              size='small'
+                              variant='outlined'
+                              color={isDynamicRoom ? 'success' : 'default'}
+                              sx={{
+                                height: 16,
+                                fontSize: '0.55rem',
+                                bgcolor: isDark
+                                  ? isDynamicRoom
+                                    ? 'rgba(76, 175, 80, 0.15)'
+                                    : 'rgba(76, 175, 80, 0.1)'
+                                  : isDynamicRoom
+                                    ? 'rgba(76, 175, 80, 0.08)'
+                                    : 'rgba(76, 175, 80, 0.05)',
+                                fontWeight: isDynamicRoom ? 600 : 500
+                              }}
+                            />
+                          )
+                        })()}
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
-            )
-          })}
+              )
+            })}
           </Box>
         </Box>
 
         {/* CONTENT AREA - Inside scrollable container */}
         <Box sx={{ display: 'flex', flex: 1, position: 'relative' }}>
           {/* Time column - sticky left */}
-          <Box sx={{ position: 'sticky', left: 0, zIndex: 60, width: '60px', flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', isolation: 'isolate' }}>
-            {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
-              <Box
-                key={index}
-                sx={{
-                  height: 160,
-                  borderBottom: 1,
-                  borderColor: 'divider',
-                  pt: 1,
-                  pr: 1,
-                  textAlign: 'right',
-                  bgcolor: 'background.paper'
-                }}
-              >
-                <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.7rem' }}>
-                  {format(slot, 'h:mm a')}
-                </Typography>
-              </Box>
-            ))}
+          <Box
+            sx={{
+              position: 'sticky',
+              left: 0,
+              zIndex: 60,
+              width: '60px',
+              flexShrink: 0,
+              bgcolor: 'background.paper',
+              borderRight: 1,
+              borderColor: 'divider',
+              isolation: 'isolate'
+            }}
+          >
+            {timeSlots
+              .filter((_, i) => i % 4 === 0)
+              .map((slot, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    height: 160,
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    pt: 1,
+                    pr: 1,
+                    textAlign: 'right',
+                    bgcolor: 'background.paper'
+                  }}
+                >
+                  <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.7rem' }}>
+                    {format(slot, 'h:mm a')}
+                  </Typography>
+                </Box>
+              ))}
           </Box>
 
           {/* Calendar grid */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${orderedResources.length}, 150px)`, width: '100%', minWidth: `${orderedResources.length * 150}px`, position: 'relative' }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${orderedResources.length}, 150px)`,
+              width: '100%',
+              minWidth: `${orderedResources.length * 150}px`,
+              position: 'relative'
+            }}
+          >
             {/* Resource columns */}
             {orderedResources.map((resource, index) => {
               const isRoom = resource.type === 'room'
-              const bgColor = isRoom
-                ? (isDark ? 'rgba(76, 175, 80, 0.01)' : 'rgba(76, 175, 80, 0.005)')
-                : 'transparent'
+              const bgColor = isRoom ? (isDark ? 'rgba(76, 175, 80, 0.01)' : 'rgba(76, 175, 80, 0.005)') : 'transparent'
 
               return (
                 <Box key={resource.id} sx={{ position: 'relative' }}>
-                  {timeSlots.filter((_, i) => i % 4 === 0).map((_, slotIndex) => (
-                    <Box
-                      key={slotIndex}
-                      sx={{
-                        height: 160,
-                        borderBottom: 1,
-                        borderRight: 1,
-                        borderColor: 'divider',
-                        bgcolor: bgColor
-                      }}
-                    />
-                  ))}
+                  {timeSlots
+                    .filter((_, i) => i % 4 === 0)
+                    .map((_, slotIndex) => (
+                      <Box
+                        key={slotIndex}
+                        sx={{
+                          height: 160,
+                          borderBottom: 1,
+                          borderRight: 1,
+                          borderColor: 'divider',
+                          bgcolor: bgColor
+                        }}
+                      />
+                    ))}
                   <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
                     {renderResourceColumn(resource, index)}
                   </Box>
