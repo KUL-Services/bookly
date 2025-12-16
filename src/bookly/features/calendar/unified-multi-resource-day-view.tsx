@@ -59,6 +59,7 @@ export default function UnifiedMultiResourceDayView({
   // Layer 2: Within Staff (Dynamic vs Static), Within Rooms (Fixed vs Flexible)
   const orderedResources = useMemo(() => {
     const resources: Array<any> = []
+    const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][currentDate.getDay()]
 
     // Layer 1: STAFF
     // Layer 2: Dynamic staff
@@ -97,6 +98,23 @@ export default function UnifiedMultiResourceDayView({
         secondaryGroup: 'fixed-rooms',
         photo: undefined
       })
+
+      // Add dynamic staff assigned to this room on this day
+      staffGrouping.dynamic.forEach(staff => {
+        if (staff.roomAssignments?.some(assignment =>
+          assignment.roomId === room.id && assignment.dayOfWeek === dayName
+        )) {
+          resources.push({
+            ...staff,
+            type: 'staff' as const,
+            staffType: 'dynamic',
+            primaryGroup: 'rooms',
+            secondaryGroup: 'fixed-rooms',
+            roomName: room.name,
+            associatedRoomId: room.id
+          })
+        }
+      })
     })
 
     // Layer 2: Flexible rooms
@@ -109,10 +127,27 @@ export default function UnifiedMultiResourceDayView({
         secondaryGroup: 'flexible-rooms',
         photo: undefined
       })
+
+      // Add dynamic staff assigned to this room on this day
+      staffGrouping.dynamic.forEach(staff => {
+        if (staff.roomAssignments?.some(assignment =>
+          assignment.roomId === room.id && assignment.dayOfWeek === dayName
+        )) {
+          resources.push({
+            ...staff,
+            type: 'staff' as const,
+            staffType: 'dynamic',
+            primaryGroup: 'rooms',
+            secondaryGroup: 'flexible-rooms',
+            roomName: room.name,
+            associatedRoomId: room.id
+          })
+        }
+      })
     })
 
     return resources
-  }, [staffGrouping, staticStaffByRoom, roomGrouping])
+  }, [staffGrouping, staticStaffByRoom, roomGrouping, currentDate])
 
   // Filter events for current date
   const todayEvents = events.filter(event => isSameDay(new Date(event.start), currentDate))
