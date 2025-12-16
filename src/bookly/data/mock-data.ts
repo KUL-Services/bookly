@@ -457,7 +457,50 @@ const baseStaff: StaffMember[] = [
     schedule: extendedSchedule,
     workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('1', 'hair'),
-    maxConcurrentBookings: 2 // Can handle 2 overlapping appointments
+    maxConcurrentBookings: 2, // Can handle 2 overlapping appointments
+    // Dynamic staff can also have room assignments (workplace reference, not scheduling constraint)
+    roomAssignments: [
+      {
+        roomId: 'room-1-1-1',
+        roomName: 'Studio A',
+        dayOfWeek: 'Mon',
+        startTime: '09:00',
+        endTime: '17:00',
+        serviceIds: ['1', '2', '3'] // Hair services
+      },
+      {
+        roomId: 'room-1-1-1',
+        roomName: 'Studio A',
+        dayOfWeek: 'Tue',
+        startTime: '09:00',
+        endTime: '17:00',
+        serviceIds: ['1', '2', '3']
+      },
+      {
+        roomId: 'room-1-1-1',
+        roomName: 'Studio A',
+        dayOfWeek: 'Wed',
+        startTime: '09:00',
+        endTime: '17:00',
+        serviceIds: ['1', '2', '3']
+      },
+      {
+        roomId: 'room-1-1-1',
+        roomName: 'Studio A',
+        dayOfWeek: 'Thu',
+        startTime: '09:00',
+        endTime: '18:00',
+        serviceIds: ['1', '2', '3']
+      },
+      {
+        roomId: 'room-1-1-1',
+        roomName: 'Studio A',
+        dayOfWeek: 'Fri',
+        startTime: '09:00',
+        endTime: '18:00',
+        serviceIds: ['1', '2', '3']
+      }
+    ]
   },
   {
     id: '2',
@@ -558,7 +601,35 @@ const baseStaff: StaffMember[] = [
     staffType: 'dynamic', // Traditional booking
     schedule: standardSchedule,
     workingHours: getWorkingHoursFromSchedule(standardSchedule),
-    appointments: generateStaffAppointments('4', 'nails')
+    appointments: generateStaffAppointments('4', 'nails'),
+    maxConcurrentBookings: 2,
+    // Dynamic staff with room assignments for flexible booking from specific workspace
+    roomAssignments: [
+      {
+        roomId: 'room-2-1-2',
+        roomName: 'Station 2',
+        dayOfWeek: 'Mon',
+        startTime: '10:00',
+        endTime: '19:00',
+        serviceIds: ['4', '5'] // Nail services
+      },
+      {
+        roomId: 'room-2-1-2',
+        roomName: 'Station 2',
+        dayOfWeek: 'Wed',
+        startTime: '10:00',
+        endTime: '19:00',
+        serviceIds: ['4', '5']
+      },
+      {
+        roomId: 'room-2-1-2',
+        roomName: 'Station 2',
+        dayOfWeek: 'Fri',
+        startTime: '10:00',
+        endTime: '19:00',
+        serviceIds: ['4', '5']
+      }
+    ]
   },
   {
     id: '5',
