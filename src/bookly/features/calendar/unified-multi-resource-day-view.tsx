@@ -376,10 +376,10 @@ export default function UnifiedMultiResourceDayView({
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <Box sx={{ minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1 }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <Box sx={{ minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           {/* Header with two-layer grouping */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', position: 'sticky', top: 0, zIndex: 10 }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', position: 'sticky', top: 0, zIndex: 20, flexShrink: 0 }}>
             {/* Layer 1: Primary grouping (Staff vs Rooms) */}
             <Box
               sx={{
@@ -608,28 +608,31 @@ export default function UnifiedMultiResourceDayView({
             </Box>
           </Box>
 
-          {/* Time grid */}
-          <Box sx={{ position: 'relative', flex: 1, display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` } }}>
-            {/* Time labels column */}
-            <Box sx={{ borderRight: 1, borderColor: 'divider' }}>
-              {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    height: 160,
-                    borderBottom: 1,
-                    borderColor: 'divider',
-                    pt: 1,
-                    pr: 1,
-                    textAlign: 'right'
-                  }}
-                >
-                  <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.7rem' }}>
-                    {format(slot, 'h:mm a')}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
+          {/* Scrollable content area */}
+          <Box sx={{ flex: 1, overflow: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex' }}>
+            {/* Time grid */}
+            <Box sx={{ position: 'relative', display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` }, width: '100%', minHeight: '100%' }}>
+              {/* Time labels column - sticky left */}
+              <Box sx={{ position: 'sticky', left: 0, zIndex: 15, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+                {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      height: 160,
+                      borderBottom: 1,
+                      borderColor: 'divider',
+                      pt: 1,
+                      pr: 1,
+                      textAlign: 'right',
+                      bgcolor: 'background.paper'
+                    }}
+                  >
+                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.7rem' }}>
+                      {format(slot, 'h:mm a')}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
 
             {/* Resource columns */}
             {orderedResources.map((resource, index) => {
@@ -659,16 +662,16 @@ export default function UnifiedMultiResourceDayView({
               )
             })}
 
-            {/* Current time indicator */}
-            {currentTimeIndicator && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  left: 60,
-                  right: 0,
-                  top: currentTimeIndicator.top,
-                  height: 2,
-                  bgcolor: 'error.main',
+              {/* Current time indicator */}
+              {currentTimeIndicator && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: 60,
+                    right: 0,
+                    top: currentTimeIndicator.top,
+                    height: 2,
+                    bgcolor: 'error.main',
                   zIndex: 5,
                   pointerEvents: 'none',
                   '&::before': {
@@ -682,9 +685,12 @@ export default function UnifiedMultiResourceDayView({
                     bgcolor: 'error.main'
                   }
                 }}
-              />
-            )}
+                />
+              )}
+            </Box>
+            {/* End of time grid */}
           </Box>
+          {/* End of scrollable content area */}
         </Box>
       </Box>
     </Box>

@@ -550,14 +550,14 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           setSelectedEventForEdit(null)
           setBookingDrawerInitialServiceId(null)
         }}
-        onSave={(booking) => {
+        onSave={booking => {
           if (bookingDrawerMode === 'create') {
             handleSaveNewAppointment(booking)
           } else {
             handleSaveNewAppointment(booking)
           }
         }}
-        onDelete={(bookingId) => {
+        onDelete={bookingId => {
           // Handle delete
           console.log('Delete booking:', bookingId)
         }}
