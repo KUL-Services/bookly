@@ -377,326 +377,290 @@ export default function UnifiedMultiResourceDayView({
     return group
   }
 
+  const totalWidth = 60 + orderedResources.length * 150
+  const gridTemplateColumnsXs = `60px repeat(${orderedResources.length}, 150px)`
+  const gridTemplateColumnsMd = `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <Box ref={scrollContainerRef} sx={{ minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto' }}>
-          {/* Header with two-layer grouping - sticky at top */}
-          <Box sx={{ position: 'sticky', top: 0, zIndex: 20, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', flexShrink: 0, width: '100%', minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' } }}>
-            {/* Layer 1: Primary grouping (Staff vs Rooms) */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: `60px repeat(${orderedResources.length}, 150px)`,
-                  md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
-                },
-                borderBottom: 1,
-                borderColor: 'divider',
-                width: '100%',
-                '& > *': {
+      {/* HEADER - Fixed at top, scrollable horizontally */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px` }}>
+        {/* Time column corner - fixed */}
+        <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
+
+        {/* Primary group headers - scrollable */}
+        <Box sx={{ display: 'contents' }}>
+          {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], groupIndex) => {
+            const resourcesInPrimaryGroup = Object.values(secondaryGroups).flat()
+            const isStaffGroup = primaryGroup === 'staff'
+            const isFirstGroup = groupIndex === 0
+            return (
+              <Box
+                key={`primary-${primaryGroup}`}
+                sx={{
+                  gridColumn: `span ${resourcesInPrimaryGroup.length}`,
+                  p: 1.5,
+                  bgcolor: isStaffGroup
+                    ? (isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)')
+                    : (isDark ? 'rgba(76, 175, 80, 0.12)' : 'rgba(76, 175, 80, 0.08)'),
+                  borderRight: isFirstGroup ? 3 : 1,
+                  borderColor: isFirstGroup ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
                   minWidth: 0,
                   overflow: 'hidden'
-                }
-              }}
-            >
-              {/* Sticky time column for primary grouping row */}
-              <Box sx={{ position: 'sticky', left: 0, width: '60px', bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }} />
+                }}
+              >
+                <i className={isStaffGroup ? 'ri-team-line' : 'ri-tools-line'} style={{ fontSize: 16 }} />
+                <Typography variant='body2' fontWeight={700} color='text.primary'>
+                  {getPrimaryGroupLabel(primaryGroup)}
+                </Typography>
+                <Chip
+                  label={resourcesInPrimaryGroup.length}
+                  size='small'
+                  sx={{
+                    height: 18,
+                    fontSize: '0.65rem',
+                    bgcolor: isStaffGroup ? 'primary.main' : 'success.main',
+                    color: 'white',
+                    fontWeight: 600
+                  }}
+                />
+              </Box>
+            )
+          })}
+        </Box>
+      </Box>
 
-              {/* Primary group headers (Staff, Rooms) */}
-              {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], groupIndex) => {
-                const resourcesInPrimaryGroup = Object.values(secondaryGroups).flat()
-                const isStaffGroup = primaryGroup === 'staff'
-                const isFirstGroup = groupIndex === 0
-                return (
-                  <Box
-                    key={`primary-${primaryGroup}`}
+      {/* SECONDARY HEADER ROW */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px` }}>
+        {/* Time column corner */}
+        <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
+
+        {/* Secondary group headers */}
+        <Box sx={{ display: 'contents' }}>
+          {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], primaryIndex) => {
+            return Object.entries(secondaryGroups).map(([secondaryGroup, resources], secondaryIndex) => {
+              const isStaffGroup = primaryGroup === 'staff'
+              const isFirstSecondaryOfRooms = !isStaffGroup && secondaryIndex === 0
+              return (
+                <Box
+                  key={`secondary-${primaryGroup}-${secondaryGroup}`}
+                  sx={{
+                    gridColumn: `span ${resources.length}`,
+                    p: 0.75,
+                    bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
+                    borderRight: isFirstSecondaryOfRooms ? 3 : 1,
+                    borderColor: isFirstSecondaryOfRooms ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minWidth: 0,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.7rem' }}>
+                    {getSecondaryGroupLabel(secondaryGroup)}
+                  </Typography>
+                  <Chip
+                    label={resources.length}
+                    size='small'
+                    variant='outlined'
                     sx={{
-                      gridColumn: `span ${resourcesInPrimaryGroup.length}`,
-                      p: 1.5,
-                      bgcolor: isStaffGroup
-                        ? (isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)')
-                        : (isDark ? 'rgba(76, 175, 80, 0.12)' : 'rgba(76, 175, 80, 0.08)'),
-                      borderRight: isFirstGroup ? 3 : 1,
-                      borderColor: isFirstGroup ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 1
+                      height: 14,
+                      fontSize: '0.6rem',
+                      ml: 0.5,
+                      '& .MuiChip-label': { px: 0.5 }
                     }}
-                  >
-                    <i className={isStaffGroup ? 'ri-team-line' : 'ri-tools-line'} style={{ fontSize: 16 }} />
-                    <Typography variant='body2' fontWeight={700} color='text.primary'>
-                      {getPrimaryGroupLabel(primaryGroup)}
-                    </Typography>
-                    <Chip
-                      label={resourcesInPrimaryGroup.length}
-                      size='small'
-                      sx={{
-                        height: 18,
-                        fontSize: '0.65rem',
-                        bgcolor: isStaffGroup ? 'primary.main' : 'success.main',
-                        color: 'white',
-                        fontWeight: 600
-                      }}
-                    />
-                  </Box>
-                )
-              })}
-            </Box>
+                  />
+                </Box>
+              )
+            })
+          })}
+        </Box>
+      </Box>
 
-            {/* Layer 2: Secondary grouping (Dynamic/Static staff, Fixed/Flexible rooms) */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: `60px repeat(${orderedResources.length}, 150px)`,
-                  md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
-                },
-                borderBottom: 1,
-                borderColor: 'divider',
-                width: '100%',
-                '& > *': {
+      {/* RESOURCE NAMES HEADER ROW */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px` }}>
+        {/* Time column header - sticky */}
+        <Box sx={{ width: '60px', p: 2, position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
+
+        {/* Resource headers */}
+        <Box sx={{ display: 'contents' }}>
+          {orderedResources.map((resource) => {
+            const isRoom = resource.type === 'room'
+
+            return (
+              <Box
+                key={resource.id}
+                sx={{
+                  p: 1.5,
+                  borderRight: 1,
+                  borderColor: 'divider',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  cursor: 'pointer',
+                  bgcolor: isRoom ? (isDark ? 'rgba(76, 175, 80, 0.03)' : 'rgba(76, 175, 80, 0.01)') : 'transparent',
+                  '&:hover': {
+                    bgcolor: isRoom
+                      ? (isDark ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)')
+                      : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)')
+                  },
                   minWidth: 0,
                   overflow: 'hidden'
-                }
-              }}
-            >
-              {/* Sticky time column for secondary grouping row */}
-              <Box sx={{ position: 'sticky', left: 0, width: '60px', bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }} />
-
-              {/* Secondary group headers */}
-              {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], primaryIndex) => {
-                return Object.entries(secondaryGroups).map(([secondaryGroup, resources], secondaryIndex) => {
-                  const isStaffGroup = primaryGroup === 'staff'
-                  const isFirstSecondaryOfRooms = !isStaffGroup && secondaryIndex === 0
-                  return (
-                    <Box
-                      key={`secondary-${primaryGroup}-${secondaryGroup}`}
-                      sx={{
-                        gridColumn: `span ${resources.length}`,
-                        p: 0.75,
-                        bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
-                        borderRight: isFirstSecondaryOfRooms ? 3 : 1,
-                        borderColor: isFirstSecondaryOfRooms ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.7rem' }}>
-                        {getSecondaryGroupLabel(secondaryGroup)}
-                      </Typography>
-                      <Chip
-                        label={resources.length}
-                        size='small'
-                        variant='outlined'
-                        sx={{
-                          height: 14,
-                          fontSize: '0.6rem',
-                          ml: 0.5,
-                          '& .MuiChip-label': { px: 0.5 }
-                        }}
-                      />
-                    </Box>
-                  )
-                })
-              })}
-            </Box>
-
-            {/* Resource headers row */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: `60px repeat(${orderedResources.length}, 150px)`,
-                  md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
-                },
-                width: '100%',
-                '& > *': {
-                  minWidth: 0,
-                  overflow: 'hidden'
-                }
-              }}
-            >
-              {/* Time column header - sticky horizontally only */}
-              <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider', position: 'sticky', left: 0, width: '60px', bgcolor: 'background.paper' }} />
-
-              {/* Resource headers */}
-              {orderedResources.map((resource) => {
-                const isRoom = resource.type === 'room'
-
-                return (
-                  <Box
-                    key={resource.id}
-                    sx={{
-                      p: 1.5,
-                      borderRight: 1,
-                      borderColor: 'divider',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 0.75,
-                      cursor: 'pointer',
-                      bgcolor: isRoom ? (isDark ? 'rgba(76, 175, 80, 0.03)' : 'rgba(76, 175, 80, 0.01)') : 'transparent',
-                      '&:hover': {
-                        bgcolor: isRoom
-                          ? (isDark ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)')
-                          : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)')
-                      }
-                    }}
-                    onClick={() => {
-                      if (resource.type === 'staff' && onStaffClick) onStaffClick(resource.id)
-                      else if (resource.type === 'room' && onRoomClick) onRoomClick(resource.id)
-                    }}
-                  >
-                    <Avatar sx={{ width: 28, height: 28, bgcolor: resource.type === 'staff' ? 'primary.main' : 'success.main', fontSize: '0.7rem', fontWeight: 600 }}>
-                      {resource.type === 'staff'
-                        ? resource.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)
-                        : <i className='ri-tools-line' style={{ color: '#fff', fontSize: 14 }} />
-                      }
-                    </Avatar>
-                    <Box sx={{ textAlign: 'center', width: '100%' }}>
-                      <Typography variant='body2' fontWeight={600} noWrap fontSize='0.8rem'>
-                        {resource.name}
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, justifyContent: 'center', mt: 0.25 }}>
-                        {resource.type === 'staff' && resource.staffType === 'dynamic' && (
-                          (() => {
-                            const availableCapacity = getStaffAvailableCapacity(resource.id, currentDate, mockBookings)
-                            const capacityColor = getCapacityColor(availableCapacity)
-                            return availableCapacity !== null ? (
-                              <Chip
-                                label={`${availableCapacity}/${resource.maxConcurrentBookings || 1}`}
-                                size='small'
-                                variant='outlined'
-                                color={capacityColor}
-                                sx={{ height: 16, fontSize: '0.55rem' }}
-                              />
-                            ) : null
-                          })()
-                        )}
-                        {resource.type === 'staff' && resource.staffType === 'static' && resource.maxConcurrentBookings && (
+                }}
+                onClick={() => {
+                  if (resource.type === 'staff' && onStaffClick) onStaffClick(resource.id)
+                  else if (resource.type === 'room' && onRoomClick) onRoomClick(resource.id)
+                }}
+              >
+                <Avatar sx={{ width: 28, height: 28, bgcolor: resource.type === 'staff' ? 'primary.main' : 'success.main', fontSize: '0.7rem', fontWeight: 600 }}>
+                  {resource.type === 'staff'
+                    ? resource.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)
+                    : <i className='ri-tools-line' style={{ color: '#fff', fontSize: 14 }} />
+                  }
+                </Avatar>
+                <Box sx={{ textAlign: 'center', width: '100%' }}>
+                  <Typography variant='body2' fontWeight={600} noWrap fontSize='0.8rem'>
+                    {resource.name}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, justifyContent: 'center', mt: 0.25 }}>
+                    {resource.type === 'staff' && resource.staffType === 'dynamic' && (
+                      (() => {
+                        const availableCapacity = getStaffAvailableCapacity(resource.id, currentDate, mockBookings)
+                        const capacityColor = getCapacityColor(availableCapacity)
+                        return availableCapacity !== null ? (
                           <Chip
-                            label={`Cap: ${resource.maxConcurrentBookings}`}
+                            label={`${availableCapacity}/${resource.maxConcurrentBookings || 1}`}
                             size='small'
                             variant='outlined'
+                            color={capacityColor}
                             sx={{ height: 16, fontSize: '0.55rem' }}
                           />
-                        )}
-                        {resource.type === 'room' && resource.capacity && (
-                          (() => {
-                            const isDynamicRoom = resource.roomType === 'dynamic' || resource.roomType === 'flexible'
-                            const dynamicInfo = isDynamicRoom ? getDynamicRoomAvailability(resource.id, [resource]) : null
-                            return (
-                              <Chip
-                                label={`${dynamicInfo?.totalCapacity || resource.capacity}`}
-                                size='small'
-                                variant='outlined'
-                                color={isDynamicRoom ? 'success' : 'default'}
-                                sx={{
-                                  height: 16,
-                                  fontSize: '0.55rem',
-                                  bgcolor: isDark
-                                    ? isDynamicRoom ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.1)'
-                                    : isDynamicRoom ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)',
-                                  fontWeight: isDynamicRoom ? 600 : 500
-                                }}
-                              />
-                            )
-                          })()
-                        )}
-                      </Box>
-                    </Box>
+                        ) : null
+                      })()
+                    )}
+                    {resource.type === 'staff' && resource.staffType === 'static' && resource.maxConcurrentBookings && (
+                      <Chip
+                        label={`Cap: ${resource.maxConcurrentBookings}`}
+                        size='small'
+                        variant='outlined'
+                        sx={{ height: 16, fontSize: '0.55rem' }}
+                      />
+                    )}
+                    {resource.type === 'room' && resource.capacity && (
+                      (() => {
+                        const isDynamicRoom = resource.roomType === 'dynamic' || resource.roomType === 'flexible'
+                        const dynamicInfo = isDynamicRoom ? getDynamicRoomAvailability(resource.id, [resource]) : null
+                        return (
+                          <Chip
+                            label={`${dynamicInfo?.totalCapacity || resource.capacity}`}
+                            size='small'
+                            variant='outlined'
+                            color={isDynamicRoom ? 'success' : 'default'}
+                            sx={{
+                              height: 16,
+                              fontSize: '0.55rem',
+                              bgcolor: isDark
+                                ? isDynamicRoom ? 'rgba(76, 175, 80, 0.15)' : 'rgba(76, 175, 80, 0.1)'
+                                : isDynamicRoom ? 'rgba(76, 175, 80, 0.08)' : 'rgba(76, 175, 80, 0.05)',
+                              fontWeight: isDynamicRoom ? 600 : 500
+                            }}
+                          />
+                        )
+                      })()
+                    )}
                   </Box>
-                )
-              })}
-            </Box>
-          </Box>
+                </Box>
+              </Box>
+            )
+          })}
+        </Box>
+      </Box>
 
-          {/* Content area - scrolled by parent container */}
-          <Box sx={{ flex: 1, overflow: 'visible', display: 'flex', position: 'relative' }}>
-            {/* Time grid */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` }, width: '100%', minHeight: '100%' }}>
-              {/* Time labels column - sticky horizontally only */}
-              <Box sx={{ position: 'sticky', left: 0, top: 'auto', width: '60px', zIndex: 50, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-                {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
+      {/* SCROLLABLE CONTENT AREA */}
+      <Box ref={scrollContainerRef} sx={{ flex: 1, overflow: 'auto', display: 'flex', position: 'relative' }}>
+        {/* Time column - sticky left */}
+        <Box sx={{ position: 'sticky', left: 0, zIndex: 50, width: '60px', flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
+          {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
+            <Box
+              key={index}
+              sx={{
+                height: 160,
+                borderBottom: 1,
+                borderColor: 'divider',
+                pt: 1,
+                pr: 1,
+                textAlign: 'right',
+                bgcolor: 'background.paper'
+              }}
+            >
+              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.7rem' }}>
+                {format(slot, 'h:mm a')}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Calendar grid */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${orderedResources.length}, 150px)`, width: '100%', minWidth: `${orderedResources.length * 150}px`, position: 'relative' }}>
+          {/* Resource columns */}
+          {orderedResources.map((resource, index) => {
+            const isRoom = resource.type === 'room'
+            const bgColor = isRoom
+              ? (isDark ? 'rgba(76, 175, 80, 0.01)' : 'rgba(76, 175, 80, 0.005)')
+              : 'transparent'
+
+            return (
+              <Box key={resource.id} sx={{ position: 'relative' }}>
+                {timeSlots.filter((_, i) => i % 4 === 0).map((_, slotIndex) => (
                   <Box
-                    key={index}
+                    key={slotIndex}
                     sx={{
                       height: 160,
                       borderBottom: 1,
+                      borderRight: 1,
                       borderColor: 'divider',
-                      pt: 1,
-                      pr: 1,
-                      textAlign: 'right',
-                      bgcolor: 'background.paper'
+                      bgcolor: bgColor
                     }}
-                  >
-                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.7rem' }}>
-                      {format(slot, 'h:mm a')}
-                    </Typography>
-                  </Box>
+                  />
                 ))}
-              </Box>
-
-            {/* Resource columns */}
-            {orderedResources.map((resource, index) => {
-              const isRoom = resource.type === 'room'
-              const bgColor = isRoom
-                ? (isDark ? 'rgba(76, 175, 80, 0.01)' : 'rgba(76, 175, 80, 0.005)')
-                : 'transparent'
-
-              return (
-                <Box key={resource.id} sx={{ position: 'relative' }}>
-                  {timeSlots.filter((_, i) => i % 4 === 0).map((_, slotIndex) => (
-                    <Box
-                      key={slotIndex}
-                      sx={{
-                        height: 160,
-                        borderBottom: 1,
-                        borderRight: 1,
-                        borderColor: 'divider',
-                        bgcolor: bgColor
-                      }}
-                    />
-                  ))}
-                  <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                    {renderResourceColumn(resource, index)}
-                  </Box>
+                <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                  {renderResourceColumn(resource, index)}
                 </Box>
-              )
-            })}
+              </Box>
+            )
+          })}
 
-              {/* Current time indicator - spans all columns */}
-              {currentTimeIndicator && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: currentTimeIndicator.top,
-                    height: 2,
-                    bgcolor: 'error.main',
-                    zIndex: 5,
-                    pointerEvents: 'none',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      left: 54,
-                      top: -4,
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      bgcolor: 'error.main'
-                    }
-                  }}
-                />
-              )}
-            </Box>
-            {/* End of time grid */}
-          </Box>
-          {/* End of scrollable content area */}
+          {/* Current time indicator - spans all columns */}
+          {currentTimeIndicator && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: -60,
+                right: 0,
+                top: currentTimeIndicator.top,
+                height: 2,
+                bgcolor: 'error.main',
+                zIndex: 5,
+                pointerEvents: 'none',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 54,
+                  top: -4,
+                  width: 10,
+                  height: 10,
+                  borderRadius: '50%',
+                  bgcolor: 'error.main'
+                }
+              }}
+            />
+          )}
         </Box>
       </Box>
     </Box>
