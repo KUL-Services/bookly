@@ -377,7 +377,7 @@ export default function UnifiedMultiResourceDayView({
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <Box sx={{ minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        <Box sx={{ minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto' }}>
           {/* Header with two-layer grouping */}
           <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', position: 'sticky', top: 0, zIndex: 20, flexShrink: 0 }}>
             {/* Layer 1: Primary grouping (Staff vs Rooms) */}
