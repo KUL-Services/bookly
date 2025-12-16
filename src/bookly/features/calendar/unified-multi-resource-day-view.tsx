@@ -413,7 +413,9 @@ export default function UnifiedMultiResourceDayView({
                     justifyContent: 'center',
                     gap: 1,
                     minWidth: 0,
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    width: '100%',
+                    height: '100%'
                   }}
                 >
                   <i className={isStaffGroup ? 'ri-team-line' : 'ri-tools-line'} style={{ fontSize: 16 }} />
@@ -461,7 +463,9 @@ export default function UnifiedMultiResourceDayView({
                       alignItems: 'center',
                       justifyContent: 'center',
                       minWidth: 0,
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      width: '100%',
+                      height: '100%'
                     }}
                   >
                     <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.7rem' }}>
@@ -514,7 +518,9 @@ export default function UnifiedMultiResourceDayView({
                       : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)')
                   },
                   minWidth: 0,
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  width: '100%',
+                  height: '100%'
                 }}
                 onClick={() => {
                   if (resource.type === 'staff' && onStaffClick) onStaffClick(resource.id)
