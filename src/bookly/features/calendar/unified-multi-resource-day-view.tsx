@@ -382,7 +382,7 @@ export default function UnifiedMultiResourceDayView({
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Box ref={scrollContainerRef} sx={{ minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto' }}>
           {/* Header with two-layer grouping - sticky at top */}
-          <Box sx={{ position: 'sticky', top: 0, zIndex: 20, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', flexShrink: 0, backdropFilter: 'blur(0px)' }}>
+          <Box sx={{ position: 'sticky', top: 0, zIndex: 20, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', flexShrink: 0, width: '100%', minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' } }}>
             {/* Layer 1: Primary grouping (Staff vs Rooms) */}
             <Box
               sx={{
@@ -393,6 +393,7 @@ export default function UnifiedMultiResourceDayView({
                 },
                 borderBottom: 1,
                 borderColor: 'divider',
+                width: '100%',
                 '& > *': {
                   minWidth: 0,
                   overflow: 'hidden'
@@ -454,6 +455,7 @@ export default function UnifiedMultiResourceDayView({
                 },
                 borderBottom: 1,
                 borderColor: 'divider',
+                width: '100%',
                 '& > *': {
                   minWidth: 0,
                   overflow: 'hidden'
@@ -510,6 +512,7 @@ export default function UnifiedMultiResourceDayView({
                   xs: `60px repeat(${orderedResources.length}, 150px)`,
                   md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
                 },
+                width: '100%',
                 '& > *': {
                   minWidth: 0,
                   overflow: 'hidden'
@@ -665,29 +668,29 @@ export default function UnifiedMultiResourceDayView({
               )
             })}
 
-              {/* Current time indicator */}
+              {/* Current time indicator - spans all columns */}
               {currentTimeIndicator && (
                 <Box
                   sx={{
                     position: 'absolute',
-                    left: 60,
+                    left: 0,
                     right: 0,
                     top: currentTimeIndicator.top,
                     height: 2,
                     bgcolor: 'error.main',
-                  zIndex: 5,
-                  pointerEvents: 'none',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    left: -6,
-                    top: -4,
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: 'error.main'
-                  }
-                }}
+                    zIndex: 5,
+                    pointerEvents: 'none',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      left: 54,
+                      top: -4,
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: 'error.main'
+                    }
+                  }}
                 />
               )}
             </Box>
