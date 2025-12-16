@@ -383,112 +383,115 @@ export default function UnifiedMultiResourceDayView({
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default', overflow: 'hidden' }}>
-      {/* HEADER - Fixed at top, scrollable horizontally */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px` }}>
-        {/* Time column corner - fixed */}
-        <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
+      {/* SCROLLABLE CONTAINER - Headers and content scroll together */}
+      <Box ref={scrollContainerRef} sx={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
 
-        {/* Primary group headers - scrollable */}
-        <Box sx={{ display: 'contents' }}>
-          {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], groupIndex) => {
-            const resourcesInPrimaryGroup = Object.values(secondaryGroups).flat()
-            const isStaffGroup = primaryGroup === 'staff'
-            const isFirstGroup = groupIndex === 0
-            return (
-              <Box
-                key={`primary-${primaryGroup}`}
-                sx={{
-                  gridColumn: `span ${resourcesInPrimaryGroup.length}`,
-                  p: 1.5,
-                  bgcolor: isStaffGroup
-                    ? (isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)')
-                    : (isDark ? 'rgba(76, 175, 80, 0.12)' : 'rgba(76, 175, 80, 0.08)'),
-                  borderRight: isFirstGroup ? 3 : 1,
-                  borderColor: isFirstGroup ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 1,
-                  minWidth: 0,
-                  overflow: 'hidden'
-                }}
-              >
-                <i className={isStaffGroup ? 'ri-team-line' : 'ri-tools-line'} style={{ fontSize: 16 }} />
-                <Typography variant='body2' fontWeight={700} color='text.primary'>
-                  {getPrimaryGroupLabel(primaryGroup)}
-                </Typography>
-                <Chip
-                  label={resourcesInPrimaryGroup.length}
-                  size='small'
-                  sx={{
-                    height: 18,
-                    fontSize: '0.65rem',
-                    bgcolor: isStaffGroup ? 'primary.main' : 'success.main',
-                    color: 'white',
-                    fontWeight: 600
-                  }}
-                />
-              </Box>
-            )
-          })}
-        </Box>
-      </Box>
+        {/* HEADER - Sticky at top, scrollable horizontally with content */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 0, zIndex: 30, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
+          {/* Time column corner - sticky left */}
+          <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
 
-      {/* SECONDARY HEADER ROW */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px` }}>
-        {/* Time column corner */}
-        <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
-
-        {/* Secondary group headers */}
-        <Box sx={{ display: 'contents' }}>
-          {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], primaryIndex) => {
-            return Object.entries(secondaryGroups).map(([secondaryGroup, resources], secondaryIndex) => {
+          {/* Primary group headers - scrollable */}
+          <Box sx={{ display: 'contents' }}>
+            {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], groupIndex) => {
+              const resourcesInPrimaryGroup = Object.values(secondaryGroups).flat()
               const isStaffGroup = primaryGroup === 'staff'
-              const isFirstSecondaryOfRooms = !isStaffGroup && secondaryIndex === 0
+              const isFirstGroup = groupIndex === 0
               return (
                 <Box
-                  key={`secondary-${primaryGroup}-${secondaryGroup}`}
+                  key={`primary-${primaryGroup}`}
                   sx={{
-                    gridColumn: `span ${resources.length}`,
-                    p: 0.75,
-                    bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
-                    borderRight: isFirstSecondaryOfRooms ? 3 : 1,
-                    borderColor: isFirstSecondaryOfRooms ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
+                    gridColumn: `span ${resourcesInPrimaryGroup.length}`,
+                    p: 1.5,
+                    bgcolor: isStaffGroup
+                      ? (isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)')
+                      : (isDark ? 'rgba(76, 175, 80, 0.12)' : 'rgba(76, 175, 80, 0.08)'),
+                    borderRight: isFirstGroup ? 3 : 1,
+                    borderColor: isFirstGroup ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    gap: 1,
                     minWidth: 0,
                     overflow: 'hidden'
                   }}
                 >
-                  <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.7rem' }}>
-                    {getSecondaryGroupLabel(secondaryGroup)}
+                  <i className={isStaffGroup ? 'ri-team-line' : 'ri-tools-line'} style={{ fontSize: 16 }} />
+                  <Typography variant='body2' fontWeight={700} color='text.primary'>
+                    {getPrimaryGroupLabel(primaryGroup)}
                   </Typography>
                   <Chip
-                    label={resources.length}
+                    label={resourcesInPrimaryGroup.length}
                     size='small'
-                    variant='outlined'
                     sx={{
-                      height: 14,
-                      fontSize: '0.6rem',
-                      ml: 0.5,
-                      '& .MuiChip-label': { px: 0.5 }
+                      height: 18,
+                      fontSize: '0.65rem',
+                      bgcolor: isStaffGroup ? 'primary.main' : 'success.main',
+                      color: 'white',
+                      fontWeight: 600
                     }}
                   />
                 </Box>
               )
-            })
-          })}
+            })}
+          </Box>
         </Box>
-      </Box>
 
-      {/* RESOURCE NAMES HEADER ROW */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px` }}>
-        {/* Time column header - sticky */}
-        <Box sx={{ width: '60px', p: 2, position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
+        {/* SECONDARY HEADER ROW - Sticky, scrolls horizontally */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 56, zIndex: 30, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
+          {/* Time column corner */}
+          <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
 
-        {/* Resource headers */}
-        <Box sx={{ display: 'contents' }}>
+          {/* Secondary group headers */}
+          <Box sx={{ display: 'contents' }}>
+            {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], primaryIndex) => {
+              return Object.entries(secondaryGroups).map(([secondaryGroup, resources], secondaryIndex) => {
+                const isStaffGroup = primaryGroup === 'staff'
+                const isFirstSecondaryOfRooms = !isStaffGroup && secondaryIndex === 0
+                return (
+                  <Box
+                    key={`secondary-${primaryGroup}-${secondaryGroup}`}
+                    sx={{
+                      gridColumn: `span ${resources.length}`,
+                      p: 0.75,
+                      bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
+                      borderRight: isFirstSecondaryOfRooms ? 3 : 1,
+                      borderColor: isFirstSecondaryOfRooms ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: 0,
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.7rem' }}>
+                      {getSecondaryGroupLabel(secondaryGroup)}
+                    </Typography>
+                    <Chip
+                      label={resources.length}
+                      size='small'
+                      variant='outlined'
+                      sx={{
+                        height: 14,
+                        fontSize: '0.6rem',
+                        ml: 0.5,
+                        '& .MuiChip-label': { px: 0.5 }
+                      }}
+                    />
+                  </Box>
+                )
+              })
+            })}
+          </Box>
+        </Box>
+
+        {/* RESOURCE NAMES HEADER ROW - Sticky, scrolls horizontally */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 102, zIndex: 30, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%' }}>
+          {/* Time column header - sticky left */}
+          <Box sx={{ width: '60px', p: 2, position: 'sticky', left: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0 }} />
+
+          {/* Resource headers */}
+          <Box sx={{ display: 'contents' }}>
           {orderedResources.map((resource) => {
             const isRoom = resource.type === 'room'
 
@@ -579,88 +582,89 @@ export default function UnifiedMultiResourceDayView({
               </Box>
             )
           })}
-        </Box>
-      </Box>
-
-      {/* SCROLLABLE CONTENT AREA */}
-      <Box ref={scrollContainerRef} sx={{ flex: 1, overflow: 'auto', display: 'flex', position: 'relative' }}>
-        {/* Time column - sticky left */}
-        <Box sx={{ position: 'sticky', left: 0, zIndex: 50, width: '60px', flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
-          {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
-            <Box
-              key={index}
-              sx={{
-                height: 160,
-                borderBottom: 1,
-                borderColor: 'divider',
-                pt: 1,
-                pr: 1,
-                textAlign: 'right',
-                bgcolor: 'background.paper'
-              }}
-            >
-              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.7rem' }}>
-                {format(slot, 'h:mm a')}
-              </Typography>
-            </Box>
-          ))}
+          </Box>
         </Box>
 
-        {/* Calendar grid */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${orderedResources.length}, 150px)`, width: '100%', minWidth: `${orderedResources.length * 150}px`, position: 'relative' }}>
-          {/* Resource columns */}
-          {orderedResources.map((resource, index) => {
-            const isRoom = resource.type === 'room'
-            const bgColor = isRoom
-              ? (isDark ? 'rgba(76, 175, 80, 0.01)' : 'rgba(76, 175, 80, 0.005)')
-              : 'transparent'
-
-            return (
-              <Box key={resource.id} sx={{ position: 'relative' }}>
-                {timeSlots.filter((_, i) => i % 4 === 0).map((_, slotIndex) => (
-                  <Box
-                    key={slotIndex}
-                    sx={{
-                      height: 160,
-                      borderBottom: 1,
-                      borderRight: 1,
-                      borderColor: 'divider',
-                      bgcolor: bgColor
-                    }}
-                  />
-                ))}
-                <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                  {renderResourceColumn(resource, index)}
-                </Box>
+        {/* CONTENT AREA - Inside scrollable container */}
+        <Box sx={{ display: 'flex', flex: 1, position: 'relative' }}>
+          {/* Time column - sticky left */}
+          <Box sx={{ position: 'sticky', left: 0, zIndex: 50, width: '60px', flexShrink: 0, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }}>
+            {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
+              <Box
+                key={index}
+                sx={{
+                  height: 160,
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  pt: 1,
+                  pr: 1,
+                  textAlign: 'right',
+                  bgcolor: 'background.paper'
+                }}
+              >
+                <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.7rem' }}>
+                  {format(slot, 'h:mm a')}
+                </Typography>
               </Box>
-            )
-          })}
+            ))}
+          </Box>
 
-          {/* Current time indicator - spans all columns */}
-          {currentTimeIndicator && (
-            <Box
-              sx={{
-                position: 'absolute',
-                left: -60,
-                right: 0,
-                top: currentTimeIndicator.top,
-                height: 2,
-                bgcolor: 'error.main',
-                zIndex: 5,
-                pointerEvents: 'none',
-                '&::before': {
-                  content: '""',
+          {/* Calendar grid */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${orderedResources.length}, 150px)`, width: '100%', minWidth: `${orderedResources.length * 150}px`, position: 'relative' }}>
+            {/* Resource columns */}
+            {orderedResources.map((resource, index) => {
+              const isRoom = resource.type === 'room'
+              const bgColor = isRoom
+                ? (isDark ? 'rgba(76, 175, 80, 0.01)' : 'rgba(76, 175, 80, 0.005)')
+                : 'transparent'
+
+              return (
+                <Box key={resource.id} sx={{ position: 'relative' }}>
+                  {timeSlots.filter((_, i) => i % 4 === 0).map((_, slotIndex) => (
+                    <Box
+                      key={slotIndex}
+                      sx={{
+                        height: 160,
+                        borderBottom: 1,
+                        borderRight: 1,
+                        borderColor: 'divider',
+                        bgcolor: bgColor
+                      }}
+                    />
+                  ))}
+                  <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                    {renderResourceColumn(resource, index)}
+                  </Box>
+                </Box>
+              )
+            })}
+
+            {/* Current time indicator - spans all columns */}
+            {currentTimeIndicator && (
+              <Box
+                sx={{
                   position: 'absolute',
-                  left: 54,
-                  top: -4,
-                  width: 10,
-                  height: 10,
-                  borderRadius: '50%',
-                  bgcolor: 'error.main'
-                }
-              }}
-            />
-          )}
+                  left: -60,
+                  right: 0,
+                  top: currentTimeIndicator.top,
+                  height: 2,
+                  bgcolor: 'error.main',
+                  zIndex: 5,
+                  pointerEvents: 'none',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 54,
+                    top: -4,
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    bgcolor: 'error.main'
+                  }
+                }}
+              />
+            )}
+          </Box>
         </Box>
       </Box>
     </Box>
