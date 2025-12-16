@@ -26,7 +26,7 @@ import { mockStaff, mockServices, mockBookings, mockRooms } from '@/bookly/data/
 import type { DateRange, StaticServiceSlot, CalendarEvent } from './types'
 import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
-import { isStaffAvailable, hasConflict, getServiceDuration, getStaffAvailableCapacity, getCapacityColor } from './utils'
+import { isStaffAvailable, hasConflict, getServiceDuration, getStaffAvailableCapacity, getCapacityColor, getStaffRoomAssignment } from './utils'
 import ClientPickerDialog from './client-picker-dialog'
 
 // Helper function to get 2 initials from a name
@@ -620,8 +620,18 @@ export default function UnifiedBookingDrawer({
                     value={staffId}
                     label="STAFF"
                     onChange={(e) => {
-                      setStaffId(e.target.value)
+                      const newStaffId = e.target.value
+                      setStaffId(newStaffId)
                       setStaffManuallyChosen(true)
+
+                      // Auto-populate room if staff has room assignments for this date
+                      if (date) {
+                        const roomAssignment = getStaffRoomAssignment(newStaffId, date)
+                        if (roomAssignment) {
+                          setRoomId(roomAssignment.roomId)
+                          setRoomName(roomAssignment.roomName)
+                        }
+                      }
                     }}
                   >
                     {mockStaff.slice(0, 7).map((staff) => {
