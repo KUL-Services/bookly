@@ -441,7 +441,7 @@ export default function UnifiedMultiResourceDayView({
         </Box>
 
         {/* SECONDARY HEADER ROW - Sticky, scrolls horizontally */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 56, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 32, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
           {/* Time column corner */}
           <Box sx={{ width: '60px', position: 'sticky', left: 0, zIndex: 70, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0, isolation: 'isolate' }} />
 
@@ -493,7 +493,7 @@ export default function UnifiedMultiResourceDayView({
         </Box>
 
         {/* RESOURCE NAMES HEADER ROW - Sticky, scrolls horizontally */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 102, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: gridTemplateColumnsXs, position: 'sticky', top: 54, zIndex: 50, bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider', flexShrink: 0, minWidth: `${totalWidth}px`, width: '100%', isolation: 'isolate' }}>
           {/* Time column header - sticky left */}
           <Box sx={{ width: '60px', p: 2, position: 'sticky', left: 0, zIndex: 70, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider', flexShrink: 0, isolation: 'isolate' }} />
 
