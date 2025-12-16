@@ -610,10 +610,10 @@ export default function UnifiedMultiResourceDayView({
 
           {/* Content area - scrolled by parent container */}
           <Box sx={{ flex: 1, overflow: 'visible', display: 'flex' }}>
-            {/* Time grid */}
-            <Box sx={{ position: 'relative', display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` }, width: '100%', minHeight: '100%' }}>
-              {/* Time labels column - fixed on left, does not scroll horizontally */}
-              <Box sx={{ position: 'sticky', left: 0, zIndex: 50, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+            {/* Time grid with time column fixed on left */}
+            <Box sx={{ position: 'relative', display: 'grid', gridTemplateColumns: { xs: `repeat(${orderedResources.length}, 150px)`, md: `repeat(${orderedResources.length}, minmax(180px, 1fr))` }, width: '100%', minHeight: '100%', ml: '60px' }}>
+              {/* Time labels column - fixed on left, never scrolls */}
+              <Box sx={{ position: 'fixed', left: 0, top: 0, width: '60px', height: '100vh', zIndex: 50, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper', overflowY: 'hidden' }}>
                 {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
                   <Box
                     key={index}
