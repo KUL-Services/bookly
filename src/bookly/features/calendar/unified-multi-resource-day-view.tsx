@@ -612,8 +612,8 @@ export default function UnifiedMultiResourceDayView({
           <Box sx={{ flex: 1, overflow: 'visible', display: 'flex' }}>
             {/* Time grid */}
             <Box sx={{ position: 'relative', display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` }, width: '100%', minHeight: '100%' }}>
-              {/* Time labels column - sticky left */}
-              <Box sx={{ position: 'sticky', left: 0, zIndex: 15, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+              {/* Time labels column - fixed on left, does not scroll horizontally */}
+              <Box sx={{ position: 'sticky', left: 0, zIndex: 50, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
                 {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
                   <Box
                     key={index}
