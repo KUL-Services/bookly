@@ -382,7 +382,7 @@ export default function UnifiedMultiResourceDayView({
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Box ref={scrollContainerRef} sx={{ minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' }, display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto' }}>
           {/* Header with two-layer grouping - sticky at top */}
-          <Box sx={{ position: 'sticky', top: 0, zIndex: 20, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', flexShrink: 0 }}>
+          <Box sx={{ position: 'sticky', top: 0, zIndex: 30, borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', flexShrink: 0 }}>
             {/* Layer 1: Primary grouping (Staff vs Rooms) */}
             <Box
               sx={{
@@ -399,8 +399,8 @@ export default function UnifiedMultiResourceDayView({
                 }
               }}
             >
-              {/* Empty time column for primary grouping row */}
-              <Box />
+              {/* Sticky time column for primary grouping row */}
+              <Box sx={{ position: 'sticky', left: 0, top: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }} />
 
               {/* Primary group headers (Staff, Rooms) */}
               {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], groupIndex) => {
@@ -460,8 +460,8 @@ export default function UnifiedMultiResourceDayView({
                 }
               }}
             >
-              {/* Empty time column for secondary grouping row */}
-              <Box />
+              {/* Sticky time column for secondary grouping row */}
+              <Box sx={{ position: 'sticky', left: 0, top: 0, zIndex: 100, bgcolor: 'background.paper', borderRight: 1, borderColor: 'divider' }} />
 
               {/* Secondary group headers */}
               {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], primaryIndex) => {
@@ -516,8 +516,8 @@ export default function UnifiedMultiResourceDayView({
                 }
               }}
             >
-              {/* Time column header */}
-              <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider' }} />
+              {/* Time column header - sticky on both axes */}
+              <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider', position: 'sticky', left: 0, top: 0, zIndex: 100, bgcolor: 'background.paper' }} />
 
               {/* Resource headers */}
               {orderedResources.map((resource) => {
@@ -616,7 +616,7 @@ export default function UnifiedMultiResourceDayView({
             {/* Time grid */}
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: `60px repeat(${orderedResources.length}, 150px)`, md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))` }, width: '100%', minHeight: '100%' }}>
               {/* Time labels column - sticky on left, scrolls vertically */}
-              <Box sx={{ position: 'sticky', left: 0, top: 'auto', width: '60px', zIndex: 50, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+              <Box sx={{ position: 'sticky', left: 0, top: 'auto', width: '60px', zIndex: 40, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
                 {timeSlots.filter((_, i) => i % 4 === 0).map((slot, index) => (
                   <Box
                     key={index}
