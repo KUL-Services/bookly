@@ -35,6 +35,7 @@ import {
   getStaffRoomAssignment
 } from './utils'
 import ClientPickerDialog from './client-picker-dialog'
+import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 
 // Helper function to get 2 initials from a name
 const getInitials = (name: string): string => {
@@ -99,6 +100,7 @@ export default function UnifiedBookingDrawer({
   >('confirmed')
   const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid')
   const [starred, setStarred] = useState(false)
+  const [arrivalTime, setArrivalTime] = useState('')
 
   // State for capacity and warnings
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -165,6 +167,7 @@ export default function UnifiedBookingDrawer({
       setStatus(existingEvent.extendedProps.status || 'confirmed')
       setPaymentStatus(existingEvent.extendedProps.paymentStatus || 'unpaid')
       setStarred(existingEvent.extendedProps.starred || false)
+      setArrivalTime(existingEvent.extendedProps.arrivalTime || '')
       setPartySize(existingEvent.extendedProps.partySize || 1)
       if (existingEvent.extendedProps.slotId) {
         setSelectedSlotId(existingEvent.extendedProps.slotId)
@@ -312,6 +315,7 @@ export default function UnifiedBookingDrawer({
       status,
       paymentStatus,
       starred,
+      arrivalTime,
       partySize,
       ...(schedulingMode === 'static' && {
         slotId: selectedSlotId,
@@ -389,6 +393,7 @@ export default function UnifiedBookingDrawer({
     setStatus('confirmed')
     setPaymentStatus('unpaid')
     setStarred(false)
+    setArrivalTime('')
     onClose()
   }
 
@@ -650,23 +655,21 @@ export default function UnifiedBookingDrawer({
 
               {/* Time Selection */}
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                <TextField
+                <TimeSelectField
                   label='START'
-                  type='time'
                   value={startTime}
-                  onChange={e => setStartTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ step: 900 }}
+                  onChange={setStartTime}
                   disabled={schedulingMode === 'static' && !!selectedSlotId}
+                  size='small'
+                  fullWidth
                 />
-                <TextField
+                <TimeSelectField
                   label='END'
-                  type='time'
                   value={endTime}
-                  onChange={e => setEndTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ step: 900 }}
+                  onChange={setEndTime}
                   disabled={schedulingMode === 'static' && !!selectedSlotId}
+                  size='small'
+                  fullWidth
                 />
               </Box>
 
@@ -918,6 +921,23 @@ export default function UnifiedBookingDrawer({
                 onChange={e => setClientPhone(e.target.value)}
                 placeholder='+1 (555) 000-0000'
               />
+
+              {/* Arrival Time */}
+              <Box>
+                <Typography variant='subtitle2' gutterBottom sx={{ mb: 1 }}>
+                  Arrival Time
+                </Typography>
+                <TimeSelectField
+                  label='Customer Walk-in Time'
+                  value={arrivalTime}
+                  onChange={setArrivalTime}
+                  size='small'
+                  fullWidth
+                />
+                <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5, display: 'block' }}>
+                  Track when the customer actually arrived (different from appointment start time)
+                </Typography>
+              </Box>
 
               {/* Status and Payment */}
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>

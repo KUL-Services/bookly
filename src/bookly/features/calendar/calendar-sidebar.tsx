@@ -1,30 +1,32 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+
+import { format } from 'date-fns'
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Avatar,
   Box,
-  Typography,
   Button,
-  Drawer,
   Checkbox,
+  Chip,
+  Divider,
+  Drawer,
   FormControlLabel,
   FormGroup,
-  Divider,
   IconButton,
-  Chip,
-  Avatar,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  ToggleButton,
   ToggleButtonGroup,
-  ToggleButton
+  Typography
 } from '@mui/material'
-import { Calendar } from '@/bookly/components/ui/calendar'
-import { useCalendarStore } from './state'
+
+import { mockBusinesses, mockStaff } from '@/bookly/data/mock-data'
 import { addWeeks } from './utils'
-import { mockStaff, mockBusinesses } from '@/bookly/data/mock-data'
-import { format } from 'date-fns'
-import type { BranchFilter, StaffFilter, RoomFilter, HighlightFilters, PaymentStatus, AppointmentStatus, SelectionMethod } from './types'
+import { useCalendarStore } from './state'
+
+import type { AppointmentStatus, BranchFilter, HighlightFilters, PaymentStatus, RoomFilter, SelectionMethod, StaffFilter } from './types'
 
 interface CalendarSidebarProps {
   currentDate: Date
@@ -87,13 +89,14 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   }, [])
 
   // Filter staff by selected branches
+  // Only show base staff members (IDs 1-7) matching staff-management tabs
   const availableStaff = useMemo(() => {
+    const baseStaff = mockStaff.filter(s => ['1', '2', '3', '4', '5', '6', '7'].includes(s.id))
+
     if (pendingBranches.allBranches || pendingBranches.branchIds.length === 0) {
-      return mockStaff.slice(0, 6)
+      return baseStaff
     }
-    return mockStaff.filter(staff =>
-      pendingBranches.branchIds.includes(staff.branchId)
-    ).slice(0, 10) // Show more staff when filtering by branch
+    return baseStaff.filter(staff => pendingBranches.branchIds.includes(staff.branchId))
   }, [pendingBranches])
 
   // Get available rooms based on selected branches
@@ -275,7 +278,13 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
   const handleClear = () => {
     const clearedBranches: BranchFilter = { allBranches: true, branchIds: [] }
-    const cleared: StaffFilter = { onlyMe: false, staffIds: [], selectedStaffId: null, workingStaffOnly: false, availableNow: false }
+    const cleared: StaffFilter = {
+      onlyMe: false,
+      staffIds: [],
+      selectedStaffId: null,
+      workingStaffOnly: false,
+      availableNow: false
+    }
     const clearedRooms: RoomFilter = { allRooms: true, roomIds: [] }
     const clearedHighlights: HighlightFilters = { payments: [], statuses: [], selection: [], details: [] }
     setPendingBranches(clearedBranches)
@@ -286,17 +295,6 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     setStaffFilters(cleared)
     setRoomFilters(clearedRooms)
     setHighlights(clearedHighlights)
-  }
-
-  const handleDateSelect = (date: Date | undefined) => {
-    if (!date) return
-
-    // Switch to day view when clicking on a date
-    if (view !== 'timeGridDay') {
-      setView('timeGridDay')
-    }
-
-    onDateChange(date)
   }
 
   const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
@@ -326,121 +324,13 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
       {/* Scrollable Content */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-        {/* Mini Calendar */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
-            Calendar
-          </Typography>
-          <Box
-            sx={{
-              '& .rdp': {
-                '--rdp-cell-size': '40px',
-                '--rdp-accent-color': theme => theme.palette.primary.main,
-                margin: 0
-              },
-              '& .rdp-months': {
-                width: '100%'
-              },
-              '& .rdp-month': {
-                width: '100%'
-              },
-              '& .rdp-caption': {
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: '0.5rem 0',
-                marginBottom: '0.5rem'
-              },
-              '& .rdp-caption_label': {
-                fontSize: '1rem',
-                fontWeight: 600,
-                color: theme => theme.palette.text.primary,
-                padding: '0 1rem'
-              },
-              '& .rdp-nav': {
-                display: 'flex',
-                gap: '0.5rem'
-              },
-              '& .rdp-nav_button': {
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '50%',
-                backgroundColor: 'transparent',
-                border: 'none',
-                color: theme => theme.palette.text.primary,
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  backgroundColor: theme =>
-                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
-                  color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
-                }
-              },
-              '& .rdp-head_cell': {
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                color: theme => theme.palette.text.secondary,
-                padding: '0.5rem 0',
-                textTransform: 'uppercase'
-              },
-              '& .rdp-cell': {
-                padding: '2px'
-              },
-              '& .rdp-day': {
-                width: '40px',
-                height: '40px',
-                fontSize: '0.9375rem',
-                fontWeight: 500,
-                borderRadius: '50%',
-                backgroundColor: 'transparent',
-                color: theme => theme.palette.text.primary,
-                border: '1px solid transparent',
-                transition: 'all 0.2s ease',
-                '&:hover:not(.rdp-day_selected):not(.rdp-day_disabled)': {
-                  backgroundColor: theme =>
-                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
-                  borderColor: theme =>
-                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)',
-                  color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
-                }
-              },
-              '& .rdp-day_today:not(.rdp-day_selected)': {
-                fontWeight: 700,
-                color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'),
-                backgroundColor: theme =>
-                  theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
-                border: '1px solid',
-                borderColor: theme =>
-                  theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)'
-              },
-              '& .rdp-day_selected': {
-                backgroundColor: theme =>
-                  theme.palette.mode === 'dark' ? 'rgb(20, 184, 166) !important' : 'rgb(20, 184, 166) !important',
-                color: theme => (theme.palette.mode === 'dark' ? '#0f172a !important' : '#ffffff !important'),
-                fontWeight: 700,
-                border: 'none !important',
-                '&:hover': {
-                  backgroundColor: theme =>
-                    theme.palette.mode === 'dark' ? 'rgb(13, 148, 136) !important' : 'rgb(13, 148, 136) !important'
-                }
-              },
-              '& .rdp-day_outside': {
-                color: theme => theme.palette.text.disabled,
-                opacity: 0.3
-              }
-            }}
-          >
-            <Calendar mode='single' selected={currentDate} onSelect={handleDateSelect} />
-          </Box>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
 
         {/* Quick Actions */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Typography
+            variant='subtitle2'
+            sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}
+          >
             <i className='ri-calendar-event-line' style={{ fontSize: '1.1rem' }} />
             Quick Actions
           </Typography>
@@ -448,7 +338,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
             <Button
               variant='outlined'
               fullWidth
-              onClick={() => window.location.href = '/en/apps/bookly/staff?action=time-reservation'}
+              onClick={() => (window.location.href = '/en/apps/bookly/staff?action=time-reservation')}
               startIcon={<i className='ri-time-line' />}
               sx={{
                 justifyContent: 'flex-start',
@@ -456,11 +346,13 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                 fontWeight: 600,
                 fontSize: '0.75rem',
                 py: 1,
-                borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(33, 150, 243, 0.5)' : 'rgba(33, 150, 243, 0.5)',
-                color: theme => theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)',
+                borderColor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgba(33, 150, 243, 0.5)' : 'rgba(33, 150, 243, 0.5)',
+                color: theme => (theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)'),
                 '&:hover': {
-                  borderColor: theme => theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)',
-                  backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.08)' : 'rgba(25, 118, 210, 0.04)'
+                  borderColor: theme => (theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)'),
+                  backgroundColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.08)' : 'rgba(25, 118, 210, 0.04)'
                 }
               }}
             >
@@ -469,7 +361,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
             <Button
               variant='outlined'
               fullWidth
-              onClick={() => window.location.href = '/en/apps/bookly/staff?action=time-off'}
+              onClick={() => (window.location.href = '/en/apps/bookly/staff?action=time-off')}
               startIcon={<i className='ri-calendar-close-line' />}
               sx={{
                 justifyContent: 'flex-start',
@@ -477,11 +369,13 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                 fontWeight: 600,
                 fontSize: '0.75rem',
                 py: 1,
-                borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(121, 85, 72, 0.5)' : 'rgba(121, 85, 72, 0.5)',
-                color: theme => theme.palette.mode === 'dark' ? 'rgb(188, 170, 164)' : 'rgb(121, 85, 72)',
+                borderColor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgba(121, 85, 72, 0.5)' : 'rgba(121, 85, 72, 0.5)',
+                color: theme => (theme.palette.mode === 'dark' ? 'rgb(188, 170, 164)' : 'rgb(121, 85, 72)'),
                 '&:hover': {
-                  borderColor: theme => theme.palette.mode === 'dark' ? 'rgb(188, 170, 164)' : 'rgb(121, 85, 72)',
-                  backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(121, 85, 72, 0.08)' : 'rgba(121, 85, 72, 0.04)'
+                  borderColor: theme => (theme.palette.mode === 'dark' ? 'rgb(188, 170, 164)' : 'rgb(121, 85, 72)'),
+                  backgroundColor: theme =>
+                    theme.palette.mode === 'dark' ? 'rgba(121, 85, 72, 0.08)' : 'rgba(121, 85, 72, 0.04)'
                 }
               }}
             >
@@ -511,7 +405,8 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                     fontWeight: 500,
                     transition: 'all 0.2s',
                     '&:hover': {
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                      bgcolor: theme =>
+                        theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
                       color: 'primary.main'
                     }
                   }}
@@ -540,7 +435,8 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                     fontWeight: 500,
                     transition: 'all 0.2s',
                     '&:hover': {
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                      bgcolor: theme =>
+                        theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
                       color: 'primary.main'
                     }
                   }}
@@ -587,7 +483,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                 <Button
                   variant='text'
                   size='small'
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation()
                     setPendingBranches({ allBranches: true, branchIds: [] })
                   }}
@@ -601,13 +497,12 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
           <AccordionDetails sx={{ px: 0, pt: 0 }}>
             <FormGroup>
               <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={pendingBranches.allBranches}
-                    onChange={() => handleAllBranches()}
-                  />
+                control={<Checkbox checked={pendingBranches.allBranches} onChange={() => handleAllBranches()} />}
+                label={
+                  <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                    All Branches
+                  </Typography>
                 }
-                label={<Typography variant='body2' sx={{ fontWeight: 500 }}>All Branches</Typography>}
               />
               {branches.map(branch => (
                 <FormControlLabel
@@ -627,8 +522,9 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                         sx={{
                           height: 20,
                           fontSize: '0.7rem',
-                          bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
-                          color: theme => theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)'
+                          bgcolor: theme =>
+                            theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                          color: theme => (theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)')
                         }}
                       />
                     </Box>
@@ -662,20 +558,22 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                   border: 1,
                   borderColor: 'divider',
                   '&.Mui-selected': {
-                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                    bgcolor: theme =>
+                      theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
                     color: 'primary.main',
                     '&:hover': {
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.18)' : 'rgba(25, 118, 210, 0.12)'
+                      bgcolor: theme =>
+                        theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.18)' : 'rgba(25, 118, 210, 0.12)'
                     }
                   }
                 }
               }}
             >
-              <ToggleButton value="staff">
+              <ToggleButton value='staff'>
                 <i className='ri-user-line' style={{ fontSize: '1.1rem', marginRight: '0.5rem' }} />
                 Staff Members
               </ToggleButton>
-              <ToggleButton value="resources">
+              <ToggleButton value='resources'>
                 <i className='ri-door-line' style={{ fontSize: '1.1rem', marginRight: '0.5rem' }} />
                 Resources
               </ToggleButton>
@@ -695,108 +593,110 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
               bgcolor: 'transparent'
             }}
           >
-          <AccordionSummary
-            expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
-            sx={{
-              minHeight: 48,
-              px: 0,
-              '& .MuiAccordionSummary-content': { my: 1 }
-            }}
-          >
-            <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <i className='ri-user-line' style={{ fontSize: '1.1rem' }} />
-              Staff Members
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
-            {/* Back to All Staff button (shown in single-staff view) */}
-            {staffFilters.selectedStaffId && previousStaffFilters && (
-              <Button
-                variant='outlined'
-                size='small'
-                fullWidth
-                onClick={goBackToAllStaff}
-                startIcon={<i className='ri-arrow-left-line' />}
-                sx={{ mb: 2 }}
-              >
-                Back to All Staff
-              </Button>
-            )}
+            <AccordionSummary
+              expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
+              sx={{
+                minHeight: 48,
+                px: 0,
+                '& .MuiAccordionSummary-content': { my: 1 }
+              }}
+            >
+              <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <i className='ri-user-line' style={{ fontSize: '1.1rem' }} />
+                Staff Members
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ px: 0, pt: 0 }}>
+              {/* Back to All Staff button (shown in single-staff view) */}
+              {staffFilters.selectedStaffId && previousStaffFilters && (
+                <Button
+                  variant='outlined'
+                  size='small'
+                  fullWidth
+                  onClick={goBackToAllStaff}
+                  startIcon={<i className='ri-arrow-left-line' />}
+                  sx={{ mb: 2 }}
+                >
+                  Back to All Staff
+                </Button>
+              )}
 
-            <FormGroup>
-              <FormControlLabel
-                control={<Checkbox checked={pendingStaff.onlyMe} onChange={e => handleOnlyMeChange(e.target.checked)} />}
-                label={<Typography variant='body2' sx={{ fontWeight: 500 }}>Only me</Typography>}
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={pendingStaff.availableNow || false}
-                    onChange={e => handleAvailableNowToggle(e.target.checked)}
-                  />
-                }
-                label={<Typography variant='body2'>Available now</Typography>}
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={pendingStaff.workingStaffOnly}
-                    onChange={e => setPendingStaff({ ...pendingStaff, workingStaffOnly: e.target.checked })}
-                  />
-                }
-                label={<Typography variant='body2'>Working staff members</Typography>}
-              />
-              <Button
-                variant='text'
-                size='small'
-                onClick={handleSelectAllStaff}
-                disabled={pendingStaff.onlyMe}
-                sx={{ justifyContent: 'flex-start', mb: 1 }}
-              >
-                Select All
-              </Button>
-              {availableStaff.map(staff => {
-                const branch = branches.find(b => b.id === staff.branchId)
-                return (
-                  <FormControlLabel
-                    key={staff.id}
-                    control={
-                      <Checkbox
-                        checked={pendingStaff.staffIds.includes(staff.id)}
-                        onChange={() => handleStaffToggle(staff.id)}
-                        disabled={pendingStaff.onlyMe}
-                      />
-                    }
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
-                        <Avatar
-                          src={staff.photo}
-                          alt={staff.name}
-                          sx={{ width: 24, height: 24 }}
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox checked={pendingStaff.onlyMe} onChange={e => handleOnlyMeChange(e.target.checked)} />
+                  }
+                  label={
+                    <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                      Only me
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={pendingStaff.availableNow || false}
+                      onChange={e => handleAvailableNowToggle(e.target.checked)}
+                    />
+                  }
+                  label={<Typography variant='body2'>Available now</Typography>}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={pendingStaff.workingStaffOnly}
+                      onChange={e => setPendingStaff({ ...pendingStaff, workingStaffOnly: e.target.checked })}
+                    />
+                  }
+                  label={<Typography variant='body2'>Working staff members</Typography>}
+                />
+                <Button
+                  variant='text'
+                  size='small'
+                  onClick={handleSelectAllStaff}
+                  disabled={pendingStaff.onlyMe}
+                  sx={{ justifyContent: 'flex-start', mb: 1 }}
+                >
+                  Select All
+                </Button>
+                {availableStaff.map(staff => {
+                  const branch = branches.find(b => b.id === staff.branchId)
+                  return (
+                    <FormControlLabel
+                      key={staff.id}
+                      control={
+                        <Checkbox
+                          checked={pendingStaff.staffIds.includes(staff.id)}
+                          onChange={() => handleStaffToggle(staff.id)}
+                          disabled={pendingStaff.onlyMe}
                         />
-                        <Typography variant='body2'>{staff.name}</Typography>
-                        {branch && (
-                          <Chip
-                            icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
-                            label={branch.name}
-                            size='small'
-                            variant='outlined'
-                            sx={{
-                              height: 18,
-                              fontSize: '0.65rem',
-                              ml: 'auto',
-                              '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
-                            }}
-                          />
-                        )}
-                      </Box>
-                    }
-                  />
-                )
-              })}
-            </FormGroup>
-          </AccordionDetails>
-        </Accordion>
+                      }
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
+                          <Avatar src={staff.photo} alt={staff.name} sx={{ width: 24, height: 24 }} />
+                          <Typography variant='body2'>{staff.name}</Typography>
+                          {branch && (
+                            <Chip
+                              icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
+                              label={branch.name}
+                              size='small'
+                              variant='outlined'
+                              sx={{
+                                height: 18,
+                                fontSize: '0.65rem',
+                                ml: 'auto',
+                                '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
+                              }}
+                            />
+                          )}
+                        </Box>
+                      }
+                    />
+                  )
+                })}
+              </FormGroup>
+            </AccordionDetails>
+          </Accordion>
         )}
 
         {/* Rooms (only in static scheduling mode and resources tab) */}
@@ -811,93 +711,102 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
               bgcolor: 'transparent'
             }}
           >
-              <AccordionSummary
-                expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
-                sx={{
-                  minHeight: 48,
-                  px: 0,
-                  '& .MuiAccordionSummary-content': { my: 1 }
-                }}
+            <AccordionSummary
+              expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
+              sx={{
+                minHeight: 48,
+                px: 0,
+                '& .MuiAccordionSummary-content': { my: 1 }
+              }}
+            >
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 1 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 1 }}>
-                  <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <i className='ri-door-line' style={{ fontSize: '1.1rem' }} />
-                    Rooms
-                  </Typography>
-                  {!pendingRooms.allRooms && pendingRooms.roomIds.length > 0 && (
-                    <Button
-                      variant='text'
-                      size='small'
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setPendingRooms({ allRooms: true, roomIds: [] })
-                      }}
-                      sx={{ minWidth: 'auto', p: 0.5 }}
-                    >
-                      <i className='ri-close-circle-line' style={{ fontSize: '1.1rem' }} />
-                    </Button>
-                  )}
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails sx={{ px: 0, pt: 0 }}>
-                <FormGroup>
-                  <FormControlLabel
-                    control={<Checkbox checked={pendingRooms.allRooms} onChange={handleAllRooms} />}
-                    label={<Typography variant='body2' sx={{ fontWeight: 500 }}>All Rooms</Typography>}
-                  />
+                <Typography
+                  variant='subtitle2'
+                  sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}
+                >
+                  <i className='ri-door-line' style={{ fontSize: '1.1rem' }} />
+                  Rooms
+                </Typography>
+                {!pendingRooms.allRooms && pendingRooms.roomIds.length > 0 && (
                   <Button
                     variant='text'
                     size='small'
-                    onClick={handleSelectAllRooms}
-                    sx={{ justifyContent: 'flex-start', mb: 1 }}
+                    onClick={e => {
+                      e.stopPropagation()
+                      setPendingRooms({ allRooms: true, roomIds: [] })
+                    }}
+                    sx={{ minWidth: 'auto', p: 0.5 }}
                   >
-                    Select All
+                    <i className='ri-close-circle-line' style={{ fontSize: '1.1rem' }} />
                   </Button>
-                  {availableRooms.map(room => {
-                    const branch = branches.find(b => b.id === room.branchId)
-                    return (
-                      <FormControlLabel
-                        key={room.id}
-                        control={
-                          <Checkbox
-                            checked={pendingRooms.roomIds.includes(room.id)}
-                            onChange={() => handleRoomToggle(room.id)}
+                )}
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails sx={{ px: 0, pt: 0 }}>
+              <FormGroup>
+                <FormControlLabel
+                  control={<Checkbox checked={pendingRooms.allRooms} onChange={handleAllRooms} />}
+                  label={
+                    <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                      All Rooms
+                    </Typography>
+                  }
+                />
+                <Button
+                  variant='text'
+                  size='small'
+                  onClick={handleSelectAllRooms}
+                  sx={{ justifyContent: 'flex-start', mb: 1 }}
+                >
+                  Select All
+                </Button>
+                {availableRooms.map(room => {
+                  const branch = branches.find(b => b.id === room.branchId)
+                  return (
+                    <FormControlLabel
+                      key={room.id}
+                      control={
+                        <Checkbox
+                          checked={pendingRooms.roomIds.includes(room.id)}
+                          onChange={() => handleRoomToggle(room.id)}
+                        />
+                      }
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
+                          <Box
+                            sx={{
+                              width: 16,
+                              height: 16,
+                              borderRadius: '50%',
+                              bgcolor: '#9E9E9E',
+                              flexShrink: 0
+                            }}
                           />
-                        }
-                        label={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
-                            <Box
+                          <Typography variant='body2'>{room.name}</Typography>
+                          {branch && (
+                            <Chip
+                              icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
+                              label={branch.name}
+                              size='small'
+                              variant='outlined'
                               sx={{
-                                width: 16,
-                                height: 16,
-                                borderRadius: '50%',
-                                bgcolor: '#9E9E9E',
-                                flexShrink: 0
+                                height: 18,
+                                fontSize: '0.65rem',
+                                ml: 'auto',
+                                '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
                               }}
                             />
-                            <Typography variant='body2'>{room.name}</Typography>
-                            {branch && (
-                              <Chip
-                                icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
-                                label={branch.name}
-                                size='small'
-                                variant='outlined'
-                                sx={{
-                                  height: 18,
-                                  fontSize: '0.65rem',
-                                  ml: 'auto',
-                                  '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
-                                }}
-                              />
-                            )}
-                          </Box>
-                        }
-                      />
-                    )
-                  })}
-                </FormGroup>
-              </AccordionDetails>
-            </Accordion>
+                          )}
+                        </Box>
+                      }
+                    />
+                  )
+                })}
+              </FormGroup>
+            </AccordionDetails>
+          </Accordion>
         )}
 
         <Divider sx={{ my: 2 }} />
@@ -959,7 +868,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
               {[
                 { value: 'confirmed', label: 'Confirmed' },
                 { value: 'need_confirm', label: 'Need confirm' },
-                { value: 'no_show', label: 'No-show' },
+                // { value: 'no_show', label: 'No-show' },
                 { value: 'completed', label: 'Completed' },
                 { value: 'cancelled', label: 'Cancelled' }
               ].map(status => (

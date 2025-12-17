@@ -130,6 +130,7 @@ export interface CalendarEvent extends EventInput {
     approved?: boolean // For time off approval status
     allDay?: boolean // For all-day time off
     note?: string // Additional notes
+    arrivalTime?: string // Actual customer arrival/walk-in time (HH:MM format)
   }
 }
 

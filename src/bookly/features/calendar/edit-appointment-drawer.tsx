@@ -129,8 +129,8 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
       pending: 'PENDING',
       completed: 'COMPLETED',
       cancelled: 'CANCELLED',
-      need_confirm: 'NEED CONFIRM',
-      no_show: 'NO SHOW'
+      need_confirm: 'NEED CONFIRM'
+      // no_show: 'NO SHOW'
     }
     return labels[status] || status.toUpperCase()
   }
@@ -219,7 +219,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
     <Drawer
       open={open}
       onClose={onClose}
-      anchor="right"
+      anchor='right'
       PaperProps={{
         sx: { width: { xs: '100%', sm: 480 } }
       }}
@@ -227,17 +227,17 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header with Status */}
         <Box sx={{ bgcolor: getStatusColor(status) + '.main', color: 'white', p: { xs: 1.5, sm: 2 } }}>
-          <Box className="flex items-center justify-between mb-2">
-            <IconButton onClick={onClose} sx={{ color: 'white' }} size="small">
-              <i className="ri-close-line" />
+          <Box className='flex items-center justify-between mb-2'>
+            <IconButton onClick={onClose} sx={{ color: 'white' }} size='small'>
+              <i className='ri-close-line' />
             </IconButton>
-            <Typography variant="h6" className="font-semibold" sx={{ fontSize: { xs: '0.95rem', sm: '1.25rem' } }}>
+            <Typography variant='h6' className='font-semibold' sx={{ fontSize: { xs: '0.95rem', sm: '1.25rem' } }}>
               {getStatusLabel(status)}
             </Typography>
             <Button
-              variant="outlined"
-              size="small"
-              onClick={(e) => setStatusMenuAnchor(e.currentTarget)}
+              variant='outlined'
+              size='small'
+              onClick={e => setStatusMenuAnchor(e.currentTarget)}
               sx={{
                 color: 'white',
                 borderColor: 'white',
@@ -245,28 +245,20 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 fontSize: { xs: '0.7rem', sm: '0.875rem' },
                 px: { xs: 1, sm: 2 }
               }}
-              endIcon={<i className="ri-arrow-down-s-line" />}
+              endIcon={<i className='ri-arrow-down-s-line' />}
             >
               CHANGE
             </Button>
           </Box>
-          <Typography variant="caption" className="opacity-90" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+          <Typography variant='caption' className='opacity-90' sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
             Business Booking ID: {extendedProps.bookingId}
           </Typography>
         </Box>
 
         {/* Status Change Menu */}
-        <Menu
-          anchorEl={statusMenuAnchor}
-          open={Boolean(statusMenuAnchor)}
-          onClose={() => setStatusMenuAnchor(null)}
-        >
-          {['confirmed', 'pending', 'need_confirm', 'completed', 'no_show', 'cancelled'].map((s) => (
-            <MuiMenuItem
-              key={s}
-              onClick={() => handleStatusChange(s as AppointmentStatus)}
-              selected={s === status}
-            >
+        <Menu anchorEl={statusMenuAnchor} open={Boolean(statusMenuAnchor)} onClose={() => setStatusMenuAnchor(null)}>
+          {['confirmed', 'pending', 'need_confirm', 'completed', 'no_show', 'cancelled'].map(s => (
+            <MuiMenuItem key={s} onClick={() => handleStatusChange(s as AppointmentStatus)} selected={s === status}>
               {getStatusLabel(s as AppointmentStatus)}
             </MuiMenuItem>
           ))}
@@ -274,18 +266,21 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
 
         {/* Client Info */}
         <Box sx={{ bgcolor: 'background.paper', p: { xs: 2, sm: 3 }, borderBottom: 1, borderColor: 'divider' }}>
-          <Box className="flex items-center gap-3">
+          <Box className='flex items-center gap-3'>
             <Avatar sx={{ width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 }, bgcolor: 'grey.300' }}>
-              <Typography variant="h6" sx={{ color: 'grey.700', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-                {customerName?.split(' ').map(n => n[0]).join('') || 'W'}
+              <Typography variant='h6' sx={{ color: 'grey.700', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+                {customerName
+                  ?.split(' ')
+                  .map(n => n[0])
+                  .join('') || 'W'}
               </Typography>
             </Avatar>
             <Box sx={{ flex: 1 }}>
-              <Typography variant="h6" className="font-semibold" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+              <Typography variant='h6' className='font-semibold' sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 {customerName || 'Walk-in'}
               </Typography>
               {customerPhone && (
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                <Typography variant='body2' color='text.secondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   {customerPhone}
                 </Typography>
               )}
@@ -295,22 +290,22 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
 
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-          <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} variant="fullWidth">
-            <Tab label="APPOINTMENT" sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }} />
-            <Tab label="NOTES & INFO" sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }} />
+          <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} variant='fullWidth'>
+            <Tab label='APPOINTMENT' sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }} />
+            <Tab label='NOTES & INFO' sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }} />
           </Tabs>
         </Box>
 
         {/* Content */}
-        <Box className="flex-1 overflow-auto" sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+        <Box className='flex-1 overflow-auto' sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
           {activeTab === 0 && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {/* Date Display */}
               <Box>
-                <Typography variant="h6" sx={{ mb: 1 }}>
+                <Typography variant='h6' sx={{ mb: 1 }}>
                   {formatDate(event.start)}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Original time: {formatTimeRange(event.start, event.end)}
                 </Typography>
               </Box>
@@ -328,100 +323,101 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                   borderRadius: 1
                 }}
               >
-                <Typography variant="h6" className="font-semibold">
+                <Typography variant='h6' className='font-semibold'>
                   {extendedProps.serviceName}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   {duration} min
                 </Typography>
-                <Typography variant="h6" className="font-semibold" sx={{ mt: 1 }}>
+                <Typography variant='h6' className='font-semibold' sx={{ mt: 1 }}>
                   ${extendedProps.price}
                 </Typography>
               </Box>
 
               {/* Static Mode: Show slot capacity info */}
-              {extendedProps.slotId && (() => {
-                const eventDate = new Date(event.start)
-                const { remainingCapacity, total } = isSlotAvailable(extendedProps.slotId, eventDate)
-                const currentPartySize = extendedProps.partySize || 1
-                const availableForEdit = remainingCapacity + currentPartySize
+              {extendedProps.slotId &&
+                (() => {
+                  const eventDate = new Date(event.start)
+                  const { remainingCapacity, total } = isSlotAvailable(extendedProps.slotId, eventDate)
+                  const currentPartySize = extendedProps.partySize || 1
+                  const availableForEdit = remainingCapacity + currentPartySize
 
-                return (
-                  <>
-                    <Box
-                      sx={{
-                        p: 2,
-                        bgcolor: 'info.light',
-                        borderRadius: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        border: theme => `1px solid ${theme.palette.info.main}`
-                      }}
-                    >
-                      <i className="ri-information-line" />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" fontWeight={600}>
-                          Static Slot Booking
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Time and instructor are locked to the scheduled slot
-                          {extendedProps.roomId && ` in room ${extendedProps.roomId}`}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Party Size Input */}
-                    <Box>
-                      <TextField
-                        fullWidth
-                        type="number"
-                        label="Party Size"
-                        value={partySize}
-                        onChange={(e) => setPartySize(Math.max(1, parseInt(e.target.value) || 1))}
-                        inputProps={{ min: 1, max: availableForEdit }}
-                        helperText={`Available capacity: ${availableForEdit} of ${total} total spots`}
-                        InputProps={{
-                          startAdornment: (
-                            <Box sx={{ mr: 1 }}>
-                              <i className="ri-group-line" />
-                            </Box>
-                          )
+                  return (
+                    <>
+                      <Box
+                        sx={{
+                          p: 2,
+                          bgcolor: 'info.light',
+                          borderRadius: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          border: theme => `1px solid ${theme.palette.info.main}`
                         }}
-                      />
-
-                      {/* Capacity Warning */}
-                      {partySize > availableForEdit && (
-                        <Box
-                          sx={{
-                            mt: 1,
-                            p: 1,
-                            bgcolor: 'error.light',
-                            borderRadius: 1,
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1
-                          }}
-                        >
-                          <i className="ri-error-warning-line" />
-                          <Typography variant="caption" color="error">
-                            Party size exceeds available capacity
+                      >
+                        <i className='ri-information-line' />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant='body2' fontWeight={600}>
+                            Static Slot Booking
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            Time and instructor are locked to the scheduled slot
+                            {extendedProps.roomId && ` in room ${extendedProps.roomId}`}
                           </Typography>
                         </Box>
-                      )}
-                    </Box>
-                  </>
-                )
-              })()}
+                      </Box>
+
+                      {/* Party Size Input */}
+                      <Box>
+                        <TextField
+                          fullWidth
+                          type='number'
+                          label='Party Size'
+                          value={partySize}
+                          onChange={e => setPartySize(Math.max(1, parseInt(e.target.value) || 1))}
+                          inputProps={{ min: 1, max: availableForEdit }}
+                          helperText={`Available capacity: ${availableForEdit} of ${total} total spots`}
+                          InputProps={{
+                            startAdornment: (
+                              <Box sx={{ mr: 1 }}>
+                                <i className='ri-group-line' />
+                              </Box>
+                            )
+                          }}
+                        />
+
+                        {/* Capacity Warning */}
+                        {partySize > availableForEdit && (
+                          <Box
+                            sx={{
+                              mt: 1,
+                              p: 1,
+                              bgcolor: 'error.light',
+                              borderRadius: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1
+                            }}
+                          >
+                            <i className='ri-error-warning-line' />
+                            <Typography variant='caption' color='error'>
+                              Party size exceeds available capacity
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    </>
+                  )
+                })()}
 
               {/* Time Selection */}
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                 <TextField
                   select
-                  label="START"
+                  label='START'
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  size="small"
+                  onChange={e => setStartTime(e.target.value)}
+                  size='small'
                   disabled={!!extendedProps.slotId}
                   SelectProps={{
                     native: true
@@ -435,10 +431,10 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 </TextField>
                 <TextField
                   select
-                  label="END"
+                  label='END'
                   value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  size="small"
+                  onChange={e => setEndTime(e.target.value)}
+                  size='small'
                   disabled={!!extendedProps.slotId}
                   SelectProps={{
                     native: true
@@ -456,25 +452,25 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
               <TextField
                 select
                 fullWidth
-                label="STAFF"
+                label='STAFF'
                 value={staffId}
-                onChange={(e) => handleStaffChange(e.target.value)}
+                onChange={e => handleStaffChange(e.target.value)}
                 disabled={!!extendedProps.slotId}
                 SelectProps={{
                   native: true
                 }}
-                helperText={extendedProps.slotId ? "Instructor is assigned to the slot" : undefined}
+                helperText={extendedProps.slotId ? 'Instructor is assigned to the slot' : undefined}
               >
-                {mockStaff.map((staff) => (
+                {mockStaff.map(staff => (
                   <option key={staff.id} value={staff.id}>
                     {staff.name}
                   </option>
                 ))}
               </TextField>
 
-              <Box className="flex items-center gap-2">
-                <i className="ri-user-line" />
-                <Typography variant="body2">Staff Member chosen manually</Typography>
+              <Box className='flex items-center gap-2'>
+                <i className='ri-user-line' />
+                <Typography variant='body2'>Staff Member chosen manually</Typography>
               </Box>
 
               {/* Requested by client */}
@@ -482,14 +478,14 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 control={
                   <Checkbox
                     checked={requestedByClient}
-                    onChange={(e) => setRequestedByClient(e.target.checked)}
-                    icon={<i className="ri-heart-line" style={{ fontSize: '1.5rem' }} />}
-                    checkedIcon={<i className="ri-heart-fill" style={{ fontSize: '1.5rem', color: '#f44336' }} />}
+                    onChange={e => setRequestedByClient(e.target.checked)}
+                    icon={<i className='ri-heart-line' style={{ fontSize: '1.5rem' }} />}
+                    checkedIcon={<i className='ri-heart-fill' style={{ fontSize: '1.5rem', color: '#f44336' }} />}
                   />
                 }
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2">Requested by client</Typography>
+                    <Typography variant='body2'>Requested by client</Typography>
                   </Box>
                 }
               />
@@ -501,26 +497,26 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
               {/* Client Information */}
               <TextField
                 fullWidth
-                label="Client Name"
+                label='Client Name'
                 value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Enter client name"
+                onChange={e => setCustomerName(e.target.value)}
+                placeholder='Enter client name'
               />
               <TextField
                 fullWidth
-                label="Email"
-                type="email"
+                label='Email'
+                type='email'
                 value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                placeholder="client@example.com"
+                onChange={e => setCustomerEmail(e.target.value)}
+                placeholder='client@example.com'
               />
               <TextField
                 fullWidth
-                label="Phone"
-                type="tel"
+                label='Phone'
+                type='tel'
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="+1 (555) 000-0000"
+                onChange={e => setCustomerPhone(e.target.value)}
+                placeholder='+1 (555) 000-0000'
               />
 
               {/* Notes */}
@@ -528,10 +524,10 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 fullWidth
                 multiline
                 rows={6}
-                label="Notes"
+                label='Notes'
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add any notes about the appointment..."
+                onChange={e => setNotes(e.target.value)}
+                placeholder='Add any notes about the appointment...'
               />
             </Box>
           )}
@@ -539,28 +535,32 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
 
         {/* Footer */}
         <Box sx={{ borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-          <Box className="flex items-center justify-between" sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+          <Box className='flex items-center justify-between' sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+              <Typography variant='caption' color='text.secondary' sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                 Total
               </Typography>
-              <Typography variant="h4" className="font-bold" sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}>
+              <Typography
+                variant='h4'
+                className='font-bold'
+                sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}
+              >
                 ${extendedProps.price}
               </Typography>
             </Box>
             <Box>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
+              <Typography variant='caption' color='text.secondary' sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                 Duration
               </Typography>
-              <Typography variant="h6" className="font-bold" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
+              <Typography variant='h6' className='font-bold' sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 {duration} min
               </Typography>
             </Box>
           </Box>
-          <Box className="grid grid-cols-2" sx={{ gap: { xs: 1.5, sm: 2 }, p: { xs: 2, sm: 3 } }}>
+          <Box className='grid grid-cols-2' sx={{ gap: { xs: 1.5, sm: 2 }, p: { xs: 2, sm: 3 } }}>
             <Button
-              variant="outlined"
-              size="large"
+              variant='outlined'
+              size='large'
               fullWidth
               onClick={onClose}
               sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, py: { xs: 1, sm: 1.5 } }}
@@ -568,11 +568,11 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
               CANCEL
             </Button>
             <Button
-              variant="contained"
-              size="large"
+              variant='contained'
+              size='large'
               fullWidth
               onClick={handleSave}
-              color="primary"
+              color='primary'
               sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, py: { xs: 1, sm: 1.5 } }}
             >
               SAVE

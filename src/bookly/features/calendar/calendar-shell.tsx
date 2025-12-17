@@ -96,8 +96,17 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     if (staffFilters.onlyMe) {
       return ['1'] // Current user ID
     }
-    // If no specific staff selected, show all staff (first 7 for performance)
-    return staffFilters.staffIds.length > 0 ? staffFilters.staffIds : mockStaff.slice(0, 7).map(s => s.id)
+
+    // Only work with base staff members (IDs 1-7)
+    const baseStaffIds = ['1', '2', '3', '4', '5', '6', '7']
+
+    // If specific staff selected, filter to only base staff and limit to 7 max
+    if (staffFilters.staffIds.length > 0) {
+      return staffFilters.staffIds.filter(id => baseStaffIds.includes(id)).slice(0, 7)
+    }
+
+    // Default: show all base staff
+    return baseStaffIds
   }, [staffFilters, schedulingMode])
 
   const activeStaffMembers = useMemo(() => {
@@ -105,11 +114,14 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   }, [activeStaffIds])
 
   // Get all available staff for dropdown (filtered by branch if applicable)
+  // Only show base staff members (IDs 1-7)
   const availableStaffForDropdown = useMemo(() => {
+    const baseStaff = mockStaff.filter(s => ['1', '2', '3', '4', '5', '6', '7'].includes(s.id))
+
     if (branchFilters.allBranches || branchFilters.branchIds.length === 0) {
-      return mockStaff.slice(0, 10) // Show first 10 staff when all branches selected
+      return baseStaff
     }
-    return mockStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
+    return baseStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
   }, [branchFilters])
 
   // Determine which rooms are being shown (static mode)
@@ -518,6 +530,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         onNext={handleNext}
         onToday={handleToday}
         onNewBooking={() => openNewBooking()}
+        onDateChange={handleDateChange}
       />
 
       {/* Main Content */}

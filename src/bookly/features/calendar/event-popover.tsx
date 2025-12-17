@@ -95,8 +95,8 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
       pending: 'Pending',
       completed: 'Completed',
       cancelled: 'Cancelled',
-      need_confirm: 'Need Confirm',
-      no_show: 'No Show'
+      need_confirm: 'Need Confirm'
+      // no_show: 'No Show'
     }
     return labels[status] || status
   }
@@ -105,84 +105,90 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
     <Drawer
       open={Boolean(anchorEl || event)}
       onClose={onClose}
-      anchor="right"
+      anchor='right'
       PaperProps={{
         sx: { width: { xs: '100%', sm: 480 } }
       }}
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
-        <Box className="p-4 flex items-center justify-between border-b">
-          <Typography variant="h6" className="font-semibold">
+        <Box className='p-4 flex items-center justify-between border-b'>
+          <Typography variant='h6' className='font-semibold'>
             Appointment Details
           </Typography>
-          <IconButton onClick={onClose} size="small">
-            <i className="ri-close-line" />
+          <IconButton onClick={onClose} size='small'>
+            <i className='ri-close-line' />
           </IconButton>
         </Box>
 
         {/* Content */}
-        <Box className="flex-1 overflow-auto p-6">
-          <div className="flex items-start justify-between mb-4">
-            <Typography variant="h5" className="font-semibold flex-1">
+        <Box className='flex-1 overflow-auto p-6'>
+          <div className='flex items-start justify-between mb-4'>
+            <Typography variant='h5' className='font-semibold flex-1'>
               {extendedProps.serviceName}
             </Typography>
-            <IconButton size="medium" onClick={handleToggleStarred}>
+            <IconButton size='medium' onClick={handleToggleStarred}>
               <i className={`${extendedProps.starred ? 'ri-star-fill' : 'ri-star-line'} text-2xl text-warning`} />
             </IconButton>
           </div>
 
           {/* Status and Payment */}
-          <div className="flex items-center gap-2 mb-6">
+          <div className='flex items-center gap-2 mb-6'>
             <Chip
               label={getStatusLabel(extendedProps.status)}
               color={getStatusColor(extendedProps.status) as any}
-              size="medium"
+              size='medium'
             />
             <Chip
               label={extendedProps.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
               color={extendedProps.paymentStatus === 'paid' ? 'success' : 'default'}
-              size="medium"
-              variant="outlined"
+              size='medium'
+              variant='outlined'
             />
           </div>
 
           {/* Date and Time */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <i className="ri-calendar-line text-xl" />
-              <Typography variant="body1">{formatDate(event.start)}</Typography>
+          <div className='space-y-4'>
+            <div className='flex items-center gap-3'>
+              <i className='ri-calendar-line text-xl' />
+              <Typography variant='body1'>{formatDate(event.start)}</Typography>
             </div>
-            <div className="flex items-center gap-3">
-              <i className="ri-time-line text-xl" />
-              <Typography variant="body1">
+            <div className='flex items-center gap-3'>
+              <i className='ri-time-line text-xl' />
+              <Typography variant='body1'>
                 {formatTime(event.start)} - {formatTime(event.end)}
               </Typography>
             </div>
-            <div className="flex items-center gap-3">
-              <i className="ri-user-line text-xl" />
+            <div className='flex items-center gap-3'>
+              <i className='ri-user-line text-xl' />
               <Box>
-                <Typography variant="body1" fontWeight={600}>{extendedProps.customerName}</Typography>
+                <Typography variant='body1' fontWeight={600}>
+                  {extendedProps.customerName}
+                </Typography>
                 {extendedProps.selectionMethod === 'by_client' && (
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <i className="ri-heart-fill" style={{ fontSize: '0.75rem', color: '#f44336' }} />
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                  >
+                    <i className='ri-heart-fill' style={{ fontSize: '0.75rem', color: '#f44336' }} />
                     Requested by client
                   </Typography>
                 )}
               </Box>
             </div>
-            <div className="flex items-center gap-3">
-              <i className="ri-team-line text-xl" />
-              <Typography variant="body1">{extendedProps.staffName}</Typography>
+            <div className='flex items-center gap-3'>
+              <i className='ri-team-line text-xl' />
+              <Typography variant='body1'>{extendedProps.staffName}</Typography>
             </div>
-            <div className="flex items-center gap-3">
-              <i className="ri-money-dollar-circle-line text-xl" />
-              <Typography variant="body1">${extendedProps.price}</Typography>
+            <div className='flex items-center gap-3'>
+              <i className='ri-money-dollar-circle-line text-xl' />
+              <Typography variant='body1'>${extendedProps.price}</Typography>
             </div>
             {extendedProps.notes && (
-              <div className="flex items-start gap-3">
-                <i className="ri-file-text-line text-xl mt-0.5" />
-                <Typography variant="body1">{extendedProps.notes}</Typography>
+              <div className='flex items-start gap-3'>
+                <i className='ri-file-text-line text-xl mt-0.5' />
+                <Typography variant='body1'>{extendedProps.notes}</Typography>
               </div>
             )}
           </div>
@@ -191,12 +197,12 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
         <Divider />
 
         {/* Actions */}
-        <Box className="p-4 space-y-2 border-t">
+        <Box className='p-4 space-y-2 border-t'>
           <Button
             fullWidth
-            variant="contained"
-            size="large"
-            startIcon={<i className="ri-edit-line" />}
+            variant='contained'
+            size='large'
+            startIcon={<i className='ri-edit-line' />}
             onClick={() => {
               onEdit?.(event)
               onClose()
@@ -206,8 +212,8 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
           </Button>
           <Button
             fullWidth
-            variant="outlined"
-            size="large"
+            variant='outlined'
+            size='large'
             startIcon={<i className={`ri-${extendedProps.paymentStatus === 'paid' ? 'close' : 'check'}-line`} />}
             onClick={handleTogglePayment}
           >
@@ -215,10 +221,10 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
           </Button>
           <Button
             fullWidth
-            variant="outlined"
-            size="large"
-            color="error"
-            startIcon={<i className="ri-delete-bin-line" />}
+            variant='outlined'
+            size='large'
+            color='error'
+            startIcon={<i className='ri-delete-bin-line' />}
             onClick={handleDelete}
           >
             Delete Appointment
@@ -227,16 +233,16 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
           {/* Change Status Menu */}
           {extendedProps.status !== 'completed' && extendedProps.status !== 'cancelled' && (
             <>
-              <Divider className="my-3" />
-              <Typography variant="subtitle2" className="text-textSecondary block mb-2">
+              <Divider className='my-3' />
+              <Typography variant='subtitle2' className='text-textSecondary block mb-2'>
                 Change Status
               </Typography>
-              <Box className="space-y-1">
+              <Box className='space-y-1'>
                 {['confirmed', 'need_confirm', 'pending', 'completed', 'no_show', 'cancelled'].map(status => (
                   <Button
                     key={status}
                     fullWidth
-                    variant="outlined"
+                    variant='outlined'
                     onClick={() => handleStatusChange(status as AppointmentStatus)}
                     disabled={status === extendedProps.status}
                   >
