@@ -3,7 +3,7 @@
 import { Box, Typography, Avatar, Chip, Divider } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, addMinutes, isSameDay, isToday } from 'date-fns'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
@@ -40,76 +40,87 @@ export default function UnifiedMultiResourceDayView({
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const { rooms, staffWorkingHours } = useStaffManagementStore()
 
-  // Group staff by type and static staff by room
-  const staffGrouping = useMemo(() => groupStaffByType(mockStaff), [])
+  // Refs for scroll synchronization
+  const headerScrollRef = useRef<HTMLDivElement>(null)
+  const timeGridScrollRef = useRef<HTMLDivElement>(null)
 
-  // Static staff are already grouped by room in staffGrouping
-  const staticStaffByRoom = useMemo(() => {
-    return staffGrouping.staticByRoom
-  }, [staffGrouping])
+  // Synchronize horizontal scroll between header and time grid
+  useEffect(() => {
+    const handleHeaderScroll = () => {
+      if (headerScrollRef.current && timeGridScrollRef.current) {
+        timeGridScrollRef.current.scrollLeft = headerScrollRef.current.scrollLeft
+      }
+    }
 
-  // Group rooms by type
-  const roomGrouping = useMemo(() => categorizeRooms(rooms), [rooms])
+    const handleTimeGridScroll = () => {
+      if (timeGridScrollRef.current && headerScrollRef.current) {
+        headerScrollRef.current.scrollLeft = timeGridScrollRef.current.scrollLeft
+      }
+    }
+
+    const headerElement = headerScrollRef.current
+    const timeGridElement = timeGridScrollRef.current
+
+    if (headerElement) {
+      headerElement.addEventListener('scroll', handleHeaderScroll)
+    }
+    if (timeGridElement) {
+      timeGridElement.addEventListener('scroll', handleTimeGridScroll)
+    }
+
+    return () => {
+      if (headerElement) {
+        headerElement.removeEventListener('scroll', handleHeaderScroll)
+      }
+      if (timeGridElement) {
+        timeGridElement.removeEventListener('scroll', handleTimeGridScroll)
+      }
+    }
+  }, [])
 
   // Build ordered resource list with two-layer grouping
-  // Layer 1: Staff vs Rooms
-  // Layer 2: Within Staff (Dynamic vs Static), Within Rooms (Fixed vs Flexible)
+  // Layer 1: Branches
+  // Layer 2: Staff vs Rooms
   const orderedResources = useMemo(() => {
     const resources: Array<any> = []
 
-    // Layer 1: STAFF
-    // Layer 2: Dynamic staff
-    staffGrouping.dynamic.forEach(staff => {
-      resources.push({
-        ...staff,
-        type: 'staff' as const,
-        staffType: staff.staffType || 'dynamic',
-        primaryGroup: 'staff',
-        secondaryGroup: 'dynamic-staff'
-      })
-    })
+    // Get unique branches from staff and rooms
+    const branches = new Set<string>()
+    mockStaff.forEach(staff => branches.add(staff.branchId || '1-1'))
+    rooms.forEach(room => branches.add(room.branchId || '1-1'))
 
-    // Layer 2: Static staff grouped by room
-    Object.entries(staticStaffByRoom).forEach(([roomName, staffList]) => {
-      staffList.forEach(staff => {
-        resources.push({
-          ...staff,
-          type: 'staff' as const,
-          staffType: 'static',
-          primaryGroup: 'staff',
-          secondaryGroup: 'static-staff',
-          roomName
-        })
-      })
-    })
+    // Sort branches for consistent ordering
+    const sortedBranches = Array.from(branches).sort()
 
-    // Layer 1: ROOMS
-    // Layer 2: Fixed capacity rooms
-    roomGrouping.fixed.forEach(room => {
-      resources.push({
-        ...room,
-        type: 'room' as const,
-        roomType: room.roomType || 'fixed',
-        primaryGroup: 'rooms',
-        secondaryGroup: 'fixed-rooms',
-        photo: undefined
+    sortedBranches.forEach(branchId => {
+      // Layer 2: STAFF (within branch) - all staff
+      mockStaff.forEach(staff => {
+        if ((staff.branchId || '1-1') === branchId) {
+          resources.push({
+            ...staff,
+            type: 'staff' as const,
+            primaryGroup: branchId,
+            secondaryGroup: 'staff'
+          })
+        }
       })
-    })
 
-    // Layer 2: Flexible rooms
-    roomGrouping.flexible.forEach(room => {
-      resources.push({
-        ...room,
-        type: 'room' as const,
-        roomType: room.roomType || 'flexible',
-        primaryGroup: 'rooms',
-        secondaryGroup: 'flexible-rooms',
-        photo: undefined
+      // Layer 2: ROOMS (within branch) - all rooms
+      rooms.forEach(room => {
+        if ((room.branchId || '1-1') === branchId) {
+          resources.push({
+            ...room,
+            type: 'room' as const,
+            primaryGroup: branchId,
+            secondaryGroup: 'rooms',
+            photo: undefined
+          })
+        }
       })
     })
 
     return resources
-  }, [staffGrouping, staticStaffByRoom, roomGrouping])
+  }, [rooms])
 
   // Filter events for current date
   const todayEvents = events.filter(event => isSameDay(new Date(event.start), currentDate))
@@ -366,19 +377,15 @@ export default function UnifiedMultiResourceDayView({
     )
   }
 
-  // Helper to get primary grouping label
+  // Helper to get primary grouping label (branches)
   const getPrimaryGroupLabel = (group: string) => {
-    if (group === 'staff') return 'Staff'
-    if (group === 'rooms') return 'Rooms'
-    return group
+    return getBranchName(group)
   }
 
-  // Helper to get secondary grouping label
+  // Helper to get secondary grouping label (staff vs rooms)
   const getSecondaryGroupLabel = (group: string) => {
-    if (group === 'dynamic-staff') return 'Dynamic'
-    if (group === 'static-staff') return 'Static'
-    if (group === 'fixed-rooms') return 'Fixed Capacity'
-    if (group === 'flexible-rooms') return 'Flexible'
+    if (group === 'staff') return 'Staff'
+    if (group === 'rooms') return 'Rooms'
     return group
   }
 
@@ -403,7 +410,7 @@ export default function UnifiedMultiResourceDayView({
             flex: 1
           }}
         >
-          {/* Header with two-layer grouping */}
+          {/* Header with three-layer grouping */}
           <Box
             sx={{
               borderBottom: 1,
@@ -411,32 +418,49 @@ export default function UnifiedMultiResourceDayView({
               bgcolor: 'background.paper',
               position: 'sticky',
               top: 0,
-              zIndex: 10
+              zIndex: 10,
+              display: 'flex',
+              overflow: 'hidden'
             }}
           >
-            {/* Layer 1: Primary grouping (Staff vs Rooms) */}
+            {/* Empty time column space for header alignment */}
+            <Box sx={{ width: 60, flexShrink: 0, borderRight: 1, borderColor: 'divider' }} />
+
+            {/* Header scroll container - synced with time grid scroll */}
             <Box
+              ref={headerScrollRef}
               sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: `60px repeat(${orderedResources.length}, 150px)`,
-                  md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
-                },
-                borderBottom: 1,
-                borderColor: 'divider',
-                '& > *': {
-                  minWidth: 0,
-                  overflow: 'hidden'
+                flex: 1,
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                scrollbarWidth: 'none',
+                '&::-webkit-scrollbar': {
+                  display: 'none'
                 }
               }}
+              className='header-scroll-container'
             >
-              {/* Empty time column for primary grouping row */}
-              <Box />
+              {/* Layer 1: Primary grouping (Branches) */}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: `repeat(${orderedResources.length}, 150px)`,
+                    md: `repeat(${orderedResources.length}, minmax(180px, 1fr))`
+                  },
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  minWidth: 'min-content',
+                  '& > *': {
+                    minWidth: 0,
+                    overflow: 'hidden'
+                  }
+                }}
+              >
 
-              {/* Primary group headers (Staff, Rooms) */}
+              {/* Primary group headers (Branches) */}
               {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], groupIndex) => {
-                const resourcesInPrimaryGroup = Object.values(secondaryGroups).flat()
-                const isStaffGroup = primaryGroup === 'staff'
+                const resourcesInPrimaryGroup = Object.values(secondaryGroups).flat().flat()
                 const isFirstGroup = groupIndex === 0
                 return (
                   <Box
@@ -444,13 +468,7 @@ export default function UnifiedMultiResourceDayView({
                     sx={{
                       gridColumn: `span ${resourcesInPrimaryGroup.length}`,
                       p: 1.5,
-                      bgcolor: isStaffGroup
-                        ? isDark
-                          ? 'rgba(33, 150, 243, 0.12)'
-                          : 'rgba(33, 150, 243, 0.08)'
-                        : isDark
-                          ? 'rgba(76, 175, 80, 0.12)'
-                          : 'rgba(76, 175, 80, 0.08)',
+                      bgcolor: isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)',
                       borderRight: isFirstGroup ? 3 : 1,
                       borderColor: isFirstGroup ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
                       display: 'flex',
@@ -459,7 +477,7 @@ export default function UnifiedMultiResourceDayView({
                       gap: 1
                     }}
                   >
-                    <i className={isStaffGroup ? 'ri-team-line' : 'ri-tools-line'} style={{ fontSize: 16 }} />
+                    <i className='ri-building-line' style={{ fontSize: 16 }} />
                     <Typography variant='body2' fontWeight={700} color='text.primary'>
                       {getPrimaryGroupLabel(primaryGroup)}
                     </Typography>
@@ -469,7 +487,7 @@ export default function UnifiedMultiResourceDayView({
                       sx={{
                         height: 18,
                         fontSize: '0.65rem',
-                        bgcolor: isStaffGroup ? 'primary.main' : 'success.main',
+                        bgcolor: 'primary.main',
                         color: 'white',
                         fontWeight: 600
                       }}
@@ -477,39 +495,44 @@ export default function UnifiedMultiResourceDayView({
                   </Box>
                 )
               })}
-            </Box>
+              </Box>
 
-            {/* Layer 2: Secondary grouping (Dynamic/Static staff, Fixed/Flexible rooms) */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: `60px repeat(${orderedResources.length}, 150px)`,
-                  md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
-                },
-                borderBottom: 1,
-                borderColor: 'divider',
-                '& > *': {
-                  minWidth: 0,
-                  overflow: 'hidden'
-                }
-              }}
-            >
-              {/* Empty time column for secondary grouping row */}
-              <Box />
+              {/* Layer 2: Secondary grouping (Staff vs Rooms) */}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: `repeat(${orderedResources.length}, 150px)`,
+                    md: `repeat(${orderedResources.length}, minmax(180px, 1fr))`
+                  },
+                  borderBottom: 1,
+                  borderColor: 'divider',
+                  minWidth: 'min-content',
+                  '& > *': {
+                    minWidth: 0,
+                    overflow: 'hidden'
+                  }
+                }}
+              >
 
               {/* Secondary group headers */}
               {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], primaryIndex) => {
                 return Object.entries(secondaryGroups).map(([secondaryGroup, resources], secondaryIndex) => {
-                  const isStaffGroup = primaryGroup === 'staff'
+                  const isStaffGroup = secondaryGroup === 'staff'
                   const isFirstSecondaryOfRooms = !isStaffGroup && secondaryIndex === 0
                   return (
                     <Box
                       key={`secondary-${primaryGroup}-${secondaryGroup}`}
                       sx={{
                         gridColumn: `span ${resources.length}`,
-                        p: 0.75,
-                        bgcolor: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
+                        p: 1,
+                        bgcolor: isStaffGroup
+                          ? isDark
+                            ? 'rgba(33, 150, 243, 0.08)'
+                            : 'rgba(33, 150, 243, 0.05)'
+                          : isDark
+                            ? 'rgba(76, 175, 80, 0.08)'
+                            : 'rgba(76, 175, 80, 0.05)',
                         borderRight: isFirstSecondaryOfRooms ? 3 : 1,
                         borderColor: isFirstSecondaryOfRooms
                           ? isDark
@@ -518,10 +541,15 @@ export default function UnifiedMultiResourceDayView({
                           : 'divider',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        gap: 0.5
                       }}
                     >
-                      <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.7rem' }}>
+                      <i
+                        className={isStaffGroup ? 'ri-team-line' : 'ri-tools-line'}
+                        style={{ fontSize: 12, opacity: 0.7 }}
+                      />
+                      <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.75rem' }}>
                         {getSecondaryGroupLabel(secondaryGroup)}
                       </Typography>
                       <Chip
@@ -529,34 +557,32 @@ export default function UnifiedMultiResourceDayView({
                         size='small'
                         variant='outlined'
                         sx={{
-                          height: 14,
+                          height: 16,
                           fontSize: '0.6rem',
-                          ml: 0.5,
-                          '& .MuiChip-label': { px: 0.5 }
+                          ml: 'auto'
                         }}
                       />
                     </Box>
                   )
                 })
               })}
-            </Box>
+              </Box>
 
-            {/* Resource headers row */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: `60px repeat(${orderedResources.length}, 150px)`,
-                  md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
-                },
-                '& > *': {
-                  minWidth: 0,
-                  overflow: 'hidden'
-                }
-              }}
-            >
-              {/* Time column header */}
-              <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider' }} />
+              {/* Resource headers row */}
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: `repeat(${orderedResources.length}, 150px)`,
+                    md: `repeat(${orderedResources.length}, minmax(180px, 1fr))`
+                  },
+                  minWidth: 'min-content',
+                  '& > *': {
+                    minWidth: 0,
+                    overflow: 'hidden'
+                  }
+                }}
+              >
 
               {/* Resource headers */}
               {orderedResources.map(resource => {
@@ -678,23 +704,32 @@ export default function UnifiedMultiResourceDayView({
                   </Box>
                 )
               })}
+              </Box>
             </Box>
           </Box>
 
-          {/* Time grid */}
+          {/* Time grid - Flex layout with sticky time column */}
           <Box
             sx={{
-              position: 'relative',
               flex: 1,
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: `60px repeat(${orderedResources.length}, 150px)`,
-                md: `60px repeat(${orderedResources.length}, minmax(180px, 1fr))`
-              }
+              display: 'flex',
+              position: 'relative',
+              overflow: 'hidden'
             }}
           >
-            {/* Time labels column */}
-            <Box sx={{ borderRight: 1, borderColor: 'divider' }}>
+            {/* Time labels column - truly sticky */}
+            <Box
+              sx={{
+                position: 'sticky',
+                left: 0,
+                zIndex: 11,
+                borderRight: 1,
+                borderColor: 'divider',
+                bgcolor: 'background.default',
+                flexShrink: 0,
+                width: 60
+              }}
+            >
               {timeSlots
                 .filter((_, i) => i % 4 === 0)
                 .map((slot, index) => (
@@ -706,7 +741,8 @@ export default function UnifiedMultiResourceDayView({
                       borderColor: 'divider',
                       pt: 1,
                       pr: 1,
-                      textAlign: 'right'
+                      textAlign: 'right',
+                      bgcolor: 'background.default'
                     }}
                   >
                     <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.7rem' }}>
@@ -716,59 +752,85 @@ export default function UnifiedMultiResourceDayView({
                 ))}
             </Box>
 
-            {/* Resource columns */}
-            {orderedResources.map((resource, index) => {
-              const isRoom = resource.type === 'room'
-              const bgColor = isRoom ? (isDark ? 'rgba(76, 175, 80, 0.01)' : 'rgba(76, 175, 80, 0.005)') : 'transparent'
-
-              return (
-                <Box key={resource.id} sx={{ position: 'relative' }}>
-                  {timeSlots
-                    .filter((_, i) => i % 4 === 0)
-                    .map((_, slotIndex) => (
-                      <Box
-                        key={slotIndex}
-                        sx={{
-                          height: 160,
-                          borderBottom: 1,
-                          borderRight: 1,
-                          borderColor: 'divider',
-                          bgcolor: bgColor
-                        }}
-                      />
-                    ))}
-                  <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
-                    {renderResourceColumn(resource, index)}
-                  </Box>
-                </Box>
-              )
-            })}
-
-            {/* Current time indicator */}
-            {currentTimeIndicator && (
+            {/* Horizontally scrollable resources area */}
+            <Box
+              ref={timeGridScrollRef}
+              sx={{
+                flex: 1,
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                position: 'relative',
+                scrollbarWidth: 'none',
+                '&::-webkit-scrollbar': {
+                  display: 'none'
+                }
+              }}
+            >
               <Box
                 sx={{
-                  position: 'absolute',
-                  left: 60,
-                  right: 0,
-                  top: currentTimeIndicator.top,
-                  height: 2,
-                  bgcolor: 'error.main',
-                  zIndex: 5,
-                  pointerEvents: 'none',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    left: -6,
-                    top: -4,
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: 'error.main'
-                  }
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: `repeat(${orderedResources.length}, 150px)`,
+                    md: `repeat(${orderedResources.length}, minmax(180px, 1fr))`
+                  },
+                  minWidth: 'min-content'
                 }}
-              />
-            )}
+              >
+                {/* Resource columns */}
+                {orderedResources.map((resource, index) => {
+                  const isRoom = resource.type === 'room'
+                  const bgColor = isRoom ? (isDark ? 'rgba(76, 175, 80, 0.01)' : 'rgba(76, 175, 80, 0.005)') : 'transparent'
+
+                  return (
+                    <Box key={resource.id} sx={{ position: 'relative' }}>
+                      {timeSlots
+                        .filter((_, i) => i % 4 === 0)
+                        .map((_, slotIndex) => (
+                          <Box
+                            key={slotIndex}
+                            sx={{
+                              height: 160,
+                              borderBottom: 1,
+                              borderRight: 1,
+                              borderColor: 'divider',
+                              bgcolor: bgColor
+                            }}
+                          />
+                        ))}
+                      <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                        {renderResourceColumn(resource, index)}
+                      </Box>
+                    </Box>
+                  )
+                })}
+              </Box>
+
+              {/* Current time indicator */}
+              {currentTimeIndicator && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    left: 0,
+                    right: 0,
+                    top: currentTimeIndicator.top,
+                    height: 2,
+                    bgcolor: 'error.main',
+                    zIndex: 5,
+                    pointerEvents: 'none',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      left: -6,
+                      top: -4,
+                      width: 10,
+                      height: 10,
+                      borderRadius: '50%',
+                      bgcolor: 'error.main'
+                    }
+                  }}
+                />
+              )}
+            </Box>
           </Box>
         </Box>
       </Box>

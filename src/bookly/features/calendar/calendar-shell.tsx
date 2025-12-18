@@ -19,6 +19,7 @@ import CalendarSettings from './calendar-settings'
 import CalendarNotifications from './calendar-notifications'
 import TemplateManagementDrawer from './template-management-drawer'
 import QuickActionMenu from './quick-action-menu'
+import FloatingActionMenu from './floating-action-menu'
 import type { CalendarEvent, DateRange } from './types'
 
 interface CalendarShellProps {
@@ -594,6 +595,17 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         onNewAppointment={handleQuickMenuNewAppointment}
         onTimeReservation={handleQuickMenuTimeReservation}
         onTimeOff={handleQuickMenuTimeOff}
+      />
+
+      {/* Floating Action Menu */}
+      <FloatingActionMenu
+        onNewAppointment={() => openNewBooking()}
+        onTimeReservation={() => {
+          window.location.href = '/en/apps/bookly/staff?action=time-reservation'
+        }}
+        onTimeOff={() => {
+          window.location.href = '/en/apps/bookly/staff?action=time-off'
+        }}
       />
 
       {/* Error Snackbar */}

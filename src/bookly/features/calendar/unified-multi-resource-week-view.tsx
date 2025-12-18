@@ -39,16 +39,30 @@ export default function UnifiedMultiResourceWeekView({
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd })
 
-  // Group staff by type AND assignment status (4 categories)
-  const staffGrouping = useMemo(() => groupStaffByTypeAndAssignment(mockStaff), [])
+  // Group all resources (staff and rooms) by branch
+  const resourcesByBranch = useMemo(() => {
+    const grouped: Record<string, any[]> = {}
 
-  // Count total assigned static staff for index calculations
-  const totalAssignedStaticStaff = useMemo(() => {
-    return Object.values(staffGrouping.staticAssignedByRoom).flat().length
-  }, [staffGrouping])
+    // Add all staff
+    mockStaff.forEach(staff => {
+      const branchId = staff.branchId || '1-1'
+      if (!grouped[branchId]) {
+        grouped[branchId] = []
+      }
+      grouped[branchId].push({ ...staff, type: 'staff' as const })
+    })
 
-  // Group rooms by type
-  const roomGrouping = useMemo(() => categorizeRooms(rooms), [rooms])
+    // Add all rooms
+    rooms.forEach(room => {
+      const branchId = room.branchId || '1-1'
+      if (!grouped[branchId]) {
+        grouped[branchId] = []
+      }
+      grouped[branchId].push({ ...room, type: 'room' as const })
+    })
+
+    return grouped
+  }, [rooms])
 
   // Get events for a specific resource and day
   const getResourceDayEvents = (resourceId: string, resourceType: 'staff' | 'room', day: Date) => {
@@ -387,201 +401,48 @@ export default function UnifiedMultiResourceWeekView({
             ))}
           </Box>
 
-          {/* Dynamic Unassigned Staff Section */}
-          {staffGrouping.dynamicUnassigned.length > 0 && (
-            <Box>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1,
-                  bgcolor: isDark ? 'rgba(33, 150, 243, 0.08)' : 'rgba(33, 150, 243, 0.05)',
-                  borderBottom: 1,
-                  borderColor: 'divider'
-                }}
-              >
-                <Typography variant='caption' fontWeight={700} color='info.dark'>
-                  DYNAMIC UNASSIGNED ({staffGrouping.dynamicUnassigned.length})
-                </Typography>
-              </Box>
-              {staffGrouping.dynamicUnassigned.map((staff, index) => {
-                const staffResource = { ...staff, type: 'staff' as const, assignmentStatus: 'unassigned' }
-                return renderResourceRow(staffResource, index)
-              })}
-            </Box>
-          )}
-
-          {/* Dynamic Assigned Staff Section */}
-          {staffGrouping.dynamicAssigned.length > 0 && (
-            <Box>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1,
-                  bgcolor: isDark ? 'rgba(76, 175, 80, 0.12)' : 'rgba(76, 175, 80, 0.1)',
-                  borderBottom: 1,
-                  borderColor: 'divider',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1
-                }}
-              >
-                <i className='ri-home-office-line' style={{ fontSize: 14, color: isDark ? '#81c784' : '#4caf50' }} />
-                <Typography variant='caption' fontWeight={700} color='success.dark'>
-                  DYNAMIC ASSIGNED TO ROOMS ({staffGrouping.dynamicAssigned.length})
-                </Typography>
-              </Box>
-              {staffGrouping.dynamicAssigned.map((staff, index) => {
-                const staffResource = { ...staff, type: 'staff' as const, assignmentStatus: 'assigned' }
-                return renderResourceRow(staffResource, staffGrouping.dynamicUnassigned.length + index)
-              })}
-            </Box>
-          )}
-
-          {/* Static Unassigned Staff Section */}
-          {staffGrouping.staticUnassigned.length > 0 && (
-            <Box>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1,
-                  bgcolor: isDark ? 'rgba(156, 39, 176, 0.08)' : 'rgba(156, 39, 176, 0.05)',
-                  borderBottom: 1,
-                  borderColor: 'divider'
-                }}
-              >
-                <Typography variant='caption' fontWeight={700} color='text.secondary'>
-                  STATIC UNASSIGNED ({staffGrouping.staticUnassigned.length})
-                </Typography>
-              </Box>
-              {staffGrouping.staticUnassigned.map((staff, index) => {
-                const staffResource = { ...staff, type: 'staff' as const, staffType: 'static', assignmentStatus: 'unassigned' }
-                return renderResourceRow(staffResource, staffGrouping.dynamicUnassigned.length + staffGrouping.dynamicAssigned.length + index)
-              })}
-            </Box>
-          )}
-
-          {/* Static Assigned Staff Grouped by Room Section */}
-          {staffGrouping.staticAssigned.length > 0 && (
-            <Box>
-              {/* Outer section header for static assigned staff */}
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  bgcolor: isDark ? 'rgba(255, 152, 0, 0.12)' : 'rgba(255, 152, 0, 0.1)',
-                  borderBottom: 1,
-                  borderColor: 'divider',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1
-                }}
-              >
-                <i className='ri-home-office-line' style={{ fontSize: 14, color: isDark ? '#ffb74d' : '#ff9800' }} />
-                <Typography variant='body2' fontWeight={700} color='warning.dark'>
-                  STATIC ASSIGNED TO ROOMS
-                </Typography>
-                <Chip
-                  label={staffGrouping.staticAssigned.length}
-                  size='small'
+          {/* Branch Sections */}
+          {Object.entries(resourcesByBranch).map(([branchId, resources], branchIndex) => {
+            const branchName = getBranchName(branchId)
+            return (
+              <Box key={`branch-${branchId}`}>
+                <Box
                   sx={{
-                    height: 18,
-                    fontSize: '0.65rem',
-                    bgcolor: 'warning.main',
-                    color: 'white',
-                    fontWeight: 600,
-                    ml: 'auto'
+                    px: 2,
+                    py: 1.5,
+                    bgcolor: isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.1)',
+                    borderBottom: 1,
+                    borderColor: 'divider',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1
                   }}
-                />
+                >
+                  <i className='ri-building-line' style={{ fontSize: 14, color: isDark ? '#64b5f6' : '#1976d2' }} />
+                  <Typography variant='body2' fontWeight={700} color='primary.dark'>
+                    {branchName}
+                  </Typography>
+                  <Chip
+                    label={resources.length}
+                    size='small'
+                    sx={{
+                      height: 18,
+                      fontSize: '0.65rem',
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      fontWeight: 600,
+                      ml: 'auto'
+                    }}
+                  />
+                </Box>
+
+                {/* Resources in this branch */}
+                {resources.map((resource, resourceIndex) => {
+                  return renderResourceRow(resource, branchIndex * 1000 + resourceIndex)
+                })}
               </Box>
-
-              {/* Inner groupings by room */}
-              {Object.entries(staffGrouping.staticAssignedByRoom).map(([roomName, staffList], roomIndex) => {
-                let staffIndexOffset = staffGrouping.dynamicUnassigned.length + staffGrouping.dynamicAssigned.length + staffGrouping.staticUnassigned.length
-                return (
-                  <Box key={`static-assigned-room-${roomIndex}`}>
-                    {/* Room-specific sub-header */}
-                    <Box
-                      sx={{
-                        px: 3,
-                        py: 0.75,
-                        bgcolor: isDark ? 'rgba(255, 152, 0, 0.08)' : 'rgba(255, 152, 0, 0.05)',
-                        borderBottom: 1,
-                        borderColor: 'divider'
-                      }}
-                    >
-                      <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ fontSize: '0.75rem' }}>
-                        {roomName} ({staffList.length})
-                      </Typography>
-                    </Box>
-
-                    {/* Staff in this room */}
-                    {staffList.map((staff, index) => {
-                      const staffResource = { ...staff, type: 'staff' as const, staffType: 'static', assignmentStatus: 'assigned', roomName }
-                      return renderResourceRow(staffResource, staffIndexOffset + index)
-                    })}
-                  </Box>
-                )
-              })}
-            </Box>
-          )}
-
-          {/* Divider between STAFF and ROOMS sections */}
-          <Box
-            sx={{
-              height: 3,
-              bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)',
-              borderBottom: 1,
-              borderColor: 'divider'
-            }}
-          />
-
-          {/* Fixed Capacity Rooms Section */}
-          {roomGrouping.fixed.length > 0 && (
-            <Box>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1,
-                  bgcolor: isDark ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.08)',
-                  borderBottom: 1,
-                  borderColor: 'divider'
-                }}
-              >
-                <Typography variant='caption' fontWeight={700} color='success.dark'>
-                  FIXED CAPACITY ROOMS ({roomGrouping.fixed.length})
-                </Typography>
-              </Box>
-              {roomGrouping.fixed.map((room, index) => {
-                const roomResource = { ...room, type: 'room' as const, photo: undefined }
-                const staffIndexOffset = staffGrouping.dynamicUnassigned.length + staffGrouping.dynamicAssigned.length + staffGrouping.staticUnassigned.length + totalAssignedStaticStaff
-                return renderResourceRow(roomResource, staffIndexOffset + index)
-              })}
-            </Box>
-          )}
-
-          {/* Flexible Rooms Section */}
-          {roomGrouping.flexible.length > 0 && (
-            <Box>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1,
-                  bgcolor: isDark ? 'rgba(76, 175, 80, 0.05)' : 'rgba(76, 175, 80, 0.03)',
-                  borderBottom: 1,
-                  borderColor: 'divider'
-                }}
-              >
-                <Typography variant='caption' fontWeight={700} color='text.secondary'>
-                  FLEXIBLE ROOMS ({roomGrouping.flexible.length})
-                </Typography>
-              </Box>
-              {roomGrouping.flexible.map((room, index) => {
-                const roomResource = { ...room, type: 'room' as const, photo: undefined }
-                const staffIndexOffset = staffGrouping.dynamicUnassigned.length + staffGrouping.dynamicAssigned.length + staffGrouping.staticUnassigned.length + totalAssignedStaticStaff
-                return renderResourceRow(roomResource, staffIndexOffset + roomGrouping.fixed.length + index)
-              })}
-            </Box>
-          )}
+            )
+          })}
         </Box>
       </Box>
     </Box>

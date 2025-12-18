@@ -23,7 +23,6 @@ import {
 } from '@mui/material'
 
 import { mockBusinesses, mockStaff } from '@/bookly/data/mock-data'
-import { addWeeks } from './utils'
 import { useCalendarStore } from './state'
 
 import type { AppointmentStatus, BranchFilter, HighlightFilters, PaymentStatus, RoomFilter, SelectionMethod, StaffFilter } from './types'
@@ -110,10 +109,6 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     return allRooms
   }, [pendingBranches, branches, getRoomsByBranch])
 
-  const handleJumpWeek = (weeks: number) => {
-    const newDate = addWeeks(currentDate, weeks)
-    onDateChange(newDate)
-  }
 
   // Branch handlers
   const handleAllBranches = () => {
@@ -324,136 +319,6 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
       {/* Scrollable Content */}
       <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-
-        {/* Quick Actions */}
-        <Box sx={{ mb: 3 }}>
-          <Typography
-            variant='subtitle2'
-            sx={{ fontWeight: 600, mb: 2, display: 'flex', alignItems: 'center', gap: 0.5 }}
-          >
-            <i className='ri-calendar-event-line' style={{ fontSize: '1.1rem' }} />
-            Quick Actions
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <Button
-              variant='outlined'
-              fullWidth
-              onClick={() => (window.location.href = '/en/apps/bookly/staff?action=time-reservation')}
-              startIcon={<i className='ri-time-line' />}
-              sx={{
-                justifyContent: 'flex-start',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                py: 1,
-                borderColor: theme =>
-                  theme.palette.mode === 'dark' ? 'rgba(33, 150, 243, 0.5)' : 'rgba(33, 150, 243, 0.5)',
-                color: theme => (theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)'),
-                '&:hover': {
-                  borderColor: theme => (theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)'),
-                  backgroundColor: theme =>
-                    theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.08)' : 'rgba(25, 118, 210, 0.04)'
-                }
-              }}
-            >
-              Add Time Reservation
-            </Button>
-            <Button
-              variant='outlined'
-              fullWidth
-              onClick={() => (window.location.href = '/en/apps/bookly/staff?action=time-off')}
-              startIcon={<i className='ri-calendar-close-line' />}
-              sx={{
-                justifyContent: 'flex-start',
-                textTransform: 'uppercase',
-                fontWeight: 600,
-                fontSize: '0.75rem',
-                py: 1,
-                borderColor: theme =>
-                  theme.palette.mode === 'dark' ? 'rgba(121, 85, 72, 0.5)' : 'rgba(121, 85, 72, 0.5)',
-                color: theme => (theme.palette.mode === 'dark' ? 'rgb(188, 170, 164)' : 'rgb(121, 85, 72)'),
-                '&:hover': {
-                  borderColor: theme => (theme.palette.mode === 'dark' ? 'rgb(188, 170, 164)' : 'rgb(121, 85, 72)'),
-                  backgroundColor: theme =>
-                    theme.palette.mode === 'dark' ? 'rgba(121, 85, 72, 0.08)' : 'rgba(121, 85, 72, 0.04)'
-                }
-              }}
-            >
-              Add Time Off
-            </Button>
-          </Box>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Jump By Week */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2 }}>
-            Jump By Week
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1, flexWrap: 'wrap' }}>
-            {[1, 2, 3, 4, 5, 6].map((week, index) => (
-              <Box key={`plus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography
-                  variant='body2'
-                  onClick={() => handleJumpWeek(week)}
-                  sx={{
-                    cursor: 'pointer',
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 0.5,
-                    fontWeight: 500,
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      bgcolor: theme =>
-                        theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
-                      color: 'primary.main'
-                    }
-                  }}
-                >
-                  +{week}
-                </Typography>
-                {index < 5 && (
-                  <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
-                    |
-                  </Typography>
-                )}
-              </Box>
-            ))}
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
-            {[-1, -2, -3, -4, -5, -6].map((week, index) => (
-              <Box key={`minus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography
-                  variant='body2'
-                  onClick={() => handleJumpWeek(week)}
-                  sx={{
-                    cursor: 'pointer',
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 0.5,
-                    fontWeight: 500,
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      bgcolor: theme =>
-                        theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
-                      color: 'primary.main'
-                    }
-                  }}
-                >
-                  {week}
-                </Typography>
-                {index < 5 && (
-                  <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
-                    |
-                  </Typography>
-                )}
-              </Box>
-            ))}
-          </Box>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
 
         {/* Branches */}
         <Accordion

@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import {
   Box,
   Button,
+  Divider,
   IconButton,
   ListItemIcon,
   ListItemText,
@@ -21,7 +22,7 @@ import {
 import { Calendar } from '@/bookly/components/ui/calendar'
 import { useCalendarStore } from './state'
 import { exportEventsToExcel, exportSummaryToExcel } from './export-utils'
-import { getViewTitle } from './utils'
+import { getViewTitle, addWeeks } from './utils'
 
 import type { CalendarEvent, CalendarView } from './types'
 
@@ -131,6 +132,11 @@ export default function CalendarHeader({
   const handleExportSummary = () => {
     exportSummaryToExcel(filteredEvents)
     handleExportClose()
+  }
+
+  const handleJumpWeek = (weeks: number) => {
+    const newDate = addWeeks(currentDate, weeks)
+    onDateChange?.(newDate)
   }
 
   const viewOptions: { value: CalendarView; label: string }[] = [
@@ -366,6 +372,72 @@ export default function CalendarHeader({
                   }}
                 >
                   <Calendar mode='single' selected={currentDate} onSelect={handleDateSelect} />
+                </Box>
+
+                {/* Jump By Week */}
+                <Divider sx={{ my: 2 }} />
+                <Typography variant='subtitle2' sx={{ fontWeight: 600, mb: 2, px: 2 }}>
+                  Jump By Week
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1, flexWrap: 'wrap', px: 2 }}>
+                  {[1, 2, 3, 4, 5, 6].map((week, index) => (
+                    <Box key={`plus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography
+                        variant='body2'
+                        onClick={() => handleJumpWeek(week)}
+                        sx={{
+                          cursor: 'pointer',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 0.5,
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            bgcolor: theme =>
+                              theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                            color: 'primary.main'
+                          }
+                        }}
+                      >
+                        +{week}
+                      </Typography>
+                      {index < 5 && (
+                        <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
+                          |
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap', px: 2 }}>
+                  {[-1, -2, -3, -4, -5, -6].map((week, index) => (
+                    <Box key={`minus-${week}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Typography
+                        variant='body2'
+                        onClick={() => handleJumpWeek(week)}
+                        sx={{
+                          cursor: 'pointer',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 0.5,
+                          fontWeight: 500,
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            bgcolor: theme =>
+                              theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
+                            color: 'primary.main'
+                          }
+                        }}
+                      >
+                        {week}
+                      </Typography>
+                      {index < 5 && (
+                        <Typography variant='body2' color='text.disabled' sx={{ mx: 0.5 }}>
+                          |
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
                 </Box>
               </Box>
             </Popover>
