@@ -254,6 +254,7 @@ export default function UnifiedMultiResourceWeekView({
               {/* Events */}
               {dayEvents.map(event => {
                 const colors = buildEventColors(colorScheme, event.extendedProps.status)
+                const isStaticType = isStaff ? resource.staffType === 'static' : resource.roomType === 'fixed'
                 return (
                   <Box
                     key={event.id}
@@ -263,15 +264,27 @@ export default function UnifiedMultiResourceWeekView({
                     }}
                     sx={{
                       mb: 0.5,
-                      p: 0.5,
+                      p: 0.6,
                       bgcolor: colors.bg,
-                      borderLeft: `3px solid ${colors.border}`,
-                      borderRadius: 0.5,
+                      borderRadius: 0,
+                      border: isStaticType ? `2px solid ${colors.border}` : `1px solid ${colors.border}40`,
+                      borderLeft: isStaticType ? `4px solid ${colors.border}` : `1px solid ${colors.border}40`,
+                      backgroundImage: isStaticType
+                        ? `repeating-linear-gradient(
+                            45deg,
+                            transparent,
+                            transparent 5px,
+                            ${colors.border}40 5px,
+                            ${colors.border}40 10px
+                          )`
+                        : 'none',
+                      opacity: 1,
+                      boxShadow: isStaticType ? 'none' : '0px 2px 8px rgba(0,0,0,0.06)',
                       cursor: 'pointer',
-                      transition: 'all 0.15s',
+                      transition: 'all 0.2s ease',
                       '&:hover': {
-                        boxShadow: 1,
-                        transform: 'translateX(2px)'
+                        boxShadow: isStaticType ? 'none' : '0px 4px 12px rgba(0,0,0,0.1)',
+                        transform: 'translateY(-2px)'
                       }
                     }}
                   >

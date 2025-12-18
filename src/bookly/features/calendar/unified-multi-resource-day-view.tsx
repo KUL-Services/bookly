@@ -303,6 +303,10 @@ export default function UnifiedMultiResourceDayView({
           const style = getEventStyle(event)
           const colors = buildEventColors(colorScheme, event.extendedProps.status)
 
+          // Determine if this is a static/fixed resource vs dynamic/flexible
+          const isStaticType = isStaff ? resource.staffType === 'static' : resource.roomType === 'fixed'
+          const isDynamicType = isStaff ? resource.staffType === 'dynamic' : (resource.roomType === 'flexible' || resource.roomType === 'dynamic')
+
           return (
             <Box
               key={event.id}
@@ -317,15 +321,27 @@ export default function UnifiedMultiResourceDayView({
                 top: style.top,
                 height: Math.max(style.height, 30),
                 bgcolor: colors.bg,
-                borderLeft: `3px solid ${colors.border}`,
-                borderRadius: 0.5,
-                p: 0.5,
+                borderRadius: 0,
+                border: isStaticType ? `2px solid ${colors.border}` : `1px solid ${colors.border}40`,
+                borderLeft: isStaticType ? `4px solid ${colors.border}` : `1px solid ${colors.border}40`,
+                backgroundImage: isStaticType
+                  ? `repeating-linear-gradient(
+                      45deg,
+                      transparent,
+                      transparent 5px,
+                      ${colors.border}40 5px,
+                      ${colors.border}40 10px
+                    )`
+                  : 'none',
+                p: 0.75,
                 overflow: 'hidden',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                transition: 'all 0.2s ease',
+                opacity: 1,
+                boxShadow: isStaticType ? 'none' : '0px 2px 8px rgba(0,0,0,0.06)',
                 '&:hover': {
-                  boxShadow: 2,
-                  transform: 'translateX(2px)',
+                  boxShadow: isStaticType ? 'none' : '0px 4px 12px rgba(0,0,0,0.1)',
+                  transform: 'translateY(-2px)',
                   zIndex: 10
                 }
               }}
