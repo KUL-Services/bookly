@@ -305,7 +305,7 @@ export default function UnifiedMultiResourceDayView({
           const colors = buildEventColors(colorScheme, event.extendedProps.status)
 
           // Determine if this is a static/fixed resource vs dynamic/flexible
-          const isStaticType = isStaff ? resource.staffType === 'static' : resource.roomType === 'fixed'
+          const isStaticType = isStaff ? resource.staffType === 'static' : resource.roomType === 'static'
           const isDynamicType = isStaff
             ? resource.staffType === 'dynamic'
             : resource.roomType === 'flexible' || resource.roomType === 'dynamic'
@@ -390,11 +390,18 @@ export default function UnifiedMultiResourceDayView({
                 </Typography>
               </Box>
 
-              {/* Capacity Display for Static/Fixed Resources */}
+              {/* Capacity Display for Static/Fixed Resources ONLY */}
               {(() => {
-                // Only show capacity for static staff or fixed/static rooms (regardless of global scheduling mode)
+                // Show capacity chip ONLY for:
+                // 1. ALL events on static staff (staffType === 'static') - diagonal stripes
+                // 2. ALL events in static/fixed rooms (roomType === 'static') - diagonal stripes
+                // The event's slotId doesn't matter - only the RESOURCE type matters
                 const isStaticStaff = isStaff && resource.staffType === 'static'
-                const isFixedRoom = !isStaff && (resource.roomType === 'fixed' || resource.roomType === 'static')
+                const isStaticRoom = !isStaff && resource.roomType === 'static'
+                const shouldShowChip = isStaticStaff || isStaticRoom
+
+                // Extract slotId for capacity calculation (if it exists)
+                const slotId = event.extendedProps?.slotId
 
                 console.log('🔍 DAY VIEW Capacity Check:', {
                   eventId: event.id,
@@ -405,41 +412,56 @@ export default function UnifiedMultiResourceDayView({
                   staffType: resource.staffType,
                   roomType: resource.roomType,
                   isStaticStaff,
-                  isFixedRoom,
-                  slotId: event.extendedProps?.slotId,
-                  extendedProps: event.extendedProps
+                  isStaticRoom,
+                  shouldShowChip,
+                  slotId
                 })
 
-                if (!isStaticStaff && !isFixedRoom) {
-                  console.log('❌ Not static staff or fixed room')
+                if (!shouldShowChip) {
+                  console.log('❌ Resource is not static/fixed - capacity chip will not display')
                   return null
                 }
 
-                // Get slot info
-                const slotId = event.extendedProps?.slotId
-                if (!slotId) {
-                  console.log('❌ No slotId found')
-                  return null
-                }
-
-                // Get capacity info for this slot
+                // Get capacity info for this slot (only if slotId exists)
                 const eventDate = new Date(event.start)
-                const capacityInfo = isSlotAvailable(slotId, eventDate)
+                const capacityInfo = slotId ? isSlotAvailable(slotId, eventDate) : null
 
                 console.log('📊 Capacity Info:', { slotId, eventDate, capacityInfo })
 
-                if (!capacityInfo) {
-                  console.log('❌ No capacity info returned')
-                  return null
+                // For static resources, ALWAYS show chip (even without detailed slot data)
+                let bookedCount: number
+                let totalCapacity: number
+                let chipColor: 'success' | 'warning' | 'error'
+
+                if (capacityInfo) {
+                  // Use real capacity data from slot
+                  bookedCount = capacityInfo.total - capacityInfo.remainingCapacity
+                  totalCapacity = capacityInfo.total
+                  const percentRemaining = (capacityInfo.remainingCapacity / totalCapacity) * 100
+                  chipColor = percentRemaining > 50 ? 'success' : percentRemaining > 20 ? 'warning' : 'error'
+                } else {
+                  // No slot data - count bookings manually for this resource
+                  const resourceEvents = events.filter(e => {
+                    if (isStaticStaff) {
+                      return e.extendedProps.staffId === resource.id && 
+                             isSameDay(new Date(e.start), eventDate) &&
+                             e.extendedProps.status !== 'cancelled'
+                    } else {
+                      return e.extendedProps.roomId === resource.id && 
+                             isSameDay(new Date(e.start), eventDate) &&
+                             e.extendedProps.status !== 'cancelled'
+                    }
+                  })
+                  bookedCount = resourceEvents.length
+                  totalCapacity = resource.maxConcurrentBookings || resource.capacity || 10
+                  const percentRemaining = ((totalCapacity - bookedCount) / totalCapacity) * 100
+                  chipColor = percentRemaining > 50 ? 'success' : percentRemaining > 20 ? 'warning' : 'error'
                 }
 
-                // Calculate color based on remaining capacity
-                const percentRemaining = (capacityInfo.remainingCapacity / capacityInfo.total) * 100
-                const chipColor = percentRemaining > 50 ? 'success' : percentRemaining > 20 ? 'warning' : 'error'
-
                 console.log('✅ RENDERING CHIP:', {
-                  remainingCapacity: capacityInfo.remainingCapacity,
-                  total: capacityInfo.total,
+                  bookedCount,
+                  totalCapacity,
+                  hasSlotData: !!capacityInfo,
                   chipColor
                 })
 
@@ -447,7 +469,7 @@ export default function UnifiedMultiResourceDayView({
                   <Box sx={{ mt: 0.5 }}>
                     <Chip
                       icon={<i className='ri-user-line' style={{ fontSize: '0.7rem' }} />}
-                      label={`${capacityInfo.remainingCapacity}/${capacityInfo.total}`}
+                      label={`${bookedCount}/${totalCapacity}`}
                       color={chipColor}
                       size='small'
                       sx={{

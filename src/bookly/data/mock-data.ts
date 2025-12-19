@@ -2034,6 +2034,73 @@ export const mockBookings: Booking[] = [
     price: 25,
     status: 'confirmed',
     notes: 'Dynamic barber - later in week'
+  },
+
+  // TODAY (Dec 19, 2025) - Hair salon static slot bookings for testing capacity chips
+  // These bookings use the actual static service slots defined in mockStaticServiceSlots
+  // Thursday slots for Studio A and Studio B
+
+  // Studio A - slot-1-1-1-thu-1 (10:00-12:30 Highlights) - Multi-capacity slot
+  {
+    id: 'booking-thu-slot-1',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Highlights',
+    staffMemberName: 'Emma Johnson',
+    date: new Date('2025-12-19'),
+    time: '10:00 AM',
+    duration: 150,
+    price: 85,
+    status: 'confirmed',
+    notes: 'Client 1 - Blonde highlights',
+    slotId: 'slot-1-1-1-thu-1',
+    roomId: 'room-1-1-1',
+    partySize: 1
+  },
+
+  // Studio A - slot-1-1-1-thu-3 (14:00-15:00 Haircut & Style)
+  {
+    id: 'booking-thu-slot-2',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Haircut & Style',
+    staffMemberName: 'Emma Johnson',
+    date: new Date('2025-12-19'),
+    time: '2:00 PM',
+    duration: 60,
+    price: 65,
+    status: 'confirmed',
+    notes: 'Client 2 - Trim and style',
+    slotId: 'slot-1-1-1-thu-3',
+    roomId: 'room-1-1-1',
+    partySize: 1
+  },
+
+  // Studio B - slot-1-1-2-thu-1 (09:00-10:00 Haircut)
+  {
+    id: 'booking-thu-slot-3',
+    businessId: '1',
+    branchId: '1-1',
+    branchName: 'Luxe Hair Studio - Oxford',
+    businessName: 'Luxe Hair Studio',
+    businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
+    serviceName: 'Haircut & Style',
+    staffMemberName: 'Sarah Williams',
+    date: new Date('2025-12-19'),
+    time: '9:00 AM',
+    duration: 60,
+    price: 65,
+    status: 'confirmed',
+    notes: 'Early morning cut',
+    slotId: 'slot-1-1-2-thu-1',
+    roomId: 'room-1-1-2',
+    partySize: 1
   }
 ]
 
@@ -2044,19 +2111,22 @@ export const mockRooms: Room[] = [
     id: 'room-1-1-1',
     name: 'Studio A',
     branchId: '1-1',
-    color: '#FF6B6B'
+    color: '#FF6B6B',
+    roomType: 'static' // Fixed capacity room for static scheduling
   },
   {
     id: 'room-1-1-2',
     name: 'Studio B',
     branchId: '1-1',
-    color: '#4ECDC4'
+    color: '#4ECDC4',
+    roomType: 'static' // Fixed capacity room for fitness classes
   },
   {
     id: 'room-1-1-3',
     name: 'Studio C',
     branchId: '1-1',
-    color: '#95E1D3'
+    color: '#95E1D3',
+    roomType: 'dynamic' // Flexible capacity room
   },
   // Luxe Hair Studio - Soho Branch
   {
@@ -2089,32 +2159,37 @@ export const mockRooms: Room[] = [
     id: 'room-2-1-1',
     name: 'Station 1',
     branchId: '2-1',
-    color: '#FFDAC1'
+    color: '#FFDAC1',
+    roomType: 'static' // Fixed capacity nail station
   },
   {
     id: 'room-2-1-2',
     name: 'Station 2',
     branchId: '2-1',
-    color: '#B5EAD7'
+    color: '#B5EAD7',
+    roomType: 'dynamic' // Flexible nail station
   },
   {
     id: 'room-2-1-3',
     name: 'Station 3',
     branchId: '2-1',
-    color: '#C7CEEA'
+    color: '#C7CEEA',
+    roomType: 'dynamic' // Flexible nail station
   },
   // Bliss Nail Bar - Camden Branch
   {
     id: 'room-2-2-1',
     name: 'Pod A',
     branchId: '2-2',
-    color: '#FFB6B9'
+    color: '#FFB6B9',
+    roomType: 'dynamic'
   },
   {
     id: 'room-2-2-2',
     name: 'Pod B',
     branchId: '2-2',
-    color: '#FEC8D8'
+    color: '#FEC8D8',
+    roomType: 'dynamic'
   }
 ]
 
@@ -2441,6 +2516,21 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     serviceName: 'Haircut & Style',
     capacity: 1,
     instructorStaffId: '1',
+    price: 65
+  },
+
+  // Thursday Schedule for Studio B
+  {
+    id: 'slot-1-1-2-thu-1',
+    roomId: 'room-1-1-2',
+    branchId: '1-1',
+    dayOfWeek: 'Thu',
+    startTime: '09:00',
+    endTime: '10:00',
+    serviceId: '1',
+    serviceName: 'Haircut & Style',
+    capacity: 1,
+    instructorStaffId: '2',
     price: 65
   },
 

@@ -86,7 +86,12 @@ export default function UnifiedBookingDrawer({
   const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const getSlotsForDate = useCalendarStore(state => state.getSlotsForDate)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
+  const getSlotBookings = useCalendarStore(state => state.getSlotBookings)
   const getRoomsByBranch = useCalendarStore(state => state.getRoomsByBranch)
+  const createEvent = useCalendarStore(state => state.createEvent)
+  const updateEvent = useCalendarStore(state => state.updateEvent)
+  const deleteEvent = useCalendarStore(state => state.deleteEvent)
+  const staticSlots = useCalendarStore(state => state.staticSlots)
 
   // Dynamic mode form state
   const [bookingReference, setBookingReference] = useState('')
@@ -109,6 +114,7 @@ export default function UnifiedBookingDrawer({
   // Static mode state
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
   const [slotClients, setSlotClients] = useState<SlotClient[]>([])
+  const [realSlotData, setRealSlotData] = useState<any>(null)
   const [isAddingClient, setIsAddingClient] = useState(false)
   const [newClientName, setNewClientName] = useState('')
   const [newClientEmail, setNewClientEmail] = useState('')
@@ -218,24 +224,32 @@ export default function UnifiedBookingDrawer({
 
       // Load slot data if static mode
       if (props.slotId || props.isStaticSlot) {
-        setSelectedSlotId(props.slotId || existingEvent.id)
-        // Load slot clients (in real app, this would come from API)
-        // For now, create mock clients if none exist
-        if (props.slotClients && props.slotClients.length > 0) {
-          setSlotClients(props.slotClients)
-        } else {
-          // Create mock client from the booking data for static slots
-          const mockClient: SlotClient = {
-            id: `client-${Date.now()}`,
-            name: props.customerName || clientName || 'Walk-in Client',
-            email: props.email || props.customerEmail || clientEmail || '',
-            phone: props.phone || props.customerPhone || clientPhone || '',
-            bookedAt: new Date(existingEvent.start).toISOString(),
-            status: ['confirmed', 'no_show', 'completed'].includes(props.status) ? props.status : 'confirmed',
-            arrivalTime: props.arrivalTime || ''
-          }
-          setSlotClients([mockClient])
-        }
+        const slotId = props.slotId || existingEvent.id
+        setSelectedSlotId(slotId)
+
+        // Get real slot data from state
+        const slot = staticSlots.find(s => s.id === slotId)
+        setRealSlotData(slot)
+
+        // Get all real bookings for this slot
+        const slotBookings = getSlotBookings(slotId, start)
+
+        // Convert events to SlotClient format
+        const clients: SlotClient[] = slotBookings
+          .filter(booking => booking.extendedProps.status !== 'cancelled') // Exclude cancelled
+          .map(booking => ({
+            id: booking.id,
+            name: booking.extendedProps.customerName || 'Walk-in Client',
+            email: '', // Email not stored in extendedProps type
+            phone: '', // Phone not stored in extendedProps type
+            bookedAt: new Date(booking.start).toISOString(),
+            status: ['confirmed', 'no_show', 'completed', 'pending'].includes(booking.extendedProps.status)
+              ? (booking.extendedProps.status as 'confirmed' | 'no_show' | 'completed' | 'pending')
+              : 'confirmed',
+            arrivalTime: booking.extendedProps.arrivalTime || ''
+          }))
+
+        setSlotClients(clients)
       }
     }
   }, [mode, existingEvent, open])
@@ -321,9 +335,9 @@ export default function UnifiedBookingDrawer({
       return
     }
 
-    // Capacity validation
-    const totalCapacity = 10 // Mock capacity - in real app from slot data
-    const availableCapacity = totalCapacity - slotClients.length
+    // Capacity validation using real slot data
+    const capacityInfo = selectedSlotId ? isSlotAvailable(selectedSlotId, date) : null
+    const availableCapacity = capacityInfo?.remainingCapacity ?? 0
 
     if (availableCapacity === 0) {
       setValidationError('Cannot add client: Slot is at maximum capacity')
@@ -362,6 +376,7 @@ export default function UnifiedBookingDrawer({
     setValidationError(null)
 
     if (effectiveSchedulingMode === 'dynamic') {
+      // Dynamic mode validation
       if (!clientName.trim()) {
         setValidationError('Please enter client name')
         return
@@ -374,9 +389,129 @@ export default function UnifiedBookingDrawer({
         setValidationError('Please select a staff member')
         return
       }
+
+      // Create or update dynamic booking
+      if (mode === 'create') {
+        const [hours, minutes] = startTime.split(':').map(Number)
+        const startDate = new Date(date)
+        startDate.setHours(hours, minutes, 0, 0)
+
+        const [endHours, endMinutes] = endTime.split(':').map(Number)
+        const endDate = new Date(date)
+        endDate.setHours(endHours, endMinutes, 0, 0)
+
+        const newEvent: CalendarEvent = {
+          id: bookingReference,
+          title: serviceName,
+          start: startDate,
+          end: endDate,
+          extendedProps: {
+            status,
+            paymentStatus: 'unpaid',
+            staffId,
+            staffName: mockStaff.find(s => s.id === staffId)?.name || '',
+            selectionMethod: requestedByClient ? 'by_client' : 'automatically',
+            starred,
+            serviceName,
+            customerName: clientName,
+            price: servicePrice,
+            bookingId: bookingReference,
+            serviceId,
+            notes: `Email: ${clientEmail}, Phone: ${clientPhone}` // Store in notes since not in type
+          }
+        }
+        createEvent(newEvent)
+      } else {
+        // Update existing event
+        if (existingEvent) {
+          const updatedEvent: CalendarEvent = {
+            ...existingEvent,
+            extendedProps: {
+              ...existingEvent.extendedProps,
+              status,
+              starred
+            }
+          }
+          updateEvent(updatedEvent)
+        }
+      }
+    } else {
+      // Static mode - update all slot client bookings
+      if (!selectedSlotId || !realSlotData) {
+        setValidationError('Slot data not found')
+        return
+      }
+
+      // Get existing bookings for this slot
+      const existingBookings = getSlotBookings(selectedSlotId, date)
+      const existingBookingIds = new Set(existingBookings.map(b => b.id))
+      const currentClientIds = new Set(slotClients.map(c => c.id))
+
+      // Delete removed clients
+      existingBookings.forEach(booking => {
+        if (!currentClientIds.has(booking.id)) {
+          deleteEvent(booking.id)
+        }
+      })
+
+      // Update or create client bookings
+      slotClients.forEach(client => {
+        const [hours, minutes] = startTime.split(':').map(Number)
+        const startDate = new Date(date)
+        startDate.setHours(hours, minutes, 0, 0)
+
+        const [endHours, endMinutes] = endTime.split(':').map(Number)
+        const endDate = new Date(date)
+        endDate.setHours(endHours, endMinutes, 0, 0)
+
+        if (existingBookingIds.has(client.id)) {
+          // Update existing booking
+          const existingBooking = existingBookings.find(b => b.id === client.id)
+          if (existingBooking) {
+            const updatedEvent: CalendarEvent = {
+              ...existingBooking,
+              extendedProps: {
+                ...existingBooking.extendedProps,
+                status: client.status,
+                customerName: client.name,
+                arrivalTime: client.arrivalTime,
+                notes: `Email: ${client.email}, Phone: ${client.phone}`
+              }
+            }
+            updateEvent(updatedEvent)
+          }
+        } else {
+          // Create new booking for this client in the slot
+          const newEvent: CalendarEvent = {
+            id: client.id,
+            title: realSlotData.serviceName,
+            start: startDate,
+            end: endDate,
+            extendedProps: {
+              status: client.status,
+              paymentStatus: 'unpaid',
+              staffId: realSlotData.instructorStaffId || '',
+              staffName: mockStaff.find(s => s.id === realSlotData.instructorStaffId)?.name || '',
+              selectionMethod: 'automatically',
+              starred: false,
+              serviceName: realSlotData.serviceName,
+              customerName: client.name,
+              price: realSlotData.price,
+              bookingId: client.id,
+              serviceId: realSlotData.serviceId,
+              slotId: selectedSlotId,
+              roomId: realSlotData.roomId,
+              partySize: 1,
+              arrivalTime: client.arrivalTime,
+              notes: `Email: ${client.email}, Phone: ${client.phone}`
+            }
+          }
+          createEvent(newEvent)
+        }
+      })
     }
 
-    const booking = {
+    onSave?.({
       bookingReference,
       date,
       startTime,
@@ -396,9 +531,7 @@ export default function UnifiedBookingDrawer({
         slotId: selectedSlotId,
         slotClients
       })
-    }
-
-    onSave?.(booking)
+    })
     handleClose()
   }
 
@@ -794,10 +927,11 @@ export default function UnifiedBookingDrawer({
           {/* ===== STATIC/FIXED MODE ===== */}
           {effectiveSchedulingMode === 'static' &&
             (() => {
-              // Calculate capacity at the top level for reuse
-              const totalCapacity = 10 // Mock capacity - in real app from slot data
+              // Calculate capacity from real slot data
+              const capacityInfo = selectedSlotId ? isSlotAvailable(selectedSlotId, date) : null
+              const totalCapacity = capacityInfo?.total || realSlotData?.capacity || 10
               const bookedCount = slotClients.length
-              const availableCapacity = totalCapacity - bookedCount
+              const availableCapacity = capacityInfo?.remainingCapacity ?? totalCapacity - bookedCount
               const isLow = availableCapacity < totalCapacity * 0.3
               const isFull = availableCapacity === 0
 
@@ -837,7 +971,7 @@ export default function UnifiedBookingDrawer({
                         </Typography>
                       </Box>
                       <Chip
-                        label={`${availableCapacity}/${totalCapacity}`}
+                        label={`${bookedCount}/${totalCapacity}`}
                         size='small'
                         color={isFull ? 'error' : isLow ? 'warning' : 'success'}
                         icon={<i className='ri-user-line' style={{ fontSize: '0.75rem' }} />}
