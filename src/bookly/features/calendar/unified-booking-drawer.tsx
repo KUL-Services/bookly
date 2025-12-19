@@ -190,6 +190,14 @@ export default function UnifiedBookingDrawer({
   useEffect(() => {
     if (mode === 'edit' && existingEvent && existingEvent.extendedProps && open) {
       const props = existingEvent.extendedProps as any
+      console.log('🎯 DRAWER Opening in edit mode:', {
+        eventId: existingEvent.id,
+        props,
+        hasSlotId: !!props.slotId,
+        isStaticSlot: props.isStaticSlot,
+        effectiveSchedulingMode
+      })
+
       const start = new Date(existingEvent.start)
       const end = new Date(existingEvent.end)
       setDate(start)
@@ -229,30 +237,42 @@ export default function UnifiedBookingDrawer({
 
         // Get real slot data from state
         const slot = staticSlots.find(s => s.id === slotId)
+        console.log('🔍 DRAWER Loading slot data:', { slotId, foundSlot: !!slot, slot, allStaticSlots: staticSlots })
         setRealSlotData(slot)
+
+        // Load service name from slot if available
+        if (slot?.serviceName) {
+          setServiceName(slot.serviceName)
+        }
 
         // Get all real bookings for this slot
         const slotBookings = getSlotBookings(slotId, start)
+        console.log('📋 DRAWER Slot bookings:', { slotId, bookingsCount: slotBookings.length, slotBookings })
 
         // Convert events to SlotClient format
-        const clients: SlotClient[] = slotBookings
-          .filter(booking => booking.extendedProps.status !== 'cancelled') // Exclude cancelled
-          .map(booking => ({
+        const clients: SlotClient[] = slotBookings.map(booking => {
+          // Extract email/phone from notes field (format: "Email: xxx, Phone: yyy")
+          const notes = booking.extendedProps.notes || ''
+          const emailMatch = notes.match(/Email:\s*([^,]+)/)
+          const phoneMatch = notes.match(/Phone:\s*(.+)/)
+
+          return {
             id: booking.id,
             name: booking.extendedProps.customerName || 'Walk-in Client',
-            email: '', // Email not stored in extendedProps type
-            phone: '', // Phone not stored in extendedProps type
+            email: emailMatch ? emailMatch[1].trim() : '',
+            phone: phoneMatch ? phoneMatch[1].trim() : '',
             bookedAt: new Date(booking.start).toISOString(),
             status: ['confirmed', 'no_show', 'completed', 'pending'].includes(booking.extendedProps.status)
               ? (booking.extendedProps.status as 'confirmed' | 'no_show' | 'completed' | 'pending')
               : 'confirmed',
             arrivalTime: booking.extendedProps.arrivalTime || ''
-          }))
+          }
+        })
 
         setSlotClients(clients)
       }
     }
-  }, [mode, existingEvent, open])
+  }, [mode, existingEvent, open, staticSlots, getSlotBookings])
 
   // Auto-calculate end time when service or start time changes
   useEffect(() => {
@@ -335,9 +355,10 @@ export default function UnifiedBookingDrawer({
       return
     }
 
-    // Capacity validation using real slot data
-    const capacityInfo = selectedSlotId ? isSlotAvailable(selectedSlotId, date) : null
-    const availableCapacity = capacityInfo?.remainingCapacity ?? 0
+    // Capacity validation using local state for real-time accuracy
+    const totalCapacity = realSlotData?.capacity || 10
+    const currentCount = slotClients.length
+    const availableCapacity = totalCapacity - currentCount
 
     if (availableCapacity === 0) {
       setValidationError('Cannot add client: Slot is at maximum capacity')
@@ -927,11 +948,33 @@ export default function UnifiedBookingDrawer({
           {/* ===== STATIC/FIXED MODE ===== */}
           {effectiveSchedulingMode === 'static' &&
             (() => {
-              // Calculate capacity from real slot data
-              const capacityInfo = selectedSlotId ? isSlotAvailable(selectedSlotId, date) : null
-              const totalCapacity = capacityInfo?.total || realSlotData?.capacity || 10
-              const bookedCount = slotClients.length
-              const availableCapacity = capacityInfo?.remainingCapacity ?? totalCapacity - bookedCount
+              // Calculate capacity - use LOCAL state (slotClients) for accurate real-time count
+              // This ensures the UI reflects unsaved changes immediately
+
+              // If we have slotId but no realSlotData, try to fetch it synchronously for display
+              let displaySlotData = realSlotData
+              if (selectedSlotId && !displaySlotData) {
+                displaySlotData = staticSlots.find(s => s.id === selectedSlotId)
+                console.log('⚠️ DRAWER Fallback slot data fetch:', {
+                  selectedSlotId,
+                  found: !!displaySlotData,
+                  displaySlotData
+                })
+              }
+
+              const totalCapacity = displaySlotData?.capacity || 10
+              const bookedCount = slotClients.length // Count from local state (includes unsaved changes)
+
+              console.log('💡 DRAWER Capacity calculation:', {
+                selectedSlotId,
+                hasRealSlotData: !!realSlotData,
+                hasDisplaySlotData: !!displaySlotData,
+                totalCapacity,
+                bookedCount,
+                slotClientsLength: slotClients.length,
+                slotClients
+              })
+              const availableCapacity = totalCapacity - bookedCount
               const isLow = availableCapacity < totalCapacity * 0.3
               const isFull = availableCapacity === 0
 

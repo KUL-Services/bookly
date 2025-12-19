@@ -392,16 +392,33 @@ export default function UnifiedMultiResourceDayView({
 
               {/* Capacity Display for Static/Fixed Resources ONLY */}
               {(() => {
-                // Show capacity chip ONLY for:
-                // 1. ALL events on static staff (staffType === 'static') - diagonal stripes
-                // 2. ALL events in static/fixed rooms (roomType === 'static') - diagonal stripes
-                // The event's slotId doesn't matter - only the RESOURCE type matters
+                // Show capacity chip on ALL events on static/fixed resources (diagonal stripes)
+                // This includes both slot-based bookings and regular appointments
                 const isStaticStaff = isStaff && resource.staffType === 'static'
                 const isStaticRoom = !isStaff && resource.roomType === 'static'
                 const shouldShowChip = isStaticStaff || isStaticRoom
 
+                if (!shouldShowChip) {
+                  return null // Don't show chip on dynamic resources
+                }
+
                 // Extract slotId for capacity calculation (if it exists)
                 const slotId = event.extendedProps?.slotId
+                // This prevents showing "2/1" multiple times when there are multiple bookings
+                if (slotId) {
+                  // If has slotId, only show on first event of that slot
+                  const slotEventsInResource = resourceEvents.filter(e => e.extendedProps?.slotId === slotId)
+                  const isFirstEventInSlot = slotEventsInResource[0]?.id === event.id
+                  if (!isFirstEventInSlot) {
+                    return null
+                  }
+                } else {
+                  // If no slotId, only show on first event for this resource
+                  const isFirstEventOfResource = resourceEvents[0]?.id === event.id
+                  if (!isFirstEventOfResource) {
+                    return null
+                  }
+                }
 
                 console.log('🔍 DAY VIEW Capacity Check:', {
                   eventId: event.id,
@@ -416,11 +433,6 @@ export default function UnifiedMultiResourceDayView({
                   shouldShowChip,
                   slotId
                 })
-
-                if (!shouldShowChip) {
-                  console.log('❌ Resource is not static/fixed - capacity chip will not display')
-                  return null
-                }
 
                 // Get capacity info for this slot (only if slotId exists)
                 const eventDate = new Date(event.start)
@@ -441,18 +453,23 @@ export default function UnifiedMultiResourceDayView({
                   chipColor = percentRemaining > 50 ? 'success' : percentRemaining > 20 ? 'warning' : 'error'
                 } else {
                   // No slot data - count bookings manually for this resource
-                  const resourceEvents = events.filter(e => {
+                  const allResourceEvents = events.filter(e => {
                     if (isStaticStaff) {
-                      return e.extendedProps.staffId === resource.id && 
-                             isSameDay(new Date(e.start), eventDate) &&
-                             e.extendedProps.status !== 'cancelled'
+                      return (
+                        e.extendedProps.staffId === resource.id &&
+                        isSameDay(new Date(e.start), eventDate) &&
+                        e.extendedProps.status !== 'cancelled'
+                      )
                     } else {
-                      return e.extendedProps.roomId === resource.id && 
-                             isSameDay(new Date(e.start), eventDate) &&
-                             e.extendedProps.status !== 'cancelled'
+                      return (
+                        e.extendedProps.roomId === resource.id &&
+                        isSameDay(new Date(e.start), eventDate) &&
+                        e.extendedProps.status !== 'cancelled'
+                      )
                     }
                   })
-                  bookedCount = resourceEvents.length
+                  // Sum party sizes (default to 1 if not specified) - matches isSlotAvailable logic
+                  bookedCount = allResourceEvents.reduce((sum, e) => sum + (e.extendedProps.partySize || 1), 0)
                   totalCapacity = resource.maxConcurrentBookings || resource.capacity || 10
                   const percentRemaining = ((totalCapacity - bookedCount) / totalCapacity) * 100
                   chipColor = percentRemaining > 50 ? 'success' : percentRemaining > 20 ? 'warning' : 'error'

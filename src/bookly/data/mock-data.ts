@@ -517,7 +517,7 @@ const baseStaff: StaffMember[] = [
     schedule: standardSchedule,
     workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('2', 'hair'),
-    maxConcurrentBookings: 1,
+    maxConcurrentBookings: 5,
     roomAssignments: [
       {
         roomId: 'room-1-1-2',
@@ -560,6 +560,7 @@ const baseStaff: StaffMember[] = [
     schedule: extendedSchedule,
     workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('3', 'nails'),
+    maxConcurrentBookings: 3,
     roomAssignments: [
       {
         roomId: 'room-2-1-1',
@@ -694,7 +695,7 @@ const baseStaff: StaffMember[] = [
     schedule: standardSchedule,
     workingHours: getWorkingHoursFromSchedule(standardSchedule),
     appointments: generateStaffAppointments('8', 'hair'),
-    maxConcurrentBookings: 1
+    maxConcurrentBookings: 8
     // NO roomAssignments - static staff without fixed room assignment
   },
   {
@@ -712,7 +713,7 @@ const baseStaff: StaffMember[] = [
     schedule: extendedSchedule,
     workingHours: getWorkingHoursFromSchedule(extendedSchedule),
     appointments: generateStaffAppointments('9', 'hair'),
-    maxConcurrentBookings: 1
+    maxConcurrentBookings: 10
     // NO roomAssignments - static staff without fixed room assignment
   }
 ]
