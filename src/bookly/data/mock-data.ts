@@ -1909,7 +1909,10 @@ export const mockBookings: Booking[] = [
     duration: 45,
     price: 35,
     status: 'confirmed',
-    notes: 'Static nail artist - morning slot'
+    notes: 'Static nail artist - morning slot',
+    slotId: 'slot-nail-wed-morning',
+    roomId: 'room-2-1-1',
+    partySize: 1
   },
   {
     id: 'booking-showcase-8',
@@ -1925,7 +1928,10 @@ export const mockBookings: Booking[] = [
     duration: 60,
     price: 45,
     status: 'confirmed',
-    notes: 'Static nail artist - afternoon slot'
+    notes: 'Static nail artist - afternoon slot',
+    slotId: 'slot-nail-wed-afternoon',
+    roomId: 'room-2-1-1',
+    partySize: 1
   },
   {
     id: 'booking-showcase-9',
@@ -1943,6 +1949,7 @@ export const mockBookings: Booking[] = [
     status: 'pending',
     notes: 'Static nail artist - next day',
     slotId: 'slot-nail-thu-afternoon',
+    roomId: 'room-2-1-1',
     partySize: 1
   },
 
@@ -2816,6 +2823,34 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     capacity: 2,
     instructorStaffId: '2',
     price: 50
+  },
+
+  // Lisa Chen nail slots - Wednesday
+  {
+    id: 'slot-nail-wed-morning',
+    roomId: 'room-2-1-1',
+    branchId: '2-1',
+    dayOfWeek: 'Wed',
+    startTime: '11:00',
+    endTime: '12:00',
+    serviceId: 'nail-1',
+    serviceName: 'Gel Manicure',
+    capacity: 3,
+    instructorStaffId: '3',
+    price: 35
+  },
+  {
+    id: 'slot-nail-wed-afternoon',
+    roomId: 'room-2-1-1',
+    branchId: '2-1',
+    dayOfWeek: 'Wed',
+    startTime: '16:00',
+    endTime: '17:00',
+    serviceId: 'nail-2',
+    serviceName: 'Luxury Pedicure',
+    capacity: 3,
+    instructorStaffId: '3',
+    price: 45
   },
 
   // Lisa Chen nail slots - Thursday

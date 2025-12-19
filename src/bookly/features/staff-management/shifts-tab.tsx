@@ -364,9 +364,9 @@ export function ShiftsTab() {
           | 'Fri'
           | 'Sat'
 
-        // First, sort by type: dynamic (0) before static (1)
-        const aType = getStaffType(a.id) === 'dynamic' ? 0 : 1
-        const bType = getStaffType(b.id) === 'dynamic' ? 0 : 1
+        // First, sort by type: dynamic (0) before static (1) - based on selected date
+        const aType = getStaffTypeForDate(a.id, selectedDate) === 'dynamic' ? 0 : 1
+        const bType = getStaffTypeForDate(b.id, selectedDate) === 'dynamic' ? 0 : 1
         if (aType !== bType) return aType - bType
 
         // Within the same type, sort by working status
@@ -778,58 +778,101 @@ export function ShiftsTab() {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {(() => {
-                const currentStaffType = getStaffType(staff.id)
+                // Get effective staff type for the selected date (reflects transitions)
+                const effectiveStaffType = getStaffTypeForDate(staff.id, selectedDate)
                 const pendingChange = getPendingStaffTypeChange(staff.id)
 
                 return (
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={currentStaffType === 'static'}
-                        onChange={e => {
-                          handleStaffTypeToggle(staff.id, staff.name, e.target.checked)
-                        }}
-                        size='small'
-                        color={pendingChange ? 'warning' : 'primary'}
-                      />
-                    }
-                    label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <i
-                          className={currentStaffType === 'static' ? 'ri-group-line' : 'ri-user-line'}
-                          style={{ fontSize: 12 }}
+                  <>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={effectiveStaffType === 'static'}
+                          onChange={e => {
+                            handleStaffTypeToggle(staff.id, staff.name, e.target.checked)
+                          }}
+                          size='small'
+                          color={pendingChange ? 'warning' : 'primary'}
                         />
-                        <Typography variant='caption' fontSize='0.65rem'>
-                          {currentStaffType === 'static' ? 'Static' : 'Dynamic'}
-                        </Typography>
-                      </Box>
-                    }
-                    sx={{ ml: 0, mr: 1 }}
-                  />
+                      }
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <i
+                            className={effectiveStaffType === 'static' ? 'ri-group-line' : 'ri-user-line'}
+                            style={{ fontSize: 12 }}
+                          />
+                          <Typography variant='caption' fontSize='0.65rem'>
+                            {effectiveStaffType === 'static' ? 'Static' : 'Dynamic'}
+                          </Typography>
+                        </Box>
+                      }
+                      sx={{ ml: 0, mr: 1 }}
+                    />
+                    <Tooltip
+                      title={
+                        effectiveStaffType === 'static' ? (
+                          <Box sx={{ p: 1 }}>
+                            <Typography
+                              variant='caption'
+                              fontWeight={600}
+                              display='block'
+                              gutterBottom
+                              sx={{ fontSize: '0.75rem', color: '#fff' }}
+                            >
+                              Static Staff / Rooms
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              display='block'
+                              sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                            >
+                              Resources with fixed, consistent schedules. They work the same hours every day (e.g.,
+                              treatment rooms, equipment, or staff with fixed schedules).
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Box sx={{ p: 1 }}>
+                            <Typography
+                              variant='caption'
+                              fontWeight={600}
+                              display='block'
+                              gutterBottom
+                              sx={{ fontSize: '0.75rem', color: '#fff' }}
+                            >
+                              Dynamic Staff
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              display='block'
+                              sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
+                            >
+                              Staff with flexible schedules. They work one-on-one with clients and can have varying
+                              hours throughout the week.
+                            </Typography>
+                          </Box>
+                        )
+                      }
+                      arrow
+                      placement='right'
+                      componentsProps={{
+                        tooltip: {
+                          sx: {
+                            bgcolor: 'rgba(0, 0, 0, 0.9)',
+                            maxWidth: 300,
+                            '& .MuiTooltip-arrow': {
+                              color: 'rgba(0, 0, 0, 0.9)'
+                            }
+                          }
+                        }
+                      }}
+                    >
+                      <IconButton size='small' sx={{ p: 0.25 }}>
+                        <i className='ri-information-line' style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }} />
+                      </IconButton>
+                    </Tooltip>
+                  </>
                 )
               })()}
-              <Tooltip
-                title={
-                  <Box sx={{ p: 0.5 }}>
-                    <Typography variant='caption' fontWeight={600} display='block' gutterBottom>
-                      Dynamic vs Static Scheduling
-                    </Typography>
-                    <Typography variant='caption' display='block' sx={{ mb: 1 }}>
-                      <strong>Dynamic:</strong> One-on-one appointments. Staff works with one client at a time.
-                    </Typography>
-                    <Typography variant='caption' display='block'>
-                      <strong>Static:</strong> Group sessions with capacity. Staff can serve multiple clients
-                      simultaneously (e.g., classes, group training).
-                    </Typography>
-                  </Box>
-                }
-                arrow
-                placement='right'
-              >
-                <IconButton size='small' sx={{ p: 0.25 }}>
-                  <i className='ri-information-line' style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }} />
-                </IconButton>
-              </Tooltip>
               <Box
                 sx={{
                   display: 'flex',
@@ -839,28 +882,28 @@ export function ShiftsTab() {
                   ml: 'auto'
                 }}
               >
-              {viewMode === 'Day' && (
-                <Typography variant='caption'>
-                  {hasShift && firstShift
-                    ? `D ${Math.floor((parseInt(firstShift.end.split(':')[0]) * 60 + parseInt(firstShift.end.split(':')[1]) - (parseInt(firstShift.start.split(':')[0]) * 60 + parseInt(firstShift.start.split(':')[1]))) / 60)}h`
-                    : 'D 0h'}
-                </Typography>
-              )}
-              {viewMode === 'Week' && (
-                <>
-                  <Typography variant='caption'>{hasShift ? 'D 8h' : 'D 0h'}</Typography>
+                {viewMode === 'Day' && (
                   <Typography variant='caption'>
-                    W{' '}
-                    {
-                      ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].filter(
-                        day => getStaffWorkingHours(staff.id, day as any).isWorking
-                      ).length
-                    }
-                    d
+                    {hasShift && firstShift
+                      ? `D ${Math.floor((parseInt(firstShift.end.split(':')[0]) * 60 + parseInt(firstShift.end.split(':')[1]) - (parseInt(firstShift.start.split(':')[0]) * 60 + parseInt(firstShift.start.split(':')[1]))) / 60)}h`
+                      : 'D 0h'}
                   </Typography>
-                </>
-              )}
-            </Box>
+                )}
+                {viewMode === 'Week' && (
+                  <>
+                    <Typography variant='caption'>{hasShift ? 'D 8h' : 'D 0h'}</Typography>
+                    <Typography variant='caption'>
+                      W{' '}
+                      {
+                        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].filter(
+                          day => getStaffWorkingHours(staff.id, day as any).isWorking
+                        ).length
+                      }
+                      d
+                    </Typography>
+                  </>
+                )}
+              </Box>
             </Box>
             {/* Pending Type Change Indicator */}
             {(() => {
@@ -868,7 +911,16 @@ export function ShiftsTab() {
               return pendingChange ? (
                 <Box sx={{ pl: 4 }}>
                   <Chip
-                    label={`Changing to ${pendingChange.toType} on ${format(pendingChange.effectiveDate, 'MMM d, yyyy')}`}
+                    label={
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', py: 0.3 }}>
+                        <Typography variant='caption' sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}>
+                          Changing to {pendingChange.toType}
+                        </Typography>
+                        <Typography variant='caption' sx={{ fontSize: '0.6rem', lineHeight: 1.2, opacity: 0.8 }}>
+                          on {format(pendingChange.effectiveDate, 'MMM d, yyyy')}
+                        </Typography>
+                      </Box>
+                    }
                     size='small'
                     color='warning'
                     variant='outlined'
@@ -876,10 +928,11 @@ export function ShiftsTab() {
                     onDelete={() => cancelStaffTypeChange(staff.id)}
                     deleteIcon={<i className='ri-close-line' style={{ fontSize: '0.9rem' }} />}
                     sx={{
-                      height: 20,
+                      height: 'auto',
+                      minHeight: 32,
                       fontSize: '0.65rem',
-                      '& .MuiChip-label': { px: 1 },
-                      '& .MuiChip-icon': { ml: 0.5 }
+                      '& .MuiChip-label': { px: 1, py: 0.5 },
+                      '& .MuiChip-icon': { ml: 0.5, alignSelf: 'flex-start', mt: 0.8 }
                     }}
                   />
                 </Box>
@@ -1314,9 +1367,9 @@ export function ShiftsTab() {
 
                     {/* Staff in this branch - grouped by type */}
                     {(() => {
-                      // Group staff by type
-                      const dynamicStaff = branchStaff.filter(s => getStaffType(s.id) === 'dynamic')
-                      const staticStaff = branchStaff.filter(s => getStaffType(s.id) === 'static')
+                      // Group staff by type based on selected date
+                      const dynamicStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, selectedDate) === 'dynamic')
+                      const staticStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, selectedDate) === 'static')
 
                       return (
                         <>
@@ -1343,49 +1396,6 @@ export function ShiftsTab() {
                                 <Typography variant='caption' color='text.secondary'>
                                   ({dynamicStaff.length})
                                 </Typography>
-                                <Tooltip
-                                  title={
-                                    <Box sx={{ p: 1 }}>
-                                      <Typography
-                                        variant='caption'
-                                        fontWeight={600}
-                                        display='block'
-                                        gutterBottom
-                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
-                                      >
-                                        Dynamic Staff
-                                      </Typography>
-                                      <Typography
-                                        variant='caption'
-                                        display='block'
-                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
-                                      >
-                                        Staff members who work flexible hours. Their working hours can vary by day, and
-                                        they can have multiple shifts or breaks during the day.
-                                      </Typography>
-                                    </Box>
-                                  }
-                                  arrow
-                                  placement='right'
-                                  componentsProps={{
-                                    tooltip: {
-                                      sx: {
-                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
-                                        maxWidth: 300,
-                                        '& .MuiTooltip-arrow': {
-                                          color: 'rgba(0, 0, 0, 0.9)'
-                                        }
-                                      }
-                                    }
-                                  }}
-                                >
-                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
-                                    <i
-                                      className='ri-information-line'
-                                      style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }}
-                                    />
-                                  </IconButton>
-                                </Tooltip>
                               </Box>
                               {dynamicStaff.map(renderEnhancedStaffRow)}
                             </>
@@ -1414,49 +1424,6 @@ export function ShiftsTab() {
                                 <Typography variant='caption' color='text.secondary'>
                                   ({staticStaff.length})
                                 </Typography>
-                                <Tooltip
-                                  title={
-                                    <Box sx={{ p: 1 }}>
-                                      <Typography
-                                        variant='caption'
-                                        fontWeight={600}
-                                        display='block'
-                                        gutterBottom
-                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
-                                      >
-                                        Static Staff / Rooms
-                                      </Typography>
-                                      <Typography
-                                        variant='caption'
-                                        display='block'
-                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
-                                      >
-                                        Resources with fixed, consistent schedules. They work the same hours every day
-                                        (e.g., treatment rooms, equipment, or staff with fixed schedules).
-                                      </Typography>
-                                    </Box>
-                                  }
-                                  arrow
-                                  placement='right'
-                                  componentsProps={{
-                                    tooltip: {
-                                      sx: {
-                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
-                                        maxWidth: 300,
-                                        '& .MuiTooltip-arrow': {
-                                          color: 'rgba(0, 0, 0, 0.9)'
-                                        }
-                                      }
-                                    }
-                                  }}
-                                >
-                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
-                                    <i
-                                      className='ri-information-line'
-                                      style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }}
-                                    />
-                                  </IconButton>
-                                </Tooltip>
                               </Box>
                               {staticStaff.map(renderEnhancedStaffRow)}
                             </>
@@ -1859,9 +1826,9 @@ export function ShiftsTab() {
 
                     {/* Staff in this branch - grouped by type */}
                     {(() => {
-                      // Group staff by type
-                      const dynamicStaff = branchStaff.filter(s => getStaffType(s.id) === 'dynamic')
-                      const staticStaff = branchStaff.filter(s => getStaffType(s.id) === 'static')
+                      // Group staff by type based on selected date
+                      const dynamicStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, selectedDate) === 'dynamic')
+                      const staticStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, selectedDate) === 'static')
 
                       return (
                         <>
@@ -1888,49 +1855,6 @@ export function ShiftsTab() {
                                 <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
                                   ({dynamicStaff.length})
                                 </Typography>
-                                <Tooltip
-                                  title={
-                                    <Box sx={{ p: 1 }}>
-                                      <Typography
-                                        variant='caption'
-                                        fontWeight={600}
-                                        display='block'
-                                        gutterBottom
-                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
-                                      >
-                                        Dynamic Staff
-                                      </Typography>
-                                      <Typography
-                                        variant='caption'
-                                        display='block'
-                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
-                                      >
-                                        Staff members who work flexible hours. Their working hours can vary by day, and
-                                        they can have multiple shifts or breaks during the day.
-                                      </Typography>
-                                    </Box>
-                                  }
-                                  arrow
-                                  placement='right'
-                                  componentsProps={{
-                                    tooltip: {
-                                      sx: {
-                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
-                                        maxWidth: 300,
-                                        '& .MuiTooltip-arrow': {
-                                          color: 'rgba(0, 0, 0, 0.9)'
-                                        }
-                                      }
-                                    }
-                                  }}
-                                >
-                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
-                                    <i
-                                      className='ri-information-line'
-                                      style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}
-                                    />
-                                  </IconButton>
-                                </Tooltip>
                               </Box>
                               {dynamicStaff.map(staff => (
                                 <Box
@@ -2005,49 +1929,6 @@ export function ShiftsTab() {
                                 <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
                                   ({staticStaff.length})
                                 </Typography>
-                                <Tooltip
-                                  title={
-                                    <Box sx={{ p: 1 }}>
-                                      <Typography
-                                        variant='caption'
-                                        fontWeight={600}
-                                        display='block'
-                                        gutterBottom
-                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
-                                      >
-                                        Static Staff / Rooms
-                                      </Typography>
-                                      <Typography
-                                        variant='caption'
-                                        display='block'
-                                        sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
-                                      >
-                                        Staff members and rooms with fixed working hours that remain the same every day.
-                                        They work single continuous shifts without breaks.
-                                      </Typography>
-                                    </Box>
-                                  }
-                                  arrow
-                                  placement='right'
-                                  componentsProps={{
-                                    tooltip: {
-                                      sx: {
-                                        bgcolor: 'rgba(0, 0, 0, 0.9)',
-                                        maxWidth: 300,
-                                        '& .MuiTooltip-arrow': {
-                                          color: 'rgba(0, 0, 0, 0.9)'
-                                        }
-                                      }
-                                    }
-                                  }}
-                                >
-                                  <IconButton size='small' sx={{ p: 0.25, ml: 'auto' }}>
-                                    <i
-                                      className='ri-information-line'
-                                      style={{ fontSize: 12, color: 'rgba(0,0,0,0.4)' }}
-                                    />
-                                  </IconButton>
-                                </Tooltip>
                               </Box>
                               {staticStaff.map(staff => (
                                 <Box
@@ -2241,9 +2122,9 @@ export function ShiftsTab() {
                 {Object.entries(staffByBranch).map(([branchId, branchStaff]) => {
                   const showBranchHeader = selectedBranch === 'all' // Only show header when viewing all branches
 
-                  // Group staff by type
-                  const dynamicStaff = branchStaff.filter(s => getStaffType(s.id) === 'dynamic')
-                  const staticStaff = branchStaff.filter(s => getStaffType(s.id) === 'static')
+                  // Group staff by type based on this column's date
+                  const dynamicStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, date) === 'dynamic')
+                  const staticStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, date) === 'static')
 
                   return (
                     <Box key={branchId}>

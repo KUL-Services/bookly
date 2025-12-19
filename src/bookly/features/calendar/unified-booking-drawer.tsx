@@ -1122,6 +1122,11 @@ export default function UnifiedBookingDrawer({
               if (!effectiveSlotId && existingEvent) {
                 effectiveSlotId = existingEvent.extendedProps?.slotId || null
 
+                // If we found a slotId from event props but don't have slot data yet, fetch it
+                if (effectiveSlotId && !displaySlotData) {
+                  displaySlotData = staticSlots.find(s => s.id === effectiveSlotId)
+                }
+
                 // If still no slotId, try to find slot by matching event properties
                 if (!effectiveSlotId) {
                   const eventStart = new Date(existingEvent.start)
@@ -1145,11 +1150,12 @@ export default function UnifiedBookingDrawer({
 
                   if (matchingSlot) {
                     effectiveSlotId = matchingSlot.id
+                    displaySlotData = matchingSlot // Set displaySlotData immediately when found
                   }
                 }
               }
 
-              // Get slot data synchronously for display
+              // Get slot data synchronously for display (if not already set above)
               if (effectiveSlotId && !displaySlotData) {
                 displaySlotData = staticSlots.find(s => s.id === effectiveSlotId)
                 console.log('⚠️ DRAWER Sync slot data fetch:', {
@@ -1162,42 +1168,9 @@ export default function UnifiedBookingDrawer({
               // Get total capacity from slot data
               let totalCapacity = displaySlotData?.capacity || 10
 
-              // ALWAYS count from events for consistency with calendar view
-              // This ensures capacity numbers match between calendar chip and modal
-              let bookedCount = 0
-
-              // Use existingEvent's date if available (for initial render), otherwise use date state
-              const effectiveDate = existingEvent ? new Date(existingEvent.start) : date
-
-              if (displaySlotData && effectiveSlotId) {
-                // First try: get bookings by slotId
-                let slotBookings = getSlotBookings(effectiveSlotId, effectiveDate)
-
-                // Second try: if no bookings found by slotId, match by time/location
-                if (slotBookings.length === 0) {
-                  const dateStr = effectiveDate.toISOString().split('T')[0]
-                  const eventTimeToMatch = displaySlotData.startTime || effectiveDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-
-                  slotBookings = events.filter(e => {
-                    const eventStart = new Date(e.start)
-                    const eventDateStr = eventStart.toISOString().split('T')[0]
-                    if (eventDateStr !== dateStr) return false
-                    if (e.extendedProps.status === 'cancelled') return false
-
-                    const eventTime = eventStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-                    if (eventTime !== eventTimeToMatch) return false
-
-                    // Match by room or staff
-                    if (displaySlotData.roomId && e.extendedProps.roomId === displaySlotData.roomId) return true
-                    if (displaySlotData.instructorStaffId && e.extendedProps.staffId === displaySlotData.instructorStaffId) return true
-
-                    return false
-                  })
-                }
-
-                // Count events (sum party sizes like calendar view does)
-                bookedCount = slotBookings.reduce((sum, e) => sum + (e.extendedProps.partySize || 1), 0)
-              }
+              // Use slotClients.length for real-time capacity tracking
+              // This ensures the UI updates immediately when adding/removing clients
+              const bookedCount = slotClients.length
 
               console.log('💡 DRAWER Capacity calculation:', {
                 selectedSlotId,
@@ -1208,8 +1181,7 @@ export default function UnifiedBookingDrawer({
                 bookedCount,
                 slotClientsLength: slotClients.length,
                 slotClients,
-                calculationMethod: 'events (same as calendar)',
-                effectiveDate
+                calculationMethod: 'slotClients.length (real-time)'
               })
               const availableCapacity = totalCapacity - bookedCount
               const isLow = availableCapacity < totalCapacity * 0.3

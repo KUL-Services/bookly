@@ -370,8 +370,11 @@ export default function UnifiedMultiResourceWeekView({
                         return null // Don't show chip on dynamic resources
                       }
 
-                      // Extract slotId for capacity calculation (if it exists)
+                      // Extract slotId and time info for capacity calculation
                       const slotId = event.extendedProps?.slotId
+                      const eventStartTime = format(new Date(event.start), 'HH:mm')
+                      const eventEndTime = format(new Date(event.end), 'HH:mm')
+
                       // This prevents showing "2/1" multiple times when there are multiple bookings
                       if (slotId) {
                         // If has slotId, only show on first event of that slot
@@ -381,9 +384,15 @@ export default function UnifiedMultiResourceWeekView({
                           return null
                         }
                       } else {
-                        // If no slotId, only show on first event of the day for this resource
-                        const isFirstEventOfDay = dayEvents[0]?.id === event.id
-                        if (!isFirstEventOfDay) {
+                        // If no slotId, show chip only on first event within the same time slot
+                        const sameTimeSlotEvents = dayEvents.filter(e => {
+                          const eStartTime = format(new Date(e.start), 'HH:mm')
+                          const eEndTime = format(new Date(e.end), 'HH:mm')
+                          // Events with overlapping time
+                          return eStartTime < eventEndTime && eEndTime > eventStartTime
+                        })
+                        const isFirstInTimeSlot = sameTimeSlotEvents[0]?.id === event.id
+                        if (!isFirstInTimeSlot) {
                           return null
                         }
                       }
@@ -413,29 +422,34 @@ export default function UnifiedMultiResourceWeekView({
                       let totalCapacity: number
                       let chipColor: 'success' | 'warning' | 'error'
 
-                      if (capacityInfo) {
+                      // Check if we have valid slot data (total > 0 means slot was found)
+                      const hasValidSlotData = capacityInfo && capacityInfo.total > 0
+
+                      if (hasValidSlotData) {
                         // Use real capacity data from slot
                         bookedCount = capacityInfo.total - capacityInfo.remainingCapacity
                         totalCapacity = capacityInfo.total
                         const percentRemaining = (capacityInfo.remainingCapacity / totalCapacity) * 100
                         chipColor = percentRemaining > 50 ? 'success' : percentRemaining > 20 ? 'warning' : 'error'
                       } else {
-                        // No slot data - count bookings manually for this resource
+                        // No slot data - count bookings manually for this resource's time slot
                         const allResourceEvents = events.filter(e => {
-                          if (isStaticStaff) {
-                            return (
-                              e.extendedProps.staffId === resource.id &&
-                              isSameDay(new Date(e.start), eventDate) &&
-                              e.extendedProps.status !== 'cancelled'
-                            )
-                          } else {
-                            return (
-                              e.extendedProps.roomId === resource.id &&
-                              isSameDay(new Date(e.start), eventDate) &&
-                              e.extendedProps.status !== 'cancelled'
-                            )
-                          }
+                          // Must be same day and not cancelled
+                          if (!isSameDay(new Date(e.start), eventDate)) return false
+                          if (e.extendedProps.status === 'cancelled') return false
+
+                          // Match by resource (staff or room)
+                          if (isStaticStaff && e.extendedProps.staffId !== resource.id) return false
+                          if (isStaticRoom && e.extendedProps.roomId !== resource.id) return false
+
+                          // Only count events in overlapping time slots
+                          const eStartTime = format(new Date(e.start), 'HH:mm')
+                          const eEndTime = format(new Date(e.end), 'HH:mm')
+                          const hasOverlap = eStartTime < eventEndTime && eEndTime > eventStartTime
+
+                          return hasOverlap
                         })
+
                         // Sum party sizes (default to 1 if not specified) - matches isSlotAvailable logic
                         bookedCount = allResourceEvents.reduce((sum, e) => sum + (e.extendedProps.partySize || 1), 0)
                         totalCapacity = resource.maxConcurrentBookings || resource.capacity || 10
