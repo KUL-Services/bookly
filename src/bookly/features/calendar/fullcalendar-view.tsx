@@ -2,7 +2,7 @@
 
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { useTheme } from '@mui/material/styles'
-import { Box, Typography } from '@mui/material'
+import { Box, Typography, Chip } from '@mui/material'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -12,7 +12,18 @@ import type { DateSelectArg, EventClickArg, EventDropArg, DatesSetArg } from '@f
 import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 
 import { buildEventColors } from './utils'
-import type { CalendarEvent, CalendarView, DisplayMode, ColorScheme, HighlightFilters, DateRange, SchedulingMode, Room } from './types'
+import { useCalendarStore } from './state'
+import { mockStaff } from '@/bookly/data/mock-data'
+import type {
+  CalendarEvent,
+  CalendarView,
+  DisplayMode,
+  ColorScheme,
+  HighlightFilters,
+  DateRange,
+  SchedulingMode,
+  Room
+} from './types'
 
 interface FullCalendarViewProps {
   events: CalendarEvent[]
@@ -56,6 +67,12 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
   ) => {
     const calendarRef = useRef<FullCalendar>(null)
     const theme = useTheme()
+
+    // Get isSlotAvailable function at component level
+    const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
+    const getSlotsForDate = useCalendarStore(state => state.getSlotsForDate)
+    const staticSlots = useCalendarStore(state => state.staticSlots)
+    const visibleDateRange = useCalendarStore(state => state.visibleDateRange)
 
     // Helper to get room info
     const getRoomById = (roomId: string | undefined) => {
@@ -158,6 +175,71 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
       }
     })
 
+    // Generate background events for static slots (only in static mode)
+    const slotBackgroundEvents =
+      schedulingMode === 'static' && visibleDateRange
+        ? (() => {
+            const slotEvents: any[] = []
+            const start = new Date(visibleDateRange.start)
+            const end = new Date(visibleDateRange.end)
+
+            // Iterate through each day in the visible range
+            for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+              const daySlots = getSlotsForDate(new Date(date))
+
+              daySlots.forEach(slot => {
+                // Skip cancelled slots
+                if (slot.isCancelled) return
+
+                // Create date-time for this slot
+                const slotStart = new Date(date)
+                const [startHours, startMinutes] = slot.startTime.split(':').map(Number)
+                slotStart.setHours(startHours, startMinutes, 0, 0)
+
+                const slotEnd = new Date(date)
+                const [endHours, endMinutes] = slot.endTime.split(':').map(Number)
+                slotEnd.setHours(endHours, endMinutes, 0, 0)
+
+                // Get capacity info
+                const capacityInfo = isSlotAvailable(slot.id, new Date(date))
+
+                slotEvents.push({
+                  id: `slot-bg-${slot.id}-${date.toISOString().split('T')[0]}`,
+                  title: `${slot.serviceName} - ${capacityInfo.remainingCapacity}/${capacityInfo.total} spots`,
+                  start: slotStart,
+                  end: slotEnd,
+                  display: 'background',
+                  backgroundColor:
+                    capacityInfo.remainingCapacity === 0
+                      ? 'rgba(244, 67, 54, 0.1)'
+                      : capacityInfo.remainingCapacity < capacityInfo.total * 0.3
+                        ? 'rgba(255, 152, 0, 0.1)'
+                        : 'rgba(76, 175, 80, 0.1)',
+                  borderColor:
+                    capacityInfo.remainingCapacity === 0
+                      ? '#F44336'
+                      : capacityInfo.remainingCapacity < capacityInfo.total * 0.3
+                        ? '#FF9800'
+                        : '#4CAF50',
+                  extendedProps: {
+                    isSlotBackground: true,
+                    slotId: slot.id,
+                    capacity: capacityInfo.total,
+                    remaining: capacityInfo.remainingCapacity,
+                    serviceName: slot.serviceName,
+                    roomId: slot.roomId
+                  }
+                })
+              })
+            }
+
+            return slotEvents
+          })()
+        : []
+
+    // Combine regular events with slot background events
+    const allCalendarEvents = [...calendarEvents, ...slotBackgroundEvents]
+
     const isDark = theme.palette.mode === 'dark'
 
     return (
@@ -208,9 +290,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           },
           // Selection highlight styling
           '& .fc-highlight': {
-            backgroundColor: isDark
-              ? 'rgba(20, 184, 166, 0.2) !important'
-              : 'rgba(20, 184, 166, 0.15) !important',
+            backgroundColor: isDark ? 'rgba(20, 184, 166, 0.2) !important' : 'rgba(20, 184, 166, 0.15) !important',
             border: isDark
               ? '2px solid rgba(20, 184, 166, 0.5) !important'
               : '2px solid rgba(20, 184, 166, 0.6) !important',
@@ -219,9 +299,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             zIndex: 3
           },
           '& .fc-timegrid .fc-highlight': {
-            backgroundColor: isDark
-              ? 'rgba(20, 184, 166, 0.2) !important'
-              : 'rgba(20, 184, 166, 0.15) !important',
+            backgroundColor: isDark ? 'rgba(20, 184, 166, 0.2) !important' : 'rgba(20, 184, 166, 0.15) !important'
           },
           '& .fc-event': {
             cursor: 'pointer',
@@ -397,7 +475,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
               left: 0,
               right: 0,
               height: '1px',
-              backgroundImage: 'linear-gradient(to right, transparent 0%, transparent 50%, var(--fc-border-color) 50%, var(--fc-border-color) 100%)',
+              backgroundImage:
+                'linear-gradient(to right, transparent 0%, transparent 50%, var(--fc-border-color) 50%, var(--fc-border-color) 100%)',
               backgroundSize: '8px 1px',
               backgroundRepeat: 'repeat-x'
             }
@@ -408,7 +487,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             paddingTop: '4px'
           },
           '& .time-off-event, & .time-reservation-event': {
-            background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px) !important',
+            background:
+              'repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px) !important',
             opacity: '0.15 !important',
             pointerEvents: 'none',
             zIndex: 1
@@ -418,6 +498,19 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           },
           '& .time-reservation-event': {
             color: '#2196f3 !important'
+          },
+          '& .fc-bg-event': {
+            opacity: '1 !important',
+            border: '2px dashed',
+            borderRadius: '6px !important',
+            fontSize: '0.75rem',
+            fontWeight: 500,
+            padding: '4px 6px',
+            overflow: 'visible !important'
+          },
+          '& .fc-bg-event .fc-event-main': {
+            color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
+            padding: '2px 4px'
           },
           '& .fc-col-header-cell': {
             minWidth: { xs: '100px', sm: '120px', md: '140px' }
@@ -482,7 +575,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           initialView={view}
           headerToolbar={false}
           height='100%'
-          events={calendarEvents}
+          events={allCalendarEvents}
           editable={true}
           selectable={view === 'timeGridDay' || view === 'timeGridWeek'}
           selectMirror={true}
@@ -523,7 +616,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
               ? { weekday: 'short', month: 'short', day: 'numeric' }
               : { weekday: 'short', day: 'numeric' }
           }
-          dayHeaderContent={(arg) => {
+          dayHeaderContent={arg => {
             const date = arg.date
             const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
             const dayNumber = date.getDate()
@@ -543,7 +636,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   <Typography
-                    variant="caption"
+                    variant='caption'
                     sx={{
                       fontWeight: 600,
                       color: 'text.secondary',
@@ -554,7 +647,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                   </Typography>
                   {monthName && (
                     <Typography
-                      variant="caption"
+                      variant='caption'
                       sx={{
                         fontWeight: 600,
                         color: 'text.secondary',
@@ -565,7 +658,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                     </Typography>
                   )}
                   <Typography
-                    variant="caption"
+                    variant='caption'
                     sx={{
                       fontWeight: 600,
                       color: 'text.secondary',
@@ -576,7 +669,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                   </Typography>
                 </Box>
                 <Typography
-                  variant="caption"
+                  variant='caption'
                   sx={{
                     color: 'text.secondary',
                     fontSize: '0.65rem',
@@ -593,9 +686,75 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           eventContent={arg => {
             const { event, timeText } = arg
             const props = event.extendedProps
+
+            // Handle slot background events differently
+            if (props.isSlotBackground && event.display === 'background') {
+              return (
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    padding: 1,
+                    textAlign: 'center'
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      lineHeight: 1.2,
+                      color:
+                        props.remaining === 0
+                          ? '#D32F2F'
+                          : props.remaining < props.capacity * 0.3
+                            ? '#F57C00'
+                            : '#388E3C'
+                    }}
+                  >
+                    {props.serviceName}
+                  </Typography>
+                  <Chip
+                    icon={<i className='ri-user-line' style={{ fontSize: '0.7rem' }} />}
+                    label={`${props.remaining}/${props.capacity}`}
+                    size='small'
+                    color={
+                      props.remaining === 0 ? 'error' : props.remaining < props.capacity * 0.3 ? 'warning' : 'success'
+                    }
+                    sx={{
+                      height: '20px',
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      '& .MuiChip-label': { px: 1, py: 0 },
+                      '& .MuiChip-icon': { marginLeft: '4px', marginRight: '-2px' }
+                    }}
+                  />
+                </Box>
+              )
+            }
+
             const room = getRoomById(props.roomId)
-            const isStatic = schedulingMode === 'static'
-            const isDynamic = schedulingMode === 'dynamic'
+
+            // Check if this is a static slot event by multiple criteria
+            const isStaticSlot =
+              schedulingMode === 'static' ||
+              props.slotId ||
+              props.isStaticSlot ||
+              (props.staffId && mockStaff.find(s => s.id === props.staffId)?.staffType === 'static') ||
+              (props.roomId && rooms.find(r => r.id === props.roomId)?.roomType === 'static')
+
+            const isDynamic = !isStaticSlot
+
+            // Get capacity info for static slots
+            let capacityInfo = null
+            if (isStaticSlot && event.start && props.slotId) {
+              const eventDate = new Date(event.start)
+              capacityInfo = isSlotAvailable(props.slotId, eventDate)
+            }
 
             return (
               <Box
@@ -660,7 +819,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                   </Box>
                 )}
                 {/* Show room for static mode */}
-                {room && isStatic && (
+                {room && isStaticSlot && (
                   <Box
                     sx={{
                       display: 'flex',
@@ -697,6 +856,43 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                     </Box>
                   </Box>
                 )}
+                {/* Capacity indicator for static slots */}
+                {isStaticSlot && capacityInfo && (
+                  <Box
+                    sx={{
+                      mt: 0.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5
+                    }}
+                  >
+                    <Chip
+                      icon={<i className='ri-user-line' style={{ fontSize: '0.75rem' }} />}
+                      label={`${capacityInfo.remainingCapacity}/${capacityInfo.total}`}
+                      size='small'
+                      color={
+                        capacityInfo.remainingCapacity === 0
+                          ? 'error'
+                          : capacityInfo.remainingCapacity < capacityInfo.total * 0.3
+                            ? 'warning'
+                            : 'success'
+                      }
+                      sx={{
+                        height: '18px',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        '& .MuiChip-label': {
+                          px: 0.75,
+                          py: 0
+                        },
+                        '& .MuiChip-icon': {
+                          marginLeft: '4px',
+                          marginRight: '-2px'
+                        }
+                      }}
+                    />
+                  </Box>
+                )}
                 {/* Show staff for dynamic mode */}
                 {props.staffName && isDynamic && (
                   <Box
@@ -709,7 +905,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                       overflow: 'hidden'
                     }}
                   >
-                    <i className="ri-user-line" style={{ fontSize: '0.75rem', flexShrink: 0 }} />
+                    <i className='ri-user-line' style={{ fontSize: '0.75rem', flexShrink: 0 }} />
                     <Box
                       sx={{
                         fontSize: '0.65rem',

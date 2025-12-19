@@ -53,7 +53,7 @@ interface SlotClient {
   email: string
   phone: string
   bookedAt: string
-  status: 'confirmed' | 'no_show' | 'completed'
+  status: 'confirmed' | 'no_show' | 'completed' | 'pending'
   arrivalTime?: string
 }
 
@@ -322,7 +322,7 @@ export default function UnifiedBookingDrawer({
     }
 
     // Capacity validation
-    const totalCapacity = 20 // Mock capacity - in real app from slot data
+    const totalCapacity = 10 // Mock capacity - in real app from slot data
     const availableCapacity = totalCapacity - slotClients.length
 
     if (availableCapacity === 0) {
@@ -795,7 +795,7 @@ export default function UnifiedBookingDrawer({
           {effectiveSchedulingMode === 'static' &&
             (() => {
               // Calculate capacity at the top level for reuse
-              const totalCapacity = 20 // Mock capacity - in real app from slot data
+              const totalCapacity = 10 // Mock capacity - in real app from slot data
               const bookedCount = slotClients.length
               const availableCapacity = totalCapacity - bookedCount
               const isLow = availableCapacity < totalCapacity * 0.3
@@ -883,7 +883,15 @@ export default function UnifiedBookingDrawer({
                                     {client.name}
                                   </Typography>
                                   <Typography variant='caption' color='text.secondary'>
-                                    Added: {new Date(client.bookedAt).toLocaleDateString()}
+                                    Added:{' '}
+                                    {new Date(client.bookedAt).toLocaleString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric',
+                                      hour: 'numeric',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })}
                                   </Typography>
                                 </Box>
                               </Box>
@@ -914,7 +922,7 @@ export default function UnifiedBookingDrawer({
 
                             {/* Editable Status and Arrival Time */}
                             <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-                              <FormControl size='small' sx={{ minWidth: 130 }}>
+                              <FormControl size='small' sx={{ minWidth: 130, flex: 1 }}>
                                 <InputLabel>Status</InputLabel>
                                 <Select
                                   value={client.status}
@@ -927,6 +935,12 @@ export default function UnifiedBookingDrawer({
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                       <i className='ri-checkbox-circle-line' style={{ color: '#4caf50' }} />
                                       Confirmed
+                                    </Box>
+                                  </MenuItem>
+                                  <MenuItem value='pending'>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                      <i className='ri-time-line' style={{ color: '#ff9800' }} />
+                                      Not Yet Confirmed / Pending Confirmation
                                     </Box>
                                   </MenuItem>
                                   <MenuItem value='no_show'>
@@ -943,13 +957,15 @@ export default function UnifiedBookingDrawer({
                                   </MenuItem>
                                 </Select>
                               </FormControl>
-                              <TimeSelectField
-                                label='Arrival Time'
-                                value={client.arrivalTime || ''}
-                                onChange={time => handleClientArrivalChange(client.id, time)}
-                                size='small'
-                                fullWidth={false}
-                              />
+                              <Box sx={{ minWidth: 130, flex: 1 }}>
+                                <TimeSelectField
+                                  label='Arrival Time'
+                                  value={client.arrivalTime || ''}
+                                  onChange={time => handleClientArrivalChange(client.id, time)}
+                                  size='small'
+                                  fullWidth
+                                />
+                              </Box>
                             </Box>
                           </Paper>
                         ))
