@@ -46,6 +46,15 @@ function syncWithCalendar() {
 // Staff Management State
 // ============================================================================
 
+// Interface for staff type transition
+export interface StaffTypeTransition {
+  staffId: string
+  fromType: StaffType
+  toType: StaffType
+  effectiveDate: Date // Date when the change becomes effective
+  createdAt: Date
+}
+
 export interface StaffManagementState {
   // Business hours (branch-specific)
   businessHours: Record<string, WeeklyBusinessHours> // branchId -> WeeklyBusinessHours
@@ -54,6 +63,7 @@ export interface StaffManagementState {
   staffWorkingHours: Record<string, WeeklyStaffHours>
   staffServiceAssignments: Record<string, string[]> // staffId -> serviceIds[]
   staffTypeUpdates: Record<string, StaffType> // Track staff type changes for re-rendering
+  staffTypeTransitions: StaffTypeTransition[] // Track pending and historical type transitions
   updateCounter: number // Force re-render counter
 
   // Time management
@@ -147,6 +157,10 @@ export interface StaffManagementState {
 
   // Actions - Staff Type & Room Assignments
   getStaffType: (staffId: string) => StaffType
+  getStaffTypeForDate: (staffId: string, date: Date) => StaffType
+  scheduleStaffTypeChange: (staffId: string, targetType: StaffType, effectiveDate: Date) => void
+  getPendingStaffTypeChange: (staffId: string) => StaffTypeTransition | null
+  cancelStaffTypeChange: (staffId: string) => void
   updateStaffType: (staffId: string, staffType: StaffType) => void
   updateRoomType: (roomId: string, roomType: 'dynamic' | 'static') => void
   assignStaffToRoom: (staffId: string, roomAssignment: RoomAssignment) => void
@@ -198,6 +212,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   staffWorkingHours: mockStaffWorkingHours,
   staffServiceAssignments: mockStaffServiceAssignments,
   staffTypeUpdates: {},
+  staffTypeTransitions: [],
   updateCounter: 0,
   timeReservations: mockTimeReservations,
   timeOffRequests: mockTimeOffRequests,
@@ -783,6 +798,65 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     // Fall back to mockStaff
     const staff = mockStaff.find(s => s.id === staffId)
     return staff?.staffType || 'dynamic'
+  },
+
+  getStaffTypeForDate: (staffId, date) => {
+    const state = get()
+
+    // Check for transitions affecting this date
+    const transition = state.staffTypeTransitions
+      .filter(t => t.staffId === staffId)
+      .find(t => date >= t.effectiveDate)
+
+    if (transition) {
+      return transition.toType
+    }
+
+    // Fall back to current type
+    return get().getStaffType(staffId)
+  },
+
+  scheduleStaffTypeChange: (staffId, targetType, effectiveDate) => {
+    const currentType = get().getStaffType(staffId)
+
+    // Remove any existing pending transition for this staff
+    set(state => ({
+      staffTypeTransitions: [
+        ...state.staffTypeTransitions.filter(t => t.staffId !== staffId || t.effectiveDate < new Date()),
+        {
+          staffId,
+          fromType: currentType,
+          toType: targetType,
+          effectiveDate,
+          createdAt: new Date()
+        }
+      ]
+    }))
+
+    // If effective date is today or in the past, apply immediately
+    if (effectiveDate <= new Date()) {
+      get().updateStaffType(staffId, targetType)
+    }
+
+    syncWithCalendar()
+  },
+
+  getPendingStaffTypeChange: staffId => {
+    const state = get()
+    return (
+      state.staffTypeTransitions
+        .filter(t => t.staffId === staffId && t.effectiveDate > new Date())
+        .sort((a, b) => a.effectiveDate.getTime() - b.effectiveDate.getTime())[0] || null
+    )
+  },
+
+  cancelStaffTypeChange: staffId => {
+    set(state => ({
+      staffTypeTransitions: state.staffTypeTransitions.filter(
+        t => !(t.staffId === staffId && t.effectiveDate > new Date())
+      )
+    }))
+    syncWithCalendar()
   },
 
   updateStaffType: (staffId, staffType) => {

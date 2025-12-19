@@ -1649,11 +1649,33 @@ export const mockBookings: Booking[] = [
     businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
     serviceName: 'Gel Manicure',
     staffMemberName: 'Lisa Chen',
-    date: new Date('2025-12-14'),
+    date: new Date('2025-12-19'),
     time: '11:00 AM',
     duration: 45,
     price: 35,
-    status: 'confirmed'
+    status: 'confirmed',
+    slotId: 'slot-nail-thu-morning',
+    roomId: 'room-2-1-1',
+    partySize: 1
+  },
+  {
+    id: 'booking-today-4b',
+    businessId: '2',
+    branchId: '2-1',
+    branchName: "Bliss Nail Bar - King's Road",
+    businessName: 'Bliss Nail Bar',
+    businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
+    serviceName: 'Gel Manicure',
+    staffMemberName: 'Lisa Chen',
+    date: new Date('2025-12-19'),
+    time: '11:00 AM',
+    duration: 45,
+    price: 35,
+    status: 'confirmed',
+    slotId: 'slot-nail-thu-morning',
+    roomId: 'room-2-1-1',
+    partySize: 1,
+    notes: 'Second client at 11am'
   },
   {
     id: 'booking-today-5',
@@ -1664,12 +1686,15 @@ export const mockBookings: Booking[] = [
     businessImage: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&h=300&fit=crop',
     serviceName: 'Gel Manicure',
     staffMemberName: 'Lisa Chen',
-    date: new Date('2025-12-14'),
+    date: new Date('2025-12-19'),
     time: '2:00 PM',
     duration: 45,
     price: 35,
     status: 'confirmed',
-    notes: 'Holiday nail art'
+    notes: 'Holiday nail art',
+    slotId: 'slot-nail-thu-afternoon',
+    roomId: 'room-2-1-1',
+    partySize: 1
   },
   {
     id: 'booking-today-6',
@@ -2793,7 +2818,20 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     price: 50
   },
 
-  // Lisa Chen nail slot - Thursday afternoon
+  // Lisa Chen nail slots - Thursday
+  {
+    id: 'slot-nail-thu-morning',
+    roomId: 'room-2-1-1',
+    branchId: '2-1',
+    dayOfWeek: 'Thu',
+    startTime: '11:00',
+    endTime: '12:00',
+    serviceId: 'nail-1',
+    serviceName: 'Gel Manicure',
+    capacity: 3,
+    instructorStaffId: '3',
+    price: 35
+  },
   {
     id: 'slot-nail-thu-afternoon',
     roomId: 'room-2-1-1',

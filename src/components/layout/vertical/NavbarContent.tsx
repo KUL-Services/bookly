@@ -118,7 +118,7 @@ const NavbarContent = () => {
         {/* <ModeDropdown /> */}
         {/* <ShortcutsDropdown shortcuts={shortcuts} /> */}
         {/* <NotificationsDropdown notifications={notifications} /> */}
-        {/* <UserDropdown /> */}
+        <UserDropdown />
       </div>
     </div>
   )

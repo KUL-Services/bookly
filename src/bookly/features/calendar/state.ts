@@ -630,10 +630,42 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   },
 
   isSlotAvailable: (slotId, date) => {
-    const { staticSlots } = get()
-    const slot = staticSlots.find(s => s.id === slotId)
+    const { staticSlots, events } = get()
+    let slot = staticSlots.find(s => s.id === slotId)
+
+    // If slot not found by ID, try to find by matching event's slot reference
+    if (!slot && slotId) {
+      // Try to find an event with this slotId to get slot info
+      const eventWithSlot = events.find(e => e.extendedProps.slotId === slotId)
+      if (eventWithSlot) {
+        // Try to find a slot that matches the event's time and location
+        const eventStart = new Date(eventWithSlot.start)
+        const eventTime = eventStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+        const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        const dayOfWeek = dayNames[eventStart.getDay()]
+        const dateStr = eventStart.toISOString().split('T')[0]
+
+        slot = staticSlots.find(s => {
+          // Match by day
+          const dayMatch = s.date === dateStr || s.dayOfWeek === dayOfWeek
+          if (!dayMatch) return false
+
+          // Match by time
+          if (s.startTime !== eventTime) return false
+
+          // Match by room or staff
+          const roomId = eventWithSlot.extendedProps.roomId
+          const staffId = eventWithSlot.extendedProps.staffId
+          if (roomId && s.roomId === roomId) return true
+          if (staffId && s.instructorStaffId === staffId) return true
+
+          return false
+        })
+      }
+    }
 
     if (!slot) {
+      // Return null-like values to indicate slot not found (caller can use fallback logic)
       return { available: false, remainingCapacity: 0, total: 0 }
     }
 

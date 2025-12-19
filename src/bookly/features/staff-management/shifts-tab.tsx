@@ -38,6 +38,7 @@ import { StaffEditWorkingHoursModal } from './staff-edit-working-hours-modal'
 import { TimeOffModal } from './time-off-modal'
 import { ShiftEditorModal } from './shift-editor-modal'
 import { CalendarPopover } from './calendar-popover'
+import { StaffTypeChangeDialog } from './staff-type-change-dialog'
 import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -306,6 +307,15 @@ export function ShiftsTab() {
   const [calendarAnchor, setCalendarAnchor] = useState<null | HTMLElement>(null)
   const calendarOpen = Boolean(calendarAnchor)
 
+  // Staff type change dialog state
+  const [isStaffTypeChangeDialogOpen, setIsStaffTypeChangeDialogOpen] = useState(false)
+  const [staffTypeChangeContext, setStaffTypeChangeContext] = useState<{
+    staffId: string
+    staffName: string
+    currentType: 'dynamic' | 'static'
+    targetType: 'dynamic' | 'static'
+  } | null>(null)
+
   const {
     timeOffRequests,
     getStaffWorkingHours,
@@ -313,6 +323,10 @@ export function ShiftsTab() {
     getBusinessHours,
     updateStaffType,
     getStaffType,
+    getStaffTypeForDate,
+    scheduleStaffTypeChange,
+    getPendingStaffTypeChange,
+    cancelStaffTypeChange,
     updateCounter
   } = useStaffManagementStore()
 
@@ -485,6 +499,37 @@ export function ShiftsTab() {
 
   const handlePrint = () => {
     window.print()
+  }
+
+  const handleStaffTypeToggle = (staffId: string, staffName: string, newTypeChecked: boolean) => {
+    const currentType = getStaffType(staffId)
+    const targetType = newTypeChecked ? 'static' : 'dynamic'
+
+    // Check if there's a pending change
+    const pendingChange = getPendingStaffTypeChange(staffId)
+
+    if (pendingChange) {
+      // Cancel pending change and revert to original type
+      cancelStaffTypeChange(staffId)
+      return
+    }
+
+    // Open confirmation dialog
+    setStaffTypeChangeContext({
+      staffId,
+      staffName,
+      currentType,
+      targetType
+    })
+    setIsStaffTypeChangeDialogOpen(true)
+  }
+
+  const handleStaffTypeChangeConfirm = (effectiveDate: Date) => {
+    if (!staffTypeChangeContext) return
+
+    scheduleStaffTypeChange(staffTypeChangeContext.staffId, staffTypeChangeContext.targetType, effectiveDate)
+    setIsStaffTypeChangeDialogOpen(false)
+    setStaffTypeChangeContext(null)
   }
 
   const handleDragEnd = useCallback((event: any) => {
@@ -730,62 +775,70 @@ export function ShiftsTab() {
           </Box>
 
           {/* Staff Type Toggle */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={getStaffType(staff.id) === 'static'}
-                  onChange={e => {
-                    const newType = e.target.checked ? 'static' : 'dynamic'
-                    updateStaffType(staff.id, newType)
-                  }}
-                  size='small'
-                />
-              }
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <i
-                    className={getStaffType(staff.id) === 'static' ? 'ri-group-line' : 'ri-user-line'}
-                    style={{ fontSize: 12 }}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {(() => {
+                const currentStaffType = getStaffType(staff.id)
+                const pendingChange = getPendingStaffTypeChange(staff.id)
+
+                return (
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={currentStaffType === 'static'}
+                        onChange={e => {
+                          handleStaffTypeToggle(staff.id, staff.name, e.target.checked)
+                        }}
+                        size='small'
+                        color={pendingChange ? 'warning' : 'primary'}
+                      />
+                    }
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <i
+                          className={currentStaffType === 'static' ? 'ri-group-line' : 'ri-user-line'}
+                          style={{ fontSize: 12 }}
+                        />
+                        <Typography variant='caption' fontSize='0.65rem'>
+                          {currentStaffType === 'static' ? 'Static' : 'Dynamic'}
+                        </Typography>
+                      </Box>
+                    }
+                    sx={{ ml: 0, mr: 1 }}
                   />
-                  <Typography variant='caption' fontSize='0.65rem'>
-                    {getStaffType(staff.id) === 'static' ? 'Static' : 'Dynamic'}
-                  </Typography>
-                </Box>
-              }
-              sx={{ ml: 0, mr: 1 }}
-            />
-            <Tooltip
-              title={
-                <Box sx={{ p: 0.5 }}>
-                  <Typography variant='caption' fontWeight={600} display='block' gutterBottom>
-                    Dynamic vs Static Scheduling
-                  </Typography>
-                  <Typography variant='caption' display='block' sx={{ mb: 1 }}>
-                    <strong>Dynamic:</strong> One-on-one appointments. Staff works with one client at a time.
-                  </Typography>
-                  <Typography variant='caption' display='block'>
-                    <strong>Static:</strong> Group sessions with capacity. Staff can serve multiple clients
-                    simultaneously (e.g., classes, group training).
-                  </Typography>
-                </Box>
-              }
-              arrow
-              placement='right'
-            >
-              <IconButton size='small' sx={{ p: 0.25 }}>
-                <i className='ri-information-line' style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }} />
-              </IconButton>
-            </Tooltip>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                fontSize: '0.65rem',
-                color: 'text.secondary',
-                ml: 'auto'
-              }}
-            >
+                )
+              })()}
+              <Tooltip
+                title={
+                  <Box sx={{ p: 0.5 }}>
+                    <Typography variant='caption' fontWeight={600} display='block' gutterBottom>
+                      Dynamic vs Static Scheduling
+                    </Typography>
+                    <Typography variant='caption' display='block' sx={{ mb: 1 }}>
+                      <strong>Dynamic:</strong> One-on-one appointments. Staff works with one client at a time.
+                    </Typography>
+                    <Typography variant='caption' display='block'>
+                      <strong>Static:</strong> Group sessions with capacity. Staff can serve multiple clients
+                      simultaneously (e.g., classes, group training).
+                    </Typography>
+                  </Box>
+                }
+                arrow
+                placement='right'
+              >
+                <IconButton size='small' sx={{ p: 0.25 }}>
+                  <i className='ri-information-line' style={{ fontSize: 14, color: 'rgba(0,0,0,0.4)' }} />
+                </IconButton>
+              </Tooltip>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  fontSize: '0.65rem',
+                  color: 'text.secondary',
+                  ml: 'auto'
+                }}
+              >
               {viewMode === 'Day' && (
                 <Typography variant='caption'>
                   {hasShift && firstShift
@@ -808,6 +861,30 @@ export function ShiftsTab() {
                 </>
               )}
             </Box>
+            </Box>
+            {/* Pending Type Change Indicator */}
+            {(() => {
+              const pendingChange = getPendingStaffTypeChange(staff.id)
+              return pendingChange ? (
+                <Box sx={{ pl: 4 }}>
+                  <Chip
+                    label={`Changing to ${pendingChange.toType} on ${format(pendingChange.effectiveDate, 'MMM d, yyyy')}`}
+                    size='small'
+                    color='warning'
+                    variant='outlined'
+                    icon={<i className='ri-calendar-event-line' style={{ fontSize: '0.7rem' }} />}
+                    onDelete={() => cancelStaffTypeChange(staff.id)}
+                    deleteIcon={<i className='ri-close-line' style={{ fontSize: '0.9rem' }} />}
+                    sx={{
+                      height: 20,
+                      fontSize: '0.65rem',
+                      '& .MuiChip-label': { px: 1 },
+                      '& .MuiChip-icon': { ml: 0.5 }
+                    }}
+                  />
+                </Box>
+              ) : null
+            })()}
           </Box>
         </Box>
 
@@ -822,6 +899,9 @@ export function ShiftsTab() {
               const durationMinutes = endH * 60 + endM - (startH * 60 + startM)
               const hours = Math.floor(durationMinutes / 60)
 
+              // Use date-based staff type to show transitions
+              const staffTypeForDate = getStaffTypeForDate(staff.id, selectedDate)
+
               return (
                 <Box key={shift.id}>
                   {/* Main Shift Box */}
@@ -833,13 +913,13 @@ export function ShiftsTab() {
                       top: shifts.length > 1 ? `${idx * (100 / shifts.length)}%` : 0,
                       height: shifts.length > 1 ? `${Math.floor(90 / shifts.length)}%` : '100%',
                       bgcolor:
-                        getStaffType(staff.id) === 'dynamic'
+                        staffTypeForDate === 'dynamic'
                           ? 'rgba(139, 195, 74, 0.3)'
                           : theme =>
                               theme.palette.mode === 'dark' ? 'rgba(120, 120, 120, 0.3)' : 'rgba(158, 158, 158, 0.25)',
                       borderRadius: 1,
                       border: 1,
-                      borderColor: getStaffType(staff.id) === 'dynamic' ? 'success.light' : 'grey.400',
+                      borderColor: staffTypeForDate === 'dynamic' ? 'success.light' : 'grey.400',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -847,13 +927,13 @@ export function ShiftsTab() {
                       transition: 'all 0.2s',
                       '&:hover': {
                         bgcolor:
-                          getStaffType(staff.id) === 'dynamic'
+                          staffTypeForDate === 'dynamic'
                             ? 'rgba(139, 195, 74, 0.4)'
                             : theme =>
                                 theme.palette.mode === 'dark'
                                   ? 'rgba(120, 120, 120, 0.4)'
                                   : 'rgba(158, 158, 158, 0.35)',
-                        borderColor: getStaffType(staff.id) === 'dynamic' ? 'success.main' : 'grey.500'
+                        borderColor: staffTypeForDate === 'dynamic' ? 'success.main' : 'grey.500'
                       }
                     }}
                   >
@@ -1604,6 +1684,22 @@ export function ShiftsTab() {
             onDateSelect={handleDateSelect}
             onJumpWeek={handleJumpWeek}
           />
+
+          {/* Staff Type Change Confirmation Dialog */}
+          {staffTypeChangeContext && (
+            <StaffTypeChangeDialog
+              open={isStaffTypeChangeDialogOpen}
+              onClose={() => {
+                setIsStaffTypeChangeDialogOpen(false)
+                setStaffTypeChangeContext(null)
+              }}
+              staffId={staffTypeChangeContext.staffId}
+              staffName={staffTypeChangeContext.staffName}
+              currentType={staffTypeChangeContext.currentType}
+              targetType={staffTypeChangeContext.targetType}
+              onConfirm={handleStaffTypeChangeConfirm}
+            />
+          )}
         </Box>
       </DndContext>
     )

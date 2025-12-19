@@ -120,6 +120,7 @@ export interface CalendarEvent extends EventInput {
     bookingId: string
     slotId?: string // For static scheduling mode - links booking to a specific slot
     roomId?: string // For static scheduling mode - indicates which room
+    isStaticSlot?: boolean // Flag indicating this event belongs to a static slot
     partySize?: number // For group bookings (default 1)
     branchId?: string // Branch where this appointment takes place
     branchName?: string // Branch name for display
@@ -131,6 +132,7 @@ export interface CalendarEvent extends EventInput {
     allDay?: boolean // For all-day time off
     note?: string // Additional notes
     arrivalTime?: string // Actual customer arrival/walk-in time (HH:MM format)
+    instapayReference?: string // Instapay payment reference number
   }
 }
 
