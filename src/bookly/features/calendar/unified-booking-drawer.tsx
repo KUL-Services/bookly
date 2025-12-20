@@ -69,6 +69,10 @@ const isTimeWithinSlot = (time: string, startTime: string, endTime: string): boo
   return current >= timeToMinutes(startTime) && current < timeToMinutes(endTime)
 }
 
+const normalizeEmail = (email: string): string => {
+  return email.trim().toLowerCase()
+}
+
 // Type for client in static slot
 interface SlotClient {
   id: string
@@ -411,6 +415,12 @@ export default function UnifiedBookingDrawer({
     return realSlotData?.capacity ?? fallbackSlot?.capacity ?? roomCapacity ?? staffCapacity ?? 10
   }
 
+  const hasDuplicateEmail = (email: string) => {
+    const normalized = normalizeEmail(email)
+    if (!normalized) return false
+    return slotClients.some(client => normalizeEmail(client.email) === normalized)
+  }
+
   const resolveSlotForEvent = (event?: CalendarEvent | null) => {
     if (!event) return null
 
@@ -422,6 +432,7 @@ export default function UnifiedBookingDrawer({
     }
 
     const eventStart = new Date(event.start)
+    const eventEnd = new Date(event.end)
     const eventTime = getTimeKey(eventStart)
     const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = [
       'Sun',
@@ -451,11 +462,34 @@ export default function UnifiedBookingDrawer({
       return { slotId: matchingSlot.id, slot: matchingSlot }
     }
 
-    if (directSlotId) {
-      return { slotId: directSlotId, slot: directSlot }
+    const staffId = props?.staffId || ''
+    const roomId = props?.roomId || ''
+    if (!staffId && !roomId) {
+      return directSlotId ? { slotId: directSlotId, slot: directSlot } : null
     }
 
-    return null
+    const staff = staffId ? mockStaff.find(s => s.id === staffId) : null
+    const room = roomId ? mockRooms.find(r => r.id === roomId) : null
+    const startTime = getTimeKey(eventStart)
+    const endTime = getTimeKey(eventEnd)
+    const fallbackSlotId =
+      directSlotId || `virtual-${roomId || staffId}-${dateStr}-${startTime.replace(':', '')}-${endTime.replace(':', '')}`
+    const fallbackSlot = {
+      id: fallbackSlotId,
+      roomId: roomId || '',
+      branchId: props?.branchId || staff?.branchId || room?.branchId || '',
+      dayOfWeek: dayNames[eventStart.getDay()],
+      date: dateStr,
+      startTime,
+      endTime,
+      serviceId: props?.serviceId || '',
+      serviceName: props?.serviceName || event.title || 'Service',
+      capacity: room?.capacity ?? staff?.maxConcurrentBookings ?? 10,
+      instructorStaffId: staffId || '',
+      price: props?.price || 0
+    }
+
+    return { slotId: fallbackSlotId, slot: fallbackSlot }
   }
 
   const handleServiceChange = (newServiceId: string) => {
@@ -478,6 +512,15 @@ export default function UnifiedBookingDrawer({
 
       // If in static mode and adding client, add to slot clients list
       if (effectiveSchedulingMode === 'static' && isAddingClient) {
+        if (!client.email?.trim()) {
+          setValidationError('Client email is required to avoid duplicates')
+          return
+        }
+        if (hasDuplicateEmail(client.email)) {
+          setValidationError('This client is already booked in this slot')
+          return
+        }
+
         const totalCapacity = getSlotCapacity()
         if (slotClients.length >= totalCapacity) {
           setValidationError('Cannot add client: Slot is at maximum capacity')
@@ -504,6 +547,14 @@ export default function UnifiedBookingDrawer({
   const handleAddClientToSlot = () => {
     if (!newClientName.trim()) {
       setValidationError('Please enter client name')
+      return
+    }
+    if (!newClientEmail.trim()) {
+      setValidationError('Client email is required to avoid duplicates')
+      return
+    }
+    if (hasDuplicateEmail(newClientEmail)) {
+      setValidationError('This client is already booked in this slot')
       return
     }
 
