@@ -46,6 +46,29 @@ const generateBookingReference = () => {
   return `${prefix}-${timestamp}-${random}`
 }
 
+const getDateKey = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const getTimeKey = (date: Date): string => {
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+const isTimeWithinSlot = (time: string, startTime: string, endTime: string): boolean => {
+  const current = timeToMinutes(time)
+  return current >= timeToMinutes(startTime) && current < timeToMinutes(endTime)
+}
+
 // Type for client in static slot
 interface SlotClient {
   id: string
@@ -151,7 +174,7 @@ export default function UnifiedBookingDrawer({
 
       // Check if the room is static/fixed type
       const eventRoom = mockRooms.find(r => r.id === props.roomId)
-      if (eventRoom?.roomType === 'static') {
+      if (eventRoom?.roomType === 'static' || eventRoom?.roomType === 'fixed') {
         return true
       }
     }
@@ -191,6 +214,16 @@ export default function UnifiedBookingDrawer({
   // Load existing event data in edit mode
   useEffect(() => {
     if (mode === 'edit' && existingEvent && existingEvent.extendedProps && open) {
+      setSelectedSlotId(null)
+      setSlotClients([])
+      setRealSlotData(null)
+      setIsAddingClient(false)
+      setNewClientName('')
+      setNewClientEmail('')
+      setNewClientPhone('')
+      setValidationError(null)
+      setAvailabilityWarning(null)
+
       const props = existingEvent.extendedProps as any
       console.log('🎯 DRAWER Opening in edit mode:', {
         eventId: existingEvent.id,
@@ -235,42 +268,20 @@ export default function UnifiedBookingDrawer({
 
       // Load slot data if static mode (use effectiveSchedulingMode to detect)
       if (effectiveSchedulingMode === 'static' || props.slotId || props.isStaticSlot) {
-        let slotId = props.slotId || null
-        let slot = slotId ? staticSlots.find(s => s.id === slotId) : null
+        const resolved = resolveSlotForEvent(existingEvent)
+        const slotId = resolved?.slotId || null
+        const slot = resolved?.slot || null
 
-        // If no slot found by direct slotId, try to find a matching slot by time/room/staff
-        if (!slot && existingEvent) {
-          const eventStart = new Date(existingEvent.start)
-          const eventTime = eventStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-          const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-          const dayOfWeek = dayNames[eventStart.getDay()]
-          const dateStr = eventStart.toISOString().split('T')[0]
-
-          // Try to find slot by matching room or staff and time
-          const matchingSlot = staticSlots.find(s => {
-            // Match by day (either specific date or day of week)
-            const dayMatch = s.date === dateStr || s.dayOfWeek === dayOfWeek
-            if (!dayMatch) return false
-
-            // Match by time
-            if (s.startTime !== eventTime) return false
-
-            // Match by room or staff
-            if (props.roomId && s.roomId === props.roomId) return true
-            if (props.staffId && s.instructorStaffId === props.staffId) return true
-
-            return false
-          })
-
-          if (matchingSlot) {
-            slot = matchingSlot
-            slotId = matchingSlot.id
-          }
-        }
-
-        // Use event ID as fallback slotId if we still don't have one
+        // CRITICAL: Don't use event ID as fallback - this causes slot fragmentation
+        // If we still don't have a slotId, this event shouldn't be treated as a static slot
         if (!slotId) {
-          slotId = existingEvent.id
+          console.error('❌ DRAWER No slot found for event - cannot edit as static slot', {
+            eventId: existingEvent.id,
+            props,
+            staticSlotsCount: staticSlots.length
+          })
+          // Don't set slotId - this will prevent treating this as a static slot
+          return
         }
 
         setSelectedSlotId(slotId)
@@ -289,22 +300,28 @@ export default function UnifiedBookingDrawer({
         if (slot?.serviceName) {
           setServiceName(slot.serviceName)
         }
+        if (slot?.startTime && slot?.endTime) {
+          setStartTime(slot.startTime)
+          setEndTime(slot.endTime)
+        }
 
         // Get all real bookings for this slot
-        let slotBookings = getSlotBookings(slotId, start)
-        console.log('📋 DRAWER Slot bookings by slotId:', { slotId, bookingsCount: slotBookings.length, slotBookings })
+        // IMPORTANT: Always use time/location matching to catch ALL bookings in this slot,
+        // even if they have wrong/missing slotId
+        const dateStr = getDateKey(start)
+        let slotBookings: CalendarEvent[] = []
 
-        // If no bookings found by slotId, try to find events matching this slot's time and location
-        if (slotBookings.length === 0 && slot) {
-          const dateStr = start.toISOString().split('T')[0]
+        if (slot) {
+          // Find ALL events that match this slot's time and location
           slotBookings = events.filter(e => {
             const eventStart = new Date(e.start)
-            const eventDateStr = eventStart.toISOString().split('T')[0]
+            const eventDateStr = getDateKey(eventStart)
             if (eventDateStr !== dateStr) return false
             if (e.extendedProps.status === 'cancelled') return false
+            if (e.extendedProps.type === 'timeOff' || e.extendedProps.type === 'reservation') return false
 
-            const eventTime = eventStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-            if (eventTime !== slot.startTime) return false
+            const eventTime = getTimeKey(eventStart)
+            if (!isTimeWithinSlot(eventTime, slot.startTime, slot.endTime)) return false
 
             // Match by room or staff
             if (slot.roomId && e.extendedProps.roomId === slot.roomId) return true
@@ -312,7 +329,15 @@ export default function UnifiedBookingDrawer({
 
             return false
           })
-          console.log('📋 DRAWER Slot bookings by time/location:', { slotBookings })
+          console.log('📋 DRAWER Slot bookings by time/location (primary):', { slotBookings })
+        } else {
+          // Fallback to slotId-only matching if we don't have slot data
+          slotBookings = getSlotBookings(slotId, start)
+          console.log('📋 DRAWER Slot bookings by slotId (fallback):', {
+            slotId,
+            bookingsCount: slotBookings.length,
+            slotBookings
+          })
         }
 
         // Convert events to SlotClient format
@@ -378,6 +403,61 @@ export default function UnifiedBookingDrawer({
     setAvailabilityWarning(null)
   }, [staffId, date, startTime, endTime, events, effectiveSchedulingMode, mode])
 
+  const getSlotCapacity = () => {
+    const fallbackSlot = selectedSlotId ? staticSlots.find(s => s.id === selectedSlotId) : null
+    const staffCapacity = staffId ? mockStaff.find(s => s.id === staffId)?.maxConcurrentBookings : null
+    const roomId = existingEvent?.extendedProps?.roomId
+    const roomCapacity = roomId ? mockRooms.find(r => r.id === roomId)?.capacity : null
+    return realSlotData?.capacity ?? fallbackSlot?.capacity ?? roomCapacity ?? staffCapacity ?? 10
+  }
+
+  const resolveSlotForEvent = (event?: CalendarEvent | null) => {
+    if (!event) return null
+
+    const props = event.extendedProps as any
+    const directSlotId = props?.slotId || null
+    const directSlot = directSlotId ? staticSlots.find(s => s.id === directSlotId) : null
+    if (directSlotId && directSlot) {
+      return { slotId: directSlotId, slot: directSlot }
+    }
+
+    const eventStart = new Date(event.start)
+    const eventTime = getTimeKey(eventStart)
+    const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = [
+      'Sun',
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat'
+    ]
+    const dayOfWeek = dayNames[eventStart.getDay()]
+    const dateStr = getDateKey(eventStart)
+
+    const matchingSlot = staticSlots.find(s => {
+      const dayMatch = s.date === dateStr || s.dayOfWeek === dayOfWeek
+      if (!dayMatch) return false
+      if (!isTimeWithinSlot(eventTime, s.startTime, s.endTime)) return false
+
+      const eventRoomId = props?.roomId
+      const eventStaffId = props?.staffId
+      if (eventRoomId && s.roomId === eventRoomId) return true
+      if (eventStaffId && s.instructorStaffId === eventStaffId) return true
+      return false
+    })
+
+    if (matchingSlot) {
+      return { slotId: matchingSlot.id, slot: matchingSlot }
+    }
+
+    if (directSlotId) {
+      return { slotId: directSlotId, slot: directSlot }
+    }
+
+    return null
+  }
+
   const handleServiceChange = (newServiceId: string) => {
     const selectedService = mockServices.find(s => s.id === newServiceId)
     if (selectedService) {
@@ -398,6 +478,12 @@ export default function UnifiedBookingDrawer({
 
       // If in static mode and adding client, add to slot clients list
       if (effectiveSchedulingMode === 'static' && isAddingClient) {
+        const totalCapacity = getSlotCapacity()
+        if (slotClients.length >= totalCapacity) {
+          setValidationError('Cannot add client: Slot is at maximum capacity')
+          return
+        }
+
         const newClient: SlotClient = {
           id: `client-${Date.now()}`,
           name: fullName,
@@ -422,7 +508,7 @@ export default function UnifiedBookingDrawer({
     }
 
     // Capacity validation using local state for real-time accuracy
-    const totalCapacity = realSlotData?.capacity || 10
+    const totalCapacity = getSlotCapacity()
     const currentCount = slotClients.length
     const availableCapacity = totalCapacity - currentCount
 
@@ -526,7 +612,19 @@ export default function UnifiedBookingDrawer({
       }
     } else {
       // Static mode - update all slot client bookings
-      if (!selectedSlotId) {
+      let slotIdForSave = selectedSlotId
+      if (!slotIdForSave && existingEvent) {
+        const resolved = resolveSlotForEvent(existingEvent)
+        if (resolved?.slotId) {
+          slotIdForSave = resolved.slotId
+          setSelectedSlotId(resolved.slotId)
+          if (resolved.slot) {
+            setRealSlotData(resolved.slot)
+          }
+        }
+      }
+
+      if (!slotIdForSave) {
         setValidationError('Slot ID not found')
         return
       }
@@ -534,18 +632,20 @@ export default function UnifiedBookingDrawer({
       // If no slot data, try to get it from the calendar state
       let slotDataForSave = realSlotData
       if (!slotDataForSave) {
-        slotDataForSave = staticSlots.find(s => s.id === selectedSlotId)
+        slotDataForSave = staticSlots.find(s => s.id === slotIdForSave)
         if (!slotDataForSave) {
           // Last resort: create minimal slot data from event
           if (existingEvent) {
             const props = existingEvent.extendedProps as any
             slotDataForSave = {
-              id: selectedSlotId,
+              id: slotIdForSave,
               serviceName: serviceName || props.serviceName || 'Service',
               serviceId: serviceId || props.serviceId || '',
               instructorStaffId: staffId || props.staffId || '',
               roomId: props.roomId || '',
               price: servicePrice || props.price || 0,
+              startTime,
+              endTime,
               capacity: 10 // Default capacity
             }
             console.warn('⚠️ DRAWER Using fallback slot data:', slotDataForSave)
@@ -556,14 +656,50 @@ export default function UnifiedBookingDrawer({
         }
       }
 
-      // Get existing bookings for this slot
-      const existingBookings = getSlotBookings(selectedSlotId, date)
+      // Get existing bookings for this slot using time/location matching
+      // CRITICAL: Must use same matching logic as when loading to avoid creating duplicates
+      const dateStr = getDateKey(date)
+      let existingBookings: CalendarEvent[] = []
+
+      if (slotDataForSave && (slotDataForSave.roomId || slotDataForSave.instructorStaffId)) {
+        // Find ALL events matching this slot's time and location
+        existingBookings = events.filter(e => {
+          const eventStart = new Date(e.start)
+          const eventDateStr = getDateKey(eventStart)
+          if (eventDateStr !== dateStr) return false
+          if (e.extendedProps.status === 'cancelled') return false
+          if (e.extendedProps.type === 'timeOff' || e.extendedProps.type === 'reservation') return false
+
+          const eventTime = getTimeKey(eventStart)
+          if (!isTimeWithinSlot(eventTime, slotDataForSave.startTime, slotDataForSave.endTime)) return false
+
+          // Match by room or staff
+          if (slotDataForSave.roomId && e.extendedProps.roomId === slotDataForSave.roomId) return true
+          if (slotDataForSave.instructorStaffId && e.extendedProps.staffId === slotDataForSave.instructorStaffId)
+            return true
+
+          return false
+        })
+        console.log('💾 DRAWER Save: Found existing bookings by time/location:', {
+          count: existingBookings.length,
+          existingBookings
+        })
+      } else {
+        // Fallback to slotId-only matching
+        existingBookings = getSlotBookings(slotIdForSave, date)
+        console.log('💾 DRAWER Save: Found existing bookings by slotId:', {
+          count: existingBookings.length,
+          existingBookings
+        })
+      }
+
       const existingBookingIds = new Set(existingBookings.map(b => b.id))
       const currentClientIds = new Set(slotClients.map(c => c.id))
 
       // Delete removed clients
       existingBookings.forEach(booking => {
         if (!currentClientIds.has(booking.id)) {
+          console.log('🗑️ DRAWER Deleting removed client:', booking.id)
           deleteEvent(booking.id)
         }
       })
@@ -579,19 +715,21 @@ export default function UnifiedBookingDrawer({
         endDate.setHours(endHours, endMinutes, 0, 0)
 
         if (existingBookingIds.has(client.id)) {
-          // Update existing booking
+          // Update existing booking - IMPORTANT: Also update slotId to ensure consistency
           const existingBooking = existingBookings.find(b => b.id === client.id)
           if (existingBooking) {
             const updatedEvent: CalendarEvent = {
               ...existingBooking,
               extendedProps: {
                 ...existingBooking.extendedProps,
+                slotId: slotIdForSave, // Ensure slotId is consistent
                 status: client.status,
                 customerName: client.name,
                 arrivalTime: client.arrivalTime,
                 notes: `Email: ${client.email}, Phone: ${client.phone}`
               }
             }
+            console.log('✏️ DRAWER Updating existing booking:', client.id)
             updateEvent(updatedEvent)
           }
         } else {
@@ -613,7 +751,7 @@ export default function UnifiedBookingDrawer({
               price: slotDataForSave.price,
               bookingId: client.id,
               serviceId: slotDataForSave.serviceId,
-              slotId: selectedSlotId,
+              slotId: slotIdForSave,
               isStaticSlot: true, // Mark as static slot for future detection
               roomId: slotDataForSave.roomId,
               partySize: 1,
@@ -621,6 +759,7 @@ export default function UnifiedBookingDrawer({
               notes: `Email: ${client.email}, Phone: ${client.phone}`
             }
           }
+          console.log('➕ DRAWER Creating new booking:', client.id)
           createEvent(newEvent)
         }
       })
@@ -643,7 +782,7 @@ export default function UnifiedBookingDrawer({
       status,
       starred,
       ...(effectiveSchedulingMode === 'static' && {
-        slotId: selectedSlotId,
+        slotId: slotIdForSave,
         slotClients
       })
     })
@@ -1120,38 +1259,10 @@ export default function UnifiedBookingDrawer({
 
               // If no slotId in state, try to determine it from event properties
               if (!effectiveSlotId && existingEvent) {
-                effectiveSlotId = existingEvent.extendedProps?.slotId || null
-
-                // If we found a slotId from event props but don't have slot data yet, fetch it
-                if (effectiveSlotId && !displaySlotData) {
-                  displaySlotData = staticSlots.find(s => s.id === effectiveSlotId)
-                }
-
-                // If still no slotId, try to find slot by matching event properties
-                if (!effectiveSlotId) {
-                  const eventStart = new Date(existingEvent.start)
-                  const eventTime = eventStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-                  const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-                  const dayOfWeek = dayNames[eventStart.getDay()]
-                  const dateStr = eventStart.toISOString().split('T')[0]
-
-                  const matchingSlot = staticSlots.find(s => {
-                    const dayMatch = s.date === dateStr || s.dayOfWeek === dayOfWeek
-                    if (!dayMatch) return false
-                    if (s.startTime !== eventTime) return false
-
-                    // Match by room or staff from event
-                    const eventRoomId = existingEvent.extendedProps?.roomId
-                    const eventStaffId = existingEvent.extendedProps?.staffId
-                    if (eventRoomId && s.roomId === eventRoomId) return true
-                    if (eventStaffId && s.instructorStaffId === eventStaffId) return true
-                    return false
-                  })
-
-                  if (matchingSlot) {
-                    effectiveSlotId = matchingSlot.id
-                    displaySlotData = matchingSlot // Set displaySlotData immediately when found
-                  }
+                const resolved = resolveSlotForEvent(existingEvent)
+                if (resolved?.slotId) {
+                  effectiveSlotId = resolved.slotId
+                  displaySlotData = resolved.slot || displaySlotData
                 }
               }
 
@@ -1166,7 +1277,7 @@ export default function UnifiedBookingDrawer({
               }
 
               // Get total capacity from slot data
-              let totalCapacity = displaySlotData?.capacity || 10
+              let totalCapacity = displaySlotData?.capacity ?? getSlotCapacity()
 
               // Use slotClients.length for real-time capacity tracking
               // This ensures the UI updates immediately when adding/removing clients

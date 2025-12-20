@@ -39,6 +39,7 @@ export default function UnifiedMultiResourceDayView({
   const isDark = theme.palette.mode === 'dark'
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
+  const allEvents = useCalendarStore(state => state.events)
   const { rooms, staffWorkingHours } = useStaffManagementStore()
 
   // Refs for scroll synchronization
@@ -305,7 +306,9 @@ export default function UnifiedMultiResourceDayView({
           const colors = buildEventColors(colorScheme, event.extendedProps.status)
 
           // Determine if this is a static/fixed resource vs dynamic/flexible
-          const isStaticType = isStaff ? resource.staffType === 'static' : resource.roomType === 'static'
+          const isStaticType = isStaff
+            ? resource.staffType === 'static'
+            : resource.roomType === 'static' || resource.roomType === 'fixed'
           const isDynamicType = isStaff
             ? resource.staffType === 'dynamic'
             : resource.roomType === 'flexible' || resource.roomType === 'dynamic'
@@ -395,7 +398,7 @@ export default function UnifiedMultiResourceDayView({
                 // Show capacity chip on ALL events on static/fixed resources (diagonal stripes)
                 // This includes both slot-based bookings and regular appointments
                 const isStaticStaff = isStaff && resource.staffType === 'static'
-                const isStaticRoom = !isStaff && resource.roomType === 'static'
+                const isStaticRoom = !isStaff && (resource.roomType === 'static' || resource.roomType === 'fixed')
                 const shouldShowChip = isStaticStaff || isStaticRoom
 
                 if (!shouldShowChip) {
@@ -465,7 +468,7 @@ export default function UnifiedMultiResourceDayView({
                   chipColor = percentRemaining > 50 ? 'success' : percentRemaining > 20 ? 'warning' : 'error'
                 } else {
                   // No slot data - count bookings manually for this resource's time slot
-                  const allResourceEvents = events.filter(e => {
+                  const allResourceEvents = allEvents.filter(e => {
                     // Must be same day and not cancelled
                     if (!isSameDay(new Date(e.start), eventDate)) return false
                     if (e.extendedProps.status === 'cancelled') return false

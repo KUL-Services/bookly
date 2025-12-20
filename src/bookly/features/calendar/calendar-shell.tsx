@@ -52,7 +52,6 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const setVisibleDateRange = useCalendarStore(state => state.setVisibleDateRange)
   const openNewBooking = useCalendarStore(state => state.openNewBooking)
   const closeNewBooking = useCalendarStore(state => state.closeNewBooking)
-  const createEvent = useCalendarStore(state => state.createEvent)
   const toggleSettings = useCalendarStore(state => state.toggleSettings)
   const toggleNotifications = useCalendarStore(state => state.toggleNotifications)
   const selectSingleStaff = useCalendarStore(state => state.selectSingleStaff)
@@ -346,57 +345,6 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     goBackToAllStaff()
   }
 
-  const handleSaveNewAppointment = (appointment: any) => {
-    // Generate unique ID for the new event
-    const eventId = `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-
-    // Convert appointment data to CalendarEvent
-    const newEvent: CalendarEvent = {
-      id: eventId,
-      title: appointment.clientName || 'Walk-in',
-      start: new Date(
-        appointment.date.getFullYear(),
-        appointment.date.getMonth(),
-        appointment.date.getDate(),
-        parseInt(appointment.startTime.split(':')[0]),
-        parseInt(appointment.startTime.split(':')[1])
-      ),
-      end: new Date(
-        appointment.date.getFullYear(),
-        appointment.date.getMonth(),
-        appointment.date.getDate(),
-        parseInt(appointment.endTime.split(':')[0]),
-        parseInt(appointment.endTime.split(':')[1])
-      ),
-      extendedProps: {
-        staffId: appointment.staffId,
-        staffName: mockStaff.find(s => s.id === appointment.staffId)?.name || 'Unknown Staff',
-        serviceId: appointment.serviceId || undefined,
-        serviceName: appointment.service || 'No service selected',
-        customerName: appointment.clientName || 'Walk-in',
-        price: appointment.servicePrice || 0,
-        status: 'confirmed' as const,
-        paymentStatus: 'unpaid' as const,
-        selectionMethod: appointment.requestedByClient ? ('by_client' as const) : ('automatically' as const),
-        notes: appointment.notes || '',
-        starred: false,
-        bookingId: eventId,
-        // Static mode fields
-        ...(appointment.slotId && {
-          slotId: appointment.slotId,
-          roomId: appointment.roomId,
-          partySize: appointment.partySize || 1
-        })
-      }
-    }
-
-    // Add to store
-    createEvent(newEvent)
-
-    // Clear the calendar selection
-    clearCalendarSelection()
-  }
-
   const handleDateClickInWeekView = (date: Date) => {
     // When clicking a date in week view, navigate to that day in day view
     useCalendarStore.getState().setView('timeGridDay')
@@ -564,13 +512,6 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           handleCloseNewBooking()
           setSelectedEventForEdit(null)
           setBookingDrawerInitialServiceId(null)
-        }}
-        onSave={booking => {
-          if (bookingDrawerMode === 'create') {
-            handleSaveNewAppointment(booking)
-          } else {
-            handleSaveNewAppointment(booking)
-          }
         }}
         onDelete={bookingId => {
           // Handle delete

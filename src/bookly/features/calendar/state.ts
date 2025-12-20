@@ -93,6 +93,29 @@ function loadStaticSlots(): StaticServiceSlot[] {
   }
 }
 
+const getDateKey = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const getTimeKey = (date: Date): string => {
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+const isTimeWithinSlot = (time: string, startTime: string, endTime: string): boolean => {
+  const current = timeToMinutes(time)
+  return current >= timeToMinutes(startTime) && current < timeToMinutes(endTime)
+}
+
 // Initial state
 const initialBranchFilter: BranchFilter = {
   allBranches: true,
@@ -383,16 +406,9 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       if (slotChanged || partySizeChanged) {
         const slotDate = new Date(updatedEvent.start)
 
-        // Temporarily remove the old event from capacity calculation
-        const tempEvents = events.filter(e => e.id !== updatedEvent.id)
-        const tempGet = () => ({ ...get(), events: tempEvents })
-        const bookingsForSlot = tempGet().events.filter(event => {
-          const eventDateStr = new Date(event.start).toISOString().split('T')[0]
-          const slotDateStr = slotDate.toISOString().split('T')[0]
-          return event.extendedProps.slotId === updatedEvent.extendedProps.slotId &&
-                 eventDateStr === slotDateStr &&
-                 event.extendedProps.status !== 'cancelled'
-        })
+        const bookingsForSlot = get()
+          .getSlotBookings(updatedEvent.extendedProps.slotId, slotDate)
+          .filter(event => event.id !== updatedEvent.id)
 
         const slot = get().staticSlots.find(s => s.id === updatedEvent.extendedProps.slotId)
         if (slot) {
@@ -595,7 +611,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     const { staticSlots } = get()
     const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const dayOfWeek = dayNames[date.getDay()]
-    const dateStr = date.toISOString().split('T')[0]
+    const dateStr = getDateKey(date)
 
     return staticSlots.filter(slot => {
       // Skip cancelled slots
@@ -616,16 +632,29 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
   // Get all bookings for a specific slot on a specific date (excluding cancelled)
   getSlotBookings: (slotId, date) => {
-    const { events } = get()
-    const dateStr = date.toISOString().split('T')[0]
+    const { events, staticSlots } = get()
+    const dateStr = getDateKey(date)
+    const slot = staticSlots.find(s => s.id === slotId)
 
     return events.filter(event => {
-      const eventDateStr = new Date(event.start).toISOString().split('T')[0]
-      const isSameSlot = event.extendedProps.slotId === slotId
+      const eventDateStr = getDateKey(new Date(event.start))
       const isSameDate = eventDateStr === dateStr
       const isNotCancelled = event.extendedProps.status !== 'cancelled'
 
-      return isSameSlot && isSameDate && isNotCancelled
+      if (!isSameDate || !isNotCancelled) return false
+      if (event.extendedProps.type === 'timeOff' || event.extendedProps.type === 'reservation') return false
+
+      if (event.extendedProps.slotId === slotId) return true
+      if (!slot) return false
+
+      // Match by time/location when slotId is missing to keep capacity in sync.
+      const eventTime = getTimeKey(new Date(event.start))
+      if (!isTimeWithinSlot(eventTime, slot.startTime, slot.endTime)) return false
+
+      if (slot.roomId && event.extendedProps.roomId === slot.roomId) return true
+      if (slot.instructorStaffId && event.extendedProps.staffId === slot.instructorStaffId) return true
+
+      return false
     })
   },
 
@@ -640,10 +669,10 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       if (eventWithSlot) {
         // Try to find a slot that matches the event's time and location
         const eventStart = new Date(eventWithSlot.start)
-        const eventTime = eventStart.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+        const eventTime = getTimeKey(eventStart)
         const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         const dayOfWeek = dayNames[eventStart.getDay()]
-        const dateStr = eventStart.toISOString().split('T')[0]
+        const dateStr = getDateKey(eventStart)
 
         slot = staticSlots.find(s => {
           // Match by day
@@ -651,7 +680,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
           if (!dayMatch) return false
 
           // Match by time
-          if (s.startTime !== eventTime) return false
+          if (!isTimeWithinSlot(eventTime, s.startTime, s.endTime)) return false
 
           // Match by room or staff
           const roomId = eventWithSlot.extendedProps.roomId
@@ -832,7 +861,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     let currentDate = new Date(startDate)
     while (currentDate <= endDate) {
       const dayOfWeek = dayNames[currentDate.getDay()]
-      const dateStr = currentDate.toISOString().split('T')[0]
+      const dateStr = getDateKey(currentDate)
 
       // Find all patterns for this day of week
       const patternsForDay = template.weeklyPattern.filter(p => p.dayOfWeek === dayOfWeek)

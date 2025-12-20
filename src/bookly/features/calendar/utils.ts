@@ -14,6 +14,13 @@ import type {
   SchedulingMode
 } from './types'
 
+const getDateKey = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 /**
  * Parse 12-hour time format to hours and minutes
  * @example parseTime12h('3:00 PM') => { hours: 15, minutes: 0 }
@@ -546,7 +553,7 @@ export function getSlotsForDate(
   date: Date
 ): import('./types').StaticServiceSlot[] {
   const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()] as import('./types').DayOfWeek
-  const dateStr = date.toISOString().split('T')[0]
+  const dateStr = getDateKey(date)
 
   return slots.filter(slot => {
     if (slot.branchId !== branchId) return false
@@ -582,10 +589,10 @@ export function countSlotOccupancy(
   slotId: string,
   date: Date
 ): number {
-  const dateStr = date.toISOString().split('T')[0]
+  const dateStr = getDateKey(date)
 
   const bookings = events.filter(event => {
-    const eventDateStr = new Date(event.start).toISOString().split('T')[0]
+    const eventDateStr = getDateKey(new Date(event.start))
     return (
       event.extendedProps.slotId === slotId &&
       eventDateStr === dateStr &&
