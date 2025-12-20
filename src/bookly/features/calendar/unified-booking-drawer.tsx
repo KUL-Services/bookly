@@ -473,7 +473,8 @@ export default function UnifiedBookingDrawer({
     const startTime = getTimeKey(eventStart)
     const endTime = getTimeKey(eventEnd)
     const fallbackSlotId =
-      directSlotId || `virtual-${roomId || staffId}-${dateStr}-${startTime.replace(':', '')}-${endTime.replace(':', '')}`
+      directSlotId ||
+      `virtual-${roomId || staffId}-${dateStr}-${startTime.replace(':', '')}-${endTime.replace(':', '')}`
     const fallbackSlot = {
       id: fallbackSlotId,
       roomId: roomId || '',

@@ -243,19 +243,21 @@ export default function UnifiedMultiResourceDayView({
     const resourceEvents = getResourceEvents(resource.id, resource.type)
     const roomBlocks = isStaff ? getStaffRoomBlocks(resource.id) : []
 
-    const handleClick = () => {
-      if (isStaff && onStaffClick) {
-        onStaffClick(resource.id)
-      } else if (!isStaff && onRoomClick) {
-        onRoomClick(resource.id)
-      }
-    }
+    // NOTE: Staff/room click disabled - only slots/bookings are clickable
+    // const handleClick = () => {
+    //   if (isStaff && onStaffClick) {
+    //     onStaffClick(resource.id)
+    //   } else if (!isStaff && onRoomClick) {
+    //     onRoomClick(resource.id)
+    //   }
+    // }
 
-    const handleCellClickInternal = () => {
-      if (onCellClick) {
-        onCellClick(resource.id, resource.type, currentDate)
-      }
-    }
+    // NOTE: Cell click disabled - only slots/bookings are clickable
+    // const handleCellClickInternal = () => {
+    //   if (onCellClick) {
+    //     onCellClick(resource.id, resource.type, currentDate)
+    //   }
+    // }
 
     return (
       <Box
@@ -263,13 +265,14 @@ export default function UnifiedMultiResourceDayView({
         sx={{
           borderRight: 1,
           borderColor: 'divider',
-          position: 'relative',
-          cursor: 'pointer',
-          '&:hover': {
-            bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'
-          }
+          position: 'relative'
+          // cursor: 'pointer', // Disabled - only slots/bookings are clickable
+          // '&:hover': { // Disabled - only slots/bookings are clickable
+          //   bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'
+          // }
         }}
-        onClick={handleCellClickInternal}
+        // onClick disabled - only slots/bookings are clickable
+        // onClick={handleCellClickInternal}
       >
         {/* Room assignment blocks (for static staff) */}
         {roomBlocks.map((block, idx) => {
@@ -739,6 +742,7 @@ export default function UnifiedMultiResourceDayView({
                 }}
               >
                 {/* Resource headers */}
+                {/* NOTE: Resource header click disabled - only slots/bookings are clickable */}
                 {orderedResources.map(resource => {
                   const isRoom = resource.type === 'room'
 
@@ -753,26 +757,27 @@ export default function UnifiedMultiResourceDayView({
                         flexDirection: 'column',
                         alignItems: 'center',
                         gap: 0.75,
-                        cursor: 'pointer',
+                        // cursor: 'pointer', // Disabled - only slots/bookings are clickable
                         bgcolor: isRoom
                           ? isDark
                             ? 'rgba(76, 175, 80, 0.03)'
                             : 'rgba(76, 175, 80, 0.01)'
-                          : 'transparent',
-                        '&:hover': {
-                          bgcolor: isRoom
-                            ? isDark
-                              ? 'rgba(76, 175, 80, 0.08)'
-                              : 'rgba(76, 175, 80, 0.05)'
-                            : isDark
-                              ? 'rgba(255,255,255,0.05)'
-                              : 'rgba(0,0,0,0.03)'
-                        }
+                          : 'transparent'
+                        // '&:hover': { // Disabled - only slots/bookings are clickable
+                        //   bgcolor: isRoom
+                        //     ? isDark
+                        //       ? 'rgba(76, 175, 80, 0.08)'
+                        //       : 'rgba(76, 175, 80, 0.05)'
+                        //     : isDark
+                        //       ? 'rgba(255,255,255,0.05)'
+                        //       : 'rgba(0,0,0,0.03)'
+                        // }
                       }}
-                      onClick={() => {
-                        if (resource.type === 'staff' && onStaffClick) onStaffClick(resource.id)
-                        else if (resource.type === 'room' && onRoomClick) onRoomClick(resource.id)
-                      }}
+                      // onClick disabled - only slots/bookings are clickable
+                      // onClick={() => {
+                      //   if (resource.type === 'staff' && onStaffClick) onStaffClick(resource.id)
+                      //   else if (resource.type === 'room' && onRoomClick) onRoomClick(resource.id)
+                      // }}
                     >
                       <Avatar
                         sx={{

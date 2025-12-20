@@ -122,6 +122,7 @@ export default function UnifiedMultiResourceWeekView({
         }}
       >
         {/* Resource info column */}
+        {/* NOTE: Staff/room click disabled - only slots/bookings are clickable */}
         <Box
           sx={{
             p: 2,
@@ -130,19 +131,20 @@ export default function UnifiedMultiResourceWeekView({
             display: 'flex',
             alignItems: 'center',
             gap: 1.5,
-            cursor: 'pointer',
-            bgcolor: isRoom ? (isDark ? 'rgba(76, 175, 80, 0.05)' : 'rgba(76, 175, 80, 0.02)') : 'transparent',
-            '&:hover': {
-              bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'
-            }
+            // cursor: 'pointer', // Disabled - only slots/bookings are clickable
+            bgcolor: isRoom ? (isDark ? 'rgba(76, 175, 80, 0.05)' : 'rgba(76, 175, 80, 0.02)') : 'transparent'
+            // '&:hover': { // Disabled - only slots/bookings are clickable
+            //   bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'
+            // }
           }}
-          onClick={() => {
-            if (isStaff && onStaffClick) {
-              onStaffClick(resource.id)
-            } else if (isRoom && onRoomClick) {
-              onRoomClick(resource.id)
-            }
-          }}
+          // onClick disabled - only slots/bookings are clickable
+          // onClick={() => {
+          //   if (isStaff && onStaffClick) {
+          //     onStaffClick(resource.id)
+          //   } else if (isRoom && onRoomClick) {
+          //     onRoomClick(resource.id)
+          //   }
+          // }}
         >
           <Avatar
             sx={{
@@ -229,6 +231,7 @@ export default function UnifiedMultiResourceWeekView({
           const dayEvents = getResourceDayEvents(resource.id, resource.type, day)
           const roomAssignment = isStaff ? getStaffRoomAssignment(resource.id, day) : null
 
+          // NOTE: Cell click disabled - only slots/bookings are clickable
           return (
             <Box
               key={day.toISOString()}
@@ -244,14 +247,15 @@ export default function UnifiedMultiResourceWeekView({
                     ? isDark
                       ? 'rgba(76, 175, 80, 0.02)'
                       : 'rgba(76, 175, 80, 0.01)'
-                    : 'transparent',
-                cursor: 'pointer',
-                transition: 'background-color 0.15s',
-                '&:hover': {
-                  bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'
-                }
+                    : 'transparent'
+                // cursor: 'pointer', // Disabled - only slots/bookings are clickable
+                // transition: 'background-color 0.15s',
+                // '&:hover': { // Disabled - only slots/bookings are clickable
+                //   bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'
+                // }
               }}
-              onClick={() => onCellClick?.(resource.id, resource.type, day)}
+              // onClick disabled - only slots/bookings are clickable
+              // onClick={() => onCellClick?.(resource.id, resource.type, day)}
             >
               {/* Room assignment indicator */}
               {roomAssignment && (
@@ -577,14 +581,15 @@ export default function UnifiedMultiResourceWeekView({
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  bgcolor: isToday(day) ? (isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)') : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                  '&:hover': {
-                    bgcolor: isDark ? 'rgba(144,202,249,0.12)' : 'rgba(25,118,210,0.12)'
-                  }
+                  bgcolor: isToday(day) ? (isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)') : 'transparent'
+                  // cursor: 'pointer', // Disabled - only slots/bookings are clickable
+                  // transition: 'background-color 0.2s',
+                  // '&:hover': { // Disabled - only slots/bookings are clickable
+                  //   bgcolor: isDark ? 'rgba(144,202,249,0.12)' : 'rgba(25,118,210,0.12)'
+                  // }
                 }}
-                onClick={() => onDateClick?.(day)}
+                // onClick disabled - only slots/bookings are clickable
+                // onClick={() => onDateClick?.(day)}
               >
                 <Typography variant='caption' color='text.secondary' fontWeight={500}>
                   {format(day, 'EEE')}
