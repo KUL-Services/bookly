@@ -191,60 +191,6 @@ export default function UnifiedMultiResourceWeekView({
             <Typography variant='body2' fontWeight={600} noWrap>
               {resource.name}
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, flexWrap: 'wrap' }}>
-              {isStaff && resource.staffType && (
-                <Chip label={resource.staffType} size='small' sx={{ height: 18, fontSize: '0.6rem' }} />
-              )}
-              {isStaff &&
-                resource.staffType === 'dynamic' &&
-                (() => {
-                  const availableCapacity = getStaffAvailableCapacity(resource.id, currentDate, mockBookings)
-                  const capacityColor = getCapacityColor(availableCapacity)
-                  return availableCapacity !== null ? (
-                    <Chip
-                      label={`${availableCapacity}/${resource.maxConcurrentBookings || 1}`}
-                      size='small'
-                      variant='outlined'
-                      color={capacityColor}
-                      sx={{ height: 18, fontSize: '0.6rem' }}
-                    />
-                  ) : null
-                })()}
-              {isStaff && resource.staffType === 'static' && resource.maxConcurrentBookings && (
-                <Chip
-                  label={`Cap: ${resource.maxConcurrentBookings}`}
-                  size='small'
-                  variant='outlined'
-                  sx={{ height: 18, fontSize: '0.6rem' }}
-                />
-              )}
-              {isRoom &&
-                resource.capacity &&
-                (() => {
-                  const isDynamicRoom = resource.roomType === 'dynamic' || resource.roomType === 'flexible'
-                  const dynamicInfo = isDynamicRoom ? getDynamicRoomAvailability(resource.id, [resource]) : null
-                  return (
-                    <Chip
-                      label={`${dynamicInfo?.totalCapacity || resource.capacity}`}
-                      size='small'
-                      variant='outlined'
-                      color={isDynamicRoom ? 'success' : 'default'}
-                      sx={{
-                        height: 18,
-                        fontSize: '0.6rem',
-                        bgcolor: isDark
-                          ? isDynamicRoom
-                            ? 'rgba(76, 175, 80, 0.15)'
-                            : 'rgba(76, 175, 80, 0.1)'
-                          : isDynamicRoom
-                            ? 'rgba(76, 175, 80, 0.08)'
-                            : 'rgba(76, 175, 80, 0.05)',
-                        fontWeight: isDynamicRoom ? 600 : 500
-                      }}
-                    />
-                  )
-                })()}
-            </Box>
           </Box>
         </Box>
 
@@ -334,7 +280,7 @@ export default function UnifiedMultiResourceWeekView({
                       p: 0.6,
                       minHeight: 50,
                       bgcolor: effectiveBgColor,
-                      borderRadius: 0,
+                      borderRadius: 1.5,
                       border: isStaticType ? `2px solid ${effectiveBorderColor}` : `1px solid ${effectiveBorderColor}40`,
                       borderLeft: isStaticType ? `4px solid ${effectiveBorderColor}` : `1px solid ${effectiveBorderColor}40`,
                       backgroundImage: isStaticType

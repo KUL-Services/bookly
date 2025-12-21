@@ -362,7 +362,7 @@ export default function UnifiedMultiResourceDayView({
                 top: style.top,
                 height: Math.max(style.height, 60),
                 bgcolor: effectiveBgColor,
-                borderRadius: 0,
+                borderRadius: 1.5,
                 border: isStaticType ? `2px solid ${effectiveBorderColor}` : `1px solid ${effectiveBorderColor}40`,
                 borderLeft: isStaticType ? `4px solid ${effectiveBorderColor}` : `1px solid ${effectiveBorderColor}40`,
                 backgroundImage: isStaticType
@@ -846,67 +846,6 @@ export default function UnifiedMultiResourceDayView({
                         <Typography variant='body2' fontWeight={600} noWrap fontSize='0.8rem'>
                           {resource.name}
                         </Typography>
-                        <Box
-                          sx={{ display: 'flex', alignItems: 'center', gap: 0.25, justifyContent: 'center', mt: 0.25 }}
-                        >
-                          {resource.type === 'staff' &&
-                            resource.staffType === 'dynamic' &&
-                            (() => {
-                              const availableCapacity = getStaffAvailableCapacity(
-                                resource.id,
-                                currentDate,
-                                mockBookings
-                              )
-                              const capacityColor = getCapacityColor(availableCapacity)
-                              return availableCapacity !== null ? (
-                                <Chip
-                                  label={`${availableCapacity}/${resource.maxConcurrentBookings || 1}`}
-                                  size='small'
-                                  variant='outlined'
-                                  color={capacityColor}
-                                  sx={{ height: 16, fontSize: '0.55rem' }}
-                                />
-                              ) : null
-                            })()}
-                          {resource.type === 'staff' &&
-                            resource.staffType === 'static' &&
-                            resource.maxConcurrentBookings && (
-                              <Chip
-                                label={`Cap: ${resource.maxConcurrentBookings}`}
-                                size='small'
-                                variant='outlined'
-                                sx={{ height: 16, fontSize: '0.55rem' }}
-                              />
-                            )}
-                          {resource.type === 'room' &&
-                            resource.capacity &&
-                            (() => {
-                              const isDynamicRoom = resource.roomType === 'dynamic' || resource.roomType === 'flexible'
-                              const dynamicInfo = isDynamicRoom
-                                ? getDynamicRoomAvailability(resource.id, [resource])
-                                : null
-                              return (
-                                <Chip
-                                  label={`${dynamicInfo?.totalCapacity || resource.capacity}`}
-                                  size='small'
-                                  variant='outlined'
-                                  color={isDynamicRoom ? 'success' : 'default'}
-                                  sx={{
-                                    height: 16,
-                                    fontSize: '0.55rem',
-                                    bgcolor: isDark
-                                      ? isDynamicRoom
-                                        ? 'rgba(76, 175, 80, 0.15)'
-                                        : 'rgba(76, 175, 80, 0.1)'
-                                      : isDynamicRoom
-                                        ? 'rgba(76, 175, 80, 0.08)'
-                                        : 'rgba(76, 175, 80, 0.05)',
-                                    fontWeight: isDynamicRoom ? 600 : 500
-                                  }}
-                                />
-                              )
-                            })()}
-                        </Box>
                       </Box>
                     </Box>
                   )

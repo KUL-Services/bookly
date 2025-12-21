@@ -344,7 +344,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           },
           '& .fc-event': {
             cursor: 'pointer',
-            borderRadius: '8px',
+            borderRadius: '12px',
             fontSize: '0.8125rem',
             fontWeight: 500,
             border: 'none',
@@ -389,7 +389,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             width: '100%'
           },
           '& .fc-timegrid-event': {
-            borderRadius: '8px !important',
+            borderRadius: '12px !important',
             boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
           },
           '& .fc-timegrid-event .fc-event-main': {
@@ -562,7 +562,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           '& .fc-bg-event': {
             opacity: '1 !important',
             border: '2px dashed',
-            borderRadius: '6px !important',
+            borderRadius: '12px !important',
             fontSize: '0.75rem',
             fontWeight: 500,
             padding: '4px 6px',

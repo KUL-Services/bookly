@@ -585,7 +585,7 @@ export default function SingleStaffDayView({
                     bgcolor: effectiveBgColor,
                     border: 3,
                     borderColor: effectiveBorderColor,
-                    borderRadius: 2,
+                    borderRadius: 1.5,
                     p: 1.5,
                     cursor: 'pointer',
                     overflow: 'hidden',

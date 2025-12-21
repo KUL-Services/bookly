@@ -197,7 +197,7 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                             bgcolor: 'background.paper',
                             borderLeft: 4,
                             borderColor: effectiveBorderColor,
-                            borderRadius: 1,
+                            borderRadius: 1.5,
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
                             opacity: isFaded ? 0.4 : 1,
