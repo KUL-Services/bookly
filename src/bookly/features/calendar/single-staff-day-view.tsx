@@ -9,6 +9,23 @@ import { useCalendarStore } from './state'
 import { getBranchName, buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
 
+// Helper to adjust color opacity for faded events
+const adjustColorOpacity = (color: string, opacity: number): string => {
+  if (color.startsWith('#')) {
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
+  if (color.startsWith('rgb(')) {
+    return color.replace('rgb(', 'rgba(').replace(')', `, ${opacity})`)
+  }
+  if (color.startsWith('rgba(')) {
+    return color.replace(/,\s*[\d.]+\)$/, `, ${opacity})`)
+  }
+  return color
+}
+
 interface SingleStaffDayViewProps {
   events: CalendarEvent[]
   staff: { id: string; name: string; photo?: string; workingHours?: string; branchId?: string }
@@ -38,6 +55,8 @@ export default function SingleStaffDayView({
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const colorScheme = useCalendarStore(state => state.colorScheme)
+  const isSearchActive = useCalendarStore(state => state.isSearchActive)
+  const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
 
   // Drag-to-select state
   const [isDragging, setIsDragging] = useState(false)
@@ -542,6 +561,16 @@ export default function SingleStaffDayView({
               const { top, height } = getEventStyle(event)
               const colors = buildEventColors(colorScheme, event.extendedProps.status)
 
+              // Search highlighting logic
+              const isMatchedBySearch = isEventMatchedBySearch(event.id)
+              const isFaded = isSearchActive && !isMatchedBySearch
+              const isHighlighted = isSearchActive && isMatchedBySearch
+
+              // Adjust colors for faded events
+              const effectiveBgColor = isFaded ? adjustColorOpacity(colors.bg, 0.25) : colors.bg
+              const effectiveBorderColor = isFaded ? adjustColorOpacity(colors.border, 0.3) : colors.border
+              const effectiveTextColor = isFaded ? adjustColorOpacity(colors.text, 0.4) : colors.text
+
               return (
                 <Box
                   key={event.id}
@@ -553,21 +582,30 @@ export default function SingleStaffDayView({
                     left: 8,
                     right: 8,
                     height: `${height}px`,
-                    bgcolor: colors.bg,
+                    bgcolor: effectiveBgColor,
                     border: 3,
-                    borderColor: colors.border,
+                    borderColor: effectiveBorderColor,
                     borderRadius: 2,
                     p: 1.5,
                     cursor: 'pointer',
                     overflow: 'hidden',
-                    transition: 'all 0.2s',
-                    boxShadow: 2,
+                    transition: 'all 0.3s ease',
+                    opacity: isFaded ? 0.4 : 1,
+                    filter: isFaded ? 'grayscale(50%)' : 'none',
+                    boxShadow: isHighlighted
+                      ? '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                      : 2,
+                    transform: isHighlighted ? 'scale(1.02)' : 'none',
+                    zIndex: isHighlighted ? 5 : 'auto',
                     display: 'flex',
                     flexDirection: 'column',
                     '&:hover': {
-                      boxShadow: 6,
-                      transform: 'translateX(4px)',
-                      zIndex: 5
+                      boxShadow: isHighlighted
+                        ? '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                        : 6,
+                      transform: isHighlighted ? 'scale(1.03) translateX(4px)' : 'translateX(4px)',
+                      zIndex: 5,
+                      opacity: isFaded ? 0.6 : 1
                     }
                   }}
                 >
@@ -576,7 +614,7 @@ export default function SingleStaffDayView({
                     sx={{
                       display: 'block',
                       fontWeight: 700,
-                      color: colors.text,
+                      color: effectiveTextColor,
                       fontSize: '0.75rem',
                       mb: 0.5,
                       whiteSpace: 'nowrap',
@@ -591,7 +629,7 @@ export default function SingleStaffDayView({
                     variant="body1"
                     sx={{
                       fontWeight: 700,
-                      color: colors.text,
+                      color: effectiveTextColor,
                       fontSize: '0.95rem',
                       lineHeight: 1.4,
                       mb: 0.5,
@@ -616,7 +654,7 @@ export default function SingleStaffDayView({
                             width: 6,
                             height: 6,
                             borderRadius: '50%',
-                            bgcolor: service.color,
+                            bgcolor: isFaded ? adjustColorOpacity(service.color, 0.3) : service.color,
                             flexShrink: 0
                           }}
                         />
@@ -625,9 +663,9 @@ export default function SingleStaffDayView({
                     <Typography
                       variant="body2"
                       sx={{
-                        color: colors.text,
+                        color: effectiveTextColor,
                         fontSize: '0.8rem',
-                        opacity: 0.9,
+                        opacity: isFaded ? 0.5 : 0.9,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -642,9 +680,9 @@ export default function SingleStaffDayView({
                       variant="caption"
                       sx={{
                         display: 'block',
-                        color: colors.text,
+                        color: effectiveTextColor,
                         fontSize: '0.7rem',
-                        opacity: 0.8,
+                        opacity: isFaded ? 0.4 : 0.8,
                         flexShrink: 0
                       }}
                     >

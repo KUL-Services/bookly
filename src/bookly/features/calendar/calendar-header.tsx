@@ -23,6 +23,7 @@ import { Calendar } from '@/bookly/components/ui/calendar'
 import { useCalendarStore } from './state'
 import { exportEventsToExcel, exportSummaryToExcel } from './export-utils'
 import { getViewTitle, addWeeks } from './utils'
+import CalendarSearch from './calendar-search'
 
 import type { CalendarEvent, CalendarView } from './types'
 
@@ -203,6 +204,9 @@ export default function CalendarHeader({
             <i className='ri-arrow-right-s-line' />
           </IconButton>
         </Box>
+
+        {/* Search */}
+        <CalendarSearch />
 
         {/* Date Picker Dropdown - Hidden on small screens */}
         {!isMobile && (

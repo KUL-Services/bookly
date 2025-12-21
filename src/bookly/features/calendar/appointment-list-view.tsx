@@ -22,10 +22,29 @@ interface GroupedEvents {
   }
 }
 
+// Helper to adjust color opacity for faded events
+const adjustColorOpacity = (color: string, opacity: number): string => {
+  if (color.startsWith('#')) {
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
+  if (color.startsWith('rgb(')) {
+    return color.replace('rgb(', 'rgba(').replace(')', `, ${opacity})`)
+  }
+  if (color.startsWith('rgba(')) {
+    return color.replace(/,\s*[\d.]+\)$/, `, ${opacity})`)
+  }
+  return color
+}
+
 export default function AppointmentListView({ events, onEventClick }: AppointmentListViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const colorScheme = useCalendarStore(state => state.colorScheme)
+  const isSearchActive = useCalendarStore(state => state.isSearchActive)
+  const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
 
   // Group events by date and then by branch
   const groupedEvents = useMemo(() => {
@@ -158,6 +177,14 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                     {branchGroup.events.map(event => {
                       const colors = buildEventColors(colorScheme, event.extendedProps.status)
 
+                      // Search highlighting logic
+                      const isMatchedBySearch = isEventMatchedBySearch(event.id)
+                      const isFaded = isSearchActive && !isMatchedBySearch
+                      const isHighlighted = isSearchActive && isMatchedBySearch
+
+                      // Adjust colors for faded events
+                      const effectiveBorderColor = isFaded ? adjustColorOpacity(colors.border, 0.3) : colors.border
+
                       return (
                         <Box
                           key={event.id}
@@ -169,14 +196,23 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                             p: 2,
                             bgcolor: 'background.paper',
                             borderLeft: 4,
-                            borderColor: colors.border,
+                            borderColor: effectiveBorderColor,
                             borderRadius: 1,
                             cursor: 'pointer',
-                            transition: 'all 0.2s',
+                            transition: 'all 0.3s ease',
+                            opacity: isFaded ? 0.4 : 1,
+                            filter: isFaded ? 'grayscale(50%)' : 'none',
+                            boxShadow: isHighlighted
+                              ? '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                              : 'none',
+                            transform: isHighlighted ? 'scale(1.01)' : 'none',
                             '&:hover': {
-                              boxShadow: 2,
-                              transform: 'translateX(4px)',
-                              bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'
+                              boxShadow: isHighlighted
+                                ? '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                                : 2,
+                              transform: isHighlighted ? 'scale(1.02) translateX(4px)' : 'translateX(4px)',
+                              bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                              opacity: isFaded ? 0.6 : 1
                             }
                           }}
                         >

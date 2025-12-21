@@ -73,6 +73,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
     const getSlotsForDate = useCalendarStore(state => state.getSlotsForDate)
     const staticSlots = useCalendarStore(state => state.staticSlots)
     const visibleDateRange = useCalendarStore(state => state.visibleDateRange)
+    const isSearchActive = useCalendarStore(state => state.isSearchActive)
+    const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
 
     // Helper to get room info
     const getRoomById = (roomId: string | undefined) => {
@@ -164,14 +166,53 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
       }
     }
 
-    // Map events to FullCalendar format with colors
+    // Helper to adjust color opacity for faded events
+    const adjustColorOpacity = (color: string, opacity: number): string => {
+      if (color.startsWith('#')) {
+        const r = parseInt(color.slice(1, 3), 16)
+        const g = parseInt(color.slice(3, 5), 16)
+        const b = parseInt(color.slice(5, 7), 16)
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`
+      }
+      if (color.startsWith('rgb(')) {
+        return color.replace('rgb(', 'rgba(').replace(')', `, ${opacity})`)
+      }
+      if (color.startsWith('rgba(')) {
+        return color.replace(/,\s*[\d.]+\)$/, `, ${opacity})`)
+      }
+      return color
+    }
+
+    // Map events to FullCalendar format with colors and search highlighting
     const calendarEvents = events.map(event => {
       const colors = buildEventColors(colorScheme, event.extendedProps.status)
+
+      // Search highlighting logic
+      const isMatchedBySearch = isEventMatchedBySearch(event.id)
+      const isFaded = isSearchActive && !isMatchedBySearch
+      const isHighlighted = isSearchActive && isMatchedBySearch
+
+      // Adjust colors for faded events
+      const effectiveBgColor = isFaded ? adjustColorOpacity(colors.bg, 0.25) : colors.bg
+      const effectiveBorderColor = isFaded ? adjustColorOpacity(colors.border, 0.3) : colors.border
+      const effectiveTextColor = isFaded ? adjustColorOpacity(colors.text, 0.4) : colors.text
+
+      // Build class names for CSS-based styling
+      const classNames: string[] = []
+      if (isFaded) classNames.push('search-faded-event')
+      if (isHighlighted) classNames.push('search-highlighted-event')
+
       return {
         ...event,
-        backgroundColor: colors.bg,
-        borderColor: colors.border,
-        textColor: colors.text
+        backgroundColor: effectiveBgColor,
+        borderColor: effectiveBorderColor,
+        textColor: effectiveTextColor,
+        classNames,
+        extendedProps: {
+          ...event.extendedProps,
+          isSearchFaded: isFaded,
+          isSearchHighlighted: isHighlighted
+        }
       }
     })
 
@@ -308,10 +349,29 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             fontWeight: 500,
             border: 'none',
             overflow: 'visible',
-            transition: 'all 0.15s ease',
+            transition: 'all 0.3s ease',
             '&:hover': {
               boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
               zIndex: 10
+            }
+          },
+          // Search highlighting styles
+          '& .fc-event.search-faded-event': {
+            opacity: 0.4,
+            filter: 'grayscale(50%)',
+            transform: 'scale(0.98)',
+            '&:hover': {
+              opacity: 0.6,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+            }
+          },
+          '& .fc-event.search-highlighted-event': {
+            boxShadow: '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)',
+            transform: 'scale(1.02)',
+            zIndex: 5,
+            '&:hover': {
+              boxShadow: '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)',
+              transform: 'scale(1.03)'
             }
           },
           '& .fc-daygrid-event': {

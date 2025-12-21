@@ -115,6 +115,8 @@ export interface CalendarEvent extends EventInput {
     serviceId?: string // Service ID for pre-selection
     serviceName: string
     customerName: string
+    customerPhone?: string // Customer phone number for search
+    customerEmail?: string // Customer email for search
     price: number
     notes?: string
     bookingId: string
@@ -188,6 +190,10 @@ export interface CalendarState {
   staticSlots: StaticServiceSlot[]
   scheduleTemplates: ScheduleTemplate[]
   isTemplateManagementOpen: boolean // For template management drawer
+  // Search state
+  searchQuery: string // Search query text
+  searchMatchedEventIds: Set<string> // IDs of events that match the search
+  isSearchActive: boolean // Whether search is active (has query)
 }
 
 export interface CalendarPreferences {

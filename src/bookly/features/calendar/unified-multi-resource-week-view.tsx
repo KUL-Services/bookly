@@ -19,6 +19,26 @@ import {
 import type { CalendarEvent, DayOfWeek } from './types'
 import { useMemo } from 'react'
 
+// Helper to adjust color opacity for faded events
+const adjustColorOpacity = (color: string, opacity: number): string => {
+  // Handle hex colors
+  if (color.startsWith('#')) {
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
+  // Handle rgb colors
+  if (color.startsWith('rgb(')) {
+    return color.replace('rgb(', 'rgba(').replace(')', `, ${opacity})`)
+  }
+  // Handle rgba colors - replace existing opacity
+  if (color.startsWith('rgba(')) {
+    return color.replace(/,\s*[\d.]+\)$/, `, ${opacity})`)
+  }
+  return color
+}
+
 interface UnifiedMultiResourceWeekViewProps {
   events: CalendarEvent[]
   currentDate: Date
@@ -43,6 +63,8 @@ export default function UnifiedMultiResourceWeekView({
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
   const allEvents = useCalendarStore(state => state.events)
+  const isSearchActive = useCalendarStore(state => state.isSearchActive)
+  const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
   const { rooms } = useStaffManagementStore()
 
   // Get week days
@@ -289,6 +311,17 @@ export default function UnifiedMultiResourceWeekView({
                 const isStaticType = isStaff
                   ? resource.staffType === 'static'
                   : resource.roomType === 'static' || resource.roomType === 'fixed'
+
+                // Search highlighting - check if event matches search
+                const isMatchedBySearch = isEventMatchedBySearch(event.id)
+                const isFaded = isSearchActive && !isMatchedBySearch
+                const isHighlighted = isSearchActive && isMatchedBySearch
+
+                // Adjust colors for faded events
+                const effectiveBgColor = isFaded ? adjustColorOpacity(colors.bg, 0.25) : colors.bg
+                const effectiveBorderColor = isFaded ? adjustColorOpacity(colors.border, 0.3) : colors.border
+                const effectiveTextColor = isFaded ? adjustColorOpacity(colors.text, 0.4) : colors.text
+
                 return (
                   <Box
                     key={event.id}
@@ -300,27 +333,40 @@ export default function UnifiedMultiResourceWeekView({
                       mb: 0.5,
                       p: 0.6,
                       minHeight: 50,
-                      bgcolor: colors.bg,
+                      bgcolor: effectiveBgColor,
                       borderRadius: 0,
-                      border: isStaticType ? `2px solid ${colors.border}` : `1px solid ${colors.border}40`,
-                      borderLeft: isStaticType ? `4px solid ${colors.border}` : `1px solid ${colors.border}40`,
+                      border: isStaticType ? `2px solid ${effectiveBorderColor}` : `1px solid ${effectiveBorderColor}40`,
+                      borderLeft: isStaticType ? `4px solid ${effectiveBorderColor}` : `1px solid ${effectiveBorderColor}40`,
                       backgroundImage: isStaticType
                         ? `repeating-linear-gradient(
                             45deg,
                             transparent,
                             transparent 5px,
-                            ${colors.border}40 5px,
-                            ${colors.border}40 10px
+                            ${effectiveBorderColor}40 5px,
+                            ${effectiveBorderColor}40 10px
                           )`
                         : 'none',
-                      opacity: 1,
+                      opacity: isFaded ? 0.4 : 1,
+                      filter: isFaded ? 'grayscale(50%)' : 'none',
                       overflow: 'visible',
-                      boxShadow: isStaticType ? 'none' : '0px 2px 8px rgba(0,0,0,0.06)',
+                      boxShadow: isHighlighted
+                        ? '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                        : isStaticType
+                          ? 'none'
+                          : '0px 2px 8px rgba(0,0,0,0.06)',
+                      transform: isHighlighted ? 'scale(1.02)' : 'none',
+                      zIndex: isHighlighted ? 5 : 'auto',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease',
+                      transition: 'all 0.3s ease',
                       '&:hover': {
-                        boxShadow: isStaticType ? 'none' : '0px 4px 12px rgba(0,0,0,0.1)',
-                        transform: 'translateY(-2px)'
+                        boxShadow: isHighlighted
+                          ? '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                          : isStaticType
+                            ? 'none'
+                            : '0px 4px 12px rgba(0,0,0,0.1)',
+                        transform: isHighlighted ? 'scale(1.03) translateY(-2px)' : 'translateY(-2px)',
+                        zIndex: 10,
+                        opacity: isFaded ? 0.6 : 1
                       }
                     }}
                   >
@@ -330,7 +376,7 @@ export default function UnifiedMultiResourceWeekView({
                         fontSize: '0.65rem',
                         fontWeight: 500,
                         display: 'block',
-                        color: colors.text,
+                        color: effectiveTextColor,
                         lineHeight: 1.2
                       }}
                       noWrap
@@ -346,7 +392,7 @@ export default function UnifiedMultiResourceWeekView({
                               width: 5,
                               height: 5,
                               borderRadius: '50%',
-                              bgcolor: service.color,
+                              bgcolor: isFaded ? adjustColorOpacity(service.color, 0.3) : service.color,
                               flexShrink: 0
                             }}
                           />
@@ -356,8 +402,8 @@ export default function UnifiedMultiResourceWeekView({
                         variant='caption'
                         sx={{
                           fontSize: '0.6rem',
-                          color: colors.text,
-                          opacity: 0.8
+                          color: effectiveTextColor,
+                          opacity: isFaded ? 0.5 : 0.8
                         }}
                         noWrap
                       >

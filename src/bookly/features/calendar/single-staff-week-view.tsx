@@ -9,6 +9,23 @@ import { useCalendarStore } from './state'
 import { buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
 
+// Helper to adjust color opacity for faded events
+const adjustColorOpacity = (color: string, opacity: number): string => {
+  if (color.startsWith('#')) {
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
+  if (color.startsWith('rgb(')) {
+    return color.replace('rgb(', 'rgba(').replace(')', `, ${opacity})`)
+  }
+  if (color.startsWith('rgba(')) {
+    return color.replace(/,\s*[\d.]+\)$/, `, ${opacity})`)
+  }
+  return color
+}
+
 interface SingleStaffWeekViewProps {
   events: CalendarEvent[]
   staff: { id: string; name: string; photo?: string; workingHours?: string }
@@ -33,6 +50,8 @@ export default function SingleStaffWeekView({
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const colorScheme = useCalendarStore(state => state.colorScheme)
+  const isSearchActive = useCalendarStore(state => state.isSearchActive)
+  const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
 
   // Current time tracking for live indicator
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -329,21 +348,41 @@ export default function SingleStaffWeekView({
                     dayEvents.map(event => {
                       const colors = buildEventColors(colorScheme, event.extendedProps.status)
 
+                      // Search highlighting logic
+                      const isMatchedBySearch = isEventMatchedBySearch(event.id)
+                      const isFaded = isSearchActive && !isMatchedBySearch
+                      const isHighlighted = isSearchActive && isMatchedBySearch
+
+                      // Adjust colors for faded events
+                      const effectiveBgColor = isFaded ? adjustColorOpacity(colors.bg, 0.25) : colors.bg
+                      const effectiveBorderColor = isFaded ? adjustColorOpacity(colors.border, 0.3) : colors.border
+                      const effectiveTextColor = isFaded ? adjustColorOpacity(colors.text, 0.4) : colors.text
+
                       return (
                         <Box
                           key={event.id}
                           onClick={() => onEventClick?.(event)}
                           sx={{
-                            bgcolor: colors.bg,
+                            bgcolor: effectiveBgColor,
                             border: 2,
-                            borderColor: colors.border,
+                            borderColor: effectiveBorderColor,
                             borderRadius: 1.5,
                             p: 1.5,
                             cursor: 'pointer',
-                            transition: 'all 0.2s',
+                            transition: 'all 0.3s ease',
+                            opacity: isFaded ? 0.4 : 1,
+                            filter: isFaded ? 'grayscale(50%)' : 'none',
+                            boxShadow: isHighlighted
+                              ? '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                              : 'none',
+                            transform: isHighlighted ? 'scale(1.02)' : 'none',
+                            zIndex: isHighlighted ? 5 : 'auto',
                             '&:hover': {
-                              boxShadow: 3,
-                              transform: 'scale(1.02)'
+                              boxShadow: isHighlighted
+                                ? '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                                : 3,
+                              transform: 'scale(1.02)',
+                              opacity: isFaded ? 0.6 : 1
                             }
                           }}
                         >
@@ -352,7 +391,7 @@ export default function SingleStaffWeekView({
                             sx={{
                               display: 'block',
                               fontWeight: 700,
-                              color: colors.text,
+                              color: effectiveTextColor,
                               fontSize: '0.7rem',
                               mb: 0.5
                             }}
@@ -363,7 +402,7 @@ export default function SingleStaffWeekView({
                             variant="body2"
                             sx={{
                               fontWeight: 700,
-                              color: colors.text,
+                              color: effectiveTextColor,
                               fontSize: '0.85rem',
                               lineHeight: 1.4,
                               mb: 0.25
@@ -381,7 +420,7 @@ export default function SingleStaffWeekView({
                                     width: 5,
                                     height: 5,
                                     borderRadius: '50%',
-                                    bgcolor: service.color,
+                                    bgcolor: isFaded ? adjustColorOpacity(service.color, 0.3) : service.color,
                                     flexShrink: 0
                                   }}
                                 />
@@ -390,9 +429,9 @@ export default function SingleStaffWeekView({
                             <Typography
                               variant="caption"
                               sx={{
-                                color: colors.text,
+                                color: effectiveTextColor,
                                 fontSize: '0.7rem',
-                                opacity: 0.9,
+                                opacity: isFaded ? 0.5 : 0.9,
                                 lineHeight: 1.3
                               }}
                             >

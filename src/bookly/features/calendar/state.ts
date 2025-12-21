@@ -228,6 +228,10 @@ interface CalendarStore extends CalendarState {
   // Slot override actions
   overrideSlot: (templateId: string, date: string, patternId: string, updates: Partial<StaticServiceSlot>) => void
   cancelSlotOccurrence: (templateId: string, date: string, patternId: string) => void
+  // Search actions
+  setSearchQuery: (query: string) => void
+  clearSearch: () => void
+  isEventMatchedBySearch: (eventId: string) => boolean
 }
 
 export const useCalendarStore = create<CalendarStore>((set, get) => ({
@@ -258,6 +262,10 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   staticSlots: loadStaticSlots(),
   scheduleTemplates: loadTemplates(),
   isTemplateManagementOpen: false,
+  // Search state
+  searchQuery: '',
+  searchMatchedEventIds: new Set<string>(),
+  isSearchActive: false,
 
   // Actions
   setView: (view) => {
@@ -1013,5 +1021,75 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       set({ staticSlots: updatedSlots })
       savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
     }
+  },
+
+  // Search actions
+  setSearchQuery: (query: string) => {
+    const { events } = get()
+    const trimmedQuery = query.trim().toLowerCase()
+
+    if (!trimmedQuery) {
+      // Clear search when query is empty
+      set({
+        searchQuery: '',
+        searchMatchedEventIds: new Set<string>(),
+        isSearchActive: false
+      })
+      return
+    }
+
+    // Search through events by:
+    // - Booking reference (bookingId)
+    // - Customer name
+    // - Customer phone
+    // - Customer email
+    // - Staff name
+    // - Service name
+    const matchedIds = new Set<string>()
+
+    events.forEach(event => {
+      const props = event.extendedProps
+
+      // Skip non-booking events (time off, reservations)
+      if (props.type === 'timeOff' || props.type === 'reservation') {
+        return
+      }
+
+      const searchableFields = [
+        props.bookingId?.toLowerCase() || '',
+        props.customerName?.toLowerCase() || '',
+        props.customerPhone?.toLowerCase() || '',
+        props.customerEmail?.toLowerCase() || '',
+        props.staffName?.toLowerCase() || '',
+        props.serviceName?.toLowerCase() || '',
+        event.id?.toLowerCase() || ''
+      ]
+
+      // Check if any field contains the search query
+      if (searchableFields.some(field => field.includes(trimmedQuery))) {
+        matchedIds.add(event.id)
+      }
+    })
+
+    set({
+      searchQuery: query,
+      searchMatchedEventIds: matchedIds,
+      isSearchActive: true
+    })
+  },
+
+  clearSearch: () => {
+    set({
+      searchQuery: '',
+      searchMatchedEventIds: new Set<string>(),
+      isSearchActive: false
+    })
+  },
+
+  isEventMatchedBySearch: (eventId: string) => {
+    const { isSearchActive, searchMatchedEventIds } = get()
+    // If search is not active, all events are "matched" (not faded)
+    if (!isSearchActive) return true
+    return searchMatchedEventIds.has(eventId)
   }
 }))
