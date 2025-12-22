@@ -1081,9 +1081,33 @@ export default function UnifiedMultiResourceDayView({
                               borderBottom: 1,
                               borderRight: 1,
                               borderColor: 'divider',
-                              bgcolor: bgColor
+                              bgcolor: bgColor,
+                              position: 'relative'
                             }}
-                          />
+                          >
+                            {/* 15-minute interval lines */}
+                            {[40, 80, 120].map((topPosition, lineIndex) => (
+                              <Box
+                                key={`line-${lineIndex}`}
+                                sx={{
+                                  position: 'absolute',
+                                  top: topPosition,
+                                  left: 0,
+                                  right: 0,
+                                  height: 0,
+                                  borderTop: isDark
+                                    ? '1px dashed rgba(255, 255, 255, 0.15)'
+                                    : '1px dashed rgba(0, 0, 0, 0.12)',
+                                  borderImageSlice: 1,
+                                  borderImageRepeat: 'round',
+                                  borderImageSource: isDark
+                                    ? 'repeating-linear-gradient(to right, rgba(255, 255, 255, 0.15) 0, rgba(255, 255, 255, 0.15) 6px, transparent 6px, transparent 12px)'
+                                    : 'repeating-linear-gradient(to right, rgba(0, 0, 0, 0.12) 0, rgba(0, 0, 0, 0.12) 6px, transparent 6px, transparent 12px)',
+                                  pointerEvents: 'none'
+                                }}
+                              />
+                            ))}
+                          </Box>
                         ))}
                       <Box sx={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
                         {renderResourceColumn(resource, index)}
