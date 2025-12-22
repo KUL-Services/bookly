@@ -131,7 +131,9 @@ const initialStaffFilter: StaffFilter = {
 
 const initialRoomFilter: RoomFilter = {
   allRooms: true,
-  roomIds: []
+  roomIds: [],
+  availableNow: false,
+  availableToday: false
 }
 
 const initialHighlights: HighlightFilters = {

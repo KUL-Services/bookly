@@ -65,37 +65,73 @@ export default function UnifiedMultiResourceWeekView({
   const allEvents = useCalendarStore(state => state.events)
   const isSearchActive = useCalendarStore(state => state.isSearchActive)
   const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
-  const { rooms } = useStaffManagementStore()
+  const branchFilters = useCalendarStore(state => state.branchFilters)
+  const staffFilters = useCalendarStore(state => state.staffFilters)
+  const roomFilters = useCalendarStore(state => state.roomFilters)
+  const schedulingMode = useCalendarStore(state => state.schedulingMode)
+  const { rooms, staffWorkingHours } = useStaffManagementStore()
 
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd })
 
-  // Group all resources (staff and rooms) by branch
+  // Group all resources (staff and rooms) by branch with filtering
   const resourcesByBranch = useMemo(() => {
     const grouped: Record<string, any[]> = {}
 
-    // Add all staff
-    mockStaff.forEach(staff => {
-      const branchId = staff.branchId || '1-1'
-      if (!grouped[branchId]) {
-        grouped[branchId] = []
-      }
-      grouped[branchId].push({ ...staff, type: 'staff' as const })
-    })
+    // Determine which branches to show
+    const selectedBranchIds = branchFilters.allBranches || branchFilters.branchIds.length === 0
+      ? Array.from(new Set([...mockStaff.map(s => s.branchId || '1-1'), ...rooms.map(r => r.branchId || '1-1')]))
+      : branchFilters.branchIds
 
-    // Add all rooms
-    rooms.forEach(room => {
-      const branchId = room.branchId || '1-1'
+    selectedBranchIds.forEach(branchId => {
+      // Filter staff for this branch
+      let filteredStaff = mockStaff.filter(staff => (staff.branchId || '1-1') === branchId)
+
+      // Apply staff filters
+      if (staffFilters.onlyMe) {
+        filteredStaff = filteredStaff.filter(staff => staff.id === '1')
+      } else if (staffFilters.staffIds.length > 0) {
+        filteredStaff = filteredStaff.filter(staff => staffFilters.staffIds.includes(staff.id))
+      }
+
+      // Apply workingStaffOnly filter (check if staff works on ANY day of the week)
+      if (staffFilters.workingStaffOnly) {
+        filteredStaff = filteredStaff.filter(staff => {
+          const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+          return weekDays.some(day => {
+            const dayOfWeek = dayNames[day.getDay()]
+            const workingHours = staffWorkingHours[staff.id]?.[dayOfWeek]
+            return workingHours?.isWorking && workingHours.shifts && workingHours.shifts.length > 0
+          })
+        })
+      }
+
+      // Filter rooms for this branch
+      let filteredRooms = rooms.filter(room => (room.branchId || '1-1') === branchId)
+
+      // Apply room filters
+      if (!roomFilters.allRooms && roomFilters.roomIds.length > 0) {
+        filteredRooms = filteredRooms.filter(room => roomFilters.roomIds.includes(room.id))
+      }
+
+      // Add filtered staff
       if (!grouped[branchId]) {
         grouped[branchId] = []
       }
-      grouped[branchId].push({ ...room, type: 'room' as const })
+      filteredStaff.forEach(staff => {
+        grouped[branchId].push({ ...staff, type: 'staff' as const })
+      })
+
+      // Add filtered rooms
+      filteredRooms.forEach(room => {
+        grouped[branchId].push({ ...room, type: 'room' as const })
+      })
     })
 
     return grouped
-  }, [rooms])
+  }, [rooms, branchFilters, staffFilters, roomFilters, weekDays, staffWorkingHours])
 
   // Get events for a specific resource and day
   const getResourceDayEvents = (resourceId: string, resourceType: 'staff' | 'room', day: Date) => {

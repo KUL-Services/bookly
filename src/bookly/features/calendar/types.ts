@@ -154,6 +154,8 @@ export interface StaffFilter {
 export interface RoomFilter {
   allRooms: boolean
   roomIds: string[]
+  availableNow?: boolean // Filter to show only rooms available at the current moment
+  availableToday?: boolean // Filter to show only rooms with availability today
 }
 
 export interface HighlightFilters {

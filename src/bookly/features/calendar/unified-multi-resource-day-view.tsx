@@ -62,6 +62,10 @@ export default function UnifiedMultiResourceDayView({
   const allEvents = useCalendarStore(state => state.events)
   const isSearchActive = useCalendarStore(state => state.isSearchActive)
   const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
+  const branchFilters = useCalendarStore(state => state.branchFilters)
+  const staffFilters = useCalendarStore(state => state.staffFilters)
+  const roomFilters = useCalendarStore(state => state.roomFilters)
+  const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const { rooms, staffWorkingHours } = useStaffManagementStore()
 
   // Refs for scroll synchronization
@@ -108,43 +112,69 @@ export default function UnifiedMultiResourceDayView({
   const orderedResources = useMemo(() => {
     const resources: Array<any> = []
 
-    // Get unique branches from staff and rooms
-    const branches = new Set<string>()
-    mockStaff.forEach(staff => branches.add(staff.branchId || '1-1'))
-    rooms.forEach(room => branches.add(room.branchId || '1-1'))
+    // Determine which branches to show
+    const selectedBranchIds = branchFilters.allBranches || branchFilters.branchIds.length === 0
+      ? Array.from(new Set([...mockStaff.map(s => s.branchId || '1-1'), ...rooms.map(r => r.branchId || '1-1')]))
+      : branchFilters.branchIds
 
     // Sort branches for consistent ordering
-    const sortedBranches = Array.from(branches).sort()
+    const sortedBranches = selectedBranchIds.sort()
 
     sortedBranches.forEach(branchId => {
-      // Layer 2: STAFF (within branch) - all staff
-      mockStaff.forEach(staff => {
-        if ((staff.branchId || '1-1') === branchId) {
-          resources.push({
-            ...staff,
-            type: 'staff' as const,
-            primaryGroup: branchId,
-            secondaryGroup: 'staff'
-          })
-        }
+      // Layer 2: STAFF (within branch) - filter based on staff filters
+      let filteredStaff = mockStaff.filter(staff => (staff.branchId || '1-1') === branchId)
+
+      // Apply staff filters
+      if (staffFilters.onlyMe) {
+        filteredStaff = filteredStaff.filter(staff => staff.id === '1')
+      } else if (staffFilters.staffIds.length > 0) {
+        filteredStaff = filteredStaff.filter(staff => staffFilters.staffIds.includes(staff.id))
+      }
+
+      // Apply workingStaffOnly filter
+      if (staffFilters.workingStaffOnly) {
+        filteredStaff = filteredStaff.filter(staff => {
+          const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+          const dayOfWeek = dayNames[currentDate.getDay()]
+          const workingHours = staffWorkingHours[staff.id]?.[dayOfWeek]
+          return workingHours?.isWorking && workingHours.shifts && workingHours.shifts.length > 0
+        })
+      }
+
+      filteredStaff.forEach(staff => {
+        resources.push({
+          ...staff,
+          type: 'staff' as const,
+          primaryGroup: branchId,
+          secondaryGroup: 'staff'
+        })
       })
 
-      // Layer 2: ROOMS (within branch) - all rooms
-      rooms.forEach(room => {
-        if ((room.branchId || '1-1') === branchId) {
-          resources.push({
-            ...room,
-            type: 'room' as const,
-            primaryGroup: branchId,
-            secondaryGroup: 'rooms',
-            photo: undefined
-          })
-        }
+      // Layer 2: ROOMS (within branch) - filter based on room filters
+      let filteredRooms = rooms.filter(room => (room.branchId || '1-1') === branchId)
+
+      // Apply room filters
+      if (!roomFilters.allRooms && roomFilters.roomIds.length > 0) {
+        filteredRooms = filteredRooms.filter(room => roomFilters.roomIds.includes(room.id))
+      }
+
+      // TODO: Implement availableNow and availableToday filters for rooms
+      // For now, these filters are placeholders - the actual logic will depend on
+      // how you want to determine room availability
+
+      filteredRooms.forEach(room => {
+        resources.push({
+          ...room,
+          type: 'room' as const,
+          primaryGroup: branchId,
+          secondaryGroup: 'rooms',
+          photo: undefined
+        })
       })
     })
 
     return resources
-  }, [rooms])
+  }, [rooms, branchFilters, staffFilters, roomFilters, currentDate, staffWorkingHours])
 
   // Filter events for current date
   const todayEvents = events.filter(event => isSameDay(new Date(event.start), currentDate))

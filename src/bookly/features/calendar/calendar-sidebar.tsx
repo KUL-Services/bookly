@@ -101,8 +101,9 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   // Get available rooms based on selected branches
   const availableRooms = useMemo(() => {
     if (pendingBranches.allBranches || pendingBranches.branchIds.length === 0) {
-      const branchId = branches[0]?.id || '1-1'
-      return getRoomsByBranch(branchId)
+      // Get rooms from all branches
+      const allRooms = branches.flatMap(branch => getRoomsByBranch(branch.id))
+      return allRooms
     }
     // Get rooms for all selected branches
     const allRooms = pendingBranches.branchIds.flatMap(branchId => getRoomsByBranch(branchId))
@@ -258,6 +259,19 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     applyFilters(pendingBranches, newStaff, pendingRooms, pendingHighlights)
   }
 
+  // Room filter handlers
+  const handleRoomAvailableNowToggle = (checked: boolean) => {
+    const newRooms = { ...pendingRooms, availableNow: checked }
+    setPendingRooms(newRooms)
+    applyFilters(pendingBranches, pendingStaff, newRooms, pendingHighlights)
+  }
+
+  const handleRoomAvailableTodayToggle = (checked: boolean) => {
+    const newRooms = { ...pendingRooms, availableToday: checked }
+    setPendingRooms(newRooms)
+    applyFilters(pendingBranches, pendingStaff, newRooms, pendingHighlights)
+  }
+
   // Apply filters instantly without needing to click Apply button
   const applyFilters = (
     branches: BranchFilter,
@@ -280,7 +294,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
       workingStaffOnly: false,
       availableNow: false
     }
-    const clearedRooms: RoomFilter = { allRooms: true, roomIds: [] }
+    const clearedRooms: RoomFilter = { allRooms: true, roomIds: [], availableNow: false, availableToday: false }
     const clearedHighlights: HighlightFilters = { payments: [], statuses: [], selection: [], details: [] }
     setPendingBranches(clearedBranches)
     setPendingStaff(cleared)
@@ -402,52 +416,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
 
         <Divider sx={{ my: 2 }} />
 
-        {/* Staff/Resources Segmented Control */}
-        {schedulingMode === 'static' && (
-          <Box sx={{ mb: 2 }}>
-            <ToggleButtonGroup
-              value={resourceTab}
-              exclusive
-              onChange={(e, newValue) => {
-                if (newValue !== null) {
-                  setResourceTab(newValue)
-                }
-              }}
-              fullWidth
-              sx={{
-                '& .MuiToggleButton-root': {
-                  py: 1,
-                  textTransform: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  border: 1,
-                  borderColor: 'divider',
-                  '&.Mui-selected': {
-                    bgcolor: theme =>
-                      theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
-                    color: 'primary.main',
-                    '&:hover': {
-                      bgcolor: theme =>
-                        theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.18)' : 'rgba(25, 118, 210, 0.12)'
-                    }
-                  }
-                }
-              }}
-            >
-              <ToggleButton value='staff'>
-                <i className='ri-user-line' style={{ fontSize: '1.1rem', marginRight: '0.5rem' }} />
-                Staff Members
-              </ToggleButton>
-              <ToggleButton value='resources'>
-                <i className='ri-door-line' style={{ fontSize: '1.1rem', marginRight: '0.5rem' }} />
-                Resources
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-        )}
-
-        {/* Staff and Resources */}
-        {(schedulingMode !== 'static' || resourceTab === 'staff') && (
+        {/* Staff */}
           <Accordion
             expanded={expandedAccordions.staff}
             onChange={handleAccordionChange('staff')}
@@ -562,10 +531,10 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
               </FormGroup>
             </AccordionDetails>
           </Accordion>
-        )}
 
-        {/* Rooms (only in static scheduling mode and resources tab) */}
-        {schedulingMode === 'static' && resourceTab === 'resources' && (
+        <Divider sx={{ my: 2 }} />
+
+        {/* Rooms */}
           <Accordion
             expanded={expandedAccordions.rooms}
             onChange={handleAccordionChange('rooms')}
@@ -618,6 +587,24 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                       All Rooms
                     </Typography>
                   }
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={pendingRooms.availableNow || false}
+                      onChange={e => handleRoomAvailableNowToggle(e.target.checked)}
+                    />
+                  }
+                  label={<Typography variant='body2'>Available now</Typography>}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={pendingRooms.availableToday || false}
+                      onChange={e => handleRoomAvailableTodayToggle(e.target.checked)}
+                    />
+                  }
+                  label={<Typography variant='body2'>Available today</Typography>}
                 />
                 <Button
                   variant='text'
@@ -672,7 +659,6 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
               </FormGroup>
             </AccordionDetails>
           </Accordion>
-        )}
 
         <Divider sx={{ my: 2 }} />
 
