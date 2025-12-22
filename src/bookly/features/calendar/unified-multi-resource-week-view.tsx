@@ -99,11 +99,34 @@ export default function UnifiedMultiResourceWeekView({
 
   // Get events for a specific resource and day
   const getResourceDayEvents = (resourceId: string, resourceType: 'staff' | 'room', day: Date) => {
-    if (resourceType === 'staff') {
-      return events.filter(event => event.extendedProps.staffId === resourceId && isSameDay(new Date(event.start), day))
-    } else {
-      return events.filter(event => event.extendedProps.roomId === resourceId && isSameDay(new Date(event.start), day))
-    }
+    const allEvents = resourceType === 'staff'
+      ? events.filter(event => event.extendedProps.staffId === resourceId && isSameDay(new Date(event.start), day))
+      : events.filter(event => event.extendedProps.roomId === resourceId && isSameDay(new Date(event.start), day))
+
+    // Filter out timeOff and reservation events - they'll be shown as stripes
+    return allEvents.filter(
+      event => event.extendedProps.type !== 'timeOff' && event.extendedProps.type !== 'reservation'
+    )
+  }
+
+  // Check if staff is working on a given day
+  const isStaffWorking = (staffId: string, day: Date) => {
+    const { staffWorkingHours } = useStaffManagementStore.getState()
+    const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const dayOfWeek = dayNames[day.getDay()]
+    const workingHours = staffWorkingHours[staffId]?.[dayOfWeek]
+
+    return workingHours?.isWorking && workingHours.shifts && workingHours.shifts.length > 0
+  }
+
+  // Check if staff has time-off on a given day
+  const hasStaffTimeOff = (staffId: string, day: Date) => {
+    return events.some(
+      event =>
+        event.extendedProps.type === 'timeOff' &&
+        event.extendedProps.staffId === staffId &&
+        isSameDay(new Date(event.start), day)
+    )
   }
 
   // Get room assignment for BOTH dynamic and static assigned staff on a specific day
@@ -199,6 +222,9 @@ export default function UnifiedMultiResourceWeekView({
           const dayEvents = getResourceDayEvents(resource.id, resource.type, day)
           const roomAssignment = isStaff ? getStaffRoomAssignment(resource.id, day) : null
 
+          const showNonWorkingStripes = isStaff && !isStaffWorking(resource.id, day)
+          const showTimeOffStripes = isStaff && hasStaffTimeOff(resource.id, day)
+
           // NOTE: Cell click disabled - only slots/bookings are clickable
           return (
             <Box
@@ -207,6 +233,7 @@ export default function UnifiedMultiResourceWeekView({
                 p: 1,
                 borderRight: 1,
                 borderColor: 'divider',
+                position: 'relative',
                 bgcolor: isToday(day)
                   ? isDark
                     ? 'rgba(144,202,249,0.05)'
@@ -225,6 +252,23 @@ export default function UnifiedMultiResourceWeekView({
               // onClick disabled - only slots/bookings are clickable
               // onClick={() => onCellClick?.(resource.id, resource.type, day)}
             >
+              {/* Non-working hours or time-off overlay (diagonal stripes) */}
+              {(showNonWorkingStripes || showTimeOffStripes) && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                    backgroundImage: isDark
+                      ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
+                      : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
+                  }}
+                />
+              )}
               {/* Room assignment indicator */}
               {roomAssignment && (
                 <Box

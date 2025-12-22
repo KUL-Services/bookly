@@ -121,22 +121,32 @@ export function CalendarPopover({
             },
             '& .rdp-day_today:not(.rdp-day_selected)': {
               fontWeight: 700,
-              color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'),
+              color: theme => (theme.palette.mode === 'dark' ? '#ffffff' : '#000000'),
               backgroundColor: theme =>
-                theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
-              border: '1px solid',
+                theme.palette.mode === 'dark' ? 'rgba(156, 163, 175, 0.3)' : 'rgba(156, 163, 175, 0.2)',
+              border: '2px solid',
               borderColor: theme =>
-                theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)'
+                theme.palette.mode === 'dark' ? 'rgba(156, 163, 175, 0.6)' : 'rgba(107, 114, 128, 0.5)',
+              boxShadow: theme =>
+                theme.palette.mode === 'dark'
+                  ? '0 0 0 2px rgba(156, 163, 175, 0.2)'
+                  : '0 0 0 2px rgba(156, 163, 175, 0.15)'
             },
             '& .rdp-day_selected': {
-              backgroundColor: theme =>
-                theme.palette.mode === 'dark' ? 'rgb(20, 184, 166) !important' : 'rgb(20, 184, 166) !important',
-              color: theme => (theme.palette.mode === 'dark' ? '#0f172a !important' : '#ffffff !important'),
+              backgroundColor: theme => theme.palette.primary.main + ' !important',
+              color: theme => theme.palette.primary.contrastText + ' !important',
               fontWeight: 700,
-              border: 'none !important',
+              border: '2px solid !important',
+              borderColor: theme => theme.palette.primary.dark + ' !important',
+              boxShadow: theme =>
+                theme.palette.mode === 'dark'
+                  ? '0 0 0 3px rgba(25, 118, 210, 0.25) !important'
+                  : '0 0 0 3px rgba(25, 118, 210, 0.2) !important',
+              transform: 'scale(1.05) !important',
+              zIndex: 10,
               '&:hover': {
-                backgroundColor: theme =>
-                  theme.palette.mode === 'dark' ? 'rgb(13, 148, 136) !important' : 'rgb(13, 148, 136) !important'
+                backgroundColor: theme => theme.palette.primary.dark + ' !important',
+                transform: 'scale(1.08) !important'
               }
             },
             '& .rdp-day_outside': {

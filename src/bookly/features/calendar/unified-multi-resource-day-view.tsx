@@ -201,6 +201,101 @@ export default function UnifiedMultiResourceDayView({
     }
   }
 
+  // Helper to check if a time is within working hours for a staff member
+  const getStaffNonWorkingBlocks = (staffId: string) => {
+    const staff = mockStaff.find(s => s.id === staffId)
+    if (!staff) return []
+
+    const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const dayOfWeek = dayNames[currentDate.getDay()]
+    const workingHours = staffWorkingHours[staffId]?.[dayOfWeek]
+
+    const nonWorkingBlocks: Array<{ top: number; height: number }> = []
+    const slotHeight = 40
+    const startHour = 6
+    const endHour = 22
+
+    if (!workingHours || !workingHours.isWorking || !workingHours.shifts || workingHours.shifts.length === 0) {
+      // Entire day is non-working
+      const totalMinutes = (endHour - startHour) * 60
+      nonWorkingBlocks.push({
+        top: 0,
+        height: (totalMinutes / 15) * slotHeight
+      })
+      return nonWorkingBlocks
+    }
+
+    // Check for gaps before first shift, between shifts, and after last shift
+    const shifts = [...workingHours.shifts].sort((a, b) => {
+      const aStart = parseInt(a.start.replace(':', ''))
+      const bStart = parseInt(b.start.replace(':', ''))
+      return aStart - bStart
+    })
+
+    let currentMins = startHour * 60
+
+    shifts.forEach((shift, index) => {
+      const [shiftStartH, shiftStartM] = shift.start.split(':').map(Number)
+      const [shiftEndH, shiftEndM] = shift.end.split(':').map(Number)
+      const shiftStartMins = shiftStartH * 60 + shiftStartM
+      const shiftEndMins = shiftEndH * 60 + shiftEndM
+
+      // Add block before this shift
+      if (currentMins < shiftStartMins) {
+        const duration = shiftStartMins - currentMins
+        const top = ((currentMins - startHour * 60) / 15) * slotHeight
+        nonWorkingBlocks.push({
+          top,
+          height: (duration / 15) * slotHeight
+        })
+      }
+
+      // Add break times within shift
+      if (shift.breaks && shift.breaks.length > 0) {
+        shift.breaks.forEach(breakTime => {
+          const [breakStartH, breakStartM] = breakTime.start.split(':').map(Number)
+          const [breakEndH, breakEndM] = breakTime.end.split(':').map(Number)
+          const breakStartMins = breakStartH * 60 + breakStartM
+          const breakEndMins = breakEndH * 60 + breakEndM
+
+          const top = ((breakStartMins - startHour * 60) / 15) * slotHeight
+          const duration = breakEndMins - breakStartMins
+          nonWorkingBlocks.push({
+            top,
+            height: (duration / 15) * slotHeight
+          })
+        })
+      }
+
+      currentMins = Math.max(currentMins, shiftEndMins)
+    })
+
+    // Add block after last shift
+    const endMins = endHour * 60
+    if (currentMins < endMins) {
+      const duration = endMins - currentMins
+      const top = ((currentMins - startHour * 60) / 15) * slotHeight
+      nonWorkingBlocks.push({
+        top,
+        height: (duration / 15) * slotHeight
+      })
+    }
+
+    return nonWorkingBlocks
+  }
+
+  // Helper to get time-off blocks for a staff member
+  const getStaffTimeOffBlocks = (staffId: string) => {
+    const timeOffEvents = todayEvents.filter(
+      event => event.extendedProps.type === 'timeOff' && event.extendedProps.staffId === staffId
+    )
+
+    return timeOffEvents.map(event => {
+      const style = getEventStyle(event)
+      return { top: style.top, height: style.height }
+    })
+  }
+
   // Get room assignment blocks for static staff
   const getStaffRoomBlocks = (staffId: string) => {
     const staff = mockStaff.find(s => s.id === staffId)
@@ -262,8 +357,14 @@ export default function UnifiedMultiResourceDayView({
 
   const renderResourceColumn = (resource: any, index: number) => {
     const isStaff = resource.type === 'staff'
-    const resourceEvents = getResourceEvents(resource.id, resource.type)
+    const allResourceEvents = getResourceEvents(resource.id, resource.type)
+    // Filter out timeOff and reservation events - they'll be shown as stripes
+    const resourceEvents = allResourceEvents.filter(
+      event => event.extendedProps.type !== 'timeOff' && event.extendedProps.type !== 'reservation'
+    )
     const roomBlocks = isStaff ? getStaffRoomBlocks(resource.id) : []
+    const nonWorkingBlocks = isStaff ? getStaffNonWorkingBlocks(resource.id) : []
+    const timeOffBlocks = isStaff ? getStaffTimeOffBlocks(resource.id) : []
 
     // NOTE: Staff/room click disabled - only slots/bookings are clickable
     // const handleClick = () => {
@@ -296,6 +397,43 @@ export default function UnifiedMultiResourceDayView({
         // onClick disabled - only slots/bookings are clickable
         // onClick={handleCellClickInternal}
       >
+        {/* Non-working hours overlay (diagonal stripes) */}
+        {nonWorkingBlocks.map((block, idx) => (
+          <Box
+            key={`non-working-${idx}`}
+            sx={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: block.top,
+              height: block.height,
+              pointerEvents: 'none',
+              zIndex: 1,
+              backgroundImage: isDark
+                ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
+                : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
+            }}
+          />
+        ))}
+
+        {/* Time-off overlay (diagonal stripes) */}
+        {timeOffBlocks.map((block, idx) => (
+          <Box
+            key={`time-off-${idx}`}
+            sx={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: block.top,
+              height: block.height,
+              pointerEvents: 'none',
+              zIndex: 2,
+              backgroundImage: isDark
+                ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
+                : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
+            }}
+          />
+        ))}
         {/* Room assignment blocks (for static staff) */}
         {roomBlocks.map((block, idx) => {
           const style = getRoomBlockStyle(block.startTime, block.endTime)
