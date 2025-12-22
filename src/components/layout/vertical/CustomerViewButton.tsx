@@ -46,12 +46,12 @@ const CustomerViewButton = () => {
   }
 
   return (
-    <Tooltip title="Switch to Customer View" placement="bottom">
+    <Tooltip title='Switch to Customer View' placement='bottom'>
       <StyledButton
-        startIcon={<i className="ri-store-2-line text-base" />}
+        startIcon={<i className='ri-store-2-line text-base' />}
         onClick={handleCustomerView}
-        size="small"
-        className="customer-view-btn"
+        size='small'
+        className='customer-view-btn'
       >
         Customer View
       </StyledButton>

@@ -147,7 +147,7 @@ export function DatePickerField({
               '& .rdp-cell': {
                 padding: '2px'
               },
-              '& .rdp-day': {
+              '& .rdp-day_button': {
                 width: '40px',
                 height: '40px',
                 fontSize: '0.9375rem',
@@ -157,7 +157,7 @@ export function DatePickerField({
                 color: theme => theme.palette.text.primary,
                 border: '1px solid transparent',
                 transition: 'all 0.2s ease',
-                '&:hover:not(.rdp-day_selected):not(.rdp-day_disabled)': {
+                '&:not(:disabled):hover': {
                   backgroundColor: theme =>
                     theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
                   borderColor: theme =>
@@ -165,7 +165,7 @@ export function DatePickerField({
                   color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
                 }
               },
-              '& .rdp-day_today:not(.rdp-day_selected)': {
+              '& [data-today="true"]:not([data-selected="true"]) .rdp-day_button': {
                 fontWeight: 700,
                 color: theme => (theme.palette.mode === 'dark' ? '#ffffff' : '#000000'),
                 backgroundColor: theme =>
@@ -178,7 +178,7 @@ export function DatePickerField({
                     ? '0 0 0 2px rgba(156, 163, 175, 0.2)'
                     : '0 0 0 2px rgba(156, 163, 175, 0.15)'
               },
-              '& .rdp-day_selected': {
+              '& [data-selected="true"] .rdp-day_button': {
                 backgroundColor: theme => theme.palette.primary.main + ' !important',
                 color: theme => theme.palette.primary.contrastText + ' !important',
                 fontWeight: 700,
@@ -195,9 +195,13 @@ export function DatePickerField({
                   transform: 'scale(1.08) !important'
                 }
               },
-              '& .rdp-day_outside': {
+              '& [data-outside="true"] .rdp-day_button': {
                 color: theme => theme.palette.text.disabled,
                 opacity: 0.3
+              },
+              '& [data-disabled="true"] .rdp-day_button': {
+                color: theme => theme.palette.text.disabled,
+                opacity: 0.4
               }
             }}
           >

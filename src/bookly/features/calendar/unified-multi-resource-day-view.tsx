@@ -113,9 +113,10 @@ export default function UnifiedMultiResourceDayView({
     const resources: Array<any> = []
 
     // Determine which branches to show
-    const selectedBranchIds = branchFilters.allBranches || branchFilters.branchIds.length === 0
-      ? Array.from(new Set([...mockStaff.map(s => s.branchId || '1-1'), ...rooms.map(r => r.branchId || '1-1')]))
-      : branchFilters.branchIds
+    const selectedBranchIds =
+      branchFilters.allBranches || branchFilters.branchIds.length === 0
+        ? Array.from(new Set([...mockStaff.map(s => s.branchId || '1-1'), ...rooms.map(r => r.branchId || '1-1')]))
+        : branchFilters.branchIds
 
     // Sort branches for consistent ordering
     const sortedBranches = selectedBranchIds.sort()
@@ -756,6 +757,12 @@ export default function UnifiedMultiResourceDayView({
     return group
   }
 
+  const primaryGroups = Object.entries(groupingStructure)
+  const branchDividerWidth = 3
+  const branchDividerColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'
+  const staffRoomDividerWidth = 2
+  const staffRoomDividerColor = isDark ? 'rgba(148,163,184,0.45)' : 'rgba(148,163,184,0.6)'
+
   return (
     <Box
       sx={{
@@ -825,9 +832,11 @@ export default function UnifiedMultiResourceDayView({
                 }}
               >
                 {/* Primary group headers (Branches) */}
-                {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], groupIndex) => {
+                {primaryGroups.map(([primaryGroup, secondaryGroups], groupIndex) => {
                   const resourcesInPrimaryGroup = Object.values(secondaryGroups).flat().flat()
-                  const isFirstGroup = groupIndex === 0
+                  const isLastGroup = groupIndex === primaryGroups.length - 1
+                  const borderRightWidth = isLastGroup ? 1 : branchDividerWidth
+                  const borderRightColor = isLastGroup ? 'divider' : branchDividerColor
                   return (
                     <Box
                       key={`primary-${primaryGroup}`}
@@ -835,8 +844,8 @@ export default function UnifiedMultiResourceDayView({
                         gridColumn: `span ${resourcesInPrimaryGroup.length}`,
                         p: 1.5,
                         bgcolor: isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)',
-                        borderRight: isFirstGroup ? 3 : 1,
-                        borderColor: isFirstGroup ? (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)') : 'divider',
+                        borderRight: borderRightWidth,
+                        borderColor: borderRightColor,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -881,10 +890,24 @@ export default function UnifiedMultiResourceDayView({
                 }}
               >
                 {/* Secondary group headers */}
-                {Object.entries(groupingStructure).map(([primaryGroup, secondaryGroups], primaryIndex) => {
-                  return Object.entries(secondaryGroups).map(([secondaryGroup, resources], secondaryIndex) => {
+                {primaryGroups.map(([primaryGroup, secondaryGroups], primaryIndex) => {
+                  const secondaryEntries = Object.entries(secondaryGroups)
+                  return secondaryEntries.map(([secondaryGroup, resources], secondaryIndex) => {
                     const isStaffGroup = secondaryGroup === 'staff'
-                    const isFirstSecondaryOfRooms = !isStaffGroup && secondaryIndex === 0
+                    const isLastSecondaryGroup = secondaryIndex === secondaryEntries.length - 1
+                    const isLastPrimaryGroup = primaryIndex === primaryGroups.length - 1
+                    const isBranchBoundary = isLastSecondaryGroup && !isLastPrimaryGroup
+                    const isStaffRoomsBoundary = !isLastSecondaryGroup && !isBranchBoundary
+                    const borderRightWidth = isBranchBoundary
+                      ? branchDividerWidth
+                      : isStaffRoomsBoundary
+                        ? staffRoomDividerWidth
+                        : 1
+                    const borderRightColor = isBranchBoundary
+                      ? branchDividerColor
+                      : isStaffRoomsBoundary
+                        ? staffRoomDividerColor
+                        : 'divider'
                     return (
                       <Box
                         key={`secondary-${primaryGroup}-${secondaryGroup}`}
@@ -898,12 +921,8 @@ export default function UnifiedMultiResourceDayView({
                             : isDark
                               ? 'rgba(76, 175, 80, 0.08)'
                               : 'rgba(76, 175, 80, 0.05)',
-                          borderRight: isFirstSecondaryOfRooms ? 3 : 1,
-                          borderColor: isFirstSecondaryOfRooms
-                            ? isDark
-                              ? 'rgba(255,255,255,0.2)'
-                              : 'rgba(0,0,0,0.1)'
-                            : 'divider',
+                          borderRight: borderRightWidth,
+                          borderColor: borderRightColor,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -955,16 +974,34 @@ export default function UnifiedMultiResourceDayView({
               >
                 {/* Resource headers */}
                 {/* NOTE: Resource header click disabled - only slots/bookings are clickable */}
-                {orderedResources.map(resource => {
+                {orderedResources.map((resource, index) => {
                   const isRoom = resource.type === 'room'
+                  const isBranchBoundary =
+                    index < orderedResources.length - 1 &&
+                    orderedResources[index + 1].primaryGroup !== resource.primaryGroup
+                  const isStaffRoomBoundary =
+                    !isBranchBoundary &&
+                    resource.type === 'staff' &&
+                    index < orderedResources.length - 1 &&
+                    orderedResources[index + 1].type === 'room'
+                  const borderRightWidth = isBranchBoundary
+                    ? branchDividerWidth
+                    : isStaffRoomBoundary
+                      ? staffRoomDividerWidth
+                      : 1
+                  const borderRightColor = isBranchBoundary
+                    ? branchDividerColor
+                    : isStaffRoomBoundary
+                      ? staffRoomDividerColor
+                      : 'divider'
 
                   return (
                     <Box
                       key={resource.id}
                       sx={{
                         p: 1.5,
-                        borderRight: 1,
-                        borderColor: 'divider',
+                        borderRight: borderRightWidth,
+                        borderColor: borderRightColor,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -1087,7 +1124,8 @@ export default function UnifiedMultiResourceDayView({
                     xs: `repeat(${orderedResources.length}, 150px)`,
                     md: `repeat(${orderedResources.length}, minmax(180px, 1fr))`
                   },
-                  minWidth: 'min-content'
+                  minWidth: 'min-content',
+                  position: 'relative'
                 }}
               >
                 {/* Resource columns */}
@@ -1145,33 +1183,33 @@ export default function UnifiedMultiResourceDayView({
                     </Box>
                   )
                 })}
-              </Box>
 
-              {/* Current time indicator */}
-              {currentTimeIndicator && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    top: currentTimeIndicator.top,
-                    height: 2,
-                    bgcolor: 'error.main',
-                    zIndex: 5,
-                    pointerEvents: 'none',
-                    '&::before': {
-                      content: '""',
+                {/* Current time indicator */}
+                {currentTimeIndicator && (
+                  <Box
+                    sx={{
                       position: 'absolute',
-                      left: -6,
-                      top: -4,
-                      width: 10,
-                      height: 10,
-                      borderRadius: '50%',
-                      bgcolor: 'error.main'
-                    }
-                  }}
-                />
-              )}
+                      left: 0,
+                      right: 0,
+                      top: currentTimeIndicator.top,
+                      height: 2,
+                      bgcolor: 'error.main',
+                      zIndex: 5,
+                      pointerEvents: 'none',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        left: -6,
+                        top: -4,
+                        width: 10,
+                        height: 10,
+                        borderRadius: '50%',
+                        bgcolor: 'error.main'
+                      }
+                    }}
+                  />
+                )}
+              </Box>
             </Box>
           </Box>
         </Box>
