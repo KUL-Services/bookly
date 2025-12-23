@@ -20,6 +20,7 @@ import CalendarNotifications from './calendar-notifications'
 import TemplateManagementDrawer from './template-management-drawer'
 import QuickActionMenu from './quick-action-menu'
 import FloatingActionMenu from './floating-action-menu'
+import { TimeReservationModal } from '../staff-management/time-reservation-modal'
 import type { CalendarEvent, DateRange } from './types'
 
 interface CalendarShellProps {
@@ -74,6 +75,10 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const [bookingDrawerMode, setBookingDrawerMode] = useState<'create' | 'edit'>('create')
   const [selectedEventForEdit, setSelectedEventForEdit] = useState<CalendarEvent | null>(null)
   const [bookingDrawerInitialServiceId, setBookingDrawerInitialServiceId] = useState<string | null>(null)
+  const [isTimeReservationOpen, setIsTimeReservationOpen] = useState(false)
+  const [timeReservationInitialDate, setTimeReservationInitialDate] = useState<Date | undefined>(undefined)
+  const [timeReservationInitialStaffId, setTimeReservationInitialStaffId] = useState<string | undefined>(undefined)
+  const [timeReservationBranchId, setTimeReservationBranchId] = useState<string | undefined>(undefined)
 
   // Track mouse position for popover
   const mousePositionRef = useRef({ x: 0, y: 0 })
@@ -97,31 +102,29 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       return ['1'] // Current user ID
     }
 
-    // Only work with base staff members (IDs 1-7)
-    const baseStaffIds = ['1', '2', '3', '4', '5', '6', '7']
+    const staffInScope =
+      branchFilters.allBranches || branchFilters.branchIds.length === 0
+        ? mockStaff
+        : mockStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
+    const staffIdsInScope = staffInScope.map(staff => staff.id)
 
-    // If specific staff selected, filter to only base staff and limit to 7 max
     if (staffFilters.staffIds.length > 0) {
-      return staffFilters.staffIds.filter(id => baseStaffIds.includes(id)).slice(0, 7)
+      return staffFilters.staffIds.filter(id => staffIdsInScope.includes(id))
     }
 
-    // Default: show all base staff
-    return baseStaffIds
-  }, [staffFilters, schedulingMode])
+    return staffIdsInScope
+  }, [staffFilters, schedulingMode, branchFilters])
 
   const activeStaffMembers = useMemo(() => {
     return mockStaff.filter(staff => activeStaffIds.includes(staff.id))
   }, [activeStaffIds])
 
   // Get all available staff for dropdown (filtered by branch if applicable)
-  // Only show base staff members (IDs 1-7)
   const availableStaffForDropdown = useMemo(() => {
-    const baseStaff = mockStaff.filter(s => ['1', '2', '3', '4', '5', '6', '7'].includes(s.id))
-
     if (branchFilters.allBranches || branchFilters.branchIds.length === 0) {
-      return baseStaff
+      return mockStaff
     }
-    return baseStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
+    return mockStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
   }, [branchFilters])
 
   // Determine which rooms are being shown (static mode)
@@ -138,8 +141,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       return branchRooms.filter(room => roomFilters.roomIds.includes(room.id))
     }
 
-    // Otherwise show all rooms for the branch (limit to first 7 for performance)
-    return branchRooms.slice(0, 7)
+    // Otherwise show all rooms for the branch
+    return branchRooms
   }, [schedulingMode, branchFilters, roomFilters, getRoomsByBranch])
 
   // Determine which view to show
@@ -284,8 +287,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   }
 
   const handleQuickMenuTimeReservation = () => {
-    // Navigate to staff page with time-reservation action
-    window.location.href = '/en/apps/bookly/staff?action=time-reservation'
+    openTimeReservationModal(selectedTimeRange?.start)
     // Clear overlay when option is selected
     setSelectionOverlay(null)
   }
@@ -307,6 +309,30 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const handleCloseNewBooking = () => {
     closeNewBooking()
     clearCalendarSelection()
+  }
+
+  const getTimeReservationStaffId = () => {
+    if (staffFilters.selectedStaffId) return staffFilters.selectedStaffId
+    if (staffFilters.onlyMe) return '1'
+    if (activeStaffIds.length === 1) return activeStaffIds[0]
+    return undefined
+  }
+
+  const getTimeReservationBranchId = (staffId?: string) => {
+    if (staffId) {
+      const staff = mockStaff.find(member => member.id === staffId)
+      if (staff?.branchId) return staff.branchId
+    }
+    if (branchFilters.allBranches || branchFilters.branchIds.length === 0) return 'all'
+    return branchFilters.branchIds[0]
+  }
+
+  const openTimeReservationModal = (dateOverride?: Date) => {
+    const staffId = getTimeReservationStaffId()
+    setTimeReservationInitialStaffId(staffId)
+    setTimeReservationInitialDate(dateOverride || currentDate)
+    setTimeReservationBranchId(getTimeReservationBranchId(staffId))
+    setIsTimeReservationOpen(true)
   }
 
   const clearCalendarSelection = () => {
@@ -542,11 +568,19 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       <FloatingActionMenu
         onNewAppointment={() => openNewBooking()}
         onTimeReservation={() => {
-          window.location.href = '/en/apps/bookly/staff?action=time-reservation'
+          openTimeReservationModal()
         }}
         onTimeOff={() => {
           window.location.href = '/en/apps/bookly/staff?action=time-off'
         }}
+      />
+
+      <TimeReservationModal
+        open={isTimeReservationOpen}
+        onClose={() => setIsTimeReservationOpen(false)}
+        initialStaffId={timeReservationInitialStaffId}
+        initialDate={timeReservationInitialDate}
+        branchId={timeReservationBranchId}
       />
 
       {/* Error Snackbar */}

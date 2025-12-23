@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Drawer,
   Box,
@@ -85,6 +85,13 @@ export default function NewAppointmentDrawer({
     null
   )
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
+
+  const availableStaff = useMemo(() => {
+    if (branchFilters.allBranches || branchFilters.branchIds.length === 0) {
+      return mockStaff
+    }
+    return mockStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
+  }, [branchFilters])
 
   // Static mode state
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
@@ -673,7 +680,7 @@ export default function NewAppointmentDrawer({
                       setStaffManuallyChosen(true)
                     }}
                   >
-                    {mockStaff.slice(0, 7).map(staff => {
+                    {availableStaff.map(staff => {
                       // Calculate capacity for dynamic staff in dynamic mode
                       const showCapacity =
                         schedulingMode === 'dynamic' && staff.staffType === 'dynamic' && startTime && endTime

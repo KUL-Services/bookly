@@ -88,14 +88,11 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   }, [])
 
   // Filter staff by selected branches
-  // Only show base staff members (IDs 1-7) matching staff-management tabs
   const availableStaff = useMemo(() => {
-    const baseStaff = mockStaff.filter(s => ['1', '2', '3', '4', '5', '6', '7'].includes(s.id))
-
     if (pendingBranches.allBranches || pendingBranches.branchIds.length === 0) {
-      return baseStaff
+      return mockStaff
     }
-    return baseStaff.filter(staff => pendingBranches.branchIds.includes(staff.branchId))
+    return mockStaff.filter(staff => pendingBranches.branchIds.includes(staff.branchId))
   }, [pendingBranches])
 
   // Get available rooms based on selected branches

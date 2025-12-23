@@ -512,7 +512,12 @@ export function StaffMembersTab() {
       <TimeOffModal open={isTimeOffOpen} onClose={toggleTimeOff} />
 
       {/* Time Reservation Modal */}
-      <TimeReservationModal open={isTimeReservationOpen} onClose={toggleTimeReservation} />
+      <TimeReservationModal
+        open={isTimeReservationOpen}
+        onClose={toggleTimeReservation}
+        initialStaffId={selectedStaffId || undefined}
+        branchId={branchFilter}
+      />
 
       {/* Add Staff Member Drawer */}
       <AddStaffMemberDrawer

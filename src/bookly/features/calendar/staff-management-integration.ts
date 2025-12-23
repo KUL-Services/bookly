@@ -49,34 +49,81 @@ export function timeOffToCalendarEvent(timeOff: TimeOffRequest, staffName: strin
 /**
  * Convert time reservation to calendar background event
  */
-export function reservationToCalendarEvent(reservation: TimeReservation, staffName: string): CalendarEvent {
-  return {
-    id: `reservation-${reservation.id}`,
-    title: `${staffName} - ${reservation.reason}`,
-    start: new Date(reservation.start),
-    end: new Date(reservation.end),
-    display: 'background',
-    backgroundColor: 'rgba(33, 150, 243, 0.15)',
-    borderColor: '#2196f3',
-    classNames: ['time-reservation-event'],
-    extendedProps: {
-      type: 'reservation',
-      reservationId: reservation.id,
-      staffId: reservation.staffId,
-      staffName,
-      reason: reservation.reason,
-      note: reservation.note,
-      // Required props for calendar event
-      status: 'confirmed' as const,
-      paymentStatus: 'unpaid' as const,
-      selectionMethod: 'automatically' as const,
-      starred: false,
-      serviceName: 'Reserved',
-      customerName: staffName,
-      price: 0,
-      bookingId: reservation.id
-    }
-  }
+export function reservationToCalendarEvents(
+  reservation: TimeReservation,
+  staffLookup: Record<string, { name: string; branchId?: string }>,
+  roomLookup: Record<string, { name: string; branchId?: string }>
+): CalendarEvent[] {
+  const events: CalendarEvent[] = []
+
+  reservation.staffIds.forEach(staffId => {
+    const staffInfo = staffLookup[staffId]
+    const staffName = staffInfo?.name || 'Staff Member'
+    events.push({
+      id: `reservation-${reservation.id}-staff-${staffId}`,
+      title: `${staffName} - ${reservation.reason}`,
+      start: new Date(reservation.start),
+      end: new Date(reservation.end),
+      display: 'background',
+      backgroundColor: 'rgba(33, 150, 243, 0.15)',
+      borderColor: '#2196f3',
+      classNames: ['time-reservation-event'],
+      extendedProps: {
+        type: 'reservation',
+        reservationId: reservation.id,
+        staffId,
+        staffName,
+        reason: reservation.reason,
+        note: reservation.note,
+        branchId: staffInfo?.branchId,
+        // Required props for calendar event
+        status: 'confirmed' as const,
+        paymentStatus: 'unpaid' as const,
+        selectionMethod: 'automatically' as const,
+        starred: false,
+        serviceName: 'Reserved',
+        customerName: staffName,
+        price: 0,
+        bookingId: reservation.id
+      }
+    })
+  })
+
+  reservation.roomIds.forEach(roomId => {
+    const roomInfo = roomLookup[roomId]
+    const roomName = roomInfo?.name || 'Room'
+    events.push({
+      id: `reservation-${reservation.id}-room-${roomId}`,
+      title: `${roomName} - ${reservation.reason}`,
+      start: new Date(reservation.start),
+      end: new Date(reservation.end),
+      display: 'background',
+      backgroundColor: 'rgba(33, 150, 243, 0.15)',
+      borderColor: '#2196f3',
+      classNames: ['time-reservation-event'],
+      extendedProps: {
+        type: 'reservation',
+        reservationId: reservation.id,
+        staffId: '',
+        staffName: roomName,
+        roomId,
+        reason: reservation.reason,
+        note: reservation.note,
+        branchId: roomInfo?.branchId,
+        // Required props for calendar event
+        status: 'confirmed' as const,
+        paymentStatus: 'unpaid' as const,
+        selectionMethod: 'automatically' as const,
+        starred: false,
+        serviceName: 'Reserved',
+        customerName: roomName,
+        price: 0,
+        bookingId: reservation.id
+      }
+    })
+  })
+
+  return events
 }
 
 /**
@@ -109,13 +156,16 @@ export function hasTimeOffConflict(
  * Check if a time slot conflicts with a reservation
  */
 export function hasReservationConflict(
-  staffId: string,
+  staffId: string | null,
+  roomId: string | null,
   start: Date,
   end: Date,
   reservations: TimeReservation[]
 ): { hasConflict: boolean; conflictingReservation?: TimeReservation } {
   const reservation = reservations.find(res => {
-    if (res.staffId !== staffId) return false
+    const matchesStaff = staffId ? res.staffIds.includes(staffId) : false
+    const matchesRoom = roomId ? res.roomIds.includes(roomId) : false
+    if (!matchesStaff && !matchesRoom) return false
 
     const resStart = new Date(res.start)
     const resEnd = new Date(res.end)
@@ -167,7 +217,7 @@ export function getStaffUnavailability(
 
   // Check reservations
   reservations.forEach(res => {
-    if (res.staffId !== staffId) return
+    if (!res.staffIds.includes(staffId)) return
 
     const resStart = new Date(res.start)
     const resEnd = new Date(res.end)
@@ -190,23 +240,26 @@ export function getStaffUnavailability(
  * Validate if a booking can be created (no conflicts)
  */
 export function validateBookingTime(
-  staffId: string,
+  staffId: string | null,
+  roomId: string | null,
   start: Date,
   end: Date,
   timeOffRequests: TimeOffRequest[],
   reservations: TimeReservation[]
 ): { valid: boolean; error?: string } {
   // Check time off conflicts
-  const timeOffCheck = hasTimeOffConflict(staffId, start, end, timeOffRequests)
-  if (timeOffCheck.hasConflict) {
-    return {
-      valid: false,
-      error: `Staff member has approved time off (${timeOffCheck.conflictingTimeOff?.reason}) during this time`
+  if (staffId) {
+    const timeOffCheck = hasTimeOffConflict(staffId, start, end, timeOffRequests)
+    if (timeOffCheck.hasConflict) {
+      return {
+        valid: false,
+        error: `Staff member has approved time off (${timeOffCheck.conflictingTimeOff?.reason}) during this time`
+      }
     }
   }
 
   // Check reservation conflicts
-  const reservationCheck = hasReservationConflict(staffId, start, end, reservations)
+  const reservationCheck = hasReservationConflict(staffId, roomId, start, end, reservations)
   if (reservationCheck.hasConflict) {
     return {
       valid: false,

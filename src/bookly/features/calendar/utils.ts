@@ -206,7 +206,11 @@ export function filterEvents(
       .map(staff => staff.id)
 
     // Filter events to only include staff from selected branches
-    filtered = filtered.filter(event => validStaffIds!.includes(event.extendedProps.staffId))
+    filtered = filtered.filter(event => {
+      const eventBranchId = event.extendedProps.branchId
+      if (eventBranchId && filters.branchFilters!.branchIds.includes(eventBranchId)) return true
+      return validStaffIds!.includes(event.extendedProps.staffId)
+    })
   }
 
   // Filter by staff (only in dynamic mode)

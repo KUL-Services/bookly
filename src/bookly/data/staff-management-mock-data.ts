@@ -244,7 +244,8 @@ export const mockStaffWorkingHours: Record<string, WeeklyStaffHours> = {
 export const mockTimeReservations: TimeReservation[] = [
   {
     id: 'res-1',
-    staffId: '1',
+    staffIds: ['1'],
+    roomIds: [],
     start: new Date(2025, 0, 15, 14, 0), // Jan 15, 2025, 2:00 PM
     end: new Date(2025, 0, 15, 15, 30), // Jan 15, 2025, 3:30 PM
     reason: 'Staff meeting',
@@ -252,7 +253,8 @@ export const mockTimeReservations: TimeReservation[] = [
   },
   {
     id: 'res-2',
-    staffId: '2',
+    staffIds: ['2'],
+    roomIds: ['room-1-1-1'],
     start: new Date(2025, 0, 20, 10, 0), // Jan 20, 2025, 10:00 AM
     end: new Date(2025, 0, 20, 12, 0), // Jan 20, 2025, 12:00 PM
     reason: 'Training session',
@@ -436,7 +438,7 @@ export const getStaffHoursForDay = (staffId: string, day: keyof WeeklyStaffHours
 }
 
 export const getTimeReservationsForStaff = (staffId: string) => {
-  return mockTimeReservations.filter(res => res.staffId === staffId)
+  return mockTimeReservations.filter(res => res.staffIds.includes(staffId))
 }
 
 export const getTimeOffForStaff = (staffId: string) => {

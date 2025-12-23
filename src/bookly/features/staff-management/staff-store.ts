@@ -451,7 +451,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   getTimeReservationsForStaff: staffId => {
-    return get().timeReservations.filter(res => res.staffId === staffId)
+    return get().timeReservations.filter(res => res.staffIds.includes(staffId))
   },
 
   // Time Off Actions
@@ -1028,7 +1028,12 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
           Object.entries(state.staffServiceAssignments).filter(([id]) => id !== staffId)
         ),
         shiftOverrides: Object.fromEntries(Object.entries(state.shiftOverrides).filter(([id]) => id !== staffId)),
-        timeReservations: state.timeReservations.filter(res => res.staffId !== staffId),
+        timeReservations: state.timeReservations
+          .map(reservation => ({
+            ...reservation,
+            staffIds: reservation.staffIds.filter(id => id !== staffId)
+          }))
+          .filter(reservation => reservation.staffIds.length > 0 || reservation.roomIds.length > 0),
         timeOffRequests: state.timeOffRequests.filter(req => req.staffId !== staffId),
         selectedStaffId: state.selectedStaffId === staffId ? null : state.selectedStaffId
       }))

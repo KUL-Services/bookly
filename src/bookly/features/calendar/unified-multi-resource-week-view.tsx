@@ -165,6 +165,16 @@ export default function UnifiedMultiResourceWeekView({
     )
   }
 
+  const hasResourceReservation = (resourceId: string, resourceType: 'staff' | 'room', day: Date) => {
+    return events.some(event => {
+      if (event.extendedProps.type !== 'reservation') return false
+      if (!isSameDay(new Date(event.start), day)) return false
+      return resourceType === 'staff'
+        ? event.extendedProps.staffId === resourceId
+        : event.extendedProps.roomId === resourceId
+    })
+  }
+
   // Get room assignment for BOTH dynamic and static assigned staff on a specific day
   const getStaffRoomAssignment = (staffId: string, day: Date) => {
     const staff = mockStaff.find(s => s.id === staffId)
@@ -260,6 +270,7 @@ export default function UnifiedMultiResourceWeekView({
 
           const showNonWorkingStripes = isStaff && !isStaffWorking(resource.id, day)
           const showTimeOffStripes = isStaff && hasStaffTimeOff(resource.id, day)
+          const showReservationStripes = hasResourceReservation(resource.id, resource.type, day)
 
           // NOTE: Cell click disabled - only slots/bookings are clickable
           return (
@@ -289,7 +300,7 @@ export default function UnifiedMultiResourceWeekView({
               // onClick={() => onCellClick?.(resource.id, resource.type, day)}
             >
               {/* Non-working hours or time-off overlay (diagonal stripes) */}
-              {(showNonWorkingStripes || showTimeOffStripes) && (
+              {(showNonWorkingStripes || showTimeOffStripes || showReservationStripes) && (
                 <Box
                   sx={{
                     position: 'absolute',
@@ -299,9 +310,13 @@ export default function UnifiedMultiResourceWeekView({
                     bottom: 0,
                     pointerEvents: 'none',
                     zIndex: 1,
-                    backgroundImage: isDark
-                      ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
-                      : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
+                    backgroundImage: showReservationStripes
+                      ? isDark
+                        ? 'repeating-linear-gradient(45deg, rgba(33, 150, 243, 0.2) 0px, rgba(33, 150, 243, 0.2) 8px, transparent 8px, transparent 16px)'
+                        : 'repeating-linear-gradient(45deg, rgba(33, 150, 243, 0.18) 0px, rgba(33, 150, 243, 0.18) 8px, transparent 8px, transparent 16px)'
+                      : isDark
+                        ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
+                        : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
                   }}
                 />
               )}

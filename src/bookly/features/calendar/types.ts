@@ -254,7 +254,8 @@ export interface WeeklyBusinessHours {
 
 export interface TimeReservation {
   id: string
-  staffId: string
+  staffIds: string[]
+  roomIds: string[]
   start: Date
   end: Date
   reason: string

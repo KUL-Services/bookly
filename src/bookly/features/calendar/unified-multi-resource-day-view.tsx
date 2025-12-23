@@ -327,6 +327,20 @@ export default function UnifiedMultiResourceDayView({
     })
   }
 
+  const getReservationBlocks = (resourceId: string, resourceType: 'staff' | 'room') => {
+    const reservationEvents = todayEvents.filter(event => {
+      if (event.extendedProps.type !== 'reservation') return false
+      return resourceType === 'staff'
+        ? event.extendedProps.staffId === resourceId
+        : event.extendedProps.roomId === resourceId
+    })
+
+    return reservationEvents.map(event => {
+      const style = getEventStyle(event)
+      return { top: style.top, height: style.height }
+    })
+  }
+
   // Get room assignment blocks for static staff
   const getStaffRoomBlocks = (staffId: string) => {
     const staff = mockStaff.find(s => s.id === staffId)
@@ -396,6 +410,7 @@ export default function UnifiedMultiResourceDayView({
     const roomBlocks = isStaff ? getStaffRoomBlocks(resource.id) : []
     const nonWorkingBlocks = isStaff ? getStaffNonWorkingBlocks(resource.id) : []
     const timeOffBlocks = isStaff ? getStaffTimeOffBlocks(resource.id) : []
+    const reservationBlocks = getReservationBlocks(resource.id, resource.type)
 
     // NOTE: Staff/room click disabled - only slots/bookings are clickable
     // const handleClick = () => {
@@ -462,6 +477,25 @@ export default function UnifiedMultiResourceDayView({
               backgroundImage: isDark
                 ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
                 : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
+            }}
+          />
+        ))}
+
+        {/* Reservation overlay (blue diagonal stripes) */}
+        {reservationBlocks.map((block, idx) => (
+          <Box
+            key={`reservation-${idx}`}
+            sx={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              top: block.top,
+              height: block.height,
+              pointerEvents: 'none',
+              zIndex: 2,
+              backgroundImage: isDark
+                ? 'repeating-linear-gradient(45deg, rgba(33, 150, 243, 0.2) 0px, rgba(33, 150, 243, 0.2) 8px, transparent 8px, transparent 16px)'
+                : 'repeating-linear-gradient(45deg, rgba(33, 150, 243, 0.18) 0px, rgba(33, 150, 243, 0.18) 8px, transparent 8px, transparent 16px)'
             }}
           />
         ))}

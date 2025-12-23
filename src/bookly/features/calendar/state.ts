@@ -3,7 +3,7 @@ import { mockBookings, mockStaff, mockRooms, mockStaticServiceSlots, mockSchedul
 import { mapBookingToEvent, filterEvents } from './utils'
 import {
   timeOffToCalendarEvent,
-  reservationToCalendarEvent,
+  reservationToCalendarEvents,
   validateBookingTime
 } from './staff-management-integration'
 import { useStaffManagementStore } from '../staff-management/staff-store'
@@ -153,11 +153,21 @@ function generateBackgroundEvents(): CalendarEvent[] {
     return timeOffToCalendarEvent(timeOff, staff?.name || 'Staff Member')
   })
 
-  // Reservation background events
-  const reservationEvents = staffManagementState.timeReservations.map(reservation => {
-    const staff = mockStaff.find(s => s.id === reservation.staffId)
-    return reservationToCalendarEvent(reservation, staff?.name || 'Staff Member')
-  })
+  const staffLookup = mockStaff.reduce<Record<string, { name: string; branchId?: string }>>((acc, staff) => {
+    acc[staff.id] = { name: staff.name, branchId: staff.branchId }
+    return acc
+  }, {})
+  const roomLookup = [...mockRooms, ...staffManagementState.rooms].reduce<
+    Record<string, { name: string; branchId?: string }>
+  >((acc, room) => {
+    acc[room.id] = { name: room.name, branchId: room.branchId }
+    return acc
+  }, {})
+
+  // Reservation background events (support multi-staff and rooms)
+  const reservationEvents = staffManagementState.timeReservations.flatMap(reservation =>
+    reservationToCalendarEvents(reservation, staffLookup, roomLookup)
+  )
 
   return [...timeOffEvents, ...reservationEvents]
 }
@@ -334,10 +344,11 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     const { events, schedulingMode } = get()
 
     // Validate time off and reservation conflicts
-    if (newEvent.extendedProps.staffId) {
+    if (newEvent.extendedProps.staffId || newEvent.extendedProps.roomId) {
       const staffManagementState = useStaffManagementStore.getState()
       const validation = validateBookingTime(
-        newEvent.extendedProps.staffId,
+        newEvent.extendedProps.staffId || null,
+        newEvent.extendedProps.roomId || null,
         new Date(newEvent.start),
         new Date(newEvent.end),
         staffManagementState.timeOffRequests,
@@ -385,16 +396,18 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     const oldEvent = events.find(e => e.id === updatedEvent.id)
 
     // Validate time off and reservation conflicts when changing staff or time
-    if (updatedEvent.extendedProps.staffId) {
+    if (updatedEvent.extendedProps.staffId || updatedEvent.extendedProps.roomId) {
       const staffChanged = oldEvent?.extendedProps.staffId !== updatedEvent.extendedProps.staffId
+      const roomChanged = oldEvent?.extendedProps.roomId !== updatedEvent.extendedProps.roomId
       const timeChanged =
         oldEvent?.start.toString() !== updatedEvent.start.toString() ||
         oldEvent?.end.toString() !== updatedEvent.end.toString()
 
-      if (staffChanged || timeChanged) {
+      if (staffChanged || roomChanged || timeChanged) {
         const staffManagementState = useStaffManagementStore.getState()
         const validation = validateBookingTime(
-          updatedEvent.extendedProps.staffId,
+          updatedEvent.extendedProps.staffId || null,
+          updatedEvent.extendedProps.roomId || null,
           new Date(updatedEvent.start),
           new Date(updatedEvent.end),
           staffManagementState.timeOffRequests,
