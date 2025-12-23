@@ -165,6 +165,12 @@ export default function UnifiedBookingDrawer({
   const isStaticSlotEvent = (() => {
     if (mode === 'edit' && existingEvent && existingEvent.extendedProps) {
       const props = existingEvent.extendedProps as any
+      const eventStaff = mockStaff.find(s => s.id === props.staffId)
+
+      // Dynamic staff should always open as dynamic, even if slot data exists.
+      if (eventStaff?.staffType === 'dynamic') {
+        return false
+      }
 
       // Check for explicit slot properties
       if (props.slotId || props.isStaticSlot) {
@@ -172,7 +178,6 @@ export default function UnifiedBookingDrawer({
       }
 
       // Check if the staff is static type
-      const eventStaff = mockStaff.find(s => s.id === props.staffId)
       if (eventStaff?.staffType === 'static') {
         return true
       }
