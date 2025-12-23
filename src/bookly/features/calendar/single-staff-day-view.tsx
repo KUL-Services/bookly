@@ -567,9 +567,14 @@ export default function SingleStaffDayView({
               const isHighlighted = isSearchActive && isMatchedBySearch
 
               // Adjust colors for faded events
-              const effectiveBgColor = isFaded ? adjustColorOpacity(colors.bg, 0.25) : colors.bg
               const effectiveBorderColor = isFaded ? adjustColorOpacity(colors.border, 0.3) : colors.border
-              const effectiveTextColor = isFaded ? adjustColorOpacity(colors.text, 0.4) : colors.text
+              const baseFillOpacity = isDark ? 0.22 : 0.16
+              const effectiveBgColor = adjustColorOpacity(
+                effectiveBorderColor,
+                isFaded ? baseFillOpacity * 0.6 : baseFillOpacity
+              )
+              const baseTextColor = theme.palette.text.primary
+              const effectiveTextColor = isFaded ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6) : baseTextColor
 
               return (
                 <Box
@@ -583,8 +588,8 @@ export default function SingleStaffDayView({
                     right: 8,
                     height: `${height}px`,
                     bgcolor: effectiveBgColor,
-                    border: 3,
-                    borderColor: effectiveBorderColor,
+                    border: 'none',
+                    borderLeft: `4px solid ${effectiveBorderColor}`,
                     borderRadius: 1.5,
                     p: 1.5,
                     cursor: 'pointer',

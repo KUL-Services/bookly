@@ -192,10 +192,14 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
       const isFaded = isSearchActive && !isMatchedBySearch
       const isHighlighted = isSearchActive && isMatchedBySearch
 
-      // Adjust colors for faded events
-      const effectiveBgColor = isFaded ? adjustColorOpacity(colors.bg, 0.25) : colors.bg
       const effectiveBorderColor = isFaded ? adjustColorOpacity(colors.border, 0.3) : colors.border
-      const effectiveTextColor = isFaded ? adjustColorOpacity(colors.text, 0.4) : colors.text
+      const baseFillOpacity = isDark ? 0.22 : 0.16
+      const effectiveBgColor = adjustColorOpacity(
+        effectiveBorderColor,
+        isFaded ? baseFillOpacity * 0.6 : baseFillOpacity
+      )
+      const baseTextColor = theme.palette.text.primary
+      const effectiveTextColor = isFaded ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6) : baseTextColor
 
       // Build class names for CSS-based styling
       const classNames: string[] = []
@@ -354,6 +358,9 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
               boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
               zIndex: 10
             }
+          },
+          '& .fc-timegrid-event, & .fc-daygrid-event': {
+            borderLeft: '4px solid var(--fc-event-border-color)'
           },
           // Search highlighting styles
           '& .fc-event.search-faded-event': {

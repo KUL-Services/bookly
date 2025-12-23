@@ -7,6 +7,22 @@ import { useCalendarStore } from './state'
 import { buildEventColors } from './utils'
 import type { CalendarEvent, Room } from './types'
 
+const adjustColorOpacity = (color: string, opacity: number): string => {
+  if (color.startsWith('#')) {
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
+  if (color.startsWith('rgb(')) {
+    return color.replace('rgb(', 'rgba(').replace(')', `, ${opacity})`)
+  }
+  if (color.startsWith('rgba(')) {
+    return color.replace(/,\s*[\d.]+\)$/, `, ${opacity})`)
+  }
+  return color
+}
+
 interface MultiRoomDayViewProps {
   events: CalendarEvent[]
   rooms: Room[]
@@ -306,6 +322,9 @@ export default function MultiRoomDayView({
                   {roomEvents.map(event => {
                     const { top, height } = getEventStyle(event)
                     const colors = buildEventColors(colorScheme, event.extendedProps.status)
+                    const baseFillOpacity = isDark ? 0.22 : 0.16
+                    const fillColor = adjustColorOpacity(colors.border, baseFillOpacity)
+                    const textColor = theme.palette.text.primary
 
                     return (
                       <Box
@@ -318,8 +337,9 @@ export default function MultiRoomDayView({
                           left: '4px',
                           right: '4px',
                           height: `${height - 4}px`,
-                          bgcolor: colors.bg,
-                          border: `2px solid ${colors.border}`,
+                          bgcolor: fillColor,
+                          border: 'none',
+                          borderLeft: `4px solid ${colors.border}`,
                           borderRadius: 1,
                           p: 1,
                           cursor: 'pointer',
@@ -338,7 +358,7 @@ export default function MultiRoomDayView({
                           variant="caption"
                           fontWeight={600}
                           sx={{
-                            color: colors.text,
+                            color: textColor,
                             fontSize: { xs: '0.7rem', md: '0.8rem' },
                             display: 'block',
                             whiteSpace: 'nowrap',
@@ -351,7 +371,7 @@ export default function MultiRoomDayView({
                         <Typography
                           variant="caption"
                           sx={{
-                            color: colors.text,
+                            color: textColor,
                             fontSize: { xs: '0.65rem', md: '0.7rem' },
                             display: 'block',
                             opacity: 0.8,

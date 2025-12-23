@@ -7,6 +7,22 @@ import { useCalendarStore } from './state'
 import { getBranchName, buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
 
+const adjustColorOpacity = (color: string, opacity: number): string => {
+  if (color.startsWith('#')) {
+    const r = parseInt(color.slice(1, 3), 16)
+    const g = parseInt(color.slice(3, 5), 16)
+    const b = parseInt(color.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
+  if (color.startsWith('rgb(')) {
+    return color.replace('rgb(', 'rgba(').replace(')', `, ${opacity})`)
+  }
+  if (color.startsWith('rgba(')) {
+    return color.replace(/,\s*[\d.]+\)$/, `, ${opacity})`)
+  }
+  return color
+}
+
 interface MultiStaffWeekViewProps {
   events: CalendarEvent[]
   staffMembers: Array<{ id: string; name: string; photo?: string; branchId?: string }>
@@ -248,26 +264,28 @@ export default function MultiStaffWeekView({
                     <>
                       {dayEvents.slice(0, displayLimit).map(event => {
                         const colors = buildEventColors(colorScheme, event.extendedProps.status)
+                        const baseFillOpacity = isDark ? 0.22 : 0.16
+                        const fillColor = adjustColorOpacity(colors.border, baseFillOpacity)
+                        const textColor = theme.palette.text.primary
 
                         return (
                           <Box
                             key={event.id}
                             data-event-card
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onEventClick?.(event)
-                            }}
-                            sx={{
-                              bgcolor: colors.bg,
-                              border: 1,
-                              borderColor: colors.border,
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onEventClick?.(event)
+                              }}
+                              sx={{
+                              bgcolor: fillColor,
+                              border: 'none',
+                              borderLeft: `4px solid ${colors.border}`,
                               borderRadius: 0.75,
                               p: { xs: 0.5, md: 0.75 },
                               cursor: 'pointer',
                               transition: 'all 0.15s',
                               '&:hover': {
                                 boxShadow: 1,
-                                borderColor: colors.text,
                                 transform: 'translateX(2px)'
                               },
                               minWidth: 0,
@@ -277,14 +295,14 @@ export default function MultiStaffWeekView({
                           >
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
                               <Typography
-                                variant="caption"
-                                sx={{
-                                  fontWeight: 600,
-                                  color: colors.text,
-                                  fontSize: { xs: '0.6rem', md: '0.65rem' },
-                                  lineHeight: 1
-                                }}
-                              >
+                                  variant="caption"
+                                  sx={{
+                                    fontWeight: 600,
+                                  color: textColor,
+                                    fontSize: { xs: '0.6rem', md: '0.65rem' },
+                                    lineHeight: 1
+                                  }}
+                                >
                                 {format(new Date(event.start), 'h:mm a')}
                               </Typography>
                               {event.extendedProps.starred && (
@@ -292,14 +310,14 @@ export default function MultiStaffWeekView({
                               )}
                             </Box>
                             <Typography
-                              variant="caption"
-                              sx={{
-                                display: 'block',
-                                fontWeight: 600,
-                                color: colors.text,
-                                fontSize: { xs: '0.65rem', md: '0.7rem' },
-                                lineHeight: 1.2,
-                                overflow: 'hidden',
+                                  variant="caption"
+                                  sx={{
+                                    display: 'block',
+                                    fontWeight: 600,
+                                  color: textColor,
+                                    fontSize: { xs: '0.65rem', md: '0.7rem' },
+                                    lineHeight: 1.2,
+                                    overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap'
                               }}

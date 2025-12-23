@@ -81,7 +81,9 @@ export default function NewAppointmentDrawer({
   const [validationError, setValidationError] = useState<string | null>(null)
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
   const [capacityWarning, setCapacityWarning] = useState<string | null>(null)
-  const [staffCapacityInfo, setStaffCapacityInfo] = useState<{available: number, max: number, isLow: boolean} | null>(null)
+  const [staffCapacityInfo, setStaffCapacityInfo] = useState<{ available: number; max: number; isLow: boolean } | null>(
+    null
+  )
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
 
   // Static mode state
@@ -163,7 +165,9 @@ export default function NewAppointmentDrawer({
           })
 
           if (availableCapacity === 0) {
-            setCapacityWarning(`No capacity available at this time. ${staff.name} has ${maxCapacity} concurrent booking(s) already booked.`)
+            setCapacityWarning(
+              `No capacity available at this time. ${staff.name} has ${maxCapacity} concurrent booking(s) already booked.`
+            )
           } else if (isLowCapacity) {
             setCapacityWarning(`Limited capacity. Only ${availableCapacity} slot(s) remaining.`)
           } else {
@@ -193,7 +197,9 @@ export default function NewAppointmentDrawer({
         return
       }
       if (partySize > remainingCapacity) {
-        setValidationError(`Not enough capacity: Only ${remainingCapacity} spot(s) remaining, but ${partySize} requested`)
+        setValidationError(
+          `Not enough capacity: Only ${remainingCapacity} spot(s) remaining, but ${partySize} requested`
+        )
         return
       }
       if (partySize < 1) {
@@ -330,19 +336,28 @@ export default function NewAppointmentDrawer({
     <Drawer
       open={open}
       onClose={handleClose}
-      anchor="right"
+      anchor='right'
       PaperProps={{
         sx: { width: { xs: '100%', sm: 480 } }
       }}
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
-        <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: 1, borderColor: 'divider' }}>
-          <Typography variant="h5" fontWeight={600}>
+        <Box
+          sx={{
+            p: 3,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: 1,
+            borderColor: 'divider'
+          }}
+        >
+          <Typography variant='h5' fontWeight={600}>
             New Appointment
           </Typography>
-          <IconButton onClick={handleClose} size="small">
-            <i className="ri-close-line" />
+          <IconButton onClick={handleClose} size='small'>
+            <i className='ri-close-line' />
           </IconButton>
         </Box>
 
@@ -366,43 +381,42 @@ export default function NewAppointmentDrawer({
               }
             }}
           >
-            <Avatar
-              src={selectedClient?.profileImage}
-              sx={{ width: 56, height: 56, bgcolor: 'grey.200' }}
-            >
+            <Avatar src={selectedClient?.profileImage} sx={{ width: 56, height: 56, bgcolor: 'grey.200' }}>
               {selectedClient ? (
                 `${selectedClient.firstName[0]}${selectedClient.lastName[0]}`
               ) : (
-                <i className="ri-user-line" style={{ fontSize: '2rem', color: '#999' }} />
+                <i className='ri-user-line' style={{ fontSize: '2rem', color: '#999' }} />
               )}
             </Avatar>
             <Box sx={{ flex: 1 }}>
               {selectedClient ? (
                 <>
-                  <Typography variant="body1" fontWeight={600}>
+                  <Typography variant='body1' fontWeight={600}>
                     {selectedClient.firstName} {selectedClient.lastName}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant='caption' color='text.secondary'>
                     {selectedClient.email}
                   </Typography>
                 </>
               ) : (
-                <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                <Typography variant='body1' sx={{ color: 'text.secondary' }}>
                   Select a client or leave empty for walk-in
                 </Typography>
               )}
             </Box>
-            <IconButton onClick={e => {
-              e.stopPropagation()
-              if (selectedClient) {
-                setSelectedClient(null)
-                setClientName('')
-                setClientEmail('')
-                setClientPhone('')
-              } else {
-                setIsClientPickerOpen(true)
-              }
-            }}>
+            <IconButton
+              onClick={e => {
+                e.stopPropagation()
+                if (selectedClient) {
+                  setSelectedClient(null)
+                  setClientName('')
+                  setClientEmail('')
+                  setClientPhone('')
+                } else {
+                  setIsClientPickerOpen(true)
+                }
+              }}
+            >
               <i className={selectedClient ? 'ri-close-line' : 'ri-add-line'} />
             </IconButton>
           </Box>
@@ -411,8 +425,8 @@ export default function NewAppointmentDrawer({
         {/* Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3 }}>
           <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-            <Tab label="APPOINTMENT" />
-            <Tab label="NOTES & INFO" />
+            <Tab label='APPOINTMENT' />
+            <Tab label='NOTES & INFO' />
           </Tabs>
         </Box>
 
@@ -422,24 +436,24 @@ export default function NewAppointmentDrawer({
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {/* Date */}
               <Box>
-                <Typography variant="h6" sx={{ mb: 1.5 }}>
+                <Typography variant='h6' sx={{ mb: 1.5 }}>
                   {formatDate(date)}
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <Button
-                    variant="outlined"
-                    size="large"
+                    variant='outlined'
+                    size='large'
                     fullWidth
-                    startIcon={<i className="ri-group-line" />}
+                    startIcon={<i className='ri-group-line' />}
                     sx={{ textTransform: 'none' }}
                   >
                     Group Booking
                   </Button>
                   <Button
-                    variant="outlined"
-                    size="large"
+                    variant='outlined'
+                    size='large'
                     fullWidth
-                    startIcon={<i className="ri-repeat-line" />}
+                    startIcon={<i className='ri-repeat-line' />}
                     sx={{ textTransform: 'none' }}
                   >
                     Recurring
@@ -455,53 +469,57 @@ export default function NewAppointmentDrawer({
                   <FormControl fullWidth>
                     <TextField
                       select
-                      label="Select Time Slot"
+                      label='Select Time Slot'
                       value={selectedSlotId || ''}
-                      onChange={(e) => handleSlotSelect(e.target.value)}
+                      onChange={e => handleSlotSelect(e.target.value)}
                       InputProps={{
                         endAdornment: (
-                          <InputAdornment position="end">
-                            <i className="ri-arrow-right-s-line" />
+                          <InputAdornment position='end'>
+                            <i className='ri-arrow-right-s-line' />
                           </InputAdornment>
                         )
                       }}
                     >
-                      <MenuItem value="">Select a slot</MenuItem>
-                      {getSlotsForDate(date).map((slot) => {
+                      <MenuItem value=''>Select a slot</MenuItem>
+                      {getSlotsForDate(date).map(slot => {
                         const { available, remainingCapacity, total } = isSlotAvailable(slot.id, date)
-                        const roomName = getRoomsByBranch(slot.branchId).find(r => r.id === slot.roomId)?.name || 'Unknown Room'
+                        const roomName =
+                          getRoomsByBranch(slot.branchId).find(r => r.id === slot.roomId)?.name || 'Unknown Room'
                         const isFull = !available
                         const isLowCapacity = available && remainingCapacity < total * 0.3
 
                         return (
-                          <MenuItem
-                            key={slot.id}
-                            value={slot.id}
-                            disabled={!available}
-                          >
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                          <MenuItem key={slot.id} value={slot.id} disabled={!available}>
+                            <Box
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                width: '100%'
+                              }}
+                            >
                               <Box sx={{ flex: 1, mr: 1 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <Typography variant="body2" fontWeight={600}>
+                                  <Typography variant='body2' fontWeight={600}>
                                     {slot.serviceName} - {roomName}
                                   </Typography>
                                   {isFull && (
                                     <Chip
-                                      label="FULL"
-                                      size="small"
-                                      color="error"
+                                      label='FULL'
+                                      size='small'
+                                      color='error'
                                       sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700 }}
                                     />
                                   )}
                                 </Box>
-                                <Typography variant="caption" color="text.secondary">
+                                <Typography variant='caption' color='text.secondary'>
                                   {slot.startTime} - {slot.endTime}
                                 </Typography>
                               </Box>
                               <Chip
-                                icon={<i className="ri-user-line" style={{ fontSize: '0.75rem' }} />}
+                                icon={<i className='ri-user-line' style={{ fontSize: '0.75rem' }} />}
                                 label={`${remainingCapacity}/${total}`}
-                                size="small"
+                                size='small'
                                 color={isFull ? 'error' : isLowCapacity ? 'warning' : 'success'}
                                 sx={{
                                   fontWeight: 600,
@@ -520,19 +538,19 @@ export default function NewAppointmentDrawer({
                     <Box>
                       <TextField
                         fullWidth
-                        type="number"
-                        label="Party Size"
+                        type='number'
+                        label='Party Size'
                         value={partySize}
-                        onChange={(e) => setPartySize(Math.max(1, parseInt(e.target.value) || 1))}
+                        onChange={e => setPartySize(Math.max(1, parseInt(e.target.value) || 1))}
                         inputProps={{ min: 1, max: 50 }}
                         InputProps={{
                           startAdornment: (
-                            <InputAdornment position="start">
-                              <i className="ri-group-line" />
+                            <InputAdornment position='start'>
+                              <i className='ri-group-line' />
                             </InputAdornment>
                           )
                         }}
-                        helperText="Number of people for this booking"
+                        helperText='Number of people for this booking'
                       />
 
                       {/* Capacity Info Display */}
@@ -547,30 +565,45 @@ export default function NewAppointmentDrawer({
                               mt: 1,
                               p: 2,
                               borderRadius: 1,
-                              bgcolor: exceedsCapacity ? 'error.lighter' : isLowCapacity ? 'warning.lighter' : 'success.lighter',
+                              bgcolor: exceedsCapacity
+                                ? 'error.lighter'
+                                : isLowCapacity
+                                  ? 'warning.lighter'
+                                  : 'success.lighter',
                               border: 1,
-                              borderColor: exceedsCapacity ? 'error.main' : isLowCapacity ? 'warning.main' : 'success.main'
+                              borderColor: exceedsCapacity
+                                ? 'error.main'
+                                : isLowCapacity
+                                  ? 'warning.main'
+                                  : 'success.main'
                             }}
                           >
                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <Typography variant="body2" fontWeight={600} color={exceedsCapacity ? 'error.dark' : isLowCapacity ? 'warning.dark' : 'success.dark'}>
-                                <i className={`ri-${exceedsCapacity ? 'error-warning' : isLowCapacity ? 'alert' : 'checkbox-circle'}-line`} style={{ marginRight: 4 }} />
+                              <Typography
+                                variant='body2'
+                                fontWeight={600}
+                                color={exceedsCapacity ? 'error.dark' : isLowCapacity ? 'warning.dark' : 'success.dark'}
+                              >
+                                <i
+                                  className={`ri-${exceedsCapacity ? 'error-warning' : isLowCapacity ? 'alert' : 'checkbox-circle'}-line`}
+                                  style={{ marginRight: 4 }}
+                                />
                                 Capacity Status
                               </Typography>
                               <Chip
-                                icon={<i className="ri-user-line" style={{ fontSize: '0.7rem' }} />}
+                                icon={<i className='ri-user-line' style={{ fontSize: '0.7rem' }} />}
                                 label={`${remainingCapacity}/${total} available`}
-                                size="small"
+                                size='small'
                                 color={exceedsCapacity ? 'error' : isLowCapacity ? 'warning' : 'success'}
                                 sx={{ fontWeight: 600 }}
                               />
                             </Box>
-                            <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: 'text.secondary' }}>
+                            <Typography variant='caption' sx={{ mt: 0.5, display: 'block', color: 'text.secondary' }}>
                               {exceedsCapacity
                                 ? `Cannot book ${partySize} spot(s) - only ${remainingCapacity} remaining`
                                 : isLowCapacity
-                                ? `Limited availability - only ${remainingCapacity} spot(s) left`
-                                : `${remainingCapacity} spot(s) available for booking`}
+                                  ? `Limited availability - only ${remainingCapacity} spot(s) left`
+                                  : `${remainingCapacity} spot(s) available for booking`}
                             </Typography>
                           </Box>
                         )
@@ -585,19 +618,19 @@ export default function NewAppointmentDrawer({
                 <FormControl fullWidth>
                   <TextField
                     select
-                    label="Select service"
+                    label='Select service'
                     value={serviceId}
-                    onChange={(e) => handleServiceChange(e.target.value)}
+                    onChange={e => handleServiceChange(e.target.value)}
                     InputProps={{
                       endAdornment: (
-                        <InputAdornment position="end">
-                          <i className="ri-arrow-right-s-line" />
+                        <InputAdornment position='end'>
+                          <i className='ri-arrow-right-s-line' />
                         </InputAdornment>
                       )
                     }}
                   >
-                    <MenuItem value="">Select service</MenuItem>
-                    {mockServices.map((svc) => (
+                    <MenuItem value=''>Select service</MenuItem>
+                    {mockServices.map(svc => (
                       <MenuItem key={svc.id} value={svc.id}>
                         {svc.name} - ${svc.price} ({svc.duration} min)
                       </MenuItem>
@@ -609,19 +642,19 @@ export default function NewAppointmentDrawer({
               {/* Time Selection */}
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                 <TextField
-                  label="START"
-                  type="time"
+                  label='START'
+                  type='time'
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  onChange={e => setStartTime(e.target.value)}
                   InputLabelProps={{ shrink: true }}
                   inputProps={{ step: 900 }} // 15 min intervals
                   disabled={schedulingMode === 'static' && !!selectedSlotId}
                 />
                 <TextField
-                  label="END"
-                  type="time"
+                  label='END'
+                  type='time'
                   value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
+                  onChange={e => setEndTime(e.target.value)}
                   InputLabelProps={{ shrink: true }}
                   inputProps={{ step: 900 }}
                   disabled={schedulingMode === 'static' && !!selectedSlotId}
@@ -634,15 +667,16 @@ export default function NewAppointmentDrawer({
                   <InputLabel>STAFF</InputLabel>
                   <Select
                     value={staffId}
-                    label="STAFF"
-                    onChange={(e) => {
+                    label='STAFF'
+                    onChange={e => {
                       setStaffId(e.target.value)
                       setStaffManuallyChosen(true)
                     }}
                   >
-                    {mockStaff.slice(0, 7).map((staff) => {
+                    {mockStaff.slice(0, 7).map(staff => {
                       // Calculate capacity for dynamic staff in dynamic mode
-                      const showCapacity = schedulingMode === 'dynamic' && staff.staffType === 'dynamic' && startTime && endTime
+                      const showCapacity =
+                        schedulingMode === 'dynamic' && staff.staffType === 'dynamic' && startTime && endTime
                       let availableCapacity = null
                       if (showCapacity) {
                         const appointmentTime = new Date(date)
@@ -654,18 +688,20 @@ export default function NewAppointmentDrawer({
                       return (
                         <MenuItem key={staff.id} value={staff.id}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                            <Avatar sx={{ width: 24, height: 24 }}>
-                              {getInitials(staff.name)}
-                            </Avatar>
-                            <Box sx={{ flex: 1 }}>
-                              {staff.name}
-                            </Box>
+                            <Avatar sx={{ width: 24, height: 24 }}>{getInitials(staff.name)}</Avatar>
+                            <Box sx={{ flex: 1 }}>{staff.name}</Box>
                             {showCapacity && availableCapacity !== null && (
                               <Chip
-                                icon={<i className="ri-user-line" style={{ fontSize: '0.65rem' }} />}
+                                icon={<i className='ri-user-line' style={{ fontSize: '0.65rem' }} />}
                                 label={`${availableCapacity}/${staff.maxConcurrentBookings || 1}`}
-                                size="small"
-                                color={availableCapacity === 0 ? 'error' : availableCapacity < (staff.maxConcurrentBookings || 1) * 0.3 ? 'warning' : 'success'}
+                                size='small'
+                                color={
+                                  availableCapacity === 0
+                                    ? 'error'
+                                    : availableCapacity < (staff.maxConcurrentBookings || 1) * 0.3
+                                      ? 'warning'
+                                      : 'success'
+                                }
                                 sx={{
                                   fontWeight: 600,
                                   height: 20,
@@ -684,13 +720,24 @@ export default function NewAppointmentDrawer({
 
               {/* Show assigned staff in static mode */}
               {schedulingMode === 'static' && staffId && selectedSlotId && (
-                <Box sx={{ p: 2, bgcolor: 'action.selected', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box
+                  sx={{
+                    p: 2,
+                    bgcolor: 'action.selected',
+                    borderRadius: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2
+                  }}
+                >
                   <Avatar sx={{ width: 40, height: 40 }}>
                     {getInitials(mockStaff.find(s => s.id === staffId)?.name || '')}
                   </Avatar>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Instructor</Typography>
-                    <Typography variant="body2" fontWeight={600}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Instructor
+                    </Typography>
+                    <Typography variant='body2' fontWeight={600}>
                       {mockStaff.find(s => s.id === staffId)?.name}
                     </Typography>
                   </Box>
@@ -710,8 +757,8 @@ export default function NewAppointmentDrawer({
                     border: theme => `1px solid ${theme.palette.warning.main}`
                   }}
                 >
-                  <i className="ri-information-line" />
-                  <Typography variant="body2" color="warning.dark">
+                  <i className='ri-information-line' />
+                  <Typography variant='body2' color='warning.dark'>
                     {availabilityWarning}
                   </Typography>
                 </Box>
@@ -723,38 +770,55 @@ export default function NewAppointmentDrawer({
                   sx={{
                     p: 2,
                     borderRadius: 1,
-                    bgcolor: staffCapacityInfo.available === 0
-                      ? theme => (theme.palette.mode === 'dark' ? 'error.dark' : 'error.light')
-                      : staffCapacityInfo.isLow
-                      ? theme => (theme.palette.mode === 'dark' ? 'warning.dark' : 'warning.light')
-                      : theme => (theme.palette.mode === 'dark' ? 'success.dark' : 'success.light'),
+                    bgcolor:
+                      staffCapacityInfo.available === 0
+                        ? theme => (theme.palette.mode === 'dark' ? 'error.dark' : 'error.light')
+                        : staffCapacityInfo.isLow
+                          ? theme => (theme.palette.mode === 'dark' ? 'warning.dark' : 'warning.light')
+                          : theme => (theme.palette.mode === 'dark' ? 'success.dark' : 'success.light'),
                     border: 1,
-                    borderColor: staffCapacityInfo.available === 0
-                      ? 'error.main'
-                      : staffCapacityInfo.isLow
-                      ? 'warning.main'
-                      : 'success.main'
+                    borderColor:
+                      staffCapacityInfo.available === 0
+                        ? 'error.main'
+                        : staffCapacityInfo.isLow
+                          ? 'warning.main'
+                          : 'success.main'
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="body2" fontWeight={600} color={staffCapacityInfo.available === 0 ? 'error.dark' : staffCapacityInfo.isLow ? 'warning.dark' : 'success.dark'}>
-                      <i className={`ri-${staffCapacityInfo.available === 0 ? 'error-warning' : staffCapacityInfo.isLow ? 'alert' : 'checkbox-circle'}-line`} style={{ marginRight: 4 }} />
+                    <Typography
+                      variant='body2'
+                      fontWeight={600}
+                      color={
+                        staffCapacityInfo.available === 0
+                          ? 'error.dark'
+                          : staffCapacityInfo.isLow
+                            ? 'warning.dark'
+                            : 'success.dark'
+                      }
+                    >
+                      <i
+                        className={`ri-${staffCapacityInfo.available === 0 ? 'error-warning' : staffCapacityInfo.isLow ? 'alert' : 'checkbox-circle'}-line`}
+                        style={{ marginRight: 4 }}
+                      />
                       Staff Capacity Status
                     </Typography>
                     <Chip
-                      icon={<i className="ri-user-line" style={{ fontSize: '0.7rem' }} />}
+                      icon={<i className='ri-user-line' style={{ fontSize: '0.7rem' }} />}
                       label={`${staffCapacityInfo.available}/${staffCapacityInfo.max} available`}
-                      size="small"
-                      color={staffCapacityInfo.available === 0 ? 'error' : staffCapacityInfo.isLow ? 'warning' : 'success'}
+                      size='small'
+                      color={
+                        staffCapacityInfo.available === 0 ? 'error' : staffCapacityInfo.isLow ? 'warning' : 'success'
+                      }
                       sx={{ fontWeight: 600 }}
                     />
                   </Box>
-                  <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: 'text.secondary' }}>
+                  <Typography variant='caption' sx={{ mt: 0.5, display: 'block', color: 'text.secondary' }}>
                     {staffCapacityInfo.available === 0
                       ? `This staff member is fully booked at this time (${staffCapacityInfo.max} concurrent bookings)`
                       : staffCapacityInfo.isLow
-                      ? `Limited availability - ${staffCapacityInfo.available} concurrent booking slot(s) remaining`
-                      : `${staffCapacityInfo.available} concurrent booking slot(s) available`}
+                        ? `Limited availability - ${staffCapacityInfo.available} concurrent booking slot(s) remaining`
+                        : `${staffCapacityInfo.available} concurrent booking slot(s) available`}
                   </Typography>
                 </Box>
               )}
@@ -772,8 +836,8 @@ export default function NewAppointmentDrawer({
                     border: theme => `1px solid ${theme.palette.error.main}`
                   }}
                 >
-                  <i className="ri-alert-line" />
-                  <Typography variant="body2" color="error.dark">
+                  <i className='ri-alert-line' />
+                  <Typography variant='body2' color='error.dark'>
                     {capacityWarning}
                   </Typography>
                 </Box>
@@ -781,34 +845,30 @@ export default function NewAppointmentDrawer({
 
               {/* Staff Selection Options */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <i className="ri-user-settings-line" />
-                <Typography variant="body2">
-                  Staff Member chosen manually
-                </Typography>
+                <i className='ri-user-settings-line' />
+                <Typography variant='body2'>Staff Member chosen manually</Typography>
               </Box>
 
               {/* Requested by Client */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Checkbox
                   checked={requestedByClient}
-                  onChange={(e) => setRequestedByClient(e.target.checked)}
-                  icon={<i className="ri-heart-line" style={{ fontSize: '1.5rem' }} />}
-                  checkedIcon={<i className="ri-heart-fill" style={{ fontSize: '1.5rem', color: '#f44336' }} />}
+                  onChange={e => setRequestedByClient(e.target.checked)}
+                  icon={<i className='ri-heart-line' style={{ fontSize: '1.5rem' }} />}
+                  checkedIcon={<i className='ri-heart-fill' style={{ fontSize: '1.5rem', color: '#f44336' }} />}
                 />
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="body2">
-                    Requested by client
-                  </Typography>
-                  <IconButton size="small">
-                    <i className="ri-question-line" />
+                  <Typography variant='body2'>Requested by client</Typography>
+                  <IconButton size='small'>
+                    <i className='ri-question-line' />
                   </IconButton>
                 </Box>
               </Box>
 
               {/* Add Another Service */}
               <Button
-                variant="text"
-                startIcon={<i className="ri-add-line" />}
+                variant='text'
+                startIcon={<i className='ri-add-line' />}
                 sx={{ justifyContent: 'flex-start', textTransform: 'none', color: 'text.secondary' }}
               >
                 ADD ANOTHER SERVICE
@@ -821,26 +881,26 @@ export default function NewAppointmentDrawer({
               {/* Client Information */}
               <TextField
                 fullWidth
-                label="Client Name"
+                label='Client Name'
                 value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                placeholder="Enter client name"
+                onChange={e => setClientName(e.target.value)}
+                placeholder='Enter client name'
               />
               <TextField
                 fullWidth
-                label="Email"
-                type="email"
+                label='Email'
+                type='email'
                 value={clientEmail}
-                onChange={(e) => setClientEmail(e.target.value)}
-                placeholder="client@example.com"
+                onChange={e => setClientEmail(e.target.value)}
+                placeholder='client@example.com'
               />
               <TextField
                 fullWidth
-                label="Phone"
-                type="tel"
+                label='Phone'
+                type='tel'
                 value={clientPhone}
-                onChange={(e) => setClientPhone(e.target.value)}
-                placeholder="+1 (555) 000-0000"
+                onChange={e => setClientPhone(e.target.value)}
+                placeholder='+1 (555) 000-0000'
               />
 
               {/* Notes */}
@@ -848,10 +908,10 @@ export default function NewAppointmentDrawer({
                 fullWidth
                 multiline
                 rows={4}
-                label="Notes"
+                label='Notes'
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add any notes about the appointment..."
+                onChange={e => setNotes(e.target.value)}
+                placeholder='Add any notes about the appointment...'
               />
             </Box>
           )}
@@ -862,18 +922,18 @@ export default function NewAppointmentDrawer({
           {/* Total */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant='caption' color='text.secondary'>
                 Total
               </Typography>
-              <Typography variant="h4" fontWeight={700}>
+              <Typography variant='h4' fontWeight={700}>
                 ${servicePrice.toFixed(2)}
               </Typography>
             </Box>
             <Box sx={{ textAlign: 'right' }}>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant='caption' color='text.secondary'>
                 To be paid
               </Typography>
-              <Typography variant="h4" fontWeight={700}>
+              <Typography variant='h4' fontWeight={700}>
                 ${servicePrice.toFixed(2)}
               </Typography>
             </Box>
@@ -881,21 +941,15 @@ export default function NewAppointmentDrawer({
 
           {/* Action Buttons */}
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button
-              variant="outlined"
-              fullWidth
-              size="large"
-              onClick={handleClose}
-              sx={{ textTransform: 'none' }}
-            >
+            <Button variant='outlined' fullWidth size='large' onClick={handleClose} sx={{ textTransform: 'none' }}>
               Discard
             </Button>
             <Button
-              variant="contained"
+              variant='contained'
               fullWidth
-              size="large"
+              size='large'
               onClick={handleSave}
-              color="primary"
+              color='primary'
               sx={{ textTransform: 'none' }}
             >
               Save
@@ -913,8 +967,8 @@ export default function NewAppointmentDrawer({
                 border: theme => `1px solid ${theme.palette.error.main}`
               }}
             >
-              <Typography variant="body2" color="error" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <i className="ri-error-warning-line" />
+              <Typography variant='body2' color='error' sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <i className='ri-error-warning-line' />
                 {validationError}
               </Typography>
             </Box>

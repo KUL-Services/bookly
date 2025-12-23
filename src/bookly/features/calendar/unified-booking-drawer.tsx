@@ -21,7 +21,7 @@ import {
   Paper
 } from '@mui/material'
 import { mockStaff, mockServices, mockBookings, mockRooms } from '@/bookly/data/mock-data'
-import type { DateRange, CalendarEvent } from './types'
+import type { AppointmentStatus, DateRange, CalendarEvent } from './types'
 import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
 import { isStaffAvailable, hasConflict, getStaffAvailableCapacity, getStaffRoomAssignment } from './utils'
@@ -135,9 +135,10 @@ export default function UnifiedBookingDrawer({
   const [servicePrice, setServicePrice] = useState(0)
   const [serviceDuration, setServiceDuration] = useState(30)
   const [requestedByClient, setRequestedByClient] = useState(false)
-  const [status, setStatus] = useState<'confirmed' | 'no_show' | 'completed'>('confirmed')
+  const [status, setStatus] = useState<AppointmentStatus>('confirmed')
   const [starred, setStarred] = useState(false)
   const [instapayReference, setInstapayReference] = useState('')
+  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid')
 
   // Static mode state
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
@@ -208,6 +209,7 @@ export default function UnifiedBookingDrawer({
       setStatus('confirmed')
       setStarred(false)
       setInstapayReference('')
+      setPaymentStatus('unpaid')
       setSelectedSlotId(null)
       setSlotClients([])
       setValidationError(null)
@@ -250,10 +252,9 @@ export default function UnifiedBookingDrawer({
       setServicePrice(props.price || 0)
       setRequestedByClient(props.selectionMethod === 'by_client')
 
-      // Map status to our limited options
       const existingStatus = props.status || 'confirmed'
-      if (['confirmed', 'no_show', 'completed'].includes(existingStatus)) {
-        setStatus(existingStatus as 'confirmed' | 'no_show' | 'completed')
+      if (['pending', 'need_confirm', 'confirmed', 'no_show', 'completed'].includes(existingStatus)) {
+        setStatus(existingStatus as AppointmentStatus)
       } else {
         setStatus('confirmed')
       }
@@ -261,6 +262,7 @@ export default function UnifiedBookingDrawer({
       setStarred(props.starred || false)
       setBookingReference(props.bookingId || existingEvent.id || '')
       setInstapayReference(props.instapayReference || '')
+      setPaymentStatus(props.paymentStatus === 'paid' ? 'paid' : 'unpaid')
 
       // Load service details
       const existingServiceId = props.serviceId
@@ -632,7 +634,7 @@ export default function UnifiedBookingDrawer({
           end: endDate,
           extendedProps: {
             status,
-            paymentStatus: 'unpaid',
+            paymentStatus,
             staffId,
             staffName: mockStaff.find(s => s.id === staffId)?.name || '',
             selectionMethod: requestedByClient ? 'by_client' : 'automatically',
@@ -656,7 +658,8 @@ export default function UnifiedBookingDrawer({
               ...existingEvent.extendedProps,
               status,
               starred,
-              instapayReference: instapayReference || undefined
+              instapayReference: instapayReference || undefined,
+              paymentStatus
             }
           }
           updateEvent(updatedEvent)
@@ -991,59 +994,21 @@ export default function UnifiedBookingDrawer({
                       />
                       <TextField
                         fullWidth
-                        label='Phone Number'
-                        value={clientPhone}
-                        onChange={e => setClientPhone(e.target.value)}
-                        size='small'
-                      />
-                      <TextField
-                        fullWidth
                         label='Email'
                         type='email'
                         value={clientEmail}
                         onChange={e => setClientEmail(e.target.value)}
                         size='small'
                       />
+                      <TextField
+                        fullWidth
+                        label='Phone Number'
+                        value={clientPhone}
+                        onChange={e => setClientPhone(e.target.value)}
+                        size='small'
+                      />
                     </Stack>
                   </Box>
-
-                  <Divider />
-
-                  {/* Service Selection */}
-                  <FormControl fullWidth size='small' required>
-                    <InputLabel>Service</InputLabel>
-                    <Select value={serviceId} label='Service' onChange={e => handleServiceChange(e.target.value)}>
-                      <MenuItem value=''>Select service</MenuItem>
-                      {mockServices.map(svc => (
-                        <MenuItem key={svc.id} value={svc.id}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                            <span>{svc.name}</span>
-                            <Typography variant='caption' color='text.secondary'>
-                              {svc.duration}min • ${svc.price}
-                            </Typography>
-                          </Box>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  {/* Staff Selection (only dynamic staff) */}
-                  <FormControl fullWidth size='small' required>
-                    <InputLabel>Staff Member</InputLabel>
-                    <Select value={staffId} label='Staff Member' onChange={e => setStaffId(e.target.value)}>
-                      <MenuItem value=''>Select staff</MenuItem>
-                      {dynamicStaff.map(staff => (
-                        <MenuItem key={staff.id} value={staff.id}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                              {getInitials(staff.name)}
-                            </Avatar>
-                            {staff.name}
-                          </Box>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
 
                   <Divider />
 
@@ -1076,6 +1041,26 @@ export default function UnifiedBookingDrawer({
                     )}
                   </Box>
 
+                  <Divider />
+
+                  {/* Staff Selection (only dynamic staff) */}
+                  <FormControl fullWidth size='small' required>
+                    <InputLabel>Staff Member</InputLabel>
+                    <Select value={staffId} label='Staff Member' onChange={e => setStaffId(e.target.value)}>
+                      <MenuItem value=''>Select staff</MenuItem>
+                      {dynamicStaff.map(staff => (
+                        <MenuItem key={staff.id} value={staff.id}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                              {getInitials(staff.name)}
+                            </Avatar>
+                            {staff.name}
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
                   {/* Availability Warning */}
                   {availabilityWarning && (
                     <Paper sx={{ p: 1.5, bgcolor: 'warning.lighter', border: 1, borderColor: 'warning.main' }}>
@@ -1086,13 +1071,50 @@ export default function UnifiedBookingDrawer({
                     </Paper>
                   )}
 
-                  {/* Requested by Client */}
+                  <Divider />
+
+                  {/* Service Selection */}
+                  <FormControl fullWidth size='small' required>
+                    <InputLabel>Service</InputLabel>
+                    <Select value={serviceId} label='Service' onChange={e => handleServiceChange(e.target.value)}>
+                      <MenuItem value=''>Select service</MenuItem>
+                      {mockServices.map(svc => (
+                        <MenuItem key={svc.id} value={svc.id}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                            <span>{svc.name}</span>
+                            <Typography variant='caption' color='text.secondary'>
+                              {svc.duration}min • ${svc.price}
+                            </Typography>
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <Divider />
+
+                  {/* Booking Status */}
+                  <FormControl fullWidth size='small'>
+                    <InputLabel>Booking Status</InputLabel>
+                    <Select
+                      value={status}
+                      label='Booking Status'
+                      onChange={e => setStatus(e.target.value as AppointmentStatus)}
+                    >
+                      <MenuItem value='pending'>Pending / Unconfirmed</MenuItem>
+                      <MenuItem value='need_confirm'>Confirmation</MenuItem>
+                      <MenuItem value='completed'>Attended / Completed</MenuItem>
+                      <MenuItem value='confirmed'>Confirmed</MenuItem>
+                      <MenuItem value='no_show'>No Show</MenuItem>
+                    </Select>
+                  </FormControl>
+
                   <FormControlLabel
                     control={
                       <Checkbox
                         checked={requestedByClient}
                         onChange={e => setRequestedByClient(e.target.checked)}
-                        icon={<i className='ri-heart-line' />}
+                        // icon={<i className='ri-heart-line' />}
                         checkedIcon={<i className='ri-heart-fill' style={{ color: '#f44336' }} />}
                       />
                     }
@@ -1101,25 +1123,28 @@ export default function UnifiedBookingDrawer({
 
                   <Divider />
 
-                  {/* Payment Information */}
-                  <Box>
-                    <Typography
-                      variant='caption'
-                      color='text.secondary'
-                      fontWeight={600}
-                      sx={{ mb: 1, display: 'block' }}
+                  {/* Payment Status */}
+                  <FormControl fullWidth size='small' sx={{ mb: 0.5 }}>
+                    <InputLabel>Payment Status</InputLabel>
+                    <Select
+                      value={paymentStatus}
+                      label='Payment Status'
+                      onChange={e => setPaymentStatus(e.target.value as 'paid' | 'unpaid')}
                     >
-                      PAYMENT INFORMATION
-                    </Typography>
-                    <TextField
-                      fullWidth
-                      label='Instapay Reference Number'
-                      value={instapayReference}
-                      onChange={e => setInstapayReference(e.target.value)}
-                      size='small'
-                      placeholder='Enter Instapay reference'
-                    />
-                  </Box>
+                      <MenuItem value='unpaid'>Unpaid</MenuItem>
+                      <MenuItem value='paid'>Paid</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {/* Payment Reference */}
+                  <TextField
+                    fullWidth
+                    label='Payment Reference Number'
+                    value={instapayReference}
+                    onChange={e => setInstapayReference(e.target.value)}
+                    size='small'
+                    placeholder='Enter payment reference'
+                  />
                 </Stack>
               ) : (
                 // EDIT MODE - Read-only with editable status and starred
@@ -1142,35 +1167,29 @@ export default function UnifiedBookingDrawer({
                       CLIENT
                     </Typography>
                     <Typography variant='body1'>{clientName || 'N/A'}</Typography>
-                    {clientPhone && (
-                      <Typography variant='body2' color='text.secondary'>
-                        <i className='ri-phone-line' style={{ marginRight: 4 }} />
-                        {clientPhone}
-                      </Typography>
-                    )}
                     {clientEmail && (
                       <Typography variant='body2' color='text.secondary'>
                         <i className='ri-mail-line' style={{ marginRight: 4 }} />
                         {clientEmail}
                       </Typography>
                     )}
+                    {clientPhone && (
+                      <Typography variant='body2' color='text.secondary'>
+                        <i className='ri-phone-line' style={{ marginRight: 4 }} />
+                        {clientPhone}
+                      </Typography>
+                    )}
                   </Box>
 
                   <Divider />
 
-                  {/* Service (read-only) */}
+                  {/* Date & Time (read-only) */}
                   <Box>
                     <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      SERVICE
+                      APPOINTMENT DATE
                     </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant='body1'>{serviceName || 'N/A'}</Typography>
-                      <Typography variant='h6' color='primary.main' fontWeight={600}>
-                        ${servicePrice.toFixed(2)}
-                      </Typography>
-                    </Box>
-                    <Typography variant='caption' color='text.secondary'>
-                      Duration: {serviceDuration} minutes
+                    <Typography variant='body1'>
+                      {formatShortDate(date)} • {startTime} - {endTime}
                     </Typography>
                   </Box>
 
@@ -1191,13 +1210,19 @@ export default function UnifiedBookingDrawer({
 
                   <Divider />
 
-                  {/* Date & Time (read-only) */}
+                  {/* Service (read-only) */}
                   <Box>
                     <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      DATE & TIME
+                      SERVICE
                     </Typography>
-                    <Typography variant='body1'>
-                      {formatShortDate(date)} • {startTime} - {endTime}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant='body1'>{serviceName || 'N/A'}</Typography>
+                      <Typography variant='h6' color='primary.main' fontWeight={600}>
+                        ${servicePrice.toFixed(2)}
+                      </Typography>
+                    </Box>
+                    <Typography variant='caption' color='text.secondary'>
+                      Duration: {serviceDuration} minutes
                     </Typography>
                   </Box>
 
@@ -1213,42 +1238,6 @@ export default function UnifiedBookingDrawer({
 
                   <Divider />
 
-                  {/* Payment Information (read-only) */}
-                  <Box>
-                    <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      PAYMENT INFORMATION
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <Typography variant='body2' color='text.secondary'>
-                        Status:
-                      </Typography>
-                      <Chip
-                        label={existingEvent?.extendedProps?.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
-                        size='small'
-                        color={existingEvent?.extendedProps?.paymentStatus === 'paid' ? 'success' : 'warning'}
-                        icon={
-                          existingEvent?.extendedProps?.paymentStatus === 'paid' ? (
-                            <i className='ri-checkbox-circle-line' style={{ fontSize: '0.875rem' }} />
-                          ) : (
-                            <i className='ri-time-line' style={{ fontSize: '0.875rem' }} />
-                          )
-                        }
-                      />
-                    </Box>
-                    {instapayReference && (
-                      <Box sx={{ mt: 1 }}>
-                        <Typography variant='body2' color='text.secondary'>
-                          Instapay Reference:
-                        </Typography>
-                        <Typography variant='body1' fontWeight={500}>
-                          {instapayReference}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-
-                  <Divider />
-
                   {/* EDITABLE SECTION */}
                   <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
                     <Typography
@@ -1260,24 +1249,43 @@ export default function UnifiedBookingDrawer({
                       EDITABLE FIELDS
                     </Typography>
 
-                    {/* Status (editable) */}
+                    {/* Booking Status (editable) */}
                     <FormControl fullWidth size='small' sx={{ mb: 2 }}>
-                      <InputLabel>Status</InputLabel>
-                      <Select value={status} label='Status' onChange={e => setStatus(e.target.value as typeof status)}>
+                      <InputLabel>Booking Status</InputLabel>
+                      <Select
+                        value={status}
+                        label='Booking Status'
+                        onChange={e => setStatus(e.target.value as AppointmentStatus)}
+                      >
+                        <MenuItem value='pending'>Pending / Unconfirmed</MenuItem>
+                        <MenuItem value='need_confirm'>Confirmation</MenuItem>
+                        <MenuItem value='completed'>Attended / Completed</MenuItem>
                         <MenuItem value='confirmed'>Confirmed</MenuItem>
                         <MenuItem value='no_show'>No Show</MenuItem>
-                        <MenuItem value='completed'>Completed</MenuItem>
                       </Select>
                     </FormControl>
 
-                    {/* Instapay Reference (editable) */}
+                    {/* Payment Status (editable) */}
+                    <FormControl fullWidth size='small' sx={{ mb: 2 }}>
+                      <InputLabel>Payment Status</InputLabel>
+                      <Select
+                        value={paymentStatus}
+                        label='Payment Status'
+                        onChange={e => setPaymentStatus(e.target.value as 'paid' | 'unpaid')}
+                      >
+                        <MenuItem value='unpaid'>Unpaid</MenuItem>
+                        <MenuItem value='paid'>Paid</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    {/* Payment Reference (editable) */}
                     <TextField
                       fullWidth
-                      label='Instapay Reference Number'
+                      label='Payment Reference Number'
                       value={instapayReference}
                       onChange={e => setInstapayReference(e.target.value)}
                       size='small'
-                      placeholder='Enter Instapay reference'
+                      placeholder='Enter payment reference'
                       sx={{ mb: 2 }}
                     />
 

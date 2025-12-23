@@ -503,9 +503,6 @@ export default function UnifiedMultiResourceDayView({
           const isStaticType = isStaff
             ? resource.staffType === 'static'
             : resource.roomType === 'static' || resource.roomType === 'fixed'
-          const isDynamicType = isStaff
-            ? resource.staffType === 'dynamic'
-            : resource.roomType === 'flexible' || resource.roomType === 'dynamic'
 
           // Search highlighting - check if event matches search
           const isMatchedBySearch = isEventMatchedBySearch(event.id)
@@ -513,9 +510,14 @@ export default function UnifiedMultiResourceDayView({
           const isHighlighted = isSearchActive && isMatchedBySearch
 
           // Adjust colors for faded events
-          const effectiveBgColor = isFaded ? adjustColorOpacity(colors.bg, 0.25) : colors.bg
           const effectiveBorderColor = isFaded ? adjustColorOpacity(colors.border, 0.3) : colors.border
-          const effectiveTextColor = isFaded ? adjustColorOpacity(colors.text, 0.4) : colors.text
+          const baseFillOpacity = isDark ? 0.22 : 0.16
+          const effectiveBgColor = adjustColorOpacity(
+            effectiveBorderColor,
+            isFaded ? baseFillOpacity * 0.6 : baseFillOpacity
+          )
+          const baseTextColor = theme.palette.text.primary
+          const effectiveTextColor = isFaded ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6) : baseTextColor
 
           return (
             <Box
@@ -532,17 +534,9 @@ export default function UnifiedMultiResourceDayView({
                 height: Math.max(style.height, 60),
                 bgcolor: effectiveBgColor,
                 borderRadius: 1.5,
-                border: isStaticType ? `2px solid ${effectiveBorderColor}` : `1px solid ${effectiveBorderColor}40`,
-                borderLeft: isStaticType ? `4px solid ${effectiveBorderColor}` : `1px solid ${effectiveBorderColor}40`,
-                backgroundImage: isStaticType
-                  ? `repeating-linear-gradient(
-                      45deg,
-                      transparent,
-                      transparent 5px,
-                      ${effectiveBorderColor}40 5px,
-                      ${effectiveBorderColor}40 10px
-                    )`
-                  : 'none',
+                border: 'none',
+                borderLeft: `4px solid ${effectiveBorderColor}`,
+                backgroundImage: 'none',
                 p: 0.75,
                 overflow: 'visible',
                 cursor: 'pointer',
