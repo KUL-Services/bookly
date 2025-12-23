@@ -518,6 +518,7 @@ export default function UnifiedMultiResourceDayView({
           )
           const baseTextColor = theme.palette.text.primary
           const effectiveTextColor = isFaded ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6) : baseTextColor
+          const stripeColor = adjustColorOpacity(effectiveBorderColor, isFaded ? 0.2 : 0.35)
 
           return (
             <Box
@@ -536,7 +537,15 @@ export default function UnifiedMultiResourceDayView({
                 borderRadius: 1.5,
                 border: 'none',
                 borderLeft: `4px solid ${effectiveBorderColor}`,
-                backgroundImage: 'none',
+                backgroundImage: isStaticType
+                  ? `repeating-linear-gradient(
+                      45deg,
+                      transparent,
+                      transparent 6px,
+                      ${stripeColor} 6px,
+                      ${stripeColor} 12px
+                    )`
+                  : 'none',
                 p: 0.75,
                 overflow: 'visible',
                 cursor: 'pointer',

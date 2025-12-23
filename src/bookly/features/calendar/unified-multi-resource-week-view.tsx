@@ -351,6 +351,7 @@ export default function UnifiedMultiResourceWeekView({
                 )
                 const baseTextColor = theme.palette.text.primary
                 const effectiveTextColor = isFaded ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6) : baseTextColor
+                const stripeColor = adjustColorOpacity(effectiveBorderColor, isFaded ? 0.2 : 0.35)
 
                 return (
                   <Box
@@ -367,7 +368,15 @@ export default function UnifiedMultiResourceWeekView({
                       borderRadius: 1.5,
                       border: 'none',
                       borderLeft: `4px solid ${effectiveBorderColor}`,
-                      backgroundImage: 'none',
+                      backgroundImage: isStaticType
+                        ? `repeating-linear-gradient(
+                            45deg,
+                            transparent,
+                            transparent 6px,
+                            ${stripeColor} 6px,
+                            ${stripeColor} 12px
+                          )`
+                        : 'none',
                       opacity: isFaded ? 0.4 : 1,
                       filter: isFaded ? 'grayscale(50%)' : 'none',
                       overflow: 'visible',
