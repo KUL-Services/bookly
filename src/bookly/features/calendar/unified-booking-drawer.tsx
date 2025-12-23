@@ -73,15 +73,21 @@ const normalizeEmail = (email: string): string => {
   return email.trim().toLowerCase()
 }
 
+type PaymentMethod = 'pay_on_arrival' | 'mock_card'
+
 // Type for client in static slot
 interface SlotClient {
   id: string
+  bookingRef: string
   name: string
   email: string
   phone: string
   bookedAt: string
   status: 'confirmed' | 'no_show' | 'completed' | 'pending'
   arrivalTime?: string
+  paymentStatus: 'paid' | 'unpaid'
+  paymentMethod: PaymentMethod
+  paymentReference: string
 }
 
 interface UnifiedBookingDrawerProps {
@@ -148,6 +154,7 @@ export default function UnifiedBookingDrawer({
   const [newClientName, setNewClientName] = useState('')
   const [newClientEmail, setNewClientEmail] = useState('')
   const [newClientPhone, setNewClientPhone] = useState('')
+  const [isSessionClientsOpen, setIsSessionClientsOpen] = useState(false)
 
   // UI state
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
@@ -217,6 +224,7 @@ export default function UnifiedBookingDrawer({
       setPaymentStatus('unpaid')
       setSelectedSlotId(null)
       setSlotClients([])
+      setIsSessionClientsOpen(false)
       setValidationError(null)
       setAvailabilityWarning(null)
     }
@@ -232,6 +240,7 @@ export default function UnifiedBookingDrawer({
       setNewClientName('')
       setNewClientEmail('')
       setNewClientPhone('')
+      setIsSessionClientsOpen(false)
       setValidationError(null)
       setAvailabilityWarning(null)
 
@@ -360,6 +369,7 @@ export default function UnifiedBookingDrawer({
 
           return {
             id: booking.id,
+            bookingRef: booking.extendedProps.bookingId || booking.id,
             name: booking.extendedProps.customerName || 'Walk-in Client',
             email: emailMatch ? emailMatch[1].trim() : '',
             phone: phoneMatch ? phoneMatch[1].trim() : '',
@@ -367,7 +377,10 @@ export default function UnifiedBookingDrawer({
             status: ['confirmed', 'no_show', 'completed', 'pending'].includes(booking.extendedProps.status)
               ? (booking.extendedProps.status as 'confirmed' | 'no_show' | 'completed' | 'pending')
               : 'confirmed',
-            arrivalTime: booking.extendedProps.arrivalTime || ''
+            arrivalTime: booking.extendedProps.arrivalTime || '',
+            paymentStatus: booking.extendedProps.paymentStatus === 'paid' ? 'paid' : 'unpaid',
+            paymentMethod: booking.extendedProps.paymentMethod || 'pay_on_arrival',
+            paymentReference: booking.extendedProps.instapayReference || ''
           }
         })
 
@@ -525,23 +538,28 @@ export default function UnifiedBookingDrawer({
           return
         }
         if (hasDuplicateEmail(client.email)) {
-          setValidationError('This client is already booked in this slot')
+          setValidationError('This client is already booked in this session')
           return
         }
 
         const totalCapacity = getSlotCapacity()
         if (slotClients.length >= totalCapacity) {
-          setValidationError('Cannot add client: Slot is at maximum capacity')
+          setValidationError('Cannot add client: Session is at maximum capacity')
           return
         }
 
+        const bookingRef = generateBookingReference()
         const newClient: SlotClient = {
-          id: `client-${Date.now()}`,
+          id: bookingRef,
+          bookingRef,
           name: fullName,
           email: client.email,
           phone: client.phone || '',
           bookedAt: new Date().toISOString(),
-          status: 'confirmed'
+          status: 'confirmed',
+          paymentStatus: 'unpaid',
+          paymentMethod: 'pay_on_arrival',
+          paymentReference: ''
         }
         setSlotClients([...slotClients, newClient])
         setIsAddingClient(false)
@@ -562,7 +580,7 @@ export default function UnifiedBookingDrawer({
       return
     }
     if (hasDuplicateEmail(newClientEmail)) {
-      setValidationError('This client is already booked in this slot')
+      setValidationError('This client is already booked in this session')
       return
     }
 
@@ -572,17 +590,22 @@ export default function UnifiedBookingDrawer({
     const availableCapacity = totalCapacity - currentCount
 
     if (availableCapacity === 0) {
-      setValidationError('Cannot add client: Slot is at maximum capacity')
+      setValidationError('Cannot add client: Session is at maximum capacity')
       return
     }
 
+    const bookingRef = generateBookingReference()
     const newClient: SlotClient = {
-      id: `client-${Date.now()}`,
+      id: bookingRef,
+      bookingRef,
       name: newClientName,
       email: newClientEmail,
       phone: newClientPhone,
       bookedAt: new Date().toISOString(),
-      status: 'confirmed'
+      status: 'confirmed',
+      paymentStatus: 'unpaid',
+      paymentMethod: 'pay_on_arrival',
+      paymentReference: ''
     }
 
     setSlotClients([...slotClients, newClient])
@@ -601,7 +624,29 @@ export default function UnifiedBookingDrawer({
   }
 
   const handleClientArrivalChange = (clientId: string, arrivalTime: string) => {
-    setSlotClients(slotClients.map(c => (c.id === clientId ? { ...c, arrivalTime } : c)))
+    setSlotClients(
+      slotClients.map(c =>
+        c.id === clientId
+          ? {
+              ...c,
+              arrivalTime,
+              status: arrivalTime ? 'completed' : c.status
+            }
+          : c
+      )
+    )
+  }
+
+  const handleClientPaymentStatusChange = (clientId: string, newStatus: 'paid' | 'unpaid') => {
+    setSlotClients(slotClients.map(c => (c.id === clientId ? { ...c, paymentStatus: newStatus } : c)))
+  }
+
+  const handleClientPaymentMethodChange = (clientId: string, newMethod: PaymentMethod) => {
+    setSlotClients(slotClients.map(c => (c.id === clientId ? { ...c, paymentMethod: newMethod } : c)))
+  }
+
+  const handleClientPaymentReferenceChange = (clientId: string, newReference: string) => {
+    setSlotClients(slotClients.map(c => (c.id === clientId ? { ...c, paymentReference: newReference } : c)))
   }
 
   const handleSave = () => {
@@ -685,7 +730,7 @@ export default function UnifiedBookingDrawer({
       }
 
       if (!slotIdForSave) {
-        setValidationError('Slot ID not found')
+        setValidationError('Session ID not found')
         return
       }
 
@@ -710,7 +755,7 @@ export default function UnifiedBookingDrawer({
             }
             console.warn('⚠️ DRAWER Using fallback slot data:', slotDataForSave)
           } else {
-            setValidationError('Slot data not available - please refresh and try again')
+            setValidationError('Session data not available - please refresh and try again')
             return
           }
         }
@@ -786,6 +831,10 @@ export default function UnifiedBookingDrawer({
                 status: client.status,
                 customerName: client.name,
                 arrivalTime: client.arrivalTime,
+                paymentStatus: client.paymentStatus,
+                paymentMethod: client.paymentMethod,
+                instapayReference: client.paymentReference || undefined,
+                bookingId: client.bookingRef,
                 notes: `Email: ${client.email}, Phone: ${client.phone}`
               }
             }
@@ -801,7 +850,8 @@ export default function UnifiedBookingDrawer({
             end: endDate,
             extendedProps: {
               status: client.status,
-              paymentStatus: 'unpaid',
+              paymentStatus: client.paymentStatus,
+              paymentMethod: client.paymentMethod,
               staffId: slotDataForSave.instructorStaffId || '',
               staffName: mockStaff.find(s => s.id === slotDataForSave.instructorStaffId)?.name || '',
               selectionMethod: 'automatically',
@@ -809,13 +859,14 @@ export default function UnifiedBookingDrawer({
               serviceName: slotDataForSave.serviceName,
               customerName: client.name,
               price: slotDataForSave.price,
-              bookingId: client.id,
+              bookingId: client.bookingRef,
               serviceId: slotDataForSave.serviceId,
               slotId: slotIdForSave,
               isStaticSlot: true, // Mark as static slot for future detection
               roomId: slotDataForSave.roomId,
               partySize: 1,
               arrivalTime: client.arrivalTime,
+              instapayReference: client.paymentReference || undefined,
               notes: `Email: ${client.email}, Phone: ${client.phone}`
             }
           }
@@ -852,6 +903,7 @@ export default function UnifiedBookingDrawer({
   const handleClose = () => {
     setValidationError(null)
     setAvailabilityWarning(null)
+    setIsSessionClientsOpen(false)
     onClose()
   }
 
@@ -912,10 +964,10 @@ export default function UnifiedBookingDrawer({
             <Typography variant='h6' fontWeight={600}>
               {mode === 'create'
                 ? effectiveSchedulingMode === 'static'
-                  ? 'Add to Slot'
+                  ? 'Add to Session'
                   : 'New Appointment'
                 : effectiveSchedulingMode === 'static'
-                  ? 'Manage Slot'
+                  ? 'Manage Session'
                   : 'Booking Details'}
             </Typography>
             {mode === 'create' && (
@@ -1364,11 +1416,12 @@ export default function UnifiedBookingDrawer({
               const isFull = availableCapacity === 0
 
               return (
-                <Stack spacing={2.5}>
-                  {/* Slot Info Header */}
+                <>
+                  <Stack spacing={2.5}>
+                  {/* Session Info Header */}
                   <Box>
                     <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      SLOT INFORMATION
+                      SESSION INFORMATION
                     </Typography>
                     <Typography variant='body1' fontWeight={500}>
                       {serviceName || 'Group Session'} • {formatShortDate(date)}
@@ -1386,8 +1439,15 @@ export default function UnifiedBookingDrawer({
                       p: 2,
                       bgcolor: isFull ? 'error.lighter' : isLow ? 'warning.lighter' : 'success.lighter',
                       border: 1,
-                      borderColor: isFull ? 'error.main' : isLow ? 'warning.main' : 'success.main'
+                      borderColor: isFull ? 'error.main' : isLow ? 'warning.main' : 'success.main',
+                      cursor: 'pointer',
+                      transition: 'transform 0.1s ease, box-shadow 0.2s ease',
+                      '&:hover': {
+                        transform: 'translateY(-1px)',
+                        boxShadow: 2
+                      }
                     }}
+                    onClick={() => setIsSessionClientsOpen(true)}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Box>
@@ -1396,6 +1456,9 @@ export default function UnifiedBookingDrawer({
                         </Typography>
                         <Typography variant='caption' color='text.secondary'>
                           {bookedCount} booked • {availableCapacity} spots remaining
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                          Click to manage session clients
                         </Typography>
                       </Box>
                       <Chip
@@ -1407,10 +1470,59 @@ export default function UnifiedBookingDrawer({
                     </Box>
                   </Paper>
 
+                  </Stack>
+                  <Dialog
+                  open={isSessionClientsOpen}
+                  onClose={() => {
+                    setIsSessionClientsOpen(false)
+                    setIsAddingClient(false)
+                  }}
+                  maxWidth='md'
+                  fullWidth
+                  PaperProps={{ sx: { borderRadius: 2 } }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
+                    <Box>
+                      <Typography variant='h6' fontWeight={600}>
+                        Session Clients
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary'>
+                        {serviceName || 'Group Session'} • {formatShortDate(date)} • {startTime} - {endTime}
+                      </Typography>
+                    </Box>
+                    <IconButton onClick={() => setIsSessionClientsOpen(false)} size='small'>
+                      <i className='ri-close-line' />
+                    </IconButton>
+                  </Box>
                   <Divider />
+                  <Box sx={{ p: 2.5 }}>
+                    <Paper
+                      sx={{
+                        p: 2,
+                        bgcolor: isFull ? 'error.lighter' : isLow ? 'warning.lighter' : 'success.lighter',
+                        border: 1,
+                        borderColor: isFull ? 'error.main' : isLow ? 'warning.main' : 'success.main',
+                        mb: 2
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Box>
+                          <Typography variant='body2' fontWeight={600}>
+                            Capacity Status
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            {bookedCount} booked • {availableCapacity} spots remaining
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={`${bookedCount}/${totalCapacity}`}
+                          size='small'
+                          color={isFull ? 'error' : isLow ? 'warning' : 'success'}
+                          icon={<i className='ri-user-line' style={{ fontSize: '0.75rem' }} />}
+                        />
+                      </Box>
+                    </Paper>
 
-                  {/* Client List - Fully Editable */}
-                  <Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
                       <Typography variant='caption' color='text.secondary' fontWeight={600}>
                         BOOKED CLIENTS ({slotClients.length})
@@ -1425,9 +1537,8 @@ export default function UnifiedBookingDrawer({
                           </Typography>
                         </Paper>
                       ) : (
-                        slotClients.map((client, index) => (
+                        slotClients.map(client => (
                           <Paper key={client.id} sx={{ p: 2 }} variant='outlined'>
-                            {/* Client Header with Remove */}
                             <Box
                               sx={{
                                 display: 'flex',
@@ -1445,15 +1556,7 @@ export default function UnifiedBookingDrawer({
                                     {client.name}
                                   </Typography>
                                   <Typography variant='caption' color='text.secondary'>
-                                    Added:{' '}
-                                    {new Date(client.bookedAt).toLocaleString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      year: 'numeric',
-                                      hour: 'numeric',
-                                      minute: '2-digit',
-                                      hour12: true
-                                    })}
+                                    Booking Ref: {client.bookingRef}
                                   </Typography>
                                 </Box>
                               </Box>
@@ -1466,7 +1569,6 @@ export default function UnifiedBookingDrawer({
                               </IconButton>
                             </Box>
 
-                            {/* Client Contact Info */}
                             <Stack spacing={1} sx={{ mb: 2 }}>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <i className='ri-mail-line' style={{ fontSize: '1rem', opacity: 0.6 }} />
@@ -1480,11 +1582,21 @@ export default function UnifiedBookingDrawer({
                                   {client.phone || 'No phone'}
                                 </Typography>
                               </Box>
+                              <Typography variant='caption' color='text.secondary'>
+                                Added:{' '}
+                                {new Date(client.bookedAt).toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                  hour12: true
+                                })}
+                              </Typography>
                             </Stack>
 
-                            {/* Editable Status and Arrival Time */}
-                            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-                              <FormControl size='small' sx={{ minWidth: 130, flex: 1 }}>
+                            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 2 }}>
+                              <FormControl size='small' sx={{ minWidth: 140, flex: 1 }}>
                                 <InputLabel>Status</InputLabel>
                                 <Select
                                   value={client.status}
@@ -1519,7 +1631,7 @@ export default function UnifiedBookingDrawer({
                                   </MenuItem>
                                 </Select>
                               </FormControl>
-                              <Box sx={{ minWidth: 130, flex: 1 }}>
+                              <Box sx={{ minWidth: 160, flex: 1 }}>
                                 <TimeSelectField
                                   label='Arrival Time'
                                   value={client.arrivalTime || ''}
@@ -1529,23 +1641,59 @@ export default function UnifiedBookingDrawer({
                                 />
                               </Box>
                             </Box>
+
+                            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                              <FormControl size='small' sx={{ minWidth: 140, flex: 1 }}>
+                                <InputLabel>Payment Status</InputLabel>
+                                <Select
+                                  value={client.paymentStatus}
+                                  label='Payment Status'
+                                  onChange={e =>
+                                    handleClientPaymentStatusChange(client.id, e.target.value as 'paid' | 'unpaid')
+                                  }
+                                >
+                                  <MenuItem value='unpaid'>Unpaid</MenuItem>
+                                  <MenuItem value='paid'>Paid</MenuItem>
+                                </Select>
+                              </FormControl>
+                              <FormControl size='small' sx={{ minWidth: 160, flex: 1 }}>
+                                <InputLabel>Payment Method</InputLabel>
+                                <Select
+                                  value={client.paymentMethod}
+                                  label='Payment Method'
+                                  onChange={e =>
+                                    handleClientPaymentMethodChange(client.id, e.target.value as PaymentMethod)
+                                  }
+                                >
+                                  <MenuItem value='pay_on_arrival'>Pay on Arrival</MenuItem>
+                                  <MenuItem value='mock_card'>Card (Mock)</MenuItem>
+                                </Select>
+                              </FormControl>
+                              <TextField
+                                fullWidth
+                                label='Payment Reference Number'
+                                value={client.paymentReference}
+                                onChange={e => handleClientPaymentReferenceChange(client.id, e.target.value)}
+                                size='small'
+                                placeholder='Enter payment reference'
+                                sx={{ minWidth: 200, flex: 2 }}
+                              />
+                            </Box>
                           </Paper>
                         ))
                       )}
 
-                      {/* Add New Client Section */}
                       {isAddingClient ? (
                         <Paper sx={{ p: 2, border: '2px solid', borderColor: 'primary.main' }} variant='outlined'>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                             <Typography variant='body2' fontWeight={600}>
-                              Add New Client to Slot
+                              Add New Client to Session
                             </Typography>
                             <IconButton size='small' onClick={() => setIsAddingClient(false)}>
                               <i className='ri-close-line' />
                             </IconButton>
                           </Box>
 
-                          {/* Option to select existing client */}
                           <Box
                             onClick={() => setIsClientPickerOpen(true)}
                             sx={{
@@ -1607,7 +1755,7 @@ export default function UnifiedBookingDrawer({
                                 Cancel
                               </Button>
                               <Button variant='contained' size='small' onClick={handleAddClientToSlot}>
-                                Add to Slot
+                                Add to Session
                               </Button>
                             </Box>
                           </Stack>
@@ -1625,12 +1773,13 @@ export default function UnifiedBookingDrawer({
                             '&:hover': { borderStyle: 'solid' }
                           }}
                         >
-                          {isFull ? 'Slot Full - Cannot Add Clients' : 'Add Client to Slot'}
+                          {isFull ? 'Session Full - Cannot Add Clients' : 'Add Client to Session'}
                         </Button>
                       )}
                     </Stack>
                   </Box>
-                </Stack>
+                  </Dialog>
+                </>
               )
             })()}
         </Box>

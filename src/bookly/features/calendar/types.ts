@@ -135,6 +135,7 @@ export interface CalendarEvent extends EventInput {
     note?: string // Additional notes
     arrivalTime?: string // Actual customer arrival/walk-in time (HH:MM format)
     instapayReference?: string // Instapay payment reference number
+    paymentMethod?: 'pay_on_arrival' | 'mock_card'
   }
 }
 
