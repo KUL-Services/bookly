@@ -463,7 +463,7 @@ export default function CalendarHeader({
 
       {/* Right Section */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1 }, flexShrink: 0 }}>
-        <Button
+        {/* <Button
           variant='contained'
           startIcon={!isMobile && <i className='ri-add-line' />}
           onClick={onNewBooking}
@@ -475,7 +475,7 @@ export default function CalendarHeader({
           }}
         >
           {isMobile ? <i className='ri-add-line' /> : 'New Booking'}
-        </Button>
+        </Button> */}
 
         {/* Schedule Templates Button (Static Mode Only) */}
         {schedulingMode === 'static' && !isMobile && (

@@ -53,6 +53,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const setVisibleDateRange = useCalendarStore(state => state.setVisibleDateRange)
   const openNewBooking = useCalendarStore(state => state.openNewBooking)
   const closeNewBooking = useCalendarStore(state => state.closeNewBooking)
+  const closeAppointmentDrawer = useCalendarStore(state => state.closeAppointmentDrawer)
   const toggleSettings = useCalendarStore(state => state.toggleSettings)
   const toggleNotifications = useCalendarStore(state => state.toggleNotifications)
   const selectSingleStaff = useCalendarStore(state => state.selectSingleStaff)
@@ -233,6 +234,15 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     setCurrentDate(range.start)
   }
 
+  const openCreateBooking = (date?: Date, dateRange?: DateRange) => {
+    setBookingDrawerMode('create')
+    setBookingDrawerOpen(true)
+    setSelectedEventForEdit(null)
+    setBookingDrawerInitialServiceId(null)
+    closeAppointmentDrawer()
+    openNewBooking(date, dateRange)
+  }
+
   const handleDateClick = (date: Date) => {
     // In month view, clicking a date should navigate to day view
     if (view === 'dayGridMonth') {
@@ -244,10 +254,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       setCurrentDate(date)
     } else {
       // In day view, clicking opens new booking
-      setBookingDrawerMode('create')
-      setBookingDrawerOpen(true)
-      setSelectedEventForEdit(null)
-      openNewBooking(date)
+      openCreateBooking(date)
     }
   }
 
@@ -255,6 +262,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     setBookingDrawerMode('edit')
     setBookingDrawerOpen(true)
     setSelectedEventForEdit(event)
+    closeNewBooking()
     openAppointmentDrawer(event)
   }
 
@@ -280,7 +288,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
   const handleQuickMenuNewAppointment = () => {
     if (selectedTimeRange) {
-      openNewBooking(selectedTimeRange.start, selectedTimeRange)
+      openCreateBooking(selectedTimeRange.start, selectedTimeRange)
     }
     // Clear overlay when option is selected
     setSelectionOverlay(null)
@@ -385,17 +393,13 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   }
 
   const handleResourceCellClick = (resourceId: string, resourceType: 'staff' | 'room', date: Date) => {
-    // Open unified booking drawer for new booking
-    setBookingDrawerMode('create')
-    setBookingDrawerOpen(true)
-    setSelectedEventForEdit(null)
-
     // Pre-populate with the resource that was clicked
     if (resourceType === 'staff') {
       selectSingleStaff(resourceId)
     }
 
-    openNewBooking(date)
+    // Open unified booking drawer for new booking
+    openCreateBooking(date)
   }
 
   // Render the appropriate calendar view
@@ -504,7 +508,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
-        onNewBooking={() => openNewBooking()}
+        onNewBooking={() => openCreateBooking()}
         onDateChange={handleDateChange}
       />
 
@@ -566,7 +570,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
       {/* Floating Action Menu */}
       <FloatingActionMenu
-        onNewAppointment={() => openNewBooking()}
+        onNewAppointment={() => openCreateBooking()}
         onTimeReservation={() => {
           openTimeReservationModal()
         }}
