@@ -40,9 +40,9 @@ function LandPage() {
       <main className='relative overflow-hidden'>
         {/* Animated background elements */}
         <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-          <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/30 to-cyan-200/20 dark:from-teal-600/20 dark:to-cyan-600/10 rounded-full blur-3xl animate-pulse' />
-          <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/30 to-teal-200/20 dark:from-emerald-600/20 dark:to-teal-600/10 rounded-full blur-3xl animate-pulse animation-delay-1000' />
-          <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-teal-100/20 to-cyan-100/10 dark:from-teal-800/10 dark:to-cyan-800/5 rounded-full blur-3xl animate-spin animation-duration-20000' />
+          <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/30 to-cyan-200/20 dark:from-primary-800/20 dark:to-cyan-600/10 rounded-full blur-3xl animate-pulse' />
+          <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/30 to-teal-200/20 dark:from-emerald-600/20 dark:to-sage-600/10 rounded-full blur-3xl animate-pulse animation-delay-1000' />
+          <div className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-primary-200/20 to-sage-200/10 dark:from-primary-800/10 dark:to-sage-800/5 rounded-full blur-3xl animate-spin animation-duration-20000' />
         </div>
         {/* Hero Section */}
         <section className='relative py-12 sm:py-16 md:py-24 lg:py-32'>
@@ -55,10 +55,10 @@ function LandPage() {
 
           {/* Floating elements */}
           <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-            <div className='absolute top-20 left-10 w-3 h-3 bg-teal-400 dark:bg-teal-500 rounded-full animate-bounce animation-delay-1000' />
+            <div className='absolute top-20 left-10 w-3 h-3 bg-teal-400 dark:bg-primary-700 rounded-full animate-bounce animation-delay-1000' />
             <div className='absolute top-40 right-20 w-2 h-2 bg-cyan-400 dark:bg-cyan-500 rounded-full animate-bounce animation-delay-2000' />
             <div className='absolute bottom-32 left-20 w-4 h-4 bg-emerald-400 dark:bg-emerald-500 rounded-full animate-bounce animation-delay-3000' />
-            <div className='absolute bottom-20 right-10 w-2 h-2 bg-teal-500 dark:bg-teal-400 rounded-full animate-bounce animation-delay-4000' />
+            <div className='absolute bottom-20 right-10 w-2 h-2 bg-primary-700 dark:bg-sage-400 rounded-full animate-bounce animation-delay-4000' />
           </div>
           <div className='relative max-w-6xl mx-auto px-4 sm:px-6'>
             <div
@@ -89,7 +89,7 @@ function LandPage() {
                           localeKey: 'landing.search.servicePlaceholder'
                         }}
                         i18nTFn={t}
-                        className='w-full h-12 sm:h-14 text-base border-0 focus:ring-2 focus:ring-teal-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
+                        className='w-full h-12 sm:h-14 text-base border-0 focus:ring-2 focus:ring-primary-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
                       />
                     </div>
                     <div className='flex-1'>
@@ -101,14 +101,14 @@ function LandPage() {
                         }}
                         i18nTFn={t}
                         leadingIcon={MapPin}
-                        className='w-full h-12 sm:h-14 text-base border-0 focus:ring-2 focus:ring-teal-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
+                        className='w-full h-12 sm:h-14 text-base border-0 focus:ring-2 focus:ring-primary-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
                       />
                     </div>
                     <Button
                       onClick={goSearch}
                       buttonText={{ localeKey: 'landing.search.button' }}
                       i18nTFn={t}
-                      className='w-full md:w-auto bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 text-base sm:text-lg text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200'
+                      className='w-full md:w-auto bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 px-6 sm:px-8 py-3 sm:py-4 h-12 sm:h-14 text-base sm:text-lg text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200'
                     />
                   </div>
                 </div>

@@ -316,7 +316,7 @@ export default function SingleStaffDayView({
                     height: 20,
                     fontSize: '0.7rem',
                     '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 },
-                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
                     color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
                   }}
                 />
@@ -435,7 +435,7 @@ export default function SingleStaffDayView({
                   left: 0,
                   right: 0,
                   height: '2px',
-                  bgcolor: '#ef4444',
+                  bgcolor: 'var(--mui-palette-error-main)',
                   zIndex: 100,
                   '&::before': {
                     content: '""',
@@ -446,7 +446,7 @@ export default function SingleStaffDayView({
                     width: 10,
                     height: 10,
                     borderRadius: '50%',
-                    bgcolor: '#ef4444'
+                    bgcolor: 'var(--mui-palette-error-main)'
                   },
                   '&::after': {
                     content: `"${currentTimeIndicator.time}"`,
@@ -454,7 +454,7 @@ export default function SingleStaffDayView({
                     left: 16,
                     top: '50%',
                     transform: 'translateY(-50%)',
-                    bgcolor: '#ef4444',
+                    bgcolor: 'var(--mui-palette-error-main)',
                     color: 'white',
                     px: 1,
                     py: 0.25,
@@ -489,9 +489,9 @@ export default function SingleStaffDayView({
                       left: 8,
                       right: 8,
                       height: `${dragStyle.height}px`,
-                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.2)' : 'rgba(20, 184, 166, 0.15)',
+                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.15)',
                       border: 2,
-                      borderColor: theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.5)' : 'rgba(20, 184, 166, 0.6)',
+                      borderColor: theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.5)' : 'rgba(10, 44, 36, 0.6)',
                       borderRadius: 1,
                       pointerEvents: 'none',
                       zIndex: 10,
@@ -598,7 +598,7 @@ export default function SingleStaffDayView({
                     opacity: isFaded ? 0.4 : 1,
                     filter: isFaded ? 'grayscale(50%)' : 'none',
                     boxShadow: isHighlighted
-                      ? '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                      ? '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
                       : 2,
                     transform: isHighlighted ? 'scale(1.02)' : 'none',
                     zIndex: isHighlighted ? 5 : 'auto',
@@ -606,7 +606,7 @@ export default function SingleStaffDayView({
                     flexDirection: 'column',
                     '&:hover': {
                       boxShadow: isHighlighted
-                        ? '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                        ? '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
                         : 6,
                       transform: isHighlighted ? 'scale(1.03) translateX(4px)' : 'translateX(4px)',
                       zIndex: 5,

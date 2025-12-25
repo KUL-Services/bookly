@@ -14,7 +14,7 @@ export default function BookingDemoPage() {
       <div className='bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700'>
         <div className='max-w-7xl mx-auto px-4 py-8'>
           <div className='flex items-center gap-6'>
-            <div className='w-24 h-24 rounded-full bg-teal-500 flex items-center justify-center text-white text-3xl font-bold'>
+            <div className='w-24 h-24 rounded-full bg-primary-700 flex items-center justify-center text-white text-3xl font-bold'>
               {business.name.charAt(0)}
             </div>
             <div className='flex-1'>
@@ -49,12 +49,12 @@ export default function BookingDemoPage() {
 
       {/* Coupon Codes Info */}
       <div className='max-w-7xl mx-auto px-4 pb-8'>
-        <div className='bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-6'>
+        <div className='bg-primary-100 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-6'>
           <H3 stringProps={{ plainText: 'Test Coupon Codes' }} className='text-xl font-bold mb-4' />
           <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
             {Object.values(mockBookingData.coupons).map(coupon => (
               <div key={coupon.code} className='bg-white dark:bg-gray-800 rounded-lg p-3 text-center'>
-                <div className='font-mono font-bold text-teal-600 dark:text-teal-400'>{coupon.code}</div>
+                <div className='font-mono font-bold text-primary-800 dark:text-sage-400'>{coupon.code}</div>
                 <div className='text-sm text-gray-600 dark:text-gray-400 mt-1'>{coupon.discountPercent}% off</div>
               </div>
             ))}

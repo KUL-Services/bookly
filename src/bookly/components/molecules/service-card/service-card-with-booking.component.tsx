@@ -57,7 +57,7 @@ export const ServiceCardWithBooking = ({ service, branchId, className }: Service
               <Button
                 variant='contained'
                 onClick={() => setIsBookingModalOpen(true)}
-                className='bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-xl'
+                className='bg-primary-700 hover:bg-primary-800 text-white px-6 py-2 rounded-xl'
                 buttonText={{ plainText: 'Book' }}
               />
             </div>

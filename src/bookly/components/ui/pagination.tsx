@@ -122,7 +122,7 @@ export function Pagination({
               className={cn(
                 "px-3 py-2 text-sm font-medium border",
                 page === currentPage
-                  ? "bg-teal-600 text-white border-teal-600 hover:bg-teal-700"
+                  ? "bg-primary-800 text-white border-primary-800 hover:bg-primary-700"
                   : "text-gray-700 bg-white border-gray-300 hover:bg-gray-50"
               )}
               aria-current={page === currentPage ? "page" : undefined}

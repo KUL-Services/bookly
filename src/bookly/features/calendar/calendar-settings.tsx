@@ -178,16 +178,16 @@ export default function CalendarSettings({ open, onClose }: CalendarSettingsProp
                   const colors =
                     colorScheme === 'vivid'
                       ? {
-                          confirmed: '#3b82f6',
-                          pending: '#f59e0b',
-                          completed: '#9ca3af',
-                          cancelled: '#ef4444'
+                          confirmed: '#51b4b7',
+                          pending: '#202c39',
+                          completed: '#77b6a3',
+                          cancelled: '#e88682'
                         }
                       : {
-                          confirmed: '#93c5fd',
-                          pending: '#fcd34d',
-                          completed: '#d1d5db',
-                          cancelled: '#fca5a5'
+                          confirmed: 'rgba(81, 180, 183, 0.2)',
+                          pending: 'rgba(32, 44, 57, 0.18)',
+                          completed: 'rgba(119, 182, 163, 0.2)',
+                          cancelled: 'rgba(232, 134, 130, 0.2)'
                         }
 
                   return (
@@ -196,7 +196,7 @@ export default function CalendarSettings({ open, onClose }: CalendarSettingsProp
                       className='px-3 py-2 rounded text-xs font-medium text-center'
                       style={{
                         backgroundColor: colors[status as keyof typeof colors],
-                        color: colorScheme === 'vivid' ? '#ffffff' : '#000000'
+                        color: colorScheme === 'vivid' ? '#f7f8f9' : '#0a2c24'
                       }}
                     >
                       {label}

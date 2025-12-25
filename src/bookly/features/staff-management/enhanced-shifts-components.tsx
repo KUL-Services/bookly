@@ -139,7 +139,7 @@ function BulkOperationsDialog({
     <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <i className='ri-edit-box-line' style={{ color: '#1976d2' }} />
+          <i className='ri-edit-box-line' style={{ color: '#0a2c24' }} />
           <Typography variant='h6'>Bulk Operations</Typography>
         </Box>
         <Typography variant='caption' display='block' color='text.secondary'>

@@ -71,7 +71,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
         <div className='w-1/3 mx-auto flex justify-center'>
           <Card className='w-full border border-gray-300'>
             <CardHeader className='space-y-1'>
-              <CardTitle className='text-2xl font-bold text-center text-teal-600'>
+              <CardTitle className='text-2xl font-bold text-center text-primary-800'>
                 Create New Password
               </CardTitle>
               <CardDescription className='text-center'>
@@ -186,7 +186,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
 
                   <Button
                     type='submit'
-                    className='w-full text-teal-50 bg-teal-500 hover:bg-teal-600'
+                    className='w-full text-white bg-primary-700 hover:bg-primary-800'
                     disabled={isLoading}
                   >
                     {isLoading ? 'Resetting...' : 'Reset Password'}
@@ -197,7 +197,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
               <div className='mt-6 text-center'>
                 <Link
                   href={`/${locale}/customer/login`}
-                  className='text-sm text-teal-600 hover:underline'
+                  className='text-sm text-primary-800 hover:underline'
                 >
                   Back to Login
                 </Link>

@@ -57,9 +57,9 @@ const BranchMapView = ({ branch }: BranchMapViewProps) => {
   // Custom marker icon (red pin) - created after isLoaded check
   const markerIcon = {
     path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-    fillColor: '#ef4444',
+    fillColor: '#e88682',
     fillOpacity: 1,
-    strokeColor: '#ffffff',
+    strokeColor: '#f7f8f9',
     strokeWeight: 2,
     scale: 1.5,
     anchor: new google.maps.Point(12, 22)

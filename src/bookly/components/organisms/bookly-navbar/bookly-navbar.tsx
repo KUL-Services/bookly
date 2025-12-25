@@ -62,7 +62,7 @@ const BooklyNavbar = () => {
   if (!hydrated) return null
 
   return (
-    <header className='sticky top-0 z-50 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-teal-200/50 dark:border-teal-700/50 shadow-sm'>
+    <header className='sticky top-0 z-50 w-full bg-white/90 dark:bg-secondary-600/90 backdrop-blur-md border-b border-primary-200/50 dark:border-primary-700/50 shadow-sm'>
       <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
         <div className='flex items-center justify-between h-16'>
           {/* Left Section */}
@@ -79,9 +79,9 @@ const BooklyNavbar = () => {
 
             <button
               onClick={() => to('/landpage')}
-              className='flex items-center gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent hover:from-teal-700 hover:to-teal-600 transition-colors duration-200 touch-manipulation'
+              className='flex items-center gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-800 to-sage-500 bg-clip-text text-transparent hover:from-primary-700 hover:to-sage-600 transition-colors duration-200 touch-manipulation'
             >
-              <Sparkles className='w-6 h-6 text-teal-500' />
+              <Sparkles className='w-6 h-6 text-sage-500' />
               Zerv
             </button>
           </div>
@@ -120,12 +120,12 @@ const BooklyNavbar = () => {
               <div className='relative'>
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className='flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-xl bg-teal-50/80 dark:bg-teal-900/30 hover:bg-teal-100/80 dark:hover:bg-teal-800/40 border border-teal-200/50 dark:border-teal-700/50 transition-all duration-200 hover:shadow-md touch-manipulation'
+                  className='flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-xl bg-primary-100/80 dark:bg-primary-900/30 hover:bg-primary-200/80 dark:hover:bg-primary-800/40 border border-primary-200/50 dark:border-primary-700/50 transition-all duration-200 hover:shadow-md touch-manipulation'
                 >
-                  <div className='w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-teal-400 to-cyan-400 flex items-center justify-center text-white font-semibold text-xs sm:text-sm shadow-lg'>
+                  <div className='w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-primary-500 to-sage-500 flex items-center justify-center text-white font-semibold text-xs sm:text-sm shadow-lg'>
                     {booklyUser.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
-                  <span className='hidden sm:block text-slate-700 dark:text-slate-200 font-medium hover:text-teal-700 dark:hover:text-teal-300 transition-colors duration-200 text-sm sm:text-base'>
+                  <span className='hidden sm:block text-slate-700 dark:text-slate-200 font-medium hover:text-primary-700 dark:hover:text-sage-400 transition-colors duration-200 text-sm sm:text-base'>
                     {booklyUser.name || 'User'}
                   </span>
                   <ChevronIcon
@@ -135,18 +135,18 @@ const BooklyNavbar = () => {
 
                 {/* User Dropdown */}
                 {userDropdownOpen && (
-                  <div className='absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-teal-200/50 dark:border-slate-600 py-2 z-50 animate-in slide-in-from-top-2 duration-200'>
+                  <div className='absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-primary-200/50 dark:border-slate-600 py-2 z-50 animate-in slide-in-from-top-2 duration-200'>
                     <button
                       onClick={() => {
                         to('/profile')
                         setUserDropdownOpen(false)
                       }}
-                      className='flex items-center gap-3 w-full px-4 py-3 text-left text-slate-700 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-colors duration-200 touch-manipulation'
+                      className='flex items-center gap-3 w-full px-4 py-3 text-left text-slate-700 dark:text-slate-200 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-sage-400 transition-colors duration-200 touch-manipulation'
                     >
                       <User className='w-4 h-4' />
                       {t('nav.profile')}
                     </button>
-                    <hr className='my-1 border-teal-100/50 dark:border-teal-800/50' />
+                    <hr className='my-1 border-primary-100/50 dark:border-primary-800/50' />
                     <button
                       onClick={handleLogout}
                       className='flex items-center gap-3 w-full px-4 py-3 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors duration-200 touch-manipulation'
@@ -161,13 +161,13 @@ const BooklyNavbar = () => {
               <div className='flex items-center gap-3'>
                 <button
                   onClick={() => router.push(`/${params?.lang}/customer/login`)}
-                  className='hidden sm:flex items-center px-4 py-2.5 h-10 rounded-lg border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 dark:text-slate-200 hover:bg-slate-600 dark:hover:bg-slate-600 hover:border-teal-500 dark:hover:border-teal-500 hover:text-white dark:hover:text-white transition-all duration-200 font-medium touch-manipulation'
+                  className='hidden sm:flex items-center px-4 py-2.5 h-10 rounded-lg border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 dark:text-slate-200 hover:bg-slate-600 dark:hover:bg-slate-600 hover:border-sage-500 dark:hover:border-sage-500 hover:text-white dark:hover:text-white transition-all duration-200 font-medium touch-manipulation'
                 >
                   {t('nav.login')}
                 </button>
                 <button
                   onClick={() => router.push(`/${params?.lang}/customer/register`)}
-                  className='flex items-center px-3 sm:px-4 py-2.5 h-10 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-500 dark:to-cyan-500 text-white hover:from-teal-700 hover:to-cyan-700 dark:hover:from-teal-600 dark:hover:to-cyan-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation text-sm sm:text-base'
+                  className='flex items-center px-3 sm:px-4 py-2.5 h-10 rounded-lg bg-gradient-to-r from-primary-800 to-sage-600 dark:from-primary-600 dark:to-sage-500 text-white hover:from-primary-700 hover:to-sage-700 dark:hover:from-primary-500 dark:hover:to-sage-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation text-sm sm:text-base'
                 >
                   <span className='hidden sm:inline'>{t('nav.signUp')}</span>
                   <span className='sm:hidden'>{t('nav.join')}</span>
@@ -178,7 +178,7 @@ const BooklyNavbar = () => {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className='md:hidden inline-flex items-center justify-center w-11 h-11 rounded-lg hover:bg-teal-50/70 dark:hover:bg-teal-900/30 text-slate-600 dark:text-slate-300 transition-all duration-200 touch-manipulation'
+              className='md:hidden inline-flex items-center justify-center w-11 h-11 rounded-lg hover:bg-primary-100/70 dark:hover:bg-primary-900/30 text-slate-600 dark:text-slate-300 transition-all duration-200 touch-manipulation'
               aria-label='Toggle menu'
             >
               {mobileMenuOpen ? <X className='w-6 h-6' /> : <Menu className='w-6 h-6' />}
@@ -188,7 +188,7 @@ const BooklyNavbar = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className='md:hidden border-t border-teal-200/50 dark:border-slate-600 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md animate-in slide-in-from-top-2 duration-200 relative z-50'>
+          <div className='md:hidden border-t border-primary-200/50 dark:border-slate-600 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md animate-in slide-in-from-top-2 duration-200 relative z-50'>
             <div className='px-4 py-4 space-y-3 relative z-50'>
               {/* Mobile Language and Theme Toggles */}
               <div className='flex items-center justify-between gap-3 px-4 py-2'>
@@ -198,7 +198,7 @@ const BooklyNavbar = () => {
                   <BooklyThemeToggle />
                 </div>
               </div>
-              <hr className='border-teal-200/50 dark:border-teal-700/50' />
+              <hr className='border-primary-200/50 dark:border-primary-700/50' />
 
               <button
                 onClick={e => {
@@ -224,7 +224,7 @@ const BooklyNavbar = () => {
               </button>
 
               {!booklyUser && (
-                <div className='pt-2 border-t border-teal-200/50 dark:border-teal-700/50 space-y-2'>
+                <div className='pt-2 border-t border-primary-200/50 dark:border-primary-700/50 space-y-2'>
                   <button
                     onClick={e => {
                       e.preventDefault()
@@ -235,7 +235,7 @@ const BooklyNavbar = () => {
                         router.push(`/${params?.lang}/customer/login`)
                       }, 100)
                     }}
-                    className='w-full px-4 py-4 text-center border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 dark:text-slate-200 hover:bg-slate-600 dark:hover:bg-slate-600 hover:border-teal-500 dark:hover:border-teal-500 hover:text-white dark:hover:text-white rounded-lg transition-all duration-200 font-medium touch-manipulation text-base'
+                    className='w-full px-4 py-4 text-center border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 dark:text-slate-200 hover:bg-slate-600 dark:hover:bg-slate-600 hover:border-sage-500 dark:hover:border-sage-500 hover:text-white dark:hover:text-white rounded-lg transition-all duration-200 font-medium touch-manipulation text-base'
                   >
                     {t('nav.login')}
                   </button>
@@ -249,7 +249,7 @@ const BooklyNavbar = () => {
                         router.push(`/${params?.lang}/customer/register`)
                       }, 100)
                     }}
-                    className='w-full px-4 py-4 text-center bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-500 dark:to-cyan-500 text-white hover:from-teal-700 hover:to-cyan-700 dark:hover:from-teal-600 dark:hover:to-cyan-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] rounded-lg touch-manipulation text-base'
+                    className='w-full px-4 py-4 text-center bg-gradient-to-r from-primary-800 to-sage-600 dark:from-primary-600 dark:to-sage-500 text-white hover:from-primary-700 hover:to-sage-700 dark:hover:from-primary-500 dark:hover:to-sage-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] rounded-lg touch-manipulation text-base'
                   >
                     {t('nav.signUp')}
                   </button>

@@ -53,7 +53,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
           <div className='w-1/3 mx-auto flex justify-center'>
             <Card className='w-full border border-gray-300'>
               <CardHeader className='space-y-1'>
-                <CardTitle className='text-2xl font-bold text-center text-teal-600'>
+                <CardTitle className='text-2xl font-bold text-center text-primary-800'>
                   Check Your Email
                 </CardTitle>
                 <CardDescription className='text-center'>
@@ -62,8 +62,8 @@ export default function ForgotPasswordPage({ params }: PageProps) {
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='text-center space-y-4'>
-                  <div className='w-16 h-16 mx-auto bg-teal-100 rounded-full flex items-center justify-center'>
-                    <svg className='w-8 h-8 text-teal-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <div className='w-16 h-16 mx-auto bg-primary-200 rounded-full flex items-center justify-center'>
+                    <svg className='w-8 h-8 text-primary-800' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' />
                     </svg>
                   </div>
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
                       href={`/${locale}/customer/login`}
                       className='block'
                     >
-                      <Button variant='link' className='w-full text-teal-600'>
+                      <Button variant='link' className='w-full text-primary-800'>
                         Back to Login
                       </Button>
                     </Link>
@@ -102,7 +102,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
         <div className='w-1/3 mx-auto flex justify-center'>
           <Card className='w-full border border-gray-300'>
             <CardHeader className='space-y-1'>
-              <CardTitle className='text-2xl font-bold text-center text-teal-600'>
+              <CardTitle className='text-2xl font-bold text-center text-primary-800'>
                 Reset Your Password
               </CardTitle>
               <CardDescription className='text-center'>
@@ -133,7 +133,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
 
                   <Button
                     type='submit'
-                    className='w-full text-teal-50 bg-teal-500 hover:bg-teal-600'
+                    className='w-full text-white bg-primary-700 hover:bg-primary-800'
                     disabled={isLoading}
                   >
                     {isLoading ? 'Sending...' : 'Send Reset Link'}
@@ -144,7 +144,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
               <div className='mt-6 text-center'>
                 <Link
                   href={`/${locale}/customer/login`}
-                  className='text-sm text-teal-600 hover:underline'
+                  className='text-sm text-primary-800 hover:underline'
                 >
                   Remember your password? Sign in
                 </Link>

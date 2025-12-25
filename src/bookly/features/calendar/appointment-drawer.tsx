@@ -252,7 +252,11 @@ export default function AppointmentDrawer() {
       >
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton onClick={handleToggleStar} size='small' sx={{ color: starred ? '#FFD700' : 'currentColor' }}>
+            <IconButton
+              onClick={handleToggleStar}
+              size='small'
+              sx={{ color: starred ? 'var(--mui-palette-customColors-coral)' : 'currentColor' }}
+            >
               <i className={starred ? 'ri-star-fill' : 'ri-star-line'} />
             </IconButton>
             <Typography variant='h6' fontWeight={600}>

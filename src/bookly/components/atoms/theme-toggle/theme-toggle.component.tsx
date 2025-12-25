@@ -91,7 +91,7 @@ const BooklyThemeToggle = () => {
       <button
         ref={anchorRef}
         onClick={handleToggle}
-        className='flex items-center gap-2 px-3 py-2.5 h-10 rounded-lg bg-teal-50/60 dark:bg-teal-900/40 hover:bg-teal-100/80 dark:hover:bg-teal-800/50 text-teal-700 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 transition-all duration-200 touch-manipulation border border-teal-200/50 dark:border-teal-700/50'
+        className='flex items-center gap-2 px-3 py-2.5 h-10 rounded-lg bg-primary-100/60 dark:bg-primary-900/40 hover:bg-primary-200/80 dark:hover:bg-primary-800/50 text-primary-900 dark:text-sage-300 hover:text-primary-900 dark:hover:text-sage-200 transition-all duration-200 touch-manipulation border border-primary-200/50 dark:border-primary-700/50'
         aria-label='Change theme'
       >
         <CurrentIcon className='w-4 h-4' />
@@ -114,7 +114,7 @@ const BooklyThemeToggle = () => {
                   onClick={() => handleThemeChange(option.value)}
                   className={`flex items-center gap-3 w-full px-3 py-2.5 text-left transition-all duration-200 touch-manipulation rounded-lg ${
                     theme === option.value
-                      ? 'bg-teal-500 text-white shadow-md font-semibold'
+                      ? 'bg-primary-700 text-white shadow-md font-semibold'
                       : 'bg-transparent text-slate-300 hover:bg-slate-700 hover:text-white'
                   }`}
                 >

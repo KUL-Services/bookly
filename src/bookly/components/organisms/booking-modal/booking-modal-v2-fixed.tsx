@@ -188,7 +188,7 @@ function SortableServiceCard({
 
       <div className='flex items-center justify-between pt-3 border-t border-slate-600 dark:border-slate-600 pl-10'>
         <div className='text-sm text-slate-300 dark:text-slate-300'>Staff: {selected.providerName}</div>
-        <button onClick={onToggleStaffSelector} className='text-teal-400 hover:text-teal-300 font-semibold text-sm px-3 py-1.5 rounded-lg hover:bg-teal-500/10 transition-all'>
+        <button onClick={onToggleStaffSelector} className='text-teal-400 hover:text-teal-300 font-semibold text-sm px-3 py-1.5 rounded-lg hover:bg-primary-700/10 transition-all'>
           Change
         </button>
       </div>
@@ -202,14 +202,14 @@ function SortableServiceCard({
               onClick={() => onChangeStaff(staff.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
                 selected.providerId === staff.id
-                  ? 'bg-teal-500/20 border-2 border-teal-500 shadow-md'
-                  : 'bg-slate-700 border-2 border-transparent hover:bg-slate-600 hover:border-teal-500/50'
+                  ? 'bg-primary-700/20 border-2 border-primary-700 shadow-md'
+                  : 'bg-slate-700 border-2 border-transparent hover:bg-slate-600 hover:border-primary-700/50'
               }`}
             >
               {staff.profilePhotoUrl ? (
                 <img src={staff.profilePhotoUrl} alt={staff.name} className='w-10 h-10 rounded-full object-cover' />
               ) : (
-                <div className='w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-semibold'>
+                <div className='w-10 h-10 rounded-full bg-primary-700 flex items-center justify-center text-white font-semibold'>
                   {staff.name.charAt(0)}
                 </div>
               )}
@@ -701,7 +701,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
           <h2 className='text-lg sm:text-xl font-semibold'>Book Appointment</h2>
           <button
             onClick={onClose}
-            className='p-2 hover:bg-teal-50 dark:hover:bg-teal-900/20 text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 rounded-full transition-colors touch-manipulation'
+            className='p-2 hover:bg-primary-100 dark:hover:bg-primary-900/20 text-gray-600 dark:text-gray-400 hover:text-primary-800 dark:hover:text-sage-400 rounded-full transition-colors touch-manipulation'
           >
             <KulIcon icon='lucide:x' className='w-5 h-5 sm:w-6 sm:h-6' />
           </button>
@@ -714,13 +714,13 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
             <div className='flex gap-2 justify-end'>
               <button
                 onClick={goToToday}
-                className='px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/40 rounded-lg font-medium transition-colors border border-teal-200 dark:border-teal-800 touch-manipulation'
+                className='px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-sage-300 hover:bg-primary-200 dark:hover:bg-primary-900/40 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800 touch-manipulation'
               >
                 Today
               </button>
               <button
                 onClick={goToNextAvailable}
-                className='px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm bg-teal-500 text-white hover:bg-teal-600 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md touch-manipulation'
+                className='px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm bg-primary-700 text-white hover:bg-primary-800 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md touch-manipulation'
               >
                 Next Available
               </button>
@@ -730,7 +730,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
             <div className='flex items-center gap-1 sm:gap-2'>
               <button
                 onClick={() => scrollDays('left')}
-                className='p-1.5 sm:p-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-full flex-shrink-0 transition-colors touch-manipulation'
+                className='p-1.5 sm:p-2 bg-primary-100 dark:bg-primary-900/20 hover:bg-primary-200 dark:hover:bg-primary-900/40 text-primary-800 dark:text-sage-400 rounded-full flex-shrink-0 transition-colors touch-manipulation'
               >
                 <KulIcon icon='lucide:chevron-left' className='w-4 h-4 sm:w-5 sm:h-5' />
               </button>
@@ -747,7 +747,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                       onClick={() => setSelectedDate(date)}
                       className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[60px] sm:min-w-[80px] h-16 sm:h-24 rounded-xl sm:rounded-2xl border-2 transition-all touch-manipulation ${
                         isSelected
-                          ? 'border-teal-500 bg-teal-500 text-white shadow-lg'
+                          ? 'border-primary-700 bg-primary-700 text-white shadow-lg'
                           : 'border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 hover:border-teal-400 hover:bg-slate-600'
                       }`}
                     >
@@ -760,7 +760,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
               <button
                 onClick={() => scrollDays('right')}
-                className='p-1.5 sm:p-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-full flex-shrink-0 transition-colors touch-manipulation'
+                className='p-1.5 sm:p-2 bg-primary-100 dark:bg-primary-900/20 hover:bg-primary-200 dark:hover:bg-primary-900/40 text-primary-800 dark:text-sage-400 rounded-full flex-shrink-0 transition-colors touch-manipulation'
               >
                 <KulIcon icon='lucide:chevron-right' className='w-4 h-4 sm:w-5 sm:h-5' />
               </button>
@@ -774,7 +774,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                   onClick={() => setSelectedPeriod(period)}
                   className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-lg transition-all font-medium text-xs sm:text-sm touch-manipulation ${
                     selectedPeriod === period
-                      ? 'bg-teal-500 text-white shadow-lg scale-[1.02]'
+                      ? 'bg-primary-700 text-white shadow-lg scale-[1.02]'
                       : 'bg-slate-700 dark:bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'
                   }`}
                 >
@@ -787,7 +787,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
             <div className='flex items-center gap-2'>
               <button
                 onClick={() => scrollTimes('left')}
-                className='p-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-full flex-shrink-0 transition-colors'
+                className='p-2 bg-primary-100 dark:bg-primary-900/20 hover:bg-primary-200 dark:hover:bg-primary-900/40 text-primary-800 dark:text-sage-400 rounded-full flex-shrink-0 transition-colors'
               >
                 <KulIcon icon='lucide:chevron-left' />
               </button>
@@ -800,7 +800,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                       onClick={() => handleTimeSelect(time)}
                       className={`flex-shrink-0 min-w-[100px] py-3 px-4 rounded-xl border-2 transition-all font-medium ${
                         selectedTime === time
-                          ? 'border-teal-500 bg-teal-500 text-white shadow-lg'
+                          ? 'border-primary-700 bg-primary-700 text-white shadow-lg'
                           : 'border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 hover:border-teal-400 hover:bg-slate-600'
                       }`}
                     >
@@ -816,7 +816,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
               <button
                 onClick={() => scrollTimes('right')}
-                className='p-2 bg-teal-50 dark:bg-teal-900/20 hover:bg-teal-100 dark:hover:bg-teal-900/40 text-teal-600 dark:text-teal-400 rounded-full flex-shrink-0 transition-colors'
+                className='p-2 bg-primary-100 dark:bg-primary-900/20 hover:bg-primary-200 dark:hover:bg-primary-900/40 text-primary-800 dark:text-sage-400 rounded-full flex-shrink-0 transition-colors'
               >
                 <KulIcon icon='lucide:chevron-right' />
               </button>
@@ -824,13 +824,13 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
             {/* Quick Add Button (when time selected but no service added yet, and no initial service) */}
             {selectedTime && selectedServices.length === 0 && availableServices.length > 0 && !initialService && (
-              <div className='bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-4'>
-                <div className='text-sm text-teal-700 dark:text-teal-300 mb-2'>
+              <div className='bg-primary-100 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-4'>
+                <div className='text-sm text-primary-900 dark:text-sage-300 mb-2'>
                   Time {selectedTime} selected. Choose a service to continue:
                 </div>
                 <button
                   onClick={() => setShowServiceSelector(true)}
-                  className='w-full bg-teal-500 hover:bg-teal-600 text-white py-2 rounded-lg'
+                  className='w-full bg-primary-700 hover:bg-primary-800 text-white py-2 rounded-lg'
                 >
                   Select Service
                 </button>
@@ -883,7 +883,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
             {/* Add Another Service */}
             <button
               onClick={() => setShowServiceSelector(true)}
-              className='w-full py-4 border-2 border-dashed border-teal-500/60 dark:border-teal-500/60 bg-slate-700/50 dark:bg-slate-700/50 rounded-xl text-teal-400 hover:bg-teal-500/10 hover:border-teal-400 dark:hover:bg-teal-900/30 dark:hover:border-teal-400 flex items-center justify-center gap-2 font-semibold transition-all shadow-sm hover:shadow-md'
+              className='w-full py-4 border-2 border-dashed border-primary-700/60 dark:border-primary-700/60 bg-slate-700/50 dark:bg-slate-700/50 rounded-xl text-teal-400 hover:bg-primary-700/10 hover:border-teal-400 dark:hover:bg-primary-900/30 dark:hover:border-sage-400 flex items-center justify-center gap-2 font-semibold transition-all shadow-sm hover:shadow-md'
             >
               <KulIcon icon='lucide:plus' className='w-5 h-5' />
               Add another service
@@ -897,7 +897,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                     <h3 className='text-xl font-bold'>Select Service</h3>
                     <button
                       onClick={() => setShowServiceSelector(false)}
-                      className='p-2 hover:bg-teal-50 dark:hover:bg-teal-900/20 text-gray-600 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 rounded-full transition-colors'
+                      className='p-2 hover:bg-primary-100 dark:hover:bg-primary-900/20 text-gray-600 dark:text-gray-400 hover:text-primary-800 dark:hover:text-sage-400 rounded-full transition-colors'
                     >
                       <KulIcon icon='lucide:x' />
                     </button>
@@ -907,7 +907,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                       <button
                         key={service.id}
                         onClick={() => handleAddServiceWithTime(service, selectedTime || '00:00', 'no-preference', false)}
-                        className='w-full border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 rounded-xl p-5 hover:border-teal-500 hover:bg-slate-600 dark:hover:bg-slate-600 hover:shadow-lg transition-all text-left group'
+                        className='w-full border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 rounded-xl p-5 hover:border-primary-700 hover:bg-slate-600 dark:hover:bg-slate-600 hover:shadow-lg transition-all text-left group'
                       >
                         <div className='flex justify-between items-start mb-2'>
                           <div className='flex-1'>
@@ -936,7 +936,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                   <button
                     onClick={() => setCurrentStep('details')}
                     disabled={!selectedTime}
-                    className='w-full sm:w-auto bg-teal-500 hover:bg-teal-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+                    className='w-full sm:w-auto bg-primary-700 hover:bg-primary-800 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
                   >
                     Continue
                   </button>
@@ -1033,14 +1033,14 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                   <button
                     type='button'
                     onClick={() => setCurrentStep('selection')}
-                    className='flex-1 border-2 border-teal-500 dark:border-teal-600 text-teal-600 dark:text-teal-400 py-3 h-12 sm:h-auto rounded-xl font-semibold hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-colors touch-manipulation'
+                    className='flex-1 border-2 border-primary-700 dark:border-primary-800 text-primary-800 dark:text-sage-400 py-3 h-12 sm:h-auto rounded-xl font-semibold hover:bg-primary-100 dark:hover:bg-primary-900/20 transition-colors touch-manipulation'
                   >
                     Back
                   </button>
                   <button
                     type='submit'
                     disabled={loading}
-                    className='flex-1 bg-teal-500 hover:bg-teal-600 text-white py-3 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50 shadow-md hover:shadow-lg transition-all touch-manipulation'
+                    className='flex-1 bg-primary-700 hover:bg-primary-800 text-white py-3 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50 shadow-md hover:shadow-lg transition-all touch-manipulation'
                   >
                     {loading ? 'Processing...' : 'Confirm & Book'}
                   </button>
@@ -1054,8 +1054,8 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
         {currentStep === 'success' && (
           <div className='p-6 sm:p-8 lg:p-12 text-center space-y-4 sm:space-y-6'>
             <div className='flex justify-center'>
-              <div className='w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center'>
-                <KulIcon icon='lucide:check' className='w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-teal-500' />
+              <div className='w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-primary-200 dark:bg-primary-900/30 flex items-center justify-center'>
+                <KulIcon icon='lucide:check' className='w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-primary-700' />
               </div>
             </div>
 
@@ -1067,7 +1067,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
             <button
               onClick={handleDownloadICS}
-              className='w-full max-w-md mx-auto bg-teal-500 hover:bg-teal-600 text-white py-3 h-12 sm:h-auto rounded-xl font-semibold transition-colors shadow-md touch-manipulation'
+              className='w-full max-w-md mx-auto bg-primary-700 hover:bg-primary-800 text-white py-3 h-12 sm:h-auto rounded-xl font-semibold transition-colors shadow-md touch-manipulation'
             >
               Download Calendar Event
             </button>

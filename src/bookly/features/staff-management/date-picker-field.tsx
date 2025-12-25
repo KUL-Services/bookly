@@ -133,7 +133,7 @@ export function DatePickerField({
                 transition: 'all 0.2s ease',
                 '&:hover': {
                   backgroundColor: theme =>
-                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                    theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
                   color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
                 }
               },
@@ -159,15 +159,15 @@ export function DatePickerField({
                 transition: 'all 0.2s ease',
                 '&:not(:disabled):hover': {
                   backgroundColor: theme =>
-                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                    theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
                   borderColor: theme =>
-                    theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)',
+                    theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.3)' : 'rgba(10, 44, 36, 0.2)',
                   color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
                 }
               },
               '& [data-today="true"]:not([data-selected="true"]) .rdp-day_button': {
                 fontWeight: 700,
-                color: theme => (theme.palette.mode === 'dark' ? '#ffffff' : '#000000'),
+                color: theme => theme.palette.text.primary,
                 backgroundColor: theme =>
                   theme.palette.mode === 'dark' ? 'rgba(156, 163, 175, 0.3)' : 'rgba(156, 163, 175, 0.2)',
                 border: '2px solid',
@@ -186,8 +186,8 @@ export function DatePickerField({
                 borderColor: theme => theme.palette.primary.dark + ' !important',
                 boxShadow: theme =>
                   theme.palette.mode === 'dark'
-                    ? '0 0 0 3px rgba(25, 118, 210, 0.25) !important'
-                    : '0 0 0 3px rgba(25, 118, 210, 0.2) !important',
+                    ? '0 0 0 3px rgba(10, 44, 36, 0.25) !important'
+                    : '0 0 0 3px rgba(10, 44, 36, 0.2) !important',
                 transform: 'scale(1.05) !important',
                 zIndex: 10,
                 '&:hover': {

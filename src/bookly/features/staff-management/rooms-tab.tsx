@@ -584,7 +584,7 @@ export function RoomsTab() {
                   bgcolor: 'rgba(139, 195, 74, 0.3)',
                   borderRadius: 1,
                   border: 1,
-                  borderColor: theme => (theme.palette.mode === 'dark' ? '#3949ab' : '#64B5F6'),
+                  borderColor: 'var(--mui-palette-customColors-teal)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -594,7 +594,8 @@ export function RoomsTab() {
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    bgcolor: theme => (theme.palette.mode === 'dark' ? '#283593' : '#BBDEFB'),
+                    bgcolor: theme =>
+                      theme.palette.mode === 'dark' ? 'rgba(81, 180, 183, 0.28)' : 'rgba(81, 180, 183, 0.18)',
                     borderColor: 'primary.main'
                   }
                 }}
@@ -630,7 +631,7 @@ export function RoomsTab() {
                   right: 0,
                   top: 0,
                   bottom: 0,
-                  bgcolor: '#424242',
+                  bgcolor: 'secondary.dark',
                   borderRadius: 1,
                   display: 'flex',
                   alignItems: 'center',
@@ -638,11 +639,11 @@ export function RoomsTab() {
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   '&:hover': {
-                    bgcolor: '#333333'
+                    bgcolor: 'secondary.main'
                   }
                 }}
               >
-                <Typography variant='body2' sx={{ color: '#fff' }} fontWeight={500}>
+                <Typography variant='body2' sx={{ color: 'secondary.contrastText' }} fontWeight={500}>
                   Branch Closed
                 </Typography>
               </Box>
@@ -898,7 +899,10 @@ export function RoomsTab() {
                                 borderColor: 'divider'
                               }}
                             >
-                              <i className='ri-equalizer-line' style={{ fontSize: 14, color: '#4caf50' }} />
+                              <i
+                                className='ri-equalizer-line'
+                                style={{ fontSize: 14, color: 'var(--mui-palette-customColors-sage)' }}
+                              />
                               <Typography variant='caption' fontWeight={600} fontSize='0.75rem'>
                                 Flexible Rooms
                               </Typography>
@@ -913,7 +917,7 @@ export function RoomsTab() {
                                       fontWeight={600}
                                       display='block'
                                       gutterBottom
-                                      sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                      sx={{ fontSize: '0.75rem', color: 'var(--mui-palette-common-white)' }}
                                     >
                                       Flexible Rooms
                                     </Typography>
@@ -968,7 +972,10 @@ export function RoomsTab() {
                                 borderColor: 'divider'
                               }}
                             >
-                              <i className='ri-lock-line' style={{ fontSize: 14, color: '#9e9e9e' }} />
+                              <i
+                                className='ri-lock-line'
+                                style={{ fontSize: 14, color: 'var(--mui-palette-text-disabled)' }}
+                              />
                               <Typography variant='caption' fontWeight={600} fontSize='0.75rem'>
                                 Fixed Rooms
                               </Typography>
@@ -983,7 +990,7 @@ export function RoomsTab() {
                                       fontWeight={600}
                                       display='block'
                                       gutterBottom
-                                      sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                      sx={{ fontSize: '0.75rem', color: 'var(--mui-palette-common-white)' }}
                                     >
                                       Fixed Rooms
                                     </Typography>
@@ -1384,7 +1391,10 @@ export function RoomsTab() {
                                   gap: 0.5
                                 }}
                               >
-                                <i className='ri-equalizer-line' style={{ fontSize: 12, color: '#4caf50' }} />
+                                <i
+                                  className='ri-equalizer-line'
+                                  style={{ fontSize: 12, color: 'var(--mui-palette-customColors-sage)' }}
+                                />
                                 <Typography variant='caption' fontWeight={600} fontSize='0.65rem' color='success.main'>
                                   Flexible
                                 </Typography>
@@ -1399,7 +1409,7 @@ export function RoomsTab() {
                                         fontWeight={600}
                                         display='block'
                                         gutterBottom
-                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                        sx={{ fontSize: '0.75rem', color: 'var(--mui-palette-common-white)' }}
                                       >
                                         Flexible Rooms
                                       </Typography>
@@ -1488,7 +1498,10 @@ export function RoomsTab() {
                                   gap: 0.5
                                 }}
                               >
-                                <i className='ri-lock-line' style={{ fontSize: 12, color: '#9e9e9e' }} />
+                                <i
+                                  className='ri-lock-line'
+                                  style={{ fontSize: 12, color: 'var(--mui-palette-text-disabled)' }}
+                                />
                                 <Typography
                                   variant='caption'
                                   fontWeight={600}
@@ -1508,7 +1521,7 @@ export function RoomsTab() {
                                         fontWeight={600}
                                         display='block'
                                         gutterBottom
-                                        sx={{ fontSize: '0.75rem', color: '#fff' }}
+                                        sx={{ fontSize: '0.75rem', color: 'var(--mui-palette-common-white)' }}
                                       >
                                         Fixed Rooms
                                       </Typography>
@@ -1780,19 +1793,25 @@ export function RoomsTab() {
                                       sx={{
                                         width: '100%',
                                         height: '100%',
-                                        bgcolor: theme => (theme.palette.mode === 'dark' ? '#1a237e' : '#E3F2FD'),
+                                        bgcolor: theme =>
+                                          theme.palette.mode === 'dark'
+                                            ? 'rgba(81, 180, 183, 0.28)'
+                                            : 'rgba(81, 180, 183, 0.18)',
                                         borderRadius: 1,
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         border: 1,
-                                        borderColor: theme => (theme.palette.mode === 'dark' ? '#3949ab' : '#64B5F6'),
+                                        borderColor: 'var(--mui-palette-customColors-teal)',
                                         cursor: 'pointer',
                                         transition: 'all 0.2s',
                                         p: 0.5,
                                         '&:hover': {
-                                          bgcolor: theme => (theme.palette.mode === 'dark' ? '#283593' : '#BBDEFB'),
+                                          bgcolor: theme =>
+                                            theme.palette.mode === 'dark'
+                                              ? 'rgba(81, 180, 183, 0.38)'
+                                              : 'rgba(81, 180, 183, 0.28)',
                                           transform: 'scale(1.02)'
                                         }
                                       }}

@@ -392,7 +392,7 @@ export default function NewAppointmentDrawer({
               {selectedClient ? (
                 `${selectedClient.firstName[0]}${selectedClient.lastName[0]}`
               ) : (
-                <i className='ri-user-line' style={{ fontSize: '2rem', color: '#999' }} />
+                <i className='ri-user-line' style={{ fontSize: '2rem', color: 'var(--mui-palette-text-disabled)' }} />
               )}
             </Avatar>
             <Box sx={{ flex: 1 }}>
@@ -862,7 +862,9 @@ export default function NewAppointmentDrawer({
                   checked={requestedByClient}
                   onChange={e => setRequestedByClient(e.target.checked)}
                   icon={<i className='ri-heart-line' style={{ fontSize: '1.5rem' }} />}
-                  checkedIcon={<i className='ri-heart-fill' style={{ fontSize: '1.5rem', color: '#f44336' }} />}
+                  checkedIcon={
+                    <i className='ri-heart-fill' style={{ fontSize: '1.5rem', color: 'var(--mui-palette-customColors-coral)' }} />
+                  }
                 />
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography variant='body2'>Requested by client</Typography>

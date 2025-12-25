@@ -81,10 +81,10 @@ export function BusinessList({
               transition-all duration-300 transform
               ${
                 isSelected
-                  ? 'border-teal-500 shadow-lg scale-[1.02]'
+                  ? 'border-primary-700 shadow-lg scale-[1.02]'
                   : isHovered
-                    ? 'border-teal-300 shadow-md scale-[1.01]'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-teal-200 hover:shadow-sm'
+                    ? 'border-primary-300 shadow-md scale-[1.01]'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-200 hover:shadow-sm'
               }
               animate-in fade-in slide-in-from-bottom-4 duration-500
             `}
@@ -98,7 +98,7 @@ export function BusinessList({
                     className={`
                     w-full h-full rounded-xl shadow-md overflow-hidden
                     transition-all duration-300
-                    ${isSelected || isHovered ? 'scale-105 shadow-lg ring-2 ring-teal-500' : ''}
+                    ${isSelected || isHovered ? 'scale-105 shadow-lg ring-2 ring-primary-500' : ''}
                   `}
                   >
                     <img
@@ -112,9 +112,9 @@ export function BusinessList({
                         const parent = target.parentElement
                         if (parent) {
                           parent.innerHTML = `
-                            <div class="w-full h-full bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 flex items-center justify-center">
+                            <div class="w-full h-full bg-gradient-to-br from-primary-200 to-sage-200 dark:from-primary-800/50 dark:to-sage-800/50 flex items-center justify-center">
                               <div class="text-center p-2">
-                                <div class="text-sm font-bold text-teal-700 dark:text-teal-300 line-clamp-2">${business.name}</div>
+                                <div class="text-sm font-bold text-primary-900 dark:text-sage-300 line-clamp-2">${business.name}</div>
                               </div>
                             </div>
                           `
@@ -128,14 +128,14 @@ export function BusinessList({
                     w-full h-full rounded-xl shadow-md flex items-center justify-center
                     transition-all duration-300
                     ${isSelected || isHovered ? 'scale-105 shadow-lg' : ''}
-                    bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50
+                    bg-gradient-to-br from-primary-200 to-sage-200 dark:from-primary-800/50 dark:to-sage-800/50
                   `}
                   >
                     <div className='text-center p-2'>
-                      <div className='text-sm font-bold text-teal-700 dark:text-teal-300 line-clamp-2'>
+                      <div className='text-sm font-bold text-primary-900 dark:text-sage-300 line-clamp-2'>
                         {business.name}
                       </div>
-                      <div className='text-xs text-teal-600 dark:text-teal-400 mt-1'>
+                      <div className='text-xs text-primary-800 dark:text-sage-400 mt-1'>
                         ★ {business.rating}/5
                       </div>
                     </div>
@@ -157,7 +157,7 @@ export function BusinessList({
                       <span className='text-gray-400'>•</span>
                       <span>{business.servicesCount} services</span>
                       <span className='text-gray-400'>•</span>
-                      <span className='text-teal-600 dark:text-teal-400 font-medium'>
+                      <span className='text-primary-800 dark:text-sage-400 font-medium'>
                         ${business.priceRange.min} - ${business.priceRange.max}
                       </span>
                     </div>
@@ -187,7 +187,7 @@ export function BusinessList({
                       {business.categories.map((category, idx) => (
                         <span
                           key={idx}
-                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-teal-100 dark:bg-teal-800/50 text-teal-800 dark:text-teal-200'
+                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-200 dark:bg-primary-800/50 text-primary-900 dark:text-sage-200'
                         >
                           {category}
                         </span>
@@ -202,7 +202,7 @@ export function BusinessList({
                         e.stopPropagation()
                         onBookNow?.(business.id)
                       }}
-                      className='bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200'
+                      className='bg-gradient-to-r from-primary-700 to-cyan-500 hover:from-primary-800 hover:to-cyan-600 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200'
                     >
                       Book Now
                     </button>

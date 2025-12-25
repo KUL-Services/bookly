@@ -388,11 +388,11 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                       <div className='space-y-1 leading-none'>
                         <FormLabel>
                           I agree to the{' '}
-                          <Link href='/terms' className='text-teal-500 dark:text-teal-400 hover:underline'>
+                          <Link href='/terms' className='text-primary-700 dark:text-sage-400 hover:underline'>
                             Terms of Service
                           </Link>{' '}
                           and{' '}
-                          <Link href='/privacy' className='text-teal-500 dark:text-teal-400 hover:underline'>
+                          <Link href='/privacy' className='text-primary-700 dark:text-sage-400 hover:underline'>
                             Privacy Policy
                           </Link>
                         </FormLabel>
@@ -417,7 +417,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                     </FormItem>
                   )}
                 />
-                <Link href='/customer/forgot-password' className='text-sm text-teal-500 dark:text-teal-400 hover:underline'>
+                <Link href='/customer/forgot-password' className='text-sm text-primary-700 dark:text-sage-400 hover:underline'>
                   Forgot your password?
                 </Link>
               </div>
@@ -425,7 +425,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
 
             <Button
               type='submit'
-              className='w-full text-teal-50 bg-teal-500 hover:bg-teal-600'
+              className='w-full text-white bg-primary-700 hover:bg-primary-800'
               disabled={loading}
             >
               {loading ? (
@@ -466,14 +466,14 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
           {isLogin ? (
             <>
               {t('auth.login.noAccount')}{' '}
-              <Link href='/customer/register' className='text-teal-500 dark:text-teal-400 hover:underline'>
+              <Link href='/customer/register' className='text-primary-700 dark:text-sage-400 hover:underline'>
                 {t('auth.login.createAccount')}
               </Link>
             </>
           ) : (
             <>
               Already have an account?{' '}
-              <Link href='/customer/login' className='text-teal-500 dark:text-teal-400 hover:underline'>
+              <Link href='/customer/login' className='text-primary-700 dark:text-sage-400 hover:underline'>
                 Log in
               </Link>
             </>

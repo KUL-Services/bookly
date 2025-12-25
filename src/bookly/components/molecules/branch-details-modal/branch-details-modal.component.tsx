@@ -188,7 +188,7 @@ export const BranchDetailsModal = ({
         >
           {/* Header */}
           <div className='relative'>
-            <div className='bg-gradient-to-r from-teal-500 to-blue-600 p-6 text-white'>
+            <div className='bg-gradient-to-r from-primary-700 to-blue-600 p-6 text-white'>
               <button
                 onClick={onClose}
                 className='absolute top-4 end-4 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors'
@@ -254,8 +254,8 @@ export const BranchDetailsModal = ({
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                       activeTab === tab.id
-                        ? 'text-teal-600 border-teal-600 bg-white dark:bg-gray-800 dark:text-teal-400 dark:border-teal-400'
-                        : 'text-gray-600 dark:text-white border-transparent hover:text-gray-800 dark:hover:text-teal-300 hover:border-gray-300 dark:hover:border-teal-400 hover:bg-gray-100 dark:hover:bg-gray-600'
+                        ? 'text-primary-800 border-primary-800 bg-white dark:bg-gray-800 dark:text-sage-400 dark:border-sage-400'
+                        : 'text-gray-600 dark:text-white border-transparent hover:text-gray-800 dark:hover:text-sage-300 hover:border-gray-300 dark:hover:border-sage-400 hover:bg-gray-100 dark:hover:bg-gray-600'
                     }`}
                   >
                     <KulIcon icon={tab.icon} className='w-4 h-4' />
@@ -281,7 +281,7 @@ export const BranchDetailsModal = ({
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.address || '')}`}
                       target='_blank'
                       rel='noopener noreferrer'
-                      className='inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 text-sm'
+                      className='inline-flex items-center gap-2 text-primary-800 hover:text-primary-900 dark:text-sage-400 dark:hover:text-sage-300 text-sm'
                     >
                       <KulIcon icon='lucide:external-link' className='w-4 h-4' />
                       {t('business.branchDetails.viewOnGoogleMaps')}
@@ -304,7 +304,7 @@ export const BranchDetailsModal = ({
                         <KulIcon icon='lucide:phone' className='w-4 h-4 text-gray-500 dark:text-gray-400' />
                         <a
                           href={`tel:${branch.mobile}`}
-                          className='text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300'
+                          className='text-primary-800 hover:text-primary-900 dark:text-sage-400 dark:hover:text-sage-300'
                         >
                           {branch.mobile}
                         </a>
@@ -388,7 +388,7 @@ export const BranchDetailsModal = ({
                     {branchServices.map(service => (
                       <div
                         key={service.id}
-                        className='flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-teal-200 dark:hover:border-teal-600 transition-colors bg-white dark:bg-gray-800'
+                        className='flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-primary-200 dark:hover:border-primary-800 transition-colors bg-white dark:bg-gray-800'
                       >
                         <div className='flex-1'>
                           <h4 className='font-medium text-gray-900 dark:text-gray-100'>{service.name}</h4>
@@ -400,13 +400,13 @@ export const BranchDetailsModal = ({
                               <KulIcon icon='lucide:clock' className='w-4 h-4' />
                               {service.duration} {t('business.branchDetails.duration')}
                             </span>
-                            <span className='font-medium text-teal-600 dark:text-teal-400'>£{service.price}</span>
+                            <span className='font-medium text-primary-800 dark:text-sage-400'>£{service.price}</span>
                           </div>
                         </div>
                         <Button
                           buttonText={{ plainText: t('business.branchDetails.bookNow') }}
                           variant='contained'
-                          className='bg-teal-500 hover:bg-teal-600 dark:bg-teal-600 dark:hover:bg-teal-700 text-white'
+                          className='bg-primary-700 hover:bg-primary-800 dark:bg-primary-800 dark:hover:bg-primary-900 text-white'
                           onClick={() => onBookService?.(service.id)}
                         />
                       </div>

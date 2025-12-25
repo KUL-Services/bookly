@@ -63,6 +63,8 @@ const ThemeProvider = (props: Props) => {
   }
 
   // Merge the primary color scheme override with the core theme
+  // Brand colors: Dark Green #0a2c24 | Navy Blue #202c39 | Off-White #f7f8f9
+  // Accents: Coral #e88682 | Sage Green #77b6a3 | Teal #51b4b7
   const theme = useMemo(() => {
     const newColorScheme = {
       colorSchemes: {
@@ -70,29 +72,29 @@ const ThemeProvider = (props: Props) => {
           palette: {
             primary: {
               main: settings.primaryColor,
-              light: lighten(settings.primaryColor as string, 0.2),
-              dark: darken(settings.primaryColor as string, 0.1)
+              light: lighten(settings.primaryColor as string, 0.3),
+              dark: darken(settings.primaryColor as string, 0.15)
             },
-            // Bookly surfaces & greys (light)
+            // Bookly surfaces & greys (light) - derived from Navy Blue
             background: {
-              default: '#F8FAFC', // slate-50
+              default: '#f7f8f9', // Off-White
               paper: '#FFFFFF'
             },
             text: {
-              primary: '#0F172A', // slate-900
-              secondary: '#475569' // slate-600
+              primary: '#0a2c24', // Dark Green for primary text
+              secondary: '#3d4a5a' // Navy Blue light for secondary
             },
             grey: {
-              50: '#F8FAFC',
-              100: '#F1F5F9',
-              200: '#E2E8F0',
-              300: '#CBD5E1',
-              400: '#94A3B8',
-              500: '#64748B',
-              600: '#475569',
-              700: '#334155',
-              800: '#1E293B',
-              900: '#0F172A'
+              50: '#f7f8f9', // Off-White
+              100: '#f0f2f4',
+              200: '#e4e7eb',
+              300: '#d1d5db',
+              400: '#9ca3af',
+              500: '#6b7280',
+              600: '#4b5563',
+              700: '#374151',
+              800: '#202c39', // Navy Blue
+              900: '#0a2c24' // Dark Green
             }
           }
         },
@@ -100,29 +102,29 @@ const ThemeProvider = (props: Props) => {
           palette: {
             primary: {
               main: settings.primaryColor,
-              light: lighten(settings.primaryColor as string, 0.2),
-              dark: darken(settings.primaryColor as string, 0.1)
+              light: lighten(settings.primaryColor as string, 0.3),
+              dark: darken(settings.primaryColor as string, 0.15)
             },
-            // Bookly surfaces & greys (dark)
+            // Bookly surfaces & greys (dark) - Navy Blue base
             background: {
-              default: '#0F172A', // slate-900
-              paper: '#0B1220' // deep slate
+              default: '#202c39', // Navy Blue
+              paper: '#283444'
             },
             text: {
-              primary: '#E2E8F0', // slate-200
-              secondary: '#94A3B8' // slate-400
+              primary: '#f7f8f9', // Off-White
+              secondary: '#d1d5db'
             },
             grey: {
-              50: '#0B1220',
-              100: '#111827',
-              200: '#1F2937',
-              300: '#374151',
-              400: '#4B5563',
-              500: '#6B7280',
-              600: '#9CA3AF',
-              700: '#CBD5E1',
-              800: '#E5E7EB',
-              900: '#F3F4F6'
+              50: '#141c27',
+              100: '#1a2430',
+              200: '#202c39', // Navy Blue
+              300: '#283444',
+              400: '#3d4a5a',
+              500: '#535f6f',
+              600: '#9ca3af',
+              700: '#d1d5db',
+              800: '#e4e7eb',
+              900: '#f7f8f9' // Off-White
             }
           }
         }

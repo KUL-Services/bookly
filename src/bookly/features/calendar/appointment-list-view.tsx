@@ -152,7 +152,7 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                       mb: 1.5,
                       px: 2,
                       py: 1,
-                      bgcolor: isDark ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                      bgcolor: isDark ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
                       borderRadius: 2
                     }}
                   >
@@ -166,7 +166,7 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                       sx={{
                         height: 20,
                         fontSize: '0.7rem',
-                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.2)' : 'rgba(20, 184, 166, 0.15)',
+                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.15)',
                         color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
                       }}
                     />
@@ -203,12 +203,12 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                             opacity: isFaded ? 0.4 : 1,
                             filter: isFaded ? 'grayscale(50%)' : 'none',
                             boxShadow: isHighlighted
-                              ? '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                              ? '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
                               : 'none',
                             transform: isHighlighted ? 'scale(1.01)' : 'none',
                             '&:hover': {
                               boxShadow: isHighlighted
-                                ? '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                                ? '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
                                 : 2,
                               transform: isHighlighted ? 'scale(1.02) translateX(4px)' : 'translateX(4px)',
                               bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',

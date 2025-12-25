@@ -256,16 +256,16 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                   display: 'background',
                   backgroundColor:
                     capacityInfo.remainingCapacity === 0
-                      ? 'rgba(244, 67, 54, 0.1)'
+                      ? 'var(--mui-palette-error-lightOpacity)'
                       : capacityInfo.remainingCapacity < capacityInfo.total * 0.3
-                        ? 'rgba(255, 152, 0, 0.1)'
-                        : 'rgba(76, 175, 80, 0.1)',
+                        ? 'var(--mui-palette-warning-lightOpacity)'
+                        : 'rgba(10, 44, 36, 0.1)',
                   borderColor:
                     capacityInfo.remainingCapacity === 0
-                      ? '#F44336'
+                      ? 'var(--mui-palette-error-main)'
                       : capacityInfo.remainingCapacity < capacityInfo.total * 0.3
-                        ? '#FF9800'
-                        : '#4CAF50',
+                        ? 'var(--mui-palette-warning-main)'
+                        : 'var(--mui-palette-success-main)',
                   extendedProps: {
                     isSlotBackground: true,
                     slotId: slot.id,
@@ -304,7 +304,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             '--fc-button-hover-border-color': theme.palette.primary.dark,
             '--fc-button-active-bg-color': theme.palette.primary.dark,
             '--fc-button-active-border-color': theme.palette.primary.dark,
-            '--fc-today-bg-color': isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)'
+            '--fc-today-bg-color': isDark ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.08)'
           },
           '& .fc-theme-standard td, & .fc-theme-standard th': {
             borderColor: 'var(--fc-border-color)'
@@ -335,16 +335,16 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           },
           // Selection highlight styling
           '& .fc-highlight': {
-            backgroundColor: isDark ? 'rgba(20, 184, 166, 0.2) !important' : 'rgba(20, 184, 166, 0.15) !important',
+            backgroundColor: isDark ? 'rgba(10, 44, 36, 0.2) !important' : 'rgba(10, 44, 36, 0.15) !important',
             border: isDark
-              ? '2px solid rgba(20, 184, 166, 0.5) !important'
-              : '2px solid rgba(20, 184, 166, 0.6) !important',
+              ? '2px solid rgba(10, 44, 36, 0.5) !important'
+              : '2px solid rgba(10, 44, 36, 0.6) !important',
             borderRadius: '8px',
             opacity: 1,
             zIndex: 3
           },
           '& .fc-timegrid .fc-highlight': {
-            backgroundColor: isDark ? 'rgba(20, 184, 166, 0.2) !important' : 'rgba(20, 184, 166, 0.15) !important'
+            backgroundColor: isDark ? 'rgba(10, 44, 36, 0.2) !important' : 'rgba(10, 44, 36, 0.15) !important'
           },
           '& .fc-event': {
             cursor: 'pointer',
@@ -373,11 +373,11 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             }
           },
           '& .fc-event.search-highlighted-event': {
-            boxShadow: '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)',
+            boxShadow: '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)',
             transform: 'scale(1.02)',
             zIndex: 5,
             '&:hover': {
-              boxShadow: '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)',
+              boxShadow: '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)',
               transform: 'scale(1.03)'
             }
           },
@@ -561,10 +561,10 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             zIndex: 1
           },
           '& .time-off-event': {
-            color: '#795548 !important'
+            color: 'var(--mui-palette-customColors-coral) !important'
           },
           '& .time-reservation-event': {
-            color: '#2196f3 !important'
+            color: 'var(--mui-palette-customColors-teal) !important'
           },
           '& .fc-bg-event': {
             opacity: '1 !important',
@@ -777,10 +777,10 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                       lineHeight: 1.2,
                       color:
                         props.remaining === 0
-                          ? '#D32F2F'
+                          ? 'var(--mui-palette-error-main)'
                           : props.remaining < props.capacity * 0.3
-                            ? '#F57C00'
-                            : '#388E3C'
+                            ? 'var(--mui-palette-warning-main)'
+                            : 'var(--mui-palette-success-main)'
                     }}
                   >
                     {props.serviceName}
@@ -902,7 +902,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                         width: 10,
                         height: 10,
                         borderRadius: '50%',
-                        bgcolor: '#9E9E9E',
+                        bgcolor: room?.color || 'var(--mui-palette-text-disabled)',
                         flexShrink: 0
                       }}
                     />

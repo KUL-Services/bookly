@@ -183,73 +183,56 @@ export default function CalendarHeader({
           ))}
         </Select>
 
-        {/* Navigation */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          <IconButton onClick={onPrev} size='small'>
-            <i className='ri-arrow-left-s-line' />
-          </IconButton>
-          <Button
-            onClick={onToday}
-            variant='outlined'
-            size='small'
-            sx={{
-              minWidth: { xs: 50, sm: 60, md: 80 },
-              px: { xs: 0.5, sm: 1, md: 2 },
-              fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.875rem' }
-            }}
-          >
-            {isMobile ? 'Now' : 'Today'}
-          </Button>
-          <IconButton onClick={onNext} size='small'>
-            <i className='ri-arrow-right-s-line' />
-          </IconButton>
-        </Box>
-
-        {/* Search */}
-        <CalendarSearch />
-
-        {/* Date Picker Dropdown - Hidden on small screens */}
+        {/* Date Picker Dropdown with Navigation - Hidden on small screens */}
         {!isMobile && (
           <>
-            <Box
-              onClick={handleCalendarOpen}
-              sx={{
-                display: { xs: 'none', lg: 'flex' },
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1,
-                px: 2,
-                py: 1.5,
-                borderBottom: '2px solid transparent',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  borderBottomColor: 'primary.main',
-                  color: 'primary.main'
-                }
-              }}
-            >
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography
-                  sx={{
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: 'inherit'
-                  }}
-                >
-                  {format(currentDate, 'eee, d MMM')}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: '0.75rem',
-                    color: 'text.secondary',
-                    mt: 0.25
-                  }}
-                >
-                  {format(currentDate, 'yyyy')}
-                </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <IconButton onClick={onPrev} size='small'>
+                <i className='ri-arrow-left-s-line' />
+              </IconButton>
+              <Box
+                onClick={handleCalendarOpen}
+                sx={{
+                  display: { xs: 'none', lg: 'flex' },
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
+                  px: 2,
+                  py: 1.5,
+                  borderBottom: '2px solid transparent',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    borderBottomColor: 'primary.main',
+                    color: 'primary.main'
+                  }
+                }}
+              >
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography
+                    sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      color: 'inherit'
+                    }}
+                  >
+                    {format(currentDate, 'eee, d MMM')}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: '0.75rem',
+                      color: 'text.secondary',
+                      mt: 0.25
+                    }}
+                  >
+                    {format(currentDate, 'yyyy')}
+                  </Typography>
+                </Box>
+                <i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />
               </Box>
-              <i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />
+              <IconButton onClick={onNext} size='small'>
+                <i className='ri-arrow-right-s-line' />
+              </IconButton>
             </Box>
 
             <Popover
@@ -315,7 +298,7 @@ export default function CalendarHeader({
                       transition: 'all 0.2s ease',
                       '&:hover': {
                         backgroundColor: theme =>
-                          theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                          theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
                         color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
                       }
                     },
@@ -341,15 +324,15 @@ export default function CalendarHeader({
                       transition: 'all 0.2s ease',
                       '&:not(:disabled):hover': {
                         backgroundColor: theme =>
-                          theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                          theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
                         borderColor: theme =>
-                          theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.3)' : 'rgba(20, 184, 166, 0.2)',
+                          theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.3)' : 'rgba(10, 44, 36, 0.2)',
                         color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
                       }
                     },
                     '& [data-today="true"]:not([data-selected="true"]) .rdp-day_button': {
                       fontWeight: 700,
-                      color: theme => (theme.palette.mode === 'dark' ? '#ffffff' : '#000000'),
+                      color: theme => theme.palette.text.primary,
                       backgroundColor: theme =>
                         theme.palette.mode === 'dark' ? 'rgba(156, 163, 175, 0.3)' : 'rgba(156, 163, 175, 0.2)',
                       border: '2px solid',
@@ -368,8 +351,8 @@ export default function CalendarHeader({
                       borderColor: theme => theme.palette.primary.dark + ' !important',
                       boxShadow: theme =>
                         theme.palette.mode === 'dark'
-                          ? '0 0 0 3px rgba(25, 118, 210, 0.25) !important'
-                          : '0 0 0 3px rgba(25, 118, 210, 0.2) !important',
+                          ? '0 0 0 3px rgba(10, 44, 36, 0.25) !important'
+                          : '0 0 0 3px rgba(10, 44, 36, 0.2) !important',
                       transform: 'scale(1.05) !important',
                       zIndex: 10,
                       '&:hover': {
@@ -459,6 +442,35 @@ export default function CalendarHeader({
             </Popover>
           </>
         )}
+
+        {/* Today Button */}
+        <Button
+          onClick={onToday}
+          variant='outlined'
+          size='small'
+          sx={{
+            minWidth: { xs: 50, sm: 60, md: 80 },
+            px: { xs: 0.5, sm: 1, md: 2 },
+            fontSize: { xs: '0.7rem', sm: '0.75rem', md: '0.875rem' }
+          }}
+        >
+          {isMobile ? 'Now' : 'Today'}
+        </Button>
+
+        {/* Mobile Navigation - only shown on mobile */}
+        {isMobile && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <IconButton onClick={onPrev} size='small'>
+              <i className='ri-arrow-left-s-line' />
+            </IconButton>
+            <IconButton onClick={onNext} size='small'>
+              <i className='ri-arrow-right-s-line' />
+            </IconButton>
+          </Box>
+        )}
+
+        {/* Search */}
+        <CalendarSearch />
       </Box>
 
       {/* Right Section */}

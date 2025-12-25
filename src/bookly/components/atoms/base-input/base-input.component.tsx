@@ -12,7 +12,7 @@ interface BaseInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement
   i18nTFn?: i18n['t']
   LeadingIcon?: LucideIcon
   TrailingIcon?: LucideIcon
-  focusColor?: 'primary' | 'secondary' | 'teal' | 'red' | 'blue' | 'green'
+  focusColor?: 'primary' | 'secondary' | 'sage' | 'teal' | 'coral' | 'red' | 'blue' | 'green'
 }
 
 export const BaseInput = ({
@@ -23,7 +23,7 @@ export const BaseInput = ({
   className,
   LeadingIcon,
   TrailingIcon,
-  focusColor = 'teal',
+  focusColor = 'primary', // Default to brand primary (Dark Green)
   ...props
 }: BaseInputProps) => {
   const translatedPlaceholder =
@@ -34,9 +34,11 @@ export const BaseInput = ({
   const getFocusClasses = () => {
     if (errorProps) return 'focus-visible:ring-red-500 focus-visible:border-red-500'
     const colorMap = {
-      primary: 'focus-visible:ring-primary focus-visible:border-primary',
-      secondary: 'focus-visible:ring-secondary focus-visible:border-secondary',
-      teal: 'focus-visible:ring-teal-500 focus-visible:border-teal-500',
+      primary: 'focus-visible:ring-primary-500 focus-visible:border-primary-500',
+      secondary: 'focus-visible:ring-secondary-500 focus-visible:border-secondary-500',
+      sage: 'focus-visible:ring-sage-500 focus-visible:border-sage-500',
+      teal: 'focus-visible:ring-primary-500 focus-visible:border-primary-700',
+      coral: 'focus-visible:ring-coral-500 focus-visible:border-coral-500',
       red: 'focus-visible:ring-red-500 focus-visible:border-red-500',
       blue: 'focus-visible:ring-blue-500 focus-visible:border-blue-500',
       green: 'focus-visible:ring-green-500 focus-visible:border-green-500'

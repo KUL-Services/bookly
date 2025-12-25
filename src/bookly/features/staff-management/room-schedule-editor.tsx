@@ -481,7 +481,7 @@ export function RoomScheduleEditor({
                     gap: 1
                   }}
                 >
-                  <i className='ri-error-warning-line' style={{ color: '#d32f2f', fontSize: 20 }} />
+                  <i className='ri-error-warning-line' style={{ color: 'var(--mui-palette-error-main)', fontSize: 20 }} />
                   <Box sx={{ flex: 1 }}>
                     <Typography variant='body2' fontWeight={600} color='error.main'>
                       Overlapping Shifts Detected

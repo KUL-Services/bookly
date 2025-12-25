@@ -95,7 +95,7 @@ export default function CalendarSearch() {
           color: 'text.secondary',
           '&:hover': {
             color: 'primary.main',
-            bgcolor: isDark ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)'
+            bgcolor: isDark ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)'
           }
         }}
         title="Search bookings (Ref, Name, Phone, Email)"
@@ -134,7 +134,7 @@ export default function CalendarSearch() {
             width: isMobile ? 180 : 260,
             '&:focus-within': {
               borderColor: 'primary.main',
-              bgcolor: isDark ? 'rgba(20, 184, 166, 0.05)' : 'rgba(20, 184, 166, 0.02)'
+              bgcolor: isDark ? 'rgba(10, 44, 36, 0.05)' : 'rgba(10, 44, 36, 0.02)'
             }
           }}
         >

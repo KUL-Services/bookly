@@ -186,11 +186,11 @@ export default function MultiRoomWeekView({
                       width: { xs: 36, md: 48 },
                       height: { xs: 36, md: 48 },
                       borderRadius: '50%',
-                      bgcolor: '#9E9E9E',
+                      bgcolor: room.color || 'var(--mui-palette-text-disabled)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      color: 'white',
+                      color: theme.palette.getContrastText(room.color || theme.palette.grey[500]),
                       fontWeight: 700,
                       fontSize: { xs: '0.875rem', md: '1rem' },
                       flexShrink: 0
@@ -288,8 +288,18 @@ export default function MultiRoomWeekView({
                             sx={{
                               p: 0.5,
                               borderRadius: 0.5,
-                              bgcolor: isFull ? 'rgba(244, 67, 54, 0.08)' : isLowCapacity ? 'rgba(255, 152, 0, 0.1)' : 'rgba(76, 175, 80, 0.1)',
-                              border: `1px solid ${isFull ? '#F44336' : isLowCapacity ? '#FF9800' : '#4CAF50'}`,
+                              bgcolor: isFull
+                                ? 'var(--mui-palette-error-lightOpacity)'
+                                : isLowCapacity
+                                  ? 'var(--mui-palette-warning-lightOpacity)'
+                                  : 'rgba(10, 44, 36, 0.1)',
+                              border: `1px solid ${
+                                isFull
+                                  ? 'var(--mui-palette-error-main)'
+                                  : isLowCapacity
+                                    ? 'var(--mui-palette-warning-main)'
+                                    : 'var(--mui-palette-success-main)'
+                              }`,
                               opacity: isFull ? 0.7 : 1
                             }}
                           >

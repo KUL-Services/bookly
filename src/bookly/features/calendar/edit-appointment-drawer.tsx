@@ -480,7 +480,9 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                     checked={requestedByClient}
                     onChange={e => setRequestedByClient(e.target.checked)}
                     icon={<i className='ri-heart-line' style={{ fontSize: '1.5rem' }} />}
-                    checkedIcon={<i className='ri-heart-fill' style={{ fontSize: '1.5rem', color: '#f44336' }} />}
+                    checkedIcon={
+                      <i className='ri-heart-fill' style={{ fontSize: '1.5rem', color: 'var(--mui-palette-customColors-coral)' }} />
+                    }
                   />
                 }
                 label={

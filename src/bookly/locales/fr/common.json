@@ -75,6 +75,7 @@
       "locationLabel": "Localisation",
       "locationPlaceholder": "Entrez une ville ou une zone",
       "categoriesLabel": "Catégories",
+      "selectCategories": "Sélectionnez des catégories",
       "priceRangeLabel": "Gamme de Prix",
       "minLabel": "Min",
       "maxLabel": "Max",

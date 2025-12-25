@@ -120,11 +120,11 @@ export default function MultiStaffWeekView({
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              bgcolor: isToday(day) ? (isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)') : 'transparent',
+              bgcolor: isToday(day) ? (isDark ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.08)') : 'transparent',
               cursor: 'pointer',
               transition: 'background-color 0.2s',
               '&:hover': {
-                bgcolor: isDark ? 'rgba(144,202,249,0.12)' : 'rgba(25,118,210,0.12)'
+                bgcolor: isDark ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.12)'
               }
             }}
             onClick={() => onDateClick?.(day)}
@@ -213,7 +213,7 @@ export default function MultiStaffWeekView({
                         whiteSpace: 'nowrap'
                       },
                       '& .MuiChip-icon': { fontSize: '0.65rem', ml: 0.5 },
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
                       color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
                     }}
                   />
@@ -237,11 +237,11 @@ export default function MultiStaffWeekView({
                     display: 'flex',
                     flexDirection: 'column',
                     gap: { xs: 0.5, md: 0.75 },
-                    bgcolor: isToday(day) ? (isDark ? 'rgba(144,202,249,0.03)' : 'rgba(25,118,210,0.03)') : 'transparent',
+                    bgcolor: isToday(day) ? (isDark ? 'rgba(10, 44, 36, 0.03)' : 'rgba(10, 44, 36, 0.03)') : 'transparent',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s',
                     '&:hover': {
-                      bgcolor: isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)'
+                      bgcolor: isDark ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.08)'
                     },
                     minWidth: 0,
                     overflow: 'visible',
@@ -306,7 +306,10 @@ export default function MultiStaffWeekView({
                                 {format(new Date(event.start), 'h:mm a')}
                               </Typography>
                               {event.extendedProps.starred && (
-                                <i className="ri-star-fill" style={{ fontSize: '0.6rem', color: '#FFA500' }} />
+                                <i
+                                  className="ri-star-fill"
+                                  style={{ fontSize: '0.6rem', color: 'var(--mui-palette-customColors-coral)' }}
+                                />
                               )}
                             </Box>
                             <Typography
@@ -337,12 +340,12 @@ export default function MultiStaffWeekView({
                             textAlign: 'center',
                             py: 0.5,
                             px: 1,
-                            bgcolor: isDark ? 'rgba(144,202,249,0.1)' : 'rgba(25,118,210,0.1)',
+                            bgcolor: isDark ? 'rgba(10, 44, 36, 0.1)' : 'rgba(10, 44, 36, 0.1)',
                             borderRadius: 0.75,
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             '&:hover': {
-                              bgcolor: isDark ? 'rgba(144,202,249,0.2)' : 'rgba(25,118,210,0.2)',
+                              bgcolor: isDark ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.2)',
                               transform: 'scale(1.02)'
                             }
                           }}

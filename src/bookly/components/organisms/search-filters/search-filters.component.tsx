@@ -48,7 +48,7 @@ function CategoryMultiSelect({
       <button
         type='button'
         onClick={() => setIsOpen(!isOpen)}
-        className='w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors'
+        className='w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors'
       >
         <span className='text-gray-700 dark:text-gray-300 truncate'>
           {selectedCategories.length === 0 ? (
@@ -104,7 +104,7 @@ function CategoryMultiSelect({
             <Badge
               key={selectedCategories[index]}
               variant='secondary'
-              className='bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 text-xs px-2 py-0.5 cursor-pointer hover:bg-teal-200 dark:hover:bg-teal-800/40'
+              className='bg-primary-200 dark:bg-primary-900/30 text-primary-900 dark:text-sage-300 text-xs px-2 py-0.5 cursor-pointer hover:bg-primary-300 dark:hover:bg-primary-800/40'
               onClick={() => onToggleCategory(selectedCategories[index])}
             >
               {name}
@@ -311,7 +311,7 @@ export function SearchFilters({
               <Badge
                 key={`${filter.key}-${index}`}
                 variant='secondary'
-                className='bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800/40 cursor-pointer'
+                className='bg-primary-200 dark:bg-primary-900/30 text-primary-900 dark:text-sage-300 hover:bg-primary-300 dark:hover:bg-primary-800/40 cursor-pointer'
                 onClick={() => removeFilter(filter.key, filter.value)}
               >
                 {filter.label}
@@ -439,7 +439,7 @@ export function SearchFilters({
               className={cn(
                 'px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors',
                 filters.rating === rating
-                  ? 'bg-teal-600 text-white'
+                  ? 'bg-primary-800 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               )}
             >
@@ -483,7 +483,7 @@ export function SearchFilters({
         <select
           value={filters.sort}
           onChange={e => updateFilter('sort', e.target.value)}
-          className='w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500'
+          className='w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-700'
         >
           {options.sortOptions.map(option => (
             <option key={option.value} value={option.value}>
@@ -495,7 +495,7 @@ export function SearchFilters({
 
       {/* Action Buttons */}
       <div className='flex gap-3'>
-        <Button onClick={onApplyFilters} disabled={loading} className='flex-1 bg-teal-600 hover:bg-teal-700 text-white'>
+        <Button onClick={onApplyFilters} disabled={loading} className='flex-1 bg-primary-800 hover:bg-primary-900 text-white'>
           {loading ? t('search.filters.applying') : t('search.filters.applyFilters')}
         </Button>
         <Button variant='outline' onClick={onResetFilters} disabled={loading} className='flex-1'>

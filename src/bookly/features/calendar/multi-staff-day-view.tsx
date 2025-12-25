@@ -193,7 +193,7 @@ export default function MultiStaffDayView({
                   height: 18,
                   fontSize: '0.65rem',
                   '& .MuiChip-icon': { fontSize: '0.7rem', ml: 0.5 },
-                  bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.12)' : 'rgba(20, 184, 166, 0.08)',
+                  bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
                   color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
                 }}
               />
@@ -278,7 +278,7 @@ export default function MultiStaffDayView({
                 bgcolor: staffIndex % 2 === 0 ? 'transparent' : isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)',
                 cursor: 'pointer',
                 '&:hover': {
-                  bgcolor: isDark ? 'rgba(144,202,249,0.05)' : 'rgba(25,118,210,0.05)'
+                  bgcolor: isDark ? 'rgba(10, 44, 36, 0.05)' : 'rgba(10, 44, 36, 0.05)'
                 }
               }}
               onClick={(e) => {
@@ -329,7 +329,7 @@ export default function MultiStaffDayView({
                     left: 0,
                     right: 0,
                     height: '2px',
-                    bgcolor: '#ef4444',
+                    bgcolor: 'var(--mui-palette-error-main)',
                     zIndex: 100,
                     '&::before': {
                       content: '""',
@@ -340,7 +340,7 @@ export default function MultiStaffDayView({
                       width: 10,
                       height: 10,
                       borderRadius: '50%',
-                      bgcolor: '#ef4444'
+                      bgcolor: 'var(--mui-palette-error-main)'
                     },
                     '&::after': {
                       content: `"${currentTimeIndicator.time}"`,
@@ -348,7 +348,7 @@ export default function MultiStaffDayView({
                       left: 16,
                       top: '50%',
                       transform: 'translateY(-50%)',
-                      bgcolor: '#ef4444',
+                      bgcolor: 'var(--mui-palette-error-main)',
                       color: 'white',
                       px: 1,
                       py: 0.25,

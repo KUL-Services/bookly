@@ -149,7 +149,7 @@ function ProfilePage() {
   if (loading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900 flex items-center justify-center'>
-        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600'></div>
+        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-primary-800'></div>
       </div>
     )
   }
@@ -158,21 +158,21 @@ function ProfilePage() {
     <div className='min-h-screen w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col items-center bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900 relative overflow-hidden'>
       {/* Animated background elements */}
       <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 dark:from-teal-600/15 dark:to-cyan-600/8 rounded-full blur-3xl animate-pulse' />
-        <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 dark:from-emerald-600/15 dark:to-teal-600/8 rounded-full blur-3xl animate-pulse animation-delay-1000' />
+        <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 dark:from-primary-800/15 dark:to-cyan-600/8 rounded-full blur-3xl animate-pulse' />
+        <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 dark:from-emerald-600/15 dark:to-sage-600/8 rounded-full blur-3xl animate-pulse animation-delay-1000' />
       </div>
       <div className='w-full max-w-4xl space-y-6 sm:space-y-8 relative z-10'>
         {/* Header */}
         {/* <div className='flex items-center justify-between gap-3 sm:gap-2 animate-in fade-in slide-in-from-top-4 duration-700'>
           <button
             onClick={goBack}
-            className='inline-flex items-center p-2 rounded-full text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/30 transition-all duration-200 hover:scale-110 active:scale-95'
+            className='inline-flex items-center p-2 rounded-full text-primary-800 dark:text-sage-400 hover:text-primary-900 dark:hover:text-sage-300 hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-all duration-200 hover:scale-110 active:scale-95'
           >
             <KulIcon icon='lucide:chevron-left' iconClass='w-6 h-6' />
           </button>
           <H1
             i18nTFn={t}
-            className='font-bold text-2xl sm:text-3xl bg-gradient-to-r from-teal-700 to-cyan-700 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent'
+            className='font-bold text-2xl sm:text-3xl bg-gradient-to-r from-primary-800 to-sage-600 dark:from-sage-400 dark:to-primary-400 bg-clip-text text-transparent'
             stringProps={{ localeKey: 'profile.title' }}
           />
           <button
@@ -187,7 +187,7 @@ function ProfilePage() {
         </div> */}
 
         {/* Profile Card */}
-        <Card className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-teal-100/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+        <Card className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-primary-100/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
           <CardHeader className='flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6'>
             <CardTitle>
               <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6'>
@@ -200,7 +200,7 @@ function ProfilePage() {
                     }
                     alt={user.name}
                     avatarTitle={user.name}
-                    className='ring-4 ring-teal-100 shadow-lg group-hover:ring-teal-200 transition-all duration-300'
+                    className='ring-4 ring-primary-100 shadow-lg group-hover:ring-primary-200 transition-all duration-300'
                   />
                   <div className='absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg animate-pulse' />
                 </div>
@@ -241,9 +241,9 @@ function ProfilePage() {
           </CardHeader>
           <CardContent className='pt-0'>
             <div className='mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6'>
-              <div className='group rounded-xl border border-teal-100 dark:border-teal-700/50 p-6 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-900/30 hover:from-teal-100 hover:to-cyan-100 dark:hover:from-teal-800/40 dark:hover:to-cyan-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
+              <div className='group rounded-xl border border-primary-100 dark:border-primary-700/50 p-6 bg-gradient-to-br from-primary-100 to-cyan-50 dark:from-primary-900/30 dark:to-cyan-900/30 hover:from-primary-200 hover:to-sage-200 dark:hover:from-sage-800/40 dark:hover:to-cyan-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <H6
-                  className='text-2xl font-bold text-teal-600 dark:text-teal-400 mb-1'
+                  className='text-2xl font-bold text-primary-800 dark:text-sage-400 mb-1'
                   stringProps={{ plainText: String(user.stats.totalBookings) }}
                 />
                 <P
@@ -253,7 +253,7 @@ function ProfilePage() {
                 />
                 <div className='mt-2 w-8 h-1 bg-gradient-to-r from-teal-400 to-cyan-400 rounded-full' />
               </div>
-              <div className='group rounded-xl border border-emerald-100 dark:border-emerald-700/50 p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/30 dark:to-teal-900/30 hover:from-emerald-100 hover:to-teal-100 dark:hover:from-emerald-800/40 dark:hover:to-teal-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
+              <div className='group rounded-xl border border-emerald-100 dark:border-emerald-700/50 p-6 bg-gradient-to-br from-emerald-50 to-sage-50 dark:from-emerald-900/30 dark:to-sage-900/30 hover:from-emerald-100 hover:to-sage-100 dark:hover:from-emerald-800/40 dark:hover:to-sage-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <H6
                   className='text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1'
                   stringProps={{ plainText: String(user.stats.favorites) }}
@@ -288,7 +288,7 @@ function ProfilePage() {
         </Card>
 
         {/* Bookings Card */}
-        <Card className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-teal-100/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-600'>
+        <Card className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-primary-100/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-600'>
           <CardHeader>
             <CardTitle>
               <H5
@@ -303,7 +303,7 @@ function ProfilePage() {
                   onClick={() => setActiveTab('upcoming')}
                   className={
                     activeTab === 'upcoming'
-                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white py-3 px-6 text-center font-semibold rounded-lg shadow-md transform scale-105 transition-all duration-300'
+                      ? 'bg-gradient-to-r from-primary-800 to-cyan-600 text-white py-3 px-6 text-center font-semibold rounded-lg shadow-md transform scale-105 transition-all duration-300'
                       : 'text-gray-600 dark:text-gray-300 py-3 px-6 text-center font-medium hover:bg-white/50 dark:hover:bg-gray-600/50 rounded-lg transition-all duration-200'
                   }
                 >
@@ -320,7 +320,7 @@ function ProfilePage() {
                   onClick={() => setActiveTab('past')}
                   className={
                     activeTab === 'past'
-                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white py-3 px-6 text-center font-semibold rounded-lg shadow-md transform scale-105 transition-all duration-300'
+                      ? 'bg-gradient-to-r from-primary-800 to-cyan-600 text-white py-3 px-6 text-center font-semibold rounded-lg shadow-md transform scale-105 transition-all duration-300'
                       : 'text-gray-600 dark:text-gray-300 py-3 px-6 text-center font-medium hover:bg-white/50 dark:hover:bg-gray-600/50 rounded-lg transition-all duration-200'
                   }
                 >
@@ -343,7 +343,7 @@ function ProfilePage() {
                 className={`group border border-gray-200/50 dark:border-gray-700/50 rounded-xl p-6 flex gap-4 items-start bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4 duration-500`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className='w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 flex-shrink-0 relative shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105'>
+                <div className='w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-primary-200 to-sage-200 dark:from-primary-800/50 dark:to-sage-800/50 flex-shrink-0 relative shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105'>
                   <BaseImage src={b.image} alt={b.business} className='object-cover w-full h-full' />
                   <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
                 </div>

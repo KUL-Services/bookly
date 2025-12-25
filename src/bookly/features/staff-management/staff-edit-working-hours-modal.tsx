@@ -220,7 +220,7 @@ export function StaffEditWorkingHoursModal({
                   avatar={
                     <Avatar
                       sx={{
-                        bgcolor: staff.color || '#1976d2',
+                        bgcolor: staff.color || '#0a2c24',
                         width: 24,
                         height: 24,
                         fontSize: 11,
@@ -232,8 +232,8 @@ export function StaffEditWorkingHoursModal({
                   }
                   label={staff.name}
                   sx={{
-                    bgcolor: `${staff.color || '#1976d2'}20`,
-                    borderColor: staff.color || '#1976d2',
+                    bgcolor: `${staff.color || '#0a2c24'}20`,
+                    borderColor: staff.color || '#0a2c24',
                     '& .MuiChip-label': {
                       color: 'text.primary',
                       fontWeight: 500
@@ -655,7 +655,7 @@ export function StaffEditWorkingHoursModal({
                           gap: 1
                         }}
                       >
-                        <i className='ri-error-warning-line' style={{ color: '#d32f2f', fontSize: 18 }} />
+                        <i className='ri-error-warning-line' style={{ color: 'var(--mui-palette-error-main)', fontSize: 18 }} />
                         <Box sx={{ flex: 1 }}>
                           <Typography variant='body2' fontWeight={600} color='error.main'>
                             Overlapping Shifts Detected

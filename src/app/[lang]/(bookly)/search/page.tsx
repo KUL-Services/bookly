@@ -278,11 +278,11 @@ export default function SearchPage() {
   if (loading) {
     return (
       <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900'>
-        <div className='bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-teal-100/50 dark:border-gray-700/50 sticky top-0 z-40'>
+        <div className='bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-primary-100/50 dark:border-gray-700/50 sticky top-0 z-40'>
           <div className='mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4'>
             <div className='flex gap-3'>
               <div className='flex-1 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse'></div>
-              <div className='w-32 h-12 bg-teal-200 dark:bg-teal-700 rounded-lg animate-pulse'></div>
+              <div className='w-32 h-12 bg-primary-200 dark:bg-primary-900 rounded-lg animate-pulse'></div>
             </div>
           </div>
         </div>
@@ -297,7 +297,7 @@ export default function SearchPage() {
   return (
     <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900'>
       {/* Top search bar */}
-      <div className='bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-teal-100/50 dark:border-gray-700/50 sticky top-0 z-40'>
+      <div className='bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-primary-100/50 dark:border-gray-700/50 sticky top-0 z-40'>
         <div className='mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4'>
           <div className='flex flex-col sm:flex-row gap-3'>
             <SearchInput
@@ -313,7 +313,7 @@ export default function SearchPage() {
                 startIcon: filtersLoading ? <ButtonLoader size={16} /> : undefined
               }}
               disabled={filtersLoading}
-              className='bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
             />
           </div>
         </div>
@@ -352,7 +352,7 @@ export default function SearchPage() {
             {filtersLoading && (
               <div className='absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl'>
                 <div className='flex flex-col items-center space-y-3'>
-                  <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600'></div>
+                  <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary-800'></div>
                   <p className='text-gray-600 dark:text-gray-300 text-sm font-medium'>Searching...</p>
                 </div>
               </div>
@@ -443,7 +443,7 @@ export default function SearchPage() {
                       onClick={() => setViewMode('list')}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                         viewMode === 'list'
-                          ? 'bg-teal-500 text-white'
+                          ? 'bg-primary-700 text-white'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
@@ -453,7 +453,7 @@ export default function SearchPage() {
                       onClick={() => setViewMode('map')}
                       className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                         viewMode === 'map'
-                          ? 'bg-teal-500 text-white'
+                          ? 'bg-primary-700 text-white'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
@@ -573,10 +573,10 @@ export default function SearchPage() {
                   <button
                     key={branch.id}
                     onClick={() => handleBranchClick(branch.id)}
-                    className='w-full text-left p-3 sm:p-4 mb-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-teal-500 dark:hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900/20 transition-all touch-manipulation'
+                    className='w-full text-left p-3 sm:p-4 mb-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-700 dark:hover:border-primary-700 hover:bg-primary-100 dark:hover:bg-primary-900/20 transition-all touch-manipulation'
                   >
                     <div className='flex items-start gap-3'>
-                      <div className='flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-teal-100 dark:bg-teal-900/50 rounded-full flex items-center justify-center text-teal-600 dark:text-teal-400 font-semibold text-sm sm:text-base'>
+                      <div className='flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-primary-200 dark:bg-primary-900/50 rounded-full flex items-center justify-center text-primary-800 dark:text-sage-400 font-semibold text-sm sm:text-base'>
                         {index + 1}
                       </div>
                       <div className='flex-1 min-w-0'>

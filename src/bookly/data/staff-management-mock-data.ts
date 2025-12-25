@@ -474,7 +474,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     roomType: 'static',
     floor: '1st Floor',
     amenities: ['Air Conditioning', 'Mirrors', 'Sound System', 'WiFi'],
-    color: '#1976d2',
+    color: '#0a2c24', // Dark Green - brand primary
     serviceIds: ['1', '2'], // Haircut & Style, Color Treatment
     weeklySchedule: {
       Sun: {
@@ -533,7 +533,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     roomType: 'dynamic',
     floor: '2nd Floor',
     amenities: ['Air Conditioning', 'Yoga Mats', 'Mirrors', 'Sound System'],
-    color: '#388e3c',
+    color: '#77b6a3', // Sage Green - brand accent
     serviceIds: ['3'], // Highlights only
     weeklySchedule: {
       Sun: {
@@ -579,7 +579,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     roomType: 'static',
     floor: '1st Floor',
     amenities: ['Air Conditioning', 'Mirrors'],
-    color: '#d32f2f',
+    color: '#e88682', // Coral - brand accent
     serviceIds: ['2'], // Color Treatment only
     weeklySchedule: {
       Sun: {
@@ -622,7 +622,7 @@ export const mockManagedRooms: ManagedRoom[] = [
     roomType: 'dynamic',
     floor: 'Ground Floor',
     amenities: ['Air Conditioning', 'Sound System', 'Lockers', 'Showers', 'WiFi'],
-    color: '#f57c00',
+    color: '#51b4b7', // Teal - brand accent
     serviceIds: ['1', '3'], // Haircut & Highlights
     weeklySchedule: {
       Sun: {

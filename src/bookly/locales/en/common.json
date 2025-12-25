@@ -80,6 +80,7 @@
       "locationLabel": "Location",
       "locationPlaceholder": "Enter city or area",
       "categoriesLabel": "Categories",
+      "selectCategories": "Select categories",
       "priceRangeLabel": "Price Range",
       "minLabel": "Min",
       "maxLabel": "Max",

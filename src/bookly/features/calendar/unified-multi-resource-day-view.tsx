@@ -494,8 +494,8 @@ export default function UnifiedMultiResourceDayView({
               pointerEvents: 'none',
               zIndex: 2,
               backgroundImage: isDark
-                ? 'repeating-linear-gradient(45deg, rgba(33, 150, 243, 0.2) 0px, rgba(33, 150, 243, 0.2) 8px, transparent 8px, transparent 16px)'
-                : 'repeating-linear-gradient(45deg, rgba(33, 150, 243, 0.18) 0px, rgba(33, 150, 243, 0.18) 8px, transparent 8px, transparent 16px)'
+                ? 'repeating-linear-gradient(45deg, rgba(10, 44, 36, 0.2) 0px, rgba(10, 44, 36, 0.2) 8px, transparent 8px, transparent 16px)'
+                : 'repeating-linear-gradient(45deg, rgba(10, 44, 36, 0.18) 0px, rgba(10, 44, 36, 0.18) 8px, transparent 8px, transparent 16px)'
             }}
           />
         ))}
@@ -587,7 +587,7 @@ export default function UnifiedMultiResourceDayView({
                 opacity: isFaded ? 0.4 : 1,
                 filter: isFaded ? 'grayscale(50%)' : 'none',
                 boxShadow: isHighlighted
-                  ? '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                  ? '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
                   : isStaticType
                     ? 'none'
                     : '0px 2px 8px rgba(0,0,0,0.06)',
@@ -595,7 +595,7 @@ export default function UnifiedMultiResourceDayView({
                 zIndex: isHighlighted ? 5 : 'auto',
                 '&:hover': {
                   boxShadow: isHighlighted
-                    ? '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                    ? '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
                     : isStaticType
                       ? 'none'
                       : '0px 4px 12px rgba(0,0,0,0.1)',
@@ -880,7 +880,7 @@ export default function UnifiedMultiResourceDayView({
                       sx={{
                         gridColumn: `span ${resourcesInPrimaryGroup.length}`,
                         p: 1.5,
-                        bgcolor: isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.08)',
+                        bgcolor: isDark ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
                         borderRight: borderRightWidth,
                         borderColor: borderRightColor,
                         display: 'flex',
@@ -953,11 +953,11 @@ export default function UnifiedMultiResourceDayView({
                           p: 1,
                           bgcolor: isStaffGroup
                             ? isDark
-                              ? 'rgba(33, 150, 243, 0.08)'
-                              : 'rgba(33, 150, 243, 0.05)'
+                              ? 'rgba(10, 44, 36, 0.08)'
+                              : 'rgba(10, 44, 36, 0.05)'
                             : isDark
-                              ? 'rgba(76, 175, 80, 0.08)'
-                              : 'rgba(76, 175, 80, 0.05)',
+                              ? 'rgba(10, 44, 36, 0.08)'
+                              : 'rgba(10, 44, 36, 0.05)',
                           borderRight: borderRightWidth,
                           borderColor: borderRightColor,
                           display: 'flex',
@@ -1046,14 +1046,14 @@ export default function UnifiedMultiResourceDayView({
                         // cursor: 'pointer', // Disabled - only slots/bookings are clickable
                         bgcolor: isRoom
                           ? isDark
-                            ? 'rgba(76, 175, 80, 0.03)'
-                            : 'rgba(76, 175, 80, 0.01)'
+                            ? 'rgba(10, 44, 36, 0.03)'
+                            : 'rgba(10, 44, 36, 0.01)'
                           : 'transparent'
                         // '&:hover': { // Disabled - only slots/bookings are clickable
                         //   bgcolor: isRoom
                         //     ? isDark
-                        //       ? 'rgba(76, 175, 80, 0.08)'
-                        //       : 'rgba(76, 175, 80, 0.05)'
+                        //       ? 'rgba(10, 44, 36, 0.08)'
+                        //       : 'rgba(10, 44, 36, 0.05)'
                         //     : isDark
                         //       ? 'rgba(255,255,255,0.05)'
                         //       : 'rgba(0,0,0,0.03)'
@@ -1081,7 +1081,10 @@ export default function UnifiedMultiResourceDayView({
                             .join('')
                             .substring(0, 2)
                         ) : (
-                          <i className='ri-tools-line' style={{ color: '#fff', fontSize: 14 }} />
+                          <i
+                            className='ri-tools-line'
+                            style={{ color: 'var(--mui-palette-common-white)', fontSize: 14 }}
+                          />
                         )}
                       </Avatar>
                       <Box sx={{ textAlign: 'center', width: '100%' }}>
@@ -1170,8 +1173,8 @@ export default function UnifiedMultiResourceDayView({
                   const isRoom = resource.type === 'room'
                   const bgColor = isRoom
                     ? isDark
-                      ? 'rgba(76, 175, 80, 0.01)'
-                      : 'rgba(76, 175, 80, 0.005)'
+                      ? 'rgba(10, 44, 36, 0.01)'
+                      : 'rgba(10, 44, 36, 0.005)'
                     : 'transparent'
 
                   return (

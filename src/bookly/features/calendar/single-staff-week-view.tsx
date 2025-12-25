@@ -289,7 +289,7 @@ export default function SingleStaffWeekView({
                         left: 0,
                         right: 0,
                         height: '2px',
-                        bgcolor: '#ef4444',
+                        bgcolor: 'var(--mui-palette-error-main)',
                         zIndex: 100,
                         mb: 1,
                         display: 'flex',
@@ -303,7 +303,7 @@ export default function SingleStaffWeekView({
                           width: 10,
                           height: 10,
                           borderRadius: '50%',
-                          bgcolor: '#ef4444'
+                          bgcolor: 'var(--mui-palette-error-main)'
                         }
                       }}
                     >
@@ -314,7 +314,7 @@ export default function SingleStaffWeekView({
                           left: 16,
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          bgcolor: '#ef4444',
+                          bgcolor: 'var(--mui-palette-error-main)',
                           color: 'white',
                           px: 1,
                           py: 0.25,
@@ -377,13 +377,13 @@ export default function SingleStaffWeekView({
                             opacity: isFaded ? 0.4 : 1,
                             filter: isFaded ? 'grayscale(50%)' : 'none',
                             boxShadow: isHighlighted
-                              ? '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                              ? '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
                               : 'none',
                             transform: isHighlighted ? 'scale(1.02)' : 'none',
                             zIndex: isHighlighted ? 5 : 'auto',
                             '&:hover': {
                               boxShadow: isHighlighted
-                                ? '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                                ? '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
                                 : 3,
                               transform: 'scale(1.02)',
                               opacity: isFaded ? 0.6 : 1

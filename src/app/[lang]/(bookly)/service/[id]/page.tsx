@@ -42,7 +42,7 @@ export default function ServiceDetailPage() {
     return (
       <div className='min-h-screen flex items-center justify-center'>
         <div className='text-center'>
-          <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-teal-600'></div>
+          <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-primary-800'></div>
           <p className='mt-4 text-gray-600'>Loading service...</p>
         </div>
       </div>
@@ -78,8 +78,8 @@ export default function ServiceDetailPage() {
             <div className='flex flex-col md:flex-row gap-6'>
               {/* Service Image */}
               <div className='w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden'>
-                <div className='w-full h-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center'>
-                  <div className='text-4xl text-teal-600'>
+                <div className='w-full h-full bg-gradient-to-br from-primary-200 to-teal-200 flex items-center justify-center'>
+                  <div className='text-4xl text-primary-800'>
                     {service.name.charAt(0)}
                   </div>
                 </div>
@@ -97,7 +97,7 @@ export default function ServiceDetailPage() {
                         <Button
                           buttonText={{ plainText: service.business.name }}
                           variant='text'
-                          className='text-teal-600 hover:text-teal-700 p-0 text-lg'
+                          className='text-primary-800 hover:text-primary-900 p-0 text-lg'
                           onClick={() => router.push(`/${params.lang}/business/${service.business?.name.toLowerCase().replace(/\s+/g, '-')}`)}
                         />
                       </div>
@@ -116,7 +116,7 @@ export default function ServiceDetailPage() {
                     {/* Categories */}
                     <div className='flex gap-2 mt-2'>
                       {service.categories?.map((category) => (
-                        <Badge key={category.id} className='bg-teal-100 text-teal-800'>
+                        <Badge key={category.id} className='bg-primary-200 text-primary-900'>
                           {category.name}
                         </Badge>
                       ))}

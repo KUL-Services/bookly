@@ -268,17 +268,17 @@ function businessDetailsPage() {
 
         <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
           <div className='relative'>
-            <div className='animate-spin rounded-full h-24 w-24 border-4 border-teal-200 border-t-teal-600 mx-auto shadow-lg'></div>
+            <div className='animate-spin rounded-full h-24 w-24 border-4 border-primary-200 border-t-primary-800 mx-auto shadow-lg'></div>
             <div className='absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-cyan-400 animate-ping mx-auto'></div>
           </div>
           <div className='mt-6 space-y-2'>
-            <p className='text-xl font-semibold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent'>
+            <p className='text-xl font-semibold bg-gradient-to-r from-primary-800 to-cyan-600 bg-clip-text text-transparent'>
               {t('business.loading')}
             </p>
             <div className='flex justify-center space-x-1'>
-              <div className='w-2 h-2 bg-teal-500 rounded-full animate-bounce'></div>
-              <div className='w-2 h-2 bg-teal-500 rounded-full animate-bounce animation-delay-200'></div>
-              <div className='w-2 h-2 bg-teal-500 rounded-full animate-bounce animation-delay-400'></div>
+              <div className='w-2 h-2 bg-primary-700 rounded-full animate-bounce'></div>
+              <div className='w-2 h-2 bg-primary-700 rounded-full animate-bounce animation-delay-200'></div>
+              <div className='w-2 h-2 bg-primary-700 rounded-full animate-bounce animation-delay-400'></div>
             </div>
           </div>
         </div>
@@ -308,7 +308,7 @@ function businessDetailsPage() {
             The business you're looking for doesn't exist or may have been removed.
           </p>
           <div className='mt-8'>
-            <button className='px-6 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'>
+            <button className='px-6 py-3 bg-gradient-to-r from-primary-800 to-cyan-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'>
               Browse Other Businesses
             </button>
           </div>
@@ -321,16 +321,16 @@ function businessDetailsPage() {
     <div className='min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900 relative overflow-hidden'>
       {/* Background elements - static to prevent flickering */}
       <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/15 to-cyan-200/8 dark:from-teal-600/10 dark:to-cyan-600/5 rounded-full blur-3xl' />
-        <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/15 to-teal-200/8 dark:from-emerald-600/10 dark:to-teal-600/5 rounded-full blur-3xl' />
+        <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/15 to-cyan-200/8 dark:from-primary-800/10 dark:to-cyan-600/5 rounded-full blur-3xl' />
+        <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/15 to-teal-200/8 dark:from-emerald-600/10 dark:to-sage-600/5 rounded-full blur-3xl' />
       </div>
       <div className='container mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6 space-y-4 sm:space-y-6 lg:space-y-8 flex-none relative z-10'>
         {/* Header Section */}
-        <Card className='bg-white/95 dark:bg-gray-800/95 shadow-xl border border-teal-100/50 dark:border-gray-700/50 animate-in fade-in slide-in-from-bottom-6 duration-700'>
+        <Card className='bg-white/95 dark:bg-gray-800/95 shadow-xl border border-primary-100/50 dark:border-gray-700/50 animate-in fade-in slide-in-from-bottom-6 duration-700'>
           <CardContent className='p-3 sm:p-4 lg:p-6 select-text'>
             <div className='flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6'>
               {/* Business Image */}
-              <div className='w-full md:w-40 lg:w-52 h-40 sm:h-48 lg:h-52 bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-800/50 dark:to-cyan-800/50 rounded-lg lg:rounded-xl overflow-hidden shadow-lg select-none'>
+              <div className='w-full md:w-40 lg:w-52 h-40 sm:h-48 lg:h-52 bg-gradient-to-br from-primary-200 to-sage-200 dark:from-primary-800/50 dark:to-sage-800/50 rounded-lg lg:rounded-xl overflow-hidden shadow-lg select-none'>
                 <img
                   src={
                     (business as any).logoUrl || (business as any).coverImageUrl || '/images/business-placeholder.jpg'
@@ -417,7 +417,7 @@ function businessDetailsPage() {
                             href={link.url}
                             target='_blank'
                             rel='noopener noreferrer'
-                            className='text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 capitalize text-xs sm:text-sm select-text'
+                            className='text-primary-800 dark:text-sage-400 hover:text-primary-900 dark:hover:text-sage-300 capitalize text-xs sm:text-sm select-text'
                           >
                             {link.platform}
                           </a>
@@ -429,7 +429,7 @@ function businessDetailsPage() {
                 {/* <Button
                   buttonText={{ plainText: 'Book Appointment' }}
                   variant='contained'
-                  className='w-full sm:w-auto bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-6 sm:px-8 py-3 h-12 sm:h-14 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 animate-glow touch-manipulation'
+                  className='w-full sm:w-auto bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 text-white font-semibold px-6 sm:px-8 py-3 h-12 sm:h-14 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 animate-glow touch-manipulation'
                  
                 /> */}
               </div>
@@ -438,7 +438,7 @@ function businessDetailsPage() {
         </Card>
 
         {/* Tabs Navigation */}
-        <div className='mx-auto max-w-4xl rounded-lg sm:rounded-xl border border-teal-100/50 dark:border-gray-700/50 shadow-lg sticky top-0 sm:top-4 z-30 bg-white/98 dark:bg-gray-800/98 animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
+        <div className='mx-auto max-w-4xl rounded-lg sm:rounded-xl border border-primary-100/50 dark:border-gray-700/50 shadow-lg sticky top-0 sm:top-4 z-30 bg-white/98 dark:bg-gray-800/98 animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
           <nav className='flex justify-center p-0.5 sm:p-1 lg:p-2'>
             <div className='flex w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 sm:p-1 gap-0.5 sm:gap-1 overflow-x-auto scrollbar-thin'>
               {getTabsWithTranslation(t).map(tab => (
@@ -449,8 +449,8 @@ function businessDetailsPage() {
                   size='md'
                   className={`relative flex-1 sm:flex-initial px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 font-medium text-xs sm:text-sm transition-all duration-300 rounded-lg whitespace-nowrap touch-manipulation ${
                     activeTab === tab.id
-                      ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg transform scale-105'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-white/50 dark:hover:bg-gray-600/50 hover:scale-105'
+                      ? 'bg-gradient-to-r from-primary-800 to-cyan-600 text-white shadow-lg transform scale-105'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-primary-800 dark:hover:text-sage-400 hover:bg-white/50 dark:hover:bg-gray-600/50 hover:scale-105'
                   }`}
                   buttonText={{ plainText: tab.label }}
                 />
@@ -465,14 +465,14 @@ function businessDetailsPage() {
         <div className='min-h-96 max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 pb-4 sm:pb-6 lg:pb-8 relative z-10'>
           {activeTab === 'services' && (
             <div className='space-y-4 sm:space-y-6'>
-              <h2 className='text-2xl sm:text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
+              <h2 className='text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-800 to-sage-600 dark:from-sage-400 dark:to-primary-400 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
                 {t('business.sections.services')}
               </h2>
               <div className='grid gap-3 sm:gap-4 lg:gap-6'>
                 {services.map((service, index) => (
                   <Card
                     key={service.id || index}
-                    className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 border border-teal-100/50 dark:border-gray-700/50 hover:border-teal-200 dark:hover:border-gray-600 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                    className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 border border-primary-100/50 dark:border-gray-700/50 hover:border-primary-200 dark:hover:border-gray-600 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
                     style={{
                       animationDelay: `${0.2 + index * 0.1}s`,
                       animationFillMode: 'forwards'
@@ -483,27 +483,27 @@ function businessDetailsPage() {
                         <div className='flex-1 space-y-2 sm:space-y-3 min-w-0'>
                           <H3
                             stringProps={{ plainText: service.name }}
-                            className='font-bold text-lg sm:text-xl text-gray-900 dark:text-white group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors duration-300'
+                            className='font-bold text-lg sm:text-xl text-gray-900 dark:text-white group-hover:text-primary-900 dark:group-hover:text-sage-400 transition-colors duration-300'
                           />
                           <P
                             stringProps={{ plainText: service.description || '' }}
                             className='text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed'
                           />
                           <div className='flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400'>
-                            <span className='flex items-center gap-1.5 sm:gap-2 bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 px-2 sm:px-3 py-1 rounded-full'>
+                            <span className='flex items-center gap-1.5 sm:gap-2 bg-primary-100 dark:bg-primary-900/30 text-primary-900 dark:text-sage-300 px-2 sm:px-3 py-1 rounded-full'>
                               <Clock className='w-3 h-3 sm:w-4 sm:h-4' />
                               {service.duration} min
                             </span>
                           </div>
                         </div>
                         <div className='w-full sm:w-auto text-left sm:text-right space-y-2 sm:space-y-3'>
-                          <div className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent'>
+                          <div className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-800 to-cyan-600 bg-clip-text text-transparent'>
                             ${service.price}
                           </div>
                           <Button
                             buttonText={{ plainText: 'Book Now' }}
                             variant='contained'
-                            className='w-full sm:w-auto bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-semibold px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 touch-manipulation'
+                            className='w-full sm:w-auto bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 text-white font-semibold px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 touch-manipulation'
                             onClick={() => handelBookService(service)}
                           />
                         </div>
@@ -517,7 +517,7 @@ function businessDetailsPage() {
 
           {activeTab === 'branches' && (
             <div className='space-y-6'>
-              <h2 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
+              <h2 className='text-3xl font-bold bg-gradient-to-r from-primary-800 to-sage-600 dark:from-sage-400 dark:to-primary-400 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
                 {t('business.sections.locations')}
               </h2>
               {branches && branches.length > 0 ? (
@@ -525,7 +525,7 @@ function businessDetailsPage() {
                   {branches.map((branch, index) => (
                     <Card
                       key={branch.id || index}
-                      className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-teal-100/50 dark:border-gray-700/50 hover:border-teal-200 dark:hover:border-gray-600 hover:scale-[1.02] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                      className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-primary-100/50 dark:border-gray-700/50 hover:border-primary-200 dark:hover:border-gray-600 hover:scale-[1.02] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
                       style={{
                         animationDelay: `${0.2 + index * 0.1}s`,
                         animationFillMode: 'forwards'
@@ -564,7 +564,7 @@ function businessDetailsPage() {
                                 </div>
                               </div>
                               <div className='mt-3 flex items-center justify-between'>
-                                <span className='text-sm text-teal-600 dark:text-teal-400 font-medium'>
+                                <span className='text-sm text-primary-800 dark:text-sage-400 font-medium'>
                                   View Details →
                                 </span>
                                 <div className='flex gap-1'>
@@ -646,7 +646,7 @@ function businessDetailsPage() {
                         <Star key={i} className='w-4 h-4 fill-yellow-400 text-yellow-400' />
                       ))} */}
               {/* Review Summary */}
-              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-teal-100/50 opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]'>
+              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-primary-100/50 opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]'>
                 <CardContent className='p-6'>
                   <div className='flex items-center gap-6'>
                     <div className='text-center'>
@@ -690,7 +690,7 @@ function businessDetailsPage() {
                   businessReview().map((review, index) => (
                     <Card
                       key={review.id || index}
-                      className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-teal-100/50 hover:border-teal-200 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                      className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-primary-100/50 hover:border-primary-200 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
                       style={{
                         animationDelay: `${0.4 + index * 0.1}s`,
                         animationFillMode: 'forwards'
@@ -698,8 +698,8 @@ function businessDetailsPage() {
                     >
                       <CardContent className='p-4'>
                         <div className='flex items-start gap-3'>
-                          <div className='w-10 h-10 bg-gradient-to-br from-teal-100 to-cyan-100 rounded-full flex items-center justify-center'>
-                            <span className='text-sm font-medium text-teal-700'>
+                          <div className='w-10 h-10 bg-gradient-to-br from-primary-200 to-sage-200 rounded-full flex items-center justify-center'>
+                            <span className='text-sm font-medium text-primary-900'>
                               {review.authorName
                                 .split(' ')
                                 .map(n => n[0])
@@ -752,7 +752,7 @@ function businessDetailsPage() {
                 className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'
               />
 
-              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-teal-100/50 opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]'>
+              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-primary-100/50 opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]'>
                 <CardContent className='p-6 space-y-4'>
                   <div>
                     <H3 stringProps={{ plainText: 'Our Story' }} className='font-semibold text-lg text-gray-900 mb-2' />
@@ -835,7 +835,7 @@ function businessDetailsPage() {
                               href={link.url}
                               target='_blank'
                               rel='noopener noreferrer'
-                              className='text-teal-600 hover:text-teal-700 capitalize underline'
+                              className='text-primary-800 hover:text-primary-900 capitalize underline'
                             >
                               {link.platform}
                             </a>

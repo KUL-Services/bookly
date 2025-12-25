@@ -398,11 +398,11 @@ export function ShiftsTimeline({
                           width: `${timeToPosition(shift.end, startHour, hourRange) - timeToPosition(shift.start, startHour, hourRange)}%`,
                           top: viewMode === 'week' ? `${(dayIndex / 7) * 100 + 10}%` : '20%',
                           height: viewMode === 'week' ? `${100 / 7 - 20}%` : '60%',
-                          bgcolor: '#d4a574',
+                          bgcolor: 'var(--mui-palette-customColors-sage)',
                           borderRadius: 1,
                           cursor: 'pointer',
                           '&:hover': {
-                            bgcolor: '#c49564'
+                            bgcolor: 'var(--mui-palette-customColors-teal)'
                           }
                         }}
                         onClick={onEditStaffShift}
@@ -441,9 +441,9 @@ export function ShiftsTimeline({
                         width: '100%',
                         top: viewMode === 'week' ? `${(daysToShow.indexOf(dayOfWeek) / 7) * 100}%` : 0,
                         height: viewMode === 'week' ? `${100 / 7}%` : '100%',
-                        bgcolor: 'rgba(121, 85, 72, 0.3)',
+                        bgcolor: 'rgba(232, 134, 130, 0.25)',
                         backgroundImage:
-                          'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(121, 85, 72, 0.1) 10px, rgba(121, 85, 72, 0.1) 20px)',
+                          'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(232, 134, 130, 0.12) 10px, rgba(232, 134, 130, 0.12) 20px)',
                         borderRadius: 1,
                         display: 'flex',
                         alignItems: 'center',
@@ -454,8 +454,8 @@ export function ShiftsTimeline({
                         label={`${off.reason} ${off.approved ? '✓' : '?'}`}
                         size='small'
                         sx={{
-                          bgcolor: '#795548',
-                          color: 'white',
+                          bgcolor: 'var(--mui-palette-customColors-coral)',
+                          color: 'var(--mui-palette-common-white)',
                           fontWeight: 500
                         }}
                       />

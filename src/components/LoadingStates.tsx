@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react'
 export const PageLoader = ({ message = 'Loading...' }: { message?: string }) => (
   <div className="flex flex-col items-center justify-center min-h-[400px] w-full">
     <div className="flex flex-col items-center space-y-4">
-      <CircularProgress size={48} className="text-teal-600" />
+      <CircularProgress size={48} className="text-primary-800" />
       <p className="text-gray-600 font-medium">{message}</p>
     </div>
   </div>
@@ -65,7 +65,7 @@ export const ButtonLoader = ({ size = 16 }: { size?: number }) => (
 // Inline loading for smaller components
 export const InlineLoader = ({ message = 'Loading...', size = 20 }: { message?: string; size?: number }) => (
   <div className="flex items-center space-x-2">
-    <CircularProgress size={size} className="text-teal-600" />
+    <CircularProgress size={size} className="text-primary-800" />
     <span className="text-gray-600 text-sm">{message}</span>
   </div>
 )
@@ -136,7 +136,7 @@ export const LoadingOverlay = ({ message = 'Loading...', transparent = false }) 
     transparent ? 'bg-white/50' : 'bg-white/80'
   } backdrop-blur-sm`}>
     <div className="flex flex-col items-center space-y-3">
-      <CircularProgress size={32} className="text-teal-600" />
+      <CircularProgress size={32} className="text-primary-800" />
       <p className="text-gray-600 font-medium text-sm">{message}</p>
     </div>
   </div>

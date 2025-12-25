@@ -15,7 +15,7 @@ export default function AuthLayout({
     <div className='min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-950 dark:to-secondary-950'>
       {/* <header className='  bg-white relative shadow-md '> */}
       <div className='container mx-auto  flex items-center justify-between px-6 py-6'>
-        {/* <div className='text-2xl font-bold text-teal-500'>Bookly</div>
+        {/* <div className='text-2xl font-bold text-primary-700'>Bookly</div>
 
           <div className='hidden md:flex items-center space-x-4'>
             <Button

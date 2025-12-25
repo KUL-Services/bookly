@@ -56,16 +56,16 @@ const AMENITIES_OPTIONS = [
 ]
 
 const COLOR_OPTIONS = [
-  { value: '#1976d2', label: 'Blue' },
-  { value: '#388e3c', label: 'Green' },
-  { value: '#d32f2f', label: 'Red' },
-  { value: '#f57c00', label: 'Orange' },
-  { value: '#7b1fa2', label: 'Purple' },
-  { value: '#0097a7', label: 'Cyan' },
-  { value: '#c2185b', label: 'Pink' },
-  { value: '#5d4037', label: 'Brown' },
-  { value: '#455a64', label: 'Blue Grey' },
-  { value: '#f9a825', label: 'Yellow' }
+  { value: '#0a2c24', label: 'Dark Green (Primary)' },
+  { value: '#77b6a3', label: 'Sage Green (Accent)' },
+  { value: '#e88682', label: 'Coral (Accent)' },
+  { value: '#51b4b7', label: 'Teal (Accent)' },
+  { value: '#202c39', label: 'Navy Blue' },
+  { value: '#1d7460', label: 'Light Green' },
+  { value: '#5a9a87', label: 'Medium Sage' },
+  { value: '#d56560', label: 'Deep Coral' },
+  { value: '#3d9598', label: 'Deep Teal' },
+  { value: '#3d4a5a', label: 'Light Navy' }
 ]
 
 export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: RoomEditorDrawerProps) {
@@ -76,7 +76,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
   const [capacity, setCapacity] = useState(10)
   const [floor, setFloor] = useState('')
   const [amenities, setAmenities] = useState<string[]>([])
-  const [color, setColor] = useState('#1976d2')
+  const [color, setColor] = useState('#0a2c24') // Dark Green - brand primary
   const [serviceIds, setServiceIds] = useState<string[]>([])
   const [description, setDescription] = useState('')
   const [customAmenity, setCustomAmenity] = useState('')
@@ -90,7 +90,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       setCapacity(room.capacity)
       setFloor(room.floor || '')
       setAmenities(room.amenities || [])
-      setColor(room.color || '#1976d2')
+      setColor(room.color || '#0a2c24')
       setServiceIds(room.serviceIds || [])
       setDescription(room.description || '')
       setRoomType(room.roomType || 'dynamic')
@@ -101,7 +101,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       setCapacity(10)
       setFloor('')
       setAmenities([])
-      setColor('#1976d2')
+      setColor('#0a2c24')
       setServiceIds([])
       setDescription('')
       setRoomType('dynamic')

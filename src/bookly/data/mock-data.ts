@@ -245,7 +245,7 @@ export const mockServices: Service[] = [
     duration: 60,
     category: 'Haircut',
     businessId: '1',
-    color: '#3B82F6' // Blue
+    color: '#0a2c24' // Dark Green (Brand Primary)
   },
   {
     id: '2',
@@ -255,7 +255,7 @@ export const mockServices: Service[] = [
     duration: 120,
     category: 'Coloring',
     businessId: '1',
-    color: '#8B5CF6' // Purple
+    color: '#202c39' // Navy Blue (Brand Secondary)
   },
   {
     id: '3',
@@ -265,7 +265,7 @@ export const mockServices: Service[] = [
     duration: 90,
     category: 'Coloring',
     businessId: '1',
-    color: '#EC4899' // Pink
+    color: '#51b4b7' // Teal (Brand Accent)
   },
   {
     id: '4',
@@ -275,7 +275,7 @@ export const mockServices: Service[] = [
     duration: 45,
     category: 'Manicure',
     businessId: '2',
-    color: '#F59E0B' // Amber
+    color: '#e88682' // Coral (Brand Accent)
   },
   {
     id: '5',
@@ -285,7 +285,7 @@ export const mockServices: Service[] = [
     duration: 60,
     category: 'Pedicure',
     businessId: '2',
-    color: '#10B981' // Emerald
+    color: '#77b6a3' // Sage Green (Brand Accent)
   },
   {
     id: '6',
@@ -295,7 +295,7 @@ export const mockServices: Service[] = [
     duration: 30,
     category: 'Haircut',
     businessId: '3',
-    color: '#14B8A6' // Teal
+    color: '#1d7460' // Brand Grade (Primary Light)
   },
   {
     id: '7',
@@ -305,7 +305,7 @@ export const mockServices: Service[] = [
     duration: 45,
     category: 'Shave',
     businessId: '3',
-    color: '#F97316' // Orange
+    color: '#3d4a5a' // Brand Grade (Secondary Light)
   }
 ]
 
@@ -451,7 +451,7 @@ const baseStaff: StaffMember[] = [
     branchId: '1-1',
     email: 'emma.johnson@luxehair.com',
     phone: '+44 7700 900001',
-    color: '#1976d2',
+    color: '#0a2c24',
     isActive: true,
     staffType: 'dynamic', // Traditional appointment-based scheduling
     schedule: extendedSchedule,
@@ -511,7 +511,7 @@ const baseStaff: StaffMember[] = [
     branchId: '1-1',
     email: 'sarah.williams@luxehair.com',
     phone: '+44 7700 900002',
-    color: '#9c27b0',
+    color: '#202c39',
     isActive: true,
     staffType: 'static', // Works in rooms on fixed schedule
     schedule: standardSchedule,
@@ -554,7 +554,7 @@ const baseStaff: StaffMember[] = [
     branchId: '2-1',
     email: 'lisa.chen@blissnails.com',
     phone: '+44 7700 900003',
-    color: '#e91e63',
+    color: '#77b6a3',
     isActive: true,
     staffType: 'static', // Works in nail stations
     schedule: extendedSchedule,
@@ -597,7 +597,7 @@ const baseStaff: StaffMember[] = [
     branchId: '1-1',
     email: 'maria.garcia@blissnails.com',
     phone: '+44 7700 900004',
-    color: '#f06292',
+    color: '#51b4b7',
     isActive: true,
     staffType: 'dynamic', // Traditional booking
     schedule: standardSchedule,
@@ -641,7 +641,7 @@ const baseStaff: StaffMember[] = [
     branchId: '3-1',
     email: 'james.mitchell@urbanbarber.com',
     phone: '+44 7700 900005',
-    color: '#795548',
+    color: '#e88682',
     isActive: true,
     staffType: 'dynamic', // Traditional booking
     schedule: extendedSchedule,
@@ -657,7 +657,7 @@ const baseStaff: StaffMember[] = [
     branchId: '3-2',
     email: 'david.brown@urbanbarber.com',
     phone: '+44 7700 900006',
-    color: '#6d4c41',
+    color: '#1d7460',
     isActive: true,
     staffType: 'dynamic', // Traditional booking
     schedule: standardSchedule,
@@ -673,7 +673,7 @@ const baseStaff: StaffMember[] = [
     branchId: '1-3',
     email: 'alex.thompson@luxehair.com',
     phone: '+44 7700 900007',
-    color: '#00897b',
+    color: '#3d4a5a',
     isActive: true,
     staffType: 'dynamic', // Traditional booking - NO room assignment (freelance/flexible)
     schedule: partTimeSchedule,
@@ -689,7 +689,7 @@ const baseStaff: StaffMember[] = [
     branchId: '1-1',
     email: 'rebecca.foster@luxehair.com',
     phone: '+44 7700 900008',
-    color: '#ff6b6b',
+    color: '#5a9a87',
     isActive: true,
     staffType: 'static', // Works in fixed time slots - NO room assignment (pool staff, flexible location)
     schedule: standardSchedule,
@@ -707,7 +707,7 @@ const baseStaff: StaffMember[] = [
     branchId: '1-2',
     email: 'oliver.price@luxehair.com',
     phone: '+44 7700 900009',
-    color: '#4ecdc4',
+    color: '#d56560',
     isActive: true,
     staffType: 'static', // Works in fixed time slots - NO room assignment
     schedule: extendedSchedule,
@@ -2144,21 +2144,21 @@ export const mockRooms: Room[] = [
     id: 'room-1-1-1',
     name: 'Studio A',
     branchId: '1-1',
-    color: '#FF6B6B',
+    color: '#0a2c24',
     roomType: 'static' // Fixed capacity room for static scheduling
   },
   {
     id: 'room-1-1-2',
     name: 'Studio B',
     branchId: '1-1',
-    color: '#4ECDC4',
+    color: '#202c39',
     roomType: 'static' // Fixed capacity room for fitness classes
   },
   {
     id: 'room-1-1-3',
     name: 'Studio C',
     branchId: '1-1',
-    color: '#95E1D3',
+    color: '#77b6a3',
     roomType: 'dynamic' // Flexible capacity room
   },
   // Luxe Hair Studio - Soho Branch
@@ -2166,47 +2166,47 @@ export const mockRooms: Room[] = [
     id: 'room-1-2-1',
     name: 'Room 1',
     branchId: '1-2',
-    color: '#FFE66D'
+    color: '#51b4b7'
   },
   {
     id: 'room-1-2-2',
     name: 'Room 2',
     branchId: '1-2',
-    color: '#A8E6CF'
+    color: '#e88682'
   },
   // Luxe Hair Studio - Kensington Branch
   {
     id: 'room-1-3-1',
     name: 'Salon A',
     branchId: '1-3',
-    color: '#FF8B94'
+    color: '#1d7460'
   },
   {
     id: 'room-1-3-2',
     name: 'Salon B',
     branchId: '1-3',
-    color: '#C7CEEA'
+    color: '#3d4a5a'
   },
   // Bliss Nail Bar - King's Road Branch
   {
     id: 'room-2-1-1',
     name: 'Station 1',
     branchId: '2-1',
-    color: '#FFDAC1',
+    color: '#77b6a3',
     roomType: 'static' // Fixed capacity nail station
   },
   {
     id: 'room-2-1-2',
     name: 'Station 2',
     branchId: '2-1',
-    color: '#B5EAD7',
+    color: '#51b4b7',
     roomType: 'dynamic' // Flexible nail station
   },
   {
     id: 'room-2-1-3',
     name: 'Station 3',
     branchId: '2-1',
-    color: '#C7CEEA',
+    color: '#e88682',
     roomType: 'dynamic' // Flexible nail station
   },
   // Bliss Nail Bar - Camden Branch
@@ -2214,14 +2214,14 @@ export const mockRooms: Room[] = [
     id: 'room-2-2-1',
     name: 'Pod A',
     branchId: '2-2',
-    color: '#FFB6B9',
+    color: '#5a9a87',
     roomType: 'dynamic'
   },
   {
     id: 'room-2-2-2',
     name: 'Pod B',
     branchId: '2-2',
-    color: '#FEC8D8',
+    color: '#d56560',
     roomType: 'dynamic'
   }
 ]

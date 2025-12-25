@@ -51,7 +51,7 @@ export const BusinessCard = ({ business, className, onClick, i18nTFn }: Business
               buttonText={i18nTFn ? { localeKey: 'business.book' } : { plainText: 'Book' }}
               i18nTFn={i18nTFn}
               variant='contained'
-              className='w-full bg-teal-500 hover:bg-teal-600 text-white'
+              className='w-full bg-primary-700 hover:bg-primary-800 text-white'
             />
           </>
         }

@@ -52,7 +52,7 @@ export const BusinessAvatar = ({ businessName, imageSrc, imageAlt, className, si
       'bg-indigo-500',
       'bg-yellow-500',
       'bg-red-500',
-      'bg-teal-500',
+      'bg-primary-700',
       'bg-orange-500',
       'bg-cyan-500'
     ]

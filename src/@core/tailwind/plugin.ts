@@ -38,7 +38,7 @@ module.exports = plugin(function () {}, {
       },
       colors: {
         // Add reasonable fallbacks for MUI-driven tokens
-        primary: 'var(--primary-color, #1976d2)',
+        primary: 'var(--primary-color, #0a2c24)',
         primaryLight: 'var(--mui-palette-primary-lightOpacity, rgb(25 118 210 / 0.12))',
         primaryLighter: 'var(--mui-palette-primary-lighterOpacity, rgb(25 118 210 / 0.08))',
         primaryDark: 'var(--mui-palette-primary-dark, #115293)',

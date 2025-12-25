@@ -223,7 +223,7 @@ export default function UnifiedMultiResourceWeekView({
             alignItems: 'center',
             gap: 1.5,
             // cursor: 'pointer', // Disabled - only slots/bookings are clickable
-            bgcolor: isRoom ? (isDark ? 'rgba(76, 175, 80, 0.05)' : 'rgba(76, 175, 80, 0.02)') : 'transparent'
+            bgcolor: isRoom ? (isDark ? 'rgba(10, 44, 36, 0.05)' : 'rgba(10, 44, 36, 0.02)') : 'transparent'
             // '&:hover': { // Disabled - only slots/bookings are clickable
             //   bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'
             // }
@@ -253,7 +253,10 @@ export default function UnifiedMultiResourceWeekView({
                 .join('')
                 .substring(0, 2)
             ) : (
-              <i className='ri-tools-line' style={{ color: '#fff', fontSize: 18 }} />
+              <i
+                className='ri-tools-line'
+                style={{ color: 'var(--mui-palette-common-white)', fontSize: 18 }}
+              />
             )}
           </Avatar>
           <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -283,12 +286,12 @@ export default function UnifiedMultiResourceWeekView({
                 position: 'relative',
                 bgcolor: isToday(day)
                   ? isDark
-                    ? 'rgba(144,202,249,0.05)'
-                    : 'rgba(25,118,210,0.05)'
+                    ? 'rgba(10, 44, 36, 0.05)'
+                    : 'rgba(10, 44, 36, 0.05)'
                   : isRoom
                     ? isDark
-                      ? 'rgba(76, 175, 80, 0.02)'
-                      : 'rgba(76, 175, 80, 0.01)'
+                      ? 'rgba(10, 44, 36, 0.02)'
+                      : 'rgba(10, 44, 36, 0.01)'
                     : 'transparent'
                 // cursor: 'pointer', // Disabled - only slots/bookings are clickable
                 // transition: 'background-color 0.15s',
@@ -312,8 +315,8 @@ export default function UnifiedMultiResourceWeekView({
                     zIndex: 1,
                     backgroundImage: showReservationStripes
                       ? isDark
-                        ? 'repeating-linear-gradient(45deg, rgba(33, 150, 243, 0.2) 0px, rgba(33, 150, 243, 0.2) 8px, transparent 8px, transparent 16px)'
-                        : 'repeating-linear-gradient(45deg, rgba(33, 150, 243, 0.18) 0px, rgba(33, 150, 243, 0.18) 8px, transparent 8px, transparent 16px)'
+                        ? 'repeating-linear-gradient(45deg, rgba(10, 44, 36, 0.2) 0px, rgba(10, 44, 36, 0.2) 8px, transparent 8px, transparent 16px)'
+                        : 'repeating-linear-gradient(45deg, rgba(10, 44, 36, 0.18) 0px, rgba(10, 44, 36, 0.18) 8px, transparent 8px, transparent 16px)'
                       : isDark
                         ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
                         : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
@@ -396,7 +399,7 @@ export default function UnifiedMultiResourceWeekView({
                       filter: isFaded ? 'grayscale(50%)' : 'none',
                       overflow: 'visible',
                       boxShadow: isHighlighted
-                        ? '0px 0px 0px 3px rgba(20, 184, 166, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                        ? '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
                         : isStaticType
                           ? 'none'
                           : '0px 2px 8px rgba(0,0,0,0.06)',
@@ -406,7 +409,7 @@ export default function UnifiedMultiResourceWeekView({
                       transition: 'all 0.3s ease',
                       '&:hover': {
                         boxShadow: isHighlighted
-                          ? '0px 0px 0px 3px rgba(20, 184, 166, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                          ? '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
                           : isStaticType
                             ? 'none'
                             : '0px 4px 12px rgba(0,0,0,0.1)',
@@ -673,11 +676,11 @@ export default function UnifiedMultiResourceWeekView({
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  bgcolor: isToday(day) ? (isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)') : 'transparent'
+                  bgcolor: isToday(day) ? (isDark ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.08)') : 'transparent'
                   // cursor: 'pointer', // Disabled - only slots/bookings are clickable
                   // transition: 'background-color 0.2s',
                   // '&:hover': { // Disabled - only slots/bookings are clickable
-                  //   bgcolor: isDark ? 'rgba(144,202,249,0.12)' : 'rgba(25,118,210,0.12)'
+                  //   bgcolor: isDark ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.12)'
                   // }
                 }}
                 // onClick disabled - only slots/bookings are clickable
@@ -708,7 +711,7 @@ export default function UnifiedMultiResourceWeekView({
                   sx={{
                     px: 2,
                     py: 1.5,
-                    bgcolor: isDark ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.1)',
+                    bgcolor: isDark ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.1)',
                     borderBottom: 1,
                     borderColor: 'divider',
                     display: 'flex',
@@ -716,7 +719,7 @@ export default function UnifiedMultiResourceWeekView({
                     gap: 1
                   }}
                 >
-                  <i className='ri-building-line' style={{ fontSize: 14, color: isDark ? '#64b5f6' : '#1976d2' }} />
+                  <i className='ri-building-line' style={{ fontSize: 14, color: isDark ? '#77b6a3' : '#0a2c24' }} />
                   <Typography variant='body2' fontWeight={700} color='primary.dark'>
                     {branchName}
                   </Typography>

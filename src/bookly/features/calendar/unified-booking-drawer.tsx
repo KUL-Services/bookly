@@ -1172,7 +1172,9 @@ export default function UnifiedBookingDrawer({
                         checked={requestedByClient}
                         onChange={e => setRequestedByClient(e.target.checked)}
                         // icon={<i className='ri-heart-line' />}
-                        checkedIcon={<i className='ri-heart-fill' style={{ color: '#f44336' }} />}
+                        checkedIcon={
+                          <i className='ri-heart-fill' style={{ color: 'var(--mui-palette-customColors-coral)' }} />
+                        }
                       />
                     }
                     label='Requested by client'
@@ -1287,7 +1289,7 @@ export default function UnifiedBookingDrawer({
                     <>
                       <Divider />
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <i className='ri-heart-fill' style={{ color: '#f44336' }} />
+                        <i className='ri-heart-fill' style={{ color: 'var(--mui-palette-customColors-coral)' }} />
                         <Typography variant='body2'>Requested by client</Typography>
                       </Box>
                     </>
@@ -1353,7 +1355,9 @@ export default function UnifiedBookingDrawer({
                           checked={starred}
                           onChange={e => setStarred(e.target.checked)}
                           icon={<i className='ri-star-line' />}
-                          checkedIcon={<i className='ri-star-fill' style={{ color: '#FFD700' }} />}
+                          checkedIcon={
+                            <i className='ri-star-fill' style={{ color: 'var(--mui-palette-customColors-coral)' }} />
+                          }
                         />
                       }
                       label='Star this booking'
@@ -1607,25 +1611,28 @@ export default function UnifiedBookingDrawer({
                                 >
                                   <MenuItem value='confirmed'>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <i className='ri-checkbox-circle-line' style={{ color: '#4caf50' }} />
+                                      <i
+                                        className='ri-checkbox-circle-line'
+                                        style={{ color: 'var(--mui-palette-success-main)' }}
+                                      />
                                       Confirmed
                                     </Box>
                                   </MenuItem>
                                   <MenuItem value='pending'>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <i className='ri-time-line' style={{ color: '#ff9800' }} />
+                                      <i className='ri-time-line' style={{ color: 'var(--mui-palette-warning-main)' }} />
                                       Not Yet Confirmed / Pending Confirmation
                                     </Box>
                                   </MenuItem>
                                   <MenuItem value='no_show'>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <i className='ri-close-circle-line' style={{ color: '#f44336' }} />
+                                      <i className='ri-close-circle-line' style={{ color: 'var(--mui-palette-error-main)' }} />
                                       No Show
                                     </Box>
                                   </MenuItem>
                                   <MenuItem value='completed'>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <i className='ri-check-double-line' style={{ color: '#2196f3' }} />
+                                      <i className='ri-check-double-line' style={{ color: 'var(--mui-palette-info-main)' }} />
                                       Completed
                                     </Box>
                                   </MenuItem>

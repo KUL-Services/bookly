@@ -9,7 +9,7 @@ export function ProfileHeader() {
         <div className='flex items-center gap-4'>
           <Button variant='text' size='sm' className='p-2' prefixIcon={{ icon: 'lucide:chevron-left' }} />
 
-          <H1 stringProps={{ plainText: 'Bookly' }} className='text-2xl font-bold text-teal-600' />
+          <H1 stringProps={{ plainText: 'Bookly' }} className='text-2xl font-bold text-primary-800' />
         </div>
         <div className='flex items-center gap-4'>
           <span className='text-gray-700'>Hello Aly</span>

@@ -171,7 +171,10 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
                     color='text.secondary'
                     sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
                   >
-                    <i className='ri-heart-fill' style={{ fontSize: '0.75rem', color: '#f44336' }} />
+                    <i
+                      className='ri-heart-fill'
+                      style={{ fontSize: '0.75rem', color: 'var(--mui-palette-customColors-coral)' }}
+                    />
                     Requested by client
                   </Typography>
                 )}

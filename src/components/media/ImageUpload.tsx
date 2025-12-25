@@ -162,7 +162,7 @@ export const ImageUpload = ({
           width: width,
           height: height,
           cursor: disabled ? 'not-allowed' : (currentImageUrl || previewUrl ? 'default' : 'pointer'),
-          border: dragOver ? '2px dashed #1976d2' : '2px dashed #ccc',
+          border: dragOver ? '2px dashed #0a2c24' : '2px dashed #ccc',
           backgroundColor: dragOver ? '#f5f5f5' : 'transparent',
           opacity: disabled ? 0.6 : 1,
           position: 'relative',

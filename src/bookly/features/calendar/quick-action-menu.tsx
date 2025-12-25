@@ -71,8 +71,8 @@ export default function QuickActionMenu({
                 border: theme => `1px solid ${theme.palette.divider}`,
                 '&:hover': {
                   bgcolor: theme => theme.palette.mode === 'dark'
-                    ? 'rgba(20, 184, 166, 0.08)'
-                    : 'rgba(20, 184, 166, 0.04)',
+                    ? 'rgba(10, 44, 36, 0.08)'
+                    : 'rgba(10, 44, 36, 0.04)',
                   borderColor: theme => theme.palette.mode === 'dark'
                     ? 'rgb(20, 184, 166)'
                     : 'rgb(13, 148, 136)'
@@ -89,8 +89,8 @@ export default function QuickActionMenu({
                     alignItems: 'center',
                     justifyContent: 'center',
                     bgcolor: theme => theme.palette.mode === 'dark'
-                      ? 'rgba(20, 184, 166, 0.12)'
-                      : 'rgba(20, 184, 166, 0.08)',
+                      ? 'rgba(10, 44, 36, 0.12)'
+                      : 'rgba(10, 44, 36, 0.08)',
                     color: theme => theme.palette.mode === 'dark'
                       ? 'rgb(20, 184, 166)'
                       : 'rgb(13, 148, 136)'
@@ -121,8 +121,8 @@ export default function QuickActionMenu({
                 border: theme => `1px solid ${theme.palette.divider}`,
                 '&:hover': {
                   bgcolor: theme => theme.palette.mode === 'dark'
-                    ? 'rgba(33, 150, 243, 0.08)'
-                    : 'rgba(33, 150, 243, 0.04)',
+                    ? 'rgba(10, 44, 36, 0.08)'
+                    : 'rgba(10, 44, 36, 0.04)',
                   borderColor: theme => theme.palette.mode === 'dark'
                     ? 'rgb(144, 202, 249)'
                     : 'rgb(25, 118, 210)'
@@ -139,8 +139,8 @@ export default function QuickActionMenu({
                     alignItems: 'center',
                     justifyContent: 'center',
                     bgcolor: theme => theme.palette.mode === 'dark'
-                      ? 'rgba(33, 150, 243, 0.12)'
-                      : 'rgba(33, 150, 243, 0.08)',
+                      ? 'rgba(10, 44, 36, 0.12)'
+                      : 'rgba(10, 44, 36, 0.08)',
                     color: theme => theme.palette.mode === 'dark'
                       ? 'rgb(144, 202, 249)'
                       : 'rgb(25, 118, 210)'

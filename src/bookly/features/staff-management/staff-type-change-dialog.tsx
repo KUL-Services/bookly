@@ -116,7 +116,7 @@ export function StaffTypeChangeDialog({
     <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <i className='ri-alert-line' style={{ color: '#ff9800', fontSize: '1.5rem' }} />
+          <i className='ri-alert-line' style={{ color: 'var(--mui-palette-warning-main)', fontSize: '1.5rem' }} />
           <Typography variant='h6' component='div'>
             Change Staff Type
           </Typography>

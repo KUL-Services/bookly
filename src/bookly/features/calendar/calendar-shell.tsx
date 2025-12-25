@@ -609,9 +609,9 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
             width: selectionOverlay.width,
             height: selectionOverlay.height,
             backgroundColor: theme =>
-              theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.2)' : 'rgba(20, 184, 166, 0.15)',
+              theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.15)',
             border: theme =>
-              theme.palette.mode === 'dark' ? '2px solid rgba(20, 184, 166, 0.5)' : '2px solid rgba(20, 184, 166, 0.6)',
+              theme.palette.mode === 'dark' ? '2px solid rgba(10, 44, 36, 0.5)' : '2px solid rgba(10, 44, 36, 0.6)',
             borderRadius: '8px',
             pointerEvents: 'none',
             zIndex: 1200,

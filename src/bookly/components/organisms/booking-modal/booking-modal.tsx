@@ -289,7 +289,7 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
                   <Button
                     type='submit'
                     variant='text'
-                    className=' bg-teal-500 text-teal-50 shadow-lg border-teal-400 hover:shadow-none hover: border-none hover:bg-transparent'
+                    className=' bg-primary-700 text-white shadow-lg border-teal-400 hover:shadow-none hover: border-none hover:bg-transparent'
                     suffixIcon={{ icon: 'lucide:chevron-right' }}
                     buttonText={{ plainText: 'Go' }}
                   />
@@ -384,7 +384,7 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
                   <Button
                     type='submit'
                     variant='text'
-                    className=' bg-teal-500 text-teal-50 shadow-lg border border-teal-400 hover:shadow-none hover:bg-white'
+                    className=' bg-primary-700 text-white shadow-lg border border-teal-400 hover:shadow-none hover:bg-white'
                     suffixIcon={{ icon: 'lucide:chevron-right' }}
                     buttonText={{ plainText: 'Go' }}
                   />
@@ -426,7 +426,7 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
                   </div>
                   <div className='flex justify-between font-medium text-lg pt-2 border-t'>
                     <span>Total Price:</span>
-                    <span className='text-teal-600'>{servicePrice ? servicePrice : 'No Price'}</span>
+                    <span className='text-primary-800'>{servicePrice ? servicePrice : 'No Price'}</span>
                   </div>
                 </div>
               </CardContent>
@@ -497,7 +497,7 @@ function BookingModal({ isOpen, onClose, serviceName, servicePrice, serviceDurat
                     <Button
                       type='submit'
                       variant='contained'
-                      className=' bg-teal-500 text-teal-50 shadow-lg border border-teal-400 hover:shadow-none hover:bg-white hover:text-gray-900'
+                      className=' bg-primary-700 text-white shadow-lg border border-teal-400 hover:shadow-none hover:bg-white hover:text-gray-900'
                       buttonText={{ plainText: 'Finish' }}
                     />
                   </div>

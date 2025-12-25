@@ -373,7 +373,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                       key={staff.id}
                       className={`flex items-center gap-3 p-4 rounded-lg border transition-all cursor-pointer ${
                         selectedProvider?.id === staff.id
-                          ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/20'
+                          ? 'border-primary-700 bg-primary-100 dark:bg-primary-900/20'
                           : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                     >
@@ -386,13 +386,13 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                             className='w-10 h-10 rounded-full object-cover'
                           />
                         ) : (
-                          <div className='w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-medium'>
+                          <div className='w-10 h-10 rounded-full bg-primary-700 flex items-center justify-center text-white font-medium'>
                             {staff.name.charAt(0)}
                           </div>
                         )}
                         <div>
                           <div className='font-medium text-gray-900 dark:text-white'>{staff.name}</div>
-                          <div className='text-sm text-teal-600 dark:text-teal-400'>
+                          <div className='text-sm text-primary-800 dark:text-sage-400'>
                             {staff.id === 'no-preference' ? 'Highest availability' : 'Available'}
                           </div>
                         </div>
@@ -427,7 +427,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                           }}
                           className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-24 rounded-2xl border-2 transition-all ${
                             isSelected
-                              ? 'border-teal-500 bg-teal-500 text-white'
+                              ? 'border-primary-700 bg-primary-700 text-white'
                               : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                           }`}
                         >
@@ -454,7 +454,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                               onClick={() => setSelectedTime(time)}
                               className={`p-3 rounded-xl border-2 transition-all ${
                                 selectedTime === time
-                                  ? 'border-teal-500 bg-teal-500 text-white'
+                                  ? 'border-primary-700 bg-primary-700 text-white'
                                   : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                               }`}
                             >
@@ -477,7 +477,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                               onClick={() => setSelectedTime(time)}
                               className={`p-3 rounded-xl border-2 transition-all ${
                                 selectedTime === time
-                                  ? 'border-teal-500 bg-teal-500 text-white'
+                                  ? 'border-primary-700 bg-primary-700 text-white'
                                   : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                               }`}
                             >
@@ -542,7 +542,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                   variant='contained'
                   disabled={!canProceedToDetails()}
                   onClick={() => setStep(STEPS.DETAILS)}
-                  className='w-full max-w-md bg-teal-500 hover:bg-teal-600 text-white py-4 rounded-2xl text-lg font-semibold'
+                  className='w-full max-w-md bg-primary-700 hover:bg-primary-800 text-white py-4 rounded-2xl text-lg font-semibold'
                   buttonText={{ plainText: 'Continue' }}
                 />
               </div>
@@ -657,14 +657,14 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                   <Button
                     type='submit'
                     variant='contained'
-                    className='w-full bg-teal-500 hover:bg-teal-600 text-white py-4 rounded-2xl text-lg font-semibold'
+                    className='w-full bg-primary-700 hover:bg-primary-800 text-white py-4 rounded-2xl text-lg font-semibold'
                     buttonText={{ plainText: 'Confirm & Book' }}
                   />
 
                   <div className='text-xs text-gray-500 dark:text-gray-400 text-center'>
                     Your personal data will be handled by the business. You can find more information{' '}
-                    <span className='text-teal-500 cursor-pointer'>here</span>. By clicking "Confirm & Book", you accept
-                    the <span className='text-teal-500 cursor-pointer'>Cancellation Policy</span> and agree that a
+                    <span className='text-primary-700 cursor-pointer'>here</span>. By clicking "Confirm & Book", you accept
+                    the <span className='text-primary-700 cursor-pointer'>Cancellation Policy</span> and agree that a
                     Cancellation Fee or Deposit may be charged to your card if it's violated..
                   </div>
                 </form>
@@ -676,8 +676,8 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
           {step === STEPS.SUCCESS && (
             <div className='text-center py-12 space-y-6'>
               <div className='flex justify-center'>
-                <div className='w-24 h-24 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center'>
-                  <KulIcon icon='lucide:check' className='text-teal-500 w-12 h-12' />
+                <div className='w-24 h-24 rounded-full bg-primary-200 dark:bg-primary-900/30 flex items-center justify-center'>
+                  <KulIcon icon='lucide:check' className='text-primary-700 w-12 h-12' />
                 </div>
               </div>
 
@@ -694,7 +694,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
               <Button
                 variant='contained'
                 onClick={handleDownloadICS}
-                className='w-full max-w-md bg-teal-500 hover:bg-teal-600 text-white py-4 rounded-2xl text-lg font-semibold'
+                className='w-full max-w-md bg-primary-700 hover:bg-primary-800 text-white py-4 rounded-2xl text-lg font-semibold'
                 buttonText={{ plainText: 'Show appointment' }}
               />
             </div>
@@ -717,7 +717,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                 variant='contained'
                 onClick={handleConfirmBooking}
                 disabled={loading}
-                className='bg-teal-500 hover:bg-teal-600 text-white'
+                className='bg-primary-700 hover:bg-primary-800 text-white'
                 buttonText={{ plainText: loading ? 'Processing...' : 'Confirm Booking' }}
               />
             )}

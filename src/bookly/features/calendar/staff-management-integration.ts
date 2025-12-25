@@ -21,8 +21,8 @@ export function timeOffToCalendarEvent(timeOff: TimeOffRequest, staffName: strin
     start,
     end,
     display: 'background',
-    backgroundColor: timeOff.approved ? 'rgba(121, 85, 72, 0.2)' : 'rgba(255, 152, 0, 0.2)',
-    borderColor: timeOff.approved ? '#795548' : '#ff9800',
+    backgroundColor: timeOff.approved ? 'rgba(232, 134, 130, 0.18)' : 'rgba(119, 182, 163, 0.18)',
+    borderColor: timeOff.approved ? '#e88682' : '#77b6a3',
     classNames: ['time-off-event'],
     extendedProps: {
       type: 'timeOff',
@@ -65,8 +65,8 @@ export function reservationToCalendarEvents(
       start: new Date(reservation.start),
       end: new Date(reservation.end),
       display: 'background',
-      backgroundColor: 'rgba(33, 150, 243, 0.15)',
-      borderColor: '#2196f3',
+      backgroundColor: 'rgba(81, 180, 183, 0.18)',
+      borderColor: '#51b4b7',
       classNames: ['time-reservation-event'],
       extendedProps: {
         type: 'reservation',
@@ -98,8 +98,8 @@ export function reservationToCalendarEvents(
       start: new Date(reservation.start),
       end: new Date(reservation.end),
       display: 'background',
-      backgroundColor: 'rgba(33, 150, 243, 0.15)',
-      borderColor: '#2196f3',
+      backgroundColor: 'rgba(81, 180, 183, 0.18)',
+      borderColor: '#51b4b7',
       classNames: ['time-reservation-event'],
       extendedProps: {
         type: 'reservation',

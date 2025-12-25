@@ -157,11 +157,11 @@ export default function MultiRoomDayView({
                     width: { xs: 32, md: 40 },
                     height: { xs: 32, md: 40 },
                     borderRadius: '50%',
-                    bgcolor: '#9E9E9E',
+                    bgcolor: room.color || 'var(--mui-palette-text-disabled)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: 'white',
+                    color: theme.palette.getContrastText(room.color || theme.palette.grey[500]),
                     fontWeight: 600,
                     fontSize: { xs: '0.875rem', md: '1rem' }
                   }}
@@ -245,14 +245,16 @@ export default function MultiRoomDayView({
                           left: 0,
                           right: 0,
                           height: `${height}px`,
-                          bgcolor: isFull ? 'rgba(244, 67, 54, 0.08)' : 'rgba(76, 175, 80, 0.1)',
-                          border: `2px ${isFull ? 'solid' : 'dashed'} ${isFull ? '#F44336' : '#4CAF50'}`,
+                          bgcolor: isFull ? 'var(--mui-palette-error-lightOpacity)' : 'rgba(10, 44, 36, 0.1)',
+                          border: `2px ${isFull ? 'solid' : 'dashed'} ${
+                            isFull ? 'var(--mui-palette-error-main)' : 'var(--mui-palette-success-main)'
+                          }`,
                           borderRadius: 1,
                           p: 1,
                           cursor: available ? 'pointer' : 'not-allowed',
                           transition: 'all 0.2s',
                           '&:hover': available ? {
-                            bgcolor: 'rgba(76, 175, 80, 0.2)',
+                            bgcolor: 'rgba(10, 44, 36, 0.2)',
                             borderStyle: 'solid',
                             transform: 'scale(1.01)'
                           } : {},

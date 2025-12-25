@@ -107,14 +107,14 @@ export const StaffCalendarView = ({ staff, t, showActions = false, showCustomerN
   return (
     <div className='space-y-4'>
       {/* Staff Selector */}
-      <div className='bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 rounded-lg p-4 border border-teal-200 dark:border-teal-700'>
+      <div className='bg-gradient-to-r from-primary-100 to-teal-100 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-lg p-4 border border-primary-200 dark:border-primary-700'>
         <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
           Select Staff Member
         </label>
         <select
           value={selectedStaffId}
           onChange={(e) => setSelectedStaffId(e.target.value)}
-          className='w-full px-4 py-3 rounded-lg border-2 border-teal-300 dark:border-teal-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 transition-all'
+          className='w-full px-4 py-3 rounded-lg border-2 border-primary-300 dark:border-primary-800 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-sage-400 transition-all'
         >
           {staff.map(member => (
             <option key={member.id} value={member.id}>
@@ -176,7 +176,7 @@ export const StaffCalendarView = ({ staff, t, showActions = false, showCustomerN
                   onClick={() => setViewMode('day')}
                   className={`px-4 py-2 text-sm transition-colors ${
                     viewMode === 'day'
-                      ? 'bg-teal-500 text-white'
+                      ? 'bg-primary-700 text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -186,7 +186,7 @@ export const StaffCalendarView = ({ staff, t, showActions = false, showCustomerN
                   onClick={() => setViewMode('week')}
                   className={`px-4 py-2 text-sm transition-colors border-s border-gray-300 dark:border-gray-600 ${
                     viewMode === 'week'
-                      ? 'bg-teal-500 text-white'
+                      ? 'bg-primary-700 text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
@@ -211,7 +211,7 @@ export const StaffCalendarView = ({ staff, t, showActions = false, showCustomerN
                     <div
                       key={index}
                       className={`p-3 text-center border-s border-gray-200 dark:border-gray-600 ${
-                        isToday ? 'bg-teal-50 dark:bg-teal-900/20' : 'bg-gray-50 dark:bg-gray-700'
+                        isToday ? 'bg-primary-100 dark:bg-primary-900/20' : 'bg-gray-50 dark:bg-gray-700'
                       }`}
                     >
                       <div className='text-xs text-gray-500 dark:text-gray-400'>
@@ -220,7 +220,7 @@ export const StaffCalendarView = ({ staff, t, showActions = false, showCustomerN
                       <div
                         className={`text-lg font-semibold ${
                           isToday
-                            ? 'text-teal-600 dark:text-teal-400'
+                            ? 'text-primary-800 dark:text-sage-400'
                             : 'text-gray-900 dark:text-gray-100'
                         }`}
                       >
@@ -313,7 +313,7 @@ export const StaffCalendarView = ({ staff, t, showActions = false, showCustomerN
                     })()}
                   </div>
                   <div className='text-right'>
-                    <div className='text-2xl font-bold text-teal-600 dark:text-teal-400'>
+                    <div className='text-2xl font-bold text-primary-800 dark:text-sage-400'>
                       {getAppointmentsForDate(selectedDate).filter(a => a.status !== 'cancelled').length}
                     </div>
                     <div className='text-xs text-gray-500 dark:text-gray-400'>

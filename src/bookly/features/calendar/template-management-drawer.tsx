@@ -140,7 +140,7 @@ export default function TemplateManagementDrawer() {
                   width: 80,
                   height: 80,
                   borderRadius: '50%',
-                  bgcolor: isDark ? 'rgba(144,202,249,0.1)' : 'rgba(25,118,210,0.1)',
+                  bgcolor: isDark ? 'rgba(10, 44, 36, 0.1)' : 'rgba(10, 44, 36, 0.1)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'

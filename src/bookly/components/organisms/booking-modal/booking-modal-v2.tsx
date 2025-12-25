@@ -272,7 +272,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                       onClick={() => setSelectedDate(date)}
                       className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[80px] h-24 rounded-2xl border-2 transition-all ${
                         isSelected
-                          ? 'border-teal-500 bg-teal-500 text-white'
+                          ? 'border-primary-700 bg-primary-700 text-white'
                           : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
                       }`}
                     >
@@ -316,7 +316,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                 {availableTimeSlots.map(time => (
                   <button
                     key={time}
-                    className='flex-shrink-0 min-w-[100px] py-3 px-4 rounded-xl border-2 border-teal-500 bg-teal-500 text-white hover:bg-teal-600 transition-all'
+                    className='flex-shrink-0 min-w-[100px] py-3 px-4 rounded-xl border-2 border-primary-700 bg-primary-700 text-white hover:bg-primary-800 transition-all'
                   >
                     {time}
                   </button>
@@ -355,7 +355,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                     </div>
                     <button
                       onClick={() => setShowStaffSelector(selected.id)}
-                      className='text-teal-600 hover:text-teal-700 font-medium'
+                      className='text-primary-800 hover:text-primary-900 font-medium'
                     >
                       Change
                     </button>
@@ -373,7 +373,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                           {staff.profilePhotoUrl ? (
                             <img src={staff.profilePhotoUrl} alt={staff.name} className='w-10 h-10 rounded-full' />
                           ) : (
-                            <div className='w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white'>
+                            <div className='w-10 h-10 rounded-full bg-primary-700 flex items-center justify-center text-white'>
                               {staff.name.charAt(0)}
                             </div>
                           )}
@@ -389,7 +389,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
             {/* Add Another Service */}
             <button
               onClick={() => setShowServiceSelector(true)}
-              className='w-full py-3 border-2 border-dashed border-teal-500 rounded-xl text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 flex items-center justify-center gap-2'
+              className='w-full py-3 border-2 border-dashed border-primary-700 rounded-xl text-primary-800 hover:bg-primary-100 dark:hover:bg-primary-900/20 flex items-center justify-center gap-2'
             >
               <KulIcon icon='lucide:plus' />
               Add another service
@@ -402,7 +402,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                   <h3 className='text-xl font-bold mb-4'>Select Service</h3>
                   <div className='space-y-3'>
                     {availableServices.map(service => (
-                      <div key={service.id} className='border rounded-lg p-4 hover:border-teal-500 cursor-pointer'>
+                      <div key={service.id} className='border rounded-lg p-4 hover:border-primary-700 cursor-pointer'>
                         <div className='flex justify-between items-start mb-2'>
                           <div>
                             <div className='font-semibold'>{service.name}</div>
@@ -416,7 +416,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                             <button
                               key={time}
                               onClick={() => handleAddService(service, 'no-preference', time)}
-                              className='px-3 py-1 bg-teal-500 text-white rounded-lg text-sm hover:bg-teal-600'
+                              className='px-3 py-1 bg-primary-700 text-white rounded-lg text-sm hover:bg-primary-800'
                             >
                               {time}
                             </button>
@@ -448,7 +448,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                   </div>
                   <button
                     onClick={() => setCurrentStep('details')}
-                    className='bg-teal-500 hover:bg-teal-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold'
+                    className='bg-primary-700 hover:bg-primary-800 text-white px-8 py-4 rounded-2xl text-lg font-semibold'
                   >
                     Continue
                   </button>
@@ -547,7 +547,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                 <button
                   type='submit'
                   disabled={loading}
-                  className='w-full bg-teal-500 hover:bg-teal-600 text-white py-4 rounded-2xl text-lg font-semibold disabled:opacity-50'
+                  className='w-full bg-primary-700 hover:bg-primary-800 text-white py-4 rounded-2xl text-lg font-semibold disabled:opacity-50'
                 >
                   {loading ? 'Processing...' : 'Confirm & Book'}
                 </button>
@@ -560,8 +560,8 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
         {currentStep === 'success' && (
           <div className='p-12 text-center space-y-6'>
             <div className='flex justify-center'>
-              <div className='w-24 h-24 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center'>
-                <KulIcon icon='lucide:check' className='w-12 h-12 text-teal-500' />
+              <div className='w-24 h-24 rounded-full bg-primary-200 dark:bg-primary-900/30 flex items-center justify-center'>
+                <KulIcon icon='lucide:check' className='w-12 h-12 text-primary-700' />
               </div>
             </div>
 
@@ -575,7 +575,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
 
             <button
               onClick={handleDownloadICS}
-              className='w-full max-w-md mx-auto bg-teal-500 hover:bg-teal-600 text-white py-4 rounded-2xl text-lg font-semibold'
+              className='w-full max-w-md mx-auto bg-primary-700 hover:bg-primary-800 text-white py-4 rounded-2xl text-lg font-semibold'
             >
               Show appointment
             </button>

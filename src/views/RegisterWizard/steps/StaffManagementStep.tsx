@@ -23,8 +23,8 @@ import OutlinedInput from '@mui/material/OutlinedInput'
 import type { StepProps, StaffMember } from '../types'
 
 const STAFF_COLORS = [
-  '#1976d2', '#d32f2f', '#388e3c', '#f57c00', '#7b1fa2',
-  '#c2185b', '#0288d1', '#689f38', '#e64a19', '#5e35b1'
+  '#0a2c24', '#77b6a3', '#51b4b7', '#e88682', '#202c39',
+  '#1d7460', '#3d4a5a', '#c9a47b', '#8b9ba8', '#6d8f82'
 ]
 
 const StaffManagementStep = ({
@@ -204,7 +204,7 @@ const StaffManagementStep = ({
               <Box className="flex items-center gap-3 flex-1">
                 <div
                   className="flex items-center justify-center w-10 h-10 rounded-full text-white font-medium"
-                  style={{ backgroundColor: staff.color || '#1976d2' }}
+                  style={{ backgroundColor: staff.color || '#0a2c24' }}
                 >
                   {staff.name.charAt(0).toUpperCase()}
                 </div>

@@ -29,23 +29,23 @@ function ProfileInfo() {
                 <span>Member since June 2023</span>
               </div>
             </div>
-            <Button buttonText={{ plainText: 'Edit Profile' }} className='bg-teal-500 hover:bg-teal-600 text-white' />
+            <Button buttonText={{ plainText: 'Edit Profile' }} className='bg-primary-700 hover:bg-primary-800 text-white' />
           </div>
 
           <div className='flex flex-wrap gap-8 pt-4'>
             <div className='text-center'>
-              <div className='text-3xl font-bold text-teal-500'>12</div>
+              <div className='text-3xl font-bold text-primary-700'>12</div>
               <div className='text-sm text-gray-600'>Total Bookings</div>
             </div>
             <div className='text-center'>
-              <div className='text-3xl font-bold text-teal-500'>2</div>
+              <div className='text-3xl font-bold text-primary-700'>2</div>
               <div className='text-sm text-gray-600'>Favorites</div>
             </div>
             <div className='text-center'>
               <div className='flex items-center justify-center gap-1'>
                 <KulIcon icon={'lucide:star'} iconClass='h-5 w-5 fill-yellow-400 text-yellow-400' />
 
-                <span className='text-3xl font-bold text-teal-500'>4.8</span>
+                <span className='text-3xl font-bold text-primary-700'>4.8</span>
               </div>
               <div className='text-sm text-gray-600'>Avg Rating</div>
             </div>

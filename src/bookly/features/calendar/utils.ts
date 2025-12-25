@@ -107,20 +107,20 @@ export function mapBookingToEvent(booking: Booking, staffId: string = '1', starr
  */
 export const colorSchemes = {
   vivid: {
-    confirmed: { bg: '#3b82f6', border: '#2563eb', text: '#ffffff' },
-    pending: { bg: '#f59e0b', border: '#d97706', text: '#ffffff' },
-    completed: { bg: '#9ca3af', border: '#6b7280', text: '#ffffff' },
-    cancelled: { bg: '#ef4444', border: '#dc2626', text: '#ffffff' },
-    need_confirm: { bg: '#22c55e', border: '#16a34a', text: '#ffffff' },
-    no_show: { bg: '#f43f5e', border: '#e11d48', text: '#ffffff' }
+    confirmed: { bg: '#51b4b7', border: '#3d9598', text: '#f7f8f9' },
+    pending: { bg: '#202c39', border: '#141c27', text: '#f7f8f9' },
+    completed: { bg: '#77b6a3', border: '#5a9a87', text: '#0a2c24' },
+    cancelled: { bg: '#e88682', border: '#d56560', text: '#0a2c24' },
+    need_confirm: { bg: '#0a2c24', border: '#051612', text: '#f7f8f9' },
+    no_show: { bg: '#3d4a5a', border: '#202c39', text: '#f7f8f9' }
   },
   pastel: {
-    confirmed: { bg: '#93c5fd', border: '#60a5fa', text: '#1e3a8a' },
-    pending: { bg: '#fcd34d', border: '#fbbf24', text: '#78350f' },
-    completed: { bg: '#d1d5db', border: '#9ca3af', text: '#1f2937' },
-    cancelled: { bg: '#fca5a5', border: '#f87171', text: '#7f1d1d' },
-    need_confirm: { bg: '#86efac', border: '#4ade80', text: '#14532d' },
-    no_show: { bg: '#fda4af', border: '#fb7185', text: '#881337' }
+    confirmed: { bg: 'rgba(81, 180, 183, 0.2)', border: '#51b4b7', text: '#0a2c24' },
+    pending: { bg: 'rgba(32, 44, 57, 0.18)', border: '#202c39', text: '#0a2c24' },
+    completed: { bg: 'rgba(119, 182, 163, 0.2)', border: '#77b6a3', text: '#0a2c24' },
+    cancelled: { bg: 'rgba(232, 134, 130, 0.2)', border: '#e88682', text: '#0a2c24' },
+    need_confirm: { bg: 'rgba(10, 44, 36, 0.2)', border: '#0a2c24', text: '#0a2c24' },
+    no_show: { bg: 'rgba(61, 74, 90, 0.18)', border: '#3d4a5a', text: '#0a2c24' }
   }
 }
 

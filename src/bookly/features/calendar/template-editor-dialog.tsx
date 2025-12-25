@@ -317,7 +317,7 @@ export default function TemplateEditorDialog({
                         borderColor: editingSlot?.id === slot.id ? 'primary.main' : 'divider',
                         borderRadius: 1,
                         bgcolor: editingSlot?.id === slot.id
-                          ? (isDark ? 'rgba(144,202,249,0.08)' : 'rgba(25,118,210,0.08)')
+                          ? (isDark ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.08)')
                           : 'background.paper',
                         display: 'flex',
                         alignItems: 'center',
@@ -353,7 +353,7 @@ export default function TemplateEditorDialog({
                 border: 1,
                 borderColor: 'primary.main',
                 borderRadius: 1,
-                bgcolor: isDark ? 'rgba(144,202,249,0.05)' : 'rgba(25,118,210,0.05)'
+                bgcolor: isDark ? 'rgba(10, 44, 36, 0.05)' : 'rgba(10, 44, 36, 0.05)'
               }}
             >
               <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>

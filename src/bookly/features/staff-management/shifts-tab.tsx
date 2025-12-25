@@ -72,13 +72,13 @@ function PrintStyles() {
 
         #print-content th,
         #print-content td {
-          border: 1px solid #ddd;
+          border: 1px solid var(--mui-palette-divider);
           padding: 8px;
           text-align: left;
         }
 
         #print-content th {
-          background-color: #f5f5f5;
+          background-color: var(--mui-palette-customColors-tableHeaderBg);
           font-weight: 600;
         }
       }
@@ -216,7 +216,7 @@ function DraggableShift({
         right: 0,
         top: 0,
         bottom: 0,
-        bgcolor: 'rgba(139, 195, 74, 0.3)',
+        bgcolor: 'rgba(10, 44, 36, 0.3)',
         borderRadius: 1,
         display: 'flex',
         alignItems: 'center',
@@ -817,7 +817,7 @@ export function ShiftsTab() {
                               fontWeight={600}
                               display='block'
                               gutterBottom
-                              sx={{ fontSize: '0.75rem', color: '#fff' }}
+                              sx={{ fontSize: '0.75rem', color: 'var(--mui-palette-common-white)' }}
                             >
                               Static Staff / Rooms
                             </Typography>
@@ -837,7 +837,7 @@ export function ShiftsTab() {
                               fontWeight={600}
                               display='block'
                               gutterBottom
-                              sx={{ fontSize: '0.75rem', color: '#fff' }}
+                              sx={{ fontSize: '0.75rem', color: 'var(--mui-palette-common-white)' }}
                             >
                               Dynamic Staff
                             </Typography>
@@ -967,7 +967,7 @@ export function ShiftsTab() {
                       height: shifts.length > 1 ? `${Math.floor(90 / shifts.length)}%` : '100%',
                       bgcolor:
                         staffTypeForDate === 'dynamic'
-                          ? 'rgba(139, 195, 74, 0.3)'
+                          ? 'rgba(10, 44, 36, 0.3)'
                           : theme =>
                               theme.palette.mode === 'dark' ? 'rgba(120, 120, 120, 0.3)' : 'rgba(158, 158, 158, 0.25)',
                       borderRadius: 1,
@@ -1116,7 +1116,7 @@ export function ShiftsTab() {
                 right: 0,
                 top: 0,
                 bottom: 0,
-                bgcolor: '#424242',
+                bgcolor: 'secondary.dark',
                 borderRadius: 1,
                 display: 'flex',
                 alignItems: 'center',
@@ -1124,11 +1124,11 @@ export function ShiftsTab() {
                 cursor: 'pointer',
                 transition: 'all 0.2s',
                 '&:hover': {
-                  bgcolor: '#333333'
+                  bgcolor: 'secondary.main'
                 }
               }}
             >
-              <Typography variant='body2' sx={{ color: '#fff' }} fontWeight={500}>
+              <Typography variant='body2' sx={{ color: 'secondary.contrastText' }} fontWeight={500}>
                 {timeOff.reason} (9h)
               </Typography>
             </Box>
@@ -1235,7 +1235,7 @@ export function ShiftsTab() {
                       }}
                       sx={{
                         flex: 1,
-                        bgcolor: isOpen ? 'rgba(139, 195, 74, 0.2)' : '#424242',
+                        bgcolor: isOpen ? 'rgba(10, 44, 36, 0.2)' : 'secondary.dark',
                         m: 1,
                         borderRadius: 1,
                         display: 'flex',
@@ -1247,7 +1247,7 @@ export function ShiftsTab() {
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                         '&:hover': {
-                          bgcolor: isOpen ? 'rgba(139, 195, 74, 0.3)' : '#333333'
+                          bgcolor: isOpen ? 'rgba(10, 44, 36, 0.3)' : 'secondary.main'
                         }
                       }}
                     >
@@ -1263,7 +1263,7 @@ export function ShiftsTab() {
                           )}
                         </Box>
                       ) : (
-                        <Typography variant='body2' sx={{ color: '#fff' }}>
+                        <Typography variant='body2' sx={{ color: 'secondary.contrastText' }}>
                           Closed
                         </Typography>
                       )}
@@ -1278,7 +1278,11 @@ export function ShiftsTab() {
                           })
                           setIsBusinessHoursDayEditorOpen(true)
                         }}
-                        sx={{ position: 'absolute', right: 8, color: isOpen ? 'text.primary' : '#fff' }}
+                        sx={{
+                          position: 'absolute',
+                          right: 8,
+                          color: isOpen ? 'text.primary' : 'secondary.contrastText'
+                        }}
                       >
                         <i className='ri-edit-line' style={{ fontSize: 16 }} />
                       </IconButton>
@@ -1389,7 +1393,7 @@ export function ShiftsTab() {
                                   gap: 1
                                 }}
                               >
-                                <i className='ri-user-line' style={{ fontSize: 14, color: '#1976d2' }} />
+                                <i className='ri-user-line' style={{ fontSize: 14, color: '#0a2c24' }} />
                                 <Typography variant='caption' fontWeight={600} color='primary'>
                                   Dynamic Staff
                                 </Typography>
@@ -1417,7 +1421,7 @@ export function ShiftsTab() {
                                   gap: 1
                                 }}
                               >
-                                <i className='ri-group-line' style={{ fontSize: 14, color: '#757575' }} />
+                                <i className='ri-group-line' style={{ fontSize: 14, color: 'var(--mui-palette-text-secondary)' }} />
                                 <Typography variant='caption' fontWeight={600} color='text.secondary'>
                                   Static Staff / Rooms
                                 </Typography>
@@ -1559,16 +1563,16 @@ export function ShiftsTab() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                 <thead>
                   <tr>
-                    <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f5f5f5' }}>
+                    <th style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', backgroundColor: 'var(--mui-palette-customColors-tableHeaderBg)' }}>
                       Staff Member
                     </th>
                     {weekDates.map((date, idx) => (
                       <th
                         key={idx}
                         style={{
-                          border: '1px solid #ddd',
+                          border: '1px solid var(--mui-palette-divider)',
                           padding: '8px',
-                          backgroundColor: '#f5f5f5',
+                          backgroundColor: 'var(--mui-palette-customColors-tableHeaderBg)',
                           textAlign: 'center'
                         }}
                       >
@@ -1582,13 +1586,13 @@ export function ShiftsTab() {
                 <tbody>
                   {displayStaff.map(staff => (
                     <tr key={staff.id}>
-                      <td style={{ border: '1px solid #ddd', padding: '8px', fontWeight: 600 }}>{staff.name}</td>
+                      <td style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', fontWeight: 600 }}>{staff.name}</td>
                       {weekDates.map((date, idx) => {
                         const timeOff = timeOffRequests.find(
                           req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
                         )
                         return (
-                          <td key={idx} style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                          <td key={idx} style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', textAlign: 'center' }}>
                             {timeOff ? (
                               <Box>
                                 <Typography variant='caption' display='block' fontWeight={500}>
@@ -1617,7 +1621,7 @@ export function ShiftsTab() {
               </table>
 
               {/* Footer */}
-              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #ddd', display: 'flex', justifyContent: 'space-between' }}>
+              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid var(--mui-palette-divider)', display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant='caption' color='text.secondary'>
                   {new Date().toLocaleDateString()}
                 </Typography>
@@ -1848,7 +1852,7 @@ export function ShiftsTab() {
                                   gap: 0.5
                                 }}
                               >
-                                <i className='ri-user-line' style={{ fontSize: 12, color: '#1976d2' }} />
+                                <i className='ri-user-line' style={{ fontSize: 12, color: '#0a2c24' }} />
                                 <Typography variant='caption' fontWeight={600} fontSize='0.65rem' color='primary'>
                                   Dynamic
                                 </Typography>
@@ -1917,7 +1921,7 @@ export function ShiftsTab() {
                                   gap: 0.5
                                 }}
                               >
-                                <i className='ri-group-line' style={{ fontSize: 12, color: '#757575' }} />
+                                <i className='ri-group-line' style={{ fontSize: 12, color: 'var(--mui-palette-text-secondary)' }} />
                                 <Typography
                                   variant='caption'
                                   fontWeight={600}
@@ -1994,7 +1998,7 @@ export function ShiftsTab() {
                   flexShrink: 0,
                   borderRight: 1,
                   borderColor: 'divider',
-                  bgcolor: isSelected ? 'rgba(20, 184, 166, 0.05)' : 'transparent'
+                  bgcolor: isSelected ? 'rgba(10, 44, 36, 0.05)' : 'transparent'
                 }}
               >
                 <Box
@@ -2063,7 +2067,7 @@ export function ShiftsTab() {
                           sx={{
                             width: '100%',
                             height: '100%',
-                            bgcolor: isOpen ? 'rgba(139, 195, 74, 0.2)' : 'grey.900',
+                            bgcolor: isOpen ? 'rgba(10, 44, 36, 0.2)' : 'grey.900',
                             borderRadius: 1,
                             display: 'flex',
                             flexDirection: 'column',
@@ -2075,7 +2079,7 @@ export function ShiftsTab() {
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             '&:hover': {
-                              bgcolor: isOpen ? 'rgba(139, 195, 74, 0.3)' : 'grey.800'
+                              bgcolor: isOpen ? 'rgba(10, 44, 36, 0.3)' : 'grey.800'
                             }
                           }}
                         >
@@ -2219,7 +2223,7 @@ export function ShiftsTab() {
                                           width: '100%',
                                           height: shifts.length > 1 ? `calc(${100 / shifts.length}% - 4px)` : '100%',
                                           mb: shifts.length > 1 && idx < shifts.length - 1 ? 0.5 : 0,
-                                          bgcolor: 'rgba(139, 195, 74, 0.3)',
+                                          bgcolor: 'rgba(10, 44, 36, 0.3)',
                                           borderRadius: 1,
                                           display: 'flex',
                                           flexDirection: 'column',
@@ -2445,7 +2449,7 @@ export function ShiftsTab() {
                                       <Typography
                                         variant='caption'
                                         sx={{
-                                          color: '#fff',
+                                          color: 'var(--mui-palette-common-white)',
                                           fontSize: '0.65rem',
                                           fontWeight: 500,
                                           display: 'block',
@@ -2576,7 +2580,7 @@ export function ShiftsTab() {
                                           width: '100%',
                                           height: shifts.length > 1 ? `calc(${100 / shifts.length}% - 4px)` : '100%',
                                           mb: shifts.length > 1 && idx < shifts.length - 1 ? 0.5 : 0,
-                                          bgcolor: 'rgba(139, 195, 74, 0.3)',
+                                          bgcolor: 'rgba(10, 44, 36, 0.3)',
                                           borderRadius: 1,
                                           display: 'flex',
                                           flexDirection: 'column',
@@ -2802,7 +2806,7 @@ export function ShiftsTab() {
                                       <Typography
                                         variant='caption'
                                         sx={{
-                                          color: '#fff',
+                                          color: 'var(--mui-palette-common-white)',
                                           fontSize: '0.65rem',
                                           fontWeight: 500,
                                           display: 'block',
@@ -3004,14 +3008,14 @@ export function ShiftsTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
             <thead>
               <tr>
-                <th style={{ border: '1px solid #ddd', padding: '8px', backgroundColor: '#f5f5f5' }}>Staff Member</th>
+                <th style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', backgroundColor: 'var(--mui-palette-customColors-tableHeaderBg)' }}>Staff Member</th>
                 {weekDates.map((date, idx) => (
                   <th
                     key={idx}
                     style={{
-                      border: '1px solid #ddd',
+                      border: '1px solid var(--mui-palette-divider)',
                       padding: '8px',
-                      backgroundColor: '#f5f5f5',
+                      backgroundColor: 'var(--mui-palette-customColors-tableHeaderBg)',
                       textAlign: 'center'
                     }}
                   >
@@ -3025,13 +3029,13 @@ export function ShiftsTab() {
             <tbody>
               {displayStaff.map(staff => (
                 <tr key={staff.id}>
-                  <td style={{ border: '1px solid #ddd', padding: '8px', fontWeight: 600 }}>{staff.name}</td>
+                  <td style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', fontWeight: 600 }}>{staff.name}</td>
                   {weekDates.map((date, idx) => {
                     const timeOff = timeOffRequests.find(
                       req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
                     )
                     return (
-                      <td key={idx} style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>
+                      <td key={idx} style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', textAlign: 'center' }}>
                         {timeOff ? (
                           <Box>
                             <Typography variant='caption' display='block' fontWeight={500}>
@@ -3060,7 +3064,7 @@ export function ShiftsTab() {
           </table>
 
           {/* Footer */}
-          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #ddd', display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid var(--mui-palette-divider)', display: 'flex', justifyContent: 'space-between' }}>
             <Typography variant='caption' color='text.secondary'>
               {new Date().toLocaleDateString()}
             </Typography>

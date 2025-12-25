@@ -6,7 +6,7 @@ interface InputProps extends React.ComponentProps<'input'> {
   focusColor?: string
 }
 
-function Input({ className, type, focusColor = '#4caf50', ...props }: InputProps) {
+function Input({ className, type, focusColor = 'var(--mui-palette-primary-main)', ...props }: InputProps) {
   return (
     <input
       type={type}

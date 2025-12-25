@@ -23,12 +23,12 @@ interface BranchMarker extends BusinessBranch {
 
 // Custom marker SVG path for pin icon (similar to previous implementation)
 const createMarkerIcon = (isSelected: boolean, isHovered: boolean) => {
-  const color = isSelected || isHovered ? '#14b8a6' : '#6366f1'
+  const color = isSelected || isHovered ? '#0a2c24' : '#202c39'
   return {
     path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
     fillColor: color,
     fillOpacity: 1,
-    strokeColor: '#ffffff',
+    strokeColor: '#f7f8f9',
     strokeWeight: 2,
     scale: 1.5,
     anchor: new google.maps.Point(12, 22)
@@ -208,7 +208,7 @@ export function BusinessMapImpl({
                     {/* Branch & Business Header */}
                     <div className='mb-3'>
                       <h3 className='font-bold text-lg text-gray-900 mb-1'>{business.name}</h3>
-                      <p className='text-sm text-teal-600 font-semibold mb-2'>{marker.branchName}</p>
+                      <p className='text-sm text-primary-800 font-semibold mb-2'>{marker.branchName}</p>
                       <div className='flex items-center gap-2 text-sm text-gray-600 mb-2'>
                         <div className='flex items-center gap-1'>
                           <span className='text-yellow-500'>★</span>
@@ -247,7 +247,7 @@ export function BusinessMapImpl({
                     )}
 
                     {/* Price Range */}
-                    <div className='text-sm font-semibold text-teal-600 mb-3'>
+                    <div className='text-sm font-semibold text-primary-800 mb-3'>
                       ${business.priceRange.min} - ${business.priceRange.max}
                     </div>
 
@@ -256,7 +256,7 @@ export function BusinessMapImpl({
                       {business.categories.slice(0, 3).map((category, idx) => (
                         <span
                           key={idx}
-                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-teal-100 text-teal-800'
+                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-200 text-primary-900'
                         >
                           {category}
                         </span>
@@ -269,7 +269,7 @@ export function BusinessMapImpl({
                         e.stopPropagation()
                         onBookNow?.(business.id)
                       }}
-                      className='w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg'
+                      className='w-full bg-gradient-to-r from-primary-700 to-cyan-500 hover:from-primary-800 hover:to-cyan-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg'
                     >
                       Book Now
                     </button>
