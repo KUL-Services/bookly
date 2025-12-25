@@ -140,6 +140,7 @@ const initialHighlights: HighlightFilters = {
   payments: [],
   statuses: [],
   selection: [],
+  bookedBy: [],
   details: []
 }
 

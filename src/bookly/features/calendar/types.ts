@@ -13,6 +13,8 @@ export type PaymentStatus = 'paid' | 'unpaid'
 
 export type SelectionMethod = 'by_client' | 'automatically'
 
+export type BookedBy = 'business' | 'client'
+
 export type SchedulingMode = 'static' | 'dynamic'
 
 export type DayOfWeek = 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'
@@ -163,6 +165,7 @@ export interface HighlightFilters {
   payments: PaymentStatus[]
   statuses: AppointmentStatus[]
   selection: SelectionMethod[]
+  bookedBy: BookedBy[]
   details: ('starred' | 'unstarred')[]
 }
 

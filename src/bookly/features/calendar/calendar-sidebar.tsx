@@ -25,7 +25,7 @@ import {
 import { mockBusinesses, mockStaff } from '@/bookly/data/mock-data'
 import { useCalendarStore } from './state'
 
-import type { AppointmentStatus, BranchFilter, HighlightFilters, PaymentStatus, RoomFilter, SelectionMethod, StaffFilter } from './types'
+import type { AppointmentStatus, BookedBy, BranchFilter, HighlightFilters, PaymentStatus, RoomFilter, SelectionMethod, StaffFilter } from './types'
 
 interface CalendarSidebarProps {
   currentDate: Date
@@ -75,7 +75,11 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     setPendingBranches(branchFilters)
     setPendingStaff(staffFilters)
     setPendingRooms(roomFilters)
-    setPendingHighlights(highlights)
+    // Ensure bookedBy field exists for backwards compatibility
+    setPendingHighlights({
+      ...highlights,
+      bookedBy: highlights.bookedBy || []
+    })
   }, [branchFilters, staffFilters, roomFilters, highlights])
 
   // Get branches from mock data with staff counts
@@ -214,6 +218,16 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     applyFilters(pendingBranches, pendingStaff, pendingRooms, newHighlights)
   }
 
+  const handleBookedByToggle = (bookedBy: BookedBy) => {
+    const currentBookedBy = pendingHighlights.bookedBy || []
+    const newBookedBy = currentBookedBy.includes(bookedBy)
+      ? currentBookedBy.filter(b => b !== bookedBy)
+      : [...currentBookedBy, bookedBy]
+    const newHighlights = { ...pendingHighlights, bookedBy: newBookedBy }
+    setPendingHighlights(newHighlights)
+    applyFilters(pendingBranches, pendingStaff, pendingRooms, newHighlights)
+  }
+
   const handleDetailToggle = (detail: 'starred' | 'unstarred') => {
     const newDetails = pendingHighlights.details.includes(detail)
       ? pendingHighlights.details.filter(d => d !== detail)
@@ -292,7 +306,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
       availableNow: false
     }
     const clearedRooms: RoomFilter = { allRooms: true, roomIds: [], availableNow: false, availableToday: false }
-    const clearedHighlights: HighlightFilters = { payments: [], statuses: [], selection: [], details: [] }
+    const clearedHighlights: HighlightFilters = { payments: [], statuses: [], selection: [], bookedBy: [], details: [] }
     setPendingBranches(clearedBranches)
     setPendingStaff(cleared)
     setPendingRooms(clearedRooms)
@@ -773,6 +787,31 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                   />
                 }
                 label={<Typography variant='body2'>Automatically</Typography>}
+              />
+            </FormGroup>
+
+            {/* Appointment Done By */}
+            <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1, mt: 2 }}>
+              Appointment done by
+            </Typography>
+            <FormGroup sx={{ mb: 2 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingHighlights.bookedBy?.includes('business') || false}
+                    onChange={() => handleBookedByToggle('business')}
+                  />
+                }
+                label={<Typography variant='body2'>Business</Typography>}
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pendingHighlights.bookedBy?.includes('client') || false}
+                    onChange={() => handleBookedByToggle('client')}
+                  />
+                }
+                label={<Typography variant='body2'>Client</Typography>}
               />
             </FormGroup>
 
