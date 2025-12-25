@@ -492,6 +492,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                 </Button>
                 {availableStaff.map(staff => {
                   const branch = branches.find(b => b.id === staff.branchId)
+                  const initials = staff.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
                   return (
                     <FormControlLabel
                       key={staff.id}
@@ -504,7 +505,19 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                       }
                       label={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
-                          <Avatar src={staff.photo} alt={staff.name} sx={{ width: 24, height: 24 }} />
+                          <Avatar
+                            alt={staff.name}
+                            sx={{
+                              width: 24,
+                              height: 24,
+                              bgcolor: staff.color || 'primary.main',
+                              color: '#fff',
+                              fontSize: '0.65rem',
+                              fontWeight: 600
+                            }}
+                          >
+                            {initials}
+                          </Avatar>
                           <Typography variant='body2'>{staff.name}</Typography>
                           {branch && (
                             <Chip
@@ -613,6 +626,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                 </Button>
                 {availableRooms.map(room => {
                   const branch = branches.find(b => b.id === room.branchId)
+                  const initials = room.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
                   return (
                     <FormControlLabel
                       key={room.id}
@@ -624,15 +638,19 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                       }
                       label={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%' }}>
-                          <Box
+                          <Avatar
+                            alt={room.name}
                             sx={{
-                              width: 16,
-                              height: 16,
-                              borderRadius: '50%',
+                              width: 24,
+                              height: 24,
                               bgcolor: room.color || 'var(--mui-palette-text-disabled)',
-                              flexShrink: 0
+                              color: '#fff',
+                              fontSize: '0.65rem',
+                              fontWeight: 600
                             }}
-                          />
+                          >
+                            {initials}
+                          </Avatar>
                           <Typography variant='body2'>{room.name}</Typography>
                           {branch && (
                             <Chip

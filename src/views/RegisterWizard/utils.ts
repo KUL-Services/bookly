@@ -140,8 +140,8 @@ export const getInitialFormData = (): BusinessRegistrationData => ({
   staffCount: '',
   servicesOffered: [],
 
-  // Scheduling Mode (NEW)
-  schedulingMode: '',
+  // Scheduling Mode (Always dynamic)
+  schedulingMode: 'dynamic',
 
   // Location & Branches (ENHANCED)
   hasMultipleBranches: false,

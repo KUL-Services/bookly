@@ -178,7 +178,9 @@ const Login = ({ mode }: { mode: Mode }) => {
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           <div className='text-center sm:text-left'>
             <Typography variant='h4' className='mb-2'>{`Welcome to ${themeConfig.templateName}!👋🏻`}</Typography>
-            <Typography className='text-sm sm:text-base'>Please sign-in to your account and start the adventure</Typography>
+            <Typography className='text-sm sm:text-base'>
+              Please sign-in to your account and start the adventure
+            </Typography>
           </div>
           <Alert icon={false} className='bg-[var(--mui-palette-primary-lightOpacity)]'>
             <Typography variant='body2' color='primary' className='text-sm'>
@@ -270,7 +272,7 @@ const Login = ({ mode }: { mode: Mode }) => {
             <Button fullWidth variant='contained' type='submit' disabled={loading}>
               {loading ? (
                 <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
                   Signing in...
                 </>
               ) : (

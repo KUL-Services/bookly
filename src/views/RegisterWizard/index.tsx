@@ -36,7 +36,8 @@ import InitialTemplatesStep from './steps/InitialTemplatesStep'
 import LegalStep from './steps/LegalStep'
 import RegistrationSuccess from './RegistrationSuccess'
 
-const baseSteps: StepConfig[] = [
+// Dynamic mode only - simplified flow without rooms/templates
+const registrationSteps: StepConfig[] = [
   {
     icon: 'ri-user-line',
     title: 'Account',
@@ -50,29 +51,11 @@ const baseSteps: StepConfig[] = [
     image: '/images/booksy-biz/step-3.jpeg'
   },
   {
-    icon: 'ri-calendar-line',
-    title: 'Scheduling',
-    subtitle: 'Choose mode',
-    image: '/images/booksy-biz/step-3.jpeg'
-  },
-  {
     icon: 'ri-map-pin-line',
     title: 'Location',
     subtitle: 'Address details',
     image: '/images/booksy-biz/step-4.jpeg'
-  }
-]
-
-const staticModeSteps: StepConfig[] = [
-  {
-    icon: 'ri-door-open-line',
-    title: 'Rooms',
-    subtitle: 'Setup facilities',
-    image: '/images/booksy-biz/step-5.jpeg'
-  }
-]
-
-const profileAndStaffSteps: StepConfig[] = [
+  },
   {
     icon: 'ri-profile-line',
     title: 'Profile',
@@ -83,20 +66,8 @@ const profileAndStaffSteps: StepConfig[] = [
     icon: 'ri-team-line',
     title: 'Staff',
     subtitle: 'Add team members',
-    image: '/images/booksy-biz/step-6.jpeg'
-  }
-]
-
-const templateStep: StepConfig[] = [
-  {
-    icon: 'ri-calendar-event-line',
-    title: 'Templates',
-    subtitle: 'Class schedules',
-    image: '/images/booksy-biz/step-6.jpeg'
-  }
-]
-
-const legalStep: StepConfig[] = [
+    image: '/images/bookly-biz/step-6.jpeg'
+  },
   {
     icon: 'ri-file-text-line',
     title: 'Legal',
@@ -106,25 +77,8 @@ const legalStep: StepConfig[] = [
 ]
 
 const getSteps = (schedulingMode: 'static' | 'dynamic' | '') => {
-  const steps = [...baseSteps]
-
-  // Add rooms step for static mode
-  if (schedulingMode === 'static') {
-    steps.push(...staticModeSteps)
-  }
-
-  // Add profile and staff steps
-  steps.push(...profileAndStaffSteps)
-
-  // Add templates step for static mode
-  if (schedulingMode === 'static') {
-    steps.push(...templateStep)
-  }
-
-  // Add legal step
-  steps.push(...legalStep)
-
-  return steps
+  // Always return the same steps (dynamic mode only)
+  return registrationSteps
 }
 
 const renderStepContent = (
@@ -150,7 +104,7 @@ const renderStepContent = (
     setValidationErrors
   }
 
-  // Dynamic step rendering based on scheduling mode
+  // Dynamic mode only - simplified step rendering
   const stepTitle = steps[activeStep]?.title
 
   switch (stepTitle) {
@@ -158,18 +112,12 @@ const renderStepContent = (
       return <AccountStep {...stepProps} />
     case 'Business':
       return <BusinessBasicsStep {...stepProps} />
-    case 'Scheduling':
-      return <SchedulingModeStep {...stepProps} />
     case 'Location':
       return <LocationStep {...stepProps} />
-    case 'Rooms':
-      return <RoomsSetupStep {...stepProps} />
     case 'Profile':
       return <BusinessProfileStep {...stepProps} />
     case 'Staff':
       return <StaffManagementStep {...stepProps} />
-    case 'Templates':
-      return <InitialTemplatesStep {...stepProps} />
     case 'Legal':
       return <LegalStep {...stepProps} isSubmitting={isSubmitting} />
     default:
@@ -324,12 +272,19 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
                     StepIconComponent={() => (
                       <Avatar
                         variant="rounded"
-                        className={classnames('cursor-pointer', {
-                          'bg-primary text-white shadow-xs': activeStep === index,
-                          'bg-primaryLight text-primary': activeStep > index,
-                          'bg-actionHover': activeStep < index
-                        })}
+                        className={classnames('cursor-pointer')}
                         onClick={handleStep(index)}
+                        sx={{
+                          backgroundColor: activeStep === index
+                            ? '#fff'
+                            : activeStep > index
+                            ? 'var(--mui-palette-primary-light)'
+                            : 'rgba(128, 128, 128, 0.15)',
+                          color: activeStep === index
+                            ? 'var(--mui-palette-primary-main)'
+                            : activeStep > index ? '#fff' : 'var(--mui-palette-text-secondary)',
+                          boxShadow: activeStep === index ? '0 4px 12px rgba(var(--mui-palette-primary-mainChannel) / 0.3)' : 'none'
+                        }}
                       >
                         <i className={step.icon} />
                       </Avatar>
@@ -370,11 +325,13 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
                         width: 36,
                         height: 36,
                         backgroundColor: activeStep === index
-                          ? 'var(--mui-palette-primary-main)'
+                          ? '#fff'
                           : activeStep > index
                           ? 'var(--mui-palette-primary-light)'
                           : 'rgba(128, 128, 128, 0.15)',
-                        color: activeStep >= index ? '#fff' : 'var(--mui-palette-text-secondary)',
+                        color: activeStep === index
+                          ? 'var(--mui-palette-primary-main)'
+                          : activeStep > index ? '#fff' : 'var(--mui-palette-text-secondary)',
                         transform: activeStep === index ? 'scale(1.1)' : 'scale(1)',
                         boxShadow: activeStep === index ? '0 4px 12px rgba(var(--mui-palette-primary-mainChannel) / 0.3)' : 'none'
                       }}

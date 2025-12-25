@@ -296,6 +296,7 @@ export function StaffMembersTab() {
                       alt={staff.name}
                       sx={{
                         bgcolor: staff.color || 'primary.main',
+                        color: '#fff',
                         width: 40,
                         height: 40
                       }}
@@ -368,6 +369,7 @@ export function StaffMembersTab() {
                 alt={selectedStaff.name}
                 sx={{
                   bgcolor: selectedStaff.color || 'primary.main',
+                  color: '#fff',
                   width: 64,
                   height: 64,
                   fontSize: '1.5rem',
