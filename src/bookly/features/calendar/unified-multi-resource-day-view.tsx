@@ -16,7 +16,7 @@ import {
   getCapacityColor,
   getDynamicRoomAvailability
 } from './utils'
-import type { CalendarEvent, DayOfWeek } from './types'
+import type { CalendarEvent, DayOfWeek, WeeklyStaffHours } from './types'
 
 // Helper to adjust color opacity for faded events
 const adjustColorOpacity = (color: string, opacity: number): string => {
@@ -226,7 +226,7 @@ export default function UnifiedMultiResourceDayView({
         filteredStaff = filteredStaff.filter(staff => {
           const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
           const dayOfWeek = dayNames[currentDate.getDay()]
-          const workingHours = staffWorkingHours[staff.id]?.[dayOfWeek]
+          const workingHours = staffWorkingHours[staff.id]?.[dayOfWeek as keyof WeeklyStaffHours] as { isWorking: boolean, shifts: any[] } | undefined
           return workingHours?.isWorking && workingHours.shifts && workingHours.shifts.length > 0
         })
       }
@@ -328,7 +328,7 @@ export default function UnifiedMultiResourceDayView({
 
     const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const dayOfWeek = dayNames[currentDate.getDay()]
-    const workingHours = staffWorkingHours[staffId]?.[dayOfWeek]
+    const workingHours = staffWorkingHours[staffId]?.[dayOfWeek as keyof WeeklyStaffHours] as { isWorking: boolean, shifts: any[] } | undefined
 
     const nonWorkingBlocks: Array<{ top: number; height: number }> = []
     const slotHeight = 40
@@ -372,7 +372,7 @@ export default function UnifiedMultiResourceDayView({
 
       // Add break times within shift
       if (shift.breaks && shift.breaks.length > 0) {
-        shift.breaks.forEach(breakTime => {
+        shift.breaks.forEach((breakTime: { start: string; end: string }) => {
           const [breakStartH, breakStartM] = breakTime.start.split(':').map(Number)
           const [breakEndH, breakEndM] = breakTime.end.split(':').map(Number)
           const breakStartMins = breakStartH * 60 + breakStartM
@@ -492,14 +492,66 @@ export default function UnifiedMultiResourceDayView({
   const renderResourceColumn = (resource: any, index: number) => {
     const isStaff = resource.type === 'staff'
     const allResourceEvents = getResourceEvents(resource.id, resource.type)
-    // Filter out timeOff and reservation events - they'll be shown as stripes
-    const resourceEvents = allResourceEvents.filter(
+    // Filter out timeOff and reservation events
+    const resourceEventsRaw = allResourceEvents.filter(
       event => event.extendedProps.type !== 'timeOff' && event.extendedProps.type !== 'reservation'
     )
-    const roomBlocks = isStaff ? getStaffRoomBlocks(resource.id) : []
+    
+    // STRICT CONFLICT CHECK for Regular Events: Remove if overlapping with Time Off
+    const timeOffEventsForStaff = isStaff 
+      ? todayEvents.filter(e => e.extendedProps.type === 'timeOff' && e.extendedProps.staffId === resource.id)
+      : []
+
+    const resourceEvents = resourceEventsRaw.filter(event => {
+      if (!isStaff || timeOffEventsForStaff.length === 0) return true
+      
+      const eventStart = new Date(event.start)
+      const eventEnd = new Date(event.end)
+      const eventStartMins = eventStart.getHours() * 60 + eventStart.getMinutes()
+      const eventEndMins = eventEnd.getHours() * 60 + eventEnd.getMinutes()
+
+      const hasConflict = timeOffEventsForStaff.some(timeOff => {
+        const toStart = new Date(timeOff.start)
+        const toEnd = new Date(timeOff.end)
+        const toStartMins = toStart.getHours() * 60 + toStart.getMinutes()
+        const toEndMins = toEnd.getHours() * 60 + toEnd.getMinutes()
+        
+        return eventStartMins < toEndMins && eventEndMins > toStartMins
+      })
+      
+      return !hasConflict
+    })
+    const roomBlocksRaw = isStaff ? getStaffRoomBlocks(resource.id) : []
     const nonWorkingBlocks = isStaff ? getStaffNonWorkingBlocks(resource.id) : []
     const timeOffBlocks = isStaff ? getStaffTimeOffBlocks(resource.id) : []
     const reservationBlocks = getReservationBlocks(resource.id, resource.type)
+
+    // Filter room blocks that overlap with Time Off
+    const timeOffEvents = todayEvents.filter(
+      event => event.extendedProps.type === 'timeOff' && event.extendedProps.staffId === resource.id
+    )
+
+    const roomBlocks = roomBlocksRaw.filter(block => {
+      // Parse block start/end to minutes
+      const [bStartH, bStartM] = block.startTime.split(':').map(Number)
+      const [bEndH, bEndM] = block.endTime.split(':').map(Number)
+      const blockStartMins = bStartH * 60 + bStartM
+      const blockEndMins = bEndH * 60 + bEndM
+
+      // Check for overlap with any time off event
+      // STRICT CONFLICT CHECK: Any overlap removes the slot
+      const hasConflict = timeOffEvents.some(event => {
+        const start = new Date(event.start)
+        const end = new Date(event.end)
+        const eventStartMins = start.getHours() * 60 + start.getMinutes()
+        const eventEndMins = end.getHours() * 60 + end.getMinutes()
+
+        // Overlap: (StartA < EndB) and (EndA > StartB)
+        return blockStartMins < eventEndMins && blockEndMins > eventStartMins
+      })
+
+      return !hasConflict
+    })
 
     // NOTE: Staff/room click disabled - only slots/bookings are clickable
     // const handleClick = () => {
@@ -546,12 +598,13 @@ export default function UnifiedMultiResourceDayView({
               zIndex: 1,
               backgroundImage: isDark
                 ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
-                : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
+                : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)',
+              backgroundColor: 'transparent'
             }}
           />
         ))}
 
-        {/* Time-off overlay (diagonal stripes) */}
+        {/* Time-off overlay (diagonal stripes) - Reverted to stripes as requested */}
         {timeOffBlocks.map((block, idx) => (
           <Box
             key={`time-off-${idx}`}
@@ -565,12 +618,13 @@ export default function UnifiedMultiResourceDayView({
               zIndex: 2,
               backgroundImage: isDark
                 ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
-                : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
+                : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)',
+              borderLeft: 'none'
             }}
           />
         ))}
 
-        {/* Reservation overlay (blue diagonal stripes) */}
+        {/* Reservation overlay (diagonal stripes) - Reverted to stripes */}
         {reservationBlocks.map((block, idx) => (
           <Box
             key={`reservation-${idx}`}
@@ -584,7 +638,8 @@ export default function UnifiedMultiResourceDayView({
               zIndex: 2,
               backgroundImage: isDark
                 ? 'repeating-linear-gradient(45deg, rgba(10, 44, 36, 0.2) 0px, rgba(10, 44, 36, 0.2) 8px, transparent 8px, transparent 16px)'
-                : 'repeating-linear-gradient(45deg, rgba(10, 44, 36, 0.18) 0px, rgba(10, 44, 36, 0.18) 8px, transparent 8px, transparent 16px)'
+                : 'repeating-linear-gradient(45deg, rgba(10, 44, 36, 0.18) 0px, rgba(10, 44, 36, 0.18) 8px, transparent 8px, transparent 16px)',
+              borderLeft: 'none'
             }}
           />
         ))}
@@ -678,15 +733,14 @@ export default function UnifiedMultiResourceDayView({
                 borderRadius: 1.5,
                 border: 'none',
                 borderLeft: `4px solid ${effectiveBorderColor}`,
+                // Static Slots: Changed to Solid + Dashed Border (or subtle pattern) to differ from stripes
                 backgroundImage: isStaticType
-                  ? `repeating-linear-gradient(
-                      45deg,
-                      transparent,
-                      transparent 6px,
-                      ${stripeColor} 6px,
-                      ${stripeColor} 12px
-                    )`
+                  ? `radial-gradient(${stripeColor} 1px, transparent 1px)` // Polka dots for static slots?
                   : 'none',
+                backgroundSize: isStaticType ? '12px 12px' : 'auto',
+                borderStyle: isStaticType ? 'dashed' : 'solid',
+                borderWidth: isStaticType ? '2px' : '0 0 0 4px', // Dashed border around for slots
+                borderColor: isStaticType ? stripeColor : effectiveBorderColor,
                 p: 0.75,
                 overflow: 'visible',
                 cursor: 'pointer',

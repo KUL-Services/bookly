@@ -16,7 +16,7 @@ import {
   getCapacityColor,
   getDynamicRoomAvailability
 } from './utils'
-import type { CalendarEvent, DayOfWeek } from './types'
+import type { CalendarEvent, DayOfWeek, WeeklyStaffHours } from './types'
 import { useMemo } from 'react'
 
 // Helper to adjust color opacity for faded events
@@ -190,8 +190,8 @@ export default function UnifiedMultiResourceWeekView({
         filteredStaff = filteredStaff.filter(staff => {
           const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
           return weekDays.some(day => {
-            const dayOfWeek = dayNames[day.getDay()]
-            const workingHours = staffWorkingHours[staff.id]?.[dayOfWeek]
+            const dayOfWeek = dayNames[day.getDay()] as DayOfWeek
+            const workingHours = staffWorkingHours[staff.id]?.[dayOfWeek as keyof WeeklyStaffHours] as { isWorking: boolean, shifts: any[] } | undefined
             return workingHours?.isWorking && workingHours.shifts && workingHours.shifts.length > 0
           })
         })
@@ -229,29 +229,112 @@ export default function UnifiedMultiResourceWeekView({
       : events.filter(event => event.extendedProps.roomId === resourceId && isSameDay(new Date(event.start), day))
 
     // Filter out timeOff and reservation events - they'll be shown as stripes
-    return allEvents.filter(
+    const regularEvents = allEvents.filter(
       event => event.extendedProps.type !== 'timeOff' && event.extendedProps.type !== 'reservation'
     )
+
+    // STRICT CONFLICT CHECK: Filter out events overlapping with Time Off
+    if (resourceType === 'staff') {
+      const timeOffEvents = events.filter(
+        e => e.extendedProps.type === 'timeOff' && e.extendedProps.staffId === resourceId && isSameDay(new Date(e.start), day)
+      )
+
+      if (timeOffEvents.length > 0) {
+        return regularEvents.filter(event => {
+          const eventStart = new Date(event.start)
+          const eventEnd = new Date(event.end)
+          const eventStartMins = eventStart.getHours() * 60 + eventStart.getMinutes()
+          const eventEndMins = eventEnd.getHours() * 60 + eventEnd.getMinutes()
+
+          const hasConflict = timeOffEvents.some(timeOff => {
+             const toStart = new Date(timeOff.start)
+             const toEnd = new Date(timeOff.end)
+             
+             // Handle ALL DAY: Check if dates overlap
+             if (timeOff.extendedProps.allDay) {
+                const toStartDay = new Date(toStart.getFullYear(), toStart.getMonth(), toStart.getDate())
+                const toEndDay = new Date(toEnd.getFullYear(), toEnd.getMonth(), toEnd.getDate())
+                const currentDay = new Date(day.getFullYear(), day.getMonth(), day.getDate())
+                return currentDay >= toStartDay && currentDay <= toEndDay
+             }
+
+             // Strict time check for partial days
+             const toStartMins = toStart.getHours() * 60 + toStart.getMinutes()
+             const toEndMins = toEnd.getHours() * 60 + toEnd.getMinutes()
+
+             return eventStartMins < toEndMins && eventEndMins > toStartMins
+          })
+
+          return !hasConflict
+        })
+      }
+    }
+
+    return regularEvents
   }
 
   // Check if staff is working on a given day
   const isStaffWorking = (staffId: string, day: Date) => {
     const { staffWorkingHours } = useStaffManagementStore.getState()
     const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    const dayOfWeek = dayNames[day.getDay()]
-    const workingHours = staffWorkingHours[staffId]?.[dayOfWeek]
+    const dayOfWeek = dayNames[day.getDay()] as DayOfWeek
+    const workingHours = staffWorkingHours[staffId]?.[dayOfWeek as keyof WeeklyStaffHours] as { isWorking: boolean, shifts: any[] } | undefined
 
     return workingHours?.isWorking && workingHours.shifts && workingHours.shifts.length > 0
   }
 
-  // Check if staff has time-off on a given day
+  // Check if staff has time-off on a given day - ONLY if it covers the whole day or working hours
   const hasStaffTimeOff = (staffId: string, day: Date) => {
-    return events.some(
-      event =>
-        event.extendedProps.type === 'timeOff' &&
-        event.extendedProps.staffId === staffId &&
-        isSameDay(new Date(event.start), day)
-    )
+    return events.some(event => {
+      if (event.extendedProps.type !== 'timeOff' || event.extendedProps.staffId !== staffId)
+        return false
+      if (!isSameDay(new Date(event.start), day)) return false
+
+      // Rule: Show only if "All Day" OR covers the entire working hours
+      if (event.extendedProps.allDay) return true
+
+      const { staffWorkingHours } = useStaffManagementStore.getState()
+      const dayNames: ('Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat')[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      const dayOfWeek = dayNames[day.getDay()] as DayOfWeek
+      const workingHours = staffWorkingHours[staffId]?.[dayOfWeek as keyof WeeklyStaffHours] as { isWorking: boolean, shifts: any[] } | undefined
+
+      // If no working hours defined or not working, simple overlap counts as "whole day" conceptually for display
+      if (
+        !workingHours ||
+        !workingHours.isWorking ||
+        !workingHours.shifts ||
+        workingHours.shifts.length === 0
+      ) {
+        return true
+      }
+
+      // Check if time off covers all shifts
+      // Simplified check: Time Off Start <= First Shift Start AND Time Off End >= Last Shift End
+      // Note: This assumes time off is continuous. If multiple shifts, this ensures it covers the span.
+      const shifts = workingHours.shifts
+      if (shifts.length === 0) return true
+
+      // Find earliest start and latest end of shifts
+      let earliestStart = 24 * 60 // minutes
+      let latestEnd = 0 // minutes
+
+      shifts.forEach((shift: { start: string; end: string }) => {
+        const [sH, sM] = shift.start.split(':').map(Number)
+        const [eH, eM] = shift.end.split(':').map(Number)
+        const startMins = sH * 60 + sM
+        const endMins = eH * 60 + eM
+        if (startMins < earliestStart) earliestStart = startMins
+        if (endMins > latestEnd) latestEnd = endMins
+      })
+
+      const eventStart = new Date(event.start)
+      const eventEnd = new Date(event.end)
+      const eventStartMins = eventStart.getHours() * 60 + eventStart.getMinutes()
+      const eventEndMins = eventEnd.getHours() * 60 + eventEnd.getMinutes()
+
+      // Allow 15 min buffer/tolerance if needed, but strict check for now
+      return eventStartMins <= earliestStart && eventEndMins >= latestEnd
+    })
   }
 
   const hasResourceReservation = (resourceId: string, resourceType: 'staff' | 'room', day: Date) => {
@@ -402,13 +485,20 @@ export default function UnifiedMultiResourceWeekView({
                     bottom: 0,
                     pointerEvents: 'none',
                     zIndex: 1,
-                    backgroundImage: showReservationStripes
-                      ? isDark
-                        ? 'repeating-linear-gradient(45deg, rgba(10, 44, 36, 0.2) 0px, rgba(10, 44, 36, 0.2) 8px, transparent 8px, transparent 16px)'
-                        : 'repeating-linear-gradient(45deg, rgba(10, 44, 36, 0.18) 0px, rgba(10, 44, 36, 0.18) 8px, transparent 8px, transparent 16px)'
-                      : isDark
-                        ? 'repeating-linear-gradient(45deg, rgba(100, 100, 100, 0.15) 0px, rgba(100, 100, 100, 0.15) 8px, transparent 8px, transparent 16px)'
-                        : 'repeating-linear-gradient(45deg, rgba(200, 200, 200, 0.2) 0px, rgba(200, 200, 200, 0.2) 8px, transparent 8px, transparent 16px)'
+                  backgroundImage: showReservationStripes
+                      ? isDark // Reservation: Solid (remove stripes in week view as requested)
+                        ? 'none'
+                        : 'none'
+                      : hasStaffTimeOff(resource.id, day) // Time Off: Solid (remove stripes in week view as requested)
+                        ? 'none'
+                        : isDark // Default non-working hours: Solid
+                          ? 'none'
+                          : 'none',
+                  backgroundColor: showReservationStripes
+                    ? isDark ? 'rgba(10, 44, 36, 0.4)' : 'rgba(10, 44, 36, 0.25)' // Solid Teal
+                    : hasStaffTimeOff(resource.id, day)
+                      ? isDark ? 'rgba(232, 134, 130, 0.25)' : 'rgba(232, 134, 130, 0.2)' // Solid Coral
+                      : isDark ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0.04)' // Solid Non-Working
                   }}
                 />
               )}
@@ -491,17 +581,13 @@ export default function UnifiedMultiResourceWeekView({
                       minHeight: 50,
                       bgcolor: effectiveBgColor,
                       borderRadius: 1.5,
-                      border: 'none',
-                      borderLeft: `4px solid ${effectiveBorderColor}`,
                       backgroundImage: isStaticType
-                        ? `repeating-linear-gradient(
-                            45deg,
-                            transparent,
-                            transparent 6px,
-                            ${stripeColor} 6px,
-                            ${stripeColor} 12px
-                          )`
+                        ? `radial-gradient(${stripeColor} 1px, transparent 1px)` // Dots for static slots
                         : 'none',
+                      backgroundSize: isStaticType ? '12px 12px' : 'auto',
+                      borderStyle: isStaticType ? 'dashed' : 'solid',
+                      borderWidth: isStaticType ? '2px' : '0 0 0 4px',
+                      borderColor: isStaticType ? stripeColor : effectiveBorderColor,
                       opacity: isFaded ? 0.4 : 1,
                       filter: isFaded ? 'grayscale(50%)' : 'none',
                       overflow: 'visible',
@@ -510,7 +596,7 @@ export default function UnifiedMultiResourceWeekView({
                         : isStaticType
                           ? 'none'
                           : '0px 2px 8px rgba(0,0,0,0.06)',
-                      transform: isHighlighted ? 'scale(1.02)' : 'none',
+                      transform: 'none',
                       zIndex: isHighlighted ? 5 : 'auto',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
@@ -520,7 +606,7 @@ export default function UnifiedMultiResourceWeekView({
                           : isStaticType
                             ? 'none'
                             : '0px 4px 12px rgba(0,0,0,0.1)',
-                        transform: isHighlighted ? 'scale(1.03) translateY(-2px)' : 'translateY(-2px)',
+                        transform: isHighlighted ? 'translateY(-2px)' : 'translateY(-2px)',
                         zIndex: 10,
                         opacity: isFaded ? 0.6 : 1
                       }
@@ -678,15 +764,21 @@ export default function UnifiedMultiResourceWeekView({
                           <Chip
                             icon={<i className='ri-user-line' style={{ fontSize: '0.6rem' }} />}
                             label={`${bookedCount}/${totalCapacity}`}
-                            color={chipColor}
+                            color='default' // Use default to allow custom bgcolor override
                             size='small'
                             sx={{
                               height: '14px',
                               fontSize: '0.55rem',
-                              fontWeight: 600,
+                              fontWeight: 700,
+                              bgcolor: 
+                                chipColor === 'success' ? (isDark ? '#1b5e20' : '#2e7d32') : 
+                                chipColor === 'warning' ? (isDark ? '#e65100' : '#ef6c00') : 
+                                (isDark ? '#b71c1c' : '#c62828'),
+                              color: '#fff', // Always white text for contrast on dark background
                               '& .MuiChip-icon': {
                                 fontSize: '0.6rem',
-                                marginLeft: '2px'
+                                marginLeft: '2px',
+                                color: 'inherit'
                               },
                               '& .MuiChip-label': {
                                 padding: '0 3px'

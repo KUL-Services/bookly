@@ -245,6 +245,29 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                 const [endHours, endMinutes] = slot.endTime.split(':').map(Number)
                 slotEnd.setHours(endHours, endMinutes, 0, 0)
 
+                // Check if this slot was cancelled via specific overrides
+                // (Already handled by getSlotsForDate filtering isCancelled? No, getSlotsForDate checks isCancelled property of the slot object itself, but overrides might be separate?
+                // Actually getSlotsForDate filters slots that are strictly cancelled.
+                // But we also need to check "Time Off" conflicts.
+
+                // Find valid time off events for this staff
+                const staffTimeOffEvents = events.filter(
+                  e =>
+                    e.extendedProps.type === 'timeOff' &&
+                    e.extendedProps.staffId === slot.instructorStaffId &&
+                    e.extendedProps.status !== 'cancelled' // Ensure time off itself isn't cancelled (though usually they are deleted)
+                )
+
+                // Check conflict
+                const hasConflict = staffTimeOffEvents.some(timeOff => {
+                  const timeOffStart = new Date(timeOff.start)
+                  const timeOffEnd = new Date(timeOff.end)
+                  // Check overlap: (StartA < EndB) and (EndA > StartB)
+                  return slotStart < timeOffEnd && slotEnd > timeOffStart
+                })
+
+                if (hasConflict) return
+
                 // Get capacity info
                 const capacityInfo = isSlotAvailable(slot.id, new Date(date))
 
@@ -558,7 +581,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
               'repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px) !important',
             opacity: '0.15 !important',
             pointerEvents: 'none',
-            zIndex: 1
+            zIndex: 1,
+            border: 'none !important'
           },
           '& .time-off-event': {
             color: 'var(--mui-palette-customColors-coral) !important'
@@ -568,13 +592,12 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           },
           '& .fc-bg-event': {
             opacity: '1 !important',
-            border: '2px dashed',
-            borderRadius: '12px !important',
-            fontSize: '0.75rem',
-            fontWeight: 500,
-            padding: '4px 6px',
-            overflow: 'visible !important'
+            // Static Slot Styling: Dashed border + light background
+            border: '2px dashed !important',
+            // borderColor handled by event prop
+            borderRadius: '8px !important'
           },
+
           '& .fc-bg-event .fc-event-main': {
             color: isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
             padding: '2px 4px'

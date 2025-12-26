@@ -1,4 +1,5 @@
 import { mockStaff, mockBusinesses, mockServices } from '@/bookly/data/mock-data'
+import { mockTimeOffRequests } from '@/bookly/data/staff-management-mock-data'
 import type { Booking } from '@/bookly/data/types'
 import type {
   CalendarEvent,
@@ -562,11 +563,62 @@ export function getSlotsForDate(
   return slots.filter(slot => {
     if (slot.branchId !== branchId) return false
 
-    // Check if slot matches by dayOfWeek (recurring) or specific date
     const matchesDayOfWeek = slot.dayOfWeek === dayOfWeek
     const matchesDate = slot.date === dateStr
 
-    return matchesDayOfWeek || matchesDate
+    if (!matchesDayOfWeek && !matchesDate) return false
+
+    // STRICT CONFLICT CHECK: Check if instructor is on Time Off
+    if (slot.instructorStaffId) {
+      // Parse slot times
+      const [slotStartH, slotStartM] = slot.startTime.split(':').map(Number)
+      const [slotEndH, slotEndM] = slot.endTime.split(':').map(Number)
+      const slotStartMins = slotStartH * 60 + slotStartM
+      const slotEndMins = slotEndH * 60 + slotEndM
+
+      const hasConflict = mockTimeOffRequests.some(req => {
+        if (req.staffId !== slot.instructorStaffId) return false
+        if (!req.approved) return false
+
+        // Check if Time Off covers this date
+        const reqStart = new Date(req.range.start)
+        const reqEnd = new Date(req.range.end)
+        
+        const currentRefDate = new Date(date) // Use the passed date
+        currentRefDate.setHours(0,0,0,0) // Normalize to start of day for date comparison
+        
+        const reqStartDay = new Date(reqStart)
+        reqStartDay.setHours(0,0,0,0)
+        
+        const reqEndDay = new Date(reqEnd)
+        reqEndDay.setHours(0,0,0,0)
+        
+        // If the date is outside the broad range, no conflict
+        if (currentRefDate < reqStartDay || currentRefDate > reqEndDay) return false
+
+        // If All Day, it conflicts
+        if (req.allDay) return true
+
+        // If partial day, strict time check required
+        // Note: Time Off Requests in mock data use Date objects which include time
+        // We need to check if the specific day aligns, which we did. 
+        // Now check if the *time* on this specific day overlaps.
+        // Simplified: assuming multi-day partial time off isn't the main case or handled as allDay.
+        // Handling single-day partial time off:
+        if (reqStartDay.getTime() === reqEndDay.getTime()) {
+           const reqStartMins = reqStart.getHours() * 60 + reqStart.getMinutes()
+           const reqEndMins = reqEnd.getHours() * 60 + reqEnd.getMinutes()
+           return (slotStartMins < reqEndMins && slotEndMins > reqStartMins)
+        }
+        
+        // Multi-day partial is ambiguous in this simple scan, default to blocking if dates overlap
+        return true
+      })
+
+      if (hasConflict) return false
+    }
+
+    return true
   })
 }
 

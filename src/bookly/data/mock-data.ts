@@ -10,6 +10,7 @@ import {
   StaffAppointment
 } from './types'
 import type { Room, StaticServiceSlot, ScheduleTemplate, WeeklySlotPattern } from '@/bookly/features/calendar/types'
+import { mockTimeOffRequests } from './staff-management-mock-data'
 
 export const categories: Category[] = [
   { id: '1', name: 'Hair', icon: '✂️', slug: 'hair' },
@@ -357,6 +358,33 @@ const generateStaffAppointments = (
       const endHour = hour + Math.floor(duration / 60)
       const endMinute = (parseInt(minute) + (duration % 60)).toString().padStart(2, '0')
       const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute}`
+
+      // Check for conflict with Time Off
+      const startDate = new Date(date)
+      startDate.setHours(hour, parseInt(minute), 0, 0)
+      const endDate = new Date(date)
+      endDate.setHours(endHour, parseInt(endMinute), 0, 0)
+
+      const hasTimeOffConflict = mockTimeOffRequests.some(request => {
+        if (request.staffId !== staffId) return false
+        if (!request.approved) return false
+        
+        const reqStart = new Date(request.range.start)
+        const reqEnd = new Date(request.range.end)
+        
+        // Handle all-day
+        if (request.allDay) {
+           // Check if dates overlap (ignoring time)
+           const reqStartDay = new Date(reqStart.getFullYear(), reqStart.getMonth(), reqStart.getDate())
+           const reqEndDay = new Date(reqEnd.getFullYear(), reqEnd.getMonth(), reqEnd.getDate())
+           const currentDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+           return currentDay >= reqStartDay && currentDay <= reqEndDay
+        }
+
+        return (startDate < reqEnd && endDate > reqStart)
+      })
+
+      if (hasTimeOffConflict) continue
 
       const services = servicesByType[businessType]
       const serviceName = services[Math.floor(Math.random() * services.length)]
