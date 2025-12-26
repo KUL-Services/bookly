@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Typography, Avatar, Chip, Divider } from '@mui/material'
+import { Box, Typography, Avatar, Chip, Divider, Tooltip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, addMinutes, isSameDay, isToday } from 'date-fns'
 import { useState, useEffect, useMemo, useRef } from 'react'
@@ -36,6 +36,95 @@ const adjustColorOpacity = (color: string, opacity: number): string => {
     return color.replace(/,\s*[\d.]+\)$/, `, ${opacity})`)
   }
   return color
+}
+
+// Helper to render tooltip content with status icons
+const renderEventTooltip = (event: CalendarEvent) => {
+  const { extendedProps } = event
+
+  return (
+    <Box sx={{ p: 1 }}>
+      <Typography variant='caption' sx={{ fontWeight: 600, display: 'block', mb: 0.5, color: '#fff', fontSize: '0.75rem' }}>
+        {extendedProps.serviceName || event.title}
+      </Typography>
+      <Typography variant='caption' sx={{ display: 'block', mb: 0.5, color: 'rgba(255,255,255,0.9)', fontSize: '0.7rem' }}>
+        {extendedProps.customerName}
+      </Typography>
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center', mt: 1 }}>
+        {/* Payment Status */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <i
+            className={extendedProps.paymentStatus === 'paid' ? 'ri-money-dollar-circle-fill' : 'ri-money-dollar-circle-line'}
+            style={{ fontSize: '14px', color: extendedProps.paymentStatus === 'paid' ? '#10b981' : '#f59e0b' }}
+          />
+          <Typography variant='caption' sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.9)' }}>
+            {extendedProps.paymentStatus === 'paid' ? 'Paid' : 'Unpaid'}
+          </Typography>
+        </Box>
+
+        {/* Booking Status */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <i
+            className={
+              extendedProps.status === 'confirmed' ? 'ri-checkbox-circle-fill' :
+              extendedProps.status === 'pending' ? 'ri-time-line' :
+              extendedProps.status === 'completed' ? 'ri-check-double-line' :
+              extendedProps.status === 'cancelled' ? 'ri-close-circle-fill' :
+              extendedProps.status === 'no_show' ? 'ri-user-unfollow-line' :
+              'ri-question-line'
+            }
+            style={{
+              fontSize: '14px',
+              color:
+                extendedProps.status === 'confirmed' ? '#10b981' :
+                extendedProps.status === 'pending' ? '#f59e0b' :
+                extendedProps.status === 'completed' ? '#3b82f6' :
+                extendedProps.status === 'cancelled' ? '#ef4444' :
+                extendedProps.status === 'no_show' ? '#9ca3af' :
+                '#9ca3af'
+            }}
+          />
+          <Typography variant='caption' sx={{ fontSize: '0.65rem', textTransform: 'capitalize', color: 'rgba(255,255,255,0.9)' }}>
+            {extendedProps.status.replace('_', ' ')}
+          </Typography>
+        </Box>
+
+        {/* Starred */}
+        {extendedProps.starred && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <i className='ri-star-fill' style={{ fontSize: '14px', color: '#fbbf24' }} />
+            <Typography variant='caption' sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.9)' }}>Starred</Typography>
+          </Box>
+        )}
+
+        {/* Booking Method */}
+        {extendedProps.selectionMethod && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <i
+              className={extendedProps.selectionMethod === 'by_client' ? 'ri-smartphone-line' : 'ri-robot-line'}
+              style={{ fontSize: '14px', color: '#8b5cf6' }}
+            />
+            <Typography variant='caption' sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.9)' }}>
+              {extendedProps.selectionMethod === 'by_client' ? 'By Client' : 'Auto'}
+            </Typography>
+          </Box>
+        )}
+
+        {/* Walk-in Indicator */}
+        {extendedProps.arrivalTime && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <i className='ri-walk-line' style={{ fontSize: '14px', color: '#ec4899' }} />
+            <Typography variant='caption' sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.9)' }}>Walk-in</Typography>
+          </Box>
+        )}
+      </Box>
+      {extendedProps.notes && (
+        <Typography variant='caption' sx={{ display: 'block', mt: 1, color: 'rgba(255,255,255,0.8)', fontSize: '0.65rem' }}>
+          Note: {extendedProps.notes}
+        </Typography>
+      )}
+    </Box>
+  )
 }
 
 interface UnifiedMultiResourceDayViewProps {
@@ -555,12 +644,30 @@ export default function UnifiedMultiResourceDayView({
           const stripeColor = adjustColorOpacity(effectiveBorderColor, isFaded ? 0.2 : 0.35)
 
           return (
-            <Box
+            <Tooltip
               key={event.id}
-              onClick={e => {
-                e.stopPropagation()
-                onEventClick?.(event)
+              title={renderEventTooltip(event)}
+              arrow
+              placement="top"
+              enterDelay={300}
+              leaveDelay={0}
+              componentsProps={{
+                tooltip: {
+                  sx: {
+                    bgcolor: 'rgba(0, 0, 0, 0.9)',
+                    maxWidth: 320,
+                    '& .MuiTooltip-arrow': {
+                      color: 'rgba(0, 0, 0, 0.9)'
+                    }
+                  }
+                }
               }}
+            >
+              <Box
+                onClick={e => {
+                  e.stopPropagation()
+                  onEventClick?.(event)
+                }}
               sx={{
                 position: 'absolute',
                 left: 4,
@@ -776,6 +883,7 @@ export default function UnifiedMultiResourceDayView({
                 )
               })()}
             </Box>
+            </Tooltip>
           )
         })}
       </Box>
