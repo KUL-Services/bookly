@@ -41,6 +41,7 @@ import { CalendarPopover } from './calendar-popover'
 import { StaffTypeChangeDialog } from './staff-type-change-dialog'
 import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
+import { SpecialDaysModal } from './special-days-modal'
 
 // Print Styles Component
 function PrintStyles() {
@@ -327,7 +328,10 @@ export function ShiftsTab() {
     scheduleStaffTypeChange,
     getPendingStaffTypeChange,
     cancelStaffTypeChange,
-    updateCounter
+    updateCounter,
+    isSpecialDaysModalOpen,
+    openSpecialDays,
+    closeSpecialDays
   } = useStaffManagementStore()
 
   // Filter staff by branch and staff selection
@@ -342,6 +346,8 @@ export function ShiftsTab() {
 
     return filtered
   }, [selectedStaff, selectedBranch])
+
+  console.log('RENDER: ShiftsTab', { isSpecialDaysModalOpen })
 
   // Group staff by branch and sort by shift start time
   const staffByBranch = useMemo(() => {
@@ -704,6 +710,14 @@ export function ShiftsTab() {
 
       <Box sx={{ flexGrow: 1 }} />
 
+      <Button
+        variant='outlined'
+        startIcon={<i className='ri-calendar-event-line' />}
+        size='small'
+        onClick={openSpecialDays}
+      >
+        SPECIAL DAYS
+      </Button>
       <Button variant='outlined' startIcon={<i className='ri-file-copy-line' />} size='small'>
         COPY
       </Button>
@@ -1671,6 +1685,12 @@ export function ShiftsTab() {
               onConfirm={handleStaffTypeChangeConfirm}
             />
           )}
+
+          {/* Special Days Modal */}
+          <SpecialDaysModal
+            open={isSpecialDaysModalOpen}
+            onClose={closeSpecialDays}
+          />
         </Box>
       </DndContext>
     )
@@ -3074,6 +3094,12 @@ export function ShiftsTab() {
           </Box>
         </Box>
       </Box>
+
+      {/* Special Days Modal */}
+      <SpecialDaysModal
+        open={isSpecialDaysModalOpen}
+        onClose={closeSpecialDays}
+      />
 
       {/* Calendar Picker Popover */}
       <CalendarPopover

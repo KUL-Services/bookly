@@ -241,14 +241,14 @@ export interface StaffShiftInstance extends StaffShift {
   reason?: 'manual' | 'business_hours_change' | 'copy'
 }
 
-export interface WeeklyStaffHours {
+export type WeeklyStaffHours = {
   [day in DayOfWeek]: {
     isWorking: boolean
     shifts: StaffShift[]
   }
 }
 
-export interface WeeklyBusinessHours {
+export type WeeklyBusinessHours = {
   [day in DayOfWeek]: {
     isOpen: boolean
     shifts: { start: string; end: string }[]

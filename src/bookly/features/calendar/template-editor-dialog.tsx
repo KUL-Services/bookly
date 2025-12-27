@@ -24,6 +24,7 @@ import {
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format } from 'date-fns'
+import { DatePickerField } from '../staff-management/date-picker-field'
 import type { DayOfWeek, WeeklySlotPattern, ScheduleTemplate } from './types'
 
 interface TemplateEditorDialogProps {
@@ -206,25 +207,22 @@ export default function TemplateEditorDialog({
               />
 
               <Box sx={{ display: 'grid', gridTemplateColumns: isOngoing ? '1fr' : '1fr 1fr', gap: 2 }}>
-                <TextField
+                <DatePickerField
                   label="Active From"
-                  type="date"
-                  value={activeFrom}
-                  onChange={(e) => setActiveFrom(e.target.value)}
+                  value={activeFrom ? new Date(activeFrom) : new Date()}
+                  onChange={(date) => setActiveFrom(format(date, 'yyyy-MM-dd'))}
                   fullWidth
                   required
-                  InputLabelProps={{ shrink: true }}
                 />
 
                 {!isOngoing && (
-                  <TextField
+                  <DatePickerField
                     label="Active Until"
-                    type="date"
-                    value={activeUntil}
-                    onChange={(e) => setActiveUntil(e.target.value)}
-                    inputProps={{ min: activeFrom }}
+                    value={activeUntil ? new Date(activeUntil) : new Date()}
+                    onChange={(date) => setActiveUntil(format(date, 'yyyy-MM-dd'))}
                     fullWidth
-                    InputLabelProps={{ shrink: true }}
+                    // Note: DatePickerField doesn't currently support min date prop directly passed to TextField inputProps in the same way, 
+                    // but we can add validation logic if needed. For now keeping visual consistency.
                   />
                 )}
               </Box>

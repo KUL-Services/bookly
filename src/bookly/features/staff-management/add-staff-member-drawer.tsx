@@ -20,6 +20,8 @@ import {
   Checkbox,
   ListItemText
 } from '@mui/material'
+import { format } from 'date-fns'
+import { DatePickerField } from './date-picker-field'
 import { mockBranches, mockStaff, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 
@@ -399,13 +401,11 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
             }}
           />
 
-          <TextField
+          <DatePickerField
             label='Start Date'
-            type='date'
-            value={startDate}
-            onChange={e => setStartDate(e.target.value)}
+            value={startDate ? new Date(startDate) : new Date()}
+            onChange={date => setStartDate(format(date, 'yyyy-MM-dd'))}
             fullWidth
-            InputLabelProps={{ shrink: true }}
           />
 
           <FormControl fullWidth>

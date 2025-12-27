@@ -16,6 +16,8 @@ import {
   MenuItem,
   Alert
 } from '@mui/material'
+import { format } from 'date-fns'
+import { DatePickerField } from './date-picker-field'
 import { mockStaff } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 
@@ -113,21 +115,17 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
 
           {/* Date Range */}
           <Box sx={{ display: 'flex', gap: 2 }}>
-            <TextField
-              type="date"
+            <DatePickerField
               label="Start Date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              value={startDate ? new Date(startDate) : new Date()}
+              onChange={(date) => setStartDate(format(date, 'yyyy-MM-dd'))}
               required
               fullWidth
             />
-            <TextField
-              type="date"
+            <DatePickerField
               label="End Date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              value={endDate ? new Date(endDate) : new Date()}
+              onChange={(date) => setEndDate(format(date, 'yyyy-MM-dd'))}
               required
               fullWidth
             />

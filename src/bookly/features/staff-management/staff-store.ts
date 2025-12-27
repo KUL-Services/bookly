@@ -30,6 +30,17 @@ import type {
 } from '../calendar/types'
 import type { StaffType, RoomAssignment } from '@/bookly/data/types'
 
+// Special Rule Interface
+export interface SpecialRule {
+  id: string
+  name: string
+  startDate: string // YYYY-MM-DD
+  endDate: string   // YYYY-MM-DD
+  type: 'closed' | 'custom'
+  shifts: { start: string; end: string }[]
+  color?: string
+}
+
 // Helper to sync changes with calendar
 function syncWithCalendar() {
   // Use dynamic import to avoid circular dependency
@@ -90,7 +101,14 @@ export interface StaffManagementState {
   isTimeOffOpen: boolean
   isResourceEditorOpen: boolean
   isCommissionEditorOpen: boolean
+  isSpecialDaysModalOpen: boolean
   shiftRules: ShiftRuleSet
+  
+  // Special Rules
+  specialRules: SpecialRule[]
+  addSpecialRule: (rule: Omit<SpecialRule, 'id'>) => void
+  updateSpecialRule: (id: string, updates: Partial<SpecialRule>) => void
+  deleteSpecialRule: (id: string) => void
 
   // Actions - Business Hours
   updateBusinessHours: (branchId: string, day: DayOfWeek, hours: WeeklyBusinessHours[DayOfWeek]) => void
@@ -190,6 +208,9 @@ export interface StaffManagementState {
   closeResourceEditor: () => void
   openCommissionEditor: () => void
   closeCommissionEditor: () => void
+  openSpecialDays: () => void
+  closeSpecialDays: () => void
+  toggleSpecialDays: () => void
   markTutorialSeen: () => void
 }
 
@@ -229,7 +250,18 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   isTimeOffOpen: false,
   isResourceEditorOpen: false,
   isCommissionEditorOpen: false,
+  isSpecialDaysModalOpen: false,
   shiftRules: mockShiftRules,
+  specialRules: [],
+
+  // Special Rules Actions
+  openSpecialDays: () => set({ isSpecialDaysModalOpen: true }),
+  closeSpecialDays: () => set({ isSpecialDaysModalOpen: false }),
+  toggleSpecialDays: () => set(state => ({ isSpecialDaysModalOpen: !state.isSpecialDaysModalOpen })),
+
+  addSpecialRule: (rule) => set(state => ({ specialRules: [...state.specialRules, { ...rule, id: `rule-${Date.now()}` }] })),
+  updateSpecialRule: (id, updates) => set(state => ({ specialRules: state.specialRules.map(r => r.id === id ? { ...r, ...updates } : r) })),
+  deleteSpecialRule: (id) => set(state => ({ specialRules: state.specialRules.filter(r => r.id !== id) })),
 
   // Business Hours Actions
   updateBusinessHours: (branchId, day, hours) => {
@@ -323,6 +355,20 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
     if (dateOverrides.length > 0) {
       return dateOverrides
+    }
+
+    // Check for Special Rules (Holidays/Custom Hours)
+    const specialRule = get().specialRules.find(r => date >= r.startDate && date <= r.endDate)
+    if (specialRule) {
+      if (specialRule.type === 'closed') return [] // No shifts
+      // Return all shifts from custom rule
+      return specialRule.shifts.map((s, idx) => ({
+          id: `special-${specialRule.id}-${idx}`,
+          start: s.start,
+          end: s.end,
+          date,
+          reason: 'business_hours_change'
+      })) as StaffShiftInstance[]
     }
 
     // Fall back to weekly template
@@ -988,6 +1034,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       photo: staffData.photo,
       color: staffData.color,
       branchId: staffData.branchId,
+      businessId: '1',
       isActive: staffData.isActive
     })
 
