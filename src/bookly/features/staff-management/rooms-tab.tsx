@@ -676,7 +676,8 @@ export function RoomsTab() {
                       border: 1,
                       borderColor: isFlexible ? 'success.light' : 'grey.400',
                       display: 'flex',
-                      flexDirection: 'column',
+                      flexDirection: 'row',
+                      gap: 1.5,
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.2s',
@@ -690,9 +691,15 @@ export function RoomsTab() {
                       }
                     }}
                   >
-                    <Typography variant='caption' fontWeight={500} color='text.primary'>
-                      {formatTimeCompact(shift.start)} - {formatTimeCompact(shift.end)}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
+                        <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
+                        {shiftStart.toLowerCase()}
+                        </Typography>
+                        <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
+                        {shiftEnd.toLowerCase()}
+                        </Typography>
+                    </Box>
+
                     <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
                       {hours}h{shift.capacity ? ` • Cap: ${shift.capacity}` : ''}
                     </Typography>

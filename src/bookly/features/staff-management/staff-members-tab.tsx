@@ -27,7 +27,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  DialogContentText
+  DialogContentText,
+  Menu,
+  ListItemIcon
 } from '@mui/material'
 import { mockStaff, mockServices, mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
@@ -72,6 +74,9 @@ export function StaffMembersTab() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [staffToDelete, setStaffToDelete] = useState<{ id: string; name: string } | null>(null)
   const [editingStaff, setEditingStaff] = useState<(typeof mockStaff)[0] | null>(null)
+  
+  // Action Menu State
+  const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null)
 
   const {
     selectedStaffId,
@@ -168,6 +173,32 @@ export function StaffMembersTab() {
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false)
     setStaffToDelete(null)
+  }
+
+  const handleOpenActionMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setActionMenuAnchor(event.currentTarget)
+  }
+
+  const handleCloseActionMenu = () => {
+    setActionMenuAnchor(null)
+  }
+
+  const handleMenuAction = (action: 'edit' | 'calendar' | 'delete') => {
+    handleCloseActionMenu()
+    if (!selectedStaff) return
+
+    switch (action) {
+      case 'edit':
+        setEditingStaff(selectedStaff)
+        setIsAddStaffDrawerOpen(true)
+        break
+      case 'calendar':
+        handleShowCalendar()
+        break
+      case 'delete':
+        handleDeleteClick({ id: selectedStaff.id, name: selectedStaff.name })
+        break
+    }
   }
 
   return (
@@ -309,36 +340,14 @@ export function StaffMembersTab() {
                     secondary={staff.title}
                     primaryTypographyProps={{ fontWeight: 500 }}
                   />
-                  <IconButton
-                    edge='end'
-                    size='small'
-                    onClick={e => {
-                      e.stopPropagation()
-                      handleDeleteClick(staff)
-                    }}
-                  >
-                    <i className='ri-delete-bin-line' style={{ fontSize: 18 }} />
-                  </IconButton>
+                  {/* Delete button removed as requested */}
                 </ListItemButton>
               ))}
             </Box>
           ))}
         </List>
 
-        {/* Add Staff FAB */}
-        <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-          <Fab
-            variant='extended'
-            color='primary'
-            size='small'
-            fullWidth
-            sx={{ textTransform: 'none' }}
-            onClick={() => setIsAddStaffDrawerOpen(true)}
-          >
-            <i className='ri-add-line' style={{ marginRight: 8 }} />
-            Add Staff Member
-          </Fab>
-        </Box>
+
       </Paper>
 
       {/* Right Panel - Staff Details */}
@@ -385,20 +394,59 @@ export function StaffMembersTab() {
                 <Typography variant='body2' color='text.secondary'>
                   {selectedStaff.title}
                 </Typography>
+                
+                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+                  {selectedStaff.email && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.8rem' }}>
+                      <i className='ri-mail-line' /> {selectedStaff.email}
+                    </Box>
+                  )}
+                  {selectedStaff.phone && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.8rem' }}>
+                      <i className='ri-phone-line' /> {selectedStaff.phone}
+                    </Box>
+                  )}
+                </Box>
               </Box>
-              <Button
-                variant='outlined'
-                startIcon={<i className='ri-edit-line' />}
-                onClick={() => {
-                  setEditingStaff(selectedStaff)
-                  setIsAddStaffDrawerOpen(true)
+              
+              {/* Action Menu Button */}
+              <IconButton onClick={handleOpenActionMenu}>
+                <i className='ri-more-2-fill' />
+              </IconButton>
+              
+              <Menu
+                anchorEl={actionMenuAnchor}
+                open={Boolean(actionMenuAnchor)}
+                onClose={handleCloseActionMenu}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
                 }}
               >
-                Edit
-              </Button>
-              <Button variant='outlined' startIcon={<i className='ri-calendar-line' />} onClick={handleShowCalendar}>
-                Show Calendar
-              </Button>
+                <MenuItem onClick={() => handleMenuAction('edit')}>
+                    <ListItemIcon>
+                        <i className='ri-edit-line' style={{ fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText>Edit Details</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={() => handleMenuAction('calendar')}>
+                    <ListItemIcon>
+                        <i className='ri-calendar-line' style={{ fontSize: 20 }} />
+                    </ListItemIcon>
+                    <ListItemText>Show Calendar</ListItemText>
+                </MenuItem>
+                <Divider />
+                <MenuItem onClick={() => handleMenuAction('delete')} sx={{ color: 'error.main' }}>
+                    <ListItemIcon>
+                        <i className='ri-delete-bin-line' style={{ fontSize: 20, color: 'var(--mui-palette-error-main)' }} />
+                    </ListItemIcon>
+                    <ListItemText>Delete Staff</ListItemText>
+                </MenuItem>
+              </Menu>
             </Box>
 
             {/* Tabs */}
@@ -548,6 +596,21 @@ export function StaffMembersTab() {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Sticky Add Button */}
+      <Fab
+        color='primary'
+        onClick={() => setIsAddStaffDrawerOpen(true)}
+        sx={{
+            position: 'fixed',
+            bottom: 40,
+            right: 40,
+            zIndex: 1050,
+            boxShadow: 4
+        }}
+      >
+        <i className='ri-add-line' style={{ fontSize: 24 }} />
+      </Fab>
     </Box>
   )
 }

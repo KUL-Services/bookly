@@ -85,9 +85,13 @@ export function StaffTypeChangeDialog({
     // Effective date is the day after the last booking, or tomorrow if no bookings
     const effectiveDate = lastBookingDate ? new Date(lastBookingDate.getTime() + 24 * 60 * 60 * 1000) : new Date()
 
-    // If no bookings, make it effective tomorrow
-    if (!lastBookingDate) {
-      effectiveDate.setDate(effectiveDate.getDate() + 1)
+    // If no bookings or calculated date is in the past, make it effective tomorrow
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0, 0, 0, 0)
+
+    if (!lastBookingDate || effectiveDate < new Date()) {
+      effectiveDate.setTime(tomorrow.getTime())
     }
 
     // Set to start of day
@@ -106,7 +110,13 @@ export function StaffTypeChangeDialog({
     }
     const effectiveDate = new Date(lastBookingDate.getTime() + 24 * 60 * 60 * 1000)
     effectiveDate.setHours(0, 0, 0, 0)
-    return effectiveDate
+    
+    // Ensure effective date is at least tomorrow
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0, 0, 0, 0)
+    
+    return effectiveDate < tomorrow ? tomorrow : effectiveDate
   }
 
   const effectiveDate = getEffectiveDate()
@@ -141,27 +151,41 @@ export function StaffTypeChangeDialog({
               Type Change
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Chip
-                label={currentType === 'dynamic' ? 'Dynamic' : 'Static'}
-                color='default'
-                icon={
-                  <i
-                    className={currentType === 'dynamic' ? 'ri-user-line' : 'ri-group-line'}
-                    style={{ fontSize: '1rem' }}
-                  />
+              {(() => {
+                const getChipProps = (type: StaffType) => {
+                  const isStatic = type === 'static'
+                  return {
+                    label: isStatic ? 'Static' : 'Dynamic',
+                    // Use primary for static (teal/green), default for dynamic (grey)
+                    color: isStatic ? 'primary' : 'default' as 'primary' | 'default',
+                    icon: (
+                      <i
+                        className={isStatic ? 'ri-group-line' : 'ri-user-line'}
+                        style={{ fontSize: '1rem' }}
+                      />
+                    ),
+                    sx: isStatic ? { 
+                        bgcolor: 'primary.main', 
+                        color: 'primary.contrastText',
+                        '& .MuiChip-icon': { color: 'inherit' }
+                    } : {
+                        bgcolor: 'action.hover',
+                        '& .MuiChip-icon': { color: 'text.secondary' }
+                    }
+                  }
                 }
-              />
-              <i className='ri-arrow-right-line' style={{ color: 'text.secondary' }} />
-              <Chip
-                label={targetType === 'dynamic' ? 'Dynamic' : 'Static'}
-                color='primary'
-                icon={
-                  <i
-                    className={targetType === 'dynamic' ? 'ri-user-line' : 'ri-group-line'}
-                    style={{ fontSize: '1rem' }}
-                  />
-                }
-              />
+
+                const currentProps = getChipProps(currentType)
+                const targetProps = getChipProps(targetType)
+
+                return (
+                  <>
+                    <Chip {...currentProps} />
+                    <i className='ri-arrow-right-line' style={{ color: 'text.secondary' }} />
+                    <Chip {...targetProps} />
+                  </>
+                )
+              })()}
             </Box>
           </Box>
 

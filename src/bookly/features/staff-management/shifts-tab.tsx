@@ -269,6 +269,12 @@ export function ShiftsTab() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
   const [bulkMode, setBulkMode] = useState(false)
+  
+  // Optimistic state for staff type toggles
+  const [optimisticStaffTypes, setOptimisticStaffTypes] = useState<Record<string, 'static' | 'dynamic' | null>>({})
+
+  const [isCancelChangeDialogOpen, setIsCancelChangeDialogOpen] = useState(false)
+  const [cancelChangeStaffId, setCancelChangeStaffId] = useState<string | null>(null)
 
   const [isBusinessHoursModalOpen, setIsBusinessHoursModalOpen] = useState(false)
   const [isBusinessHoursDayEditorOpen, setIsBusinessHoursDayEditorOpen] = useState(false)
@@ -515,10 +521,14 @@ export function ShiftsTab() {
     const pendingChange = getPendingStaffTypeChange(staffId)
 
     if (pendingChange) {
-      // Cancel pending change and revert to original type
-      cancelStaffTypeChange(staffId)
+      // Ask for confirmation before cancelling
+      setCancelChangeStaffId(staffId)
+      setIsCancelChangeDialogOpen(true)
       return
     }
+
+    // Optimistically update UI
+    setOptimisticStaffTypes(prev => ({ ...prev, [staffId]: targetType }))
 
     // Open confirmation dialog
     setStaffTypeChangeContext({
@@ -534,8 +544,45 @@ export function ShiftsTab() {
     if (!staffTypeChangeContext) return
 
     scheduleStaffTypeChange(staffTypeChangeContext.staffId, staffTypeChangeContext.targetType, effectiveDate)
+    
+    // Clear optimistic state (store will take over, or optimistic remains valid if store is slow)
+    setOptimisticStaffTypes(prev => {
+        const newState = { ...prev }
+        delete newState[staffTypeChangeContext.staffId]
+        return newState
+    })
+    
     setIsStaffTypeChangeDialogOpen(false)
     setStaffTypeChangeContext(null)
+  }
+  
+  const handleStaffTypeChangeCancel = () => {
+    if (staffTypeChangeContext) {
+        // Revert optimistic state
+        setOptimisticStaffTypes(prev => {
+            const newState = { ...prev }
+            delete newState[staffTypeChangeContext.staffId]
+            return newState
+        })
+    }
+    setIsStaffTypeChangeDialogOpen(false)
+    setStaffTypeChangeContext(null)
+  }
+
+  const handleConfirmCancelChange = () => {
+    if (cancelChangeStaffId) {
+      cancelStaffTypeChange(cancelChangeStaffId)
+      
+      // Also revert optimistic state if any exists (though usually cleared on confirm)
+      setOptimisticStaffTypes(prev => {
+        const newState = { ...prev }
+        delete newState[cancelChangeStaffId]
+        return newState
+      })
+      
+      setCancelChangeStaffId(null)
+      setIsCancelChangeDialogOpen(false)
+    }
   }
 
   const handleDragEnd = useCallback((event: any) => {
@@ -798,30 +845,42 @@ export function ShiftsTab() {
 
                 return (
                   <>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={effectiveStaffType === 'static'}
-                          onChange={e => {
-                            handleStaffTypeToggle(staff.id, staff.name, e.target.checked)
-                          }}
-                          size='small'
-                          color={pendingChange ? 'warning' : 'primary'}
-                        />
-                      }
-                      label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <i
-                            className={effectiveStaffType === 'static' ? 'ri-group-line' : 'ri-user-line'}
-                            style={{ fontSize: 12 }}
-                          />
-                          <Typography variant='caption' fontSize='0.65rem'>
-                            {effectiveStaffType === 'static' ? 'Static' : 'Dynamic'}
-                          </Typography>
-                        </Box>
-                      }
-                      sx={{ ml: 0, mr: 1 }}
-                    />
+                    {(() => {
+                        // Use optimistic type if available, otherwise fall back to store type
+                        const optimisticType = optimisticStaffTypes[staff.id]
+                        const displayType = optimisticType ?? effectiveStaffType
+                        const isStatic = displayType === 'static'
+                        
+                        return (
+                         <>
+                            <FormControlLabel
+                            control={
+                                <Switch
+                                checked={isStatic}
+                                onChange={e => {
+                                    handleStaffTypeToggle(staff.id, staff.name, e.target.checked)
+                                }}
+                                size='small'
+                                size='small'
+                                color='primary'
+                                />
+                            }
+                            label={
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <i
+                                    className={isStatic ? 'ri-group-line' : 'ri-user-line'}
+                                    style={{ fontSize: 12 }}
+                                />
+                                <Typography variant='caption' fontSize='0.65rem'>
+                                    {isStatic ? 'Static' : 'Dynamic'}
+                                </Typography>
+                                </Box>
+                            }
+                            sx={{ ml: 0, mr: 1 }}
+                            />
+                         </>
+                        )
+                    })()}
                     <Tooltip
                       title={
                         effectiveStaffType === 'static' ? (
@@ -939,8 +998,6 @@ export function ShiftsTab() {
                     color='warning'
                     variant='outlined'
                     icon={<i className='ri-calendar-event-line' style={{ fontSize: '0.7rem' }} />}
-                    onDelete={() => cancelStaffTypeChange(staff.id)}
-                    deleteIcon={<i className='ri-close-line' style={{ fontSize: '0.9rem' }} />}
                     sx={{
                       height: 'auto',
                       minHeight: 32,
@@ -988,7 +1045,8 @@ export function ShiftsTab() {
                       border: 1,
                       borderColor: staffTypeForDate === 'dynamic' ? 'success.light' : 'grey.400',
                       display: 'flex',
-                      flexDirection: 'column',
+                      flexDirection: 'row',
+                      gap: 1.5,
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.2s',
@@ -1004,12 +1062,15 @@ export function ShiftsTab() {
                       }
                     }}
                   >
-                    <Typography variant='caption' fontWeight={500} color='text.primary'>
-                      {shiftStart.toLowerCase()}
-                    </Typography>
-                    <Typography variant='caption' fontWeight={500} color='text.primary'>
-                      {shiftEnd.toLowerCase()}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
+                        <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
+                        {shiftStart.toLowerCase()}
+                        </Typography>
+                        <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
+                        {shiftEnd.toLowerCase()}
+                        </Typography>
+                    </Box>
+                    
                     <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
                       {hours}h
                     </Typography>
@@ -1674,10 +1735,7 @@ export function ShiftsTab() {
           {staffTypeChangeContext && (
             <StaffTypeChangeDialog
               open={isStaffTypeChangeDialogOpen}
-              onClose={() => {
-                setIsStaffTypeChangeDialogOpen(false)
-                setStaffTypeChangeContext(null)
-              }}
+              onClose={handleStaffTypeChangeCancel}
               staffId={staffTypeChangeContext.staffId}
               staffName={staffTypeChangeContext.staffName}
               currentType={staffTypeChangeContext.currentType}
@@ -1691,6 +1749,27 @@ export function ShiftsTab() {
             open={isSpecialDaysModalOpen}
             onClose={closeSpecialDays}
           />
+          
+          {/* Cancel Change Confirmation Dialog */}
+          <Dialog
+            open={isCancelChangeDialogOpen}
+            onClose={() => setIsCancelChangeDialogOpen(false)}
+            maxWidth='xs'
+            fullWidth
+          >
+            <DialogTitle>Cancel Pending Change?</DialogTitle>
+            <DialogContent>
+               <Typography variant='body2' color='text.secondary'>
+                  Are you sure you want to cancel the pending staff type change? This will revert the staff member to their previous type.
+               </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setIsCancelChangeDialogOpen(false)}>Keep Change</Button>
+              <Button onClick={handleConfirmCancelChange} color='error' variant='contained'>
+                Yes, Cancel Change
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Box>
       </DndContext>
     )
