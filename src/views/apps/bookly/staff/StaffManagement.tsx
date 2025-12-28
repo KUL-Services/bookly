@@ -55,12 +55,17 @@ const StaffManagement = () => {
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       {/* Tabs Header */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-        <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)} sx={{ px: 3 }}>
+        <Tabs
+          value={currentTab}
+          onChange={(_, newValue) => setCurrentTab(newValue)}
+          sx={{ px: 3 }}
+          variant='scrollable'
+          scrollButtons='auto'
+        >
           <Tab label='STAFF MEMBERS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
           <Tab label='SHIFTS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
           <Tab label='RESOURCES' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
           <Tab label='ROOMS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
-          {/* <Tab label='COMMISSIONS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} /> */}
         </Tabs>
       </Box>
 

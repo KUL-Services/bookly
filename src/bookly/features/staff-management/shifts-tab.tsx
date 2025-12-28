@@ -1899,8 +1899,8 @@ export function ShiftsTab() {
                     {showBranchHeader && (
                       <Box
                         sx={{
+                          height: 56,
                           px: 2,
-                          py: 1,
                           bgcolor: 'action.hover',
                           borderBottom: 1,
                           borderColor: 'divider',
@@ -1909,21 +1909,32 @@ export function ShiftsTab() {
                           gap: 1
                         }}
                       >
-                        <i className='ri-building-line' style={{ fontSize: 14 }} />
-                        <Typography variant='caption' fontWeight={600} fontSize='0.7rem'>
-                          {branch?.name || branchId}
-                        </Typography>
-                        <Typography variant='caption' color='text.secondary' fontSize='0.65rem'>
-                          ({branchStaff.length})
-                        </Typography>
-                        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
+                        <i className='ri-building-line' style={{ fontSize: 14, flexShrink: 0 }} />
+                        <Box sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <Typography
+                              variant='caption'
+                              fontWeight={600}
+                              fontSize='0.7rem'
+                              sx={{
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {branch?.name || branchId}
+                            </Typography>
+                            <Typography variant='caption' color='text.secondary' fontSize='0.65rem' sx={{ flexShrink: 0 }}>
+                              ({branchStaff.length})
+                            </Typography>
+                          </Box>
+                          <Typography variant='caption' color='text.secondary' fontSize='0.6rem' display='block'>
                             {branchDaysOpen}d • {branchHours}h/wk
                           </Typography>
-                          <IconButton size='small' onClick={handleOpenBusinessHoursModal}>
-                            <i className='ri-edit-line' style={{ fontSize: 12 }} />
-                          </IconButton>
                         </Box>
+                        <IconButton size='small' onClick={handleOpenBusinessHoursModal} sx={{ flexShrink: 0 }}>
+                          <i className='ri-edit-line' style={{ fontSize: 12 }} />
+                        </IconButton>
                       </Box>
                     )}
 
@@ -1940,8 +1951,8 @@ export function ShiftsTab() {
                             <>
                               <Box
                                 sx={{
+                                  height: 27,
                                   px: 2,
-                                  py: 0.75,
                                   bgcolor: 'rgba(25, 118, 210, 0.08)',
                                   borderBottom: 1,
                                   borderTop: showBranchHeader ? 0 : 1,
@@ -2009,8 +2020,8 @@ export function ShiftsTab() {
                             <>
                               <Box
                                 sx={{
+                                  height: 27,
                                   px: 2,
-                                  py: 0.75,
                                   bgcolor: 'rgba(158, 158, 158, 0.08)',
                                   borderBottom: 1,
                                   borderTop: 1,
@@ -2231,17 +2242,79 @@ export function ShiftsTab() {
 
                   return (
                     <Box key={branchId}>
-                      {/* Branch header cell - matches left sidebar branch header height - only show when all branches selected */}
-                      {showBranchHeader && (
-                        <Box
-                          sx={{
-                            height: '33px',
-                            borderBottom: 1,
-                            borderColor: 'divider',
-                            bgcolor: 'action.selected'
-                          }}
-                        />
-                      )}
+                      {/* Branch header cell with business hours - only show when all branches selected */}
+                      {showBranchHeader &&
+                        (() => {
+                          const dayOfWeek = WEEK_DAYS[dayIndex] as DayOfWeek
+                          const businessHours = getBusinessHours(branchId, dayOfWeek)
+                          const isOpen = businessHours.isOpen && businessHours.shifts.length > 0
+
+                          // Format time from 24h to 12h
+                          const formatTime = (time24: string) => {
+                            const [hourStr, minStr] = time24.split(':')
+                            let hour = parseInt(hourStr)
+                            const minute = minStr
+                            const period = hour >= 12 ? 'PM' : 'AM'
+                            if (hour === 0) hour = 12
+                            else if (hour > 12) hour -= 12
+                            return `${hour}:${minute} ${period.toLowerCase()}`
+                          }
+
+                          return (
+                            <Box
+                              sx={{
+                                height: 56,
+                                borderBottom: 1,
+                                borderColor: 'divider',
+                                bgcolor: 'action.selected',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                p: 0.5
+                              }}
+                            >
+                              {isOpen ? (
+                                <Box
+                                  sx={{
+                                    width: '100%',
+                                    height: '100%',
+                                    bgcolor: 'rgba(10, 44, 36, 0.15)',
+                                    borderRadius: 1,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '1px solid',
+                                    borderColor: 'success.light'
+                                  }}
+                                >
+                                  <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}>
+                                    {formatTime(businessHours.shifts[0].start)}
+                                  </Typography>
+                                  <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}>
+                                    {formatTime(businessHours.shifts[0].end)}
+                                  </Typography>
+                                </Box>
+                              ) : (
+                                <Box
+                                  sx={{
+                                    width: '100%',
+                                    height: '100%',
+                                    bgcolor: 'grey.800',
+                                    borderRadius: 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  <Typography variant='caption' color='grey.400' sx={{ fontSize: '0.6rem' }}>
+                                    Closed
+                                  </Typography>
+                                </Box>
+                              )}
+                            </Box>
+                          )
+                        })()}
 
                       {/* Dynamic Staff Section */}
                       {dynamicStaff.length > 0 && (
@@ -2249,8 +2322,9 @@ export function ShiftsTab() {
                           {/* Dynamic staff type header cell */}
                           <Box
                             sx={{
-                              height: '27px',
+                              height: 27,
                               borderBottom: 1,
+                              borderTop: showBranchHeader ? 0 : 1,
                               borderColor: 'divider',
                               bgcolor: 'rgba(25, 118, 210, 0.08)'
                             }}
@@ -2606,8 +2680,9 @@ export function ShiftsTab() {
                           {/* Static staff type header cell */}
                           <Box
                             sx={{
-                              height: '27px',
+                              height: 27,
                               borderBottom: 1,
+                              borderTop: 1,
                               borderColor: 'divider',
                               bgcolor: 'rgba(158, 158, 158, 0.08)'
                             }}
