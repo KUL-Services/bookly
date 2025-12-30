@@ -21,10 +21,12 @@ import {
   Paper
 } from '@mui/material'
 import { mockStaff, mockServices, mockBookings, mockRooms } from '@/bookly/data/mock-data'
-import type { AppointmentStatus, DateRange, CalendarEvent } from './types'
+import type { AppointmentStatus, DateRange, CalendarEvent, DayOfWeek, WeeklyStaffHours, TimeOffRequest } from './types'
 import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
 import { isStaffAvailable, hasConflict, getStaffAvailableCapacity, getStaffRoomAssignment } from './utils'
+import { hasTimeOffConflict } from './staff-management-integration'
+import { useStaffManagementStore } from '../staff-management/staff-store'
 import ClientPickerDialog from './client-picker-dialog'
 import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 import { DatePickerField } from '@/bookly/features/staff-management/date-picker-field'
@@ -75,6 +77,126 @@ const normalizeEmail = (email: string): string => {
 
 type PaymentMethod = 'pay_on_arrival' | 'mock_card'
 
+// Helper to generate available time slots for a staff member on a given date
+interface AvailableSlot {
+  time: string
+  available: boolean
+  reason?: string
+}
+
+const generateAvailableSlots = (
+  staffId: string,
+  date: Date,
+  serviceDuration: number,
+  events: CalendarEvent[],
+  staffWorkingHours: Record<string, WeeklyStaffHours>,
+  timeOffRequests: TimeOffRequest[] = []
+): AvailableSlot[] => {
+  const slots: AvailableSlot[] = []
+  const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const dayOfWeek = dayNames[date.getDay()]
+  const workingHours = staffWorkingHours[staffId]?.[dayOfWeek as keyof WeeklyStaffHours] as { isWorking: boolean, shifts: any[] } | undefined
+
+  // If not working, return empty
+  if (!workingHours || !workingHours.isWorking || !workingHours.shifts || workingHours.shifts.length === 0) {
+    return []
+  }
+
+  // Get all shifts for the day
+  const shifts = [...workingHours.shifts].sort((a, b) => {
+    const aStart = parseInt(a.start.replace(':', ''))
+    const bStart = parseInt(b.start.replace(':', ''))
+    return aStart - bStart
+  })
+
+  // Get existing bookings for this staff on this date
+  const dateStr = getDateKey(date)
+  const staffBookings = events.filter(e => {
+    const eventDate = getDateKey(new Date(e.start))
+    return eventDate === dateStr &&
+           e.extendedProps.staffId === staffId &&
+           e.extendedProps.status !== 'cancelled'
+  })
+
+  // Generate slots based on working hours (15 min intervals)
+  shifts.forEach(shift => {
+    const [startH, startM] = shift.start.split(':').map(Number)
+    const [endH, endM] = shift.end.split(':').map(Number)
+    const shiftStartMins = startH * 60 + startM
+    const shiftEndMins = endH * 60 + endM
+
+    // Get break times
+    const breaks: { start: number; end: number }[] = []
+    if (shift.breaks && shift.breaks.length > 0) {
+      shift.breaks.forEach((b: { start: string; end: string }) => {
+        const [bStartH, bStartM] = b.start.split(':').map(Number)
+        const [bEndH, bEndM] = b.end.split(':').map(Number)
+        breaks.push({ start: bStartH * 60 + bStartM, end: bEndH * 60 + bEndM })
+      })
+    }
+
+    // Generate slots every 15 minutes
+    for (let mins = shiftStartMins; mins + serviceDuration <= shiftEndMins; mins += 15) {
+      const slotEndMins = mins + serviceDuration
+      const hours = Math.floor(mins / 60)
+      const minutes = mins % 60
+      const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+
+      // Check if slot is during a break
+      const duringBreak = breaks.some(b =>
+        (mins >= b.start && mins < b.end) ||
+        (slotEndMins > b.start && slotEndMins <= b.end) ||
+        (mins <= b.start && slotEndMins >= b.end)
+      )
+
+      if (duringBreak) {
+        slots.push({ time: timeStr, available: false, reason: 'Break time' })
+        continue
+      }
+
+      // Check if slot is during time-off
+      const slotStart = new Date(date)
+      slotStart.setHours(hours, minutes, 0, 0)
+      const slotEnd = new Date(date)
+      slotEnd.setHours(Math.floor(slotEndMins / 60), slotEndMins % 60, 0, 0)
+
+      const timeOffCheck = hasTimeOffConflict(staffId, slotStart, slotEnd, timeOffRequests)
+      if (timeOffCheck.hasConflict) {
+        slots.push({ time: timeStr, available: false, reason: `Time off: ${timeOffCheck.conflictingTimeOff?.reason || 'Unavailable'}` })
+        continue
+      }
+
+      // Check if slot conflicts with existing bookings
+      const hasBookingConflict = staffBookings.some(booking => {
+        const bookingStart = new Date(booking.start)
+        const bookingEnd = new Date(booking.end)
+        const bookingStartMins = bookingStart.getHours() * 60 + bookingStart.getMinutes()
+        const bookingEndMins = bookingEnd.getHours() * 60 + bookingEnd.getMinutes()
+
+        return (mins >= bookingStartMins && mins < bookingEndMins) ||
+               (slotEndMins > bookingStartMins && slotEndMins <= bookingEndMins) ||
+               (mins <= bookingStartMins && slotEndMins >= bookingEndMins)
+      })
+
+      if (hasBookingConflict) {
+        slots.push({ time: timeStr, available: false, reason: 'Already booked' })
+      } else {
+        slots.push({ time: timeStr, available: true })
+      }
+    }
+  })
+
+  return slots
+}
+
+// Helper to format time to 12h format
+const formatTime12h = (time: string): string => {
+  const [hours, minutes] = time.split(':').map(Number)
+  const suffix = hours >= 12 ? 'PM' : 'AM'
+  const hour12 = hours % 12 || 12
+  return `${hour12}:${minutes.toString().padStart(2, '0')} ${suffix}`
+}
+
 // Type for client in static slot
 interface SlotClient {
   id: string
@@ -83,7 +205,7 @@ interface SlotClient {
   email: string
   phone: string
   bookedAt: string
-  status: 'confirmed' | 'no_show' | 'completed' | 'pending'
+  status: 'confirmed' | 'no_show' | 'attended' | 'pending'
   arrivalTime?: string
   paymentStatus: 'paid' | 'unpaid'
   paymentMethod: PaymentMethod
@@ -125,6 +247,7 @@ export default function UnifiedBookingDrawer({
   const updateEvent = useCalendarStore(state => state.updateEvent)
   const deleteEvent = useCalendarStore(state => state.deleteEvent)
   const staticSlots = useCalendarStore(state => state.staticSlots)
+  const { staffWorkingHours, timeOffRequests } = useStaffManagementStore()
 
   // Dynamic mode form state
   const [bookingReference, setBookingReference] = useState('')
@@ -160,6 +283,7 @@ export default function UnifiedBookingDrawer({
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
+  const [showAvailableSlots, setShowAvailableSlots] = useState(true)
 
   // Get only dynamic staff for selection
   const dynamicStaff = mockStaff.filter(s => s.staffType === 'dynamic')
@@ -267,7 +391,7 @@ export default function UnifiedBookingDrawer({
       setRequestedByClient(props.selectionMethod === 'by_client')
 
       const existingStatus = props.status || 'confirmed'
-      if (['pending', 'need_confirm', 'confirmed', 'no_show', 'completed'].includes(existingStatus)) {
+      if (['pending', 'need_confirm', 'confirmed', 'no_show', 'attended'].includes(existingStatus)) {
         setStatus(existingStatus as AppointmentStatus)
       } else {
         setStatus('confirmed')
@@ -374,8 +498,8 @@ export default function UnifiedBookingDrawer({
             email: emailMatch ? emailMatch[1].trim() : '',
             phone: phoneMatch ? phoneMatch[1].trim() : '',
             bookedAt: new Date(booking.start).toISOString(),
-            status: ['confirmed', 'no_show', 'completed', 'pending'].includes(booking.extendedProps.status)
-              ? (booking.extendedProps.status as 'confirmed' | 'no_show' | 'completed' | 'pending')
+            status: ['confirmed', 'no_show', 'attended', 'pending'].includes(booking.extendedProps.status)
+              ? (booking.extendedProps.status as 'confirmed' | 'no_show' | 'attended' | 'pending')
               : 'confirmed',
             arrivalTime: booking.extendedProps.arrivalTime || '',
             paymentStatus: booking.extendedProps.paymentStatus === 'paid' ? 'paid' : 'unpaid',
@@ -533,11 +657,12 @@ export default function UnifiedBookingDrawer({
 
       // If in static mode and adding client, add to slot clients list
       if (effectiveSchedulingMode === 'static' && isAddingClient) {
-        if (!client.email?.trim()) {
-          setValidationError('Client email is required to avoid duplicates')
+        // At least one of email or phone is required
+        if (!client.email?.trim() && !client.phone?.trim()) {
+          setValidationError('Please enter either email or phone number')
           return
         }
-        if (hasDuplicateEmail(client.email)) {
+        if (client.email?.trim() && hasDuplicateEmail(client.email)) {
           setValidationError('This client is already booked in this session')
           return
         }
@@ -575,11 +700,12 @@ export default function UnifiedBookingDrawer({
       setValidationError('Please enter client name')
       return
     }
-    if (!newClientEmail.trim()) {
-      setValidationError('Client email is required to avoid duplicates')
+    // At least one of email or phone is required
+    if (!newClientEmail.trim() && !newClientPhone.trim()) {
+      setValidationError('Please enter either email or phone number')
       return
     }
-    if (hasDuplicateEmail(newClientEmail)) {
+    if (newClientEmail.trim() && hasDuplicateEmail(newClientEmail)) {
       setValidationError('This client is already booked in this session')
       return
     }
@@ -630,7 +756,7 @@ export default function UnifiedBookingDrawer({
           ? {
               ...c,
               arrivalTime,
-              status: arrivalTime ? 'completed' : c.status
+              status: arrivalTime ? 'attended' : c.status
             }
           : c
       )
@@ -656,6 +782,11 @@ export default function UnifiedBookingDrawer({
       // Dynamic mode validation
       if (!clientName.trim()) {
         setValidationError('Please enter client name')
+        return
+      }
+      // At least one of email or phone is required
+      if (!clientEmail.trim() && !clientPhone.trim()) {
+        setValidationError('Please enter either email or phone number')
         return
       }
       if (!serviceId) {
@@ -931,8 +1062,14 @@ export default function UnifiedBookingDrawer({
         return 'success'
       case 'no_show':
         return 'error'
-      case 'completed':
+      case 'attended':
         return 'info'
+      case 'pending':
+        return 'warning'
+      case 'need_confirm':
+        return 'warning'
+      case 'cancelled':
+        return 'error'
       default:
         return 'default'
     }
@@ -1081,20 +1218,132 @@ export default function UnifiedBookingDrawer({
                     </Typography>
                     <DatePickerField label='Appointment Date' value={date} onChange={setDate} size='small' fullWidth />
 
-                    {/* Start Time (end time auto-calculated) */}
-                    <Box sx={{ mt: 1.5 }}>
-                      <TimeSelectField
-                        label='Start Time'
-                        value={startTime}
-                        onChange={setStartTime}
-                        size='small'
-                        fullWidth
-                      />
-                    </Box>
-                    {serviceId && (
-                      <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5, display: 'block' }}>
-                        End time: {endTime} (based on {serviceDuration}min service duration)
-                      </Typography>
+                    {/* Available Slots Display */}
+                    {staffId && serviceId && (
+                      <Box sx={{ mt: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                          <Typography variant='caption' color='text.secondary' fontWeight={600}>
+                            AVAILABLE TIME SLOTS
+                          </Typography>
+                          <Button
+                            size='small'
+                            variant='text'
+                            onClick={() => setShowAvailableSlots(!showAvailableSlots)}
+                            sx={{ fontSize: '0.7rem', minWidth: 'auto', p: 0.5 }}
+                          >
+                            {showAvailableSlots ? 'Hide' : 'Show'}
+                          </Button>
+                        </Box>
+                        {showAvailableSlots && (() => {
+                          const availableSlots = generateAvailableSlots(
+                            staffId,
+                            date,
+                            serviceDuration,
+                            events,
+                            staffWorkingHours,
+                            timeOffRequests
+                          )
+                          const freeSlots = availableSlots.filter(s => s.available)
+
+                          if (availableSlots.length === 0) {
+                            return (
+                              <Paper sx={{ p: 2, bgcolor: 'warning.lighter', border: 1, borderColor: 'warning.main' }}>
+                                <Typography variant='body2' color='warning.dark'>
+                                  <i className='ri-calendar-close-line' style={{ marginRight: 8 }} />
+                                  Staff member is not working on this date
+                                </Typography>
+                              </Paper>
+                            )
+                          }
+
+                          return (
+                            <Box>
+                              <Typography variant='caption' color='text.secondary' sx={{ mb: 1, display: 'block' }}>
+                                {freeSlots.length} slots available • Click to select
+                              </Typography>
+                              <Box
+                                sx={{
+                                  display: 'grid',
+                                  gridTemplateColumns: 'repeat(4, 1fr)',
+                                  gap: 0.75,
+                                  maxHeight: 180,
+                                  overflowY: 'auto',
+                                  p: 0.5,
+                                  border: 1,
+                                  borderColor: 'divider',
+                                  borderRadius: 1,
+                                  bgcolor: 'background.paper'
+                                }}
+                              >
+                                {availableSlots.map((slot, idx) => (
+                                  <Chip
+                                    key={idx}
+                                    label={formatTime12h(slot.time)}
+                                    size='small'
+                                    variant={startTime === slot.time ? 'filled' : 'outlined'}
+                                    color={startTime === slot.time ? 'primary' : slot.available ? 'default' : 'default'}
+                                    disabled={!slot.available}
+                                    onClick={() => slot.available && setStartTime(slot.time)}
+                                    sx={{
+                                      fontSize: '0.7rem',
+                                      height: 28,
+                                      cursor: slot.available ? 'pointer' : 'not-allowed',
+                                      opacity: slot.available ? 1 : 0.4,
+                                      bgcolor: startTime === slot.time ? 'primary.main' : slot.available ? 'transparent' : 'action.disabledBackground',
+                                      '&:hover': slot.available && startTime !== slot.time ? {
+                                        bgcolor: 'primary.lighter',
+                                        borderColor: 'primary.main'
+                                      } : {},
+                                      '& .MuiChip-label': {
+                                        px: 1
+                                      }
+                                    }}
+                                  />
+                                ))}
+                              </Box>
+                              {startTime && (
+                                <Paper sx={{ p: 1.5, mt: 1.5, bgcolor: 'success.lighter', border: 1, borderColor: 'success.main' }}>
+                                  <Typography variant='body2' color='success.dark' fontWeight={500}>
+                                    <i className='ri-check-line' style={{ marginRight: 8 }} />
+                                    Selected: {formatTime12h(startTime)} - {formatTime12h(endTime)}
+                                  </Typography>
+                                  <Typography variant='caption' color='success.dark'>
+                                    {serviceDuration} minute {serviceName || 'service'}
+                                  </Typography>
+                                </Paper>
+                              )}
+                            </Box>
+                          )
+                        })()}
+                      </Box>
+                    )}
+
+                    {/* Manual Time Selection (fallback when no staff/service selected) */}
+                    {(!staffId || !serviceId) && (
+                      <Box sx={{ mt: 1.5 }}>
+                        <TimeSelectField
+                          label='Start Time'
+                          value={startTime}
+                          onChange={setStartTime}
+                          size='small'
+                          fullWidth
+                        />
+                        {serviceId && (
+                          <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5, display: 'block' }}>
+                            End time: {endTime} (based on {serviceDuration}min service duration)
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+
+                    {/* Prompt to select staff and service first */}
+                    {(!staffId || !serviceId) && (
+                      <Paper sx={{ p: 1.5, mt: 1.5, bgcolor: 'info.lighter', border: 1, borderColor: 'info.main' }}>
+                        <Typography variant='caption' color='info.dark'>
+                          <i className='ri-information-line' style={{ marginRight: 6 }} />
+                          Select a staff member and service to see available time slots
+                        </Typography>
+                      </Paper>
                     )}
                   </Box>
 
@@ -1160,7 +1409,7 @@ export default function UnifiedBookingDrawer({
                     >
                       <MenuItem value='pending'>Pending / Unconfirmed</MenuItem>
                       <MenuItem value='need_confirm'>Confirmation</MenuItem>
-                      <MenuItem value='completed'>Attended / Completed</MenuItem>
+                      <MenuItem value='attended'>Attended</MenuItem>
                       <MenuItem value='confirmed'>Confirmed</MenuItem>
                       <MenuItem value='no_show'>No Show</MenuItem>
                     </Select>
@@ -1206,162 +1455,135 @@ export default function UnifiedBookingDrawer({
                   />
                 </Stack>
               ) : (
-                // EDIT MODE - Read-only with editable status and starred
-                <Stack spacing={2.5}>
-                  {/* Booking Reference */}
-                  <Box>
-                    <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      BOOKING REFERENCE
-                    </Typography>
-                    <Typography variant='body1' fontWeight={600}>
+                // EDIT MODE - Simple, clean read-only view
+                <Stack spacing={1.5}>
+                  {/* Booking Info - Clean compact display */}
+                  <Box sx={{ mb: 1 }}>
+                    <Typography variant='caption' color='text.secondary' sx={{ fontFamily: 'monospace' }}>
                       {bookingReference}
                     </Typography>
                   </Box>
 
-                  <Divider />
+                  {/* Client Name - Main heading */}
+                  <Typography variant='h6' fontWeight={600}>
+                    {clientName || 'Unknown Client'}
+                  </Typography>
 
-                  {/* Client Information (read-only) */}
-                  <Box>
-                    <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      CLIENT
+                  {/* Contact Info - Compact single line */}
+                  <Typography variant='body2' color='text.secondary'>
+                    {[clientEmail, clientPhone].filter(Boolean).join(' • ') || 'No contact info'}
+                  </Typography>
+
+                  {/* Service & Time - Key info */}
+                  <Box sx={{ py: 1.5 }}>
+                    <Typography variant='body1' fontWeight={500}>
+                      {serviceName || 'Service'}
                     </Typography>
-                    <Typography variant='body1'>{clientName || 'N/A'}</Typography>
-                    {clientEmail && (
-                      <Typography variant='body2' color='text.secondary'>
-                        <i className='ri-mail-line' style={{ marginRight: 4 }} />
-                        {clientEmail}
-                      </Typography>
-                    )}
-                    {clientPhone && (
-                      <Typography variant='body2' color='text.secondary'>
-                        <i className='ri-phone-line' style={{ marginRight: 4 }} />
-                        {clientPhone}
-                      </Typography>
-                    )}
-                  </Box>
-
-                  <Divider />
-
-                  {/* Date & Time (read-only) */}
-                  <Box>
-                    <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      APPOINTMENT DATE
+                    <Typography variant='body2' color='text.secondary'>
+                      {formatShortDate(date)} • {formatTime12h(startTime)} - {formatTime12h(endTime)}
                     </Typography>
-                    <Typography variant='body1'>
-                      {formatShortDate(date)} • {startTime} - {endTime}
+                    <Typography variant='body2' color='text.secondary'>
+                      with {mockStaff.find(s => s.id === staffId)?.name || 'Staff'} • {serviceDuration} min
                     </Typography>
                   </Box>
 
-                  <Divider />
+                  {/* Price */}
+                  <Typography variant='h5' fontWeight={600} color='primary.main'>
+                    ${servicePrice.toFixed(2)}
+                  </Typography>
 
-                  {/* Staff (read-only) */}
-                  <Box>
-                    <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      STAFF MEMBER
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <Avatar sx={{ width: 28, height: 28, fontSize: '0.75rem' }}>
-                        {getInitials(mockStaff.find(s => s.id === staffId)?.name || '')}
-                      </Avatar>
-                      <Typography variant='body1'>{mockStaff.find(s => s.id === staffId)?.name || 'N/A'}</Typography>
-                    </Box>
-                  </Box>
-
-                  <Divider />
-
-                  {/* Service (read-only) */}
-                  <Box>
-                    <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      SERVICE
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant='body1'>{serviceName || 'N/A'}</Typography>
-                      <Typography variant='h6' color='primary.main' fontWeight={600}>
-                        ${servicePrice.toFixed(2)}
-                      </Typography>
-                    </Box>
-                    <Typography variant='caption' color='text.secondary'>
-                      Duration: {serviceDuration} minutes
-                    </Typography>
-                  </Box>
-
-                  {requestedByClient && (
-                    <>
-                      <Divider />
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <i className='ri-heart-fill' style={{ color: 'var(--mui-palette-customColors-coral)' }} />
-                        <Typography variant='body2'>Requested by client</Typography>
-                      </Box>
-                    </>
-                  )}
-
-                  <Divider />
-
-                  {/* EDITABLE SECTION */}
-                  <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
-                    <Typography
-                      variant='caption'
-                      color='text.secondary'
-                      fontWeight={600}
-                      sx={{ mb: 1.5, display: 'block' }}
-                    >
-                      EDITABLE FIELDS
-                    </Typography>
-
-                    {/* Booking Status (editable) */}
-                    <FormControl fullWidth size='small' sx={{ mb: 2 }}>
-                      <InputLabel>Booking Status</InputLabel>
-                      <Select
-                        value={status}
-                        label='Booking Status'
-                        onChange={e => setStatus(e.target.value as AppointmentStatus)}
-                      >
-                        <MenuItem value='pending'>Pending / Unconfirmed</MenuItem>
-                        <MenuItem value='need_confirm'>Confirmation</MenuItem>
-                        <MenuItem value='completed'>Attended / Completed</MenuItem>
-                        <MenuItem value='confirmed'>Confirmed</MenuItem>
-                        <MenuItem value='no_show'>No Show</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    {/* Payment Status (editable) */}
-                    <FormControl fullWidth size='small' sx={{ mb: 2 }}>
-                      <InputLabel>Payment Status</InputLabel>
-                      <Select
-                        value={paymentStatus}
-                        label='Payment Status'
-                        onChange={e => setPaymentStatus(e.target.value as 'paid' | 'unpaid')}
-                      >
-                        <MenuItem value='unpaid'>Unpaid</MenuItem>
-                        <MenuItem value='paid'>Paid</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    {/* Payment Reference (editable) */}
-                    <TextField
-                      fullWidth
-                      label='Payment Reference Number'
-                      value={instapayReference}
-                      onChange={e => setInstapayReference(e.target.value)}
+                  {/* Status indicators - compact chips */}
+                  <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', py: 1 }}>
+                    <Chip
                       size='small'
-                      placeholder='Enter payment reference'
-                      sx={{ mb: 2 }}
+                      label={status.replace('_', ' ')}
+                      color={getStatusColor(status) as any}
+                      sx={{ textTransform: 'capitalize' }}
                     />
+                    <Chip
+                      size='small'
+                      label={paymentStatus}
+                      color={paymentStatus === 'paid' ? 'success' : 'warning'}
+                      variant='outlined'
+                      sx={{ textTransform: 'capitalize' }}
+                    />
+                    {requestedByClient && (
+                      <Chip
+                        size='small'
+                        icon={<i className='ri-heart-fill' style={{ fontSize: '0.75rem' }} />}
+                        label='Requested'
+                        variant='outlined'
+                        sx={{ '& .MuiChip-icon': { color: 'var(--mui-palette-customColors-coral)' } }}
+                      />
+                    )}
+                    {starred && (
+                      <Chip
+                        size='small'
+                        icon={<i className='ri-star-fill' style={{ fontSize: '0.75rem' }} />}
+                        label='Starred'
+                        variant='outlined'
+                        sx={{ '& .MuiChip-icon': { color: '#fbbf24' } }}
+                      />
+                    )}
+                  </Box>
 
-                    {/* Starred (editable) */}
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={starred}
-                          onChange={e => setStarred(e.target.checked)}
-                          icon={<i className='ri-star-line' />}
-                          checkedIcon={
-                            <i className='ri-star-fill' style={{ color: 'var(--mui-palette-customColors-coral)' }} />
-                          }
+                  {/* Editable controls - Clean section */}
+                  <Box sx={{ pt: 2, mt: 1, borderTop: 1, borderColor: 'divider' }}>
+                    <Typography variant='caption' color='text.secondary' fontWeight={600} sx={{ mb: 1.5, display: 'block' }}>
+                      UPDATE STATUS
+                    </Typography>
+
+                    <Stack spacing={1.5}>
+                      <FormControl fullWidth size='small'>
+                        <InputLabel>Booking Status</InputLabel>
+                        <Select
+                          value={status}
+                          label='Booking Status'
+                          onChange={e => setStatus(e.target.value as AppointmentStatus)}
+                        >
+                          <MenuItem value='pending'>Pending</MenuItem>
+                          <MenuItem value='need_confirm'>Needs Confirmation</MenuItem>
+                          <MenuItem value='confirmed'>Confirmed</MenuItem>
+                          <MenuItem value='attended'>Attended</MenuItem>
+                          <MenuItem value='no_show'>No Show</MenuItem>
+                        </Select>
+                      </FormControl>
+
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <FormControl size='small' sx={{ flex: 1 }}>
+                          <InputLabel>Payment</InputLabel>
+                          <Select
+                            value={paymentStatus}
+                            label='Payment'
+                            onChange={e => setPaymentStatus(e.target.value as 'paid' | 'unpaid')}
+                          >
+                            <MenuItem value='unpaid'>Unpaid</MenuItem>
+                            <MenuItem value='paid'>Paid</MenuItem>
+                          </Select>
+                        </FormControl>
+                        <TextField
+                          label='Reference'
+                          value={instapayReference}
+                          onChange={e => setInstapayReference(e.target.value)}
+                          size='small'
+                          placeholder='Payment ref'
+                          sx={{ flex: 1.5 }}
                         />
-                      }
-                      label='Star this booking'
-                    />
+                      </Box>
+
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={starred}
+                            onChange={e => setStarred(e.target.checked)}
+                            size='small'
+                            icon={<i className='ri-star-line' />}
+                            checkedIcon={<i className='ri-star-fill' style={{ color: '#fbbf24' }} />}
+                          />
+                        }
+                        label={<Typography variant='body2'>Star this booking</Typography>}
+                      />
+                    </Stack>
                   </Box>
                 </Stack>
               )}
@@ -1630,10 +1852,10 @@ export default function UnifiedBookingDrawer({
                                       No Show
                                     </Box>
                                   </MenuItem>
-                                  <MenuItem value='completed'>
+                                  <MenuItem value='attended'>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                       <i className='ri-check-double-line' style={{ color: 'var(--mui-palette-info-main)' }} />
-                                      Completed
+                                      Attended
                                     </Box>
                                   </MenuItem>
                                 </Select>

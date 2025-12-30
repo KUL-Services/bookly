@@ -15,7 +15,13 @@ import {
   IconButton,
   Divider,
   Menu,
-  MenuItem
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button
 } from '@mui/material'
 import { useServicesStore } from './services-store'
 import { ServicesFAB } from './services-fab'
@@ -67,6 +73,10 @@ export function ServicesManagement() {
   // Context menu for services
   const [serviceMenuAnchor, setServiceMenuAnchor] = useState<null | HTMLElement>(null)
   const [selectedServiceForMenu, setSelectedServiceForMenu] = useState<string | null>(null)
+
+  // Delete confirmation dialog
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null)
 
   // Drag and drop state - use refs for values needed in event handlers
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
@@ -144,14 +154,32 @@ export function ServicesManagement() {
 
   const handleDeleteCategory = () => {
     if (selectedCategoryForMenu) {
-      deleteCategory(selectedCategoryForMenu)
-      if (selectedCategoryId === selectedCategoryForMenu) {
-        setSelectedCategory(null)
-      }
+      setCategoryToDelete(selectedCategoryForMenu)
+      setDeleteConfirmOpen(true)
     }
     setCategoryMenuAnchor(null)
     setSelectedCategoryForMenu(null)
   }
+
+  const handleConfirmDelete = () => {
+    if (categoryToDelete) {
+      deleteCategory(categoryToDelete)
+      if (selectedCategoryId === categoryToDelete) {
+        setSelectedCategory(null)
+      }
+    }
+    setDeleteConfirmOpen(false)
+    setCategoryToDelete(null)
+  }
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmOpen(false)
+    setCategoryToDelete(null)
+  }
+
+  // Get the category being deleted for the dialog message
+  const categoryBeingDeleted = categoryToDelete ? categories.find(c => c.id === categoryToDelete) : null
+  const servicesInCategoryToDelete = categoryToDelete ? services.filter(s => s.categoryId === categoryToDelete).length : 0
 
   const handleEditService = () => {
     if (selectedServiceForMenu) {
@@ -284,7 +312,14 @@ export function ServicesManagement() {
                     borderTop: isDragOver && draggedIndex !== null && draggedIndex > index ? '2px solid' : 'none',
                     borderBottom: isDragOver && draggedIndex !== null && draggedIndex < index ? '2px solid' : 'none',
                     borderColor: 'primary.main',
-                    opacity: isDragging ? 0.5 : 1
+                    opacity: isDragging ? 0.5 : 1,
+                    '& .category-actions': {
+                      opacity: 0,
+                      transition: 'opacity 0.2s'
+                    },
+                    '&:hover .category-actions': {
+                      opacity: 1
+                    }
                   }}
                 >
                   <ListItemButton
@@ -314,6 +349,35 @@ export function ServicesManagement() {
                       primaryTypographyProps={{ fontWeight: selectedCategoryId === category.id ? 600 : 400 }}
                       secondary={serviceCount > 0 ? `${serviceCount} services` : undefined}
                     />
+                    <Box className='category-actions' sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mr: 1 }}>
+                      <IconButton
+                        size='small'
+                        onClick={e => {
+                          e.stopPropagation()
+                          openCategoryDialog(category)
+                        }}
+                        sx={{
+                          p: 0.5,
+                          '&:hover': { bgcolor: 'action.hover' }
+                        }}
+                      >
+                        <i className='ri-edit-line' style={{ fontSize: 16, color: 'var(--mui-palette-text-secondary)' }} />
+                      </IconButton>
+                      <IconButton
+                        size='small'
+                        onClick={e => {
+                          e.stopPropagation()
+                          setCategoryToDelete(category.id)
+                          setDeleteConfirmOpen(true)
+                        }}
+                        sx={{
+                          p: 0.5,
+                          '&:hover': { bgcolor: 'error.lighter', color: 'error.main' }
+                        }}
+                      >
+                        <i className='ri-delete-bin-line' style={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Box>
                     <i className='ri-arrow-right-s-line' style={{ color: 'var(--mui-palette-text-disabled)' }} />
                   </ListItemButton>
                 </Box>
@@ -456,6 +520,40 @@ export function ServicesManagement() {
           <ListItemText>Delete Service</ListItemText>
         </MenuItem>
       </Menu>
+
+      {/* Delete Category Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={handleCancelDelete}
+        maxWidth='xs'
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          Delete Category
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete <strong>"{categoryBeingDeleted?.name}"</strong>?
+            {servicesInCategoryToDelete > 0 && (
+              <>
+                <br /><br />
+                <Typography component='span' color='warning.main' sx={{ fontWeight: 500 }}>
+                  {servicesInCategoryToDelete} service{servicesInCategoryToDelete > 1 ? 's' : ''} will be moved to "Not categorized".
+                </Typography>
+              </>
+            )}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCancelDelete} color='inherit'>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmDelete} variant='contained' color='error'>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

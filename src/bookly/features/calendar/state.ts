@@ -245,6 +245,7 @@ interface CalendarStore extends CalendarState {
   setSearchQuery: (query: string) => void
   clearSearch: () => void
   isEventMatchedBySearch: (eventId: string) => boolean
+  getSearchMatchedFields: (eventId: string) => string[]
 }
 
 export const useCalendarStore = create<CalendarStore>((set, get) => ({
@@ -278,6 +279,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   // Search state
   searchQuery: '',
   searchMatchedEventIds: new Set<string>(),
+  searchMatchedFields: new Map<string, string[]>(), // Maps event ID to array of matched field names
   isSearchActive: false,
 
   // Actions
@@ -1049,6 +1051,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       set({
         searchQuery: '',
         searchMatchedEventIds: new Set<string>(),
+        searchMatchedFields: new Map<string, string[]>(),
         isSearchActive: false
       })
       return
@@ -1062,6 +1065,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     // - Staff name
     // - Service name
     const matchedIds = new Set<string>()
+    const matchedFields = new Map<string, string[]>()
 
     events.forEach(event => {
       const props = event.extendedProps
@@ -1071,25 +1075,33 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         return
       }
 
-      const searchableFields = [
-        props.bookingId?.toLowerCase() || '',
-        props.customerName?.toLowerCase() || '',
-        props.customerPhone?.toLowerCase() || '',
-        props.customerEmail?.toLowerCase() || '',
-        props.staffName?.toLowerCase() || '',
-        props.serviceName?.toLowerCase() || '',
-        event.id?.toLowerCase() || ''
+      const fieldsToSearch = [
+        { name: 'Ref', value: props.bookingId?.toLowerCase() || '' },
+        { name: 'Name', value: props.customerName?.toLowerCase() || '' },
+        { name: 'Phone', value: props.customerPhone?.toLowerCase() || '' },
+        { name: 'Email', value: props.customerEmail?.toLowerCase() || '' },
+        { name: 'Staff', value: props.staffName?.toLowerCase() || '' },
+        { name: 'Service', value: props.serviceName?.toLowerCase() || '' }
       ]
 
-      // Check if any field contains the search query
-      if (searchableFields.some(field => field.includes(trimmedQuery))) {
+      // Check which fields match and track them
+      const eventMatchedFields: string[] = []
+      fieldsToSearch.forEach(field => {
+        if (field.value.includes(trimmedQuery)) {
+          eventMatchedFields.push(field.name)
+        }
+      })
+
+      if (eventMatchedFields.length > 0) {
         matchedIds.add(event.id)
+        matchedFields.set(event.id, eventMatchedFields)
       }
     })
 
     set({
       searchQuery: query,
       searchMatchedEventIds: matchedIds,
+      searchMatchedFields: matchedFields,
       isSearchActive: true
     })
   },
@@ -1098,6 +1110,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     set({
       searchQuery: '',
       searchMatchedEventIds: new Set<string>(),
+      searchMatchedFields: new Map<string, string[]>(),
       isSearchActive: false
     })
   },
@@ -1107,5 +1120,10 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     // If search is not active, all events are "matched" (not faded)
     if (!isSearchActive) return true
     return searchMatchedEventIds.has(eventId)
+  },
+
+  getSearchMatchedFields: (eventId: string) => {
+    const { searchMatchedFields } = get()
+    return searchMatchedFields.get(eventId) || []
   }
 }))

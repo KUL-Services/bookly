@@ -172,7 +172,7 @@ export default function CalendarSettings({ open, onClose }: CalendarSettingsProp
                 {[
                   { status: 'confirmed', label: 'Confirmed' },
                   { status: 'pending', label: 'Pending' },
-                  { status: 'completed', label: 'Completed' },
+                  { status: 'attended', label: 'Attended' },
                   { status: 'cancelled', label: 'Cancelled' }
                 ].map(({ status, label }) => {
                   const colors =
@@ -180,13 +180,13 @@ export default function CalendarSettings({ open, onClose }: CalendarSettingsProp
                       ? {
                           confirmed: '#51b4b7',
                           pending: '#202c39',
-                          completed: '#77b6a3',
+                          attended: '#77b6a3',
                           cancelled: '#e88682'
                         }
                       : {
                           confirmed: 'rgba(81, 180, 183, 0.2)',
                           pending: 'rgba(32, 44, 57, 0.18)',
-                          completed: 'rgba(119, 182, 163, 0.2)',
+                          attended: 'rgba(119, 182, 163, 0.2)',
                           cancelled: 'rgba(232, 134, 130, 0.2)'
                         }
 

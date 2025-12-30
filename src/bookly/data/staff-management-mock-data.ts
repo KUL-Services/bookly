@@ -283,8 +283,8 @@ export const mockTimeOffRequests: TimeOffRequest[] = [
     id: 'off-2',
     staffId: '2',
     range: {
-      start: new Date(), // Today
-      end: new Date() // Today
+      start: new Date(2025, 0, 20), // Jan 20, 2025
+      end: new Date(2025, 0, 20) // Jan 20, 2025
     },
     allDay: true,
     reason: 'Sick',

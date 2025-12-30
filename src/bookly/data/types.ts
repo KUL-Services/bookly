@@ -144,6 +144,7 @@ export interface Booking {
   businessImage: string
   serviceName: string
   staffMemberName: string
+  customerName?: string // Customer/client name (optional - will use generated demo name if missing)
   date: Date
   time: string
   duration: number // in minutes

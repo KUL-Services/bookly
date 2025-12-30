@@ -121,7 +121,7 @@ export default function AppointmentDrawer() {
     const labels: Record<AppointmentStatus, string> = {
       confirmed: 'Confirmed',
       pending: 'Pending',
-      completed: 'Completed',
+      attended: 'Attended',
       cancelled: 'Cancelled',
       need_confirm: 'Need Confirmation',
       no_show: 'No Show'
@@ -304,7 +304,7 @@ export default function AppointmentDrawer() {
 
         {/* Status Menu */}
         <Menu anchorEl={statusMenuAnchor} open={Boolean(statusMenuAnchor)} onClose={() => setStatusMenuAnchor(null)}>
-          {(['confirmed', 'pending', 'completed', 'cancelled', 'need_confirm', 'no_show'] as AppointmentStatus[]).map(
+          {(['confirmed', 'pending', 'attended', 'cancelled', 'need_confirm', 'no_show'] as AppointmentStatus[]).map(
             s => (
               <MuiMenuItem key={s} onClick={() => handleStatusChange(s)}>
                 {getStatusLabel(s)}

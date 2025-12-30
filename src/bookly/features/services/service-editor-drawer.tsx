@@ -89,14 +89,8 @@ const FieldLabel = ({ label, tooltip }: { label: string; tooltip?: string }) => 
 )
 
 export function ServiceEditorDrawer() {
-  const {
-    isServiceDialogOpen,
-    editingService,
-    closeServiceDialog,
-    createService,
-    updateService,
-    categories
-  } = useServicesStore()
+  const { isServiceDialogOpen, editingService, closeServiceDialog, createService, updateService, categories } =
+    useServicesStore()
 
   const [formData, setFormData] = useState<ServiceFormData>(DEFAULT_SERVICE_FORM_DATA)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -197,11 +191,7 @@ export function ServiceEditorDrawer() {
     }))
   }
 
-  const updateProcessingTime = (
-    timeType: 'during' | 'after',
-    field: 'hours' | 'minutes',
-    value: number
-  ) => {
+  const updateProcessingTime = (timeType: 'during' | 'after', field: 'hours' | 'minutes', value: number) => {
     setFormData(prev => ({
       ...prev,
       processingTime: {
@@ -446,7 +436,7 @@ export function ServiceEditorDrawer() {
             </Grid>
 
             {/* Processing Time During */}
-            <Grid item xs={12}>
+            {/* <Grid item xs={12}>
               <FieldLabel label='Processing time during the service' tooltip={TOOLTIPS.processingTimeDuring} />
               <Grid container spacing={2}>
                 <Grid item xs={6}>
@@ -482,10 +472,10 @@ export function ServiceEditorDrawer() {
                   </FormControl>
                 </Grid>
               </Grid>
-            </Grid>
+            </Grid> */}
 
             {/* Processing Time After */}
-            <Grid item xs={12}>
+            {/* <Grid item xs={12}>
               <FieldLabel label='Processing time after the service' tooltip={TOOLTIPS.processingTimeAfter} />
               <Grid container spacing={2}>
                 <Grid item xs={6}>
@@ -521,10 +511,10 @@ export function ServiceEditorDrawer() {
                   </FormControl>
                 </Grid>
               </Grid>
-            </Grid>
+            </Grid> */}
 
             {/* Parallel Clients */}
-            <Grid item xs={12}>
+            {/* <Grid item xs={12}>
               <FieldLabel label='Parallel Clients' tooltip={TOOLTIPS.parallelClients} />
               <TextField
                 fullWidth
@@ -539,7 +529,7 @@ export function ServiceEditorDrawer() {
                 }
                 inputProps={{ min: 1 }}
               />
-            </Grid>
+            </Grid> */}
 
             {/* Tax Rate */}
             <Grid item xs={12}>

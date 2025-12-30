@@ -112,25 +112,25 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
   }
 
   const getStatusColor = (status: AppointmentStatus) => {
-    const colors = {
+    const colors: Record<AppointmentStatus, string> = {
       confirmed: 'success',
       pending: 'warning',
-      completed: 'default',
+      attended: 'info',
       cancelled: 'error',
-      need_confirm: 'info',
+      need_confirm: 'warning',
       no_show: 'error'
     }
     return colors[status] || 'default'
   }
 
   const getStatusLabel = (status: AppointmentStatus) => {
-    const labels = {
+    const labels: Record<AppointmentStatus, string> = {
       confirmed: 'CONFIRMED',
       pending: 'PENDING',
-      completed: 'COMPLETED',
+      attended: 'ATTENDED',
       cancelled: 'CANCELLED',
-      need_confirm: 'NEED CONFIRM'
-      // no_show: 'NO SHOW'
+      need_confirm: 'NEED CONFIRM',
+      no_show: 'NO SHOW'
     }
     return labels[status] || status.toUpperCase()
   }
@@ -257,7 +257,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
 
         {/* Status Change Menu */}
         <Menu anchorEl={statusMenuAnchor} open={Boolean(statusMenuAnchor)} onClose={() => setStatusMenuAnchor(null)}>
-          {['confirmed', 'pending', 'need_confirm', 'completed', 'no_show', 'cancelled'].map(s => (
+          {['confirmed', 'pending', 'need_confirm', 'attended', 'no_show', 'cancelled'].map(s => (
             <MuiMenuItem key={s} onClick={() => handleStatusChange(s as AppointmentStatus)} selected={s === status}>
               {getStatusLabel(s as AppointmentStatus)}
             </MuiMenuItem>

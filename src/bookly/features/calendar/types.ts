@@ -7,9 +7,11 @@ export type DisplayMode = 'full' | 'fit'
 
 export type ColorScheme = 'vivid' | 'pastel'
 
-export type AppointmentStatus = 'confirmed' | 'pending' | 'completed' | 'cancelled' | 'need_confirm' | 'no_show'
+export type AppointmentStatus = 'confirmed' | 'pending' | 'attended' | 'cancelled' | 'need_confirm' | 'no_show'
 
-export type PaymentStatus = 'paid' | 'unpaid'
+export type PaymentStatus = 'paid' | 'unpaid' | 'need_confirm'
+
+export type PaymentMethod = 'bank_transfer' | 'cash_on_arrival' | 'card_on_arrival' | 'online_payment' | 'instapay'
 
 export type SelectionMethod = 'by_client' | 'automatically'
 
@@ -110,20 +112,27 @@ export interface CalendarEvent extends EventInput {
   extendedProps: {
     status: AppointmentStatus
     paymentStatus: PaymentStatus
+    paymentMethod?: PaymentMethod
+    paymentReference?: string // Payment reference number (Instapay, bank transfer, etc.)
     staffId: string
     staffName: string
     selectionMethod: SelectionMethod
+    bookedBy: BookedBy // Whether booked by business (in-house) or client
     starred: boolean
     serviceId?: string // Service ID for pre-selection
     serviceName: string
+    serviceColor?: string // Service color for display
     customerName: string
     customerPhone?: string // Customer phone number for search
     customerEmail?: string // Customer email for search
     price: number
-    notes?: string
+    notes?: string // Internal business notes
+    clientNotes?: string // Notes from client (visible to business)
     bookingId: string
+    bookingReference?: string // Human-readable booking reference (e.g., "BKL-2024-001")
     slotId?: string // For static scheduling mode - links booking to a specific slot
     roomId?: string // For static scheduling mode - indicates which room
+    roomName?: string // Room name for display
     isStaticSlot?: boolean // Flag indicating this event belongs to a static slot
     partySize?: number // For group bookings (default 1)
     branchId?: string // Branch where this appointment takes place
@@ -136,8 +145,8 @@ export interface CalendarEvent extends EventInput {
     allDay?: boolean // For all-day time off
     note?: string // Additional notes
     arrivalTime?: string // Actual customer arrival/walk-in time (HH:MM format)
-    instapayReference?: string // Instapay payment reference number
-    paymentMethod?: 'pay_on_arrival' | 'mock_card'
+    createdAt?: string // When the booking was created
+    updatedAt?: string // When the booking was last updated
   }
 }
 

@@ -47,10 +47,34 @@ function mapBookingStatus(status: string): AppointmentStatus {
   const statusMap: Record<string, AppointmentStatus> = {
     confirmed: 'confirmed',
     pending: 'pending',
-    completed: 'completed',
+    completed: 'attended', // Map legacy 'completed' to 'attended'
+    attended: 'attended',
     cancelled: 'cancelled'
   }
   return (statusMap[status] as AppointmentStatus) || 'pending'
+}
+
+// Demo customer names for when real customer name is not provided
+const demoCustomerNames = [
+  'Emma Wilson', 'Olivia Brown', 'Sophia Davis', 'Isabella Martinez', 'Ava Anderson',
+  'Mia Thompson', 'Charlotte Garcia', 'Amelia Robinson', 'Harper White', 'Evelyn Harris',
+  'James Smith', 'Michael Johnson', 'William Jones', 'Benjamin Lee', 'Lucas Wilson',
+  'Henry Taylor', 'Alexander Moore', 'Daniel Clark', 'Matthew Lewis', 'Joseph Walker'
+]
+
+/**
+ * Get a consistent demo customer name based on booking ID
+ * This ensures the same booking always gets the same name
+ */
+function getDemoCustomerName(bookingId: string): string {
+  // Use a simple hash of the booking ID to get a consistent index
+  let hash = 0
+  for (let i = 0; i < bookingId.length; i++) {
+    hash = ((hash << 5) - hash) + bookingId.charCodeAt(i)
+    hash = hash & hash // Convert to 32bit integer
+  }
+  const index = Math.abs(hash) % demoCustomerNames.length
+  return demoCustomerNames[index]
 }
 
 /**
@@ -58,6 +82,9 @@ function mapBookingStatus(status: string): AppointmentStatus {
  */
 function generateExtendedProps(booking: Booking, staffId: string) {
   const random = Math.random()
+
+  // Get customer name - use booking.customerName if available, otherwise generate a demo name
+  const customerName = booking.customerName || getDemoCustomerName(booking.id)
 
   return {
     status: mapBookingStatus(booking.status),
@@ -67,7 +94,7 @@ function generateExtendedProps(booking: Booking, staffId: string) {
     selectionMethod: (random > 0.5 ? 'by_client' : 'automatically') as SelectionMethod,
     starred: random > 0.8,
     serviceName: booking.serviceName,
-    customerName: booking.notes?.split(' ')[0] || 'Guest',
+    customerName,
     price: booking.price,
     notes: booking.notes,
     bookingId: booking.id,
@@ -110,7 +137,7 @@ export const colorSchemes = {
   vivid: {
     confirmed: { bg: '#51b4b7', border: '#3d9598', text: '#f7f8f9' },
     pending: { bg: '#202c39', border: '#141c27', text: '#f7f8f9' },
-    completed: { bg: '#77b6a3', border: '#5a9a87', text: '#0a2c24' },
+    attended: { bg: '#77b6a3', border: '#5a9a87', text: '#0a2c24' },
     cancelled: { bg: '#e88682', border: '#d56560', text: '#0a2c24' },
     need_confirm: { bg: '#0a2c24', border: '#051612', text: '#f7f8f9' },
     no_show: { bg: '#3d4a5a', border: '#202c39', text: '#f7f8f9' }
@@ -118,7 +145,7 @@ export const colorSchemes = {
   pastel: {
     confirmed: { bg: 'rgba(81, 180, 183, 0.2)', border: '#51b4b7', text: '#0a2c24' },
     pending: { bg: 'rgba(32, 44, 57, 0.18)', border: '#202c39', text: '#0a2c24' },
-    completed: { bg: 'rgba(119, 182, 163, 0.2)', border: '#77b6a3', text: '#0a2c24' },
+    attended: { bg: 'rgba(119, 182, 163, 0.2)', border: '#77b6a3', text: '#0a2c24' },
     cancelled: { bg: 'rgba(232, 134, 130, 0.2)', border: '#e88682', text: '#0a2c24' },
     need_confirm: { bg: 'rgba(10, 44, 36, 0.2)', border: '#0a2c24', text: '#0a2c24' },
     no_show: { bg: 'rgba(61, 74, 90, 0.18)', border: '#3d4a5a', text: '#0a2c24' }

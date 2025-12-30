@@ -747,9 +747,10 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
             <FormGroup sx={{ mb: 2 }}>
               {[
                 { value: 'confirmed', label: 'Confirmed' },
-                { value: 'need_confirm', label: 'Need confirm' },
-                // { value: 'no_show', label: 'No-show' },
-                { value: 'completed', label: 'Completed' },
+                { value: 'need_confirm', label: 'Need Confirm' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'attended', label: 'Attended' },
+                { value: 'no_show', label: 'No Show' },
                 { value: 'cancelled', label: 'Cancelled' }
               ].map(status => (
                 <FormControlLabel

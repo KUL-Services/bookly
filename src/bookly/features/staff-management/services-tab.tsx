@@ -69,6 +69,12 @@ export function ServicesTab() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [serviceToDelete, setServiceToDelete] = useState<ExtendedService | null>(null)
 
+  // Category context menu state
+  const [categoryMenuAnchor, setCategoryMenuAnchor] = useState<null | HTMLElement>(null)
+  const [selectedCategoryForMenu, setSelectedCategoryForMenu] = useState<string | null>(null)
+  const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null)
+
   const {
     categories,
     services,
@@ -131,6 +137,52 @@ export function ServicesTab() {
     const category = categories.find(c => c.id === categoryId)
     return category?.name || 'Unknown'
   }
+
+  // Category context menu handlers
+  const handleCategoryContextMenu = (event: React.MouseEvent<HTMLElement>, categoryId: string) => {
+    event.preventDefault()
+    event.stopPropagation()
+    setCategoryMenuAnchor(event.currentTarget)
+    setSelectedCategoryForMenu(categoryId)
+  }
+
+  const handleCloseCategoryMenu = () => {
+    setCategoryMenuAnchor(null)
+    setSelectedCategoryForMenu(null)
+  }
+
+  const handleEditCategory = () => {
+    if (selectedCategoryForMenu) {
+      const category = categories.find(c => c.id === selectedCategoryForMenu)
+      if (category) {
+        openCategoryDialog(category)
+      }
+    }
+    handleCloseCategoryMenu()
+  }
+
+  const handleDeleteCategoryClick = () => {
+    if (selectedCategoryForMenu) {
+      setCategoryToDelete(selectedCategoryForMenu)
+      setDeleteCategoryDialogOpen(true)
+    }
+    handleCloseCategoryMenu()
+  }
+
+  const handleDeleteCategoryConfirm = () => {
+    if (categoryToDelete) {
+      deleteCategory(categoryToDelete)
+      if (selectedCategoryId === categoryToDelete) {
+        setSelectedCategory(null)
+      }
+    }
+    setDeleteCategoryDialogOpen(false)
+    setCategoryToDelete(null)
+  }
+
+  // Get info for category being deleted
+  const categoryBeingDeleted = categoryToDelete ? categories.find(c => c.id === categoryToDelete) : null
+  const servicesInCategoryToDelete = categoryToDelete ? services.filter(s => s.categoryId === categoryToDelete).length : 0
 
   return (
     <Box sx={{ display: 'flex', height: '100%', gap: 2 }}>
@@ -199,14 +251,79 @@ export function ServicesTab() {
             />
             {categories.map(category => {
               const count = services.filter(s => s.categoryId === category.id).length
+              const isSelected = selectedCategoryId === category.id
               return (
                 <Chip
                   key={category.id}
-                  label={`${category.name} (${count})`}
                   size='small'
                   onClick={() => setSelectedCategory(category.id)}
-                  color={selectedCategoryId === category.id ? 'primary' : 'default'}
-                  variant={selectedCategoryId === category.id ? 'filled' : 'outlined'}
+                  color={isSelected ? 'primary' : 'default'}
+                  variant={isSelected ? 'filled' : 'outlined'}
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <span>{category.name} ({count})</span>
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          ml: 0.5,
+                          gap: 0.25
+                        }}
+                      >
+                        <Box
+                          component='span'
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation()
+                            openCategoryDialog(category)
+                          }}
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 18,
+                            height: 18,
+                            borderRadius: '50%',
+                            cursor: 'pointer',
+                            '&:hover': {
+                              bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'action.hover'
+                            }
+                          }}
+                        >
+                          <i className='ri-edit-line' style={{ fontSize: 11 }} />
+                        </Box>
+                        <Box
+                          component='span'
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation()
+                            setCategoryToDelete(category.id)
+                            setDeleteCategoryDialogOpen(true)
+                          }}
+                          sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 18,
+                            height: 18,
+                            borderRadius: '50%',
+                            cursor: 'pointer',
+                            '&:hover': {
+                              bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'error.lighter',
+                              color: isSelected ? 'inherit' : 'error.main'
+                            }
+                          }}
+                        >
+                          <i className='ri-close-line' style={{ fontSize: 12 }} />
+                        </Box>
+                      </Box>
+                    </Box>
+                  }
+                  sx={{
+                    cursor: 'pointer',
+                    '& .MuiChip-label': {
+                      pr: 0.75,
+                      pl: 1
+                    }
+                  }}
                 />
               )
             })}
@@ -519,7 +636,7 @@ export function ServicesTab() {
       {/* Category Dialog */}
       <CategoryDialog />
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Service Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth='xs' fullWidth>
         <DialogTitle>Delete Service</DialogTitle>
         <DialogContent>
@@ -532,6 +649,57 @@ export function ServicesTab() {
             Cancel
           </Button>
           <Button onClick={handleDeleteConfirm} variant='contained' color='error'>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Category Context Menu */}
+      <Menu
+        anchorEl={categoryMenuAnchor}
+        open={Boolean(categoryMenuAnchor)}
+        onClose={handleCloseCategoryMenu}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+      >
+        <MenuItem onClick={handleEditCategory}>
+          <i className='ri-edit-line' style={{ marginRight: 8, fontSize: 16 }} />
+          Edit Category
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={handleDeleteCategoryClick} sx={{ color: 'error.main' }}>
+          <i className='ri-delete-bin-line' style={{ marginRight: 8, fontSize: 16 }} />
+          Delete Category
+        </MenuItem>
+      </Menu>
+
+      {/* Delete Category Confirmation Dialog */}
+      <Dialog
+        open={deleteCategoryDialogOpen}
+        onClose={() => setDeleteCategoryDialogOpen(false)}
+        maxWidth='xs'
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>Delete Category</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete <strong>"{categoryBeingDeleted?.name}"</strong>?
+            {servicesInCategoryToDelete > 0 && (
+              <>
+                <br /><br />
+                <Typography component='span' color='warning.main' sx={{ fontWeight: 500 }}>
+                  {servicesInCategoryToDelete} service{servicesInCategoryToDelete > 1 ? 's' : ''} will be moved to "Uncategorized".
+                </Typography>
+              </>
+            )}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteCategoryDialogOpen(false)} color='inherit'>
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteCategoryConfirm} variant='contained' color='error'>
             Delete
           </Button>
         </DialogActions>
