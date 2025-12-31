@@ -85,10 +85,16 @@ export const mockStaffWorkingHours: Record<string, WeeklyStaffHours> = {
     },
     Sat: { isWorking: false, shifts: [] }
   },
-  // Staff member 2 - Part time (Tue-Sat, off Sun-Mon)
+  // Staff member 2 - Fitness instructor (Sun-Sat, flexible schedule)
   '2': {
-    Sun: { isWorking: false, shifts: [] },
-    Mon: { isWorking: false, shifts: [] },
+    Sun: {
+      isWorking: true,
+      shifts: [createDefaultShift('09:00', '17:00', [{ id: '2-sun-break', start: '12:00', end: '13:00' }])]
+    },
+    Mon: {
+      isWorking: true,
+      shifts: [createDefaultShift('08:00', '20:00', [{ id: '2-mon-break', start: '12:00', end: '13:00' }])]
+    },
     Tue: {
       isWorking: true,
       shifts: [createDefaultShift('14:00', '20:00')]
@@ -529,43 +535,40 @@ export const mockManagedRooms: ManagedRoom[] = [
     id: 'room-2',
     branchId: '1-1',
     name: 'Yoga Room',
-    capacity: 15,
-    roomType: 'dynamic',
+    capacity: 20,
+    roomType: 'static',
     floor: '2nd Floor',
     amenities: ['Air Conditioning', 'Yoga Mats', 'Mirrors', 'Sound System'],
     color: '#77b6a3', // Sage Green - brand accent
-    serviceIds: ['3'], // Highlights only
+    serviceIds: ['fitness-1', 'fitness-2', 'fitness-3', 'fitness-4'], // Fitness classes
     weeklySchedule: {
       Sun: {
         isAvailable: true,
-        shifts: [createRoomShift('09:00', '17:00', ['3'])]
+        shifts: [createRoomShift('09:00', '17:00', ['fitness-1', 'fitness-2'])]
       },
       Mon: {
         isAvailable: true,
-        shifts: [
-          createRoomShift('09:00', '12:00', ['3']),
-          createRoomShift('14:00', '18:00', ['3'])
-        ]
+        shifts: [createRoomShift('08:00', '21:00', ['fitness-1', 'fitness-2', 'fitness-3'])]
       },
       Tue: {
         isAvailable: true,
-        shifts: [createRoomShift('09:00', '19:00', ['3'])]
+        shifts: [createRoomShift('08:00', '21:00', ['fitness-1', 'fitness-2', 'fitness-3'])]
       },
       Wed: {
-        isAvailable: false,
-        shifts: []
+        isAvailable: true,
+        shifts: [createRoomShift('08:00', '21:00', ['fitness-4'])]
       },
       Thu: {
         isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['3'])]
+        shifts: [createRoomShift('08:00', '21:00', ['fitness-1', 'fitness-2'])]
       },
       Fri: {
         isAvailable: true,
-        shifts: [createRoomShift('09:00', '20:00', ['3'])]
+        shifts: [createRoomShift('08:00', '21:00', ['fitness-3'])]
       },
       Sat: {
         isAvailable: true,
-        shifts: [createRoomShift('09:00', '18:00', ['3'])]
+        shifts: [createRoomShift('09:00', '18:00', ['fitness-1', 'fitness-2'])]
       }
     },
     shiftOverrides: []

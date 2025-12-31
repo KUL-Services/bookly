@@ -6,7 +6,8 @@ export const mockCategories: ServiceCategory[] = [
   { id: 'cat-2', name: 'Hair', color: '#202c39', order: 2 },
   { id: 'cat-3', name: 'Nails', color: '#51b4b7', order: 3 },
   { id: 'cat-4', name: 'Face', color: '#9b59b6', order: 4 },
-  { id: 'cat-5', name: 'Body', color: '#e74c3c', order: 5 }
+  { id: 'cat-5', name: 'Body', color: '#e74c3c', order: 5 },
+  { id: 'cat-6', name: 'Fitness', color: '#3498db', order: 6 }
 ]
 
 // Mock services with extended properties
@@ -121,6 +122,63 @@ export const mockExtendedServices: ExtendedService[] = [
     paddingTime: { rule: 'before_and_after', minutes: 10 },
     processingTime: { during: { hours: 0, minutes: 0 }, after: { hours: 0, minutes: 5 } },
     taxRate: '5',
+    parallelClients: 1
+  },
+  // Fitness Services
+  {
+    id: 'svc-9',
+    name: 'Morning Yoga Class',
+    description: 'Energizing morning yoga session for all levels',
+    price: 25,
+    duration: 60,
+    categoryId: 'cat-6', // Fitness
+    color: '#9b59b6', // Purple - Yoga
+    bookingInterval: { hours: 0, minutes: 30 },
+    paddingTime: { rule: 'after', minutes: 5 },
+    processingTime: { during: { hours: 0, minutes: 0 }, after: { hours: 0, minutes: 0 } },
+    taxRate: 'tax_free',
+    parallelClients: 20
+  },
+  {
+    id: 'svc-10',
+    name: 'Pilates Class',
+    description: 'Core strengthening pilates workout',
+    price: 30,
+    duration: 60,
+    categoryId: 'cat-6', // Fitness
+    color: '#3498db', // Blue - Pilates
+    bookingInterval: { hours: 0, minutes: 30 },
+    paddingTime: { rule: 'after', minutes: 5 },
+    processingTime: { during: { hours: 0, minutes: 0 }, after: { hours: 0, minutes: 0 } },
+    taxRate: 'tax_free',
+    parallelClients: 15
+  },
+  {
+    id: 'svc-11',
+    name: 'HIIT Training',
+    description: 'High intensity interval training',
+    price: 35,
+    duration: 45,
+    categoryId: 'cat-6', // Fitness
+    color: '#e74c3c', // Red - HIIT
+    bookingInterval: { hours: 0, minutes: 15 },
+    paddingTime: { rule: 'after', minutes: 10 },
+    processingTime: { during: { hours: 0, minutes: 0 }, after: { hours: 0, minutes: 0 } },
+    taxRate: 'tax_free',
+    parallelClients: 12
+  },
+  {
+    id: 'svc-12',
+    name: 'Personal Training',
+    description: 'One-on-one personal training session',
+    price: 75,
+    duration: 60,
+    categoryId: 'cat-6', // Fitness
+    color: '#f39c12', // Orange - Personal Training
+    bookingInterval: { hours: 0, minutes: 30 },
+    paddingTime: { rule: 'before_and_after', minutes: 5 },
+    processingTime: { during: { hours: 0, minutes: 0 }, after: { hours: 0, minutes: 0 } },
+    taxRate: '10',
     parallelClients: 1
   }
 ]

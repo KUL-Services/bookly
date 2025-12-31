@@ -75,6 +75,22 @@ const normalizeEmail = (email: string): string => {
   return email.trim().toLowerCase()
 }
 
+// Email validation function
+const isValidEmail = (email: string): boolean => {
+  if (!email.trim()) return true // Empty is valid (optional field)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email.trim())
+}
+
+// Phone validation function
+const isValidPhone = (phone: string): boolean => {
+  if (!phone.trim()) return true // Empty is valid (optional field)
+  // Allow digits, spaces, hyphens, parentheses, and + sign
+  const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/
+  const digitsOnly = phone.replace(/\D/g, '')
+  return phoneRegex.test(phone.trim()) && digitsOnly.length >= 7 && digitsOnly.length <= 15
+}
+
 type PaymentMethod = 'pay_on_arrival' | 'mock_card'
 
 // Helper to generate available time slots for a staff member on a given date
@@ -259,6 +275,8 @@ export default function UnifiedBookingDrawer({
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
   const [clientPhone, setClientPhone] = useState('')
+  const [dynamicEmailError, setDynamicEmailError] = useState<string | null>(null)
+  const [dynamicPhoneError, setDynamicPhoneError] = useState<string | null>(null)
   const [serviceId, setServiceId] = useState('')
   const [serviceName, setServiceName] = useState('')
   const [servicePrice, setServicePrice] = useState(0)
@@ -277,6 +295,8 @@ export default function UnifiedBookingDrawer({
   const [newClientName, setNewClientName] = useState('')
   const [newClientEmail, setNewClientEmail] = useState('')
   const [newClientPhone, setNewClientPhone] = useState('')
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [phoneError, setPhoneError] = useState<string | null>(null)
   const [isSessionClientsOpen, setIsSessionClientsOpen] = useState(false)
 
   // UI state
@@ -337,6 +357,8 @@ export default function UnifiedBookingDrawer({
       setClientName('')
       setClientEmail('')
       setClientPhone('')
+      setDynamicEmailError(null)
+      setDynamicPhoneError(null)
       setServiceId('')
       setServiceName('')
       setServicePrice(0)
@@ -364,6 +386,8 @@ export default function UnifiedBookingDrawer({
       setNewClientName('')
       setNewClientEmail('')
       setNewClientPhone('')
+      setEmailError(null)
+      setPhoneError(null)
       setIsSessionClientsOpen(false)
       setValidationError(null)
       setAvailabilityWarning(null)
@@ -696,15 +720,34 @@ export default function UnifiedBookingDrawer({
   }
 
   const handleAddClientToSlot = () => {
+    // Clear previous errors
+    setValidationError(null)
+    setEmailError(null)
+    setPhoneError(null)
+
     if (!newClientName.trim()) {
       setValidationError('Please enter client name')
       return
     }
+
     // At least one of email or phone is required
     if (!newClientEmail.trim() && !newClientPhone.trim()) {
       setValidationError('Please enter either email or phone number')
       return
     }
+
+    // Validate email format if provided
+    if (newClientEmail.trim() && !isValidEmail(newClientEmail)) {
+      setEmailError('Invalid email format')
+      return
+    }
+
+    // Validate phone format if provided
+    if (newClientPhone.trim() && !isValidPhone(newClientPhone)) {
+      setPhoneError('Invalid phone number')
+      return
+    }
+
     if (newClientEmail.trim() && hasDuplicateEmail(newClientEmail)) {
       setValidationError('This client is already booked in this session')
       return
@@ -738,6 +781,8 @@ export default function UnifiedBookingDrawer({
     setNewClientName('')
     setNewClientEmail('')
     setNewClientPhone('')
+    setEmailError(null)
+    setPhoneError(null)
     setIsAddingClient(false)
   }
 
@@ -777,6 +822,8 @@ export default function UnifiedBookingDrawer({
 
   const handleSave = () => {
     setValidationError(null)
+    setDynamicEmailError(null)
+    setDynamicPhoneError(null)
 
     if (effectiveSchedulingMode === 'dynamic') {
       // Dynamic mode validation
@@ -787,6 +834,16 @@ export default function UnifiedBookingDrawer({
       // At least one of email or phone is required
       if (!clientEmail.trim() && !clientPhone.trim()) {
         setValidationError('Please enter either email or phone number')
+        return
+      }
+      // Validate email format if provided
+      if (clientEmail.trim() && !isValidEmail(clientEmail)) {
+        setDynamicEmailError('Invalid email format')
+        return
+      }
+      // Validate phone format if provided
+      if (clientPhone.trim() && !isValidPhone(clientPhone)) {
+        setDynamicPhoneError('Invalid phone number')
         return
       }
       if (!serviceId) {
@@ -1191,15 +1248,25 @@ export default function UnifiedBookingDrawer({
                         label='Email'
                         type='email'
                         value={clientEmail}
-                        onChange={e => setClientEmail(e.target.value)}
+                        onChange={e => {
+                          setClientEmail(e.target.value)
+                          if (dynamicEmailError) setDynamicEmailError(null)
+                        }}
                         size='small'
+                        error={!!dynamicEmailError}
+                        helperText={dynamicEmailError || ''}
                       />
                       <TextField
                         fullWidth
                         label='Phone Number'
                         value={clientPhone}
-                        onChange={e => setClientPhone(e.target.value)}
+                        onChange={e => {
+                          setClientPhone(e.target.value)
+                          if (dynamicPhoneError) setDynamicPhoneError(null)
+                        }}
                         size='small'
+                        error={!!dynamicPhoneError}
+                        helperText={dynamicPhoneError || ''}
                       />
                     </Stack>
                   </Box>
@@ -1968,19 +2035,36 @@ export default function UnifiedBookingDrawer({
                                 fullWidth
                                 label='Email'
                                 value={newClientEmail}
-                                onChange={e => setNewClientEmail(e.target.value)}
+                                onChange={e => {
+                                  setNewClientEmail(e.target.value)
+                                  if (emailError) setEmailError(null)
+                                }}
                                 size='small'
+                                error={!!emailError}
+                                helperText={emailError || ''}
                               />
                               <TextField
                                 fullWidth
                                 label='Phone'
                                 value={newClientPhone}
-                                onChange={e => setNewClientPhone(e.target.value)}
+                                onChange={e => {
+                                  setNewClientPhone(e.target.value)
+                                  if (phoneError) setPhoneError(null)
+                                }}
                                 size='small'
+                                error={!!phoneError}
+                                helperText={phoneError || ''}
                               />
                             </Box>
                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                              <Button variant='outlined' size='small' onClick={() => setIsAddingClient(false)}>
+                              <Button variant='outlined' size='small' onClick={() => {
+                                setIsAddingClient(false)
+                                setEmailError(null)
+                                setPhoneError(null)
+                                setNewClientName('')
+                                setNewClientEmail('')
+                                setNewClientPhone('')
+                              }}>
                                 Cancel
                               </Button>
                               <Button variant='contained' size='small' onClick={handleAddClientToSlot}>

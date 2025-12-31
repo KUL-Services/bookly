@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import {
   Drawer,
   Box,
@@ -9,8 +8,6 @@ import {
   Button,
   List,
   ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   Chip,
   Stack,
   Divider,
@@ -19,7 +16,6 @@ import {
 import { useTheme } from '@mui/material/styles'
 import { format } from 'date-fns'
 import { useCalendarStore } from './state'
-import TemplateEditorDialog from './template-editor-dialog'
 import type { ScheduleTemplate } from './types'
 
 export default function TemplateManagementDrawer() {
@@ -32,10 +28,6 @@ export default function TemplateManagementDrawer() {
   const toggleTemplateActive = useCalendarStore(state => state.toggleTemplateActive)
   const deleteTemplate = useCalendarStore(state => state.deleteTemplate)
   const generateSlotsFromTemplate = useCalendarStore(state => state.generateSlotsFromTemplate)
-  const createTemplate = useCalendarStore(state => state.createTemplate)
-
-  const [isEditorOpen, setIsEditorOpen] = useState(false)
-  const [editingTemplate, setEditingTemplate] = useState<ScheduleTemplate | undefined>(undefined)
 
   const handleGenerateSlots = (template: ScheduleTemplate) => {
     const startDate = new Date(template.activeFrom)
@@ -56,32 +48,6 @@ export default function TemplateManagementDrawer() {
     if (confirm('Are you sure you want to delete this template? This will remove all generated slots.')) {
       deleteTemplate(templateId)
     }
-  }
-
-  const handleSaveTemplate = (template: Omit<ScheduleTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const templateId = createTemplate(template)
-
-    // Auto-generate slots for the new template
-    const startDate = new Date(template.activeFrom)
-    const endDate = template.activeUntil ? new Date(template.activeUntil) : new Date()
-
-    // For ongoing templates, generate for next 90 days
-    if (!template.activeUntil) {
-      endDate.setDate(endDate.getDate() + 90)
-    }
-
-    const generatedSlots = generateSlotsFromTemplate(templateId, startDate, endDate)
-
-    setIsEditorOpen(false)
-    setEditingTemplate(undefined)
-
-    // Show success message
-    alert(`Template "${template.name}" created successfully!\n\nAuto-generated ${generatedSlots.length} bookable slots.\nYou can now see these slots in your calendar views.`)
-  }
-
-  const handleOpenEditor = () => {
-    setEditingTemplate(undefined)
-    setIsEditorOpen(true)
   }
 
   return (
@@ -289,39 +255,7 @@ export default function TemplateManagementDrawer() {
           )}
         </Box>
 
-        {/* Footer */}
-        <Box
-          sx={{
-            p: 2,
-            borderTop: 1,
-            borderColor: 'divider',
-            bgcolor: 'background.paper'
-          }}
-        >
-          <Button
-            fullWidth
-            variant="contained"
-            size="large"
-            startIcon={<i className="ri-add-line" />}
-            onClick={handleOpenEditor}
-          >
-            Create New Template
-          </Button>
-        </Box>
       </Box>
-
-      {/* Template Editor Dialog */}
-      <TemplateEditorDialog
-        open={isEditorOpen}
-        onClose={() => {
-          setIsEditorOpen(false)
-          setEditingTemplate(undefined)
-        }}
-        onSave={handleSaveTemplate}
-        initialTemplate={editingTemplate}
-        businessId="1"
-        branchId="1-1"
-      />
     </Drawer>
   )
 }

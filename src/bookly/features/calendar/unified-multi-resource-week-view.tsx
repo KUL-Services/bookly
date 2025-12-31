@@ -926,6 +926,10 @@ export default function UnifiedMultiResourceWeekView({
                   placement='top'
                 >
                   <Box
+                    onClick={e => {
+                      e.stopPropagation()
+                      onDateClick?.(day)
+                    }}
                     sx={{
                       mt: 0.5,
                       p: 0.5,

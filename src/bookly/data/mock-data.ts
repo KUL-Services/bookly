@@ -307,6 +307,47 @@ export const mockServices: Service[] = [
     category: 'Shave',
     businessId: '3',
     color: '#3d4a5a' // Brand Grade (Secondary Light)
+  },
+  // Fitness Services
+  {
+    id: 'fitness-1',
+    name: 'Morning Yoga Class',
+    description: 'Energizing morning yoga session for all levels',
+    price: 25,
+    duration: 60,
+    category: 'Fitness',
+    businessId: '1',
+    color: '#9b59b6' // Purple - Yoga
+  },
+  {
+    id: 'fitness-2',
+    name: 'Pilates Class',
+    description: 'Core strengthening pilates workout',
+    price: 30,
+    duration: 60,
+    category: 'Fitness',
+    businessId: '1',
+    color: '#3498db' // Blue - Pilates
+  },
+  {
+    id: 'fitness-3',
+    name: 'HIIT Training',
+    description: 'High intensity interval training',
+    price: 35,
+    duration: 45,
+    category: 'Fitness',
+    businessId: '1',
+    color: '#e74c3c' // Red - HIIT
+  },
+  {
+    id: 'fitness-4',
+    name: 'Personal Training',
+    description: 'One-on-one personal training session',
+    price: 75,
+    duration: 60,
+    category: 'Fitness',
+    businessId: '1',
+    color: '#f39c12' // Orange - Personal Training
   }
 ]
 
@@ -489,7 +530,7 @@ const baseStaff: StaffMember[] = [
     // Dynamic staff can also have room assignments (workplace reference, not scheduling constraint)
     roomAssignments: [
       {
-        roomId: 'room-1-1-1',
+        roomId: 'room-1',
         roomName: 'Studio A',
         dayOfWeek: 'Mon',
         startTime: '09:00',
@@ -497,7 +538,7 @@ const baseStaff: StaffMember[] = [
         serviceIds: ['1', '2', '3'] // Hair services
       },
       {
-        roomId: 'room-1-1-1',
+        roomId: 'room-1',
         roomName: 'Studio A',
         dayOfWeek: 'Tue',
         startTime: '09:00',
@@ -505,7 +546,7 @@ const baseStaff: StaffMember[] = [
         serviceIds: ['1', '2', '3']
       },
       {
-        roomId: 'room-1-1-1',
+        roomId: 'room-1',
         roomName: 'Studio A',
         dayOfWeek: 'Wed',
         startTime: '09:00',
@@ -513,7 +554,7 @@ const baseStaff: StaffMember[] = [
         serviceIds: ['1', '2', '3']
       },
       {
-        roomId: 'room-1-1-1',
+        roomId: 'room-1',
         roomName: 'Studio A',
         dayOfWeek: 'Thu',
         startTime: '09:00',
@@ -521,7 +562,7 @@ const baseStaff: StaffMember[] = [
         serviceIds: ['1', '2', '3']
       },
       {
-        roomId: 'room-1-1-1',
+        roomId: 'room-1',
         roomName: 'Studio A',
         dayOfWeek: 'Fri',
         startTime: '09:00',
@@ -548,7 +589,7 @@ const baseStaff: StaffMember[] = [
     maxConcurrentBookings: 5,
     roomAssignments: [
       {
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         roomName: 'Studio B',
         dayOfWeek: 'Mon',
         startTime: '09:00',
@@ -556,7 +597,7 @@ const baseStaff: StaffMember[] = [
         serviceIds: ['fitness-1', 'fitness-2'] // Morning yoga and pilates
       },
       {
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         roomName: 'Studio B',
         dayOfWeek: 'Wed',
         startTime: '10:00',
@@ -564,7 +605,7 @@ const baseStaff: StaffMember[] = [
         serviceIds: ['fitness-4'] // Personal training
       },
       {
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         roomName: 'Studio B',
         dayOfWeek: 'Thu',
         startTime: '09:00',
@@ -1326,7 +1367,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Emma - Regular attendee',
     slotId: 'slot-fitness-mon-1',
-    roomId: 'room-1-1-2',
+    roomId: 'room-2',
     partySize: 1
   },
   {
@@ -1345,7 +1386,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Olivia - Beginner friendly',
     slotId: 'slot-fitness-mon-1',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-3',
@@ -1363,7 +1404,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Sophia',
     slotId: 'slot-fitness-mon-1',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-4',
@@ -1381,7 +1422,7 @@ export const mockBookings: Booking[] = [
     status: 'pending',
     notes: 'Isabella - First class',
     slotId: 'slot-fitness-mon-1',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-5',
@@ -1399,7 +1440,7 @@ export const mockBookings: Booking[] = [
     status: 'cancelled',
     notes: 'Ava - Cancelled, opens spot',
     slotId: 'slot-fitness-mon-1',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   // Next Monday's Pilates (15 capacity) - 10 bookings
   {
@@ -1418,7 +1459,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Mia',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-7',
@@ -1436,7 +1477,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Charlotte',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-8',
@@ -1454,7 +1495,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Amelia',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-9',
@@ -1472,7 +1513,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Harper',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-10',
@@ -1490,7 +1531,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Evelyn',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-11',
@@ -1508,7 +1549,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Abigail',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-12',
@@ -1526,7 +1567,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Ella',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-13',
@@ -1544,7 +1585,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Emily',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-14',
@@ -1562,7 +1603,7 @@ export const mockBookings: Booking[] = [
     status: 'pending',
     notes: 'Luna',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-15',
@@ -1580,7 +1621,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Grace',
     slotId: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   // Next Wednesday's small capacity slot (2 capacity) - 2 bookings to make it FULL
   {
@@ -1599,7 +1640,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Chloe - One-on-one',
     slotId: 'slot-fitness-wed-small',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   {
     id: 'booking-static-17',
@@ -1617,7 +1658,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Lily - Personal session',
     slotId: 'slot-fitness-wed-small',
-    roomId: 'room-1-1-2'
+    roomId: 'room-2'
   },
   // Today's bookings (2025-12-14)
   {
@@ -2118,7 +2159,7 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Client 1 - Blonde highlights',
     slotId: 'slot-1-1-1-thu-1',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     partySize: 1
   },
 
@@ -2139,11 +2180,11 @@ export const mockBookings: Booking[] = [
     status: 'confirmed',
     notes: 'Client 2 - Trim and style',
     slotId: 'slot-1-1-1-thu-3',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     partySize: 1
   },
 
-  // Studio B - slot-1-1-2-thu-1 (09:00-10:00 Haircut)
+  // Main Studio - slot-1-1-2-thu-1 (09:00-10:00 Haircut)
   {
     id: 'booking-thu-slot-3',
     businessId: '1',
@@ -2152,15 +2193,15 @@ export const mockBookings: Booking[] = [
     businessName: 'Luxe Hair Studio',
     businessImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop',
     serviceName: 'Haircut & Style',
-    staffMemberName: 'Sarah Williams',
-    date: new Date('2025-12-19'),
+    staffMemberName: 'Emma Johnson',
+    date: new Date('2025-12-18'),
     time: '9:00 AM',
     duration: 60,
     price: 65,
     status: 'confirmed',
     notes: 'Early morning cut',
     slotId: 'slot-1-1-2-thu-1',
-    roomId: 'room-1-1-2',
+    roomId: 'room-1',
     partySize: 1
   }
 ]
@@ -2261,7 +2302,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   // Monday Schedule for Studio A
   {
     id: 'slot-1-1-1-mon-1',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '09:00',
@@ -2274,7 +2315,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-mon-2',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '10:00',
@@ -2287,7 +2328,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-mon-3',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '11:00',
@@ -2300,7 +2341,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-mon-4',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '14:00',
@@ -2313,7 +2354,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-mon-5',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '15:30',
@@ -2325,10 +2366,10 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     price: 65
   },
 
-  // Monday Schedule for Studio B
+  // Monday Schedule for Main Studio (hair services)
   {
     id: 'slot-1-1-2-mon-1',
-    roomId: 'room-1-1-2',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '09:00',
@@ -2336,12 +2377,12 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     serviceId: '2',
     serviceName: 'Color Treatment',
     capacity: 1,
-    instructorStaffId: '2',
+    instructorStaffId: '1',
     price: 120
   },
   {
     id: 'slot-1-1-2-mon-2',
-    roomId: 'room-1-1-2',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '11:00',
@@ -2349,12 +2390,12 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     serviceId: '1',
     serviceName: 'Haircut & Style',
     capacity: 1,
-    instructorStaffId: '2',
+    instructorStaffId: '1',
     price: 65
   },
   {
     id: 'slot-1-1-2-mon-3',
-    roomId: 'room-1-1-2',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '13:00',
@@ -2362,12 +2403,12 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     serviceId: '3',
     serviceName: 'Highlights',
     capacity: 1,
-    instructorStaffId: '2',
+    instructorStaffId: '1',
     price: 85
   },
   {
     id: 'slot-1-1-2-mon-4',
-    roomId: 'room-1-1-2',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '14:30',
@@ -2375,12 +2416,12 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     serviceId: '1',
     serviceName: 'Haircut & Style',
     capacity: 1,
-    instructorStaffId: '2',
+    instructorStaffId: '1',
     price: 65
   },
   {
     id: 'slot-1-1-2-mon-5',
-    roomId: 'room-1-1-2',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '15:30',
@@ -2388,14 +2429,14 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     serviceId: '2',
     serviceName: 'Color Treatment',
     capacity: 1,
-    instructorStaffId: '2',
+    instructorStaffId: '1',
     price: 120
   },
 
   // Tuesday Schedule for Studio A
   {
     id: 'slot-1-1-1-tue-1',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Tue',
     startTime: '09:00',
@@ -2408,7 +2449,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-tue-2',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Tue',
     startTime: '10:30',
@@ -2421,7 +2462,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-tue-3',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Tue',
     startTime: '13:00',
@@ -2434,7 +2475,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-tue-4',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Tue',
     startTime: '15:00',
@@ -2449,7 +2490,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   // Wednesday Schedule for Studio A
   {
     id: 'slot-1-1-1-wed-1',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Wed',
     startTime: '09:00',
@@ -2462,7 +2503,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-wed-2',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Wed',
     startTime: '10:00',
@@ -2475,7 +2516,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-wed-3',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Wed',
     startTime: '13:00',
@@ -2488,7 +2529,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-wed-4',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Wed',
     startTime: '14:30',
@@ -2501,7 +2542,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-wed-5',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Wed',
     startTime: '15:30',
@@ -2516,7 +2557,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   // Thursday Schedule for Studio A
   {
     id: 'slot-1-1-1-thu-1',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Thu',
     startTime: '09:00',
@@ -2529,7 +2570,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-thu-2',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Thu',
     startTime: '11:00',
@@ -2542,7 +2583,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-thu-3',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Thu',
     startTime: '14:00',
@@ -2555,7 +2596,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-thu-4',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Thu',
     startTime: '15:00',
@@ -2568,7 +2609,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-thu-5',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Thu',
     startTime: '16:00',
@@ -2580,10 +2621,10 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     price: 65
   },
 
-  // Thursday Schedule for Studio B
+  // Thursday Schedule for Main Studio (hair services)
   {
     id: 'slot-1-1-2-thu-1',
-    roomId: 'room-1-1-2',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Thu',
     startTime: '09:00',
@@ -2591,14 +2632,14 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
     serviceId: '1',
     serviceName: 'Haircut & Style',
     capacity: 1,
-    instructorStaffId: '2',
+    instructorStaffId: '1',
     price: 65
   },
 
   // Friday Schedule for Studio A
   {
     id: 'slot-1-1-1-fri-1',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Fri',
     startTime: '09:00',
@@ -2611,7 +2652,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-fri-2',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Fri',
     startTime: '10:00',
@@ -2624,7 +2665,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-fri-3',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Fri',
     startTime: '13:00',
@@ -2637,7 +2678,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-fri-4',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Fri',
     startTime: '15:00',
@@ -2650,7 +2691,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-fri-5',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Fri',
     startTime: '16:00',
@@ -2665,7 +2706,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   // Saturday Schedule for Studio A (shorter day)
   {
     id: 'slot-1-1-1-sat-1',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Sat',
     startTime: '08:00',
@@ -2678,7 +2719,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-sat-2',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Sat',
     startTime: '09:00',
@@ -2691,7 +2732,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-sat-3',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Sat',
     startTime: '10:30',
@@ -2704,7 +2745,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-sat-4',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Sat',
     startTime: '11:30',
@@ -2717,7 +2758,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-sat-5',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Sat',
     startTime: '14:00',
@@ -2732,7 +2773,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   // Sunday Schedule for Studio A (limited hours)
   {
     id: 'slot-1-1-1-sun-1',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Sun',
     startTime: '10:00',
@@ -2745,7 +2786,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-sun-2',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Sun',
     startTime: '11:00',
@@ -2758,7 +2799,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-1-1-1-sun-3',
-    roomId: 'room-1-1-1',
+    roomId: 'room-1',
     branchId: '1-1',
     dayOfWeek: 'Sun',
     startTime: '13:00',
@@ -2774,7 +2815,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   // Monday Classes
   {
     id: 'slot-fitness-mon-1',
-    roomId: 'room-1-1-2',
+    roomId: 'room-2',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '09:00',
@@ -2787,7 +2828,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-fitness-mon-2',
-    roomId: 'room-1-1-2',
+    roomId: 'room-2',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '18:00',
@@ -2800,7 +2841,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-fitness-mon-3',
-    roomId: 'room-1-1-2',
+    roomId: 'room-2',
     branchId: '1-1',
     dayOfWeek: 'Mon',
     startTime: '19:30',
@@ -2814,7 +2855,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   // Tuesday Classes
   {
     id: 'slot-fitness-tue-1',
-    roomId: 'room-1-1-2',
+    roomId: 'room-2',
     branchId: '1-1',
     dayOfWeek: 'Tue',
     startTime: '09:00',
@@ -2827,7 +2868,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   },
   {
     id: 'slot-fitness-tue-2',
-    roomId: 'room-1-1-2',
+    roomId: 'room-2',
     branchId: '1-1',
     dayOfWeek: 'Tue',
     startTime: '18:00',
@@ -2841,7 +2882,7 @@ export const mockStaticServiceSlots: StaticServiceSlot[] = [
   // Small capacity slot for testing full state
   {
     id: 'slot-fitness-wed-small',
-    roomId: 'room-1-1-2',
+    roomId: 'room-2',
     branchId: '1-1',
     dayOfWeek: 'Wed',
     startTime: '10:00',
@@ -2931,7 +2972,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '10:00',
         serviceId: 'fitness-1',
         serviceName: 'Morning Yoga Class',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 12,
         instructorStaffId: '2',
         price: 25
@@ -2943,7 +2984,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '11:30',
         serviceId: 'fitness-2',
         serviceName: 'Pilates Class',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 15,
         instructorStaffId: '2',
         price: 30
@@ -2955,7 +2996,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '19:00',
         serviceId: 'fitness-3',
         serviceName: 'Zumba Dance',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 20,
         instructorStaffId: '3',
         price: 28
@@ -2968,7 +3009,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '10:00',
         serviceId: 'fitness-2',
         serviceName: 'Pilates Class',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 15,
         instructorStaffId: '2',
         price: 30
@@ -2980,7 +3021,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '19:00',
         serviceId: 'fitness-1',
         serviceName: 'Evening Yoga',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 12,
         instructorStaffId: '2',
         price: 25
@@ -2993,7 +3034,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '11:00',
         serviceId: 'fitness-4',
         serviceName: 'Personal Training Session',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 2,
         instructorStaffId: '2',
         price: 50
@@ -3005,7 +3046,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '19:30',
         serviceId: 'fitness-3',
         serviceName: 'Zumba Dance',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 20,
         instructorStaffId: '3',
         price: 28
@@ -3018,7 +3059,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '10:00',
         serviceId: 'fitness-1',
         serviceName: 'Morning Yoga Class',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 12,
         instructorStaffId: '2',
         price: 25
@@ -3030,7 +3071,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '20:00',
         serviceId: 'fitness-2',
         serviceName: 'Pilates Class',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 15,
         instructorStaffId: '2',
         price: 30
@@ -3043,7 +3084,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '19:00',
         serviceId: 'fitness-3',
         serviceName: 'Friday Zumba',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 20,
         instructorStaffId: '3',
         price: 28
@@ -3056,7 +3097,7 @@ export const mockScheduleTemplates: ScheduleTemplate[] = [
         endTime: '11:00',
         serviceId: 'fitness-1',
         serviceName: 'Weekend Yoga',
-        roomId: 'room-1-1-2',
+        roomId: 'room-2',
         capacity: 15,
         instructorStaffId: '2',
         price: 25
