@@ -226,6 +226,7 @@ interface SlotClient {
   paymentStatus: 'paid' | 'unpaid'
   paymentMethod: PaymentMethod
   paymentReference: string
+  businessNotes?: string // Notes from business about this client/booking
 }
 
 interface UnifiedBookingDrawerProps {
@@ -286,6 +287,7 @@ export default function UnifiedBookingDrawer({
   const [starred, setStarred] = useState(false)
   const [instapayReference, setInstapayReference] = useState('')
   const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid')
+  const [businessNotes, setBusinessNotes] = useState('') // Business notes for dynamic mode
 
   // Static mode state
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
@@ -295,6 +297,7 @@ export default function UnifiedBookingDrawer({
   const [newClientName, setNewClientName] = useState('')
   const [newClientEmail, setNewClientEmail] = useState('')
   const [newClientPhone, setNewClientPhone] = useState('')
+  const [newClientBusinessNotes, setNewClientBusinessNotes] = useState('') // Business notes for new client
   const [emailError, setEmailError] = useState<string | null>(null)
   const [phoneError, setPhoneError] = useState<string | null>(null)
   const [isSessionClientsOpen, setIsSessionClientsOpen] = useState(false)
@@ -368,6 +371,7 @@ export default function UnifiedBookingDrawer({
       setStarred(false)
       setInstapayReference('')
       setPaymentStatus('unpaid')
+      setBusinessNotes('')
       setSelectedSlotId(null)
       setSlotClients([])
       setIsSessionClientsOpen(false)
@@ -386,6 +390,7 @@ export default function UnifiedBookingDrawer({
       setNewClientName('')
       setNewClientEmail('')
       setNewClientPhone('')
+      setNewClientBusinessNotes('')
       setEmailError(null)
       setPhoneError(null)
       setIsSessionClientsOpen(false)
@@ -425,6 +430,7 @@ export default function UnifiedBookingDrawer({
       setBookingReference(props.bookingId || existingEvent.id || '')
       setInstapayReference(props.instapayReference || '')
       setPaymentStatus(props.paymentStatus === 'paid' ? 'paid' : 'unpaid')
+      setBusinessNotes(props.businessNotes || '')
 
       // Load service details
       const existingServiceId = props.serviceId
@@ -528,7 +534,8 @@ export default function UnifiedBookingDrawer({
             arrivalTime: booking.extendedProps.arrivalTime || '',
             paymentStatus: booking.extendedProps.paymentStatus === 'paid' ? 'paid' : 'unpaid',
             paymentMethod: booking.extendedProps.paymentMethod || 'pay_on_arrival',
-            paymentReference: booking.extendedProps.instapayReference || ''
+            paymentReference: booking.extendedProps.instapayReference || '',
+            businessNotes: booking.extendedProps.businessNotes || ''
           }
         })
 
@@ -774,13 +781,15 @@ export default function UnifiedBookingDrawer({
       status: 'confirmed',
       paymentStatus: 'unpaid',
       paymentMethod: 'pay_on_arrival',
-      paymentReference: ''
+      paymentReference: '',
+      businessNotes: newClientBusinessNotes.trim() || undefined
     }
 
     setSlotClients([...slotClients, newClient])
     setNewClientName('')
     setNewClientEmail('')
     setNewClientPhone('')
+    setNewClientBusinessNotes('')
     setEmailError(null)
     setPhoneError(null)
     setIsAddingClient(false)
@@ -818,6 +827,10 @@ export default function UnifiedBookingDrawer({
 
   const handleClientPaymentReferenceChange = (clientId: string, newReference: string) => {
     setSlotClients(slotClients.map(c => (c.id === clientId ? { ...c, paymentReference: newReference } : c)))
+  }
+
+  const handleClientBusinessNotesChange = (clientId: string, notes: string) => {
+    setSlotClients(slotClients.map(c => (c.id === clientId ? { ...c, businessNotes: notes } : c)))
   }
 
   const handleSave = () => {
@@ -883,6 +896,7 @@ export default function UnifiedBookingDrawer({
             bookingId: bookingReference,
             serviceId,
             notes: `Email: ${clientEmail}, Phone: ${clientPhone}`,
+            businessNotes: businessNotes.trim() || undefined,
             instapayReference: instapayReference || undefined
           }
         }
@@ -897,7 +911,8 @@ export default function UnifiedBookingDrawer({
               status,
               starred,
               instapayReference: instapayReference || undefined,
-              paymentStatus
+              paymentStatus,
+              businessNotes: businessNotes.trim() || undefined
             }
           }
           updateEvent(updatedEvent)
@@ -1023,7 +1038,8 @@ export default function UnifiedBookingDrawer({
                 paymentMethod: client.paymentMethod,
                 instapayReference: client.paymentReference || undefined,
                 bookingId: client.bookingRef,
-                notes: `Email: ${client.email}, Phone: ${client.phone}`
+                notes: `Email: ${client.email}, Phone: ${client.phone}`,
+                businessNotes: client.businessNotes || undefined
               }
             }
             console.log('✏️ DRAWER Updating existing booking:', client.id)
@@ -1055,7 +1071,8 @@ export default function UnifiedBookingDrawer({
               partySize: 1,
               arrivalTime: client.arrivalTime,
               instapayReference: client.paymentReference || undefined,
-              notes: `Email: ${client.email}, Phone: ${client.phone}`
+              notes: `Email: ${client.email}, Phone: ${client.phone}`,
+              businessNotes: client.businessNotes || undefined
             }
           }
           console.log('➕ DRAWER Creating new booking:', client.id)
@@ -1273,7 +1290,7 @@ export default function UnifiedBookingDrawer({
 
                   <Divider />
 
-                  {/* Date Selection */}
+                  {/* Staff Selection (only dynamic staff) */}
                   <Box>
                     <Typography
                       variant='caption'
@@ -1281,27 +1298,81 @@ export default function UnifiedBookingDrawer({
                       fontWeight={600}
                       sx={{ mb: 1, display: 'block' }}
                     >
-                      APPOINTMENT DATE & TIME
+                      SELECT STAFF MEMBER
                     </Typography>
-                    <DatePickerField label='Appointment Date' value={date} onChange={setDate} size='small' fullWidth />
+                    <FormControl fullWidth size='small' required>
+                      <InputLabel>Staff Member</InputLabel>
+                      <Select value={staffId} label='Staff Member' onChange={e => setStaffId(e.target.value)}>
+                        <MenuItem value=''>Select staff</MenuItem>
+                        {dynamicStaff.map(staff => (
+                          <MenuItem key={staff.id} value={staff.id}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                                {getInitials(staff.name)}
+                              </Avatar>
+                              {staff.name}
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
 
-                    {/* Available Slots Display */}
-                    {staffId && serviceId && (
+                  <Divider />
+
+                  {/* Service Selection */}
+                  <Box>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      fontWeight={600}
+                      sx={{ mb: 1, display: 'block' }}
+                    >
+                      SELECT SERVICE
+                    </Typography>
+                    <FormControl fullWidth size='small' required>
+                      <InputLabel>Service</InputLabel>
+                      <Select value={serviceId} label='Service' onChange={e => handleServiceChange(e.target.value)}>
+                        <MenuItem value=''>Select service</MenuItem>
+                        {mockServices.map(svc => (
+                          <MenuItem key={svc.id} value={svc.id}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                              <span>{svc.name}</span>
+                              <Typography variant='caption' color='text.secondary'>
+                                {svc.duration}min • ${svc.price}
+                              </Typography>
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+
+                  <Divider />
+
+                  {/* Date & Time Selection */}
+                  <Box>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      fontWeight={600}
+                      sx={{ mb: 1, display: 'block' }}
+                    >
+                      SELECT DATE & TIME
+                    </Typography>
+                    <DatePickerField
+                      label='Appointment Date'
+                      value={date}
+                      onChange={setDate}
+                      minDate={new Date()}
+                      size='small'
+                      fullWidth
+                    />
+
+                    {/* Available Time Slots */}
+                    {staffId && serviceId ? (
                       <Box sx={{ mt: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                            AVAILABLE TIME SLOTS
-                          </Typography>
-                          <Button
-                            size='small'
-                            variant='text'
-                            onClick={() => setShowAvailableSlots(!showAvailableSlots)}
-                            sx={{ fontSize: '0.7rem', minWidth: 'auto', p: 0.5 }}
-                          >
-                            {showAvailableSlots ? 'Hide' : 'Show'}
-                          </Button>
-                        </Box>
-                        {showAvailableSlots && (() => {
+                        {(() => {
                           const availableSlots = generateAvailableSlots(
                             staffId,
                             date,
@@ -1326,16 +1397,16 @@ export default function UnifiedBookingDrawer({
                           return (
                             <Box>
                               <Typography variant='caption' color='text.secondary' sx={{ mb: 1, display: 'block' }}>
-                                {freeSlots.length} slots available • Click to select
+                                {freeSlots.length} available slots
                               </Typography>
                               <Box
                                 sx={{
                                   display: 'grid',
-                                  gridTemplateColumns: 'repeat(4, 1fr)',
-                                  gap: 0.75,
-                                  maxHeight: 180,
+                                  gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
+                                  gap: 1,
+                                  maxHeight: 200,
                                   overflowY: 'auto',
-                                  p: 0.5,
+                                  p: 1,
                                   border: 1,
                                   borderColor: 'divider',
                                   borderRadius: 1,
@@ -1343,36 +1414,37 @@ export default function UnifiedBookingDrawer({
                                 }}
                               >
                                 {availableSlots.map((slot, idx) => (
-                                  <Chip
+                                  <Box
                                     key={idx}
-                                    label={formatTime12h(slot.time)}
-                                    size='small'
-                                    variant={startTime === slot.time ? 'filled' : 'outlined'}
-                                    color={startTime === slot.time ? 'primary' : slot.available ? 'default' : 'default'}
-                                    disabled={!slot.available}
                                     onClick={() => slot.available && setStartTime(slot.time)}
                                     sx={{
-                                      fontSize: '0.7rem',
-                                      height: 28,
+                                      p: 1,
+                                      textAlign: 'center',
+                                      borderRadius: 1,
+                                      border: 1,
+                                      borderColor: startTime === slot.time ? 'primary.main' : slot.available ? 'divider' : 'action.disabled',
+                                      bgcolor: startTime === slot.time ? 'primary.main' : slot.available ? 'background.paper' : 'action.disabledBackground',
+                                      color: startTime === slot.time ? 'primary.contrastText' : slot.available ? 'text.primary' : 'text.disabled',
                                       cursor: slot.available ? 'pointer' : 'not-allowed',
-                                      opacity: slot.available ? 1 : 0.4,
-                                      bgcolor: startTime === slot.time ? 'primary.main' : slot.available ? 'transparent' : 'action.disabledBackground',
-                                      '&:hover': slot.available && startTime !== slot.time ? {
-                                        bgcolor: 'primary.lighter',
-                                        borderColor: 'primary.main'
-                                      } : {},
-                                      '& .MuiChip-label': {
-                                        px: 1
-                                      }
+                                      opacity: slot.available ? 1 : 0.5,
+                                      transition: 'all 0.2s',
+                                      '&:hover': slot.available ? {
+                                        borderColor: 'primary.main',
+                                        bgcolor: startTime === slot.time ? 'primary.dark' : 'primary.lighter'
+                                      } : {}
                                     }}
-                                  />
+                                  >
+                                    <Typography variant='body2' fontWeight={startTime === slot.time ? 600 : 400} fontSize='0.75rem'>
+                                      {formatTime12h(slot.time)}
+                                    </Typography>
+                                  </Box>
                                 ))}
                               </Box>
                               {startTime && (
                                 <Paper sx={{ p: 1.5, mt: 1.5, bgcolor: 'success.lighter', border: 1, borderColor: 'success.main' }}>
                                   <Typography variant='body2' color='success.dark' fontWeight={500}>
                                     <i className='ri-check-line' style={{ marginRight: 8 }} />
-                                    Selected: {formatTime12h(startTime)} - {formatTime12h(endTime)}
+                                    {formatTime12h(startTime)} - {formatTime12h(endTime)}
                                   </Typography>
                                   <Typography variant='caption' color='success.dark'>
                                     {serviceDuration} minute {serviceName || 'service'}
@@ -1383,86 +1455,27 @@ export default function UnifiedBookingDrawer({
                           )
                         })()}
                       </Box>
-                    )}
-
-                    {/* Manual Time Selection (fallback when no staff/service selected) */}
-                    {(!staffId || !serviceId) && (
-                      <Box sx={{ mt: 1.5 }}>
-                        <TimeSelectField
-                          label='Start Time'
-                          value={startTime}
-                          onChange={setStartTime}
-                          size='small'
-                          fullWidth
-                        />
-                        {serviceId && (
-                          <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5, display: 'block' }}>
-                            End time: {endTime} (based on {serviceDuration}min service duration)
-                          </Typography>
-                        )}
-                      </Box>
-                    )}
-
-                    {/* Prompt to select staff and service first */}
-                    {(!staffId || !serviceId) && (
+                    ) : (
                       <Paper sx={{ p: 1.5, mt: 1.5, bgcolor: 'info.lighter', border: 1, borderColor: 'info.main' }}>
                         <Typography variant='caption' color='info.dark'>
                           <i className='ri-information-line' style={{ marginRight: 6 }} />
-                          Select a staff member and service to see available time slots
+                          Please select a staff member and service first to see available time slots
                         </Typography>
                       </Paper>
                     )}
                   </Box>
 
-                  <Divider />
-
-                  {/* Staff Selection (only dynamic staff) */}
-                  <FormControl fullWidth size='small' required>
-                    <InputLabel>Staff Member</InputLabel>
-                    <Select value={staffId} label='Staff Member' onChange={e => setStaffId(e.target.value)}>
-                      <MenuItem value=''>Select staff</MenuItem>
-                      {dynamicStaff.map(staff => (
-                        <MenuItem key={staff.id} value={staff.id}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                              {getInitials(staff.name)}
-                            </Avatar>
-                            {staff.name}
-                          </Box>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
                   {/* Availability Warning */}
                   {availabilityWarning && (
-                    <Paper sx={{ p: 1.5, bgcolor: 'warning.lighter', border: 1, borderColor: 'warning.main' }}>
-                      <Typography variant='body2' color='warning.dark'>
-                        <i className='ri-alert-line' style={{ marginRight: 8 }} />
-                        {availabilityWarning}
-                      </Typography>
-                    </Paper>
+                    <Box sx={{ mt: 2 }}>
+                      <Paper sx={{ p: 1.5, bgcolor: 'warning.lighter', border: 1, borderColor: 'warning.main' }}>
+                        <Typography variant='body2' color='warning.dark'>
+                          <i className='ri-alert-line' style={{ marginRight: 8 }} />
+                          {availabilityWarning}
+                        </Typography>
+                      </Paper>
+                    </Box>
                   )}
-
-                  <Divider />
-
-                  {/* Service Selection */}
-                  <FormControl fullWidth size='small' required>
-                    <InputLabel>Service</InputLabel>
-                    <Select value={serviceId} label='Service' onChange={e => handleServiceChange(e.target.value)}>
-                      <MenuItem value=''>Select service</MenuItem>
-                      {mockServices.map(svc => (
-                        <MenuItem key={svc.id} value={svc.id}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                            <span>{svc.name}</span>
-                            <Typography variant='caption' color='text.secondary'>
-                              {svc.duration}min • ${svc.price}
-                            </Typography>
-                          </Box>
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
 
                   <Divider />
 
@@ -1519,6 +1532,21 @@ export default function UnifiedBookingDrawer({
                     onChange={e => setInstapayReference(e.target.value)}
                     size='small'
                     placeholder='Enter payment reference'
+                  />
+
+                  <Divider />
+
+                  {/* Business Notes */}
+                  <TextField
+                    fullWidth
+                    label='Business Notes'
+                    value={businessNotes}
+                    onChange={e => setBusinessNotes(e.target.value)}
+                    size='small'
+                    multiline
+                    rows={3}
+                    placeholder='Add internal notes about this booking (not visible to client)'
+                    helperText='Internal notes - only visible to staff'
                   />
                 </Stack>
               ) : (
@@ -1649,6 +1677,19 @@ export default function UnifiedBookingDrawer({
                           />
                         }
                         label={<Typography variant='body2'>Star this booking</Typography>}
+                      />
+
+                      {/* Business Notes */}
+                      <TextField
+                        fullWidth
+                        label='Business Notes'
+                        value={businessNotes}
+                        onChange={e => setBusinessNotes(e.target.value)}
+                        size='small'
+                        multiline
+                        rows={3}
+                        placeholder='Add internal notes about this booking'
+                        helperText='Internal notes - only visible to staff'
                       />
                     </Stack>
                   </Box>
@@ -1975,6 +2016,19 @@ export default function UnifiedBookingDrawer({
                                 sx={{ minWidth: 200, flex: 2 }}
                               />
                             </Box>
+
+                            {/* Business Notes */}
+                            <TextField
+                              fullWidth
+                              label='Business Notes'
+                              value={client.businessNotes || ''}
+                              onChange={e => handleClientBusinessNotesChange(client.id, e.target.value)}
+                              size='small'
+                              multiline
+                              rows={2}
+                              placeholder='Internal notes about this client/booking...'
+                              sx={{ mt: 2 }}
+                            />
                           </Paper>
                         ))
                       )}
@@ -2056,6 +2110,16 @@ export default function UnifiedBookingDrawer({
                                 helperText={phoneError || ''}
                               />
                             </Box>
+                            <TextField
+                              fullWidth
+                              label='Business Notes'
+                              value={newClientBusinessNotes}
+                              onChange={e => setNewClientBusinessNotes(e.target.value)}
+                              size='small'
+                              multiline
+                              rows={2}
+                              placeholder='Add notes about this client (internal)'
+                            />
                             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                               <Button variant='outlined' size='small' onClick={() => {
                                 setIsAddingClient(false)
@@ -2064,6 +2128,7 @@ export default function UnifiedBookingDrawer({
                                 setNewClientName('')
                                 setNewClientEmail('')
                                 setNewClientPhone('')
+                                setNewClientBusinessNotes('')
                               }}>
                                 Cancel
                               </Button>

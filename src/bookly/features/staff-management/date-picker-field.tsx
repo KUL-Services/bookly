@@ -11,6 +11,7 @@ interface DatePickerFieldProps {
   onChange: (date: Date) => void
   required?: boolean
   disabled?: boolean
+  minDate?: Date
   size?: TextFieldProps['size']
   sx?: TextFieldProps['sx']
   fullWidth?: boolean
@@ -22,6 +23,7 @@ export function DatePickerField({
   onChange,
   required = false,
   disabled = false,
+  minDate,
   size = 'medium',
   sx,
   fullWidth = false
@@ -201,11 +203,19 @@ export function DatePickerField({
               },
               '& [data-disabled="true"] .rdp-day_button': {
                 color: theme => theme.palette.text.disabled,
-                opacity: 0.4
+                opacity: 0.4,
+                cursor: 'not-allowed',
+                pointerEvents: 'none',
+                textDecoration: 'line-through'
               }
             }}
           >
-            <Calendar mode="single" selected={dateValue} onSelect={handleDateSelect} />
+            <Calendar
+              mode="single"
+              selected={dateValue}
+              onSelect={handleDateSelect}
+              disabled={minDate ? { before: minDate } : undefined}
+            />
           </Box>
         </Box>
       </Popover>
