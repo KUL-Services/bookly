@@ -9,6 +9,7 @@ import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
 import {
   getBranchName,
+  getBranchHours,
   buildEventColors,
   groupStaffByType,
   categorizeRooms,
@@ -1284,6 +1285,7 @@ export default function UnifiedMultiResourceDayView({
                   const isLastGroup = groupIndex === primaryGroups.length - 1
                   const borderRightWidth = isLastGroup ? 1 : branchDividerWidth
                   const borderRightColor = isLastGroup ? 'divider' : branchDividerColor
+                  const branchHours = getBranchHours(primaryGroup, currentDate)
                   return (
                     <Box
                       key={`primary-${primaryGroup}`}
@@ -1296,24 +1298,36 @@ export default function UnifiedMultiResourceDayView({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: 1
+                        gap: 1,
+                        flexDirection: 'column',
+                        py: 1
                       }}
                     >
-                      <i className='ri-building-line' style={{ fontSize: 16 }} />
-                      <Typography variant='body2' fontWeight={700} color='text.primary'>
-                        {getPrimaryGroupLabel(primaryGroup)}
-                      </Typography>
-                      <Chip
-                        label={resourcesInPrimaryGroup.length}
-                        size='small'
-                        sx={{
-                          height: 18,
-                          fontSize: '0.65rem',
-                          bgcolor: 'primary.main',
-                          color: 'white',
-                          fontWeight: 600
-                        }}
-                      />
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <i className='ri-building-line' style={{ fontSize: 16 }} />
+                        <Typography variant='body2' fontWeight={700} color='text.primary'>
+                          {getPrimaryGroupLabel(primaryGroup)}
+                        </Typography>
+                        <Chip
+                          label={resourcesInPrimaryGroup.length}
+                          size='small'
+                          sx={{
+                            height: 18,
+                            fontSize: '0.65rem',
+                            bgcolor: 'primary.main',
+                            color: 'white',
+                            fontWeight: 600
+                          }}
+                        />
+                      </Box>
+                      {branchHours && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <i className='ri-time-line' style={{ fontSize: 12, opacity: 0.7 }} />
+                          <Typography variant='caption' sx={{ fontSize: '0.7rem', opacity: 0.8 }}>
+                            {branchHours}
+                          </Typography>
+                        </Box>
+                      )}
                     </Box>
                   )
                 })}

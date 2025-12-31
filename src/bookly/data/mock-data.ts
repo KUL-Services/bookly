@@ -2184,7 +2184,7 @@ export const mockBookings: Booking[] = [
     partySize: 1
   },
 
-  // Main Studio - slot-1-1-2-thu-1 (09:00-10:00 Haircut)
+  // Main Studio - slot-1-1-2-thu-1 (11:00-12:00 Haircut) - Moved to avoid conflict with booking-showcase-1
   {
     id: 'booking-thu-slot-3',
     businessId: '1',
@@ -2195,11 +2195,11 @@ export const mockBookings: Booking[] = [
     serviceName: 'Haircut & Style',
     staffMemberName: 'Emma Johnson',
     date: new Date('2025-12-18'),
-    time: '9:00 AM',
+    time: '11:00 AM',
     duration: 60,
     price: 65,
     status: 'confirmed',
-    notes: 'Early morning cut',
+    notes: 'Late morning cut',
     slotId: 'slot-1-1-2-thu-1',
     roomId: 'room-1',
     partySize: 1

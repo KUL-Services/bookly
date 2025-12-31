@@ -380,6 +380,23 @@ export function getBranch(branchId: string) {
 }
 
 /**
+ * Get branch opening hours for a specific day
+ * @param branchId - The branch ID
+ * @param date - The date to get hours for (optional, defaults to current date)
+ * @returns The opening hours string (e.g., "9:00 AM - 7:00 PM") or "Closed"
+ */
+export function getBranchHours(branchId: string, date?: Date): string {
+  const branch = getBranch(branchId)
+  if (!branch?.openingHours) return ''
+
+  const targetDate = date || new Date()
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const dayOfWeek = dayNames[targetDate.getDay()] as keyof typeof branch.openingHours
+
+  return branch.openingHours[dayOfWeek] || 'Closed'
+}
+
+/**
  * Check if two dates are the same day
  */
 export function isSameDay(date1: Date, date2: Date): boolean {

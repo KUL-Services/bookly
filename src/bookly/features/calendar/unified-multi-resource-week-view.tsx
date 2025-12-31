@@ -8,6 +8,7 @@ import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
 import {
   getBranchName,
+  getBranchHours,
   buildEventColors,
   groupStaffByType,
   groupStaffByTypeAndAssignment,
@@ -1097,32 +1098,88 @@ export default function UnifiedMultiResourceWeekView({
               <Box key={`branch-${branchId}`}>
                 <Box
                   sx={{
-                    px: 2,
-                    py: 1.5,
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: `220px repeat(${weekDays.length}, 120px)`,
+                      md: `220px repeat(${weekDays.length}, 1fr)`
+                    },
                     bgcolor: isDark ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.1)',
                     borderBottom: 1,
-                    borderColor: 'divider',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1
+                    borderColor: 'divider'
                   }}
                 >
-                  <i className='ri-building-line' style={{ fontSize: 14, color: isDark ? '#77b6a3' : '#0a2c24' }} />
-                  <Typography variant='body2' fontWeight={700} color='primary.dark'>
-                    {branchName}
-                  </Typography>
-                  <Chip
-                    label={resources.length}
-                    size='small'
+                  {/* Branch name column */}
+                  <Box
                     sx={{
-                      height: 18,
-                      fontSize: '0.65rem',
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      fontWeight: 600,
-                      ml: 'auto'
+                      px: 2,
+                      py: 1.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      borderRight: 1,
+                      borderColor: 'divider'
                     }}
-                  />
+                  >
+                    <i className='ri-building-line' style={{ fontSize: 14, color: isDark ? '#77b6a3' : '#0a2c24' }} />
+                    <Typography variant='body2' fontWeight={700} color='primary.dark'>
+                      {branchName}
+                    </Typography>
+                    <Chip
+                      label={resources.length}
+                      size='small'
+                      sx={{
+                        height: 18,
+                        fontSize: '0.65rem',
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        fontWeight: 600,
+                        ml: 'auto'
+                      }}
+                    />
+                  </Box>
+
+                  {/* Business hours for each day */}
+                  {weekDays.map(day => {
+                    const branchHours = getBranchHours(branchId, day)
+                    const isClosed = branchHours === 'Closed'
+                    return (
+                      <Box
+                        key={`${branchId}-${day.toISOString()}`}
+                        sx={{
+                          px: 1,
+                          py: 1.5,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          borderRight: 1,
+                          borderColor: 'divider',
+                          bgcolor: isClosed ? (isDark ? 'rgba(255,0,0,0.05)' : 'rgba(255,0,0,0.03)') : 'transparent'
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <i
+                            className='ri-time-line'
+                            style={{
+                              fontSize: 11,
+                              opacity: 0.6,
+                              color: isClosed ? (isDark ? '#ff6b6b' : '#d32f2f') : 'inherit'
+                            }}
+                          />
+                          <Typography
+                            variant='caption'
+                            sx={{
+                              fontSize: '0.65rem',
+                              opacity: isClosed ? 0.9 : 0.75,
+                              color: isClosed ? (isDark ? '#ff6b6b' : '#d32f2f') : 'text.secondary',
+                              fontWeight: isClosed ? 600 : 400
+                            }}
+                          >
+                            {branchHours}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )
+                  })}
                 </Box>
 
                 {/* Resources in this branch */}

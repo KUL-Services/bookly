@@ -111,7 +111,9 @@ const generateAvailableSlots = (
   const slots: AvailableSlot[] = []
   const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const dayOfWeek = dayNames[date.getDay()]
-  const workingHours = staffWorkingHours[staffId]?.[dayOfWeek as keyof WeeklyStaffHours] as { isWorking: boolean, shifts: any[] } | undefined
+  const workingHours = staffWorkingHours[staffId]?.[dayOfWeek as keyof WeeklyStaffHours] as
+    | { isWorking: boolean; shifts: any[] }
+    | undefined
 
   // If not working, return empty
   if (!workingHours || !workingHours.isWorking || !workingHours.shifts || workingHours.shifts.length === 0) {
@@ -129,9 +131,7 @@ const generateAvailableSlots = (
   const dateStr = getDateKey(date)
   const staffBookings = events.filter(e => {
     const eventDate = getDateKey(new Date(e.start))
-    return eventDate === dateStr &&
-           e.extendedProps.staffId === staffId &&
-           e.extendedProps.status !== 'cancelled'
+    return eventDate === dateStr && e.extendedProps.staffId === staffId && e.extendedProps.status !== 'cancelled'
   })
 
   // Generate slots based on working hours (15 min intervals)
@@ -159,10 +159,11 @@ const generateAvailableSlots = (
       const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 
       // Check if slot is during a break
-      const duringBreak = breaks.some(b =>
-        (mins >= b.start && mins < b.end) ||
-        (slotEndMins > b.start && slotEndMins <= b.end) ||
-        (mins <= b.start && slotEndMins >= b.end)
+      const duringBreak = breaks.some(
+        b =>
+          (mins >= b.start && mins < b.end) ||
+          (slotEndMins > b.start && slotEndMins <= b.end) ||
+          (mins <= b.start && slotEndMins >= b.end)
       )
 
       if (duringBreak) {
@@ -178,7 +179,11 @@ const generateAvailableSlots = (
 
       const timeOffCheck = hasTimeOffConflict(staffId, slotStart, slotEnd, timeOffRequests)
       if (timeOffCheck.hasConflict) {
-        slots.push({ time: timeStr, available: false, reason: `Time off: ${timeOffCheck.conflictingTimeOff?.reason || 'Unavailable'}` })
+        slots.push({
+          time: timeStr,
+          available: false,
+          reason: `Time off: ${timeOffCheck.conflictingTimeOff?.reason || 'Unavailable'}`
+        })
         continue
       }
 
@@ -189,9 +194,11 @@ const generateAvailableSlots = (
         const bookingStartMins = bookingStart.getHours() * 60 + bookingStart.getMinutes()
         const bookingEndMins = bookingEnd.getHours() * 60 + bookingEnd.getMinutes()
 
-        return (mins >= bookingStartMins && mins < bookingEndMins) ||
-               (slotEndMins > bookingStartMins && slotEndMins <= bookingEndMins) ||
-               (mins <= bookingStartMins && slotEndMins >= bookingEndMins)
+        return (
+          (mins >= bookingStartMins && mins < bookingEndMins) ||
+          (slotEndMins > bookingStartMins && slotEndMins <= bookingEndMins) ||
+          (mins <= bookingStartMins && slotEndMins >= bookingEndMins)
+        )
       })
 
       if (hasBookingConflict) {
@@ -276,9 +283,12 @@ export default function UnifiedBookingDrawer({
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
   const [clientPhone, setClientPhone] = useState('')
+  const [clientNameError, setClientNameError] = useState<string | null>(null)
   const [dynamicEmailError, setDynamicEmailError] = useState<string | null>(null)
   const [dynamicPhoneError, setDynamicPhoneError] = useState<string | null>(null)
+  const [contactError, setContactError] = useState<string | null>(null) // For "at least one contact" error
   const [serviceId, setServiceId] = useState('')
+  const [serviceError, setServiceError] = useState<string | null>(null)
   const [serviceName, setServiceName] = useState('')
   const [servicePrice, setServicePrice] = useState(0)
   const [serviceDuration, setServiceDuration] = useState(30)
@@ -288,6 +298,7 @@ export default function UnifiedBookingDrawer({
   const [instapayReference, setInstapayReference] = useState('')
   const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid')
   const [businessNotes, setBusinessNotes] = useState('') // Business notes for dynamic mode
+  const [staffError, setStaffError] = useState<string | null>(null)
 
   // Static mode state
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
@@ -297,14 +308,16 @@ export default function UnifiedBookingDrawer({
   const [newClientName, setNewClientName] = useState('')
   const [newClientEmail, setNewClientEmail] = useState('')
   const [newClientPhone, setNewClientPhone] = useState('')
+  const [newClientNameError, setNewClientNameError] = useState<string | null>(null)
   const [newClientBusinessNotes, setNewClientBusinessNotes] = useState('') // Business notes for new client
   const [emailError, setEmailError] = useState<string | null>(null)
   const [phoneError, setPhoneError] = useState<string | null>(null)
+  const [newClientContactError, setNewClientContactError] = useState<string | null>(null)
+  const [capacityError, setCapacityError] = useState<string | null>(null)
   const [isSessionClientsOpen, setIsSessionClientsOpen] = useState(false)
 
   // UI state
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
-  const [validationError, setValidationError] = useState<string | null>(null)
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
   const [showAvailableSlots, setShowAvailableSlots] = useState(true)
 
@@ -360,9 +373,12 @@ export default function UnifiedBookingDrawer({
       setClientName('')
       setClientEmail('')
       setClientPhone('')
+      setClientNameError(null)
       setDynamicEmailError(null)
       setDynamicPhoneError(null)
+      setContactError(null)
       setServiceId('')
+      setServiceError(null)
       setServiceName('')
       setServicePrice(0)
       setServiceDuration(30)
@@ -372,10 +388,10 @@ export default function UnifiedBookingDrawer({
       setInstapayReference('')
       setPaymentStatus('unpaid')
       setBusinessNotes('')
+      setStaffError(null)
       setSelectedSlotId(null)
       setSlotClients([])
       setIsSessionClientsOpen(false)
-      setValidationError(null)
       setAvailabilityWarning(null)
     }
   }, [open, mode, initialDate, initialStaffId])
@@ -390,11 +406,12 @@ export default function UnifiedBookingDrawer({
       setNewClientName('')
       setNewClientEmail('')
       setNewClientPhone('')
+      setNewClientNameError(null)
       setNewClientBusinessNotes('')
       setEmailError(null)
       setPhoneError(null)
+      setNewClientContactError(null)
       setIsSessionClientsOpen(false)
-      setValidationError(null)
       setAvailabilityWarning(null)
 
       const props = existingEvent.extendedProps as any
@@ -688,22 +705,6 @@ export default function UnifiedBookingDrawer({
 
       // If in static mode and adding client, add to slot clients list
       if (effectiveSchedulingMode === 'static' && isAddingClient) {
-        // At least one of email or phone is required
-        if (!client.email?.trim() && !client.phone?.trim()) {
-          setValidationError('Please enter either email or phone number')
-          return
-        }
-        if (client.email?.trim() && hasDuplicateEmail(client.email)) {
-          setValidationError('This client is already booked in this session')
-          return
-        }
-
-        const totalCapacity = getSlotCapacity()
-        if (slotClients.length >= totalCapacity) {
-          setValidationError('Cannot add client: Session is at maximum capacity')
-          return
-        }
-
         const bookingRef = generateBookingReference()
         const newClient: SlotClient = {
           id: bookingRef,
@@ -728,18 +729,20 @@ export default function UnifiedBookingDrawer({
 
   const handleAddClientToSlot = () => {
     // Clear previous errors
-    setValidationError(null)
+    setNewClientNameError(null)
     setEmailError(null)
     setPhoneError(null)
+    setNewClientContactError(null)
+    setCapacityError(null)
 
     if (!newClientName.trim()) {
-      setValidationError('Please enter client name')
+      setNewClientNameError('Client name is required')
       return
     }
 
     // At least one of email or phone is required
     if (!newClientEmail.trim() && !newClientPhone.trim()) {
-      setValidationError('Please enter either email or phone number')
+      setNewClientContactError('Please enter either email or phone number')
       return
     }
 
@@ -756,7 +759,7 @@ export default function UnifiedBookingDrawer({
     }
 
     if (newClientEmail.trim() && hasDuplicateEmail(newClientEmail)) {
-      setValidationError('This client is already booked in this session')
+      setEmailError('This client is already booked in this session')
       return
     }
 
@@ -766,7 +769,7 @@ export default function UnifiedBookingDrawer({
     const availableCapacity = totalCapacity - currentCount
 
     if (availableCapacity === 0) {
-      setValidationError('Cannot add client: Session is at maximum capacity')
+      setCapacityError('Cannot add client: Session is at maximum capacity')
       return
     }
 
@@ -834,19 +837,25 @@ export default function UnifiedBookingDrawer({
   }
 
   const handleSave = () => {
-    setValidationError(null)
+    setClientNameError(null)
     setDynamicEmailError(null)
     setDynamicPhoneError(null)
+    setContactError(null)
+    setServiceError(null)
+    setStaffError(null)
+
+    // Declare slotIdForSave at function scope so it's accessible in onSave callback
+    let slotIdForSave = selectedSlotId
 
     if (effectiveSchedulingMode === 'dynamic') {
       // Dynamic mode validation
       if (!clientName.trim()) {
-        setValidationError('Please enter client name')
+        setClientNameError('Client name is required')
         return
       }
       // At least one of email or phone is required
       if (!clientEmail.trim() && !clientPhone.trim()) {
-        setValidationError('Please enter either email or phone number')
+        setContactError('Please enter either email or phone number')
         return
       }
       // Validate email format if provided
@@ -860,11 +869,11 @@ export default function UnifiedBookingDrawer({
         return
       }
       if (!serviceId) {
-        setValidationError('Please select a service')
+        setServiceError('Please select a service')
         return
       }
       if (!staffId) {
-        setValidationError('Please select a staff member')
+        setStaffError('Please select a staff member')
         return
       }
 
@@ -920,7 +929,6 @@ export default function UnifiedBookingDrawer({
       }
     } else {
       // Static mode - update all slot client bookings
-      let slotIdForSave = selectedSlotId
       if (!slotIdForSave && existingEvent) {
         const resolved = resolveSlotForEvent(existingEvent)
         if (resolved?.slotId) {
@@ -933,7 +941,7 @@ export default function UnifiedBookingDrawer({
       }
 
       if (!slotIdForSave) {
-        setValidationError('Session ID not found')
+        console.error('Session ID not found')
         return
       }
 
@@ -958,7 +966,7 @@ export default function UnifiedBookingDrawer({
             }
             console.warn('⚠️ DRAWER Using fallback slot data:', slotDataForSave)
           } else {
-            setValidationError('Session data not available - please refresh and try again')
+            console.error('Session data not available - please refresh and try again')
             return
           }
         }
@@ -1106,7 +1114,6 @@ export default function UnifiedBookingDrawer({
   }
 
   const handleClose = () => {
-    setValidationError(null)
     setAvailabilityWarning(null)
     setIsSessionClientsOpen(false)
     onClose()
@@ -1256,9 +1263,15 @@ export default function UnifiedBookingDrawer({
                         fullWidth
                         label='Client Name'
                         value={clientName}
-                        onChange={e => setClientName(e.target.value)}
+                        onChange={e => {
+                          setClientName(e.target.value)
+                          if (clientNameError) setClientNameError(null)
+                          if (contactError) setContactError(null)
+                        }}
                         size='small'
                         required
+                        error={!!clientNameError}
+                        helperText={clientNameError || ''}
                       />
                       <TextField
                         fullWidth
@@ -1268,10 +1281,11 @@ export default function UnifiedBookingDrawer({
                         onChange={e => {
                           setClientEmail(e.target.value)
                           if (dynamicEmailError) setDynamicEmailError(null)
+                          if (contactError) setContactError(null)
                         }}
                         size='small'
-                        error={!!dynamicEmailError}
-                        helperText={dynamicEmailError || ''}
+                        error={!!dynamicEmailError || (!!contactError && !clientPhone)}
+                        helperText={dynamicEmailError || (contactError && !clientPhone ? contactError : '')}
                       />
                       <TextField
                         fullWidth
@@ -1280,10 +1294,11 @@ export default function UnifiedBookingDrawer({
                         onChange={e => {
                           setClientPhone(e.target.value)
                           if (dynamicPhoneError) setDynamicPhoneError(null)
+                          if (contactError) setContactError(null)
                         }}
                         size='small'
-                        error={!!dynamicPhoneError}
-                        helperText={dynamicPhoneError || ''}
+                        error={!!dynamicPhoneError || (!!contactError && !clientEmail)}
+                        helperText={dynamicPhoneError || (contactError && !clientEmail ? contactError : '')}
                       />
                     </Stack>
                   </Box>
@@ -1300,9 +1315,16 @@ export default function UnifiedBookingDrawer({
                     >
                       SELECT STAFF MEMBER
                     </Typography>
-                    <FormControl fullWidth size='small' required>
+                    <FormControl fullWidth size='small' required error={!!staffError}>
                       <InputLabel>Staff Member</InputLabel>
-                      <Select value={staffId} label='Staff Member' onChange={e => setStaffId(e.target.value)}>
+                      <Select
+                        value={staffId}
+                        label='Staff Member'
+                        onChange={e => {
+                          setStaffId(e.target.value)
+                          if (staffError) setStaffError(null)
+                        }}
+                      >
                         <MenuItem value=''>Select staff</MenuItem>
                         {dynamicStaff.map(staff => (
                           <MenuItem key={staff.id} value={staff.id}>
@@ -1315,6 +1337,11 @@ export default function UnifiedBookingDrawer({
                           </MenuItem>
                         ))}
                       </Select>
+                      {staffError && (
+                        <Typography variant='caption' color='error' sx={{ mt: 0.5, ml: 1.75 }}>
+                          {staffError}
+                        </Typography>
+                      )}
                     </FormControl>
                   </Box>
 
@@ -1330,9 +1357,16 @@ export default function UnifiedBookingDrawer({
                     >
                       SELECT SERVICE
                     </Typography>
-                    <FormControl fullWidth size='small' required>
+                    <FormControl fullWidth size='small' required error={!!serviceError}>
                       <InputLabel>Service</InputLabel>
-                      <Select value={serviceId} label='Service' onChange={e => handleServiceChange(e.target.value)}>
+                      <Select
+                        value={serviceId}
+                        label='Service'
+                        onChange={e => {
+                          handleServiceChange(e.target.value)
+                          if (serviceError) setServiceError(null)
+                        }}
+                      >
                         <MenuItem value=''>Select service</MenuItem>
                         {mockServices.map(svc => (
                           <MenuItem key={svc.id} value={svc.id}>
@@ -1345,6 +1379,11 @@ export default function UnifiedBookingDrawer({
                           </MenuItem>
                         ))}
                       </Select>
+                      {serviceError && (
+                        <Typography variant='caption' color='error' sx={{ mt: 0.5, ml: 1.75 }}>
+                          {serviceError}
+                        </Typography>
+                      )}
                     </FormControl>
                   </Box>
 
@@ -1422,26 +1461,55 @@ export default function UnifiedBookingDrawer({
                                       textAlign: 'center',
                                       borderRadius: 1,
                                       border: 1,
-                                      borderColor: startTime === slot.time ? 'primary.main' : slot.available ? 'divider' : 'action.disabled',
-                                      bgcolor: startTime === slot.time ? 'primary.main' : slot.available ? 'background.paper' : 'action.disabledBackground',
-                                      color: startTime === slot.time ? 'primary.contrastText' : slot.available ? 'text.primary' : 'text.disabled',
+                                      borderColor:
+                                        startTime === slot.time
+                                          ? 'primary.main'
+                                          : slot.available
+                                            ? 'divider'
+                                            : 'action.disabled',
+                                      bgcolor:
+                                        startTime === slot.time
+                                          ? 'primary.main'
+                                          : slot.available
+                                            ? 'background.paper'
+                                            : 'action.disabledBackground',
+                                      color:
+                                        startTime === slot.time
+                                          ? 'primary.contrastText'
+                                          : slot.available
+                                            ? 'text.primary'
+                                            : 'text.disabled',
                                       cursor: slot.available ? 'pointer' : 'not-allowed',
                                       opacity: slot.available ? 1 : 0.5,
                                       transition: 'all 0.2s',
-                                      '&:hover': slot.available ? {
-                                        borderColor: 'primary.main',
-                                        bgcolor: startTime === slot.time ? 'primary.dark' : 'primary.lighter'
-                                      } : {}
+                                      '&:hover': slot.available
+                                        ? {
+                                            borderColor: 'primary.main',
+                                            bgcolor: startTime === slot.time ? 'primary.dark' : 'primary.lighter'
+                                          }
+                                        : {}
                                     }}
                                   >
-                                    <Typography variant='body2' fontWeight={startTime === slot.time ? 600 : 400} fontSize='0.75rem'>
+                                    <Typography
+                                      variant='body2'
+                                      fontWeight={startTime === slot.time ? 600 : 400}
+                                      fontSize='0.75rem'
+                                    >
                                       {formatTime12h(slot.time)}
                                     </Typography>
                                   </Box>
                                 ))}
                               </Box>
                               {startTime && (
-                                <Paper sx={{ p: 1.5, mt: 1.5, bgcolor: 'success.lighter', border: 1, borderColor: 'success.main' }}>
+                                <Paper
+                                  sx={{
+                                    p: 1.5,
+                                    mt: 1.5,
+                                    bgcolor: 'success.lighter',
+                                    border: 1,
+                                    borderColor: 'success.main'
+                                  }}
+                                >
                                   <Typography variant='body2' color='success.dark' fontWeight={500}>
                                     <i className='ri-check-line' style={{ marginRight: 8 }} />
                                     {formatTime12h(startTime)} - {formatTime12h(endTime)}
@@ -1624,7 +1692,12 @@ export default function UnifiedBookingDrawer({
 
                   {/* Editable controls - Clean section */}
                   <Box sx={{ pt: 2, mt: 1, borderTop: 1, borderColor: 'divider' }}>
-                    <Typography variant='caption' color='text.secondary' fontWeight={600} sx={{ mb: 1.5, display: 'block' }}>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      fontWeight={600}
+                      sx={{ mb: 1.5, display: 'block' }}
+                    >
                       UPDATE STATUS
                     </Typography>
 
@@ -1752,92 +1825,36 @@ export default function UnifiedBookingDrawer({
               return (
                 <>
                   <Stack spacing={2.5}>
-                  {/* Session Info Header */}
-                  <Box>
-                    <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                      SESSION INFORMATION
-                    </Typography>
-                    <Typography variant='body1' fontWeight={500}>
-                      {serviceName || 'Group Session'} • {formatShortDate(date)}
-                    </Typography>
-                    <Typography variant='body2' color='text.secondary'>
-                      {startTime} - {endTime}
-                    </Typography>
-                  </Box>
-
-                  <Divider />
-
-                  {/* Capacity Display */}
-                  <Paper
-                    sx={{
-                      p: 2,
-                      bgcolor: isFull ? 'error.lighter' : isLow ? 'warning.lighter' : 'success.lighter',
-                      border: 1,
-                      borderColor: isFull ? 'error.main' : isLow ? 'warning.main' : 'success.main',
-                      cursor: 'pointer',
-                      transition: 'transform 0.1s ease, box-shadow 0.2s ease',
-                      '&:hover': {
-                        transform: 'translateY(-1px)',
-                        boxShadow: 2
-                      }
-                    }}
-                    onClick={() => setIsSessionClientsOpen(true)}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box>
-                        <Typography variant='body2' fontWeight={600}>
-                          Capacity Status
-                        </Typography>
-                        <Typography variant='caption' color='text.secondary'>
-                          {bookedCount} booked • {availableCapacity} spots remaining
-                        </Typography>
-                        <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
-                          Click to manage session clients
-                        </Typography>
-                      </Box>
-                      <Chip
-                        label={`${bookedCount}/${totalCapacity}`}
-                        size='small'
-                        color={isFull ? 'error' : isLow ? 'warning' : 'success'}
-                        icon={<i className='ri-user-line' style={{ fontSize: '0.75rem' }} />}
-                      />
-                    </Box>
-                  </Paper>
-
-                  </Stack>
-                  <Dialog
-                  open={isSessionClientsOpen}
-                  onClose={() => {
-                    setIsSessionClientsOpen(false)
-                    setIsAddingClient(false)
-                  }}
-                  maxWidth='md'
-                  fullWidth
-                  PaperProps={{ sx: { borderRadius: 2 } }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
+                    {/* Session Info Header */}
                     <Box>
-                      <Typography variant='h6' fontWeight={600}>
-                        Session Clients
+                      <Typography variant='caption' color='text.secondary' fontWeight={600}>
+                        SESSION INFORMATION
                       </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        {serviceName || 'Group Session'} • {formatShortDate(date)} • {startTime} - {endTime}
+                      <Typography variant='body1' fontWeight={500}>
+                        {serviceName || 'Group Session'} • {formatShortDate(date)}
+                      </Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        {startTime} - {endTime}
                       </Typography>
                     </Box>
-                    <IconButton onClick={() => setIsSessionClientsOpen(false)} size='small'>
-                      <i className='ri-close-line' />
-                    </IconButton>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ p: 2.5 }}>
+
+                    <Divider />
+
+                    {/* Capacity Display */}
                     <Paper
                       sx={{
                         p: 2,
                         bgcolor: isFull ? 'error.lighter' : isLow ? 'warning.lighter' : 'success.lighter',
                         border: 1,
                         borderColor: isFull ? 'error.main' : isLow ? 'warning.main' : 'success.main',
-                        mb: 2
+                        cursor: 'pointer',
+                        transition: 'transform 0.1s ease, box-shadow 0.2s ease',
+                        '&:hover': {
+                          transform: 'translateY(-1px)',
+                          boxShadow: 2
+                        }
                       }}
+                      onClick={() => setIsSessionClientsOpen(true)}
                     >
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box>
@@ -1846,6 +1863,9 @@ export default function UnifiedBookingDrawer({
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
                             {bookedCount} booked • {availableCapacity} spots remaining
+                          </Typography>
+                          <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
+                            Click to manage session clients
                           </Typography>
                         </Box>
                         <Chip
@@ -1856,306 +1876,406 @@ export default function UnifiedBookingDrawer({
                         />
                       </Box>
                     </Paper>
-
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                      <Typography variant='caption' color='text.secondary' fontWeight={600}>
-                        BOOKED CLIENTS ({slotClients.length})
-                      </Typography>
+                  </Stack>
+                  <Dialog
+                    open={isSessionClientsOpen}
+                    onClose={() => {
+                      setIsSessionClientsOpen(false)
+                      setIsAddingClient(false)
+                    }}
+                    maxWidth='md'
+                    fullWidth
+                    PaperProps={{ sx: { borderRadius: 2 } }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
+                      <Box>
+                        <Typography variant='h6' fontWeight={600}>
+                          Session Clients
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          {serviceName || 'Group Session'} • {formatShortDate(date)} • {startTime} - {endTime}
+                        </Typography>
+                      </Box>
+                      <IconButton onClick={() => setIsSessionClientsOpen(false)} size='small'>
+                        <i className='ri-close-line' />
+                      </IconButton>
                     </Box>
+                    <Divider />
+                    <Box sx={{ p: 2.5 }}>
+                      <Paper
+                        sx={{
+                          p: 2,
+                          bgcolor: isFull ? 'error.lighter' : isLow ? 'warning.lighter' : 'success.lighter',
+                          border: 1,
+                          borderColor: isFull ? 'error.main' : isLow ? 'warning.main' : 'success.main',
+                          mb: 2
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Box>
+                            <Typography variant='body2' fontWeight={600}>
+                              Capacity Status
+                            </Typography>
+                            <Typography variant='caption' color='text.secondary'>
+                              {bookedCount} booked • {availableCapacity} spots remaining
+                            </Typography>
+                          </Box>
+                          <Chip
+                            label={`${bookedCount}/${totalCapacity}`}
+                            size='small'
+                            color={isFull ? 'error' : isLow ? 'warning' : 'success'}
+                            icon={<i className='ri-user-line' style={{ fontSize: '0.75rem' }} />}
+                          />
+                        </Box>
+                      </Paper>
 
-                    <Stack spacing={1.5}>
-                      {slotClients.length === 0 ? (
-                        <Paper sx={{ p: 3, textAlign: 'center' }} variant='outlined'>
-                          <Typography variant='body2' color='text.secondary'>
-                            No clients booked yet
-                          </Typography>
-                        </Paper>
-                      ) : (
-                        slotClients.map(client => (
-                          <Paper key={client.id} sx={{ p: 2 }} variant='outlined'>
-                            <Box
-                              sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'flex-start',
-                                mb: 1.5
-                              }}
-                            >
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, fontSize: '0.8rem', bgcolor: 'primary.main' }}>
-                                  {getInitials(client.name)}
-                                </Avatar>
-                                <Box>
-                                  <Typography variant='body2' fontWeight={600}>
-                                    {client.name}
-                                  </Typography>
-                                  <Typography variant='caption' color='text.secondary'>
-                                    Booking Ref: {client.bookingRef}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                        <Typography variant='caption' color='text.secondary' fontWeight={600}>
+                          BOOKED CLIENTS ({slotClients.length})
+                        </Typography>
+                      </Box>
+
+                      <Stack spacing={1.5}>
+                        {slotClients.length === 0 ? (
+                          <Paper sx={{ p: 3, textAlign: 'center' }} variant='outlined'>
+                            <Typography variant='body2' color='text.secondary'>
+                              No clients booked yet
+                            </Typography>
+                          </Paper>
+                        ) : (
+                          slotClients.map(client => (
+                            <Paper key={client.id} sx={{ p: 2 }} variant='outlined'>
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'flex-start',
+                                  mb: 1.5
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                  <Avatar sx={{ width: 36, height: 36, fontSize: '0.8rem', bgcolor: 'primary.main' }}>
+                                    {getInitials(client.name)}
+                                  </Avatar>
+                                  <Box>
+                                    <Typography variant='body2' fontWeight={600}>
+                                      {client.name}
+                                    </Typography>
+                                    <Typography variant='caption' color='text.secondary'>
+                                      Booking Ref: {client.bookingRef}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                                <IconButton
+                                  size='small'
+                                  onClick={() => handleRemoveClientFromSlot(client.id)}
+                                  sx={{ color: 'error.main' }}
+                                >
+                                  <i className='ri-delete-bin-line' />
+                                </IconButton>
+                              </Box>
+
+                              <Stack spacing={1} sx={{ mb: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <i className='ri-mail-line' style={{ fontSize: '1rem', opacity: 0.6 }} />
+                                  <Typography variant='body2' color={client.email ? 'text.primary' : 'text.secondary'}>
+                                    {client.email || 'No email'}
                                   </Typography>
                                 </Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <i className='ri-phone-line' style={{ fontSize: '1rem', opacity: 0.6 }} />
+                                  <Typography variant='body2' color={client.phone ? 'text.primary' : 'text.secondary'}>
+                                    {client.phone || 'No phone'}
+                                  </Typography>
+                                </Box>
+                                <Typography variant='caption' color='text.secondary'>
+                                  Added:{' '}
+                                  {new Date(client.bookedAt).toLocaleString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                </Typography>
+                              </Stack>
+
+                              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 2 }}>
+                                <FormControl size='small' sx={{ minWidth: 140, flex: 1 }}>
+                                  <InputLabel>Status</InputLabel>
+                                  <Select
+                                    value={client.status}
+                                    label='Status'
+                                    onChange={e =>
+                                      handleClientStatusChange(client.id, e.target.value as SlotClient['status'])
+                                    }
+                                  >
+                                    <MenuItem value='confirmed'>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <i
+                                          className='ri-checkbox-circle-line'
+                                          style={{ color: 'var(--mui-palette-success-main)' }}
+                                        />
+                                        Confirmed
+                                      </Box>
+                                    </MenuItem>
+                                    <MenuItem value='pending'>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <i
+                                          className='ri-time-line'
+                                          style={{ color: 'var(--mui-palette-warning-main)' }}
+                                        />
+                                        Not Yet Confirmed / Pending Confirmation
+                                      </Box>
+                                    </MenuItem>
+                                    <MenuItem value='no_show'>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <i
+                                          className='ri-close-circle-line'
+                                          style={{ color: 'var(--mui-palette-error-main)' }}
+                                        />
+                                        No Show
+                                      </Box>
+                                    </MenuItem>
+                                    <MenuItem value='attended'>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <i
+                                          className='ri-check-double-line'
+                                          style={{ color: 'var(--mui-palette-info-main)' }}
+                                        />
+                                        Attended
+                                      </Box>
+                                    </MenuItem>
+                                  </Select>
+                                </FormControl>
+                                <Box sx={{ minWidth: 160, flex: 1 }}>
+                                  <TimeSelectField
+                                    label='Arrival Time'
+                                    value={client.arrivalTime || ''}
+                                    onChange={time => handleClientArrivalChange(client.id, time)}
+                                    size='small'
+                                    fullWidth
+                                  />
+                                </Box>
                               </Box>
+
+                              <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+                                <FormControl size='small' sx={{ minWidth: 140, flex: 1 }}>
+                                  <InputLabel>Payment Status</InputLabel>
+                                  <Select
+                                    value={client.paymentStatus}
+                                    label='Payment Status'
+                                    onChange={e =>
+                                      handleClientPaymentStatusChange(client.id, e.target.value as 'paid' | 'unpaid')
+                                    }
+                                  >
+                                    <MenuItem value='unpaid'>Unpaid</MenuItem>
+                                    <MenuItem value='paid'>Paid</MenuItem>
+                                  </Select>
+                                </FormControl>
+                                <FormControl size='small' sx={{ minWidth: 160, flex: 1 }}>
+                                  <InputLabel>Payment Method</InputLabel>
+                                  <Select
+                                    value={client.paymentMethod}
+                                    label='Payment Method'
+                                    onChange={e =>
+                                      handleClientPaymentMethodChange(client.id, e.target.value as PaymentMethod)
+                                    }
+                                  >
+                                    <MenuItem value='pay_on_arrival'>Pay on Arrival</MenuItem>
+                                    <MenuItem value='mock_card'>Card (Mock)</MenuItem>
+                                  </Select>
+                                </FormControl>
+                                <TextField
+                                  fullWidth
+                                  label='Payment Reference Number'
+                                  value={client.paymentReference}
+                                  onChange={e => handleClientPaymentReferenceChange(client.id, e.target.value)}
+                                  size='small'
+                                  placeholder='Enter payment reference'
+                                  sx={{ minWidth: 200, flex: 2 }}
+                                />
+                              </Box>
+
+                              {/* Business Notes */}
+                              <TextField
+                                fullWidth
+                                label='Business Notes'
+                                value={client.businessNotes || ''}
+                                onChange={e => handleClientBusinessNotesChange(client.id, e.target.value)}
+                                size='small'
+                                multiline
+                                rows={2}
+                                placeholder='Internal notes about this client/booking...'
+                                sx={{ mt: 2 }}
+                              />
+                            </Paper>
+                          ))
+                        )}
+
+                        {isAddingClient ? (
+                          <Paper sx={{ p: 2, border: '2px solid', borderColor: 'primary.main' }} variant='outlined'>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                              <Typography variant='body2' fontWeight={600}>
+                                Add New Client to Session
+                              </Typography>
                               <IconButton
                                 size='small'
-                                onClick={() => handleRemoveClientFromSlot(client.id)}
-                                sx={{ color: 'error.main' }}
+                                onClick={() => {
+                                  setIsAddingClient(false)
+                                  setCapacityError(null)
+                                }}
                               >
-                                <i className='ri-delete-bin-line' />
+                                <i className='ri-close-line' />
                               </IconButton>
                             </Box>
 
-                            <Stack spacing={1} sx={{ mb: 2 }}>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <i className='ri-mail-line' style={{ fontSize: '1rem', opacity: 0.6 }} />
-                                <Typography variant='body2' color={client.email ? 'text.primary' : 'text.secondary'}>
-                                  {client.email || 'No email'}
+                            {capacityError && (
+                              <Paper
+                                sx={{ p: 1.5, mb: 2, bgcolor: 'error.lighter', border: 1, borderColor: 'error.main' }}
+                              >
+                                <Typography variant='body2' color='error.dark'>
+                                  <i className='ri-error-warning-line' style={{ marginRight: 8 }} />
+                                  {capacityError}
                                 </Typography>
-                              </Box>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <i className='ri-phone-line' style={{ fontSize: '1rem', opacity: 0.6 }} />
-                                <Typography variant='body2' color={client.phone ? 'text.primary' : 'text.secondary'}>
-                                  {client.phone || 'No phone'}
-                                </Typography>
-                              </Box>
-                              <Typography variant='caption' color='text.secondary'>
-                                Added:{' '}
-                                {new Date(client.bookedAt).toLocaleString('en-US', {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })}
-                              </Typography>
-                            </Stack>
+                              </Paper>
+                            )}
 
-                            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', mb: 2 }}>
-                              <FormControl size='small' sx={{ minWidth: 140, flex: 1 }}>
-                                <InputLabel>Status</InputLabel>
-                                <Select
-                                  value={client.status}
-                                  label='Status'
-                                  onChange={e =>
-                                    handleClientStatusChange(client.id, e.target.value as SlotClient['status'])
-                                  }
-                                >
-                                  <MenuItem value='confirmed'>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <i
-                                        className='ri-checkbox-circle-line'
-                                        style={{ color: 'var(--mui-palette-success-main)' }}
-                                      />
-                                      Confirmed
-                                    </Box>
-                                  </MenuItem>
-                                  <MenuItem value='pending'>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <i className='ri-time-line' style={{ color: 'var(--mui-palette-warning-main)' }} />
-                                      Not Yet Confirmed / Pending Confirmation
-                                    </Box>
-                                  </MenuItem>
-                                  <MenuItem value='no_show'>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <i className='ri-close-circle-line' style={{ color: 'var(--mui-palette-error-main)' }} />
-                                      No Show
-                                    </Box>
-                                  </MenuItem>
-                                  <MenuItem value='attended'>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                      <i className='ri-check-double-line' style={{ color: 'var(--mui-palette-info-main)' }} />
-                                      Attended
-                                    </Box>
-                                  </MenuItem>
-                                </Select>
-                              </FormControl>
-                              <Box sx={{ minWidth: 160, flex: 1 }}>
-                                <TimeSelectField
-                                  label='Arrival Time'
-                                  value={client.arrivalTime || ''}
-                                  onChange={time => handleClientArrivalChange(client.id, time)}
-                                  size='small'
-                                  fullWidth
-                                />
-                              </Box>
+                            <Box
+                              onClick={() => setIsClientPickerOpen(true)}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
+                                p: 1.5,
+                                mb: 2,
+                                border: '1px dashed',
+                                borderColor: 'divider',
+                                borderRadius: 1,
+                                cursor: 'pointer',
+                                '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' }
+                              }}
+                            >
+                              <Avatar sx={{ width: 32, height: 32, bgcolor: 'grey.300' }}>
+                                <i className='ri-user-search-line' />
+                              </Avatar>
+                              <Typography variant='body2' color='text.secondary'>
+                                Search existing clients...
+                              </Typography>
                             </Box>
 
-                            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-                              <FormControl size='small' sx={{ minWidth: 140, flex: 1 }}>
-                                <InputLabel>Payment Status</InputLabel>
-                                <Select
-                                  value={client.paymentStatus}
-                                  label='Payment Status'
-                                  onChange={e =>
-                                    handleClientPaymentStatusChange(client.id, e.target.value as 'paid' | 'unpaid')
-                                  }
-                                >
-                                  <MenuItem value='unpaid'>Unpaid</MenuItem>
-                                  <MenuItem value='paid'>Paid</MenuItem>
-                                </Select>
-                              </FormControl>
-                              <FormControl size='small' sx={{ minWidth: 160, flex: 1 }}>
-                                <InputLabel>Payment Method</InputLabel>
-                                <Select
-                                  value={client.paymentMethod}
-                                  label='Payment Method'
-                                  onChange={e =>
-                                    handleClientPaymentMethodChange(client.id, e.target.value as PaymentMethod)
-                                  }
-                                >
-                                  <MenuItem value='pay_on_arrival'>Pay on Arrival</MenuItem>
-                                  <MenuItem value='mock_card'>Card (Mock)</MenuItem>
-                                </Select>
-                              </FormControl>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                              sx={{ display: 'block', mb: 1.5, textAlign: 'center' }}
+                            >
+                              — or enter manually —
+                            </Typography>
+
+                            <Stack spacing={1.5}>
                               <TextField
                                 fullWidth
-                                label='Payment Reference Number'
-                                value={client.paymentReference}
-                                onChange={e => handleClientPaymentReferenceChange(client.id, e.target.value)}
+                                label='Client Name'
+                                value={newClientName}
+                                onChange={e => {
+                                  setNewClientName(e.target.value)
+                                  if (newClientNameError) setNewClientNameError(null)
+                                  if (newClientContactError) setNewClientContactError(null)
+                                }}
                                 size='small'
-                                placeholder='Enter payment reference'
-                                sx={{ minWidth: 200, flex: 2 }}
+                                required
+                                error={!!newClientNameError}
+                                helperText={newClientNameError || ''}
                               />
-                            </Box>
-
-                            {/* Business Notes */}
-                            <TextField
-                              fullWidth
-                              label='Business Notes'
-                              value={client.businessNotes || ''}
-                              onChange={e => handleClientBusinessNotesChange(client.id, e.target.value)}
-                              size='small'
-                              multiline
-                              rows={2}
-                              placeholder='Internal notes about this client/booking...'
-                              sx={{ mt: 2 }}
-                            />
+                              <Box sx={{ display: 'flex', gap: 1, flexDirection: 'column' }}>
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                  <TextField
+                                    fullWidth
+                                    label='Email'
+                                    value={newClientEmail}
+                                    onChange={e => {
+                                      setNewClientEmail(e.target.value)
+                                      if (emailError) setEmailError(null)
+                                      if (newClientContactError) setNewClientContactError(null)
+                                    }}
+                                    size='small'
+                                    error={!!emailError}
+                                    helperText={emailError || ''}
+                                  />
+                                  <TextField
+                                    fullWidth
+                                    label='Phone'
+                                    value={newClientPhone}
+                                    onChange={e => {
+                                      setNewClientPhone(e.target.value)
+                                      if (phoneError) setPhoneError(null)
+                                      if (newClientContactError) setNewClientContactError(null)
+                                    }}
+                                    size='small'
+                                    error={!!phoneError}
+                                    helperText={phoneError || ''}
+                                  />
+                                </Box>
+                                {newClientContactError && !emailError && !phoneError && (
+                                  <Typography variant='caption' color='error' sx={{ ml: 1.75 }}>
+                                    {newClientContactError}
+                                  </Typography>
+                                )}
+                              </Box>
+                              <TextField
+                                fullWidth
+                                label='Business Notes'
+                                value={newClientBusinessNotes}
+                                onChange={e => setNewClientBusinessNotes(e.target.value)}
+                                size='small'
+                                multiline
+                                rows={2}
+                                placeholder='Add notes about this client (internal)'
+                              />
+                              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                <Button
+                                  variant='outlined'
+                                  size='small'
+                                  onClick={() => {
+                                    setIsAddingClient(false)
+                                    setNewClientNameError(null)
+                                    setEmailError(null)
+                                    setPhoneError(null)
+                                    setNewClientContactError(null)
+                                    setCapacityError(null)
+                                    setNewClientName('')
+                                    setNewClientEmail('')
+                                    setNewClientPhone('')
+                                    setNewClientBusinessNotes('')
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button variant='contained' size='small' onClick={handleAddClientToSlot}>
+                                  Add to Session
+                                </Button>
+                              </Box>
+                            </Stack>
                           </Paper>
-                        ))
-                      )}
-
-                      {isAddingClient ? (
-                        <Paper sx={{ p: 2, border: '2px solid', borderColor: 'primary.main' }} variant='outlined'>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant='body2' fontWeight={600}>
-                              Add New Client to Session
-                            </Typography>
-                            <IconButton size='small' onClick={() => setIsAddingClient(false)}>
-                              <i className='ri-close-line' />
-                            </IconButton>
-                          </Box>
-
-                          <Box
-                            onClick={() => setIsClientPickerOpen(true)}
+                        ) : (
+                          <Button
+                            fullWidth
+                            variant='outlined'
+                            startIcon={<i className='ri-user-add-line' />}
+                            onClick={() => setIsAddingClient(true)}
+                            disabled={isFull}
                             sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1.5,
-                              p: 1.5,
-                              mb: 2,
-                              border: '1px dashed',
-                              borderColor: 'divider',
-                              borderRadius: 1,
-                              cursor: 'pointer',
-                              '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' }
+                              borderStyle: 'dashed',
+                              py: 1.5,
+                              '&:hover': { borderStyle: 'solid' }
                             }}
                           >
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'grey.300' }}>
-                              <i className='ri-user-search-line' />
-                            </Avatar>
-                            <Typography variant='body2' color='text.secondary'>
-                              Search existing clients...
-                            </Typography>
-                          </Box>
-
-                          <Typography
-                            variant='caption'
-                            color='text.secondary'
-                            sx={{ display: 'block', mb: 1.5, textAlign: 'center' }}
-                          >
-                            — or enter manually —
-                          </Typography>
-
-                          <Stack spacing={1.5}>
-                            <TextField
-                              fullWidth
-                              label='Client Name'
-                              value={newClientName}
-                              onChange={e => setNewClientName(e.target.value)}
-                              size='small'
-                              required
-                            />
-                            <Box sx={{ display: 'flex', gap: 1 }}>
-                              <TextField
-                                fullWidth
-                                label='Email'
-                                value={newClientEmail}
-                                onChange={e => {
-                                  setNewClientEmail(e.target.value)
-                                  if (emailError) setEmailError(null)
-                                }}
-                                size='small'
-                                error={!!emailError}
-                                helperText={emailError || ''}
-                              />
-                              <TextField
-                                fullWidth
-                                label='Phone'
-                                value={newClientPhone}
-                                onChange={e => {
-                                  setNewClientPhone(e.target.value)
-                                  if (phoneError) setPhoneError(null)
-                                }}
-                                size='small'
-                                error={!!phoneError}
-                                helperText={phoneError || ''}
-                              />
-                            </Box>
-                            <TextField
-                              fullWidth
-                              label='Business Notes'
-                              value={newClientBusinessNotes}
-                              onChange={e => setNewClientBusinessNotes(e.target.value)}
-                              size='small'
-                              multiline
-                              rows={2}
-                              placeholder='Add notes about this client (internal)'
-                            />
-                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                              <Button variant='outlined' size='small' onClick={() => {
-                                setIsAddingClient(false)
-                                setEmailError(null)
-                                setPhoneError(null)
-                                setNewClientName('')
-                                setNewClientEmail('')
-                                setNewClientPhone('')
-                                setNewClientBusinessNotes('')
-                              }}>
-                                Cancel
-                              </Button>
-                              <Button variant='contained' size='small' onClick={handleAddClientToSlot}>
-                                Add to Session
-                              </Button>
-                            </Box>
-                          </Stack>
-                        </Paper>
-                      ) : (
-                        <Button
-                          fullWidth
-                          variant='outlined'
-                          startIcon={<i className='ri-user-add-line' />}
-                          onClick={() => setIsAddingClient(true)}
-                          disabled={isFull}
-                          sx={{
-                            borderStyle: 'dashed',
-                            py: 1.5,
-                            '&:hover': { borderStyle: 'solid' }
-                          }}
-                        >
-                          {isFull ? 'Session Full - Cannot Add Clients' : 'Add Client to Session'}
-                        </Button>
-                      )}
-                    </Stack>
-                  </Box>
+                            {isFull ? 'Session Full - Cannot Add Clients' : 'Add Client to Session'}
+                          </Button>
+                        )}
+                      </Stack>
+                    </Box>
                   </Dialog>
                 </>
               )
@@ -2164,16 +2284,6 @@ export default function UnifiedBookingDrawer({
 
         {/* Footer */}
         <Box sx={{ p: 2.5, borderTop: 1, borderColor: 'divider' }}>
-          {/* Validation Error */}
-          {validationError && (
-            <Paper sx={{ p: 1.5, mb: 2, bgcolor: 'error.lighter', border: 1, borderColor: 'error.main' }}>
-              <Typography variant='body2' color='error.dark'>
-                <i className='ri-error-warning-line' style={{ marginRight: 8 }} />
-                {validationError}
-              </Typography>
-            </Paper>
-          )}
-
           {/* Price Display for Dynamic Mode */}
           {effectiveSchedulingMode === 'dynamic' && servicePrice > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
