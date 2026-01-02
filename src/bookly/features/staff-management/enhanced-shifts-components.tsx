@@ -1,18 +1,26 @@
 // Enhanced imports for drag-and-drop and bulk operations
+import { useState } from 'react'
 import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  FormControl,
+  Select,
+  MenuItem,
   Checkbox,
   FormControlLabel,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Chip,
   Tooltip,
   Badge
 } from '@mui/material'
+import { TimeSelectField } from './time-select-field'
 
 // Drag and drop types
 interface DragData {
@@ -181,24 +189,8 @@ function BulkOperationsDialog({
           {operation === 'setWorkingHours' && (
             <>
               <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  label='Start Time'
-                  type='time'
-                  value={startTime}
-                  onChange={e => setStartTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                  variant='outlined'
-                />
-                <TextField
-                  label='End Time'
-                  type='time'
-                  value={endTime}
-                  onChange={e => setEndTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                  variant='outlined'
-                />
+                <TimeSelectField label='Start Time' value={startTime} onChange={setStartTime} fullWidth />
+                <TimeSelectField label='End Time' value={endTime} onChange={setEndTime} fullWidth />
               </Box>
               <Box>
                 <Typography variant='body2' gutterBottom sx={{ fontWeight: 500 }}>

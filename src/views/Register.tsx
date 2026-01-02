@@ -95,9 +95,7 @@ const Register = ({ mode }: { mode: Mode }) => {
 
     try {
       // Filter out empty social links
-      const validSocialLinks = formData.socialLinks.filter(
-        link => link.platform.trim() && link.url.trim()
-      )
+      const validSocialLinks = formData.socialLinks.filter(link => link.platform.trim() && link.url.trim())
 
       const businessData: RegisterBusinessRequest = {
         name: formData.businessName,
@@ -122,26 +120,31 @@ const Register = ({ mode }: { mode: Mode }) => {
       setTimeout(() => {
         router.push(getLocalizedUrl('/login', locale as Locale))
       }, 2000)
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed'
       const errorMessageLower = errorMessage.toLowerCase()
 
       // Map API errors to field-specific errors
-      if (errorMessageLower.includes('email already exists') ||
-          errorMessageLower.includes('email already taken') ||
-          errorMessageLower.includes('email is already in use') ||
-          errorMessageLower.includes('user already exists')) {
+      if (
+        errorMessageLower.includes('email already exists') ||
+        errorMessageLower.includes('email already taken') ||
+        errorMessageLower.includes('email is already in use') ||
+        errorMessageLower.includes('user already exists')
+      ) {
         setFieldErrors({ ownerEmail: errorMessage })
-      } else if (errorMessageLower.includes('invalid email') ||
-                 errorMessageLower.includes('email format') ||
-                 errorMessageLower.includes('please enter a valid email')) {
+      } else if (
+        errorMessageLower.includes('invalid email') ||
+        errorMessageLower.includes('email format') ||
+        errorMessageLower.includes('please enter a valid email')
+      ) {
         setFieldErrors({ ownerEmail: errorMessage })
       } else if (errorMessageLower.includes('password')) {
         setFieldErrors({ password: errorMessage })
-      } else if (errorMessageLower.includes('business name') ||
-                 errorMessageLower.includes('name is required') ||
-                 errorMessageLower.includes('business already exists')) {
+      } else if (
+        errorMessageLower.includes('business name') ||
+        errorMessageLower.includes('name is required') ||
+        errorMessageLower.includes('business already exists')
+      ) {
         setFieldErrors({ businessName: errorMessage })
       } else {
         // General error for other cases
@@ -195,13 +198,10 @@ const Register = ({ mode }: { mode: Mode }) => {
               </Typography>
             </div>
           ) : (
-            <form
-              noValidate
-              autoComplete='off'
-              onSubmit={handleSubmit}
-              className='flex flex-col gap-5'
-            >
-              <Typography variant='h6' color='primary'>Business Information</Typography>
+            <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>
+              <Typography variant='h6' color='primary'>
+                Business Information
+              </Typography>
 
               <TextField
                 autoFocus
@@ -239,7 +239,9 @@ const Register = ({ mode }: { mode: Mode }) => {
               />
 
               <div className='space-y-3'>
-                <Typography variant='h6' color='primary'>Social Links</Typography>
+                <Typography variant='h6' color='primary'>
+                  Social Links
+                </Typography>
                 {formData.socialLinks.map((link, index) => (
                   <div key={index} className='flex gap-2 items-center'>
                     <TextField
@@ -287,7 +289,9 @@ const Register = ({ mode }: { mode: Mode }) => {
                 </Button>
               </div>
 
-              <Typography variant='h6' color='primary' className='mt-4'>Owner Information</Typography>
+              <Typography variant='h6' color='primary' className='mt-4'>
+                Owner Information
+              </Typography>
 
               <TextField
                 fullWidth
@@ -362,15 +366,10 @@ const Register = ({ mode }: { mode: Mode }) => {
                 />
               </div>
 
-              <Button
-                fullWidth
-                variant='contained'
-                type='submit'
-                disabled={loading}
-              >
+              <Button fullWidth variant='contained' type='submit' disabled={loading}>
                 {loading ? (
                   <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
                     Registering...
                   </>
                 ) : (

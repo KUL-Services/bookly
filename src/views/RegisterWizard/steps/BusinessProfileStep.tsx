@@ -13,6 +13,7 @@ import Checkbox from '@mui/material/Checkbox'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
 import Chip from '@mui/material/Chip'
+import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 
 import type { StepProps } from '../types'
 import { TIMEZONES, DAYS_OF_WEEK } from '../types'
@@ -117,21 +118,21 @@ const BusinessProfileStep = ({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="text-center mb-2">
-        <Typography variant="h5" className="mb-2">
+    <div className='flex flex-col gap-5'>
+      <div className='text-center mb-2'>
+        <Typography variant='h5' className='mb-2'>
           Set Up Your Business Profile
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant='body2' color='text.secondary'>
           Configure your public booking page and hours
         </Typography>
       </div>
 
       <TextField
         fullWidth
-        label="Public URL Slug"
+        label='Public URL Slug'
         value={formData.publicUrlSlug}
-        onChange={(e) => {
+        onChange={e => {
           const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
           updateFormData({ publicUrlSlug: value })
           if (validationErrors.publicUrlSlug) {
@@ -141,7 +142,11 @@ const BusinessProfileStep = ({
         error={!!validationErrors.publicUrlSlug || slugAvailable === false}
         helperText={getSlugHelperText()}
         InputProps={{
-          startAdornment: <Typography color="text.secondary" className="mr-1">bookly.com/</Typography>
+          startAdornment: (
+            <Typography color='text.secondary' className='mr-1'>
+              bookly.com/
+            </Typography>
+          )
         }}
         required
       />
@@ -150,15 +155,15 @@ const BusinessProfileStep = ({
         <InputLabel>Timezone</InputLabel>
         <Select
           value={formData.timezone}
-          label="Timezone"
-          onChange={(e) => {
+          label='Timezone'
+          onChange={e => {
             updateFormData({ timezone: e.target.value })
             if (validationErrors.timezone) {
               setValidationErrors({ ...validationErrors, timezone: '' })
             }
           }}
         >
-          {TIMEZONES.map((tz) => (
+          {TIMEZONES.map(tz => (
             <MenuItem key={tz} value={tz}>
               {tz}
             </MenuItem>
@@ -170,73 +175,63 @@ const BusinessProfileStep = ({
         control={
           <Checkbox
             checked={formData.acceptsOnlineBooking}
-            onChange={(e) => updateFormData({ acceptsOnlineBooking: e.target.checked })}
+            onChange={e => updateFormData({ acceptsOnlineBooking: e.target.checked })}
           />
         }
-        label="Accept online bookings"
+        label='Accept online bookings'
       />
 
-      <Paper variant="outlined" className="p-4">
-        <Typography variant="subtitle2" className="mb-3">
+      <Paper variant='outlined' className='p-4'>
+        <Typography variant='subtitle2' className='mb-3'>
           Working Hours
         </Typography>
-        <div className="flex flex-col gap-2">
-          {DAYS_OF_WEEK.map((day) => {
+        <div className='flex flex-col gap-2'>
+          {DAYS_OF_WEEK.map(day => {
             const dayData = formData.workingHours[day]
             return (
-              <Box key={day} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <Box key={day} className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3'>
                 <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={dayData.isOpen}
-                      onChange={() => handleDayToggle(day)}
-                    />
-                  }
-                  label={
-                    <Typography className="capitalize w-20 sm:w-24">
-                      {day}
-                    </Typography>
-                  }
+                  control={<Checkbox checked={dayData.isOpen} onChange={() => handleDayToggle(day)} />}
+                  label={<Typography className='capitalize w-20 sm:w-24'>{day}</Typography>}
                 />
                 {dayData.isOpen ? (
-                  <Box className="flex gap-2 items-center flex-1 ml-8 sm:ml-0">
-                    <TextField
-                      type="time"
-                      size="small"
+                  <Box className='flex gap-2 items-center flex-1 ml-8 sm:ml-0'>
+                    <TimeSelectField
                       value={dayData.open}
-                      onChange={(e) => handleTimeChange(day, 'open', e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                      className="flex-1 sm:flex-initial"
+                      onChange={value => handleTimeChange(day, 'open', value)}
+                      size='small'
                     />
-                    <Typography className="text-sm">to</Typography>
-                    <TextField
-                      type="time"
-                      size="small"
+                    <Typography className='text-sm'>to</Typography>
+                    <TimeSelectField
                       value={dayData.close}
-                      onChange={(e) => handleTimeChange(day, 'close', e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                      className="flex-1 sm:flex-initial"
+                      onChange={value => handleTimeChange(day, 'close', value)}
+                      size='small'
                     />
                   </Box>
                 ) : (
-                  <Chip label="Closed" size="small" variant="outlined" className="ml-8 sm:ml-0 self-start sm:self-center" />
+                  <Chip
+                    label='Closed'
+                    size='small'
+                    variant='outlined'
+                    className='ml-8 sm:ml-0 self-start sm:self-center'
+                  />
                 )}
               </Box>
             )
           })}
         </div>
         {validationErrors.workingHours && (
-          <Typography variant="caption" color="error" className="mt-2 block">
+          <Typography variant='caption' color='error' className='mt-2 block'>
             {validationErrors.workingHours}
           </Typography>
         )}
       </Paper>
 
-      <Box className="flex gap-3 justify-between mt-4">
-        <Button variant="outlined" onClick={handlePrev}>
+      <Box className='flex gap-3 justify-between mt-4'>
+        <Button variant='outlined' onClick={handlePrev}>
           Back
         </Button>
-        <Button variant="contained" onClick={handleContinue} disabled={slugChecking}>
+        <Button variant='contained' onClick={handleContinue} disabled={slugChecking}>
           Continue
         </Button>
       </Box>

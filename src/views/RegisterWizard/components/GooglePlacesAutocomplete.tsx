@@ -31,6 +31,18 @@ const GooglePlacesAutocomplete = ({
   const [isLoading, setIsLoading] = useState(true)
   const [apiError, setApiError] = useState<string | null>(null)
   const isSelectingPlace = useRef(false)
+  const lastExternalValue = useRef(value)
+
+  // Sync input value when external value changes (e.g., from map picker)
+  useEffect(() => {
+    if (inputRef.current && value !== lastExternalValue.current) {
+      // Only update if the change came from external source (not from typing)
+      if (!isSelectingPlace.current) {
+        inputRef.current.value = value
+      }
+      lastExternalValue.current = value
+    }
+  }, [value])
 
   useEffect(() => {
     const checkGoogleMaps = () => {
@@ -125,7 +137,7 @@ const GooglePlacesAutocomplete = ({
   }
 
   return (
-    <Box className="relative">
+    <Box className='relative'>
       <TextField
         fullWidth
         inputRef={inputRef}
@@ -133,7 +145,7 @@ const GooglePlacesAutocomplete = ({
         placeholder={value ? '' : placeholder}
         defaultValue={value}
         onChange={handleInputChange}
-        onKeyDown={(e) => {
+        onKeyDown={e => {
           // Prevent form submission on Enter when selecting from dropdown
           if (e.key === 'Enter') {
             e.preventDefault()
@@ -153,11 +165,11 @@ const GooglePlacesAutocomplete = ({
               {isLoading ? (
                 <CircularProgress size={20} />
               ) : value ? (
-                <IconButton size="small" onClick={handleClear} edge="end">
-                  <i className="ri-close-circle-line" />
+                <IconButton size='small' onClick={handleClear} edge='end'>
+                  <i className='ri-close-circle-line' />
                 </IconButton>
               ) : (
-                <i className="ri-map-pin-line text-gray-400" />
+                <i className='ri-map-pin-line text-gray-400' />
               )}
             </>
           )
@@ -165,7 +177,7 @@ const GooglePlacesAutocomplete = ({
       />
 
       {apiError && (
-        <Alert severity="warning" className="mt-2 text-sm">
+        <Alert severity='warning' className='mt-2 text-sm'>
           {apiError}
         </Alert>
       )}

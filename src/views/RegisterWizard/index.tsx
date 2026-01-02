@@ -22,21 +22,19 @@ import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { getInitialFormData, saveDraft, loadDraft } from './utils'
+import { syncRegistrationDataToStores } from './registration-sync'
 
 // Step Components
 import AccountStep from './steps/AccountStep'
-import MobileVerificationStep from './steps/MobileVerificationStep'
 import BusinessBasicsStep from './steps/BusinessBasicsStep'
-import SchedulingModeStep from './steps/SchedulingModeStep'
 import LocationStep from './steps/LocationStep'
-import RoomsSetupStep from './steps/RoomsSetupStep'
 import BusinessProfileStep from './steps/BusinessProfileStep'
 import StaffManagementStep from './steps/StaffManagementStep'
-import InitialTemplatesStep from './steps/InitialTemplatesStep'
+import ServicesSetupStep from './steps/ServicesSetupStep'
 import LegalStep from './steps/LegalStep'
 import RegistrationSuccess from './RegistrationSuccess'
 
-// Dynamic mode only - simplified flow without rooms/templates
+// Registration steps - scheduling mode is per staff/room, not global
 const registrationSteps: StepConfig[] = [
   {
     icon: 'ri-user-line',
@@ -69,6 +67,12 @@ const registrationSteps: StepConfig[] = [
     image: '/images/bookly-biz/step-6.jpeg'
   },
   {
+    icon: 'ri-service-line',
+    title: 'Services',
+    subtitle: 'Define offerings',
+    image: '/images/booksy-biz/step-6.jpeg'
+  },
+  {
     icon: 'ri-file-text-line',
     title: 'Legal',
     subtitle: 'Terms & privacy',
@@ -76,8 +80,8 @@ const registrationSteps: StepConfig[] = [
   }
 ]
 
-const getSteps = (schedulingMode: 'static' | 'dynamic' | '') => {
-  // Always return the same steps (dynamic mode only)
+// Scheduling mode is now per staff/room, so we don't need dynamic steps
+const getSteps = () => {
   return registrationSteps
 }
 
@@ -104,7 +108,7 @@ const renderStepContent = (
     setValidationErrors
   }
 
-  // Dynamic mode only - simplified step rendering
+  // Step rendering based on step title
   const stepTitle = steps[activeStep]?.title
 
   switch (stepTitle) {
@@ -118,6 +122,8 @@ const renderStepContent = (
       return <BusinessProfileStep {...stepProps} />
     case 'Staff':
       return <StaffManagementStep {...stepProps} />
+    case 'Services':
+      return <ServicesSetupStep {...stepProps} />
     case 'Legal':
       return <LegalStep {...stepProps} isSubmitting={isSubmitting} />
     default:
@@ -140,8 +146,8 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
   const { settings } = useSettings()
   const { lang: locale } = useParams()
 
-  // Generate steps dynamically based on scheduling mode
-  const steps = getSteps(formData.schedulingMode)
+  // Generate steps - no longer depends on scheduling mode
+  const steps = getSteps()
   const isLastStep = activeStep === steps.length - 1
 
   // Illustration images
@@ -186,6 +192,9 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // Sync registration data to application stores
+      syncRegistrationDataToStores(formData)
 
       // Clear draft after successful submission
       if (typeof window !== 'undefined') {
@@ -237,23 +246,23 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
   }
 
   return (
-    <div className="flex bs-full justify-center">
+    <div className='flex bs-full justify-center'>
       {/* Form Section */}
-      <div className="flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:p-12">
+      <div className='flex justify-center items-center bs-full bg-backgroundPaper !min-is-full p-6 md:p-12'>
         <Link
           href={getLocalizedUrl('/', locale as Locale)}
-          className="absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]"
+          className='absolute block-start-5 sm:block-start-[38px] inline-start-6 sm:inline-start-[38px]'
         >
           <Logo />
         </Link>
 
-        <div className="flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[500px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0">
+        <div className='flex flex-col gap-6 is-full sm:is-auto md:is-full sm:max-is-[500px] md:max-is-[unset] mbs-11 sm:mbs-14 md:mbs-0'>
           {/* Header */}
-          <div className="text-center">
-            <Typography variant="h4" className="mb-1">
+          <div className='text-center'>
+            <Typography variant='h4' className='mb-1'>
               Business Registration
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Step {activeStep + 1} of {steps.length}
             </Typography>
           </div>
@@ -261,87 +270,98 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
           {/* Stepper - Horizontal on mobile, Vertical on desktop */}
           <StepperWrapper>
             {/* Desktop Stepper */}
-            <Stepper
-              activeStep={activeStep}
-              orientation="horizontal"
-              className="hidden md:flex mb-6"
-            >
+            <Stepper activeStep={activeStep} orientation='horizontal' className='hidden md:flex mb-6'>
               {steps.map((step, index) => (
                 <Step key={index}>
                   <StepLabel
                     StepIconComponent={() => (
                       <Avatar
-                        variant="rounded"
+                        variant='rounded'
                         className={classnames('cursor-pointer')}
                         onClick={handleStep(index)}
                         sx={{
-                          backgroundColor: activeStep === index
-                            ? '#fff'
-                            : activeStep > index
-                            ? 'var(--mui-palette-primary-light)'
-                            : 'rgba(128, 128, 128, 0.15)',
-                          color: activeStep === index
-                            ? 'var(--mui-palette-primary-main)'
-                            : activeStep > index ? '#fff' : 'var(--mui-palette-text-secondary)',
-                          boxShadow: activeStep === index ? '0 4px 12px rgba(var(--mui-palette-primary-mainChannel) / 0.3)' : 'none'
+                          backgroundColor:
+                            activeStep === index
+                              ? '#fff'
+                              : activeStep > index
+                                ? 'var(--mui-palette-primary-light)'
+                                : 'rgba(128, 128, 128, 0.15)',
+                          color:
+                            activeStep === index
+                              ? 'var(--mui-palette-primary-main)'
+                              : activeStep > index
+                                ? '#fff'
+                                : 'var(--mui-palette-text-secondary)',
+                          boxShadow:
+                            activeStep === index
+                              ? '0 4px 12px rgba(var(--mui-palette-primary-mainChannel) / 0.3)'
+                              : 'none'
                         }}
                       >
                         <i className={step.icon} />
                       </Avatar>
                     )}
                   >
-                    <Typography className="text-xs font-medium hidden lg:block">
-                      {step.title}
-                    </Typography>
+                    <Typography className='text-xs font-medium hidden lg:block'>{step.title}</Typography>
                   </StepLabel>
                 </Step>
               ))}
             </Stepper>
 
             {/* Mobile Progress Bar - Styled like Booksy Biz */}
-            <Box className="md:hidden mb-6">
-              <div className="flex gap-2 mb-4" style={{ minHeight: '8px' }}>
+            <Box className='md:hidden mb-6'>
+              <div className='flex gap-2 mb-4' style={{ minHeight: '8px' }}>
                 {steps.map((_, index) => (
                   <div
                     key={index}
                     className={classnames('flex-1 rounded-full transition-all duration-300')}
                     style={{
                       height: '8px',
-                      backgroundColor: index <= activeStep ? 'var(--mui-palette-primary-main)' : 'rgba(128, 128, 128, 0.2)',
-                      boxShadow: index <= activeStep ? '0 2px 6px rgba(var(--mui-palette-primary-mainChannel) / 0.4)' : 'none'
+                      backgroundColor:
+                        index <= activeStep ? 'var(--mui-palette-primary-main)' : 'rgba(128, 128, 128, 0.2)',
+                      boxShadow:
+                        index <= activeStep ? '0 2px 6px rgba(var(--mui-palette-primary-mainChannel) / 0.4)' : 'none'
                     }}
                   />
                 ))}
               </div>
               {/* Mobile Step Icons */}
-              <div className="flex justify-between items-center px-1">
+              <div className='flex justify-between items-center px-1'>
                 {steps.map((step, index) => (
-                  <div key={index} className="flex flex-col items-center gap-1.5">
+                  <div key={index} className='flex flex-col items-center gap-1.5'>
                     <Avatar
-                      variant="rounded"
+                      variant='rounded'
                       className={classnames('cursor-pointer transition-all duration-300')}
                       onClick={handleStep(index)}
                       sx={{
                         width: 36,
                         height: 36,
-                        backgroundColor: activeStep === index
-                          ? '#fff'
-                          : activeStep > index
-                          ? 'var(--mui-palette-primary-light)'
-                          : 'rgba(128, 128, 128, 0.15)',
-                        color: activeStep === index
-                          ? 'var(--mui-palette-primary-main)'
-                          : activeStep > index ? '#fff' : 'var(--mui-palette-text-secondary)',
+                        backgroundColor:
+                          activeStep === index
+                            ? '#fff'
+                            : activeStep > index
+                              ? 'var(--mui-palette-primary-light)'
+                              : 'rgba(128, 128, 128, 0.15)',
+                        color:
+                          activeStep === index
+                            ? 'var(--mui-palette-primary-main)'
+                            : activeStep > index
+                              ? '#fff'
+                              : 'var(--mui-palette-text-secondary)',
                         transform: activeStep === index ? 'scale(1.1)' : 'scale(1)',
-                        boxShadow: activeStep === index ? '0 4px 12px rgba(var(--mui-palette-primary-mainChannel) / 0.3)' : 'none'
+                        boxShadow:
+                          activeStep === index
+                            ? '0 4px 12px rgba(var(--mui-palette-primary-mainChannel) / 0.3)'
+                            : 'none'
                       }}
                     >
                       <i className={`${step.icon} text-base`} />
                     </Avatar>
                     <Typography
-                      className="text-[10px] font-medium text-center whitespace-nowrap"
+                      className='text-[10px] font-medium text-center whitespace-nowrap'
                       sx={{
-                        color: index <= activeStep ? 'var(--mui-palette-primary-main)' : 'var(--mui-palette-text-secondary)'
+                        color:
+                          index <= activeStep ? 'var(--mui-palette-primary-main)' : 'var(--mui-palette-text-secondary)'
                       }}
                     >
                       {step.title}
@@ -353,7 +373,7 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
           </StepperWrapper>
 
           {/* Step Content */}
-          <div className="flex-1">
+          <div className='flex-1'>
             {renderStepContent(
               activeStep,
               steps,
@@ -369,20 +389,20 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
           </div>
 
           {/* Save for later button */}
-          <div className="text-center">
-            <Button variant="text" size="small" onClick={handleSaveForLater}>
+          <div className='text-center'>
+            <Button variant='text' size='small' onClick={handleSaveForLater}>
               Save and continue later
             </Button>
           </div>
 
           {/* Footer */}
-          <div className="flex justify-center items-center flex-wrap gap-2">
-            <Typography variant="body2">Already have an account?</Typography>
+          <div className='flex justify-center items-center flex-wrap gap-2'>
+            <Typography variant='body2'>Already have an account?</Typography>
             <Typography
               component={Link}
               href={getLocalizedUrl('/login', locale as Locale)}
-              color="primary"
-              className="font-medium"
+              color='primary'
+              className='font-medium'
             >
               Sign in instead
             </Typography>

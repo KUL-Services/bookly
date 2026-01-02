@@ -140,8 +140,8 @@ export const getInitialFormData = (): BusinessRegistrationData => ({
   staffCount: '',
   servicesOffered: [],
 
-  // Scheduling Mode (Always dynamic)
-  schedulingMode: 'dynamic',
+  // Scheduling Mode (user chooses)
+  schedulingMode: '',
 
   // Location & Branches (ENHANCED)
   hasMultipleBranches: false,
@@ -155,7 +155,7 @@ export const getInitialFormData = (): BusinessRegistrationData => ({
   postalCode: '',
   mobileOnly: false,
 
-  // Rooms (NEW - for static mode)
+  // Rooms (for static mode)
   rooms: [],
 
   // Business Profile
@@ -164,10 +164,13 @@ export const getInitialFormData = (): BusinessRegistrationData => ({
   workingHours: getDefaultWorkingHours(),
   acceptsOnlineBooking: true,
 
-  // Staff (ENHANCED)
+  // Staff
   staff: [],
 
-  // Initial Templates (NEW - for static mode)
+  // Services
+  services: [],
+
+  // Initial Templates (for static mode)
   initialTemplates: [],
 
   // Legal

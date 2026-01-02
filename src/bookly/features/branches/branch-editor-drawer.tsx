@@ -20,6 +20,7 @@ import { useBranchesStore } from './branches-store'
 import { availableServices, availableStaff } from './mock-data'
 import type { BranchFormData, BranchWorkingHours } from './types'
 import { DEFAULT_BRANCH_FORM_DATA } from './types'
+import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 
 export function BranchEditorDrawer() {
   const { isBranchEditorOpen, editingBranch, closeBranchEditor, createBranch, updateBranch } = useBranchesStore()
@@ -375,19 +376,17 @@ export function BranchEditorDrawer() {
 
                     {hours.isOpen ? (
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-                        <TextField
-                          type='time'
-                          size='small'
+                        <TimeSelectField
                           value={hours.openTime}
-                          onChange={e => updateWorkingHours(hours.day, 'openTime', e.target.value)}
+                          onChange={value => updateWorkingHours(hours.day, 'openTime', value)}
+                          size='small'
                           sx={{ width: 130 }}
                         />
                         <Typography color='text.secondary'>to</Typography>
-                        <TextField
-                          type='time'
-                          size='small'
+                        <TimeSelectField
                           value={hours.closeTime}
-                          onChange={e => updateWorkingHours(hours.day, 'closeTime', e.target.value)}
+                          onChange={value => updateWorkingHours(hours.day, 'closeTime', value)}
+                          size='small'
                           sx={{ width: 130 }}
                         />
                       </Box>

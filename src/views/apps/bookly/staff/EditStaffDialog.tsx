@@ -18,6 +18,8 @@ import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { useTheme } from '@mui/material/styles'
+import Checkbox from '@mui/material/Checkbox'
+import ListItemText from '@mui/material/ListItemText'
 
 // Types
 import type { Staff, UpdateStaffRequest, Branch, Service } from '@/lib/api'
@@ -108,7 +110,7 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches, services = 
                 fullWidth
                 label='Full Name'
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 error={!!errors.name}
                 helperText={errors.name}
                 required
@@ -119,7 +121,7 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches, services = 
                 fullWidth
                 label='Mobile Number'
                 value={formData.mobile}
-                onChange={(e) => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, mobile: e.target.value }))}
                 placeholder='e.g., +1234567890'
               />
             </Grid>
@@ -128,9 +130,9 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches, services = 
                 <InputLabel>Assign to Branch</InputLabel>
                 <Select
                   value={formData.branchId}
-                  onChange={(e) => setFormData(prev => ({ ...prev, branchId: e.target.value as string }))}
+                  onChange={e => setFormData(prev => ({ ...prev, branchId: e.target.value as string }))}
                 >
-                  {branches.map((branch) => (
+                  {branches.map(branch => (
                     <MenuItem key={branch.id} value={branch.id}>
                       {branch.name}
                     </MenuItem>
@@ -144,21 +146,20 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches, services = 
                 <Select
                   multiple
                   value={formData.serviceIds || []}
-                  onChange={(e) => setFormData(prev => ({ ...prev, serviceIds: e.target.value as string[] }))}
-                  renderValue={(selected) => (
+                  onChange={e => setFormData(prev => ({ ...prev, serviceIds: e.target.value as string[] }))}
+                  renderValue={selected => (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => {
+                      {selected.map(value => {
                         const service = services.find(s => s.id === value)
-                        return (
-                          <Chip key={value} label={service?.name || value} size="small" />
-                        )
+                        return <Chip key={value} label={service?.name || value} size='small' />
                       })}
                     </Box>
                   )}
                 >
-                  {services.map((service) => (
+                  {services.map(service => (
                     <MenuItem key={service.id} value={service.id}>
-                      {service.name}
+                      <Checkbox checked={(formData.serviceIds || []).includes(service.id)} />
+                      <ListItemText primary={service.name} />
                     </MenuItem>
                   ))}
                 </Select>
@@ -169,7 +170,7 @@ const EditStaffDialog = ({ open, onClose, onSubmit, staff, branches, services = 
                 currentImageUrl={formData.profilePhoto ? staff.profilePhotoUrl : null}
                 onImageUploaded={handleProfilePhotoUploaded}
                 onImageDeleted={handleProfilePhotoDeleted}
-                label="Profile Photo"
+                label='Profile Photo'
                 description="Upload staff member's profile picture"
                 maxSizeMB={3}
                 width={150}

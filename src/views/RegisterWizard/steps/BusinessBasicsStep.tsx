@@ -10,6 +10,8 @@ import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import OutlinedInput from '@mui/material/OutlinedInput'
+import Checkbox from '@mui/material/Checkbox'
+import ListItemText from '@mui/material/ListItemText'
 
 import type { StepProps } from '../types'
 import { BUSINESS_TYPES, STAFF_COUNTS, SERVICES_OPTIONS } from '../types'
@@ -41,21 +43,21 @@ const BusinessBasicsStep = ({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="text-center mb-2">
-        <Typography variant="h5" className="mb-2">
+    <div className='flex flex-col gap-5'>
+      <div className='text-center mb-2'>
+        <Typography variant='h5' className='mb-2'>
           Tell Us About Your Business
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant='body2' color='text.secondary'>
           Help us understand what services you provide
         </Typography>
       </div>
 
       <TextField
         fullWidth
-        label="Business Name"
+        label='Business Name'
         value={formData.businessName}
-        onChange={(e) => {
+        onChange={e => {
           updateFormData({ businessName: e.target.value })
           if (validationErrors.businessName) {
             setValidationErrors({ ...validationErrors, businessName: '' })
@@ -70,22 +72,22 @@ const BusinessBasicsStep = ({
         <InputLabel>Business Type</InputLabel>
         <Select
           value={formData.businessType}
-          label="Business Type"
-          onChange={(e) => {
+          label='Business Type'
+          onChange={e => {
             updateFormData({ businessType: e.target.value })
             if (validationErrors.businessType) {
               setValidationErrors({ ...validationErrors, businessType: '' })
             }
           }}
         >
-          {BUSINESS_TYPES.map((type) => (
+          {BUSINESS_TYPES.map(type => (
             <MenuItem key={type} value={type}>
               {type}
             </MenuItem>
           ))}
         </Select>
         {validationErrors.businessType && (
-          <Typography variant="caption" color="error" className="mt-1 ml-3">
+          <Typography variant='caption' color='error' className='mt-1 ml-3'>
             {validationErrors.businessType}
           </Typography>
         )}
@@ -95,22 +97,22 @@ const BusinessBasicsStep = ({
         <InputLabel>Team Size</InputLabel>
         <Select
           value={formData.staffCount}
-          label="Team Size"
-          onChange={(e) => {
+          label='Team Size'
+          onChange={e => {
             updateFormData({ staffCount: e.target.value })
             if (validationErrors.staffCount) {
               setValidationErrors({ ...validationErrors, staffCount: '' })
             }
           }}
         >
-          {STAFF_COUNTS.map((count) => (
+          {STAFF_COUNTS.map(count => (
             <MenuItem key={count} value={count}>
               {count}
             </MenuItem>
           ))}
         </Select>
         {validationErrors.staffCount && (
-          <Typography variant="caption" color="error" className="mt-1 ml-3">
+          <Typography variant='caption' color='error' className='mt-1 ml-3'>
             {validationErrors.staffCount}
           </Typography>
         )}
@@ -121,44 +123,45 @@ const BusinessBasicsStep = ({
         <Select
           multiple
           value={formData.servicesOffered}
-          onChange={(e) => {
+          onChange={e => {
             const value = typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
             updateFormData({ servicesOffered: value })
             if (validationErrors.servicesOffered) {
               setValidationErrors({ ...validationErrors, servicesOffered: '' })
             }
           }}
-          input={<OutlinedInput label="Services Offered" />}
-          renderValue={(selected) => (
+          input={<OutlinedInput label='Services Offered' />}
+          renderValue={selected => (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {selected.map((value) => (
-                <Chip key={value} label={value} size="small" />
+              {selected.map(value => (
+                <Chip key={value} label={value} size='small' />
               ))}
             </Box>
           )}
         >
-          {SERVICES_OPTIONS.map((service) => (
+          {SERVICES_OPTIONS.map(service => (
             <MenuItem key={service} value={service}>
-              {service}
+              <Checkbox checked={formData.servicesOffered.includes(service)} />
+              <ListItemText primary={service} />
             </MenuItem>
           ))}
         </Select>
         {validationErrors.servicesOffered ? (
-          <Typography variant="caption" color="error" className="mt-1 ml-3">
+          <Typography variant='caption' color='error' className='mt-1 ml-3'>
             {validationErrors.servicesOffered}
           </Typography>
         ) : (
-          <Typography variant="caption" color="text.secondary" className="mt-1 ml-3">
+          <Typography variant='caption' color='text.secondary' className='mt-1 ml-3'>
             Select all that apply
           </Typography>
         )}
       </FormControl>
 
-      <Box className="flex gap-3 justify-between mt-4">
-        <Button variant="outlined" onClick={handlePrev}>
+      <Box className='flex gap-3 justify-between mt-4'>
+        <Button variant='outlined' onClick={handlePrev}>
           Back
         </Button>
-        <Button variant="contained" onClick={handleContinue}>
+        <Button variant='contained' onClick={handleContinue}>
           Continue
         </Button>
       </Box>

@@ -69,6 +69,55 @@ export interface BasicTemplate {
   }
 }
 
+// Service category for registration
+export interface ServiceCategory {
+  id: string
+  name: string
+  color: string
+}
+
+// Service for registration (simplified version for quick setup)
+export interface RegistrationService {
+  id: string
+  name: string
+  description?: string
+  price: number
+  duration: number // in minutes
+  categoryId?: string
+  color?: string
+  branchIds: string[] // Which branches offer this service
+  staffIds: string[] // Which staff can provide this service (for dynamic mode)
+  roomIds?: string[] // Which rooms this can be done in (for static mode)
+}
+
+// Default service categories
+export const DEFAULT_SERVICE_CATEGORIES: ServiceCategory[] = [
+  { id: 'cat-1', name: 'Hair', color: '#6366f1' },
+  { id: 'cat-2', name: 'Nails', color: '#ec4899' },
+  { id: 'cat-3', name: 'Skin', color: '#14b8a6' },
+  { id: 'cat-4', name: 'Massage', color: '#f59e0b' },
+  { id: 'cat-5', name: 'Fitness', color: '#22c55e' },
+  { id: 'cat-6', name: 'Other', color: '#8b5cf6' }
+]
+
+// Service duration options
+export const SERVICE_DURATIONS = [
+  { value: 15, label: '15 min' },
+  { value: 30, label: '30 min' },
+  { value: 45, label: '45 min' },
+  { value: 60, label: '1 hour' },
+  { value: 90, label: '1.5 hours' },
+  { value: 120, label: '2 hours' },
+  { value: 180, label: '3 hours' }
+]
+
+// Service color options
+export const SERVICE_COLORS = [
+  '#6366f1', '#8b5cf6', '#ec4899', '#ef4444',
+  '#f59e0b', '#22c55e', '#14b8a6', '#06b6d4',
+  '#3b82f6', '#64748b'
+]
+
 export interface BusinessRegistrationData {
   // Step 1: Account
   email: string
@@ -120,7 +169,10 @@ export interface BusinessRegistrationData {
   // Step 6: Staff Management (ENHANCED)
   staff: StaffMember[]
 
-  // Step 6.5: Initial Templates (NEW - for static mode)
+  // Step 6.5: Services Setup (NEW)
+  services: RegistrationService[]
+
+  // Step 7: Initial Templates (for static mode)
   initialTemplates: BasicTemplate[]
 
   // Step 7: Legal

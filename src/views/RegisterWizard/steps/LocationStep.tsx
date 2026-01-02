@@ -88,7 +88,7 @@ const LocationStep = ({
   const handlePlaceSelected = (place: google.maps.places.PlaceResult, isForDialog: boolean = false) => {
     const addressComponents = place.address_components || []
     const extractComponent = (type: string) => {
-      const component = addressComponents.find((comp) => comp.types.includes(type))
+      const component = addressComponents.find(comp => comp.types.includes(type))
       return component?.long_name || ''
     }
 
@@ -114,7 +114,10 @@ const LocationStep = ({
       formattedAddress: place.formatted_address || '',
       placeId: place.place_id || '',
       addressLine1: addressLine1,
-      city: extractComponent('locality') || extractComponent('administrative_area_level_2') || extractComponent('sublocality'),
+      city:
+        extractComponent('locality') ||
+        extractComponent('administrative_area_level_2') ||
+        extractComponent('sublocality'),
       state: extractComponent('administrative_area_level_1') || extractComponent('administrative_area_level_2') || '',
       postalCode: extractComponent('postal_code') || '',
       country: extractComponent('country') || formData.country || 'EG',
@@ -169,7 +172,13 @@ const LocationStep = ({
   }
 
   const handleSaveBranch = () => {
-    if (!tempBranch.name || !tempBranch.addressLine1 || !tempBranch.city || !tempBranch.state || !tempBranch.postalCode) {
+    if (
+      !tempBranch.name ||
+      !tempBranch.addressLine1 ||
+      !tempBranch.city ||
+      !tempBranch.state ||
+      !tempBranch.postalCode
+    ) {
       return
     }
 
@@ -178,7 +187,7 @@ const LocationStep = ({
     if (editingBranchId) {
       // Edit existing branch
       const updatedBranches = currentBranches.map(b =>
-        b.id === editingBranchId ? { ...tempBranch, id: editingBranchId } as Branch : b
+        b.id === editingBranchId ? ({ ...tempBranch, id: editingBranchId } as Branch) : b
       )
       updateFormData({ branches: updatedBranches })
     } else {
@@ -243,7 +252,11 @@ const LocationStep = ({
   const handleContinue = () => {
     if (validate()) {
       // If single branch mode, ensure branches array has the data
-      if (!formData.hasMultipleBranches && formData.addressLine1 && (!formData.branches || formData.branches.length === 0)) {
+      if (
+        !formData.hasMultipleBranches &&
+        formData.addressLine1 &&
+        (!formData.branches || formData.branches.length === 0)
+      ) {
         const mainBranch: Branch = {
           id: 'branch-1',
           name: formData.businessName ? `${formData.businessName} - Main Location` : 'Main Location',
@@ -272,12 +285,12 @@ const LocationStep = ({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="text-center mb-2">
-        <Typography variant="h5" className="mb-2">
+    <div className='flex flex-col gap-5'>
+      <div className='text-center mb-2'>
+        <Typography variant='h5' className='mb-2'>
           Where Are You Located?
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant='body2' color='text.secondary'>
           Let customers know where to find you
         </Typography>
       </div>
@@ -286,13 +299,13 @@ const LocationStep = ({
         control={
           <Checkbox
             checked={formData.mobileOnly}
-            onChange={(e) => {
+            onChange={e => {
               updateFormData({ mobileOnly: e.target.checked })
               if (e.target.checked) setValidationErrors({})
             }}
           />
         }
-        label="I provide mobile services only (no fixed location)"
+        label='I provide mobile services only (no fixed location)'
       />
 
       {!formData.mobileOnly && (
@@ -301,78 +314,73 @@ const LocationStep = ({
             control={
               <Checkbox
                 checked={formData.hasMultipleBranches}
-                onChange={(e) => handleMultipleBranchesChange(e.target.checked)}
+                onChange={e => handleMultipleBranchesChange(e.target.checked)}
               />
             }
-            label="I have multiple business locations"
+            label='I have multiple business locations'
           />
 
           {formData.hasMultipleBranches ? (
             <>
               {/* Multi-Branch Management */}
-              {validationErrors.branches && (
-                <Alert severity="error">{validationErrors.branches}</Alert>
-              )}
+              {validationErrors.branches && <Alert severity='error'>{validationErrors.branches}</Alert>}
 
-              <div className="flex flex-col gap-3">
-                {formData.branches && formData.branches.map((branch) => (
-                  <Card key={branch.id} variant="outlined" className="shadow-sm">
-                    <CardContent className="flex items-center justify-between gap-3 p-4">
-                      <Box className="flex items-center gap-3 flex-1">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
-                          <i className="ri-map-pin-line text-xl" />
-                        </div>
-                        <Box className="flex-1">
-                          <Typography variant="body1" className="font-medium">
-                            {branch.name}
-                            {branch.isMainBranch && (
-                              <Chip label="Main" size="small" color="primary" className="ml-2" />
-                            )}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" className="text-sm">
-                            {branch.addressLine1}, {branch.city}, {branch.state}
-                          </Typography>
+              <div className='flex flex-col gap-3'>
+                {formData.branches &&
+                  formData.branches.map(branch => (
+                    <Card key={branch.id} variant='outlined' className='shadow-sm'>
+                      <CardContent className='flex items-center justify-between gap-3 p-4'>
+                        <Box className='flex items-center gap-3 flex-1'>
+                          <div className='flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary'>
+                            <i className='ri-map-pin-line text-xl' />
+                          </div>
+                          <Box className='flex-1'>
+                            <Typography variant='body1' className='font-medium'>
+                              {branch.name}
+                              {branch.isMainBranch && (
+                                <Chip label='Main' size='small' color='primary' className='ml-2' />
+                              )}
+                            </Typography>
+                            <Typography variant='body2' color='text.secondary' className='text-sm'>
+                              {branch.addressLine1}, {branch.city}, {branch.state}
+                            </Typography>
+                          </Box>
                         </Box>
-                      </Box>
 
-                      <Box className="flex gap-1">
-                        {!branch.isMainBranch && (
-                          <IconButton
-                            size="small"
-                            onClick={() => handleSetMainBranch(branch.id)}
-                            title="Set as main branch"
-                          >
-                            <i className="ri-star-line" />
+                        <Box className='flex gap-1'>
+                          {!branch.isMainBranch && (
+                            <IconButton
+                              size='small'
+                              onClick={() => handleSetMainBranch(branch.id)}
+                              title='Set as main branch'
+                            >
+                              <i className='ri-star-line' />
+                            </IconButton>
+                          )}
+                          <IconButton size='small' onClick={() => handleOpenDialog(branch)} className='text-primary'>
+                            <i className='ri-pencil-line' />
                           </IconButton>
-                        )}
-                        <IconButton
-                          size="small"
-                          onClick={() => handleOpenDialog(branch)}
-                          className="text-primary"
-                        >
-                          <i className="ri-pencil-line" />
-                        </IconButton>
-                        {formData.branches && formData.branches.length > 1 && (
-                          <IconButton
-                            size="small"
-                            onClick={() => handleDeleteBranch(branch.id)}
-                            className="text-error"
-                          >
-                            <i className="ri-delete-bin-line" />
-                          </IconButton>
-                        )}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                ))}
+                          {formData.branches && formData.branches.length > 1 && (
+                            <IconButton
+                              size='small'
+                              onClick={() => handleDeleteBranch(branch.id)}
+                              className='text-error'
+                            >
+                              <i className='ri-delete-bin-line' />
+                            </IconButton>
+                          )}
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  ))}
               </div>
 
               <Button
                 fullWidth
-                variant="outlined"
+                variant='outlined'
                 onClick={() => handleOpenDialog()}
-                startIcon={<i className="ri-add-line" />}
-                className="border-2 border-dashed"
+                startIcon={<i className='ri-add-line' />}
+                className='border-2 border-dashed'
               >
                 Add Branch Location
               </Button>
@@ -382,25 +390,25 @@ const LocationStep = ({
               {/* Single Branch Location */}
               {!useManualEntry ? (
                 <>
-                  <Alert severity="info" className="flex items-center justify-between">
+                  <Alert severity='info' className='flex items-center justify-between'>
                     <span>Search for your address using Google Maps</span>
-                    <Button size="small" onClick={() => setUseManualEntry(true)}>
+                    <Button size='small' onClick={() => setUseManualEntry(true)}>
                       Enter Manually
                     </Button>
                   </Alert>
 
                   <GooglePlacesAutocomplete
-                    value={formData.addressLine1 || ''}
-                    onChange={(value) => updateFormData({ addressLine1: value, formattedAddress: '' })}
-                    onPlaceSelected={(place) => handlePlaceSelected(place, false)}
+                    value={formData.formattedAddress || formData.addressLine1 || ''}
+                    onChange={value => updateFormData({ addressLine1: value, formattedAddress: '' })}
+                    onPlaceSelected={place => handlePlaceSelected(place, false)}
                     error={!!validationErrors.addressLine1}
                     helperText={validationErrors.addressLine1 || 'Start typing to search for your address'}
-                    label="Search Your Address"
-                    placeholder="Start typing your address..."
+                    label='Search Your Address'
+                    placeholder='Start typing your address...'
                   />
 
-                  <Divider className="my-4">
-                    <Typography variant="body2" color="text.secondary">
+                  <Divider className='my-4'>
+                    <Typography variant='body2' color='text.secondary'>
                       or select on map
                     </Typography>
                   </Divider>
@@ -417,19 +425,19 @@ const LocationStep = ({
                       })
                       setValidationErrors({})
                     }}
-                    height="min(400px, 50vh)"
+                    height='min(400px, 50vh)'
                   />
 
                   {formData.formattedAddress && (
-                    <Box className="mt-4 p-3 bg-success/10 border border-success/20 rounded-lg">
-                      <Typography variant="body2" className="font-medium mb-1">
-                        <i className="ri-checkbox-circle-line text-success mr-1" />
+                    <Box className='mt-4 p-3 bg-success/10 border border-success/20 rounded-lg'>
+                      <Typography variant='body2' className='font-medium mb-1'>
+                        <i className='ri-checkbox-circle-line text-success mr-1' />
                         Address Confirmed
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" className="text-sm">
+                      <Typography variant='body2' color='text.secondary' className='text-sm'>
                         {formData.formattedAddress}
                       </Typography>
-                      <Button size="small" onClick={() => setUseManualEntry(true)} className="mt-2">
+                      <Button size='small' onClick={() => setUseManualEntry(true)} className='mt-2'>
                         Edit Details Manually
                       </Button>
                     </Box>
@@ -437,9 +445,9 @@ const LocationStep = ({
                 </>
               ) : (
                 <>
-                  <Alert severity="info" className="flex items-center justify-between">
+                  <Alert severity='info' className='flex items-center justify-between'>
                     <span>Manual address entry mode</span>
-                    <Button size="small" onClick={() => setUseManualEntry(false)}>
+                    <Button size='small' onClick={() => setUseManualEntry(false)}>
                       Use Google Maps
                     </Button>
                   </Alert>
@@ -448,10 +456,10 @@ const LocationStep = ({
                     <InputLabel>Country</InputLabel>
                     <Select
                       value={formData.country}
-                      label="Country"
-                      onChange={(e) => updateFormData({ country: e.target.value })}
+                      label='Country'
+                      onChange={e => updateFormData({ country: e.target.value })}
                     >
-                      {COUNTRIES.map((country) => (
+                      {COUNTRIES.map(country => (
                         <MenuItem key={country.code} value={country.code}>
                           {country.name}
                         </MenuItem>
@@ -461,9 +469,9 @@ const LocationStep = ({
 
                   <TextField
                     fullWidth
-                    label="Address Line 1"
+                    label='Address Line 1'
                     value={formData.addressLine1}
-                    onChange={(e) => {
+                    onChange={e => {
                       updateFormData({ addressLine1: e.target.value })
                       if (validationErrors.addressLine1) {
                         setValidationErrors({ ...validationErrors, addressLine1: '' })
@@ -476,18 +484,18 @@ const LocationStep = ({
 
                   <TextField
                     fullWidth
-                    label="Address Line 2"
+                    label='Address Line 2'
                     value={formData.addressLine2}
-                    onChange={(e) => updateFormData({ addressLine2: e.target.value })}
-                    helperText="Apartment, suite, unit, building, floor, etc. (optional)"
+                    onChange={e => updateFormData({ addressLine2: e.target.value })}
+                    helperText='Apartment, suite, unit, building, floor, etc. (optional)'
                   />
 
-                  <Box className="flex flex-col sm:flex-row gap-3">
+                  <Box className='flex flex-col sm:flex-row gap-3'>
                     <TextField
                       fullWidth
-                      label="City"
+                      label='City'
                       value={formData.city}
-                      onChange={(e) => {
+                      onChange={e => {
                         updateFormData({ city: e.target.value })
                         if (validationErrors.city) {
                           setValidationErrors({ ...validationErrors, city: '' })
@@ -500,20 +508,20 @@ const LocationStep = ({
 
                     <TextField
                       fullWidth
-                      label="State / Province (Optional)"
+                      label='State / Province (Optional)'
                       value={formData.state}
-                      onChange={(e) => {
+                      onChange={e => {
                         updateFormData({ state: e.target.value })
                       }}
-                      helperText="State, province, or region"
+                      helperText='State, province, or region'
                     />
                   </Box>
 
                   <TextField
                     fullWidth
-                    label="Postal Code (Optional)"
+                    label='Postal Code (Optional)'
                     value={formData.postalCode}
-                    onChange={(e) => {
+                    onChange={e => {
                       updateFormData({ postalCode: e.target.value })
                       if (validationErrors.postalCode) {
                         setValidationErrors({ ...validationErrors, postalCode: '' })
@@ -530,65 +538,65 @@ const LocationStep = ({
       )}
 
       {formData.mobileOnly && (
-        <Box className="p-4 bg-primary/10 rounded-lg">
-          <Typography variant="body2" color="text.secondary">
+        <Box className='p-4 bg-primary/10 rounded-lg'>
+          <Typography variant='body2' color='text.secondary'>
             Great! You can still accept bookings from customers in your service area.
           </Typography>
         </Box>
       )}
 
       {/* Branch Dialog */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth='md' fullWidth>
         <DialogTitle>{editingBranchId ? 'Edit Branch' : 'Add Branch Location'}</DialogTitle>
-        <DialogContent className="pt-4">
-          <div className="flex flex-col gap-4">
+        <DialogContent className='pt-4'>
+          <div className='flex flex-col gap-4'>
             <TextField
               fullWidth
-              label="Branch Name"
+              label='Branch Name'
               value={tempBranch.name}
-              onChange={(e) => setTempBranch({ ...tempBranch, name: e.target.value })}
-              placeholder="e.g., Downtown Location, West Side Branch"
+              onChange={e => setTempBranch({ ...tempBranch, name: e.target.value })}
+              placeholder='e.g., Downtown Location, West Side Branch'
               required
             />
 
             <TextField
               fullWidth
-              label="Address Line 1"
+              label='Address Line 1'
               value={tempBranch.addressLine1}
-              onChange={(e) => setTempBranch({ ...tempBranch, addressLine1: e.target.value })}
+              onChange={e => setTempBranch({ ...tempBranch, addressLine1: e.target.value })}
               required
             />
 
             <TextField
               fullWidth
-              label="Address Line 2"
+              label='Address Line 2'
               value={tempBranch.addressLine2 || ''}
-              onChange={(e) => setTempBranch({ ...tempBranch, addressLine2: e.target.value })}
+              onChange={e => setTempBranch({ ...tempBranch, addressLine2: e.target.value })}
             />
 
-            <Box className="flex gap-3">
+            <Box className='flex gap-3'>
               <TextField
                 fullWidth
-                label="City"
+                label='City'
                 value={tempBranch.city}
-                onChange={(e) => setTempBranch({ ...tempBranch, city: e.target.value })}
+                onChange={e => setTempBranch({ ...tempBranch, city: e.target.value })}
                 required
               />
 
               <TextField
                 fullWidth
-                label="State"
+                label='State'
                 value={tempBranch.state}
-                onChange={(e) => setTempBranch({ ...tempBranch, state: e.target.value })}
+                onChange={e => setTempBranch({ ...tempBranch, state: e.target.value })}
                 required
               />
             </Box>
 
             <TextField
               fullWidth
-              label="Postal Code"
+              label='Postal Code'
               value={tempBranch.postalCode}
-              onChange={(e) => setTempBranch({ ...tempBranch, postalCode: e.target.value })}
+              onChange={e => setTempBranch({ ...tempBranch, postalCode: e.target.value })}
               required
             />
 
@@ -596,10 +604,10 @@ const LocationStep = ({
               <InputLabel>Country</InputLabel>
               <Select
                 value={tempBranch.country || 'EG'}
-                label="Country"
-                onChange={(e) => setTempBranch({ ...tempBranch, country: e.target.value })}
+                label='Country'
+                onChange={e => setTempBranch({ ...tempBranch, country: e.target.value })}
               >
-                {COUNTRIES.map((country) => (
+                {COUNTRIES.map(country => (
                   <MenuItem key={country.code} value={country.code}>
                     {country.name}
                   </MenuItem>
@@ -611,10 +619,10 @@ const LocationStep = ({
               <InputLabel>Timezone</InputLabel>
               <Select
                 value={tempBranch.timezone || 'Africa/Cairo'}
-                label="Timezone"
-                onChange={(e) => setTempBranch({ ...tempBranch, timezone: e.target.value })}
+                label='Timezone'
+                onChange={e => setTempBranch({ ...tempBranch, timezone: e.target.value })}
               >
-                {TIMEZONES.map((tz) => (
+                {TIMEZONES.map(tz => (
                   <MenuItem key={tz} value={tz}>
                     {tz}
                   </MenuItem>
@@ -624,30 +632,36 @@ const LocationStep = ({
 
             <TextField
               fullWidth
-              label="Phone (Optional)"
+              label='Phone (Optional)'
               value={tempBranch.phone || ''}
-              onChange={(e) => setTempBranch({ ...tempBranch, phone: e.target.value })}
-              placeholder="+20 123 456 7890"
+              onChange={e => setTempBranch({ ...tempBranch, phone: e.target.value })}
+              placeholder='+20 123 456 7890'
             />
           </div>
         </DialogContent>
-        <DialogActions className="p-4">
+        <DialogActions className='p-4'>
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button
-            variant="contained"
+            variant='contained'
             onClick={handleSaveBranch}
-            disabled={!tempBranch.name || !tempBranch.addressLine1 || !tempBranch.city || !tempBranch.state || !tempBranch.postalCode}
+            disabled={
+              !tempBranch.name ||
+              !tempBranch.addressLine1 ||
+              !tempBranch.city ||
+              !tempBranch.state ||
+              !tempBranch.postalCode
+            }
           >
             {editingBranchId ? 'Save Changes' : 'Add Branch'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Box className="flex gap-3 justify-between mt-4">
-        <Button variant="outlined" onClick={handlePrev}>
+      <Box className='flex gap-3 justify-between mt-4'>
+        <Button variant='outlined' onClick={handlePrev}>
           Back
         </Button>
-        <Button variant="contained" onClick={handleContinue}>
+        <Button variant='contained' onClick={handleContinue}>
           Continue
         </Button>
       </Box>

@@ -27,6 +27,7 @@ import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
 import { isStaffAvailable, hasConflict, getServiceDuration, getStaffAvailableCapacity, getCapacityColor } from './utils'
 import ClientPickerDialog from './client-picker-dialog'
+import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 
 // Helper function to get 2 initials from a name
 const getInitials = (name: string): string => {
@@ -648,23 +649,21 @@ export default function NewAppointmentDrawer({
 
               {/* Time Selection */}
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                <TextField
+                <TimeSelectField
                   label='START'
-                  type='time'
                   value={startTime}
-                  onChange={e => setStartTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ step: 900 }} // 15 min intervals
+                  onChange={setStartTime}
                   disabled={schedulingMode === 'static' && !!selectedSlotId}
+                  size='small'
+                  fullWidth
                 />
-                <TextField
+                <TimeSelectField
                   label='END'
-                  type='time'
                   value={endTime}
-                  onChange={e => setEndTime(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  inputProps={{ step: 900 }}
+                  onChange={setEndTime}
                   disabled={schedulingMode === 'static' && !!selectedSlotId}
+                  size='small'
+                  fullWidth
                 />
               </Box>
 
@@ -863,7 +862,10 @@ export default function NewAppointmentDrawer({
                   onChange={e => setRequestedByClient(e.target.checked)}
                   icon={<i className='ri-heart-line' style={{ fontSize: '1.5rem' }} />}
                   checkedIcon={
-                    <i className='ri-heart-fill' style={{ fontSize: '1.5rem', color: 'var(--mui-palette-customColors-coral)' }} />
+                    <i
+                      className='ri-heart-fill'
+                      style={{ fontSize: '1.5rem', color: 'var(--mui-palette-customColors-coral)' }}
+                    />
                   }
                 />
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

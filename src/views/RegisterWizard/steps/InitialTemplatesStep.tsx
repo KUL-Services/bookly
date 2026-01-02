@@ -26,6 +26,7 @@ import Accordion from '@mui/material/Accordion'
 import AccordionSummary from '@mui/material/AccordionSummary'
 import AccordionDetails from '@mui/material/AccordionDetails'
 import { useMediaQuery, useTheme } from '@mui/material'
+import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 
 import type { StepProps, BasicTemplate } from '../types'
 import { CLASS_DURATIONS, DAYS_OF_WEEK } from '../types'
@@ -161,7 +162,7 @@ const InitialTemplatesStep = ({
 
     if (editingTemplateId) {
       const updatedTemplates = currentTemplates.map(t =>
-        t.id === editingTemplateId ? { ...tempTemplate, id: editingTemplateId } as BasicTemplate : t
+        t.id === editingTemplateId ? ({ ...tempTemplate, id: editingTemplateId } as BasicTemplate) : t
       )
       updateFormData({ initialTemplates: updatedTemplates })
     } else {
@@ -215,40 +216,33 @@ const InitialTemplatesStep = ({
           '&:not(:last-child)': { mb: 1 }
         }}
       >
-        <AccordionSummary
-          expandIcon={<i className="ri-arrow-down-s-line" />}
-          sx={{ minHeight: { xs: 48, sm: 56 } }}
-        >
-          <Box className="flex items-center justify-between w-full pr-2">
-            <Typography className="capitalize font-medium">
-              {day}
-            </Typography>
+        <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />} sx={{ minHeight: { xs: 48, sm: 56 } }}>
+          <Box className='flex items-center justify-between w-full pr-2'>
+            <Typography className='capitalize font-medium'>{day}</Typography>
             {hasSlots && (
               <Chip
                 label={`${slots.length} ${slots.length === 1 ? 'time' : 'times'}`}
-                size="small"
-                color="primary"
-                variant="outlined"
+                size='small'
+                color='primary'
+                variant='outlined'
               />
             )}
           </Box>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 0 }}>
-          <Box className="flex flex-col gap-3">
+          <Box className='flex flex-col gap-3'>
             {/* Time input */}
-            <Box className="flex gap-2">
-              <TextField
-                fullWidth
-                size="small"
-                type="time"
-                label="Add Time"
+            <Box className='flex gap-2'>
+              <TimeSelectField
+                label='Add Time'
                 value={newTime}
-                onChange={(e) => setNewTime(e.target.value)}
-                InputLabelProps={{ shrink: true }}
+                onChange={value => setNewTime(value)}
+                size='small'
+                fullWidth
               />
               <Button
-                variant="contained"
-                size="small"
+                variant='contained'
+                size='small'
                 onClick={() => {
                   handleAddTimeToDay(day, newTime)
                   setNewTime('')
@@ -262,22 +256,22 @@ const InitialTemplatesStep = ({
 
             {/* Display added times */}
             {hasSlots && (
-              <Box className="flex flex-wrap gap-2">
-                {slots.map((time) => (
+              <Box className='flex flex-wrap gap-2'>
+                {slots.map(time => (
                   <Chip
                     key={time}
                     label={time}
-                    size="medium"
+                    size='medium'
                     onDelete={() => handleRemoveTimeFromDay(day, time)}
-                    color="primary"
-                    variant="outlined"
+                    color='primary'
+                    variant='outlined'
                   />
                 ))}
               </Box>
             )}
 
             {!hasSlots && (
-              <Typography variant="caption" color="text.secondary" className="text-center py-2">
+              <Typography variant='caption' color='text.secondary' className='text-center py-2'>
                 No times added for this day
               </Typography>
             )}
@@ -288,72 +282,57 @@ const InitialTemplatesStep = ({
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="text-center mb-2">
-        <Typography variant="h5" className="mb-2">
+    <div className='flex flex-col gap-5'>
+      <div className='text-center mb-2'>
+        <Typography variant='h5' className='mb-2'>
           Create Your First Class Template
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant='body2' color='text.secondary'>
           Optional: Set up recurring class schedules to get started faster
         </Typography>
       </div>
 
-      <Alert severity="info" icon={<i className="ri-information-line" />}>
-        <Typography variant="body2">
-          Templates define recurring weekly classes. You can skip this step and create templates later in the calendar settings.
+      <Alert severity='info' icon={<i className='ri-information-line' />}>
+        <Typography variant='body2'>
+          Templates define recurring weekly classes. You can skip this step and create templates later in the calendar
+          settings.
         </Typography>
       </Alert>
 
       {/* Templates List */}
       {formData.initialTemplates && formData.initialTemplates.length > 0 && (
-        <div className="flex flex-col gap-3">
-          {formData.initialTemplates.map((template) => (
-            <Card key={template.id} variant="outlined" className="shadow-sm">
-              <CardContent className="p-4">
-                <Box className="flex items-start justify-between gap-3">
-                  <Box className="flex items-start gap-3 flex-1">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary flex-shrink-0">
-                      <i className="ri-calendar-event-line text-xl" />
+        <div className='flex flex-col gap-3'>
+          {formData.initialTemplates.map(template => (
+            <Card key={template.id} variant='outlined' className='shadow-sm'>
+              <CardContent className='p-4'>
+                <Box className='flex items-start justify-between gap-3'>
+                  <Box className='flex items-start gap-3 flex-1'>
+                    <div className='flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary flex-shrink-0'>
+                      <i className='ri-calendar-event-line text-xl' />
                     </div>
-                    <Box className="flex-1 min-w-0">
-                      <Typography variant="body1" className="font-medium mb-1">
+                    <Box className='flex-1 min-w-0'>
+                      <Typography variant='body1' className='font-medium mb-1'>
                         {template.name}
                       </Typography>
-                      <Box className="flex flex-wrap gap-1 mb-2">
-                        <Chip
-                          label={`${template.duration} min`}
-                          size="small"
-                          variant="outlined"
-                        />
-                        <Chip
-                          label={`Cap: ${template.capacity}`}
-                          size="small"
-                          variant="outlined"
-                        />
+                      <Box className='flex flex-wrap gap-1 mb-2'>
+                        <Chip label={`${template.duration} min`} size='small' variant='outlined' />
+                        <Chip label={`Cap: ${template.capacity}`} size='small' variant='outlined' />
                       </Box>
-                      <Typography variant="body2" color="text.secondary" className="text-sm">
+                      <Typography variant='body2' color='text.secondary' className='text-sm'>
                         {getRoomName(template.roomId)} • {getStaffName(template.instructorStaffId)}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" className="text-xs">
+                      <Typography variant='caption' color='text.secondary' className='text-xs'>
                         {getScheduleSummary(template)}
                       </Typography>
                     </Box>
                   </Box>
 
-                  <Box className="flex gap-1 flex-shrink-0">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleOpenDialog(template)}
-                      className="text-primary"
-                    >
-                      <i className="ri-pencil-line" />
+                  <Box className='flex gap-1 flex-shrink-0'>
+                    <IconButton size='small' onClick={() => handleOpenDialog(template)} className='text-primary'>
+                      <i className='ri-pencil-line' />
                     </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteTemplate(template.id)}
-                      className="text-error"
-                    >
-                      <i className="ri-delete-bin-line" />
+                    <IconButton size='small' onClick={() => handleDeleteTemplate(template.id)} className='text-error'>
+                      <i className='ri-delete-bin-line' />
                     </IconButton>
                   </Box>
                 </Box>
@@ -366,10 +345,10 @@ const InitialTemplatesStep = ({
       {/* Add Template Button */}
       <Button
         fullWidth
-        variant="outlined"
+        variant='outlined'
         onClick={() => handleOpenDialog()}
-        startIcon={<i className="ri-add-line" />}
-        className="border-2 border-dashed"
+        startIcon={<i className='ri-add-line' />}
+        className='border-2 border-dashed'
         disabled={availableRooms.length === 0 || availableStaff.length === 0}
         sx={{ py: { xs: 1.5, sm: 1 } }}
       >
@@ -377,27 +356,17 @@ const InitialTemplatesStep = ({
       </Button>
 
       {(availableRooms.length === 0 || availableStaff.length === 0) && (
-        <Alert severity="warning">
-          You need at least one room and one staff member to create templates.
-        </Alert>
+        <Alert severity='warning'>You need at least one room and one staff member to create templates.</Alert>
       )}
 
       {/* Add/Edit Template Dialog - Mobile Optimized */}
-      <Dialog
-        open={dialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-        fullScreen={isMobile}
-      >
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth='md' fullWidth fullScreen={isMobile}>
         <DialogTitle sx={{ pb: 1 }}>
-          <Box className="flex items-center justify-between">
-            <Typography variant="h6">
-              {editingTemplateId ? 'Edit Template' : 'Create Class Template'}
-            </Typography>
+          <Box className='flex items-center justify-between'>
+            <Typography variant='h6'>{editingTemplateId ? 'Edit Template' : 'Create Class Template'}</Typography>
             {isMobile && (
-              <IconButton onClick={handleCloseDialog} size="small">
-                <i className="ri-close-line" />
+              <IconButton onClick={handleCloseDialog} size='small'>
+                <i className='ri-close-line' />
               </IconButton>
             )}
           </Box>
@@ -407,22 +376,22 @@ const InitialTemplatesStep = ({
           <Tabs
             value={activeTab}
             onChange={(_, newValue) => setActiveTab(newValue)}
-            variant={isMobile ? "fullWidth" : "standard"}
+            variant={isMobile ? 'fullWidth' : 'standard'}
             sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
           >
-            <Tab label="Basic Info" />
-            <Tab label="Schedule" />
+            <Tab label='Basic Info' />
+            <Tab label='Schedule' />
           </Tabs>
 
           {/* Tab 1: Basic Information */}
           {activeTab === 0 && (
-            <div className="flex flex-col gap-4">
+            <div className='flex flex-col gap-4'>
               <TextField
                 fullWidth
-                label="Class Name"
+                label='Class Name'
                 value={tempTemplate.name}
-                onChange={(e) => setTempTemplate({ ...tempTemplate, name: e.target.value })}
-                placeholder="e.g., Morning Yoga, HIIT Class"
+                onChange={e => setTempTemplate({ ...tempTemplate, name: e.target.value })}
+                placeholder='e.g., Morning Yoga, HIIT Class'
                 required
                 autoFocus={!isMobile}
               />
@@ -431,20 +400,20 @@ const InitialTemplatesStep = ({
                 fullWidth
                 multiline
                 rows={2}
-                label="Description (Optional)"
+                label='Description (Optional)'
                 value={tempTemplate.description || ''}
-                onChange={(e) => setTempTemplate({ ...tempTemplate, description: e.target.value })}
-                placeholder="Brief description of this class..."
+                onChange={e => setTempTemplate({ ...tempTemplate, description: e.target.value })}
+                placeholder='Brief description of this class...'
               />
 
               <FormControl fullWidth required>
                 <InputLabel>Room / Facility</InputLabel>
                 <Select
                   value={tempTemplate.roomId || ''}
-                  label="Room / Facility"
-                  onChange={(e) => handleRoomChange(e.target.value)}
+                  label='Room / Facility'
+                  onChange={e => handleRoomChange(e.target.value)}
                 >
-                  {availableRooms.map((room) => (
+                  {availableRooms.map(room => (
                     <MenuItem key={room.id} value={room.id}>
                       {room.name} (Cap: {room.capacity})
                     </MenuItem>
@@ -456,10 +425,10 @@ const InitialTemplatesStep = ({
                 <InputLabel>Instructor</InputLabel>
                 <Select
                   value={tempTemplate.instructorStaffId || ''}
-                  label="Instructor"
-                  onChange={(e) => setTempTemplate({ ...tempTemplate, instructorStaffId: e.target.value })}
+                  label='Instructor'
+                  onChange={e => setTempTemplate({ ...tempTemplate, instructorStaffId: e.target.value })}
                 >
-                  {availableStaff.map((staff) => (
+                  {availableStaff.map(staff => (
                     <MenuItem key={staff.id} value={staff.id}>
                       {staff.name}
                     </MenuItem>
@@ -467,15 +436,15 @@ const InitialTemplatesStep = ({
                 </Select>
               </FormControl>
 
-              <Box className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Box className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                 <FormControl fullWidth>
                   <InputLabel>Duration</InputLabel>
                   <Select
                     value={tempTemplate.duration || 60}
-                    label="Duration"
-                    onChange={(e) => setTempTemplate({ ...tempTemplate, duration: e.target.value as number })}
+                    label='Duration'
+                    onChange={e => setTempTemplate({ ...tempTemplate, duration: e.target.value as number })}
                   >
-                    {CLASS_DURATIONS.map((duration) => (
+                    {CLASS_DURATIONS.map(duration => (
                       <MenuItem key={duration.value} value={duration.value}>
                         {duration.label}
                       </MenuItem>
@@ -485,10 +454,10 @@ const InitialTemplatesStep = ({
 
                 <TextField
                   fullWidth
-                  type="number"
-                  label="Max Capacity"
+                  type='number'
+                  label='Max Capacity'
                   value={tempTemplate.capacity}
-                  onChange={(e) => setTempTemplate({ ...tempTemplate, capacity: parseInt(e.target.value) || 10 })}
+                  onChange={e => setTempTemplate({ ...tempTemplate, capacity: parseInt(e.target.value) || 10 })}
                   inputProps={{
                     min: 1,
                     max: availableRooms.find(r => r.id === tempTemplate.roomId)?.capacity || 100
@@ -497,7 +466,7 @@ const InitialTemplatesStep = ({
               </Box>
 
               {!isMobile && (
-                <Alert severity="info" icon={<i className="ri-information-line" />}>
+                <Alert severity='info' icon={<i className='ri-information-line' />}>
                   Click on the "Schedule" tab to add weekly recurring times for this class.
                 </Alert>
               )}
@@ -506,17 +475,17 @@ const InitialTemplatesStep = ({
 
           {/* Tab 2: Weekly Schedule */}
           {activeTab === 1 && (
-            <div className="flex flex-col gap-2">
-              <Typography variant="subtitle2" className="mb-2">
+            <div className='flex flex-col gap-2'>
+              <Typography variant='subtitle2' className='mb-2'>
                 Add class times for each day of the week
               </Typography>
 
-              {DAYS_OF_WEEK.map((day) => (
+              {DAYS_OF_WEEK.map(day => (
                 <DayScheduleInput key={day} day={day} />
               ))}
 
               {Object.values(tempTemplate.weeklySchedule || {}).every(slots => slots.length === 0) && (
-                <Alert severity="warning" className="mt-3">
+                <Alert severity='warning' className='mt-3'>
                   Please add at least one time slot to create this template.
                 </Alert>
               )}
@@ -524,30 +493,22 @@ const InitialTemplatesStep = ({
           )}
         </DialogContent>
 
-        <DialogActions className="p-4 gap-2">
+        <DialogActions className='p-4 gap-2'>
           <Button onClick={handleCloseDialog} fullWidth={isMobile}>
             Cancel
           </Button>
           {activeTab === 0 && (
-            <Button
-              variant="outlined"
-              onClick={() => setActiveTab(1)}
-              fullWidth={isMobile}
-            >
+            <Button variant='outlined' onClick={() => setActiveTab(1)} fullWidth={isMobile}>
               Next: Add Schedule
             </Button>
           )}
           {activeTab === 1 && (
             <>
-              <Button
-                variant="outlined"
-                onClick={() => setActiveTab(0)}
-                fullWidth={isMobile}
-              >
+              <Button variant='outlined' onClick={() => setActiveTab(0)} fullWidth={isMobile}>
                 Back
               </Button>
               <Button
-                variant="contained"
+                variant='contained'
                 onClick={handleSaveTemplate}
                 disabled={!tempTemplate.name || !tempTemplate.roomId || !tempTemplate.instructorStaffId}
                 fullWidth={isMobile}
@@ -560,27 +521,15 @@ const InitialTemplatesStep = ({
       </Dialog>
 
       {/* Navigation */}
-      <Box className="flex flex-col sm:flex-row gap-3 justify-between mt-4">
-        <Button
-          variant="outlined"
-          onClick={handlePrev}
-          fullWidth={isMobile}
-        >
+      <Box className='flex flex-col sm:flex-row gap-3 justify-between mt-4'>
+        <Button variant='outlined' onClick={handlePrev} fullWidth={isMobile}>
           Back
         </Button>
-        <Box className="flex gap-2">
-          <Button
-            variant="outlined"
-            onClick={handleSkip}
-            fullWidth={isMobile}
-          >
+        <Box className='flex gap-2'>
+          <Button variant='outlined' onClick={handleSkip} fullWidth={isMobile}>
             Skip for Now
           </Button>
-          <Button
-            variant="contained"
-            onClick={handleContinue}
-            fullWidth={isMobile}
-          >
+          <Button variant='contained' onClick={handleContinue} fullWidth={isMobile}>
             Continue
           </Button>
         </Box>

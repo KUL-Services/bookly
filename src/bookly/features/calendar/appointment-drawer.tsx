@@ -24,6 +24,7 @@ import type { CalendarEvent, AppointmentStatus, PaymentStatus } from './types'
 import { mockStaff, mockRooms } from '@/bookly/data/mock-data'
 import { useMediaQuery, useTheme } from '@mui/material'
 import { buildEventColors } from './utils'
+import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 
 export default function AppointmentDrawer() {
   const theme = useTheme()
@@ -369,24 +370,8 @@ export default function AppointmentDrawer() {
               </Typography>
               {isEditing && canEditTime ? (
                 <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                  <TextField
-                    label='Start'
-                    type='time'
-                    value={startTime}
-                    onChange={e => setStartTime(e.target.value)}
-                    size='small'
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  <TextField
-                    label='End'
-                    type='time'
-                    value={endTime}
-                    onChange={e => setEndTime(e.target.value)}
-                    size='small'
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
+                  <TimeSelectField label='Start' value={startTime} onChange={setStartTime} size='small' fullWidth />
+                  <TimeSelectField label='End' value={endTime} onChange={setEndTime} size='small' fullWidth />
                 </Box>
               ) : (
                 <Typography variant='body2' color='text.secondary'>
