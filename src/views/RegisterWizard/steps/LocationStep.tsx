@@ -47,7 +47,6 @@ const LocationStep = ({
   validationErrors,
   setValidationErrors
 }: StepProps) => {
-  const [useManualEntry, setUseManualEntry] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null)
   const [tempBranch, setTempBranch] = useState<Partial<Branch>>({
@@ -110,17 +109,21 @@ const LocationStep = ({
       addressLine1 = place.formatted_address?.split(',')[0] || ''
     }
 
+    const city = extractComponent('locality') ||
+      extractComponent('administrative_area_level_2') ||
+      extractComponent('sublocality')
+    const state = extractComponent('administrative_area_level_1') || extractComponent('administrative_area_level_2') || ''
+    const postalCode = extractComponent('postal_code') || ''
+    const country = extractComponent('country') || 'EG'
+
     const addressData = {
       formattedAddress: place.formatted_address || '',
       placeId: place.place_id || '',
       addressLine1: addressLine1,
-      city:
-        extractComponent('locality') ||
-        extractComponent('administrative_area_level_2') ||
-        extractComponent('sublocality'),
-      state: extractComponent('administrative_area_level_1') || extractComponent('administrative_area_level_2') || '',
-      postalCode: extractComponent('postal_code') || '',
-      country: extractComponent('country') || formData.country || 'EG',
+      city: city,
+      state: state,
+      postalCode: postalCode,
+      country: country,
       latitude: place.geometry?.location?.lat(),
       longitude: place.geometry?.location?.lng()
     }
@@ -388,150 +391,106 @@ const LocationStep = ({
           ) : (
             <>
               {/* Single Branch Location */}
-              {!useManualEntry ? (
-                <>
-                  <Alert severity='info' className='flex items-center justify-between'>
-                    <span>Search for your address using Google Maps</span>
-                    <Button size='small' onClick={() => setUseManualEntry(true)}>
-                      Enter Manually
-                    </Button>
-                  </Alert>
+              <GooglePlacesAutocomplete
+                value={formData.formattedAddress || formData.addressLine1 || ''}
+                onChange={value => updateFormData({ addressLine1: value, formattedAddress: '' })}
+                onPlaceSelected={place => handlePlaceSelected(place, false)}
+                error={!!validationErrors.addressLine1}
+                helperText={validationErrors.addressLine1 || 'Start typing to search for your address'}
+                label='Search Your Address'
+                placeholder='Start typing your address...'
+              />
 
-                  <GooglePlacesAutocomplete
-                    value={formData.formattedAddress || formData.addressLine1 || ''}
-                    onChange={value => updateFormData({ addressLine1: value, formattedAddress: '' })}
-                    onPlaceSelected={place => handlePlaceSelected(place, false)}
-                    error={!!validationErrors.addressLine1}
-                    helperText={validationErrors.addressLine1 || 'Start typing to search for your address'}
-                    label='Search Your Address'
-                    placeholder='Start typing your address...'
-                  />
+              <GoogleMapPicker
+                latitude={formData.latitude}
+                longitude={formData.longitude}
+                onLocationChange={(lat, lng, address) => {
+                  updateFormData({
+                    latitude: lat,
+                    longitude: lng,
+                    formattedAddress: address,
+                    addressLine1: address.split(',')[0] || address
+                  })
+                  setValidationErrors({})
+                }}
+                height='min(400px, 50vh)'
+              />
 
-                  <Divider className='my-4'>
-                    <Typography variant='body2' color='text.secondary'>
-                      or select on map
-                    </Typography>
-                  </Divider>
+              {/* Address Details - Always visible below map */}
+              <TextField
+                fullWidth
+                label='Street Address'
+                value={formData.addressLine1 || ''}
+                onChange={e => {
+                  updateFormData({ addressLine1: e.target.value })
+                  if (validationErrors.addressLine1) {
+                    setValidationErrors({ ...validationErrors, addressLine1: '' })
+                  }
+                }}
+                error={!!validationErrors.addressLine1}
+                helperText={validationErrors.addressLine1 || 'Street address, P.O. box'}
+                placeholder='e.g., 7 Ali Hasan Ateya'
+              />
 
-                  <GoogleMapPicker
-                    latitude={formData.latitude}
-                    longitude={formData.longitude}
-                    onLocationChange={(lat, lng, address) => {
-                      updateFormData({
-                        latitude: lat,
-                        longitude: lng,
-                        formattedAddress: address,
-                        addressLine1: address.split(',')[0] || address
-                      })
-                      setValidationErrors({})
-                    }}
-                    height='min(400px, 50vh)'
-                  />
+              <Box className='flex flex-col sm:flex-row gap-3'>
+                <TextField
+                  fullWidth
+                  label='City'
+                  value={formData.city || ''}
+                  onChange={e => {
+                    updateFormData({ city: e.target.value })
+                    if (validationErrors.city) {
+                      setValidationErrors({ ...validationErrors, city: '' })
+                    }
+                  }}
+                  error={!!validationErrors.city}
+                  helperText={validationErrors.city}
+                  placeholder='e.g., Agouza'
+                />
 
-                  {formData.formattedAddress && (
-                    <Box className='mt-4 p-3 bg-success/10 border border-success/20 rounded-lg'>
-                      <Typography variant='body2' className='font-medium mb-1'>
-                        <i className='ri-checkbox-circle-line text-success mr-1' />
-                        Address Confirmed
-                      </Typography>
-                      <Typography variant='body2' color='text.secondary' className='text-sm'>
-                        {formData.formattedAddress}
-                      </Typography>
-                      <Button size='small' onClick={() => setUseManualEntry(true)} className='mt-2'>
-                        Edit Details Manually
-                      </Button>
-                    </Box>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Alert severity='info' className='flex items-center justify-between'>
-                    <span>Manual address entry mode</span>
-                    <Button size='small' onClick={() => setUseManualEntry(false)}>
-                      Use Google Maps
-                    </Button>
-                  </Alert>
+                <TextField
+                  fullWidth
+                  label='State / Province (Optional)'
+                  value={formData.state || ''}
+                  onChange={e => {
+                    updateFormData({ state: e.target.value })
+                  }}
+                  helperText='State, province, or region'
+                  placeholder='e.g., Giza Governorate'
+                />
+              </Box>
 
-                  <FormControl fullWidth>
-                    <InputLabel>Country</InputLabel>
-                    <Select
-                      value={formData.country}
-                      label='Country'
-                      onChange={e => updateFormData({ country: e.target.value })}
-                    >
-                      {COUNTRIES.map(country => (
-                        <MenuItem key={country.code} value={country.code}>
-                          {country.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+              <Box className='flex flex-col sm:flex-row gap-3'>
+                <TextField
+                  fullWidth
+                  label='Postal Code (Optional)'
+                  value={formData.postalCode || ''}
+                  onChange={e => {
+                    updateFormData({ postalCode: e.target.value })
+                    if (validationErrors.postalCode) {
+                      setValidationErrors({ ...validationErrors, postalCode: '' })
+                    }
+                  }}
+                  error={!!validationErrors.postalCode}
+                  helperText={validationErrors.postalCode || 'ZIP or postal code'}
+                  placeholder='e.g., 3755151'
+                />
 
-                  <TextField
-                    fullWidth
-                    label='Address Line 1'
-                    value={formData.addressLine1}
-                    onChange={e => {
-                      updateFormData({ addressLine1: e.target.value })
-                      if (validationErrors.addressLine1) {
-                        setValidationErrors({ ...validationErrors, addressLine1: '' })
-                      }
-                    }}
-                    error={!!validationErrors.addressLine1}
-                    helperText={validationErrors.addressLine1 || 'Street address, P.O. box'}
-                    required
-                  />
-
-                  <TextField
-                    fullWidth
-                    label='Address Line 2'
-                    value={formData.addressLine2}
-                    onChange={e => updateFormData({ addressLine2: e.target.value })}
-                    helperText='Apartment, suite, unit, building, floor, etc. (optional)'
-                  />
-
-                  <Box className='flex flex-col sm:flex-row gap-3'>
-                    <TextField
-                      fullWidth
-                      label='City'
-                      value={formData.city}
-                      onChange={e => {
-                        updateFormData({ city: e.target.value })
-                        if (validationErrors.city) {
-                          setValidationErrors({ ...validationErrors, city: '' })
-                        }
-                      }}
-                      error={!!validationErrors.city}
-                      helperText={validationErrors.city}
-                      required
-                    />
-
-                    <TextField
-                      fullWidth
-                      label='State / Province (Optional)'
-                      value={formData.state}
-                      onChange={e => {
-                        updateFormData({ state: e.target.value })
-                      }}
-                      helperText='State, province, or region'
-                    />
-                  </Box>
-
-                  <TextField
-                    fullWidth
-                    label='Postal Code (Optional)'
-                    value={formData.postalCode}
-                    onChange={e => {
-                      updateFormData({ postalCode: e.target.value })
-                      if (validationErrors.postalCode) {
-                        setValidationErrors({ ...validationErrors, postalCode: '' })
-                      }
-                    }}
-                    error={!!validationErrors.postalCode}
-                    helperText={validationErrors.postalCode || 'ZIP or postal code'}
-                  />
-                </>
-              )}
+                <FormControl fullWidth>
+                  <InputLabel>Country</InputLabel>
+                  <Select
+                    value={formData.country || 'EG'}
+                    label='Country'
+                    onChange={e => updateFormData({ country: e.target.value })}
+                  >
+                    {COUNTRIES.map(country => (
+                      <MenuItem key={country.code} value={country.code}>
+                        {country.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
             </>
           )}
         </>
