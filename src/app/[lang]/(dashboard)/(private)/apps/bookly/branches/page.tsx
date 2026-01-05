@@ -1,8 +1,7 @@
-// Component Imports
-import BranchesManagement from '@/views/apps/bookly/branches/BranchesManagement'
+import { redirect } from 'next/navigation'
 
-const BooklyBranchesPage = () => {
-  return <BranchesManagement />
+const BooklyBranchesPage = ({ params }: { params: { lang: string } }) => {
+  redirect(`/${params.lang}/apps/bookly/settings?tab=branches`)
 }
 
 export default BooklyBranchesPage

@@ -183,6 +183,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
       return color
     }
 
+    const isDark = theme.palette.mode === 'dark'
+
     // Map events to FullCalendar format with colors and search highlighting
     const calendarEvents = events.map(event => {
       const colors = buildEventColors(colorScheme, event.extendedProps.status)
@@ -307,8 +309,6 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
 
     // Combine regular events with slot background events
     const allCalendarEvents = [...calendarEvents, ...slotBackgroundEvents]
-
-    const isDark = theme.palette.mode === 'dark'
 
     return (
       <Box

@@ -3,6 +3,7 @@
 // React Imports
 import { useState, useEffect } from 'react'
 import type { SyntheticEvent } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 // MUI Imports
 import Grid from '@mui/material/Grid'
@@ -29,6 +30,8 @@ import NotificationSettingsTab from './tabs/NotificationSettingsTab'
 import SchedulingSettingsTab from './tabs/SchedulingSettingsTab'
 import CalendarSettingsTab from './tabs/CalendarSettingsTab'
 import CustomerSettingsTab from './tabs/CustomerSettingsTab'
+import { ServicesTab } from '@/bookly/features/staff-management/services-tab'
+import { BranchesTab } from '@/bookly/features/branches'
 
 // Store
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
@@ -47,9 +50,38 @@ const BusinessSettings = () => {
     resetAllSettings
   } = useBusinessSettingsStore()
 
+  // URL params for tab navigation
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams.get('tab')
+
+  // Valid tab values
+  const validTabs = [
+    'business-profile',
+    'booking-policies',
+    'payment',
+    'notifications',
+    'scheduling',
+    'calendar',
+    'customer',
+    'services',
+    'branches'
+  ]
+
   // Local state
-  const [activeTab, setActiveTab] = useState('business-profile')
+  const [activeTab, setActiveTab] = useState(() => {
+    if (tabFromUrl && validTabs.includes(tabFromUrl)) {
+      return tabFromUrl
+    }
+    return 'business-profile'
+  })
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+
+  // Sync tab with URL when it changes
+  useEffect(() => {
+    if (tabFromUrl && validTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl)
+    }
+  }, [tabFromUrl])
 
   // Load settings on mount
   useEffect(() => {
@@ -133,6 +165,8 @@ const BusinessSettings = () => {
                 iconPosition='start'
                 value='business-profile'
               />
+              <Tab label='Services' icon={<i className='ri-service-line' />} iconPosition='start' value='services' />
+              <Tab label='Branches' icon={<i className='ri-building-line' />} iconPosition='start' value='branches' />
               <Tab
                 label='Booking Policies'
                 icon={<i className='ri-calendar-check-line' />}
@@ -166,6 +200,16 @@ const BusinessSettings = () => {
           <Grid item xs={12}>
             <TabPanel value='business-profile' className='p-0'>
               <BusinessProfileTab />
+            </TabPanel>
+            <TabPanel value='services' className='p-0'>
+              <Box sx={{ height: 'calc(100vh - 300px)', minHeight: 500 }}>
+                <ServicesTab />
+              </Box>
+            </TabPanel>
+            <TabPanel value='branches' className='p-0'>
+              <Box sx={{ height: 'calc(100vh - 300px)', minHeight: 500 }}>
+                <BranchesTab />
+              </Box>
             </TabPanel>
             <TabPanel value='booking-policies' className='p-0'>
               <BookingPoliciesTab />

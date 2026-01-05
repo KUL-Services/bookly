@@ -1,9 +1,7 @@
-// Component Imports
-import ServicesManagement from '@/views/apps/bookly/services/ServicesManagement'
+import { redirect } from 'next/navigation'
 
-const BooklyServicesPage = () => {
-  return <ServicesManagement />
+const BooklyServicesPage = ({ params }: { params: { lang: string } }) => {
+  redirect(`/${params.lang}/apps/bookly/settings?tab=services`)
 }
 
 export default BooklyServicesPage
-
