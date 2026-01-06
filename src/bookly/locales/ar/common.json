@@ -171,6 +171,7 @@
     }
   },
   "auth": {
+    "orContinueWith": "أو تابع عبر",
     "login": {
       "title": "مرحباً بعودتك",
       "description": "سجل دخولك إلى حساب بوكلي",
@@ -181,21 +182,47 @@
       "rememberMe": "تذكرني",
       "forgotPassword": "نسيت كلمة المرور؟",
       "submitButton": "تسجيل الدخول",
+      "signingIn": "جار تسجيل الدخول...",
       "noAccount": "ليس لديك حساب؟",
       "createAccount": "أنشئ حساباً"
     },
     "register": {
       "title": "إنشاء حساب",
-      "description": "أدخل معلوماتك لإنشاء حساب بوكلي",
+      "description": "انضم إلى بوكلي وابدأ حجز الخدمات",
+      "firstName": "الاسم الأول",
+      "firstNamePlaceholder": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "lastNamePlaceholder": "اسم العائلة",
+      "mobile": "رقم الجوال",
+      "mobilePlaceholder": "مثال: +966501234567",
       "emailLabel": "البريد الإلكتروني",
       "emailPlaceholder": "أدخل بريدك الإلكتروني",
       "passwordLabel": "كلمة المرور",
-      "passwordPlaceholder": "أدخل كلمة المرور",
+      "passwordPlaceholder": "أنشئ كلمة مرور",
       "confirmPasswordLabel": "تأكيد كلمة المرور",
       "confirmPasswordPlaceholder": "أكد كلمة المرور",
+      "agreeToTerms": "أوافق على",
+      "termsOfService": "شروط الخدمة",
+      "and": "و",
+      "privacyPolicy": "سياسة الخصوصية",
       "submitButton": "إنشاء حساب",
+      "creatingAccount": "جار إنشاء الحساب...",
       "haveAccount": "لديك حساب بالفعل؟",
       "login": "تسجيل الدخول"
+    },
+    "forgotPassword": {
+      "title": "إعادة تعيين كلمة المرور",
+      "description": "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل بريدك الإلكتروني",
+      "submitButton": "إرسال رابط إعادة التعيين",
+      "sending": "جار الإرسال...",
+      "backToLogin": "العودة لتسجيل الدخول",
+      "sendAnother": "إرسال بريد آخر",
+      "rememberPassword": "تتذكر كلمة المرور؟ سجل الدخول",
+      "checkSpam": "يرجى فحص بريدك الإلكتروني والنقر على رابط إعادة التعيين. إذا لم تجد البريد، تحقق من مجلد البريد المزعج.",
+      "successTitle": "تحقق من بريدك الإلكتروني",
+      "successDescription": "لقد أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني"
     },
     "validation": {
       "emailRequired": "البريد الإلكتروني مطلوب",
@@ -203,7 +230,12 @@
       "passwordRequired": "كلمة المرور مطلوبة",
       "passwordMinLength": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
       "passwordsDoNotMatch": "كلمات المرور غير متطابقة",
-      "confirmPasswordRequired": "يرجى تأكيد كلمة المرور"
+      "confirmPasswordRequired": "يرجى تأكيد كلمة المرور",
+      "firstNameRequired": "الاسم الأول مطلوب",
+      "lastNameRequired": "اسم العائلة مطلوب",
+      "mobileRequired": "رقم الجوال مطلوب",
+      "mobileInvalid": "يرجى إدخال رقم جوال صحيح مع رمز الدولة",
+      "termsRequired": "يجب الموافقة على الشروط والأحكام"
     }
   },
   "common": {

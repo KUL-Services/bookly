@@ -8,11 +8,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/bookly/components/ui/input'
 import { Button } from '@/bookly/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/bookly/components/ui/card'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { PageProps } from '@/bookly/types'
 import { AuthService } from '@/lib/api/services/auth.service'
 import { toast } from 'sonner'
+import { useTranslation } from '@/bookly/hooks'
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address')
@@ -21,8 +21,8 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>
 
 export default function ForgotPasswordPage({ params }: PageProps) {
-  const router = useRouter()
   const { lang: locale } = params
+  const { t } = useTranslation(locale)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isSubmitted, setIsSubmitted] = React.useState(false)
 
@@ -50,25 +50,25 @@ export default function ForgotPasswordPage({ params }: PageProps) {
     return (
       <div className='min-h-screen'>
         <main className='container mx-auto px-4 py-8'>
-          <div className='w-1/3 mx-auto flex justify-center'>
-            <Card className='w-full border border-gray-300'>
+          <div className='w-full max-w-md mx-auto flex justify-center'>
+            <Card className='w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'>
               <CardHeader className='space-y-1'>
-                <CardTitle className='text-2xl font-bold text-center text-primary-800'>
-                  Check Your Email
+                <CardTitle className='text-2xl font-bold text-center text-primary-800 dark:text-white'>
+                  {t('auth.forgotPassword.successTitle')}
                 </CardTitle>
-                <CardDescription className='text-center'>
-                  We've sent a password reset link to your email address
+                <CardDescription className='text-center text-gray-600 dark:text-gray-300'>
+                  {t('auth.forgotPassword.successDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='text-center space-y-4'>
-                  <div className='w-16 h-16 mx-auto bg-primary-200 rounded-full flex items-center justify-center'>
-                    <svg className='w-8 h-8 text-primary-800' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <div className='w-16 h-16 mx-auto bg-primary-200 dark:bg-primary-900/30 rounded-full flex items-center justify-center'>
+                    <svg className='w-8 h-8 text-primary-800 dark:text-primary-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' />
                     </svg>
                   </div>
-                  <p className='text-gray-600'>
-                    Please check your email and click the reset link to continue. If you don't see the email, check your spam folder.
+                  <p className='text-gray-600 dark:text-gray-300'>
+                    {t('auth.forgotPassword.checkSpam')}
                   </p>
                   <div className='space-y-2'>
                     <Button
@@ -76,14 +76,14 @@ export default function ForgotPasswordPage({ params }: PageProps) {
                       variant='outline'
                       className='w-full'
                     >
-                      Send Another Email
+                      {t('auth.forgotPassword.sendAnother')}
                     </Button>
                     <Link
                       href={`/${locale}/customer/login`}
                       className='block'
                     >
-                      <Button variant='link' className='w-full text-primary-800'>
-                        Back to Login
+                      <Button variant='link' className='w-full text-primary-800 dark:text-sage-400'>
+                        {t('auth.forgotPassword.backToLogin')}
                       </Button>
                     </Link>
                   </div>
@@ -99,14 +99,14 @@ export default function ForgotPasswordPage({ params }: PageProps) {
   return (
     <div className='min-h-screen'>
       <main className='container mx-auto px-4 py-8'>
-        <div className='w-1/3 mx-auto flex justify-center'>
-          <Card className='w-full border border-gray-300'>
+        <div className='w-full max-w-md mx-auto flex justify-center'>
+          <Card className='w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'>
             <CardHeader className='space-y-1'>
-              <CardTitle className='text-2xl font-bold text-center text-primary-800'>
-                Reset Your Password
+              <CardTitle className='text-2xl font-bold text-center text-primary-800 dark:text-white'>
+                {t('auth.forgotPassword.title')}
               </CardTitle>
-              <CardDescription className='text-center'>
-                Enter your email address and we'll send you a link to reset your password
+              <CardDescription className='text-center text-gray-600 dark:text-gray-300'>
+                {t('auth.forgotPassword.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -117,10 +117,10 @@ export default function ForgotPasswordPage({ params }: PageProps) {
                     name='email'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email address</FormLabel>
+                        <FormLabel>{t('auth.forgotPassword.emailLabel')}</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder='Enter your email address'
+                            placeholder={t('auth.forgotPassword.emailPlaceholder')}
                             type='email'
                             {...field}
                             disabled={isLoading}
@@ -136,7 +136,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
                     className='w-full text-white bg-primary-700 hover:bg-primary-800'
                     disabled={isLoading}
                   >
-                    {isLoading ? 'Sending...' : 'Send Reset Link'}
+                    {isLoading ? t('auth.forgotPassword.sending') : t('auth.forgotPassword.submitButton')}
                   </Button>
                 </form>
               </Form>
@@ -144,9 +144,9 @@ export default function ForgotPasswordPage({ params }: PageProps) {
               <div className='mt-6 text-center'>
                 <Link
                   href={`/${locale}/customer/login`}
-                  className='text-sm text-primary-800 hover:underline'
+                  className='text-sm text-primary-800 dark:text-sage-400 hover:underline'
                 >
-                  Remember your password? Sign in
+                  {t('auth.forgotPassword.rememberPassword')}
                 </Link>
               </div>
             </CardContent>

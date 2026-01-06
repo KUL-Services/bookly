@@ -18,6 +18,7 @@ import KulIcon from '@/bookly/components/atoms/kul-icon/kul-icon.component'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import { AuthService } from '@/lib/api'
+import { toast } from 'sonner'
 
 function ProfilePage() {
   const { t } = useTranslation()
@@ -80,6 +81,31 @@ function ProfilePage() {
   }, [hydrated, booklyUser, params?.lang, router])
 
   const goBack = () => router.push(`/${params?.lang}/landpage`)
+
+  const handleViewBusiness = (businessName: string) => {
+    // TODO: Navigate to actual business page when we have business slugs
+    toast.info(`Viewing ${businessName}`, {
+      description: 'Business page navigation coming soon'
+    })
+  }
+
+  const handleCancelBooking = (bookingId: string, serviceName: string) => {
+    // TODO: Implement cancel booking API call
+    toast.warning(`Cancel booking for ${serviceName}?`, {
+      description: 'Booking cancellation will be available soon',
+      action: {
+        label: 'OK',
+        onClick: () => {}
+      }
+    })
+  }
+
+  const handleRebook = (businessName: string, serviceName: string) => {
+    // TODO: Navigate to booking flow with pre-filled service
+    toast.info(`Rebook ${serviceName} at ${businessName}`, {
+      description: 'Quick rebooking will be available soon'
+    })
+  }
 
   // User data from API or fallback
   const user = userDetails
@@ -404,8 +430,14 @@ function ProfilePage() {
                           variant='outlined'
                           size='md'
                           buttonText={{ localeKey: 'profile.bookings.viewBusiness' }}
+                          onClick={() => handleViewBusiness(b.business)}
                         />
-                        <Button variant='text' size='md' buttonText={{ localeKey: 'profile.bookings.cancel' }} />
+                        <Button
+                          variant='text'
+                          size='md'
+                          buttonText={{ localeKey: 'profile.bookings.cancel' }}
+                          onClick={() => handleCancelBooking(b.id, b.service)}
+                        />
                       </>
                     ) : (
                       <>
@@ -413,8 +445,14 @@ function ProfilePage() {
                           variant='outlined'
                           size='md'
                           buttonText={{ localeKey: 'profile.bookings.viewBusiness' }}
+                          onClick={() => handleViewBusiness(b.business)}
                         />
-                        <Button variant='text' size='md' buttonText={{ localeKey: 'profile.bookings.rebook' }} />
+                        <Button
+                          variant='text'
+                          size='md'
+                          buttonText={{ localeKey: 'profile.bookings.rebook' }}
+                          onClick={() => handleRebook(b.business, b.service)}
+                        />
                       </>
                     )}
                   </div>

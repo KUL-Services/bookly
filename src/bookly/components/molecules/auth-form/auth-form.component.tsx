@@ -205,10 +205,10 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
     <Card className='w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'>
       <CardHeader className='space-y-1'>
         <CardTitle className='text-2xl font-bold text-center text-gray-900 dark:text-white'>
-          {isLogin ? t('auth.login.title') : 'Create your account'}
+          {isLogin ? t('auth.login.title') : t('auth.register.title')}
         </CardTitle>
         <CardDescription className='text-center text-gray-600 dark:text-gray-300'>
-          {isLogin ? t('auth.login.description') : 'Join Bookly and start booking services'}
+          {isLogin ? t('auth.login.description') : t('auth.register.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -249,9 +249,9 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                   name='firstName'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First name</FormLabel>
+                      <FormLabel>{t('auth.register.firstName')}</FormLabel>
                       <FormControl>
-                        <Input placeholder='First name' {...field} />
+                        <Input placeholder={t('auth.register.firstNamePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -262,9 +262,9 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                   name='lastName'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Last name</FormLabel>
+                      <FormLabel>{t('auth.register.lastName')}</FormLabel>
                       <FormControl>
-                        <Input placeholder='Last name' {...field} />
+                        <Input placeholder={t('auth.register.lastNamePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -279,9 +279,9 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                 name='mobile'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mobile number</FormLabel>
+                    <FormLabel>{t('auth.register.mobile')}</FormLabel>
                     <FormControl>
-                      <Input placeholder='e.g., +1234567890' {...field} />
+                      <Input placeholder={t('auth.register.mobilePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -295,11 +295,11 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
               render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel className={fieldState.error ? 'text-red-600 dark:text-red-400' : ''}>
-                    Email address
+                    {t('auth.login.emailLabel')}
                   </FormLabel>
                   <FormControl>
                     <Input
-                      placeholder='Enter your email'
+                      placeholder={t('auth.login.emailPlaceholder')}
                       type='email'
                       {...field}
                       className={fieldState.error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
@@ -316,13 +316,13 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
               render={({ field, fieldState }) => (
                 <FormItem>
                   <FormLabel className={fieldState.error ? 'text-red-600 dark:text-red-400' : ''}>
-                    Password
+                    {t('auth.login.passwordLabel')}
                   </FormLabel>
                   <FormControl>
                     <div className='relative'>
                       <Input
                         type={showPassword ? 'text' : 'password'}
-                        placeholder={isLogin ? 'Enter your password' : 'Create a password'}
+                        placeholder={isLogin ? t('auth.login.passwordPlaceholder') : t('auth.register.passwordPlaceholder')}
                         {...field}
                         className={fieldState.error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
                       />
@@ -351,12 +351,12 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                   name='confirmPassword'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm password</FormLabel>
+                      <FormLabel>{t('auth.register.confirmPasswordLabel')}</FormLabel>
                       <FormControl>
                         <div className='relative'>
                           <Input
                             type={showConfirmPassword ? 'text' : 'password'}
-                            placeholder='Confirm your password'
+                            placeholder={t('auth.register.confirmPasswordPlaceholder')}
                             {...field}
                           />
                           <button
@@ -387,13 +387,13 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                       </FormControl>
                       <div className='space-y-1 leading-none'>
                         <FormLabel>
-                          I agree to the{' '}
+                          {t('auth.register.agreeToTerms')}{' '}
                           <Link href='/terms' className='text-primary-700 dark:text-sage-400 hover:underline'>
-                            Terms of Service
+                            {t('auth.register.termsOfService')}
                           </Link>{' '}
-                          and{' '}
+                          {t('auth.register.and')}{' '}
                           <Link href='/privacy' className='text-primary-700 dark:text-sage-400 hover:underline'>
-                            Privacy Policy
+                            {t('auth.register.privacyPolicy')}
                           </Link>
                         </FormLabel>
                       </div>
@@ -413,12 +413,12 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
                       <FormControl>
                         <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
-                      <FormLabel className='text-sm'>Remember me</FormLabel>
+                      <FormLabel className='text-sm'>{t('auth.login.rememberMe')}</FormLabel>
                     </FormItem>
                   )}
                 />
                 <Link href='/customer/forgot-password' className='text-sm text-primary-700 dark:text-sage-400 hover:underline'>
-                  Forgot your password?
+                  {t('auth.login.forgotPassword')}
                 </Link>
               </div>
             )}
@@ -431,10 +431,10 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
               {loading ? (
                 <>
                   <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  {isLogin ? 'Signing in...' : 'Creating account...'}
+                  {isLogin ? t('auth.login.signingIn') : t('auth.register.creatingAccount')}
                 </>
               ) : (
-                isLogin ? 'Log in' : 'Create account'
+                isLogin ? t('auth.login.submitButton') : t('auth.register.submitButton')
               )}
             </Button>
           </form>
@@ -445,7 +445,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
             <div className='w-full border-t border-gray-300 dark:border-gray-600' />
           </div>
           <div className='relative flex justify-center text-sm'>
-            <span className='bg-white dark:bg-gray-800 px-2 text-gray-600 dark:text-gray-300'>Or continue with</span>
+            <span className='bg-white dark:bg-gray-800 px-2 text-gray-600 dark:text-gray-300'>{t('auth.orContinueWith')}</span>
           </div>
         </div>
 

@@ -171,6 +171,7 @@
     }
   },
   "auth": {
+    "orContinueWith": "Or continue with",
     "login": {
       "title": "Welcome back",
       "description": "Log in to your Bookly account",
@@ -181,21 +182,47 @@
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot your password?",
       "submitButton": "Log in",
+      "signingIn": "Signing in...",
       "noAccount": "Don't have an account?",
       "createAccount": "Create one"
     },
     "register": {
       "title": "Create an account",
-      "description": "Enter your information to create a Bookly account",
+      "description": "Join Bookly and start booking services",
+      "firstName": "First name",
+      "firstNamePlaceholder": "First name",
+      "lastName": "Last name",
+      "lastNamePlaceholder": "Last name",
+      "mobile": "Mobile number",
+      "mobilePlaceholder": "e.g., +1234567890",
       "emailLabel": "Email address",
       "emailPlaceholder": "Enter your email",
       "passwordLabel": "Password",
-      "passwordPlaceholder": "Enter your password",
+      "passwordPlaceholder": "Create a password",
       "confirmPasswordLabel": "Confirm Password",
       "confirmPasswordPlaceholder": "Confirm your password",
+      "agreeToTerms": "I agree to the",
+      "termsOfService": "Terms of Service",
+      "and": "and",
+      "privacyPolicy": "Privacy Policy",
       "submitButton": "Create account",
+      "creatingAccount": "Creating account...",
       "haveAccount": "Already have an account?",
       "login": "Log in"
+    },
+    "forgotPassword": {
+      "title": "Reset Your Password",
+      "description": "Enter your email address and we'll send you a link to reset your password",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "Enter your email address",
+      "submitButton": "Send Reset Link",
+      "sending": "Sending...",
+      "backToLogin": "Back to Login",
+      "sendAnother": "Send Another Email",
+      "rememberPassword": "Remember your password? Sign in",
+      "checkSpam": "Please check your email and click the reset link to continue. If you don't see the email, check your spam folder.",
+      "successTitle": "Check Your Email",
+      "successDescription": "We've sent a password reset link to your email address"
     },
     "validation": {
       "emailRequired": "Email is required",
@@ -203,7 +230,12 @@
       "passwordRequired": "Password is required",
       "passwordMinLength": "Password must be at least 8 characters",
       "passwordsDoNotMatch": "Passwords do not match",
-      "confirmPasswordRequired": "Please confirm your password"
+      "confirmPasswordRequired": "Please confirm your password",
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "mobileRequired": "Mobile number is required",
+      "mobileInvalid": "Please enter a valid mobile number with country code",
+      "termsRequired": "You must agree to the terms and conditions"
     }
   },
   "common": {
