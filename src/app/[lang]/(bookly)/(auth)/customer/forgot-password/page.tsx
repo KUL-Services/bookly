@@ -12,7 +12,7 @@ import Link from 'next/link'
 import { PageProps } from '@/bookly/types'
 import { AuthService } from '@/lib/api/services/auth.service'
 import { toast } from 'sonner'
-import { useTranslation } from '@/bookly/hooks'
+import { useTranslation } from 'react-i18next'
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email address')
@@ -22,7 +22,7 @@ type ForgotPasswordForm = z.infer<typeof forgotPasswordSchema>
 
 export default function ForgotPasswordPage({ params }: PageProps) {
   const { lang: locale } = params
-  const { t } = useTranslation(locale)
+  const { t } = useTranslation()
   const [isLoading, setIsLoading] = React.useState(false)
   const [isSubmitted, setIsSubmitted] = React.useState(false)
 
@@ -63,25 +63,26 @@ export default function ForgotPasswordPage({ params }: PageProps) {
               <CardContent className='space-y-4'>
                 <div className='text-center space-y-4'>
                   <div className='w-16 h-16 mx-auto bg-primary-200 dark:bg-primary-900/30 rounded-full flex items-center justify-center'>
-                    <svg className='w-8 h-8 text-primary-800 dark:text-primary-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' />
+                    <svg
+                      className='w-8 h-8 text-primary-800 dark:text-primary-400'
+                      fill='none'
+                      stroke='currentColor'
+                      viewBox='0 0 24 24'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'
+                      />
                     </svg>
                   </div>
-                  <p className='text-gray-600 dark:text-gray-300'>
-                    {t('auth.forgotPassword.checkSpam')}
-                  </p>
+                  <p className='text-gray-600 dark:text-gray-300'>{t('auth.forgotPassword.checkSpam')}</p>
                   <div className='space-y-2'>
-                    <Button
-                      onClick={() => setIsSubmitted(false)}
-                      variant='outline'
-                      className='w-full'
-                    >
+                    <Button onClick={() => setIsSubmitted(false)} variant='outline' className='w-full'>
                       {t('auth.forgotPassword.sendAnother')}
                     </Button>
-                    <Link
-                      href={`/${locale}/customer/login`}
-                      className='block'
-                    >
+                    <Link href={`/${locale}/customer/login`} className='block'>
                       <Button variant='link' className='w-full text-primary-800 dark:text-sage-400'>
                         {t('auth.forgotPassword.backToLogin')}
                       </Button>
