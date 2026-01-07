@@ -5,6 +5,17 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { AuthService } from '@/lib/api'
 import type { LoginRequest, RegisterUserRequest, VerifyAccountRequest } from '@/lib/api'
 
+// Mock authentication flag - set to true to use mock auth for customers
+// This allows testing customer flows without backend connection
+const USE_MOCK_CUSTOMER_AUTH = process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true' || true // Default to true until backend is ready
+
+// Mock customer data for testing
+const MOCK_CUSTOMERS: Record<string, { password: string; name: string; avatar?: string }> = {
+  'test@example.com': { password: 'password123', name: 'Test User' },
+  'customer@bookly.com': { password: 'customer123', name: 'Demo Customer' },
+  'john@example.com': { password: 'john123', name: 'John Doe' }
+}
+
 export type UserType = 'customer' | 'business'
 
 export interface AuthUser {
@@ -138,9 +149,55 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      // Customer auth with real API calls
+      // Customer auth - uses mock or real API based on configuration
       async loginCustomer(payload) {
         set({ loading: true, error: null })
+
+        // Helper function to set mock user session
+        const setMockSession = (email: string, name: string) => {
+          const mockToken = 'mock_token_' + Date.now()
+          const now = Date.now()
+          set({
+            userType: 'customer',
+            booklyUser: {
+              id: 'mock_user_' + email.replace('@', '_at_'),
+              email: email,
+              name: name
+            },
+            token: mockToken,
+            loading: false,
+            error: null,
+            lastActivity: now,
+            sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours
+          })
+          console.log('🎭 Mock customer login successful for:', email)
+        }
+
+        // Use mock authentication if enabled
+        if (USE_MOCK_CUSTOMER_AUTH) {
+          // Check if email exists in mock customers
+          const mockCustomer = MOCK_CUSTOMERS[payload.email.toLowerCase()]
+
+          if (mockCustomer) {
+            // Validate password for known mock customers
+            if (mockCustomer.password === payload.password) {
+              setMockSession(payload.email, mockCustomer.name)
+              return
+            } else {
+              set({ loading: false, error: 'Invalid password' })
+              throw new Error('Invalid password')
+            }
+          } else {
+            // For any other email, accept any password (for testing convenience)
+            // In production, this would fail without a valid account
+            const userName = payload.email.split('@')[0].replace(/[._]/g, ' ')
+            const capitalizedName = userName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+            setMockSession(payload.email, capitalizedName)
+            return
+          }
+        }
+
+        // Real API authentication
         try {
           const response = await AuthService.loginUser(payload)
           if (response.error) {
@@ -172,6 +229,30 @@ export const useAuthStore = create<AuthState>()(
 
       async registerCustomer(payload) {
         set({ loading: true, error: null })
+
+        // Use mock registration if enabled
+        if (USE_MOCK_CUSTOMER_AUTH) {
+          // Simulate registration delay
+          await new Promise(resolve => setTimeout(resolve, 500))
+
+          // Check if email already exists in mock customers (simulate duplicate check)
+          if (MOCK_CUSTOMERS[payload.email.toLowerCase()]) {
+            set({ loading: false, error: 'Email already registered' })
+            throw new Error('Email already registered')
+          }
+
+          // Mock successful registration
+          console.log('🎭 Mock customer registration successful for:', payload.email)
+          set({
+            loading: false,
+            error: null
+          })
+
+          // Note: In mock mode, user can login immediately without email verification
+          return
+        }
+
+        // Real API registration
         try {
           const response = await AuthService.registerUser(payload)
           if (response.error) {
@@ -193,6 +274,18 @@ export const useAuthStore = create<AuthState>()(
 
       async verifyCustomer(payload) {
         set({ loading: true, error: null })
+
+        // Use mock verification if enabled
+        if (USE_MOCK_CUSTOMER_AUTH) {
+          // Simulate verification delay
+          await new Promise(resolve => setTimeout(resolve, 300))
+
+          console.log('🎭 Mock customer verification successful for:', payload.email)
+          set({ loading: false, error: null })
+          return
+        }
+
+        // Real API verification
         try {
           const response = await AuthService.verifyUser(payload)
           if (response.error) {

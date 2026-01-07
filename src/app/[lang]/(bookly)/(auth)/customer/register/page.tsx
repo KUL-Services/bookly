@@ -46,31 +46,45 @@ export default function RegisterPage({ params }: PageProps) {
 
           {/* Form container with mobile-friendly styling */}
           <div className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-primary-100/50 dark:border-gray-700/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
-            <AuthForm
-              type='register'
-              loading={loading}
-              error={error}
-              onClearError={clearError}
-              successMessage={
-                registrationSuccess
-                  ? 'Registration successful! Please check your email to verify your account before logging in.'
-                  : null
-              }
-              onSubmit={async values => {
-                try {
-                  const { firstName, lastName, mobile, email, password } = values as any
-                  await registerCustomer({ firstName, lastName, mobile, email, password })
-                  setRegistrationSuccess(true)
-                  // Don't auto-redirect for registration - user needs to verify email first
-                } catch (err) {
-                  // Error handling is now managed by the AuthForm component
-                  // It will either show field-specific errors or let the general error through
-                  console.error('Registration failed:', err)
-                  setRegistrationSuccess(false)
-                  throw err // Re-throw to let AuthForm handle it
-                }
-              }}
-            />
+            {registrationSuccess ? (
+              <div className='text-center space-y-4'>
+                <div className='w-16 h-16 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center'>
+                  <svg className='w-8 h-8 text-green-600 dark:text-green-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
+                  </svg>
+                </div>
+                <h3 className='text-xl font-semibold text-gray-900 dark:text-white'>
+                  Registration Successful!
+                </h3>
+                <p className='text-gray-600 dark:text-gray-300 text-sm'>
+                  Your account has been created. You can now login with your credentials.
+                </p>
+                <button
+                  onClick={() => router.push(`/${locale}/customer/login`)}
+                  className='w-full py-3 px-4 bg-primary-700 hover:bg-primary-800 text-white font-medium rounded-lg transition-colors duration-200'
+                >
+                  Go to Login
+                </button>
+              </div>
+            ) : (
+              <AuthForm
+                type='register'
+                loading={loading}
+                error={error}
+                onClearError={clearError}
+                onSubmit={async values => {
+                  try {
+                    const { firstName, lastName, mobile, email, password } = values as any
+                    await registerCustomer({ firstName, lastName, mobile, email, password })
+                    setRegistrationSuccess(true)
+                  } catch (err) {
+                    console.error('Registration failed:', err)
+                    setRegistrationSuccess(false)
+                    throw err
+                  }
+                }}
+              />
+            )}
           </div>
 
           {/* Mobile-friendly footer */}
