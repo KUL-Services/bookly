@@ -20,11 +20,20 @@ import {
   Alert
 } from '@mui/material'
 import { useCalendarStore } from './state'
-import type { CalendarEvent, AppointmentStatus, PaymentStatus } from './types'
+import type { CalendarEvent, AppointmentStatus, PaymentStatus, PaymentMethod } from './types'
 import { mockStaff, mockRooms } from '@/bookly/data/mock-data'
 import { useMediaQuery, useTheme } from '@mui/material'
-import { buildEventColors } from './utils'
+import { buildEventColors, isBookingInPast, getRecommendedStatusFromPayment } from './utils'
 import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
+
+// Payment method labels
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  bank_transfer: 'Bank Transfer',
+  cash_on_arrival: 'Cash on Arrival',
+  card_on_arrival: 'Card on Arrival',
+  online_payment: 'Online Payment',
+  instapay: 'Instapay'
+}
 
 export default function AppointmentDrawer() {
   const theme = useTheme()
@@ -195,15 +204,27 @@ export default function AppointmentDrawer() {
     const newPaymentStatus = paymentStatus === 'paid' ? 'unpaid' : 'paid'
     setPaymentStatus(newPaymentStatus)
 
+    // Auto-update booking status based on payment (unless already attended/no-show/cancelled)
+    let newStatus = status
+    const isPast = isBookingInPast(event.end)
+    if (!isPast && !['attended', 'no_show', 'cancelled'].includes(status)) {
+      newStatus = getRecommendedStatusFromPayment(newPaymentStatus, extendedProps.paymentMethod)
+      setStatus(newStatus)
+    }
+
     const updatedEvent: CalendarEvent = {
       ...event,
       extendedProps: {
         ...extendedProps,
-        paymentStatus: newPaymentStatus
+        paymentStatus: newPaymentStatus,
+        status: newStatus
       }
     }
     updateEvent(updatedEvent)
   }
+
+  // Check if booking is in the past (for showing attended/no-show options)
+  const isPastBooking = event ? isBookingInPast(event.end) : false
 
   const handleStatusChange = (newStatus: AppointmentStatus) => {
     setStatus(newStatus)
@@ -305,12 +326,39 @@ export default function AppointmentDrawer() {
 
         {/* Status Menu */}
         <Menu anchorEl={statusMenuAnchor} open={Boolean(statusMenuAnchor)} onClose={() => setStatusMenuAnchor(null)}>
-          {(['confirmed', 'pending', 'attended', 'cancelled', 'need_confirm', 'no_show'] as AppointmentStatus[]).map(
-            s => (
-              <MuiMenuItem key={s} onClick={() => handleStatusChange(s)}>
-                {getStatusLabel(s)}
+          {isPastBooking && (
+            <>
+              <Typography variant='caption' sx={{ px: 2, py: 0.5, color: 'text.secondary', display: 'block' }}>
+                Past Booking Status
+              </Typography>
+              <MuiMenuItem onClick={() => handleStatusChange('attended')} sx={{ bgcolor: status === 'attended' ? 'action.selected' : undefined }}>
+                <i className='ri-check-double-line' style={{ marginRight: 8, color: 'green' }} />
+                Attended
               </MuiMenuItem>
-            )
+              <MuiMenuItem onClick={() => handleStatusChange('no_show')} sx={{ bgcolor: status === 'no_show' ? 'action.selected' : undefined }}>
+                <i className='ri-user-unfollow-line' style={{ marginRight: 8, color: 'red' }} />
+                No Show
+              </MuiMenuItem>
+              <Divider sx={{ my: 1 }} />
+              <Typography variant='caption' sx={{ px: 2, py: 0.5, color: 'text.secondary', display: 'block' }}>
+                Other Status
+              </Typography>
+            </>
+          )}
+          {(['confirmed', 'pending', 'need_confirm', 'cancelled'] as AppointmentStatus[]).map(s => (
+            <MuiMenuItem key={s} onClick={() => handleStatusChange(s)} sx={{ bgcolor: status === s ? 'action.selected' : undefined }}>
+              {getStatusLabel(s)}
+            </MuiMenuItem>
+          ))}
+          {!isPastBooking && (
+            <>
+              <Divider sx={{ my: 1 }} />
+              {(['attended', 'no_show'] as AppointmentStatus[]).map(s => (
+                <MuiMenuItem key={s} onClick={() => handleStatusChange(s)} sx={{ bgcolor: status === s ? 'action.selected' : undefined }}>
+                  {getStatusLabel(s)}
+                </MuiMenuItem>
+              ))}
+            </>
           )}
         </Menu>
       </Box>
@@ -383,73 +431,95 @@ export default function AppointmentDrawer() {
 
             <Divider />
 
-            {/* Customer */}
-            <Box>
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
-                CUSTOMER
-              </Typography>
-              {isEditing ? (
-                <TextField
-                  value={customerName}
-                  onChange={e => setCustomerName(e.target.value)}
-                  size='small'
-                  fullWidth
-                  placeholder='Customer name'
-                />
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                    {customerName.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Typography variant='body1' fontWeight={500}>
-                    {customerName}
-                  </Typography>
-                </Box>
-              )}
+            {/* Customer & Staff - Compact Layout */}
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              {/* Customer */}
+              <Box sx={{ flex: 1, minWidth: 180 }}>
+                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                  CUSTOMER
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    value={customerName}
+                    onChange={e => setCustomerName(e.target.value)}
+                    size='small'
+                    fullWidth
+                    placeholder='Customer name'
+                  />
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: '0.8rem' }}>
+                      {customerName.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box>
+                      <Typography variant='body2' fontWeight={500}>
+                        {customerName}
+                      </Typography>
+                      {(extendedProps.customerEmail || extendedProps.customerPhone) && (
+                        <Typography variant='caption' color='text.secondary' sx={{ display: 'block', lineHeight: 1.2 }}>
+                          {extendedProps.customerPhone && <span><i className='ri-phone-line' style={{ fontSize: '0.65rem', marginRight: 2 }} />{extendedProps.customerPhone}</span>}
+                          {extendedProps.customerEmail && extendedProps.customerPhone && ' • '}
+                          {extendedProps.customerEmail && <span>{extendedProps.customerEmail}</span>}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+
+              {/* Staff */}
+              <Box sx={{ flex: 1, minWidth: 180 }}>
+                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                  STAFF
+                </Typography>
+                {isEditing ? (
+                  <TextField
+                    select
+                    value={staffId}
+                    onChange={e => {
+                      setStaffId(e.target.value)
+                      const selectedStaff = mockStaff.find(s => s.id === e.target.value)
+                      if (selectedStaff) setStaffName(selectedStaff.name)
+                    }}
+                    size='small'
+                    fullWidth
+                  >
+                    {mockStaff.map(s => (
+                      <MuiMenuItem key={s.id} value={s.id}>
+                        {s.name}
+                      </MuiMenuItem>
+                    ))}
+                  </TextField>
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar src={staff?.photo} sx={{ width: 28, height: 28, fontSize: '0.8rem' }}>
+                      {staffName.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Typography variant='body2' fontWeight={500}>
+                      {staffName}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
             </Box>
 
             <Divider />
 
-            {/* Staff */}
-            <Box>
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
-                STAFF MEMBER
-              </Typography>
-              {isEditing ? (
-                <TextField
-                  select
-                  value={staffId}
-                  onChange={e => {
-                    setStaffId(e.target.value)
-                    const selectedStaff = mockStaff.find(s => s.id === e.target.value)
-                    if (selectedStaff) setStaffName(selectedStaff.name)
-                  }}
-                  size='small'
-                  fullWidth
-                >
-                  {mockStaff.map(s => (
-                    <MuiMenuItem key={s.id} value={s.id}>
-                      {s.name}
-                    </MuiMenuItem>
-                  ))}
-                </TextField>
-              ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Avatar src={staff?.photo} sx={{ width: 32, height: 32 }}>
-                    {staffName.charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Typography variant='body1' fontWeight={500}>
-                    {staffName}
-                  </Typography>
-                </Box>
-              )}
-            </Box>
+            {/* Price & Party Size Row */}
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {/* Price */}
+              <Box sx={{ flex: 1 }}>
+                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                  PRICE
+                </Typography>
+                <Typography variant='body1' fontWeight={600} color='primary.main'>
+                  ${extendedProps.price}
+                </Typography>
+              </Box>
 
-            {/* Party Size for Static Mode */}
-            {isStaticSlotBooking && (
-              <>
-                <Divider />
-                <Box>
+              {/* Party Size for Static Mode */}
+              {isStaticSlotBooking && (
+                <Box sx={{ flex: 1 }}>
                   <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
                     PARTY SIZE
                   </Typography>
@@ -468,19 +538,20 @@ export default function AppointmentDrawer() {
                     </Typography>
                   )}
                 </Box>
-              </>
-            )}
+              )}
 
-            <Divider />
-
-            {/* Price */}
-            <Box>
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
-                PRICE
-              </Typography>
-              <Typography variant='h6' fontWeight={600} color='primary.main'>
-                ${extendedProps.price}
-              </Typography>
+              {/* Room for Static Mode - in main tab */}
+              {room && !isStaticSlotBooking && (
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                    ROOM
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <i className='ri-home-4-line' style={{ fontSize: '1rem', color: theme.palette.text.secondary }} />
+                    <Typography variant='body2' fontWeight={500}>{room.name}</Typography>
+                  </Box>
+                </Box>
+              )}
             </Box>
           </Box>
         )}
@@ -520,18 +591,127 @@ export default function AppointmentDrawer() {
               />
             )}
 
-            {/* Booking ID */}
+            {/* References */}
+            <Box sx={{ bgcolor: 'action.hover', borderRadius: 1, p: 1.5 }}>
+              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
+                REFERENCES
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant='caption' color='text.secondary'>Booking Ref:</Typography>
+                  <Typography variant='body2' fontFamily='monospace' fontWeight={600}>
+                    {extendedProps.bookingReference || extendedProps.bookingId}
+                  </Typography>
+                </Box>
+                {extendedProps.paymentReference && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant='caption' color='text.secondary'>Payment Ref:</Typography>
+                    <Typography variant='body2' fontFamily='monospace' fontWeight={600}>
+                      {extendedProps.paymentReference}
+                    </Typography>
+                  </Box>
+                )}
+                {extendedProps.paymentMethod && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant='caption' color='text.secondary'>Payment Method:</Typography>
+                    <Chip
+                      label={PAYMENT_METHOD_LABELS[extendedProps.paymentMethod as PaymentMethod] || extendedProps.paymentMethod}
+                      size='small'
+                      sx={{ height: 22, fontSize: '0.7rem' }}
+                    />
+                  </Box>
+                )}
+              </Box>
+            </Box>
+
+            <Divider />
+
+            {/* Room Info for Static */}
+            {room && (
+              <>
+                <Box>
+                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                    ROOM
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <i className='ri-home-4-line' style={{ color: theme.palette.text.secondary }} />
+                    <Typography variant='body1' fontWeight={500}>
+                      {room.name}
+                    </Typography>
+                    {(room as any).capacity && (
+                      <Chip label={`Capacity: ${(room as any).capacity}`} size='small' sx={{ height: 20, fontSize: '0.65rem' }} />
+                    )}
+                  </Box>
+                </Box>
+                <Divider />
+              </>
+            )}
+
+            {/* Booked By */}
             <Box>
               <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
-                BOOKING ID
+                BOOKED BY
               </Typography>
-              <Typography variant='body2' fontFamily='monospace'>
-                {extendedProps.bookingId}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <i className={extendedProps.bookedBy === 'client' ? 'ri-user-line' : 'ri-store-line'} />
+                <Typography variant='body2'>
+                  {extendedProps.bookedBy === 'client' ? 'Client (Online)' : 'Business (In-House)'}
+                </Typography>
+                {requestedByClient && (
+                  <Chip
+                    icon={<i className='ri-heart-fill' style={{ fontSize: '0.7rem', color: 'var(--mui-palette-customColors-coral)' }} />}
+                    label='Staff Requested'
+                    size='small'
+                    sx={{ height: 20, fontSize: '0.65rem' }}
+                  />
+                )}
+              </Box>
             </Box>
           </Box>
         )}
       </Box>
+
+      {/* Quick Actions for Past Bookings */}
+      {isPastBooking && !isEditing && !['attended', 'no_show', 'cancelled'].includes(status) && (
+        <Box
+          sx={{
+            p: 2,
+            bgcolor: 'warning.lighter',
+            borderTop: 1,
+            borderColor: 'warning.main',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1
+          }}
+        >
+          <Typography variant='caption' color='warning.dark' fontWeight={600}>
+            <i className='ri-time-line' style={{ marginRight: 4 }} />
+            This booking is in the past. Did the customer show up?
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              variant='contained'
+              color='success'
+              size='small'
+              fullWidth
+              startIcon={<i className='ri-check-double-line' />}
+              onClick={() => handleStatusChange('attended')}
+            >
+              Attended
+            </Button>
+            <Button
+              variant='outlined'
+              color='error'
+              size='small'
+              fullWidth
+              startIcon={<i className='ri-user-unfollow-line' />}
+              onClick={() => handleStatusChange('no_show')}
+            >
+              No Show
+            </Button>
+          </Box>
+        </Box>
+      )}
 
       {/* Footer Actions */}
       <Box

@@ -38,6 +38,22 @@ const getInitials = (name: string): string => {
   return parts[0].substring(0, 2).toUpperCase()
 }
 
+// Helper function to format duration (120 min → 2h, 90 min → 1h 30min)
+const formatDuration = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${minutes}min`
+  }
+  const hours = Math.floor(minutes / 60)
+  const remainingMins = minutes % 60
+  if (remainingMins === 0) {
+    return `${hours}h`
+  }
+  return `${hours}h ${remainingMins}min`
+}
+
+// Constant for automatic staff assignment
+const AUTOMATIC_STAFF_ID = 'automatic'
+
 interface NewAppointmentDrawerProps {
   open: boolean
   initialDate?: Date | null
@@ -136,6 +152,14 @@ export default function NewAppointmentDrawer({
       return
     }
 
+    // Skip availability check for automatic assignment
+    if (staffId === AUTOMATIC_STAFF_ID) {
+      setAvailabilityWarning(null)
+      setCapacityWarning(null)
+      setStaffCapacityInfo(null)
+      return
+    }
+
     // Check staff availability
     const availability = isStaffAvailable(staffId, date, startTime, endTime)
     if (!availability.available) {
@@ -217,7 +241,7 @@ export default function NewAppointmentDrawer({
     } else {
       // Validation for dynamic mode
       if (!staffId) {
-        setValidationError('Please select a staff member')
+        setValidationError('Please select a staff member or choose Automatic')
         return
       }
 
@@ -640,7 +664,7 @@ export default function NewAppointmentDrawer({
                     <MenuItem value=''>Select service</MenuItem>
                     {mockServices.map(svc => (
                       <MenuItem key={svc.id} value={svc.id}>
-                        {svc.name} - ${svc.price} ({svc.duration} min)
+                        {svc.name} - ${svc.price} ({formatDuration(svc.duration)})
                       </MenuItem>
                     ))}
                   </TextField>
@@ -675,10 +699,25 @@ export default function NewAppointmentDrawer({
                     value={staffId}
                     label='STAFF'
                     onChange={e => {
-                      setStaffId(e.target.value)
-                      setStaffManuallyChosen(true)
+                      const value = e.target.value
+                      setStaffId(value)
+                      setStaffManuallyChosen(value !== AUTOMATIC_STAFF_ID)
                     }}
                   >
+                    {/* Automatic option */}
+                    <MenuItem value={AUTOMATIC_STAFF_ID}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                        <Avatar sx={{ width: 24, height: 24, bgcolor: 'primary.main' }}>
+                          <i className='ri-robot-line' style={{ fontSize: '0.875rem' }} />
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant='body2' fontWeight={600}>Automatic</Typography>
+                          <Typography variant='caption' color='text.secondary'>System will assign best available staff</Typography>
+                        </Box>
+                        <Chip label='Recommended' size='small' color='primary' sx={{ height: 20, fontSize: '0.65rem' }} />
+                      </Box>
+                    </MenuItem>
+                    <Divider sx={{ my: 1 }} />
                     {availableStaff.map(staff => {
                       // Calculate capacity for dynamic staff in dynamic mode
                       const showCapacity =
@@ -851,8 +890,10 @@ export default function NewAppointmentDrawer({
 
               {/* Staff Selection Options */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <i className='ri-user-settings-line' />
-                <Typography variant='body2'>Staff Member chosen manually</Typography>
+                <i className={staffId === AUTOMATIC_STAFF_ID ? 'ri-robot-line' : 'ri-user-settings-line'} />
+                <Typography variant='body2'>
+                  {staffId === AUTOMATIC_STAFF_ID ? 'Staff will be assigned automatically' : 'Staff Member chosen manually'}
+                </Typography>
               </Box>
 
               {/* Requested by Client */}

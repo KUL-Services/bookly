@@ -345,37 +345,63 @@ export function RoomScheduleEditor({
                         </Box>
 
                         <FormControl fullWidth>
-                          <InputLabel>Services for this shift</InputLabel>
-                          <Select
-                            multiple
-                            value={shift.serviceIds}
-                            onChange={e => {
-                              const value =
-                                typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
-                              handleUpdateShift(shift.id, 'serviceIds', value)
-                            }}
-                            input={<OutlinedInput label='Services for this shift' />}
-                            renderValue={selected => (
-                              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                                {selected.map(value => {
-                                  const service = availableServices.find(s => s.id === value)
-                                  return <Chip key={value} label={service?.name || value} size='small' />
-                                })}
-                              </Box>
-                            )}
-                          >
-                            {availableServices.map(service => (
-                              <MenuItem key={service.id} value={service.id}>
-                                <Checkbox checked={shift.serviceIds.includes(service.id)} />
-                                <ListItemText primary={service.name} secondary={`${service.duration} min`} />
+                          <InputLabel>{isStaticCapacity ? 'Service for this session' : 'Services for this shift'}</InputLabel>
+                          {isStaticCapacity ? (
+                            // Static rooms: Single service selection only
+                            <Select
+                              value={shift.serviceIds[0] || ''}
+                              onChange={e => {
+                                const value = e.target.value as string
+                                handleUpdateShift(shift.id, 'serviceIds', value ? [value] : [])
+                              }}
+                              input={<OutlinedInput label='Service for this session' />}
+                            >
+                              <MenuItem value=''>
+                                <em>Select a service</em>
                               </MenuItem>
-                            ))}
-                          </Select>
-                          {roomServiceIds.length > 0 && (
+                              {availableServices.map(service => (
+                                <MenuItem key={service.id} value={service.id}>
+                                  {service.name} ({service.duration} min)
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          ) : (
+                            // Dynamic rooms: Multi-select allowed
+                            <Select
+                              multiple
+                              value={shift.serviceIds}
+                              onChange={e => {
+                                const value =
+                                  typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
+                                handleUpdateShift(shift.id, 'serviceIds', value)
+                              }}
+                              input={<OutlinedInput label='Services for this shift' />}
+                              renderValue={selected => (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                  {selected.map(value => {
+                                    const service = availableServices.find(s => s.id === value)
+                                    return <Chip key={value} label={service?.name || value} size='small' />
+                                  })}
+                                </Box>
+                              )}
+                            >
+                              {availableServices.map(service => (
+                                <MenuItem key={service.id} value={service.id}>
+                                  <Checkbox checked={shift.serviceIds.includes(service.id)} />
+                                  <ListItemText primary={service.name} secondary={`${service.duration} min`} />
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          )}
+                          {isStaticCapacity ? (
+                            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
+                              Each fixed session can have one service. Create additional sessions for different services.
+                            </Typography>
+                          ) : roomServiceIds.length > 0 ? (
                             <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
                               Only services assigned to this room are shown
                             </Typography>
-                          )}
+                          ) : null}
                         </FormControl>
 
                         {/* Per-slot capacity for flexible rooms */}
@@ -410,7 +436,7 @@ export function RoomScheduleEditor({
                             <Box sx={{ mt: 2 }}>
                               <TextField
                                 type='number'
-                                label='Capacity for this shift'
+                                label='Session Capacity'
                                 value={shift.capacity ?? defaultCapacity}
                                 onChange={e => {
                                   const val = e.target.value ? Number(e.target.value) : defaultCapacity
@@ -418,7 +444,8 @@ export function RoomScheduleEditor({
                                 }}
                                 size='small'
                                 fullWidth
-                                helperText='Fixed capacity for this time slot'
+                                required
+                                helperText='Maximum number of participants for this session'
                                 InputProps={{
                                   startAdornment: (
                                     <i className='ri-group-line' style={{ marginRight: 8, opacity: 0.5 }} />

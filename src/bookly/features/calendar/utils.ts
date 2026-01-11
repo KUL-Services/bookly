@@ -54,6 +54,66 @@ function mapBookingStatus(status: string): AppointmentStatus {
   return (statusMap[status] as AppointmentStatus) || 'pending'
 }
 
+/**
+ * Determine the recommended booking status based on payment status and method
+ * Business rules:
+ * - Instapay payment → need_confirm (until payment is verified)
+ * - Payment paid → confirmed
+ * - Payment unpaid (cash on arrival) → pending (unconfirmed)
+ * - Online payment paid → confirmed
+ */
+export function getRecommendedStatusFromPayment(
+  paymentStatus: PaymentStatus,
+  paymentMethod?: string
+): AppointmentStatus {
+  // Instapay requires manual confirmation
+  if (paymentMethod === 'instapay' && paymentStatus !== 'paid') {
+    return 'need_confirm'
+  }
+
+  // If paid, automatically confirm
+  if (paymentStatus === 'paid') {
+    return 'confirmed'
+  }
+
+  // Cash/card on arrival - pending until payment received
+  if (paymentMethod === 'cash_on_arrival' || paymentMethod === 'card_on_arrival') {
+    return 'pending'
+  }
+
+  // Need confirmation for pending online payments
+  if (paymentStatus === 'need_confirm') {
+    return 'need_confirm'
+  }
+
+  // Default to pending for unpaid bookings
+  return 'pending'
+}
+
+/**
+ * Check if a booking is in the past (for determining if attended/no-show options should show)
+ */
+export function isBookingInPast(endTime: Date): boolean {
+  return new Date(endTime) < new Date()
+}
+
+/**
+ * Get past booking status options (attended or no-show)
+ */
+export function getPastBookingStatusOptions(): { value: AppointmentStatus; label: string }[] {
+  return [
+    { value: 'attended', label: 'Attended' },
+    { value: 'no_show', label: 'No Show' }
+  ]
+}
+
+/**
+ * Format attendance count for static bookings (e.g., "9/11 attended")
+ */
+export function formatAttendanceCount(attended: number, total: number): string {
+  return `${attended}/${total} attended`
+}
+
 // Demo customer names for when real customer name is not provided
 const demoCustomerNames = [
   'Emma Wilson', 'Olivia Brown', 'Sophia Davis', 'Isabella Martinez', 'Ava Anderson',
@@ -100,7 +160,8 @@ function generateExtendedProps(booking: Booking, staffId: string) {
     bookingId: booking.id,
     slotId: booking.slotId,
     roomId: booking.roomId,
-    partySize: booking.partySize
+    partySize: booking.partySize,
+    bookedBy: (random > 0.6 ? 'client' : 'business') as import('./types').BookedBy
   }
 }
 

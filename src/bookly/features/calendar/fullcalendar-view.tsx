@@ -1013,6 +1013,59 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                     </Box>
                   </Box>
                 )}
+                {/* Show staff and room for static mode */}
+                {isStaticSlot && (props.staffName || room) && (
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      mt: 0.25,
+                      minWidth: 0,
+                      overflow: 'hidden',
+                      flexWrap: 'wrap'
+                    }}
+                  >
+                    {props.staffName && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                        <i className='ri-user-star-line' style={{ fontSize: '0.65rem', flexShrink: 0 }} />
+                        <Box
+                          sx={{
+                            fontSize: '0.6rem',
+                            lineHeight: 1,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            color: 'inherit',
+                            opacity: 0.8,
+                            maxWidth: 70
+                          }}
+                        >
+                          {props.staffName}
+                        </Box>
+                      </Box>
+                    )}
+                    {room && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                        <i className='ri-home-4-line' style={{ fontSize: '0.65rem', flexShrink: 0 }} />
+                        <Box
+                          sx={{
+                            fontSize: '0.6rem',
+                            lineHeight: 1,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            color: 'inherit',
+                            opacity: 0.8,
+                            maxWidth: 70
+                          }}
+                        >
+                          {room.name}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+                )}
               </Box>
             )
           }}

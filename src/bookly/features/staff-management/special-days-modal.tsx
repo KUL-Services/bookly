@@ -125,17 +125,17 @@ export function SpecialDaysModal({ open, onClose }: SpecialDaysModalProps) {
             <i className='ri-calendar-event-line' style={{ fontSize: 24, opacity: 0.6 }} />
           </Box>
           <Typography variant='subtitle1' fontWeight={600} gutterBottom>
-            No Special Days Defined
+            No Holiday Hours Defined
           </Typography>
           <Typography variant='body2' color='text.secondary' align='center' sx={{ maxWidth: 300, mb: 3 }}>
-            Create rules for holidays, closed periods, or special business hours (e.g., Ramadan).
+            Create rules for holidays, closed periods, or modified business hours that apply to your entire business.
           </Typography>
-          <Button 
-            variant='contained' 
-            onClick={handleAddNew} 
+          <Button
+            variant='contained'
+            onClick={handleAddNew}
             startIcon={<i className='ri-add-line' />}
           >
-            Add Special Day
+            Add Holiday Hours
           </Button>
         </Box>
       ) : (
@@ -350,12 +350,12 @@ export function SpecialDaysModal({ open, onClose }: SpecialDaysModalProps) {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box>
                 <Typography variant='h6' fontWeight={600}>
-                    {view === 'list' ? 'Special Days & Holidays' : editingRule?.id ? 'Edit Special Rule' : 'Add Special Rule'}
+                    {view === 'list' ? 'Holiday Hours' : editingRule?.id ? 'Edit Holiday Rule' : 'Add Holiday Rule'}
                 </Typography>
                 <Typography variant='caption' color='text.secondary'>
                     {view === 'list'
-                        ? 'Manage holidays and special business hours'
-                        : 'Define custom hours overrides for date ranges'}
+                        ? 'Manage business-wide holiday closures and modified hours'
+                        : 'Define custom hours that apply to your entire business'}
                 </Typography>
             </Box>
             <IconButton size='small' onClick={handleClose}>

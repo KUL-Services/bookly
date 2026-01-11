@@ -25,11 +25,12 @@ import {
   Tooltip,
   Badge,
   Popover,
-  Divider
+  Divider,
+  Alert
 } from '@mui/material'
 import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { mockStaff, mockBranches } from '@/bookly/data/mock-data'
-import { mockBusinessHours } from '@/bookly/data/staff-management-mock-data'
+import { mockBusinessHours, getStaffShiftBookingCount } from '@/bookly/data/staff-management-mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { BusinessHoursModal } from './business-hours-modal'
 import { BusinessHoursDayEditorModal } from './business-hours-day-editor-modal'
@@ -269,6 +270,7 @@ export function ShiftsTab() {
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
   const [bulkMode, setBulkMode] = useState(false)
+  const [bulkEditError, setBulkEditError] = useState<string | null>(null)
   
   // Optimistic state for staff type toggles
   const [optimisticStaffTypes, setOptimisticStaffTypes] = useState<Record<string, 'static' | 'dynamic' | null>>({})
@@ -604,6 +606,7 @@ export function ShiftsTab() {
 
   const toggleStaffSelection = useCallback((staffId: string) => {
     setSelectedStaffIds(prev => (prev.includes(staffId) ? prev.filter(id => id !== staffId) : [...prev, staffId]))
+    setBulkEditError(null) // Clear error when selection changes
   }, [])
 
   const weekStart = startOfWeek(selectedDate)
@@ -661,7 +664,12 @@ export function ShiftsTab() {
       </FormControl>
 
       <FormControlLabel
-        control={<Checkbox checked={bulkMode} onChange={e => setBulkMode(e.target.checked)} color='primary' />}
+        control={<Checkbox checked={bulkMode} onChange={e => {
+          setBulkMode(e.target.checked)
+          if (!e.target.checked) {
+            setBulkEditError(null)
+          }
+        }} color='primary' />}
         label='Bulk Edit'
       />
 
@@ -673,6 +681,18 @@ export function ShiftsTab() {
             onClick={() => {
               // Open working hours modal in bulk mode
               if (selectedStaffIds.length > 0) {
+                // Check if selected staff have mixed types (dynamic and static)
+                const staffTypes = selectedStaffIds.map(id => getStaffTypeForDate(id, selectedDate))
+                const hasDynamic = staffTypes.includes('dynamic')
+                const hasStatic = staffTypes.includes('static')
+
+                if (hasDynamic && hasStatic) {
+                  // Show error - cannot bulk edit mixed types
+                  setBulkEditError('Cannot bulk edit staff with mixed schedule types. Please select only Flex or only Fixed staff members.')
+                  return
+                }
+
+                setBulkEditError(null)
                 const firstStaff = mockStaff.find(s => s.id === selectedStaffIds[0])
                 setSelectedStaffForEdit({
                   id: selectedStaffIds[0],
@@ -686,6 +706,15 @@ export function ShiftsTab() {
             Bulk Operations
           </Button>
         </Badge>
+      )}
+      {bulkEditError && (
+        <Alert
+          severity='error'
+          onClose={() => setBulkEditError(null)}
+          sx={{ py: 0, '& .MuiAlert-message': { fontSize: '0.8rem' } }}
+        >
+          {bulkEditError}
+        </Alert>
       )}
 
       <Box sx={{ flexGrow: 1 }} />
@@ -763,7 +792,7 @@ export function ShiftsTab() {
         size='small'
         onClick={openSpecialDays}
       >
-        SPECIAL DAYS
+        HOLIDAY HOURS
       </Button>
       <Button variant='outlined' startIcon={<i className='ri-file-copy-line' />} size='small'>
         COPY
@@ -849,18 +878,17 @@ export function ShiftsTab() {
                         // Use optimistic type if available, otherwise fall back to store type
                         const optimisticType = optimisticStaffTypes[staff.id]
                         const displayType = optimisticType ?? effectiveStaffType
-                        const isStatic = displayType === 'static'
-                        
+                        const isFixed = displayType === 'static'
+
                         return (
                          <>
                             <FormControlLabel
                             control={
                                 <Switch
-                                checked={isStatic}
+                                checked={isFixed}
                                 onChange={e => {
                                     handleStaffTypeToggle(staff.id, staff.name, e.target.checked)
                                 }}
-                                size='small'
                                 size='small'
                                 color='primary'
                                 />
@@ -868,11 +896,11 @@ export function ShiftsTab() {
                             label={
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                 <i
-                                    className={isStatic ? 'ri-group-line' : 'ri-user-line'}
+                                    className={isFixed ? 'ri-calendar-schedule-line' : 'ri-time-line'}
                                     style={{ fontSize: 12 }}
                                 />
                                 <Typography variant='caption' fontSize='0.65rem'>
-                                    {isStatic ? 'Static' : 'Dynamic'}
+                                    {isFixed ? 'Fixed' : 'Flex'}
                                 </Typography>
                                 </Box>
                             }
@@ -892,15 +920,15 @@ export function ShiftsTab() {
                               gutterBottom
                               sx={{ fontSize: '0.75rem', color: 'var(--mui-palette-common-white)' }}
                             >
-                              Static Staff / Rooms
+                              Fixed Schedule
                             </Typography>
                             <Typography
                               variant='caption'
                               display='block'
                               sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
                             >
-                              Resources with fixed, consistent schedules. They work the same hours every day (e.g.,
-                              treatment rooms, equipment, or staff with fixed schedules).
+                              Works in pre-defined time slots with set capacity. Ideal for group classes, workshops,
+                              or shared resource bookings.
                             </Typography>
                           </Box>
                         ) : (
@@ -912,15 +940,15 @@ export function ShiftsTab() {
                               gutterBottom
                               sx={{ fontSize: '0.75rem', color: 'var(--mui-palette-common-white)' }}
                             >
-                              Dynamic Staff
+                              Flex Schedule
                             </Typography>
                             <Typography
                               variant='caption'
                               display='block'
                               sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
                             >
-                              Staff with flexible schedules. They work one-on-one with clients and can have varying
-                              hours throughout the week.
+                              Available for individual appointments during working hours. Clients book directly
+                              with this staff member.
                             </Typography>
                           </Box>
                         )
@@ -1026,6 +1054,13 @@ export function ShiftsTab() {
               // Use date-based staff type to show transitions
               const staffTypeForDate = getStaffTypeForDate(staff.id, selectedDate)
 
+              // Get booking data for this shift
+              const dateStr = format(selectedDate, 'yyyy-MM-dd')
+              const bookingData = getStaffShiftBookingCount(staff.id, dateStr, shift.start, shift.end)
+              const hasBookings = bookingData !== null
+              const isFull = hasBookings && bookingData.bookedSlots >= bookingData.totalCapacity
+              const isAlmostFull = hasBookings && bookingData.percentage >= 75 && !isFull
+
               return (
                 <Box key={shift.id}>
                   {/* Main Shift Box */}
@@ -1070,10 +1105,27 @@ export function ShiftsTab() {
                         {shiftEnd.toLowerCase()}
                         </Typography>
                     </Box>
-                    
+
                     <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
                       {hours}h
                     </Typography>
+
+                    {/* Booking count indicator */}
+                    {hasBookings && bookingData && (
+                      <Chip
+                        icon={<i className='ri-calendar-check-line' style={{ fontSize: '0.7rem' }} />}
+                        label={`${bookingData.bookedSlots}/${bookingData.totalCapacity}`}
+                        size='small'
+                        color={isFull ? 'error' : isAlmostFull ? 'warning' : 'success'}
+                        sx={{
+                          height: 18,
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          '& .MuiChip-label': { px: 0.75 },
+                          '& .MuiChip-icon': { ml: 0.5 }
+                        }}
+                      />
+                    )}
                     {shifts.length > 1 && (
                       <Chip
                         label={`${idx + 1}/${shifts.length}`}
@@ -1452,14 +1504,13 @@ export function ShiftsTab() {
 
                       return (
                         <>
-                          {/* Dynamic Staff Section */}
+                          {/* Flex Schedule Section */}
                           {dynamicStaff.length > 0 && (
                             <>
                               <Box
                                 sx={{
                                   px: 2,
-                                  py: 1,
-                                  bgcolor: 'rgba(25, 118, 210, 0.08)',
+                                  py: 0.75,
                                   borderBottom: 1,
                                   borderTop: showBranchHeader ? 0 : 1,
                                   borderColor: 'divider',
@@ -1468,26 +1519,25 @@ export function ShiftsTab() {
                                   gap: 1
                                 }}
                               >
-                                <i className='ri-user-line' style={{ fontSize: 14, color: '#0a2c24' }} />
+                                <i className='ri-time-line' style={{ fontSize: 14, color: 'var(--mui-palette-primary-main)' }} />
                                 <Typography variant='caption' fontWeight={600} color='primary'>
-                                  Dynamic Staff
+                                  Flex
                                 </Typography>
-                                <Typography variant='caption' color='text.secondary'>
-                                  ({dynamicStaff.length})
+                                <Typography variant='caption' color='text.secondary' sx={{ opacity: 0.7 }}>
+                                  {dynamicStaff.length}
                                 </Typography>
                               </Box>
                               {dynamicStaff.map(renderEnhancedStaffRow)}
                             </>
                           )}
 
-                          {/* Static Staff/Rooms Section */}
+                          {/* Fixed Schedule Section */}
                           {staticStaff.length > 0 && (
                             <>
                               <Box
                                 sx={{
                                   px: 2,
-                                  py: 1,
-                                  bgcolor: 'rgba(158, 158, 158, 0.08)',
+                                  py: 0.75,
                                   borderBottom: 1,
                                   borderTop: 1,
                                   borderColor: 'divider',
@@ -1496,12 +1546,12 @@ export function ShiftsTab() {
                                   gap: 1
                                 }}
                               >
-                                <i className='ri-group-line' style={{ fontSize: 14, color: 'var(--mui-palette-text-secondary)' }} />
+                                <i className='ri-calendar-schedule-line' style={{ fontSize: 14, color: 'var(--mui-palette-text-secondary)' }} />
                                 <Typography variant='caption' fontWeight={600} color='text.secondary'>
-                                  Static Staff / Rooms
+                                  Fixed
                                 </Typography>
-                                <Typography variant='caption' color='text.secondary'>
-                                  ({staticStaff.length})
+                                <Typography variant='caption' color='text.secondary' sx={{ opacity: 0.7 }}>
+                                  {staticStaff.length}
                                 </Typography>
                               </Box>
                               {staticStaff.map(renderEnhancedStaffRow)}
@@ -1744,7 +1794,7 @@ export function ShiftsTab() {
             />
           )}
 
-          {/* Special Days Modal */}
+          {/* Holiday Hours Modal */}
           <SpecialDaysModal
             open={isSpecialDaysModalOpen}
             onClose={closeSpecialDays}
@@ -1946,14 +1996,13 @@ export function ShiftsTab() {
 
                       return (
                         <>
-                          {/* Dynamic Staff Section */}
+                          {/* Flex Schedule Section */}
                           {dynamicStaff.length > 0 && (
                             <>
                               <Box
                                 sx={{
                                   height: 27,
                                   px: 2,
-                                  bgcolor: 'rgba(25, 118, 210, 0.08)',
                                   borderBottom: 1,
                                   borderTop: showBranchHeader ? 0 : 1,
                                   borderColor: 'divider',
@@ -1962,12 +2011,12 @@ export function ShiftsTab() {
                                   gap: 0.5
                                 }}
                               >
-                                <i className='ri-user-line' style={{ fontSize: 12, color: '#0a2c24' }} />
+                                <i className='ri-time-line' style={{ fontSize: 12, color: 'var(--mui-palette-primary-main)' }} />
                                 <Typography variant='caption' fontWeight={600} fontSize='0.65rem' color='primary'>
-                                  Dynamic
+                                  Flex
                                 </Typography>
-                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
-                                  ({dynamicStaff.length})
+                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem' sx={{ opacity: 0.7 }}>
+                                  {dynamicStaff.length}
                                 </Typography>
                               </Box>
                               {dynamicStaff.map(staff => (
@@ -2015,14 +2064,13 @@ export function ShiftsTab() {
                             </>
                           )}
 
-                          {/* Static Staff/Rooms Section */}
+                          {/* Fixed Schedule Section */}
                           {staticStaff.length > 0 && (
                             <>
                               <Box
                                 sx={{
                                   height: 27,
                                   px: 2,
-                                  bgcolor: 'rgba(158, 158, 158, 0.08)',
                                   borderBottom: 1,
                                   borderTop: 1,
                                   borderColor: 'divider',
@@ -2031,17 +2079,17 @@ export function ShiftsTab() {
                                   gap: 0.5
                                 }}
                               >
-                                <i className='ri-group-line' style={{ fontSize: 12, color: 'var(--mui-palette-text-secondary)' }} />
+                                <i className='ri-calendar-schedule-line' style={{ fontSize: 12, color: 'var(--mui-palette-text-secondary)' }} />
                                 <Typography
                                   variant='caption'
                                   fontWeight={600}
                                   fontSize='0.65rem'
                                   color='text.secondary'
                                 >
-                                  Static / Rooms
+                                  Fixed
                                 </Typography>
-                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem'>
-                                  ({staticStaff.length})
+                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem' sx={{ opacity: 0.7 }}>
+                                  {staticStaff.length}
                                 </Typography>
                               </Box>
                               {staticStaff.map(staff => (
@@ -2316,17 +2364,16 @@ export function ShiftsTab() {
                           )
                         })()}
 
-                      {/* Dynamic Staff Section */}
+                      {/* Flex Schedule Section */}
                       {dynamicStaff.length > 0 && (
                         <>
-                          {/* Dynamic staff type header cell */}
+                          {/* Flex staff type header cell */}
                           <Box
                             sx={{
                               height: 27,
                               borderBottom: 1,
                               borderTop: showBranchHeader ? 0 : 1,
-                              borderColor: 'divider',
-                              bgcolor: 'rgba(25, 118, 210, 0.08)'
+                              borderColor: 'divider'
                             }}
                           />
 
@@ -2674,21 +2721,20 @@ export function ShiftsTab() {
                         </>
                       )}
 
-                      {/* Static Staff/Rooms Section */}
+                      {/* Fixed Schedule Section */}
                       {staticStaff.length > 0 && (
                         <>
-                          {/* Static staff type header cell */}
+                          {/* Fixed staff type header cell */}
                           <Box
                             sx={{
                               height: 27,
                               borderBottom: 1,
                               borderTop: 1,
-                              borderColor: 'divider',
-                              bgcolor: 'rgba(158, 158, 158, 0.08)'
+                              borderColor: 'divider'
                             }}
                           />
 
-                          {/* Static staff cells */}
+                          {/* Fixed schedule staff cells */}
                           {staticStaff.map(staff => {
                             const timeOff = timeOffRequests.find(
                               req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
@@ -2754,22 +2800,22 @@ export function ShiftsTab() {
                                           width: '100%',
                                           height: shifts.length > 1 ? `calc(${100 / shifts.length}% - 4px)` : '100%',
                                           mb: shifts.length > 1 && idx < shifts.length - 1 ? 0.5 : 0,
-                                          bgcolor: 'rgba(10, 44, 36, 0.3)',
+                                          bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(120, 120, 120, 0.3)' : 'rgba(158, 158, 158, 0.25)',
                                           borderRadius: 1,
                                           display: 'flex',
                                           flexDirection: 'column',
                                           alignItems: 'center',
                                           justifyContent: 'center',
                                           border: 1,
-                                          borderColor: 'success.light',
+                                          borderColor: 'grey.400',
                                           px: 0.5,
                                           py: shifts.length > 1 ? 0.25 : 0.5,
                                           cursor: 'pointer',
                                           transition: 'all 0.2s',
                                           overflow: 'hidden',
                                           '&:hover': {
-                                            bgcolor: 'rgba(139, 195, 74, 0.4)',
-                                            borderColor: 'success.main'
+                                            bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(120, 120, 120, 0.4)' : 'rgba(158, 158, 158, 0.35)',
+                                            borderColor: 'grey.500'
                                           }
                                         }}
                                       >
@@ -2783,7 +2829,7 @@ export function ShiftsTab() {
                                               position: 'absolute',
                                               top: 1,
                                               left: 1,
-                                              bgcolor: 'primary.main',
+                                              bgcolor: 'grey.600',
                                               color: 'white',
                                               '& .MuiChip-label': {
                                                 px: 0.5,
@@ -2825,20 +2871,36 @@ export function ShiftsTab() {
                                           >
                                             {shiftEnd.toLowerCase()}
                                           </Typography>
-                                          <Typography
-                                            variant='caption'
-                                            color='text.secondary'
-                                            sx={{
-                                              fontSize: shifts.length > 1 ? '0.52rem' : '0.6rem',
-                                              lineHeight: 1.1,
-                                              display: 'block',
-                                              whiteSpace: 'nowrap',
-                                              overflow: 'hidden',
-                                              textOverflow: 'ellipsis'
-                                            }}
-                                          >
-                                            {hours}h{minutes > 0 ? `${minutes}m` : ''}
-                                          </Typography>
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
+                                            <Typography
+                                              variant='caption'
+                                              color='text.secondary'
+                                              sx={{
+                                                fontSize: shifts.length > 1 ? '0.52rem' : '0.6rem',
+                                                lineHeight: 1.1,
+                                                whiteSpace: 'nowrap'
+                                              }}
+                                            >
+                                              {hours}h{minutes > 0 ? `${minutes}m` : ''}
+                                            </Typography>
+                                            {shift.capacity && (
+                                              <Typography
+                                                variant='caption'
+                                                color='text.secondary'
+                                                sx={{
+                                                  fontSize: shifts.length > 1 ? '0.52rem' : '0.6rem',
+                                                  lineHeight: 1.1,
+                                                  whiteSpace: 'nowrap',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: 0.25
+                                                }}
+                                              >
+                                                • {shift.capacity}
+                                                <i className='ri-group-line' style={{ fontSize: '0.5rem' }} />
+                                              </Typography>
+                                            )}
+                                          </Box>
                                           {shift.breaks && shift.breaks.length > 0 && (
                                             <Box
                                               sx={{
@@ -3249,7 +3311,7 @@ export function ShiftsTab() {
         </Box>
       </Box>
 
-      {/* Special Days Modal */}
+      {/* Holiday Hours Modal */}
       <SpecialDaysModal
         open={isSpecialDaysModalOpen}
         onClose={closeSpecialDays}

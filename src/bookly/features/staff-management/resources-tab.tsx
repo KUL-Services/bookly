@@ -51,22 +51,26 @@ export function ResourcesTab() {
 
   const { resources, deleteResource, getResourceServices } = useStaffManagementStore()
 
-  // Filter resources for selected branch
+  // Filter resources for selected branch (excluding resources with capacity 0)
   const filteredResources = useMemo(() => {
     if (!selectedBranchId) return []
 
     return resources.filter(resource => {
       const matchesSearch = resource.name.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesBranch = resource.branchId === selectedBranchId
-      return matchesSearch && matchesBranch
+      // Hide resources with capacity 0 or less (capacity must be 1 or more to be valid)
+      const hasValidCapacity = (resource.capacity ?? 1) >= 1
+      return matchesSearch && matchesBranch && hasValidCapacity
     })
   }, [resources, searchQuery, selectedBranchId])
 
-  // Get resource counts per branch
+  // Get resource counts per branch (excluding resources with capacity 0)
   const branchResourceCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     mockBranches.forEach(branch => {
-      counts[branch.id] = resources.filter(r => r.branchId === branch.id).length
+      counts[branch.id] = resources.filter(r =>
+        r.branchId === branch.id && (r.capacity ?? 1) >= 1
+      ).length
     })
     return counts
   }, [resources])

@@ -235,6 +235,20 @@ export default function MultiRoomDayView({
                     const { available, remainingCapacity, total } = isSlotAvailable(slot.id, currentDate)
                     const isFull = !available
 
+                    // Check if slot is in the past
+                    const slotEndTime = new Date(currentDate)
+                    const [endH, endM] = slot.endTime.split(':').map(Number)
+                    slotEndTime.setHours(endH, endM, 0, 0)
+                    const isSlotInPast = slotEndTime < new Date()
+
+                    // Calculate attendance for past slots
+                    const slotBookings = todayEvents.filter(e =>
+                      e.extendedProps.slotId === slot.id && e.extendedProps.status !== 'cancelled'
+                    )
+                    const attendedCount = slotBookings.filter(e => e.extendedProps.status === 'attended').length
+                    const noShowCount = slotBookings.filter(e => e.extendedProps.status === 'no_show').length
+                    const bookedCount = slotBookings.length
+
                     return (
                       <Box
                         key={slot.id}
@@ -302,20 +316,37 @@ export default function MultiRoomDayView({
                         >
                           {slot.startTime} - {slot.endTime}
                         </Typography>
-                        <Chip
-                          icon={<i className="ri-user-line" style={{ fontSize: '0.75rem' }} />}
-                          label={`${remainingCapacity}/${total} available`}
-                          size="small"
-                          color={isFull ? 'error' : remainingCapacity < total * 0.3 ? 'warning' : 'success'}
-                          sx={{
-                            height: { xs: 16, md: 18 },
-                            fontSize: { xs: '0.6rem', md: '0.65rem' },
-                            fontWeight: 600,
-                            '& .MuiChip-icon': {
-                              marginLeft: '4px'
-                            }
-                          }}
-                        />
+                        {isSlotInPast && bookedCount > 0 ? (
+                          <Chip
+                            icon={<i className="ri-check-double-line" style={{ fontSize: '0.75rem' }} />}
+                            label={`${attendedCount}/${bookedCount} attended${noShowCount > 0 ? ` • ${noShowCount} NS` : ''}`}
+                            size="small"
+                            color={attendedCount === bookedCount ? 'success' : noShowCount > 0 ? 'warning' : 'default'}
+                            sx={{
+                              height: { xs: 16, md: 18 },
+                              fontSize: { xs: '0.6rem', md: '0.65rem' },
+                              fontWeight: 600,
+                              '& .MuiChip-icon': {
+                                marginLeft: '4px'
+                              }
+                            }}
+                          />
+                        ) : (
+                          <Chip
+                            icon={<i className="ri-user-line" style={{ fontSize: '0.75rem' }} />}
+                            label={`${remainingCapacity}/${total} available`}
+                            size="small"
+                            color={isFull ? 'error' : remainingCapacity < total * 0.3 ? 'warning' : 'success'}
+                            sx={{
+                              height: { xs: 16, md: 18 },
+                              fontSize: { xs: '0.6rem', md: '0.65rem' },
+                              fontWeight: 600,
+                              '& .MuiChip-icon': {
+                                marginLeft: '4px'
+                              }
+                            }}
+                          />
+                        )}
                       </Box>
                     )
                   })}

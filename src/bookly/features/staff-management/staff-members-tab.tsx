@@ -203,86 +203,106 @@ export function StaffMembersTab() {
 
   return (
     <Box sx={{ display: 'flex', height: '100%', gap: 2 }}>
-      {/* Left Sidebar - Staff List */}
+      {/* Left Sidebar - Team Directory */}
       <Paper
         elevation={0}
         sx={{
-          width: 320,
+          width: 340,
           flexShrink: 0,
-          borderRadius: 2,
+          borderRadius: 3,
           border: '1px solid',
-          borderColor: 'divider',
+          borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          overflow: 'hidden'
         }}
       >
+        {/* Header */}
+        <Box sx={{
+          p: 2,
+          bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.15)' : 'rgba(10, 44, 36, 0.04)',
+          borderBottom: '1px solid',
+          borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+        }}>
+          <Typography variant='subtitle1' fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <i className='ri-team-line' style={{ fontSize: 18 }} />
+            Team Directory
+          </Typography>
+          <Typography variant='caption' color='text.secondary'>
+            {filteredByService.length} team member{filteredByService.length !== 1 ? 's' : ''}
+          </Typography>
+        </Box>
+
         {/* Search and Filters */}
         <Box
           sx={{
             p: 2,
             borderBottom: '1px solid',
-            borderColor: 'divider',
+            borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
             display: 'flex',
             flexDirection: 'column',
-            gap: 2
+            gap: 1.5
           }}
         >
           <TextField
             fullWidth
             size='small'
-            placeholder='Search staff...'
+            placeholder='Search by name or role...'
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position='start'>
-                  <i className='ri-search-line' />
+                  <i className='ri-search-line' style={{ fontSize: 16, opacity: 0.6 }} />
                 </InputAdornment>
               )
             }}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2
+              }
+            }}
           />
 
-          <FormControl fullWidth size='small'>
-            <InputLabel>Branch</InputLabel>
-            <Select value={branchFilter} onChange={e => setBranchFilter(e.target.value)} label='Branch'>
-              <MenuItem value='all'>
-                <em>All Branches</em>
-              </MenuItem>
-              {mockBranches.map(branch => (
-                <MenuItem key={branch.id} value={branch.id}>
-                  {branch.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <FormControl fullWidth size='small'>
+              <InputLabel>Location</InputLabel>
+              <Select value={branchFilter} onChange={e => setBranchFilter(e.target.value)} label='Location'>
+                <MenuItem value='all'>All Locations</MenuItem>
+                {mockBranches.map(branch => (
+                  <MenuItem key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-          <FormControl fullWidth size='small'>
-            <InputLabel>Service</InputLabel>
-            <Select value={serviceFilter} onChange={e => setServiceFilter(e.target.value)} label='Service'>
-              <MenuItem value='all'>
-                <em>All Services</em>
-              </MenuItem>
-              {mockServices.map(service => (
-                <MenuItem key={service.id} value={service.id}>
-                  {service.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+            <FormControl fullWidth size='small'>
+              <InputLabel>Service</InputLabel>
+              <Select value={serviceFilter} onChange={e => setServiceFilter(e.target.value)} label='Service'>
+                <MenuItem value='all'>All Services</MenuItem>
+                {mockServices.map(service => (
+                  <MenuItem key={service.id} value={service.id}>
+                    {service.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
         </Box>
 
-        {/* Staff List - Grouped by Branch or Service */}
+        {/* Staff List - Grouped by Location */}
         <List sx={{ flexGrow: 1, overflow: 'auto', py: 0 }}>
           {sortedGroups.map(group => (
             <Box key={group.id}>
-              {/* Group Header */}
+              {/* Location Header */}
               <Box
                 sx={{
                   px: 2,
-                  py: 1,
-                  bgcolor: 'action.hover',
+                  py: 1.25,
+                  bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
                   borderBottom: '1px solid',
-                  borderColor: 'divider',
+                  borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
                   position: 'sticky',
                   top: 0,
                   zIndex: 1,
@@ -293,32 +313,37 @@ export function StaffMembersTab() {
               >
                 <Typography
                   variant='caption'
-                  fontWeight={600}
-                  color='text.secondary'
-                  sx={{ textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 0.5 }}
+                  fontWeight={700}
+                  color='text.primary'
+                  sx={{ display: 'flex', alignItems: 'center', gap: 0.75, letterSpacing: 0.5 }}
                 >
-                  <i className='ri-building-line' style={{ fontSize: 14 }} />
+                  <i className='ri-map-pin-2-line' style={{ fontSize: 14, opacity: 0.7 }} />
                   {group.name}
                 </Typography>
-                <Typography variant='caption' color='text.disabled'>
-                  {group.staff.length} {group.staff.length === 1 ? 'member' : 'members'}
+                <Typography variant='caption' color='text.secondary' fontWeight={500}>
+                  {group.staff.length}
                 </Typography>
               </Box>
 
-              {/* Staff Members in Group */}
+              {/* Team Members in Location */}
               {group.staff.map(staff => (
                 <ListItemButton
                   key={staff.id}
                   selected={selectedStaffId === staff.id}
                   onClick={() => selectStaff(staff.id)}
                   sx={{
+                    py: 1.5,
                     borderLeft: 3,
                     borderColor: selectedStaffId === staff.id ? 'primary.main' : 'transparent',
+                    transition: 'all 0.15s ease',
                     '&.Mui-selected': {
-                      bgcolor: 'action.selected',
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.06)',
                       '&:hover': {
-                        bgcolor: 'action.selected'
+                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.25)' : 'rgba(10, 44, 36, 0.08)'
                       }
+                    },
+                    '&:hover': {
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'
                     }
                   }}
                 >
@@ -328,8 +353,10 @@ export function StaffMembersTab() {
                       sx={{
                         bgcolor: staff.color || 'primary.main',
                         color: '#fff',
-                        width: 40,
-                        height: 40
+                        width: 42,
+                        height: 42,
+                        fontSize: '0.95rem',
+                        fontWeight: 600
                       }}
                     >
                       {getInitials(staff.name)}
@@ -338,9 +365,9 @@ export function StaffMembersTab() {
                   <ListItemText
                     primary={staff.name}
                     secondary={staff.title}
-                    primaryTypographyProps={{ fontWeight: 500 }}
+                    primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }}
+                    secondaryTypographyProps={{ fontSize: '0.75rem', color: 'text.secondary' }}
                   />
-                  {/* Delete button removed as requested */}
                 </ListItemButton>
               ))}
             </Box>
@@ -356,9 +383,9 @@ export function StaffMembersTab() {
           elevation={0}
           sx={{
             flexGrow: 1,
-            borderRadius: 2,
+            borderRadius: 3,
             border: '1px solid',
-            borderColor: 'divider',
+            borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column'
@@ -369,48 +396,78 @@ export function StaffMembersTab() {
             sx={{
               p: 3,
               borderBottom: '1px solid',
-              borderColor: 'divider',
-              bgcolor: 'background.default'
+              borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+              bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.02)'
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5, mb: 2 }}>
               <Avatar
                 alt={selectedStaff.name}
                 sx={{
                   bgcolor: selectedStaff.color || 'primary.main',
                   color: '#fff',
-                  width: 64,
-                  height: 64,
-                  fontSize: '1.5rem',
-                  fontWeight: 600
+                  width: 72,
+                  height: 72,
+                  fontSize: '1.75rem',
+                  fontWeight: 600,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}
               >
                 {getInitials(selectedStaff.name)}
               </Avatar>
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography variant='h5' fontWeight={600}>
+              <Box sx={{ flexGrow: 1, pt: 0.5 }}>
+                <Typography variant='h5' fontWeight={700} sx={{ mb: 0.5 }}>
                   {selectedStaff.name}
                 </Typography>
-                <Typography variant='body2' color='text.secondary'>
+                <Typography variant='body2' color='text.secondary' sx={{ mb: 1.5 }}>
                   {selectedStaff.title}
                 </Typography>
-                
-                <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+
+                {/* Contact Info with improved styling */}
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                   {selectedStaff.email && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.8rem' }}>
-                      <i className='ri-mail-line' /> {selectedStaff.email}
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1.5,
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                      fontSize: '0.8rem'
+                    }}>
+                      <i className='ri-mail-line' style={{ fontSize: 14, opacity: 0.7 }} />
+                      <Typography variant='caption' color='text.secondary'>{selectedStaff.email}</Typography>
                     </Box>
                   )}
                   {selectedStaff.phone && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'text.secondary', fontSize: '0.8rem' }}>
-                      <i className='ri-phone-line' /> {selectedStaff.phone}
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 0.75,
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1.5,
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                      fontSize: '0.8rem'
+                    }}>
+                      <i className='ri-phone-line' style={{ fontSize: 14, opacity: 0.7 }} />
+                      <Typography variant='caption' color='text.secondary'>{selectedStaff.phone}</Typography>
                     </Box>
                   )}
                 </Box>
               </Box>
-              
+
               {/* Action Menu Button */}
-              <IconButton onClick={handleOpenActionMenu}>
+              <IconButton
+                onClick={handleOpenActionMenu}
+                sx={{
+                  bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                  '&:hover': {
+                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+                  }
+                }}
+              >
                 <i className='ri-more-2-fill' />
               </IconButton>
               

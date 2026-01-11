@@ -324,13 +324,13 @@ function businessDetailsPage() {
         <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/15 to-cyan-200/8 dark:from-primary-800/10 dark:to-cyan-600/5 rounded-full blur-3xl' />
         <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/15 to-teal-200/8 dark:from-emerald-600/10 dark:to-sage-600/5 rounded-full blur-3xl' />
       </div>
-      <div className='container mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6 space-y-4 sm:space-y-6 lg:space-y-8 flex-none relative z-10'>
-        {/* Header Section */}
-        <Card className='bg-white/95 dark:bg-gray-800/95 shadow-xl border border-primary-100/50 dark:border-gray-700/50 animate-in fade-in slide-in-from-bottom-6 duration-700'>
-          <CardContent className='p-3 sm:p-4 lg:p-6 select-text'>
-            <div className='flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6'>
+      <div className='w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 space-y-3 sm:space-y-4 flex-none relative z-10'>
+        {/* Header Section - Full width seamless design */}
+        <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700'>
+          <div className='p-4 sm:p-6 select-text'>
+            <div className='flex flex-col md:flex-row gap-4 sm:gap-6'>
               {/* Business Image */}
-              <div className='w-full md:w-40 lg:w-52 h-40 sm:h-48 lg:h-52 bg-gradient-to-br from-primary-200 to-sage-200 dark:from-primary-800/50 dark:to-sage-800/50 rounded-lg lg:rounded-xl overflow-hidden shadow-lg select-none'>
+              <div className='w-full md:w-48 lg:w-56 h-40 sm:h-48 lg:h-56 bg-gradient-to-br from-primary-200 to-sage-200 dark:from-primary-800/50 dark:to-sage-800/50 rounded-xl overflow-hidden select-none'>
                 <img
                   src={
                     (business as any).logoUrl || (business as any).coverImageUrl || '/images/business-placeholder.jpg'
@@ -341,29 +341,29 @@ function businessDetailsPage() {
               </div>
 
               {/* Business Info */}
-              <div className='flex-1 space-y-2 sm:space-y-3 lg:space-y-4 select-text'>
-                <div className='flex flex-col gap-3 sm:gap-4'>
+              <div className='flex-1 space-y-2 sm:space-y-3 select-text'>
+                <div className='flex flex-col gap-3'>
                   <div>
                     <H1
                       stringProps={{ plainText: `${business.name}` }}
                       className='text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white select-text'
                     />
-                    <div className='flex items-center gap-2 mt-1 sm:mt-2'>
+                    <div className='flex items-center gap-2 mt-1'>
                       <div className='flex items-center select-none'>
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 sm:w-4 sm:h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                            className={`w-4 h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
                           />
                         ))}
                       </div>
-                      <span className='text-xs sm:text-sm text-gray-600 dark:text-gray-300 select-text'>
+                      <span className='text-sm text-gray-600 dark:text-gray-300 select-text'>
                         {business.rating || 0} ({business.reviews?.length || 0})
                       </span>
                     </div>
-                    <Badge className='mt-2 sm:mt-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 sm:px-3 py-1 text-xs rounded-full shadow-md select-none'>
-                      <div className='flex items-center gap-1 sm:gap-2'>
-                        <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full' />
+                    <Badge className='mt-2 bg-green-500 text-white px-3 py-1 text-sm rounded-full select-none'>
+                      <div className='flex items-center gap-1'>
+                        <div className='w-1.5 h-1.5 bg-white rounded-full' />
                         Open Now
                       </div>
                     </Badge>
@@ -374,42 +374,42 @@ function businessDetailsPage() {
                       buttonText={{ plainText: 'Save' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:heart' }}
-                      className='flex-1 sm:flex-initial bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover:border-none hover:bg-transparent text-xs sm:text-sm py-2 px-3 touch-manipulation'
+                      className='bg-transparent text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm py-2 px-4 touch-manipulation'
                     />
                     <Button
                       buttonText={{ plainText: 'Share' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:share' }}
-                      className='flex-1 sm:flex-initial bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-lg border-gray-400 dark:border-gray-600 hover:shadow-none hover:border-none hover:bg-transparent text-xs sm:text-sm py-2 px-3 touch-manipulation'
+                      className='bg-transparent text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm py-2 px-4 touch-manipulation'
                     />
                   </div>
                 </div>
 
                 {/* Contact Info */}
-                <div className='space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-gray-600 dark:text-gray-300 select-text'>
+                <div className='space-y-1.5 text-sm text-gray-600 dark:text-gray-300 select-text'>
                   {(business as any).address && (
                     <div className='flex items-start gap-2'>
-                      <MapPin className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5 select-none' />
+                      <MapPin className='w-4 h-4 flex-shrink-0 mt-0.5 select-none' />
                       <span className='break-words select-text'>{(business as any).address}</span>
                     </div>
                   )}
                   {business.email && (
                     <div className='flex items-center gap-2'>
-                      <Globe className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 select-none' />
+                      <Globe className='w-4 h-4 flex-shrink-0 select-none' />
                       <span className='break-all select-text'>{business.email}</span>
                     </div>
                   )}
                   <div className='flex items-start gap-2'>
-                    <Clock className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5 select-none' />
+                    <Clock className='w-4 h-4 flex-shrink-0 mt-0.5 select-none' />
                     <span className='select-text'>
                       {(business as any).openingHours
-                        ? `Monday-Wednesday: ${(business as any).openingHours['Mon'] || '9AM-6PM'}, Thursday-Friday: ${(business as any).openingHours['Thu'] || '9AM-6PM'}, Saturday: ${(business as any).openingHours['Sat'] || '10AM-4PM'}, Sunday: ${(business as any).openingHours['Sun'] || 'Closed'}`
+                        ? `Monday-Saturday: 9AM-6PM, Sunday: Closed`
                         : 'Monday-Saturday: 9AM-6PM, Sunday: Closed'}
                     </span>
                   </div>
                   {business.socialLinks && business.socialLinks.length > 0 && (
                     <div className='flex items-center gap-2'>
-                      <Globe className='w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 select-none' />
+                      <Globe className='w-4 h-4 flex-shrink-0 select-none' />
                       <div className='flex gap-2 flex-wrap'>
                         {business.socialLinks.map((link, index) => (
                           <a
@@ -417,7 +417,7 @@ function businessDetailsPage() {
                             href={link.url}
                             target='_blank'
                             rel='noopener noreferrer'
-                            className='text-primary-800 dark:text-sage-400 hover:text-primary-900 dark:hover:text-sage-300 capitalize text-xs sm:text-sm select-text'
+                            className='text-primary-800 dark:text-sage-400 hover:underline capitalize text-sm select-text'
                           >
                             {link.platform}
                           </a>
@@ -426,31 +426,25 @@ function businessDetailsPage() {
                     </div>
                   )}
                 </div>
-                {/* <Button
-                  buttonText={{ plainText: 'Book Appointment' }}
-                  variant='contained'
-                  className='w-full sm:w-auto bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 text-white font-semibold px-6 sm:px-8 py-3 h-12 sm:h-14 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 animate-glow touch-manipulation'
-                 
-                /> */}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Tabs Navigation */}
-        <div className='mx-auto max-w-4xl rounded-lg sm:rounded-xl border border-primary-100/50 dark:border-gray-700/50 shadow-lg sticky top-0 sm:top-4 z-30 bg-white/98 dark:bg-gray-800/98 animate-in fade-in slide-in-from-top-4 duration-700 animation-delay-300'>
-          <nav className='flex justify-center p-0.5 sm:p-1 lg:p-2'>
-            <div className='flex w-full bg-gray-100 dark:bg-gray-700 rounded-lg p-0.5 sm:p-1 gap-0.5 sm:gap-1 overflow-x-auto scrollbar-thin'>
+        {/* Tabs Navigation - Full width seamless */}
+        <div className='w-full rounded-xl bg-white/95 dark:bg-gray-800/95 sticky top-0 z-30 animate-in fade-in slide-in-from-top-4 duration-700'>
+          <nav className='flex p-1'>
+            <div className='flex w-full bg-gray-100/80 dark:bg-gray-700/80 rounded-lg p-0.5 gap-0.5 overflow-x-auto'>
               {getTabsWithTranslation(t).map(tab => (
                 <Button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   variant='text'
                   size='md'
-                  className={`relative flex-1 sm:flex-initial px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 font-medium text-xs sm:text-sm transition-all duration-300 rounded-lg whitespace-nowrap touch-manipulation ${
+                  className={`relative flex-1 px-3 sm:px-4 py-1.5 sm:py-2 font-medium text-xs sm:text-sm transition-all duration-200 rounded-md whitespace-nowrap touch-manipulation ${
                     activeTab === tab.id
-                      ? 'bg-gradient-to-r from-primary-800 to-cyan-600 text-white shadow-lg transform scale-105'
-                      : 'text-gray-600 dark:text-gray-300 hover:text-primary-800 dark:hover:text-sage-400 hover:bg-white/50 dark:hover:bg-gray-600/50 hover:scale-105'
+                      ? 'bg-primary-800 text-white'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-600/60'
                   }`}
                   buttonText={{ plainText: tab.label }}
                 />
@@ -460,74 +454,69 @@ function businessDetailsPage() {
         </div>
       </div>
       <div className='flex-1 overflow-y-auto'>
-        {/* mockServices[mockBusinesses[0].services] */}
-        {/* Tab Content */}
-        <div className='min-h-96 max-w-4xl mx-auto px-3 sm:px-4 lg:px-6 pb-4 sm:pb-6 lg:pb-8 relative z-10'>
+        {/* Tab Content - Full width */}
+        <div className='w-full px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 relative z-10'>
           {activeTab === 'services' && (
-            <div className='space-y-4 sm:space-y-6'>
-              <h2 className='text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-800 to-sage-600 dark:from-sage-400 dark:to-primary-400 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
+            <div className='space-y-3 sm:space-y-4'>
+              <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white pt-3'>
                 {t('business.sections.services')}
               </h2>
-              <div className='grid gap-3 sm:gap-4 lg:gap-6'>
+              <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4'>
                 {services.map((service, index) => (
-                  <Card
+                  <div
                     key={service.id || index}
-                    className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 border border-primary-100/50 dark:border-gray-700/50 hover:border-primary-200 dark:hover:border-gray-600 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                    className='group bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 hover:bg-white dark:hover:bg-gray-800 transition-colors duration-200 opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
                     style={{
-                      animationDelay: `${0.2 + index * 0.1}s`,
+                      animationDelay: `${0.1 + index * 0.05}s`,
                       animationFillMode: 'forwards'
                     }}
                   >
-                    <CardContent className='p-3 sm:p-4 lg:p-6'>
-                      <div className='flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4'>
-                        <div className='flex-1 space-y-2 sm:space-y-3 min-w-0'>
-                          <H3
-                            stringProps={{ plainText: service.name }}
-                            className='font-bold text-lg sm:text-xl text-gray-900 dark:text-white group-hover:text-primary-900 dark:group-hover:text-sage-400 transition-colors duration-300'
-                          />
-                          <P
-                            stringProps={{ plainText: service.description || '' }}
-                            className='text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed'
-                          />
-                          <div className='flex items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400'>
-                            <span className='flex items-center gap-1.5 sm:gap-2 bg-primary-100 dark:bg-primary-900/30 text-primary-900 dark:text-sage-300 px-2 sm:px-3 py-1 rounded-full'>
-                              <Clock className='w-3 h-3 sm:w-4 sm:h-4' />
-                              {service.duration} min
-                            </span>
-                          </div>
-                        </div>
-                        <div className='w-full sm:w-auto text-left sm:text-right space-y-2 sm:space-y-3'>
-                          <div className='text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-800 to-cyan-600 bg-clip-text text-transparent'>
-                            ${service.price}
-                          </div>
-                          <Button
-                            buttonText={{ plainText: 'Book Now' }}
-                            variant='contained'
-                            className='w-full sm:w-auto bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 text-white font-semibold px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 touch-manipulation'
-                            onClick={() => handelBookService(service)}
-                          />
-                        </div>
+                    <div className='flex flex-col h-full'>
+                      <div className='flex-1'>
+                        <H3
+                          stringProps={{ plainText: service.name }}
+                          className='font-semibold text-lg text-gray-900 dark:text-white'
+                        />
+                        <P
+                          stringProps={{ plainText: service.description || '' }}
+                          className='text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2'
+                        />
+                        <span className='inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mt-2'>
+                          <Clock className='w-4 h-4' />
+                          {service.duration} min
+                        </span>
                       </div>
-                    </CardContent>
-                  </Card>
+                      <div className='flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700'>
+                        <div className='text-xl font-bold text-primary-800 dark:text-primary-400'>
+                          ${service.price}
+                        </div>
+                        <Button
+                          buttonText={{ plainText: 'Book Now' }}
+                          variant='contained'
+                          className='bg-primary-800 hover:bg-primary-700 text-white text-sm px-4 py-2 rounded-lg touch-manipulation'
+                          onClick={() => handelBookService(service)}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
           {activeTab === 'branches' && (
-            <div className='space-y-6'>
-              <h2 className='text-3xl font-bold bg-gradient-to-r from-primary-800 to-sage-600 dark:from-sage-400 dark:to-primary-400 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
+            <div className='space-y-3 sm:space-y-4'>
+              <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white pt-3'>
                 {t('business.sections.locations')}
               </h2>
               {branches && branches.length > 0 ? (
-                <div className='grid gap-6 md:grid-cols-2'>
+                <div className='grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3'>
                   {branches.map((branch, index) => (
-                    <Card
+                    <div
                       key={branch.id || index}
-                      className='group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-primary-100/50 dark:border-gray-700/50 hover:border-primary-200 dark:hover:border-gray-600 hover:scale-[1.02] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                      className='group bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 cursor-pointer hover:bg-white dark:hover:bg-gray-800 transition-colors duration-200 opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
                       style={{
-                        animationDelay: `${0.2 + index * 0.1}s`,
+                        animationDelay: `${0.1 + index * 0.05}s`,
                         animationFillMode: 'forwards'
                       }}
                       onClick={() => {
@@ -535,317 +524,262 @@ function businessDetailsPage() {
                         setBranchModalOpen(true)
                       }}
                     >
-                      <CardContent className='p-6'>
-                        <div className='flex flex-col gap-4'>
-                          <div className='flex items-start gap-4'>
-                            <BusinessAvatar
-                              businessName={branch.name}
-                              className='w-16 h-16 rounded-lg flex-shrink-0'
-                              size='lg'
-                            />
-                            <div className='flex-1 min-w-0'>
-                              <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-1'>
-                                {branch.name}
-                              </h3>
-                              <div className='space-y-2 text-sm text-gray-600 dark:text-gray-300'>
-                                <div className='flex items-center gap-2'>
-                                  <MapPin className='w-4 h-4 flex-shrink-0' />
-                                  <span className='truncate text-gray-600 dark:text-gray-300'>{branch.address}</span>
-                                </div>
-                                {branch.mobile && (
-                                  <div className='flex items-center gap-2'>
-                                    <Phone className='w-4 h-4 flex-shrink-0' />
-                                    <span className='text-gray-600 dark:text-gray-300'>{branch.mobile}</span>
-                                  </div>
-                                )}
-                                <div className='flex items-center gap-2'>
-                                  <Clock className='w-4 h-4 flex-shrink-0' />
-                                  <span className='text-gray-600 dark:text-gray-300'>Open today: 9AM-6PM</span>
-                                </div>
+                      <div className='flex items-start gap-4'>
+                        <BusinessAvatar
+                          businessName={branch.name}
+                          className='w-16 h-16 rounded-xl flex-shrink-0'
+                          size='lg'
+                        />
+                        <div className='flex-1 min-w-0'>
+                          <h3 className='text-base font-semibold text-gray-900 dark:text-white'>
+                            {branch.name}
+                          </h3>
+                          <div className='space-y-1 text-sm text-gray-500 dark:text-gray-400 mt-2'>
+                            <div className='flex items-center gap-2'>
+                              <MapPin className='w-4 h-4 flex-shrink-0' />
+                              <span className='truncate'>{branch.address}</span>
+                            </div>
+                            {branch.mobile && (
+                              <div className='flex items-center gap-2'>
+                                <Phone className='w-4 h-4 flex-shrink-0' />
+                                <span>{branch.mobile}</span>
                               </div>
-                              <div className='mt-3 flex items-center justify-between'>
-                                <span className='text-sm text-primary-800 dark:text-sage-400 font-medium'>
-                                  View Details →
-                                </span>
-                                <div className='flex gap-1'>
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className='w-3 h-3 fill-yellow-400 text-yellow-400' />
-                                  ))}
-                                  <span className='text-xs text-gray-500 ml-1'>4.8</span>
-                                </div>
-                              </div>
+                            )}
+                          </div>
+                          <div className='mt-3 flex items-center justify-between'>
+                            <span className='text-sm text-primary-800 dark:text-sage-400 font-medium'>
+                              View Details →
+                            </span>
+                            <div className='flex items-center gap-1'>
+                              <Star className='w-4 h-4 fill-yellow-400 text-yellow-400' />
+                              <span className='text-sm text-gray-500'>4.8</span>
                             </div>
                           </div>
-
-                          {/* Branch Gallery Preview */}
-                          {branch.galleryUrls && branch.galleryUrls.length > 0 && (
-                            <div>
-                              <div className='flex gap-2 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600'>
-                                {branch.galleryUrls.slice(0, 4).map((imageUrl, imageIndex) => (
-                                  <div key={imageIndex} className='relative flex-shrink-0'>
-                                    <div className='w-20 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700'>
-                                      <img
-                                        src={imageUrl}
-                                        alt={`${branch.name} preview ${imageIndex + 1}`}
-                                        className='w-full h-full object-cover'
-                                        onError={e => {
-                                          const target = e.target as HTMLImageElement
-                                          target.src = '/images/placeholder-image.jpg'
-                                        }}
-                                      />
-                                    </div>
-                                    {imageIndex === 3 && branch.galleryUrls.length > 4 && (
-                                      <div className='absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center'>
-                                        <span className='text-white text-xs font-medium'>
-                                          +{branch.galleryUrls.length - 4}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+
+                      {/* Branch Gallery Preview */}
+                      {branch.galleryUrls && branch.galleryUrls.length > 0 && (
+                        <div className='mt-3 flex gap-2 overflow-x-auto'>
+                          {branch.galleryUrls.slice(0, 3).map((imageUrl, imageIndex) => (
+                            <div key={imageIndex} className='relative flex-shrink-0'>
+                              <div className='w-20 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700'>
+                                <img
+                                  src={imageUrl}
+                                  alt={`${branch.name} preview ${imageIndex + 1}`}
+                                  className='w-full h-full object-cover'
+                                  onError={e => {
+                                    const target = e.target as HTMLImageElement
+                                    target.src = '/images/placeholder-image.jpg'
+                                  }}
+                                />
+                              </div>
+                              {imageIndex === 2 && branch.galleryUrls.length > 3 && (
+                                <div className='absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center'>
+                                  <span className='text-white text-sm font-medium'>+{branch.galleryUrls.length - 3}</span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               ) : (
-                <Card className='shadow-sm opacity-0 animate-[fadeInUp_0.6s_ease-out_0.3s_forwards]'>
-                  <CardContent className='p-8 text-center'>
-                    <div className='text-gray-400 mb-3'>
-                      <MapPin className='w-12 h-12 mx-auto' />
-                    </div>
-                    <h3 className='text-lg font-medium text-gray-900 mb-2'>{t('business.noBranches.title')}</h3>
-                    <p className='text-gray-600'>{t('business.noBranches.description')}</p>
-                  </CardContent>
-                </Card>
+                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 text-center'>
+                  <MapPin className='w-12 h-12 mx-auto text-gray-400 mb-3' />
+                  <h3 className='text-base font-medium text-gray-900 dark:text-white'>{t('business.noBranches.title')}</h3>
+                  <p className='text-sm text-gray-500'>{t('business.noBranches.description')}</p>
+                </div>
               )}
             </div>
           )}
 
           {activeTab === 'reviews' && (
-            <div className='space-y-6'>
-              <div className='flex items-center justify-between opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'>
-                <H2
-                  stringProps={{ localeKey: 'business.sections.reviews' }}
-                  i18nTFn={t}
-                  className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent'
-                />
-                {/* <h2 className='text-2xl font-bold text-gray-900'>Customer Reviews</h2> */}
-
+            <div className='space-y-3 sm:space-y-4'>
+              <div className='flex items-center justify-between pt-3'>
+                <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white'>
+                  {t('business.sections.reviews')}
+                </h2>
                 <Button
                   variant='outlined'
                   buttonText={{ localeKey: 'business.writeReview' }}
                   i18nTFn={t}
-                  className='bg-white text-gray-900 shadow-lg border-gray-400 hover:shadow-none hover:border-none hover:bg-transparent'
+                  className='bg-transparent text-gray-700 dark:text-gray-300 border-gray-300 text-sm px-4 py-2'
                 />
               </div>
-              {/* {[...Array(5)].map((_, i) => (
-                        <Star key={i} className='w-4 h-4 fill-yellow-400 text-yellow-400' />
-                      ))} */}
+
               {/* Review Summary */}
-              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-primary-100/50 opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]'>
-                <CardContent className='p-6'>
-                  <div className='flex items-center gap-6'>
-                    <div className='text-center'>
-                      <div className='text-4xl font-bold text-gray-900'>{business.rating || 0}</div>
-                      <div className='flex items-center justify-center mt-1'>
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                          />
-                        ))}{' '}
-                      </div>
-                      <div className='text-sm text-gray-600 mt-1'>
-                        {business.reviews?.length || 0} review{(business.reviews?.length || 0) !== 1 ? 's' : ''}
-                      </div>
-                    </div>
-                    <div className='flex-1 space-y-2'>
-                      {[5, 4, 3, 2, 1].map(rating => (
-                        <div key={rating} className='flex items-center gap-2'>
-                          <span className='text-sm w-2'>{rating}</span>
-                          <Star className='w-3 h-3 fill-yellow-400 text-yellow-400' />
-                          <div className='flex-1 bg-gray-200 rounded-full h-2'>
-                            <div
-                              className='bg-yellow-400 h-2 rounded-full'
-                              style={{ width: rating === 5 ? '85%' : rating === 4 ? '12%' : '3%' }}
-                            ></div>
-                          </div>
-                          <span className='text-sm text-gray-600 w-8'>
-                            {business.reviews ? business.reviews.filter(r => r.rating === rating).length : 0}
-                          </span>
-                        </div>
+              <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5'>
+                <div className='flex items-center gap-4'>
+                  <div className='text-center'>
+                    <div className='text-2xl font-bold text-gray-900 dark:text-white'>{business.rating || 0}</div>
+                    <div className='flex items-center justify-center'>
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${i < Math.floor(business.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                        />
                       ))}
                     </div>
+                    <div className='text-xs text-gray-500 mt-0.5'>
+                      {business.reviews?.length || 0} reviews
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className='flex-1 space-y-1'>
+                    {[5, 4, 3, 2, 1].map(rating => (
+                      <div key={rating} className='flex items-center gap-1.5'>
+                        <span className='text-xs w-2'>{rating}</span>
+                        <Star className='w-2.5 h-2.5 fill-yellow-400 text-yellow-400' />
+                        <div className='flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5'>
+                          <div
+                            className='bg-yellow-400 h-1.5 rounded-full'
+                            style={{ width: rating === 5 ? '85%' : rating === 4 ? '12%' : '3%' }}
+                          />
+                        </div>
+                        <span className='text-xs text-gray-500 w-6'>
+                          {business.reviews ? business.reviews.filter(r => r.rating === rating).length : 0}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               {/* Individual Reviews */}
-              <div className='space-y-6'>
+              <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4'>
                 {businessReview().length > 0 ? (
                   businessReview().map((review, index) => (
-                    <Card
+                    <div
                       key={review.id || index}
-                      className='group bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 border border-primary-100/50 hover:border-primary-200 hover:scale-[1.01] opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]'
+                      className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
                       style={{
-                        animationDelay: `${0.4 + index * 0.1}s`,
+                        animationDelay: `${0.1 + index * 0.05}s`,
                         animationFillMode: 'forwards'
                       }}
                     >
-                      <CardContent className='p-4'>
-                        <div className='flex items-start gap-3'>
-                          <div className='w-10 h-10 bg-gradient-to-br from-primary-200 to-sage-200 rounded-full flex items-center justify-center'>
-                            <span className='text-sm font-medium text-primary-900'>
-                              {review.authorName
-                                .split(' ')
-                                .map(n => n[0])
-                                .join('')}
-                            </span>
-                          </div>
-                          <div className='flex-1'>
-                            <div className='flex items-center gap-2 mb-2'>
-                              <span className='font-medium text-gray-900'>{review.authorName}</span>
-                              <span className='text-sm text-gray-500'>{format(review.date, 'MMM dd, yyyy')}</span>
-                            </div>
-                            <div className='flex items-center mb-2'>
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-                                  }`}
-                                />
-                              ))}
-                              <span className='ml-2 text-sm text-gray-600'>{review.rating}/5</span>
-                            </div>
-                            <p className='text-gray-700 dark:[color:rgb(55_65_81)] text-sm leading-relaxed'>
-                              {review.comment}
-                            </p>
-                          </div>
+                      <div className='flex items-start gap-3'>
+                        <div className='w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center flex-shrink-0'>
+                          <span className='text-sm font-medium text-primary-800 dark:text-primary-300'>
+                            {review.authorName
+                              .split(' ')
+                              .map(n => n[0])
+                              .join('')}
+                          </span>
                         </div>
-                      </CardContent>
-                    </Card>
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-base font-medium text-gray-900 dark:text-white'>{review.authorName}</span>
+                            <span className='text-sm text-gray-400'>{format(review.date, 'MMM d')}</span>
+                          </div>
+                          <div className='flex items-center my-1'>
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <p className='text-sm text-gray-600 dark:text-gray-400 line-clamp-3'>
+                            {review.comment}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   ))
                 ) : (
-                  <Card className='shadow-sm opacity-0 animate-[fadeInUp_0.6s_ease-out_0.4s_forwards]'>
-                    <CardContent className='p-8 text-center'>
-                      <div className='text-gray-400 mb-3'>
-                        <Star className='w-12 h-12 mx-auto' />
-                      </div>
-                      <h3 className='text-lg font-medium text-gray-900 mb-2'>No reviews yet</h3>
-                      <p className='text-gray-600'>Be the first to leave a review for this business!</p>
-                    </CardContent>
-                  </Card>
+                  <div className='col-span-full bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 text-center'>
+                    <Star className='w-12 h-12 mx-auto text-gray-400 mb-3' />
+                    <h3 className='text-base font-medium text-gray-900 dark:text-white'>No reviews yet</h3>
+                    <p className='text-sm text-gray-500'>Be the first to leave a review!</p>
+                  </div>
                 )}
               </div>
             </div>
           )}
 
           {activeTab === 'about' && (
-            <div className='space-y-6'>
-              <H2
-                stringProps={{ plainText: `About ${business.name}` }}
-                className='text-3xl font-bold bg-gradient-to-r from-teal-700 to-cyan-700 bg-clip-text text-transparent opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]'
-              />
+            <div className='space-y-3 sm:space-y-4'>
+              <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white pt-3'>
+                About {business.name}
+              </h2>
 
-              <Card className='bg-white/80 backdrop-blur-sm shadow-lg border border-primary-100/50 opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]'>
-                <CardContent className='p-6 space-y-4'>
-                  <div>
-                    <H3 stringProps={{ plainText: 'Our Story' }} className='font-semibold text-lg text-gray-900 mb-2' />
+              <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 border border-gray-100/50 dark:border-gray-700/50'>
+                  <h3 className='text-base font-semibold text-gray-900 dark:text-white mb-2'>Our Story</h3>
+                  <p className='text-sm text-gray-600 dark:text-gray-400 leading-relaxed'>
+                    {business.description ||
+                      `${business.name} is committed to providing exceptional services in a welcoming, professional environment.`}
+                  </p>
+                </div>
 
-                    <P
-                      stringProps={{
-                        plainText:
-                          business.description ||
-                          `${business.name} is committed to providing exceptional services in a welcoming, professional environment. Our experienced team is passionate about their craft and dedicated to helping every client look and feel their best.`
-                      }}
-                      className='text-gray-700 leading-relaxed'
-                    />
-                  </div>
+                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 border border-gray-100/50 dark:border-gray-700/50'>
+                  <h3 className='text-base font-semibold text-gray-900 dark:text-white mb-3'>What Makes Us Special</h3>
+                  <ul className='space-y-2 text-sm text-gray-600 dark:text-gray-400'>
+                    <li className='flex items-start gap-2'>
+                      <span className='w-2 h-2 bg-primary-500 rounded-full mt-1.5 flex-shrink-0' />
+                      <span>Experienced professionals</span>
+                    </li>
+                    <li className='flex items-start gap-2'>
+                      <span className='w-2 h-2 bg-primary-500 rounded-full mt-1.5 flex-shrink-0' />
+                      <span>Premium products and tools</span>
+                    </li>
+                    <li className='flex items-start gap-2'>
+                      <span className='w-2 h-2 bg-primary-500 rounded-full mt-1.5 flex-shrink-0' />
+                      <span>Clean, modern environment</span>
+                    </li>
+                    <li className='flex items-start gap-2'>
+                      <span className='w-2 h-2 bg-primary-500 rounded-full mt-1.5 flex-shrink-0' />
+                      <span>Personalized service</span>
+                    </li>
+                  </ul>
+                </div>
 
-                  <div>
-                    <H3
-                      stringProps={{ plainText: 'What Makes Us Special' }}
-                      className='font-semibold text-lg text-gray-900 mb-2'
-                    />
-                    <ul className='space-y-2 text-gray-700'>
-                      <li className='flex items-start gap-2'>
-                        <span className='w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0'></span>
-                        <span>Master barbers with 10+ years of experience</span>
-                      </li>
-                      <li className='flex items-start gap-2'>
-                        <span className='w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0'></span>
-                        <span>Premium grooming products and tools</span>
-                      </li>
-                      <li className='flex items-start gap-2'>
-                        <span className='w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0'></span>
-                        <span>Clean, modern, and comfortable environment</span>
-                      </li>
-                      <li className='flex items-start gap-2'>
-                        <span className='w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0'></span>
-                        <span>Personalized service tailored to your style</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <H3
-                      stringProps={{ plainText: 'Hours of Operation' }}
-                      className='font-semibold text-lg text-gray-900 mb-2'
-                    />
-                    <div className='space-y-1 text-gray-700'>
-                      <div className='flex justify-between'>
-                        <span>Monday - Wednesday</span>
-                        <span>{(business as any).openingHours?.['Mon'] || '9AM-6PM'}</span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span>Thursday - Friday</span>
-                        <span>{(business as any).openingHours?.['Thu'] || '9AM-6PM'}</span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span>Saturday</span>
-                        <span>{(business as any).openingHours?.['Sat'] || '10AM-4PM'}</span>
-                      </div>
+                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 border border-gray-100/50 dark:border-gray-700/50'>
+                  <h3 className='text-base font-semibold text-gray-900 dark:text-white mb-3'>Hours</h3>
+                  <div className='space-y-2 text-sm text-gray-600 dark:text-gray-400'>
+                    <div className='flex justify-between'>
+                      <span>Mon-Fri</span>
+                      <span className='font-medium'>9AM-6PM</span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span>Saturday</span>
+                      <span className='font-medium'>10AM-4PM</span>
                     </div>
                   </div>
+                </div>
 
-                  <div>
-                    <H3
-                      stringProps={{ plainText: 'Location & Contact' }}
-                      className='font-semibold text-lg text-gray-900 mb-2'
-                    />
-                    <div className='space-y-2 text-gray-700'>
-                      {branches.length > 0 && branches[0].address && (
-                        <P stringProps={{ plainText: `Address: ${branches[0].address}` }} />
-                      )}
-                      {branches.length > 0 && branches[0].mobile && (
-                        <P stringProps={{ plainText: `Phone: ${branches[0].mobile}` }} />
-                      )}
-                      {business.email && <P stringProps={{ plainText: `Email: ${business.email}` }} />}
-                      {business.socialLinks && business.socialLinks.length > 0 && (
-                        <div className='flex items-center gap-4 mt-3'>
-                          <span className='font-medium'>Follow us:</span>
-                          {business.socialLinks.map((link, index) => (
-                            <a
-                              key={index}
-                              href={link.url}
-                              target='_blank'
-                              rel='noopener noreferrer'
-                              className='text-primary-800 hover:text-primary-900 capitalize underline'
-                            >
-                              {link.platform}
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 border border-gray-100/50 dark:border-gray-700/50'>
+                  <h3 className='text-base font-semibold text-gray-900 dark:text-white mb-3'>Contact</h3>
+                  <div className='space-y-2 text-sm text-gray-600 dark:text-gray-400'>
+                    {branches.length > 0 && branches[0].address && (
+                      <p>{branches[0].address}</p>
+                    )}
+                    {branches.length > 0 && branches[0].mobile && (
+                      <p>{branches[0].mobile}</p>
+                    )}
+                    {business.email && <p>{business.email}</p>}
+                    {business.socialLinks && business.socialLinks.length > 0 && (
+                      <div className='flex items-center gap-3 mt-2'>
+                        {business.socialLinks.map((link, index) => (
+                          <a
+                            key={index}
+                            href={link.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-primary-700 dark:text-primary-400 hover:underline capitalize font-medium'
+                          >
+                            {link.platform}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           )}
         </div>

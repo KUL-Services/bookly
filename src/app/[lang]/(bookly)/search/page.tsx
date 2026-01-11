@@ -278,16 +278,16 @@ export default function SearchPage() {
   if (loading) {
     return (
       <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900'>
-        <div className='bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-primary-100/50 dark:border-gray-700/50 sticky top-0 z-40'>
-          <div className='mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4'>
-            <div className='flex gap-3'>
-              <div className='flex-1 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse'></div>
-              <div className='w-32 h-12 bg-primary-200 dark:bg-primary-900 rounded-lg animate-pulse'></div>
+        <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-primary-100/30 dark:border-gray-700/30 sticky top-0 z-40'>
+          <div className='mx-auto max-w-7xl px-3 sm:px-4 py-2 sm:py-3'>
+            <div className='flex gap-2'>
+              <div className='flex-1 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse'></div>
+              <div className='w-24 h-10 bg-primary-200 dark:bg-primary-900 rounded-lg animate-pulse'></div>
             </div>
           </div>
         </div>
 
-        <div className='mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-6'>
+        <div className='mx-auto max-w-7xl px-3 sm:px-4 py-3 sm:py-4'>
           <SearchResultsSkeleton items={8} />
         </div>
       </div>
@@ -296,15 +296,15 @@ export default function SearchPage() {
 
   return (
     <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900'>
-      {/* Top search bar */}
-      <div className='bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-primary-100/50 dark:border-gray-700/50 sticky top-0 z-40'>
-        <div className='mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4'>
+      {/* Top search bar - Full width stretch */}
+      <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-primary-100/30 dark:border-gray-700/30 sticky top-0 z-40'>
+        <div className='w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4'>
           <div className='flex flex-col sm:flex-row gap-3'>
             <SearchInput
               value={filters.q}
               onChange={e => setFilters({ ...filters, q: e.target.value })}
               placeholderProps={{ plainText: 'Search businesses or services...' }}
-              className='flex-1 dark:bg-gray-700/50 dark:text-white dark:border-gray-600'
+              className='flex-1 h-12 text-base dark:bg-gray-700/50 dark:text-white dark:border-gray-600'
             />
             <Button
               onClick={handleApplyFilters}
@@ -313,19 +313,19 @@ export default function SearchPage() {
                 startIcon: filtersLoading ? <ButtonLoader size={16} /> : undefined
               }}
               disabled={filtersLoading}
-              className='bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 text-white font-semibold px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 text-white font-semibold px-8 py-3 h-12 text-base rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
             />
           </div>
         </div>
       </div>
 
-      <div className='mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-6'>
-        <div className='grid grid-cols-1 lg:grid-cols-[280px,1fr] xl:grid-cols-[300px,1fr] gap-4 lg:gap-6'>
+      <div className='w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6'>
+        <div className='grid grid-cols-1 lg:grid-cols-[300px,1fr] xl:grid-cols-[320px,1fr] gap-4 lg:gap-6'>
           {/* Sidebar Filters - Hidden on mobile, show as drawer or modal */}
           <aside className='hidden lg:block space-y-4'>
             {/* Location Filters */}
-            <div className='bg-white dark:bg-gray-800 rounded-xl p-3 lg:p-4 shadow-sm border border-gray-200 dark:border-gray-700'>
-              <h3 className='font-semibold text-sm lg:text-base text-gray-900 dark:text-white mb-3 lg:mb-4'>Location</h3>
+            <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 shadow-sm border border-gray-200/50 dark:border-gray-700/50'>
+              <h3 className='font-semibold text-base text-gray-900 dark:text-white mb-3'>Location</h3>
               <LocationFilters
                 selectedCountry={selectedCountry}
                 selectedCity={selectedCity}
@@ -350,10 +350,10 @@ export default function SearchPage() {
           {/* Main Content */}
           <main className='relative'>
             {filtersLoading && (
-              <div className='absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-xl'>
-                <div className='flex flex-col items-center space-y-3'>
-                  <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary-800'></div>
-                  <p className='text-gray-600 dark:text-gray-300 text-sm font-medium'>Searching...</p>
+              <div className='absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg'>
+                <div className='flex flex-col items-center space-y-2'>
+                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-primary-800'></div>
+                  <p className='text-gray-600 dark:text-gray-300 text-xs font-medium'>Searching...</p>
                 </div>
               </div>
             )}
@@ -363,7 +363,7 @@ export default function SearchPage() {
               {/* Mobile Filter Button */}
               <button
                 onClick={() => setShowMobileFilters(true)}
-                className='lg:hidden flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors touch-manipulation'
+                className='lg:hidden flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-gray-800/90 border border-gray-200/50 dark:border-gray-700/50 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors touch-manipulation'
               >
                 <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z' />
@@ -396,7 +396,7 @@ export default function SearchPage() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className='mt-8 flex justify-center'>
+                  <div className='mt-6 flex justify-center'>
                     <Pagination
                       currentPage={currentPage}
                       totalPages={totalPages}
@@ -438,10 +438,10 @@ export default function SearchPage() {
 
                 {/* Mobile: Stacked with toggle */}
                 <div className='lg:hidden space-y-4'>
-                  <div className='flex justify-center gap-2 bg-white dark:bg-gray-800 p-2 rounded-lg'>
+                  <div className='flex justify-center gap-2 bg-white/90 dark:bg-gray-800/90 p-1.5 rounded-xl'>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      className={`flex-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${
                         viewMode === 'list'
                           ? 'bg-primary-700 text-white'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -451,7 +451,7 @@ export default function SearchPage() {
                     </button>
                     <button
                       onClick={() => setViewMode('map')}
-                      className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
+                      className={`flex-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${
                         viewMode === 'map'
                           ? 'bg-primary-700 text-white'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -496,14 +496,14 @@ export default function SearchPage() {
         <div className='fixed inset-0 z-50 lg:hidden'>
           {/* Backdrop */}
           <div
-            className='absolute inset-0 bg-black/50 backdrop-blur-sm'
+            className='absolute inset-0 bg-black/40 backdrop-blur-sm'
             onClick={() => setShowMobileFilters(false)}
           />
 
-          {/* Drawer */}
-          <div className='absolute right-0 top-0 bottom-0 w-full sm:w-96 bg-white dark:bg-gray-800 shadow-2xl overflow-y-auto animate-slide-in-right'>
+          {/* Drawer - Full width on mobile, larger on tablet */}
+          <div className='absolute right-0 top-0 bottom-0 w-full sm:w-96 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto animate-slide-in-right'>
             {/* Header */}
-            <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between z-10'>
+            <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200/50 dark:border-gray-700/50 p-4 flex items-center justify-between z-10'>
               <h2 className='text-lg font-bold text-gray-900 dark:text-white'>Filters</h2>
               <button
                 onClick={() => setShowMobileFilters(false)}
@@ -552,11 +552,11 @@ export default function SearchPage() {
 
       {/* Branch Selection Modal */}
       {showBranchModal && branchModalBusinessId && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4'>
-          <div className='bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-md mx-auto h-full sm:h-auto sm:max-h-[85vh] overflow-y-auto'>
-            <div className='p-4 sm:p-6'>
-              <div className='flex items-center justify-between mb-4 sm:mb-6'>
-                <h3 className='text-lg sm:text-xl font-bold text-gray-900 dark:text-white'>Select a Branch</h3>
+        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4'>
+          <div className='bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-auto max-h-[85vh] overflow-y-auto'>
+            <div className='p-4 sm:p-5'>
+              <div className='flex items-center justify-between mb-4'>
+                <h3 className='text-lg font-bold text-gray-900 dark:text-white'>Select a Branch</h3>
                 <button
                   onClick={() => setShowBranchModal(false)}
                   className='p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors touch-manipulation'
@@ -573,16 +573,16 @@ export default function SearchPage() {
                   <button
                     key={branch.id}
                     onClick={() => handleBranchClick(branch.id)}
-                    className='w-full text-left p-3 sm:p-4 mb-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-700 dark:hover:border-primary-700 hover:bg-primary-100 dark:hover:bg-primary-900/20 transition-all touch-manipulation'
+                    className='w-full text-left p-2.5 mb-2 rounded-lg border border-gray-200/50 dark:border-gray-700/50 hover:border-primary-700 dark:hover:border-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all touch-manipulation'
                   >
-                    <div className='flex items-start gap-3'>
-                      <div className='flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-primary-200 dark:bg-primary-900/50 rounded-full flex items-center justify-center text-primary-800 dark:text-sage-400 font-semibold text-sm sm:text-base'>
+                    <div className='flex items-start gap-2.5'>
+                      <div className='flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/50 rounded-full flex items-center justify-center text-primary-800 dark:text-sage-400 font-semibold text-xs'>
                         {index + 1}
                       </div>
                       <div className='flex-1 min-w-0'>
-                        <h4 className='font-semibold text-base sm:text-lg text-gray-900 dark:text-white mb-1'>{branch.branchName}</h4>
-                        <div className='flex items-start gap-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400'>
-                          <svg className='w-4 h-4 flex-shrink-0 mt-0.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                        <h4 className='font-semibold text-sm text-gray-900 dark:text-white mb-0.5'>{branch.branchName}</h4>
+                        <div className='flex items-start gap-1 text-xs text-gray-600 dark:text-gray-400'>
+                          <svg className='w-3 h-3 flex-shrink-0 mt-0.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                             <path
                               strokeLinecap='round'
                               strokeLinejoin='round'
@@ -591,11 +591,11 @@ export default function SearchPage() {
                             />
                             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
                           </svg>
-                          <span className='break-words'>{branch.address}</span>
+                          <span className='break-words line-clamp-2'>{branch.address}</span>
                         </div>
                         {branch.phone && (
-                          <div className='flex items-center gap-1 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1'>
-                            <svg className='w-4 h-4 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <div className='flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mt-0.5'>
+                            <svg className='w-3 h-3 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
                             </svg>
                             <span>{branch.phone}</span>

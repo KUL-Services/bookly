@@ -12,7 +12,6 @@ import {
   Alert,
   AlertTitle,
   CircularProgress,
-  Chip,
   Stack,
   Divider
 } from '@mui/material'
@@ -148,45 +147,40 @@ export function StaffTypeChangeDialog({
           {/* Type Change */}
           <Box>
             <Typography variant='body2' color='text.secondary' gutterBottom>
-              Type Change
+              Schedule Type Change
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              {(() => {
-                const getChipProps = (type: StaffType) => {
-                  const isStatic = type === 'static'
-                  return {
-                    label: isStatic ? 'Static' : 'Dynamic',
-                    // Use primary for static (teal/green), default for dynamic (grey)
-                    color: isStatic ? 'primary' : 'default' as 'primary' | 'default',
-                    icon: (
-                      <i
-                        className={isStatic ? 'ri-group-line' : 'ri-user-line'}
-                        style={{ fontSize: '1rem' }}
-                      />
-                    ),
-                    sx: isStatic ? { 
-                        bgcolor: 'primary.main', 
-                        color: 'primary.contrastText',
-                        '& .MuiChip-icon': { color: 'inherit' }
-                    } : {
-                        bgcolor: 'action.hover',
-                        '& .MuiChip-icon': { color: 'text.secondary' }
-                    }
-                  }
-                }
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              {/* Current type */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <i
+                  className={currentType === 'static' ? 'ri-calendar-schedule-line' : 'ri-time-line'}
+                  style={{ fontSize: '1rem', color: 'var(--mui-palette-text-secondary)' }}
+                />
+                <Typography variant='body2' fontWeight={500} color='text.secondary'>
+                  {currentType === 'static' ? 'Fixed' : 'Flex'}
+                </Typography>
+              </Box>
 
-                const currentProps = getChipProps(currentType)
-                const targetProps = getChipProps(targetType)
+              {/* Arrow */}
+              <i className='ri-arrow-right-line' style={{ fontSize: '1.25rem', color: 'var(--mui-palette-primary-main)' }} />
 
-                return (
-                  <>
-                    <Chip {...currentProps} />
-                    <i className='ri-arrow-right-line' style={{ color: 'text.secondary' }} />
-                    <Chip {...targetProps} />
-                  </>
-                )
-              })()}
+              {/* Target type */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <i
+                  className={targetType === 'static' ? 'ri-calendar-schedule-line' : 'ri-time-line'}
+                  style={{ fontSize: '1rem', color: 'var(--mui-palette-primary-main)' }}
+                />
+                <Typography variant='body2' fontWeight={600} color='primary'>
+                  {targetType === 'static' ? 'Fixed' : 'Flex'}
+                </Typography>
+              </Box>
             </Box>
+            <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
+              {targetType === 'static'
+                ? 'Fixed schedule: Works in pre-defined time slots with set capacity (e.g., group classes)'
+                : 'Flex schedule: Available for individual bookings during working hours'
+              }
+            </Typography>
           </Box>
 
           <Divider />
@@ -242,16 +236,12 @@ export function StaffTypeChangeDialog({
                   <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
                     <li>
                       All bookings before <strong>{format(effectiveDate, 'MMM d, yyyy')}</strong> will use the{' '}
-                      <strong>{currentType}</strong> type
+                      <strong>{currentType === 'static' ? 'Fixed' : 'Flex'}</strong> schedule
                     </li>
                     <li>
                       All bookings from <strong>{format(effectiveDate, 'MMM d, yyyy')}</strong> onward will use the{' '}
-                      <strong>{targetType}</strong> type
+                      <strong>{targetType === 'static' ? 'Fixed' : 'Flex'}</strong> schedule
                     </li>
-                    {/* {targetType === 'static' && (
-                      <li>You'll need to assign this staff member to rooms/time slots after the change</li>
-                    )}
-                    {targetType === 'dynamic' && <li>Room assignments will be removed after the change</li>} */}
                   </ul>
                 </Typography>
               </Alert>

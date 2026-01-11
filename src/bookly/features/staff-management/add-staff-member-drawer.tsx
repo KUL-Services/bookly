@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Drawer,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Box,
   Typography,
   TextField,
@@ -18,7 +21,8 @@ import {
   Chip,
   OutlinedInput,
   Checkbox,
-  ListItemText
+  ListItemText,
+  useTheme
 } from '@mui/material'
 import { format } from 'date-fns'
 import { DatePickerField } from './date-picker-field'
@@ -56,6 +60,8 @@ const COLOR_OPTIONS = [
 ]
 
 export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMemberDrawerProps) {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
   const { createStaffMember, updateStaffMember } = useStaffManagementStore()
   const isEditMode = !!editingStaff
 
@@ -78,10 +84,7 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
   const [emergencyContact, setEmergencyContact] = useState('')
   const [emergencyPhone, setEmergencyPhone] = useState('')
 
-  // Photo upload (mock for now)
-  const [photoPreview, setPhotoPreview] = useState('')
-
-  // Reset form when drawer opens
+  // Reset form when modal opens
   useEffect(() => {
     if (open) {
       if (editingStaff) {
@@ -106,7 +109,6 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         setBranchIds(staffBranchIds.filter((id: string) => id !== staffMainBranch))
 
         setColor(editingStaff.color || '#0a2c24')
-        setPhotoPreview(editingStaff.photo || '')
         // Keep other fields at defaults for edit
         setEmployeeId('')
         setStartDate(new Date().toISOString().split('T')[0])
@@ -128,7 +130,6 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         setColor('#0a2c24')
         setEmergencyContact('')
         setEmergencyPhone('')
-        setPhotoPreview('')
       }
     }
   }, [open, editingStaff])
@@ -166,8 +167,7 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
       startDate,
       color,
       emergencyContact,
-      emergencyPhone,
-      photo: photoPreview || undefined
+      emergencyPhone
     }
 
     if (isEditMode && editingStaff) {
@@ -183,65 +183,60 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
     onClose()
   }
 
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
   const getInitials = () => {
     return `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase()
   }
 
   return (
-    <Drawer
-      anchor='right'
+    <Dialog
       open={open}
       onClose={handleCancel}
+      maxWidth='sm'
+      fullWidth
       PaperProps={{
-        sx: { width: { xs: '100%', sm: 520 } }
+        sx: {
+          borderRadius: 3,
+          maxHeight: '90vh'
+        }
       }}
     >
-      <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant='h5' fontWeight={600}>
-            {isEditMode ? 'Edit Staff Member' : 'Add Staff Member'}
-          </Typography>
-          <IconButton onClick={handleCancel}>
-            <i className='ri-close-line' />
-          </IconButton>
-        </Box>
-
-        <Divider sx={{ mb: 3 }} />
-
-        {/* Form */}
-        <Box sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Photo Upload Section */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <Avatar
-              sx={{
-                width: 100,
-                height: 100,
-                bgcolor: color,
-                fontSize: '2rem',
-                fontWeight: 600
-              }}
-            >
-              {getInitials()}
-            </Avatar>
-            <Button component='label' variant='outlined' size='small' startIcon={<i className='ri-upload-2-line' />}>
-              Upload Photo
-              <input type='file' hidden accept='image/*' onChange={handlePhotoUpload} />
-            </Button>
+      {/* Header */}
+      <DialogTitle sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottom: 1,
+        borderColor: 'divider',
+        pb: 2
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              width: 48,
+              height: 48,
+              bgcolor: color,
+              fontSize: '1.25rem',
+              fontWeight: 600
+            }}
+          >
+            {getInitials() || <i className='ri-user-add-line' style={{ fontSize: '1.25rem' }} />}
+          </Avatar>
+          <Box>
+            <Typography variant='h6' fontWeight={600}>
+              {isEditMode ? 'Edit Staff Member' : 'Add New Staff Member'}
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {isEditMode ? 'Update staff member details' : 'Fill in the details below'}
+            </Typography>
           </Box>
+        </Box>
+        <IconButton onClick={handleCancel} size='small'>
+          <i className='ri-close-line' />
+        </IconButton>
+      </DialogTitle>
 
-          <Divider />
+      <DialogContent sx={{ pt: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
           {/* Basic Information Section */}
           <Typography variant='subtitle1' fontWeight={600} color='primary'>
@@ -484,31 +479,32 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
           <Box
             sx={{
               p: 2,
-              bgcolor: 'info.50',
-              borderRadius: 1,
+              bgcolor: isDark ? 'rgba(10, 44, 36, 0.1)' : 'rgba(10, 44, 36, 0.05)',
+              borderRadius: 2,
               border: '1px solid',
-              borderColor: 'info.main'
+              borderColor: isDark ? 'rgba(10, 44, 36, 0.3)' : 'rgba(10, 44, 36, 0.15)'
             }}
           >
-            <Typography variant='caption' color='info.dark'>
-              <strong>Note:</strong> After adding the staff member, you can configure their working hours, assign
-              services, and set up their schedule in the Staff Management section.
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+              <i className='ri-information-line' style={{ color: 'var(--mui-palette-primary-main)', marginTop: 2 }} />
+              <Typography variant='caption' color='text.secondary'>
+                After adding the staff member, you can configure their working hours, assign
+                services, and set up their schedule in the Staff Management section.
+              </Typography>
+            </Box>
           </Box>
         </Box>
+      </DialogContent>
 
-        <Divider sx={{ my: 3 }} />
-
-        {/* Actions */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button variant='outlined' onClick={handleCancel} fullWidth>
-            Cancel
-          </Button>
-          <Button variant='contained' onClick={handleSave} fullWidth>
-            {isEditMode ? 'Save Changes' : 'Add Staff Member'}
-          </Button>
-        </Box>
-      </Box>
-    </Drawer>
+      {/* Actions */}
+      <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider', gap: 1 }}>
+        <Button variant='outlined' onClick={handleCancel} sx={{ minWidth: 100 }}>
+          Cancel
+        </Button>
+        <Button variant='contained' onClick={handleSave} sx={{ minWidth: 140 }}>
+          {isEditMode ? 'Save Changes' : 'Add Staff Member'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }

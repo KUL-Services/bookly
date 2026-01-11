@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Drawer,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Box,
   Typography,
   TextField,
@@ -20,7 +23,9 @@ import {
   ToggleButtonGroup,
   Alert,
   Checkbox,
-  ListItemText
+  ListItemText,
+  useTheme,
+  Avatar
 } from '@mui/material'
 import { mockBranches, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
@@ -69,6 +74,8 @@ const COLOR_OPTIONS = [
 ]
 
 export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: RoomEditorDrawerProps) {
+  const theme = useTheme()
+  const isDark = theme.palette.mode === 'dark'
   const { createRoom, updateRoom, rooms } = useStaffManagementStore()
 
   const [name, setName] = useState('')
@@ -156,26 +163,54 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
   }
 
   return (
-    <Drawer
-      anchor='right'
+    <Dialog
       open={open}
       onClose={handleCancel}
+      maxWidth='sm'
+      fullWidth
       PaperProps={{
-        sx: { width: { xs: '100%', sm: 520 } }
+        sx: {
+          borderRadius: 3,
+          maxHeight: '90vh'
+        }
       }}
     >
-      <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-          <Typography variant='h5' fontWeight={600}>
-            {room ? 'Edit Room' : 'Add Room'}
-          </Typography>
-          <IconButton onClick={handleCancel}>
-            <i className='ri-close-line' />
-          </IconButton>
+      {/* Header */}
+      <DialogTitle sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottom: 1,
+        borderColor: 'divider',
+        pb: 2
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              width: 48,
+              height: 48,
+              bgcolor: color,
+              fontSize: '1.25rem',
+              fontWeight: 600
+            }}
+          >
+            <i className='ri-home-4-line' style={{ fontSize: '1.25rem' }} />
+          </Avatar>
+          <Box>
+            <Typography variant='h6' fontWeight={600}>
+              {room ? 'Edit Room' : 'Add New Room'}
+            </Typography>
+            <Typography variant='caption' color='text.secondary'>
+              {room ? 'Update room details' : 'Configure your room settings'}
+            </Typography>
+          </Box>
         </Box>
+        <IconButton onClick={handleCancel} size='small'>
+          <i className='ri-close-line' />
+        </IconButton>
+      </DialogTitle>
 
-        <Divider sx={{ mb: 3 }} />
+      <DialogContent sx={{ pt: 3 }}>
 
         {/* Form */}
         <Box sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -464,31 +499,32 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
           <Box
             sx={{
               p: 2,
-              bgcolor: 'info.50',
-              borderRadius: 1,
+              bgcolor: isDark ? 'rgba(10, 44, 36, 0.1)' : 'rgba(10, 44, 36, 0.05)',
+              borderRadius: 2,
               border: '1px solid',
-              borderColor: 'info.main'
+              borderColor: isDark ? 'rgba(10, 44, 36, 0.3)' : 'rgba(10, 44, 36, 0.15)'
             }}
           >
-            <Typography variant='caption' color='info.dark'>
-              <strong>Note:</strong> Rooms are physical spaces where services are performed. Assign services to rooms to
-              enable room-based scheduling. You can configure the room's weekly availability schedule after creation.
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+              <i className='ri-information-line' style={{ color: 'var(--mui-palette-primary-main)', marginTop: 2 }} />
+              <Typography variant='caption' color='text.secondary'>
+                Rooms are physical spaces where services are performed. Assign services to rooms to
+                enable room-based scheduling. You can configure the room's weekly availability schedule after creation.
+              </Typography>
+            </Box>
           </Box>
         </Box>
+      </DialogContent>
 
-        <Divider sx={{ my: 3 }} />
-
-        {/* Actions */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button variant='outlined' onClick={handleCancel} fullWidth>
-            Cancel
-          </Button>
-          <Button variant='contained' onClick={handleSave} fullWidth>
-            {room ? 'Save Changes' : 'Add Room'}
-          </Button>
-        </Box>
-      </Box>
-    </Drawer>
+      {/* Actions */}
+      <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider', gap: 1 }}>
+        <Button variant='outlined' onClick={handleCancel} sx={{ minWidth: 100 }}>
+          Cancel
+        </Button>
+        <Button variant='contained' onClick={handleSave} sx={{ minWidth: 140 }}>
+          {room ? 'Save Changes' : 'Add Room'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }

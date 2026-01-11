@@ -1822,6 +1822,12 @@ export default function UnifiedBookingDrawer({
               const isLow = availableCapacity < totalCapacity * 0.3
               const isFull = availableCapacity === 0
 
+              // Calculate attendance counts for past bookings display
+              const attendedCount = slotClients.filter(c => c.status === 'attended').length
+              const noShowCount = slotClients.filter(c => c.status === 'no_show').length
+              const pendingCount = slotClients.filter(c => !['attended', 'no_show'].includes(c.status)).length
+              const isSessionInPast = new Date(`${date.toISOString().split('T')[0]}T${endTime}`) < new Date()
+
               return (
                 <>
                   <Stack spacing={2.5}>
@@ -1859,21 +1865,35 @@ export default function UnifiedBookingDrawer({
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Box>
                           <Typography variant='body2' fontWeight={600}>
-                            Capacity Status
+                            {isSessionInPast ? 'Attendance Status' : 'Capacity Status'}
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
-                            {bookedCount} booked • {availableCapacity} spots remaining
+                            {isSessionInPast
+                              ? `${attendedCount} attended • ${noShowCount} no-show${pendingCount > 0 ? ` • ${pendingCount} unmarked` : ''}`
+                              : `${bookedCount} booked • ${availableCapacity} spots remaining`
+                            }
                           </Typography>
                           <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
                             Click to manage session clients
                           </Typography>
                         </Box>
-                        <Chip
-                          label={`${bookedCount}/${totalCapacity}`}
-                          size='small'
-                          color={isFull ? 'error' : isLow ? 'warning' : 'success'}
-                          icon={<i className='ri-user-line' style={{ fontSize: '0.75rem' }} />}
-                        />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+                          <Chip
+                            label={`${bookedCount}/${totalCapacity}`}
+                            size='small'
+                            color={isFull ? 'error' : isLow ? 'warning' : 'success'}
+                            icon={<i className='ri-user-line' style={{ fontSize: '0.75rem' }} />}
+                          />
+                          {isSessionInPast && bookedCount > 0 && (
+                            <Chip
+                              label={`${attendedCount}/${bookedCount} attended`}
+                              size='small'
+                              variant='outlined'
+                              color={attendedCount === bookedCount ? 'success' : noShowCount > 0 ? 'warning' : 'default'}
+                              icon={<i className='ri-check-double-line' style={{ fontSize: '0.75rem' }} />}
+                            />
+                          )}
+                        </Box>
                       </Box>
                     </Paper>
                   </Stack>

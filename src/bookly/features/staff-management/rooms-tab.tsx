@@ -25,7 +25,7 @@ import {
 } from '@mui/material'
 import { format, addDays, subDays, startOfWeek, addWeeks, subWeeks, isSameDay } from 'date-fns'
 import { mockBranches, mockServices, mockStaff } from '@/bookly/data/mock-data'
-import { mockBusinessHours } from '@/bookly/data/staff-management-mock-data'
+import { mockBusinessHours, getShiftBookingCount } from '@/bookly/data/staff-management-mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { CalendarPopover } from './calendar-popover'
 import { RoomEditorDrawer } from './room-editor-drawer'
@@ -658,6 +658,13 @@ export function RoomsTab() {
               const durationMinutes = endH * 60 + endM - (startH * 60 + startM)
               const hours = Math.floor(durationMinutes / 60)
 
+              // Get booking count for this shift
+              const dateStr = format(date, 'yyyy-MM-dd')
+              const bookingData = getShiftBookingCount(room.id, dateStr, shift.start, shift.end)
+              const hasBookings = bookingData !== null
+              const isFull = hasBookings && bookingData.bookedSpots >= bookingData.capacity
+              const isAlmostFull = hasBookings && bookingData.percentage >= 75 && !isFull
+
               return (
                 <Box key={idx}>
                   {/* Main Shift Box */}
@@ -703,6 +710,24 @@ export function RoomsTab() {
                     <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
                       {hours}h{shift.capacity ? ` • Cap: ${shift.capacity}` : ''}
                     </Typography>
+
+                    {/* Booking count indicator */}
+                    {hasBookings && bookingData && (
+                      <Chip
+                        icon={<i className='ri-user-line' style={{ fontSize: '0.7rem' }} />}
+                        label={`${bookingData.bookedSpots}/${bookingData.capacity}`}
+                        size='small'
+                        color={isFull ? 'error' : isAlmostFull ? 'warning' : 'success'}
+                        sx={{
+                          height: 18,
+                          fontSize: '0.65rem',
+                          fontWeight: 600,
+                          '& .MuiChip-label': { px: 0.75 },
+                          '& .MuiChip-icon': { ml: 0.5 }
+                        }}
+                      />
+                    )}
+
                     {shiftServices.length > 0 && (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3, justifyContent: 'center', mt: 0.5 }}>
                         {shiftServices.slice(0, 2).map(service => (
@@ -1827,9 +1852,17 @@ export function RoomsTab() {
                                         variant='caption'
                                         fontWeight={500}
                                         color='text.primary'
-                                        sx={{ mb: 0.5 }}
+                                        sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
                                       >
-                                        Open
+                                        {formatTimeCompact(businessHours.shifts[0].start)}
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={500}
+                                        color='text.primary'
+                                        sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                      >
+                                        {formatTimeCompact(businessHours.shifts[0].end)}
                                       </Typography>
                                     </Box>
                                   ) : (
@@ -1907,32 +1940,57 @@ export function RoomsTab() {
                                       sx={{
                                         width: '100%',
                                         height: '100%',
-                                        bgcolor: 'rgba(139, 195, 74, 0.3)',
+                                        bgcolor: theme =>
+                                          theme.palette.mode === 'dark'
+                                            ? 'rgba(120, 120, 120, 0.3)'
+                                            : 'rgba(158, 158, 158, 0.25)',
                                         borderRadius: 1,
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         border: 1,
-                                        borderColor: 'success.light',
+                                        borderColor: 'grey.400',
                                         cursor: 'pointer',
                                         transition: 'all 0.2s',
                                         p: 0.5,
                                         '&:hover': {
-                                          bgcolor: 'rgba(139, 195, 74, 0.4)',
+                                          bgcolor: theme =>
+                                            theme.palette.mode === 'dark'
+                                              ? 'rgba(120, 120, 120, 0.4)'
+                                              : 'rgba(158, 158, 158, 0.35)',
                                           transform: 'scale(1.02)'
                                         }
                                       }}
                                     >
-                                      <Typography
-                                        variant='caption'
-                                        fontWeight={500}
-                                        color='text.primary'
-                                        sx={{ mb: 0.5 }}
-                                      >
-                                        {schedule.shifts.length}{' '}
-                                        {getShiftLabel(room.roomType, schedule.shifts.length > 1)}
-                                      </Typography>
+                                      {/* Show time range for fixed rooms */}
+                                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
+                                        <Typography
+                                          variant='caption'
+                                          fontWeight={500}
+                                          color='text.primary'
+                                          sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                        >
+                                          {formatTimeCompact(schedule.shifts[0].start)}
+                                        </Typography>
+                                        <Typography
+                                          variant='caption'
+                                          fontWeight={500}
+                                          color='text.primary'
+                                          sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
+                                        >
+                                          {formatTimeCompact(schedule.shifts[schedule.shifts.length - 1].end)}
+                                        </Typography>
+                                        {/* Show capacity */}
+                                        {schedule.shifts[0].capacity && (
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, mt: 0.25 }}>
+                                            <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.55rem' }}>
+                                              {schedule.shifts.reduce((total: number, s: any) => total + (s.capacity || 0), 0)}
+                                            </Typography>
+                                            <i className='ri-group-line' style={{ fontSize: '0.5rem', color: 'var(--mui-palette-text-secondary)' }} />
+                                          </Box>
+                                        )}
+                                      </Box>
                                       {shiftServices.length > 0 && (
                                         <Box
                                           sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3, justifyContent: 'center' }}

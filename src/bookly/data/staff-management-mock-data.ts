@@ -666,6 +666,429 @@ export const getRoomsForBranch = (branchId: string) => {
 }
 
 // ============================================================================
+// Room Session Bookings (Mock Appointment Data for Rooms)
+// ============================================================================
+
+export interface RoomSessionBooking {
+  id: string
+  roomId: string
+  date: string // YYYY-MM-DD format
+  shiftStartTime: string // HH:MM format
+  shiftEndTime: string // HH:MM format
+  bookedSpots: number
+  capacity: number
+  bookings: {
+    id: string
+    customerName: string
+    status: 'confirmed' | 'attended' | 'no_show' | 'cancelled'
+  }[]
+}
+
+// Mock bookings for this week and next week
+const today = new Date()
+const getDateString = (daysOffset: number = 0): string => {
+  const date = new Date(today)
+  date.setDate(date.getDate() + daysOffset)
+  return date.toISOString().split('T')[0]
+}
+
+export const mockRoomSessionBookings: RoomSessionBooking[] = [
+  // Main Studio (room-1) - Static room bookings for this week
+  {
+    id: 'rsb-1',
+    roomId: 'room-1',
+    date: getDateString(1), // Tomorrow
+    shiftStartTime: '09:00',
+    shiftEndTime: '12:00',
+    bookedSpots: 15,
+    capacity: 20,
+    bookings: [
+      { id: 'b1', customerName: 'Alice Johnson', status: 'confirmed' },
+      { id: 'b2', customerName: 'Bob Smith', status: 'confirmed' },
+      { id: 'b3', customerName: 'Carol White', status: 'confirmed' },
+      { id: 'b4', customerName: 'David Brown', status: 'confirmed' },
+      { id: 'b5', customerName: 'Emma Davis', status: 'confirmed' },
+      // ... 10 more (15 total)
+    ]
+  },
+  {
+    id: 'rsb-2',
+    roomId: 'room-1',
+    date: getDateString(1),
+    shiftStartTime: '13:00',
+    shiftEndTime: '19:00',
+    bookedSpots: 18,
+    capacity: 20,
+    bookings: [
+      { id: 'b6', customerName: 'Frank Miller', status: 'confirmed' },
+      { id: 'b7', customerName: 'Grace Lee', status: 'confirmed' },
+      // ... 16 more (18 total)
+    ]
+  },
+  {
+    id: 'rsb-3',
+    roomId: 'room-1',
+    date: getDateString(2), // 2 days from now
+    shiftStartTime: '09:00',
+    shiftEndTime: '19:00',
+    bookedSpots: 12,
+    capacity: 20,
+    bookings: []
+  },
+  {
+    id: 'rsb-4',
+    roomId: 'room-1',
+    date: getDateString(4), // 4 days from now (Thu)
+    shiftStartTime: '09:00',
+    shiftEndTime: '20:00',
+    bookedSpots: 20,
+    capacity: 20,
+    bookings: [] // Fully booked!
+  },
+  {
+    id: 'rsb-5',
+    roomId: 'room-1',
+    date: getDateString(5), // Friday
+    shiftStartTime: '09:00',
+    shiftEndTime: '13:00',
+    bookedSpots: 8,
+    capacity: 20,
+    bookings: []
+  },
+  {
+    id: 'rsb-6',
+    roomId: 'room-1',
+    date: getDateString(5),
+    shiftStartTime: '14:00',
+    shiftEndTime: '20:00',
+    bookedSpots: 16,
+    capacity: 20,
+    bookings: []
+  },
+
+  // Yoga Room (room-2) - Fitness class bookings
+  {
+    id: 'rsb-7',
+    roomId: 'room-2',
+    date: getDateString(1), // Tomorrow (Mon)
+    shiftStartTime: '08:00',
+    shiftEndTime: '21:00',
+    bookedSpots: 17,
+    capacity: 20,
+    bookings: [
+      { id: 'yb1', customerName: 'Hannah Green', status: 'confirmed' },
+      { id: 'yb2', customerName: 'Ian Black', status: 'confirmed' },
+      // ... 15 more (17 total)
+    ]
+  },
+  {
+    id: 'rsb-8',
+    roomId: 'room-2',
+    date: getDateString(2), // Tuesday
+    shiftStartTime: '08:00',
+    shiftEndTime: '21:00',
+    bookedSpots: 19,
+    capacity: 20,
+    bookings: [] // Almost full!
+  },
+  {
+    id: 'rsb-9',
+    roomId: 'room-2',
+    date: getDateString(4), // Thursday
+    shiftStartTime: '08:00',
+    shiftEndTime: '21:00',
+    bookedSpots: 14,
+    capacity: 20,
+    bookings: []
+  },
+  {
+    id: 'rsb-10',
+    roomId: 'room-2',
+    date: getDateString(5), // Friday
+    shiftStartTime: '08:00',
+    shiftEndTime: '21:00',
+    bookedSpots: 11,
+    capacity: 20,
+    bookings: []
+  },
+  {
+    id: 'rsb-11',
+    roomId: 'room-2',
+    date: getDateString(6), // Saturday
+    shiftStartTime: '09:00',
+    shiftEndTime: '18:00',
+    bookedSpots: 20,
+    capacity: 20,
+    bookings: [] // Fully booked weekend!
+  },
+
+  // Past sessions with attendance data (yesterday)
+  {
+    id: 'rsb-past-1',
+    roomId: 'room-1',
+    date: getDateString(-1), // Yesterday
+    shiftStartTime: '09:00',
+    shiftEndTime: '19:00',
+    bookedSpots: 16,
+    capacity: 20,
+    bookings: [
+      { id: 'pb1', customerName: 'Past Customer 1', status: 'attended' },
+      { id: 'pb2', customerName: 'Past Customer 2', status: 'attended' },
+      { id: 'pb3', customerName: 'Past Customer 3', status: 'attended' },
+      { id: 'pb4', customerName: 'Past Customer 4', status: 'no_show' },
+      { id: 'pb5', customerName: 'Past Customer 5', status: 'no_show' },
+      // ... more
+    ]
+  },
+  {
+    id: 'rsb-past-2',
+    roomId: 'room-2',
+    date: getDateString(-1), // Yesterday
+    shiftStartTime: '08:00',
+    shiftEndTime: '21:00',
+    bookedSpots: 18,
+    capacity: 20,
+    bookings: [
+      { id: 'pyb1', customerName: 'Yoga Student 1', status: 'attended' },
+      { id: 'pyb2', customerName: 'Yoga Student 2', status: 'attended' },
+      { id: 'pyb3', customerName: 'Yoga Student 3', status: 'attended' },
+      { id: 'pyb4', customerName: 'Yoga Student 4', status: 'attended' },
+      { id: 'pyb5', customerName: 'Yoga Student 5', status: 'no_show' },
+      // ... more (total 18, with 16 attended, 2 no-show)
+    ]
+  }
+]
+
+// Helper to get bookings for a specific room on a specific date
+export const getRoomBookingsForDate = (roomId: string, date: string): RoomSessionBooking[] => {
+  return mockRoomSessionBookings.filter(booking => booking.roomId === roomId && booking.date === date)
+}
+
+// Helper to get booking count for a specific shift
+export const getShiftBookingCount = (
+  roomId: string,
+  date: string,
+  shiftStart: string,
+  shiftEnd: string
+): { bookedSpots: number; capacity: number; percentage: number } | null => {
+  const booking = mockRoomSessionBookings.find(
+    b =>
+      b.roomId === roomId && b.date === date && b.shiftStartTime === shiftStart && b.shiftEndTime === shiftEnd
+  )
+
+  if (!booking) {
+    return null
+  }
+
+  return {
+    bookedSpots: booking.bookedSpots,
+    capacity: booking.capacity,
+    percentage: Math.round((booking.bookedSpots / booking.capacity) * 100)
+  }
+}
+
+// ============================================================================
+// Staff Session Bookings (Mock appointment data for staff shifts)
+// ============================================================================
+
+export interface StaffSessionBooking {
+  id: string
+  staffId: string
+  date: string // YYYY-MM-DD format
+  shiftStartTime: string // HH:MM format
+  shiftEndTime: string // HH:MM format
+  bookedSlots: number
+  totalCapacity: number
+  appointments: {
+    id: string
+    customerName: string
+    serviceName: string
+    startTime: string
+    endTime: string
+    status: 'confirmed' | 'attended' | 'no_show' | 'cancelled'
+  }[]
+}
+
+export const mockStaffSessionBookings: StaffSessionBooking[] = [
+  // Emma Johnson (staff-1) - Hair stylist with high bookings
+  {
+    id: 'ssb-1',
+    staffId: '1',
+    date: getDateString(1), // Tomorrow (Mon)
+    shiftStartTime: '09:00',
+    shiftEndTime: '17:00',
+    bookedSlots: 7,
+    totalCapacity: 8,
+    appointments: [
+      { id: 'apt-1', customerName: 'Alice Brown', serviceName: 'Haircut & Style', startTime: '09:00', endTime: '10:00', status: 'confirmed' },
+      { id: 'apt-2', customerName: 'Bob Smith', serviceName: 'Color Treatment', startTime: '10:00', endTime: '12:00', status: 'confirmed' },
+      { id: 'apt-3', customerName: 'Carol White', serviceName: 'Haircut', startTime: '12:00', endTime: '13:00', status: 'confirmed' },
+      { id: 'apt-4', customerName: 'David Lee', serviceName: 'Haircut & Style', startTime: '13:00', endTime: '14:00', status: 'confirmed' },
+      { id: 'apt-5', customerName: 'Eve Martinez', serviceName: 'Highlights', startTime: '14:00', endTime: '16:00', status: 'confirmed' },
+      { id: 'apt-6', customerName: 'Frank Chen', serviceName: 'Haircut', startTime: '16:00', endTime: '17:00', status: 'confirmed' }
+    ]
+  },
+  {
+    id: 'ssb-2',
+    staffId: '1',
+    date: getDateString(2), // Tuesday
+    shiftStartTime: '09:00',
+    shiftEndTime: '17:00',
+    bookedSlots: 8,
+    totalCapacity: 8,
+    appointments: [] // Fully booked!
+  },
+  {
+    id: 'ssb-3',
+    staffId: '1',
+    date: getDateString(3), // Wednesday
+    shiftStartTime: '09:00',
+    shiftEndTime: '17:00',
+    bookedSlots: 5,
+    totalCapacity: 8,
+    appointments: []
+  },
+  {
+    id: 'ssb-4',
+    staffId: '1',
+    date: getDateString(4), // Thursday
+    shiftStartTime: '09:00',
+    shiftEndTime: '17:00',
+    bookedSlots: 6,
+    totalCapacity: 8,
+    appointments: []
+  },
+
+  // Sarah Williams (staff-2) - Senior stylist
+  {
+    id: 'ssb-5',
+    staffId: '2',
+    date: getDateString(1),
+    shiftStartTime: '10:00',
+    shiftEndTime: '18:00',
+    bookedSlots: 6,
+    totalCapacity: 8,
+    appointments: []
+  },
+  {
+    id: 'ssb-6',
+    staffId: '2',
+    date: getDateString(2),
+    shiftStartTime: '10:00',
+    shiftEndTime: '18:00',
+    bookedSlots: 7,
+    totalCapacity: 8,
+    appointments: []
+  },
+
+  // Michael Chen (staff-3) - Nail technician
+  {
+    id: 'ssb-7',
+    staffId: '3',
+    date: getDateString(1),
+    shiftStartTime: '09:00',
+    shiftEndTime: '17:00',
+    bookedSlots: 4,
+    totalCapacity: 6,
+    appointments: [
+      { id: 'nail-1', customerName: 'Julia Roberts', serviceName: 'Manicure', startTime: '09:00', endTime: '10:00', status: 'confirmed' },
+      { id: 'nail-2', customerName: 'Kate Hudson', serviceName: 'Pedicure', startTime: '10:30', endTime: '11:30', status: 'confirmed' },
+      { id: 'nail-3', customerName: 'Laura Dean', serviceName: 'Gel Nails', startTime: '12:00', endTime: '13:30', status: 'confirmed' },
+      { id: 'nail-4', customerName: 'Maria Garcia', serviceName: 'Manicure', startTime: '14:00', endTime: '15:00', status: 'confirmed' }
+    ]
+  },
+
+  // Alex Thompson (staff-7) - Flexible stylist
+  {
+    id: 'ssb-8',
+    staffId: '7',
+    date: getDateString(1),
+    shiftStartTime: '09:00',
+    shiftEndTime: '17:00',
+    bookedSlots: 3,
+    totalCapacity: 8,
+    appointments: []
+  },
+
+  // Gym trainers - Lisa Anderson (staff-9) - Personal trainer
+  {
+    id: 'ssb-9',
+    staffId: '9',
+    date: getDateString(1),
+    shiftStartTime: '06:00',
+    shiftEndTime: '14:00',
+    bookedSlots: 6,
+    totalCapacity: 8,
+    appointments: [
+      { id: 'pt-1', customerName: 'Athlete 1', serviceName: 'Personal Training', startTime: '06:00', endTime: '07:00', status: 'confirmed' },
+      { id: 'pt-2', customerName: 'Athlete 2', serviceName: 'Personal Training', startTime: '07:00', endTime: '08:00', status: 'confirmed' },
+      { id: 'pt-3', customerName: 'Athlete 3', serviceName: 'Personal Training', startTime: '09:00', endTime: '10:00', status: 'confirmed' },
+      { id: 'pt-4', customerName: 'Athlete 4', serviceName: 'Personal Training', startTime: '10:00', endTime: '11:00', status: 'confirmed' },
+      { id: 'pt-5', customerName: 'Athlete 5', serviceName: 'Personal Training', startTime: '12:00', endTime: '13:00', status: 'confirmed' },
+      { id: 'pt-6', customerName: 'Athlete 6', serviceName: 'Personal Training', startTime: '13:00', endTime: '14:00', status: 'confirmed' }
+    ]
+  },
+  {
+    id: 'ssb-10',
+    staffId: '9',
+    date: getDateString(2),
+    shiftStartTime: '06:00',
+    shiftEndTime: '14:00',
+    bookedSlots: 7,
+    totalCapacity: 8,
+    appointments: []
+  },
+
+  // Past session with attendance data
+  {
+    id: 'ssb-11',
+    staffId: '1',
+    date: getDateString(-1), // Yesterday
+    shiftStartTime: '09:00',
+    shiftEndTime: '17:00',
+    bookedSlots: 7,
+    totalCapacity: 8,
+    appointments: [
+      { id: 'past-1', customerName: 'Past Client 1', serviceName: 'Haircut', startTime: '09:00', endTime: '10:00', status: 'attended' },
+      { id: 'past-2', customerName: 'Past Client 2', serviceName: 'Color', startTime: '10:00', endTime: '12:00', status: 'attended' },
+      { id: 'past-3', customerName: 'Past Client 3', serviceName: 'Haircut', startTime: '12:00', endTime: '13:00', status: 'attended' },
+      { id: 'past-4', customerName: 'Past Client 4', serviceName: 'Haircut', startTime: '13:00', endTime: '14:00', status: 'attended' },
+      { id: 'past-5', customerName: 'Past Client 5', serviceName: 'Style', startTime: '14:00', endTime: '15:00', status: 'attended' },
+      { id: 'past-6', customerName: 'Past Client 6', serviceName: 'Haircut', startTime: '15:00', endTime: '16:00', status: 'no_show' },
+      { id: 'past-7', customerName: 'Past Client 7', serviceName: 'Haircut', startTime: '16:00', endTime: '17:00', status: 'attended' }
+    ]
+  }
+]
+
+// Helper to get staff bookings for a specific date
+export const getStaffBookingsForDate = (staffId: string, date: string): StaffSessionBooking[] => {
+  return mockStaffSessionBookings.filter(booking => booking.staffId === staffId && booking.date === date)
+}
+
+// Helper to get booking count for a specific staff shift
+export const getStaffShiftBookingCount = (
+  staffId: string,
+  date: string,
+  shiftStart: string,
+  shiftEnd: string
+): { bookedSlots: number; totalCapacity: number; percentage: number } | null => {
+  const booking = mockStaffSessionBookings.find(
+    b =>
+      b.staffId === staffId && b.date === date && b.shiftStartTime === shiftStart && b.shiftEndTime === shiftEnd
+  )
+
+  if (!booking) {
+    return null
+  }
+
+  return {
+    bookedSlots: booking.bookedSlots,
+    totalCapacity: booking.totalCapacity,
+    percentage: Math.round((booking.bookedSlots / booking.totalCapacity) * 100)
+  }
+}
+
+// ============================================================================
 // Staff Service Assignments (Initial Mock Data)
 // ============================================================================
 

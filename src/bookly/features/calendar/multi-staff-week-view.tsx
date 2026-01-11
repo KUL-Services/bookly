@@ -1,6 +1,7 @@
 'use client'
 
-import { Box, Typography, Avatar, Chip } from '@mui/material'
+import { useState } from 'react'
+import { Box, Typography, Avatar, Chip, Popover, IconButton } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday } from 'date-fns'
 import { useCalendarStore } from './state'
@@ -45,6 +46,21 @@ export default function MultiStaffWeekView({
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
   const colorScheme = useCalendarStore(state => state.colorScheme)
+
+  // State for "more events" popover
+  const [moreEventsAnchor, setMoreEventsAnchor] = useState<HTMLElement | null>(null)
+  const [moreEventsData, setMoreEventsData] = useState<{ events: CalendarEvent[]; staffName: string; date: Date } | null>(null)
+
+  const handleMoreEventsClick = (e: React.MouseEvent<HTMLElement>, hiddenEvents: CalendarEvent[], staffName: string, date: Date) => {
+    e.stopPropagation()
+    setMoreEventsAnchor(e.currentTarget)
+    setMoreEventsData({ events: hiddenEvents, staffName, date })
+  }
+
+  const handleMoreEventsClose = () => {
+    setMoreEventsAnchor(null)
+    setMoreEventsData(null)
+  }
 
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
@@ -332,10 +348,7 @@ export default function MultiStaffWeekView({
                       })}
                       {hasMore && (
                         <Box
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onDateClick?.(day)
-                          }}
+                          onClick={(e) => handleMoreEventsClick(e, dayEvents.slice(displayLimit), staff.name, day)}
                           sx={{
                             textAlign: 'center',
                             py: 0.5,
@@ -373,6 +386,129 @@ export default function MultiStaffWeekView({
           </Box>
         </Box>
       </Box>
+
+      {/* More Events Popover */}
+      <Popover
+        open={Boolean(moreEventsAnchor)}
+        anchorEl={moreEventsAnchor}
+        onClose={handleMoreEventsClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center'
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center'
+        }}
+        PaperProps={{
+          sx: {
+            maxWidth: 320,
+            maxHeight: 400,
+            overflow: 'hidden',
+            boxShadow: 3,
+            borderRadius: 2
+          }
+        }}
+      >
+        {moreEventsData && (
+          <Box>
+            {/* Header */}
+            <Box sx={{
+              p: 2,
+              borderBottom: 1,
+              borderColor: 'divider',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              bgcolor: isDark ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.05)'
+            }}>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600}>
+                  {moreEventsData.staffName}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {format(moreEventsData.date, 'EEEE, MMM d')}
+                </Typography>
+              </Box>
+              <IconButton size="small" onClick={handleMoreEventsClose}>
+                <i className="ri-close-line" />
+              </IconButton>
+            </Box>
+
+            {/* Events List */}
+            <Box sx={{ p: 1.5, maxHeight: 320, overflow: 'auto' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {moreEventsData.events.map(event => {
+                  const colors = buildEventColors(colorScheme, event.extendedProps.status)
+                  const baseFillOpacity = isDark ? 0.22 : 0.16
+                  const fillColor = adjustColorOpacity(colors.border, baseFillOpacity)
+
+                  return (
+                    <Box
+                      key={event.id}
+                      onClick={() => {
+                        handleMoreEventsClose()
+                        onEventClick?.(event)
+                      }}
+                      sx={{
+                        bgcolor: fillColor,
+                        borderLeft: `4px solid ${colors.border}`,
+                        borderRadius: 1,
+                        p: 1.5,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        '&:hover': {
+                          boxShadow: 1,
+                          transform: 'translateX(2px)'
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Typography variant="caption" fontWeight={600}>
+                          {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
+                        </Typography>
+                        {event.extendedProps.starred && (
+                          <i className="ri-star-fill" style={{ fontSize: '0.75rem', color: 'var(--mui-palette-customColors-coral)' }} />
+                        )}
+                      </Box>
+                      <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                        {event.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {event.extendedProps.customerName}
+                      </Typography>
+                    </Box>
+                  )
+                })}
+              </Box>
+            </Box>
+
+            {/* Footer - View All link */}
+            <Box sx={{
+              p: 1.5,
+              borderTop: 1,
+              borderColor: 'divider',
+              textAlign: 'center'
+            }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: 'primary.main',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  '&:hover': { textDecoration: 'underline' }
+                }}
+                onClick={() => {
+                  handleMoreEventsClose()
+                  onDateClick?.(moreEventsData.date)
+                }}
+              >
+                View day details →
+              </Typography>
+            </Box>
+          </Box>
+        )}
+      </Popover>
     </Box>
   )
 }
