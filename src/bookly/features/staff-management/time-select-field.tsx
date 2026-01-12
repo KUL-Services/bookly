@@ -1,6 +1,6 @@
 'use client'
 
-import { FormControl, InputLabel, Select, MenuItem, SelectProps } from '@mui/material'
+import { FormControl, InputLabel, Select, MenuItem, SelectProps, FormHelperText } from '@mui/material'
 
 interface TimeSelectFieldProps {
   label?: string
@@ -11,7 +11,11 @@ interface TimeSelectFieldProps {
   size?: SelectProps['size']
   sx?: SelectProps['sx']
   fullWidth?: boolean
+  error?: boolean
+  helperText?: string
 }
+
+// ... (keep generateTimeOptions and formatTime12h) ...
 
 // Generate time options in 15-minute increments
 function generateTimeOptions(): string[] {
@@ -49,23 +53,21 @@ export function TimeSelectField({
   required = false,
   size = 'small',
   sx,
-  fullWidth = false
+  fullWidth = false,
+  error,
+  helperText
 }: TimeSelectFieldProps) {
   return (
-    <FormControl size={size} disabled={disabled} required={required} fullWidth={fullWidth} sx={sx}>
+    <FormControl size={size} disabled={disabled} required={required} fullWidth={fullWidth} sx={sx} error={error}>
       {label && <InputLabel>{label}</InputLabel>}
-      <Select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        label={label}
-        displayEmpty={!label}
-      >
-        {TIME_OPTIONS.map((time) => (
+      <Select value={value} onChange={e => onChange(e.target.value)} label={label} displayEmpty={!label}>
+        {TIME_OPTIONS.map(time => (
           <MenuItem key={time} value={time}>
             {formatTime12h(time)}
           </MenuItem>
         ))}
       </Select>
+      {helperText && <FormHelperText>{helperText}</FormHelperText>}
     </FormControl>
   )
 }

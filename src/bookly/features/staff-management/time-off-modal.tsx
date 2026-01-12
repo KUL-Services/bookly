@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -14,17 +14,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Switch,
   FormControlLabel,
   Checkbox,
-  Chip,
   Tooltip,
   IconButton,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  InputAdornment
+  FormHelperText
 } from '@mui/material'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
 import { mockStaff } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import type { TimeOffReasonGroup } from '../calendar/types'
@@ -59,6 +57,63 @@ function calculateDuration(start: string, end: string): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
 }
 
+const timeOffSchema = z
+  .object({
+    staffId: z.string().min(1, 'Please select a staff member'),
+    startDate: z.date({ required_error: 'Start date is required' }),
+    endDate: z.date({ required_error: 'End date is required' }),
+    allDay: z.boolean(),
+    startTime: z.string(),
+    endTime: z.string(),
+    repeat: z.boolean(),
+    repeatUntil: z.date().nullable(),
+    reasonGroup: z.enum(['Vacation', 'Sick', 'Personal', 'Training', 'No-Show', 'Late', 'Other']),
+    approved: z.boolean(),
+    note: z.string().optional()
+  })
+  .superRefine((data, ctx) => {
+    if (!data.allDay) {
+      if (!data.startTime) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Start time is required',
+          path: ['startTime']
+        })
+      }
+      if (!data.endTime) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'End time is required',
+          path: ['endTime']
+        })
+      }
+    }
+
+    if (data.endDate < data.startDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End date cannot be before start date',
+        path: ['endDate']
+      })
+    }
+    // Simple check so endTime is after startTime if on the same day?
+    // Not strictly enforced here if spanning multiple days, but good for single day logic
+    if (!data.allDay && data.startDate.getTime() === data.endDate.getTime()) {
+      // Comparison logic for times
+      const [startH, startM] = data.startTime.split(':').map(Number)
+      const [endH, endM] = data.endTime.split(':').map(Number)
+      if (startH * 60 + startM >= endH * 60 + endM) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'End time must be after start time',
+          path: ['endTime']
+        })
+      }
+    }
+  })
+
+type TimeOffFormValues = z.infer<typeof timeOffSchema>
+
 export function TimeOffModal({
   open,
   onClose,
@@ -69,108 +124,103 @@ export function TimeOffModal({
 }: TimeOffModalProps) {
   const { createTimeOff, timeOffRequests, updateTimeOff, deleteTimeOff } = useStaffManagementStore()
 
-  // Find existing time-off if editing
-  const existingTimeOff = editTimeOffId ? timeOffRequests.find(t => t.id === editTimeOffId) : null
-
-  const [selectedStaffId, setSelectedStaffId] = useState<string>(existingTimeOff?.staffId || initialStaffId || '')
-  const [startDate, setStartDate] = useState<Date>(existingTimeOff?.range.start || initialDate || new Date())
-  const [endDate, setEndDate] = useState<Date>(existingTimeOff?.range.end || initialDate || new Date())
-  const [allDay, setAllDay] = useState(existingTimeOff?.allDay ?? true)
-  const [startTime, setStartTime] = useState(() => {
-    if (existingTimeOff && !existingTimeOff.allDay) {
-      const hours = existingTimeOff.range.start.getHours().toString().padStart(2, '0')
-      const minutes = existingTimeOff.range.start.getMinutes().toString().padStart(2, '0')
-      return `${hours}:${minutes}`
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors }
+  } = useForm<TimeOffFormValues>({
+    resolver: zodResolver(timeOffSchema),
+    defaultValues: {
+      staffId: '',
+      startDate: new Date(),
+      endDate: new Date(),
+      allDay: true,
+      startTime: '09:00',
+      endTime: '17:00',
+      repeat: false,
+      repeatUntil: null,
+      reasonGroup: 'Sick',
+      approved: false,
+      note: ''
     }
-    return '09:00'
   })
-  const [endTime, setEndTime] = useState(() => {
-    if (existingTimeOff && !existingTimeOff.allDay) {
-      const hours = existingTimeOff.range.end.getHours().toString().padStart(2, '0')
-      const minutes = existingTimeOff.range.end.getMinutes().toString().padStart(2, '0')
-      return `${hours}:${minutes}`
-    }
-    return '17:00'
-  })
-  const [hasRepeat, setHasRepeat] = useState(!!existingTimeOff?.repeat)
-  const [repeatUntil, setRepeatUntil] = useState<Date | null>(existingTimeOff?.repeat?.until || null)
-  const [reasonGroup, setReasonGroup] = useState<TimeOffReasonGroup>(existingTimeOff?.reason || 'Sick')
-  const [approved, setApproved] = useState(existingTimeOff?.approved ?? false)
-  const [note, setNote] = useState(existingTimeOff?.note || '')
 
-  // Reset form when modal opens with new data
+  // Watch values for conditional rendering
+  const allDay = watch('allDay')
+  const startTime = watch('startTime')
+  const endTime = watch('endTime')
+  const hasRepeat = watch('repeat')
+
+  // Load existing data when modal opens
   useEffect(() => {
     if (open) {
-      const timeOff = editTimeOffId ? timeOffRequests.find(t => t.id === editTimeOffId) : null
+      const existingTimeOff = editTimeOffId ? timeOffRequests.find(t => t.id === editTimeOffId) : null
 
-      setSelectedStaffId(timeOff?.staffId || initialStaffId || '')
-      setStartDate(timeOff?.range.start || initialDate || new Date())
-      setEndDate(timeOff?.range.end || initialDate || new Date())
-      setAllDay(timeOff?.allDay ?? true)
-
-      if (timeOff && !timeOff.allDay) {
-        const startHours = timeOff.range.start.getHours().toString().padStart(2, '0')
-        const startMinutes = timeOff.range.start.getMinutes().toString().padStart(2, '0')
-        setStartTime(`${startHours}:${startMinutes}`)
-
-        const endHours = timeOff.range.end.getHours().toString().padStart(2, '0')
-        const endMinutes = timeOff.range.end.getMinutes().toString().padStart(2, '0')
-        setEndTime(`${endHours}:${endMinutes}`)
+      if (existingTimeOff) {
+        reset({
+          staffId: existingTimeOff.staffId,
+          startDate: existingTimeOff.range.start,
+          endDate: existingTimeOff.range.end,
+          allDay: existingTimeOff.allDay,
+          startTime: !existingTimeOff.allDay
+            ? `${existingTimeOff.range.start.getHours().toString().padStart(2, '0')}:${existingTimeOff.range.start.getMinutes().toString().padStart(2, '0')}`
+            : '09:00',
+          endTime: !existingTimeOff.allDay
+            ? `${existingTimeOff.range.end.getHours().toString().padStart(2, '0')}:${existingTimeOff.range.end.getMinutes().toString().padStart(2, '0')}`
+            : '17:00',
+          repeat: !!existingTimeOff.repeat,
+          repeatUntil: existingTimeOff.repeat?.until || null,
+          reasonGroup: existingTimeOff.reason,
+          approved: existingTimeOff.approved,
+          note: existingTimeOff.note || ''
+        })
       } else {
-        setStartTime('09:00')
-        setEndTime('17:00')
+        reset({
+          staffId: initialStaffId || '',
+          startDate: initialDate || new Date(),
+          endDate: initialDate || new Date(),
+          allDay: true,
+          startTime: '09:00',
+          endTime: '17:00',
+          repeat: false,
+          repeatUntil: null,
+          reasonGroup: 'Sick',
+          approved: false,
+          note: ''
+        })
       }
-
-      setHasRepeat(!!timeOff?.repeat)
-      setRepeatUntil(timeOff?.repeat?.until || null)
-      setReasonGroup(timeOff?.reason || 'Sick')
-      setApproved(timeOff?.approved ?? false)
-      setNote(timeOff?.note || '')
     }
-  }, [open, editTimeOffId, initialStaffId, initialDate, timeOffRequests])
+  }, [open, editTimeOffId, initialStaffId, initialDate, timeOffRequests, reset])
 
-  const handleSave = () => {
-    if (!selectedStaffId) {
-      alert('Please select a staff member')
-      return
+  const onSubmit = (data: TimeOffFormValues) => {
+    const startDateTime = data.allDay
+      ? new Date(data.startDate.setHours(0, 0, 0, 0))
+      : new Date(`${data.startDate.toISOString().split('T')[0]}T${data.startTime}`)
+
+    const endDateTime = data.allDay
+      ? new Date(data.endDate.setHours(23, 59, 59, 999))
+      : new Date(`${data.endDate.toISOString().split('T')[0]}T${data.endTime}`)
+
+    const payload = {
+      staffId: data.staffId,
+      range: {
+        start: startDateTime,
+        end: endDateTime
+      },
+      allDay: data.allDay,
+      repeat: data.repeat && data.repeatUntil ? { until: data.repeatUntil } : undefined,
+      reason: data.reasonGroup as TimeOffReasonGroup,
+      approved: data.approved,
+      note: data.note
     }
 
-    const startDateTime = allDay
-      ? new Date(startDate.setHours(0, 0, 0, 0))
-      : new Date(`${startDate.toISOString().split('T')[0]}T${startTime}`)
-
-    const endDateTime = allDay
-      ? new Date(endDate.setHours(23, 59, 59, 999))
-      : new Date(`${endDate.toISOString().split('T')[0]}T${endTime}`)
-
-    if (editTimeOffId && existingTimeOff) {
-      // Update existing time-off
-      updateTimeOff(editTimeOffId, {
-        staffId: selectedStaffId,
-        range: {
-          start: startDateTime,
-          end: endDateTime
-        },
-        allDay,
-        repeat: hasRepeat && repeatUntil ? { until: repeatUntil } : undefined,
-        reason: reasonGroup,
-        approved,
-        note
-      })
+    if (editTimeOffId) {
+      updateTimeOff(editTimeOffId, payload)
     } else {
-      // Create new time-off
-      createTimeOff({
-        staffId: selectedStaffId,
-        range: {
-          start: startDateTime,
-          end: endDateTime
-        },
-        allDay,
-        repeat: hasRepeat && repeatUntil ? { until: repeatUntil } : undefined,
-        reason: reasonGroup,
-        approved,
-        note
-      })
+      createTimeOff(payload)
     }
 
     handleCancel()
@@ -184,203 +234,290 @@ export function TimeOffModal({
   }
 
   const handleCancel = () => {
-    setSelectedStaffId('')
-    setStartDate(new Date())
-    setEndDate(new Date())
-    setAllDay(true)
-    setStartTime('09:00')
-    setEndTime('17:00')
-    setHasRepeat(false)
-    setRepeatUntil(null)
-    setReasonGroup('Sick')
-    setApproved(false)
-    setNote('')
+    reset()
     onClose()
   }
 
   return (
     <Dialog open={open} onClose={handleCancel} maxWidth='md' fullWidth>
-      <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography variant='h6' fontWeight={600}>
-              {editTimeOffId ? `Edit Time Off • ${initialStaffName || 'Staff'}` : 'Add Time Off'}
-            </Typography>
-            {!editTimeOffId && (
-              <Typography variant='body2' color='text.secondary'>
-                Request time off for staff members
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box>
+              <Typography variant='h6' fontWeight={600}>
+                {editTimeOffId ? `Edit Time Off • ${initialStaffName || 'Staff'}` : 'Add Time Off'}
               </Typography>
-            )}
-          </Box>
-          <IconButton size='small' onClick={handleCancel}>
-            <i className='ri-close-line' />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-
-      <DialogContent dividers>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Staff Selection - Always show dropdown when not editing */}
-          {!editTimeOffId && (
-            <FormControl fullWidth required>
-              <InputLabel>Staff Member</InputLabel>
-              <Select value={selectedStaffId} onChange={e => setSelectedStaffId(e.target.value)} label='Staff Member'>
-                <MenuItem value=''>
-                  <em>Select a staff member</em>
-                </MenuItem>
-                {mockStaff.map(staff => (
-                  <MenuItem key={staff.id} value={staff.id}>
-                    {staff.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )}
-
-          {/* Show staff name when editing */}
-          {editTimeOffId && initialStaffName && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
-              <i className='ri-user-line' />
-              <Typography variant='body2' fontWeight={600}>
-                {initialStaffName}
-              </Typography>
-            </Box>
-          )}
-
-          {/* All Day Toggle + Duration */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={allDay}
-                  onChange={e => setAllDay(e.target.checked)}
-                  sx={{
-                    '&.Mui-checked': {
-                      color: 'text.primary'
-                    }
-                  }}
-                />
-              }
-              label={<Typography fontWeight={500}>All Day</Typography>}
-            />
-            {!allDay && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <i className='ri-time-line' style={{ fontSize: 20, opacity: 0.5 }} />
+              {!editTimeOffId && (
                 <Typography variant='body2' color='text.secondary'>
-                  {calculateDuration(startTime, endTime)}
+                  Request time off for staff members
+                </Typography>
+              )}
+            </Box>
+            <IconButton size='small' onClick={handleCancel}>
+              <i className='ri-close-line' />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+
+        <DialogContent dividers>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Staff Selection */}
+            {!editTimeOffId && (
+              <Controller
+                name='staffId'
+                control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth required error={!!errors.staffId}>
+                    <InputLabel>Staff Member</InputLabel>
+                    <Select {...field} label='Staff Member'>
+                      <MenuItem value=''>
+                        <em>Select a staff member</em>
+                      </MenuItem>
+                      {mockStaff.map(staff => (
+                        <MenuItem key={staff.id} value={staff.id}>
+                          {staff.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.staffId && <FormHelperText>{errors.staffId.message}</FormHelperText>}
+                  </FormControl>
+                )}
+              />
+            )}
+
+            {/* Editing Existing Staff Name Display */}
+            {editTimeOffId && initialStaffName && (
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}
+              >
+                <i className='ri-user-line' />
+                <Typography variant='body2' fontWeight={600}>
+                  {initialStaffName}
                 </Typography>
               </Box>
             )}
-          </Box>
 
-          {/* Select date */}
-          <Box>
-            <Typography variant='subtitle2' gutterBottom fontWeight={600}>
-              Select date
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-              <DatePickerField
-                label='DATE'
-                value={startDate}
-                onChange={date => {
-                  setStartDate(date)
-                  if (!endDate || endDate < date) {
-                    setEndDate(date)
-                  }
-                }}
-                required
-                sx={{ flex: 1 }}
+            {/* All Day Toggle + Duration */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Controller
+                name='allDay'
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={field.value}
+                        onChange={e => field.onChange(e.target.checked)}
+                        sx={{
+                          '&.Mui-checked': {
+                            color: 'text.primary'
+                          }
+                        }}
+                      />
+                    }
+                    label={<Typography fontWeight={500}>All Day</Typography>}
+                  />
+                )}
               />
+
               {!allDay && (
-                <>
-                  <TimeSelectField
-                    label='Start Time'
-                    value={startTime}
-                    onChange={setStartTime}
-                    size='small'
-                    sx={{ width: 140 }}
-                  />
-                  <TimeSelectField
-                    label='End Time'
-                    value={endTime}
-                    onChange={setEndTime}
-                    size='small'
-                    sx={{ width: 140 }}
-                  />
-                </>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <i className='ri-time-line' style={{ fontSize: 20, opacity: 0.5 }} />
+                  <Typography variant='body2' color='text.secondary'>
+                    {calculateDuration(startTime, endTime)}
+                  </Typography>
+                </Box>
               )}
-              <FormControlLabel
-                control={<Checkbox checked={hasRepeat} onChange={e => setHasRepeat(e.target.checked)} />}
-                label='Repeat'
+            </Box>
+
+            {/* Select date */}
+            <Box>
+              <Typography variant='subtitle2' gutterBottom fontWeight={600}>
+                Select date
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Controller
+                  name='startDate'
+                  control={control}
+                  render={({ field }) => (
+                    <DatePickerField
+                      label='DATE'
+                      value={field.value}
+                      onChange={date => {
+                        field.onChange(date)
+                        const currentEnd = watch('endDate')
+                        if (!currentEnd || currentEnd < date) {
+                          setValue('endDate', date)
+                        }
+                      }}
+                      required
+                      sx={{ flex: 1 }}
+                      error={!!errors.startDate}
+                      helperText={errors.startDate?.message}
+                    />
+                  )}
+                />
+
+                {!allDay && (
+                  <>
+                    <Controller
+                      name='startTime'
+                      control={control}
+                      render={({ field }) => (
+                        <TimeSelectField
+                          label='Start Time'
+                          value={field.value}
+                          onChange={field.onChange}
+                          size='small'
+                          sx={{ width: 140 }}
+                          error={!!errors.startTime}
+                          helperText={errors.startTime?.message}
+                        />
+                      )}
+                    />
+                    <Controller
+                      name='endTime'
+                      control={control}
+                      render={({ field }) => (
+                        <TimeSelectField
+                          label='End Time'
+                          value={field.value}
+                          onChange={field.onChange}
+                          size='small'
+                          sx={{ width: 140 }}
+                          error={!!errors.endTime}
+                          helperText={errors.endTime?.message}
+                        />
+                      )}
+                    />
+                  </>
+                )}
+
+                <Controller
+                  name='repeat'
+                  control={control}
+                  render={({ field }) => (
+                    <FormControlLabel
+                      control={<Checkbox checked={field.value} onChange={e => field.onChange(e.target.checked)} />}
+                      label='Repeat'
+                    />
+                  )}
+                />
+              </Box>
+              {hasRepeat && (
+                <Box sx={{ mt: 2 }}>
+                  <Controller
+                    name='repeatUntil'
+                    control={control}
+                    render={({ field }) => (
+                      <DatePickerField
+                        label='Repeat Until'
+                        value={field.value || new Date()}
+                        onChange={field.onChange}
+                        required
+                        error={!!errors.repeatUntil}
+                        helperText={errors.repeatUntil?.message}
+                      />
+                    )}
+                  />
+                </Box>
+              )}
+            </Box>
+
+            {/* Reason Selection */}
+            <Box>
+              <Typography variant='subtitle2' gutterBottom fontWeight={600}>
+                Select type
+              </Typography>
+              <Controller
+                name='reasonGroup'
+                control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth required error={!!errors.reasonGroup}>
+                    <InputLabel>REASON</InputLabel>
+                    <Select {...field} label='REASON'>
+                      {Object.keys(TIME_OFF_REASONS).map(group => (
+                        <MenuItem key={group} value={group}>
+                          {group}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.reasonGroup && <FormHelperText>{errors.reasonGroup.message}</FormHelperText>}
+                  </FormControl>
+                )}
               />
             </Box>
-          </Box>
 
-          {/* Reason Selection - Dropdown */}
-          <Box>
-            <Typography variant='subtitle2' gutterBottom fontWeight={600}>
-              Select type
-            </Typography>
-            <FormControl fullWidth required>
-              <InputLabel>REASON</InputLabel>
-              <Select
-                value={reasonGroup}
-                onChange={e => setReasonGroup(e.target.value as TimeOffReasonGroup)}
-                label='REASON'
-              >
-                {Object.keys(TIME_OFF_REASONS).map(group => (
-                  <MenuItem key={group} value={group}>
-                    {group}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
+            {/* Note Field (New) */}
+            <Box>
+              <Controller
+                name='note'
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label='Note (Optional)'
+                    fullWidth
+                    multiline
+                    rows={2}
+                    error={!!errors.note}
+                    helperText={errors.note?.message}
+                  />
+                )}
+              />
+            </Box>
 
-          {/* Approved */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={approved}
-                  onChange={e => setApproved(e.target.checked)}
-                  sx={{
-                    '&.Mui-checked': {
-                      color: 'text.primary'
+            {/* Approved */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Controller
+                name='approved'
+                control={control}
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={field.value}
+                        onChange={e => field.onChange(e.target.checked)}
+                        sx={{
+                          '&.Mui-checked': {
+                            color: 'text.primary'
+                          }
+                        }}
+                      />
                     }
-                  }}
-                />
-              }
-              label={<Typography fontWeight={500}>Approved</Typography>}
-            />
-            <Tooltip title='Mark as approved if this time off request has been reviewed and accepted by management'>
-              <IconButton size='small'>
-                <i className='ri-question-line' style={{ fontSize: 16 }} />
-              </IconButton>
-            </Tooltip>
+                    label={<Typography fontWeight={500}>Approved</Typography>}
+                  />
+                )}
+              />
+              <Tooltip title='Mark as approved if this time off request has been reviewed and accepted by management'>
+                <IconButton size='small'>
+                  <i className='ri-question-line' style={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </Box>
-        </Box>
-      </DialogContent>
+        </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
-        {editTimeOffId && (
-          <Button
-            onClick={handleDelete}
-            variant='outlined'
-            color='error'
-            startIcon={<i className='ri-delete-bin-line' />}
-          >
-            Clear Time Off
+        <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
+          {editTimeOffId && (
+            <Button
+              onClick={handleDelete}
+              variant='outlined'
+              color='error'
+              startIcon={<i className='ri-delete-bin-line' />}
+            >
+              Clear Time Off
+            </Button>
+          )}
+          <Box sx={{ flexGrow: 1 }} />
+          <Button onClick={handleCancel} variant='outlined'>
+            Cancel
           </Button>
-        )}
-        <Box sx={{ flexGrow: 1 }} />
-        <Button onClick={handleCancel} variant='outlined'>
-          Cancel
-        </Button>
-        <Button onClick={handleSave} variant='contained'>
-          {editTimeOffId ? 'Save' : 'Add Time Off'}
-        </Button>
-      </DialogActions>
+          <Button type='submit' variant='contained'>
+            {editTimeOffId ? 'Save' : 'Add Time Off'}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   )
 }

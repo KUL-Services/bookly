@@ -259,20 +259,14 @@ function businessDetailsPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900 relative overflow-hidden'>
-        {/* Animated background */}
-        <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-          <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 rounded-full blur-3xl animate-pulse' />
-          <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 rounded-full blur-3xl animate-pulse animation-delay-1000' />
-        </div>
-
+      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
         <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
           <div className='relative'>
             <div className='animate-spin rounded-full h-24 w-24 border-4 border-primary-200 border-t-primary-800 mx-auto shadow-lg'></div>
-            <div className='absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-cyan-400 animate-ping mx-auto'></div>
+            <div className='absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-primary-700 animate-ping mx-auto'></div>
           </div>
           <div className='mt-6 space-y-2'>
-            <p className='text-xl font-semibold bg-gradient-to-r from-primary-800 to-cyan-600 bg-clip-text text-transparent'>
+            <p className='text-xl font-semibold text-primary-800 dark:text-white'>
               {t('business.loading')}
             </p>
             <div className='flex justify-center space-x-1'>
@@ -288,27 +282,21 @@ function businessDetailsPage() {
 
   if (!business) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900 relative overflow-hidden'>
-        {/* Animated background */}
-        <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-          <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 rounded-full blur-3xl animate-pulse' />
-          <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 rounded-full blur-3xl animate-pulse animation-delay-1000' />
-        </div>
-
+      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
         <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
           <div className='mb-6'>
-            <div className='w-24 h-24 mx-auto bg-gradient-to-br from-red-100 to-orange-100 rounded-full flex items-center justify-center shadow-lg'>
+            <div className='w-24 h-24 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center shadow-lg'>
               <div className='text-3xl'>🏪</div>
             </div>
           </div>
-          <h1 className='text-3xl font-bold bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-300 dark:to-gray-100 bg-clip-text text-transparent mb-4'>
+          <h1 className='text-3xl font-bold text-gray-900 dark:text-white mb-4'>
             Business not found
           </h1>
           <p className='text-gray-600 dark:text-gray-300 text-lg max-w-md mx-auto leading-relaxed'>
             The business you're looking for doesn't exist or may have been removed.
           </p>
           <div className='mt-8'>
-            <button className='px-6 py-3 bg-gradient-to-r from-primary-800 to-cyan-600 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'>
+            <button className='px-6 py-3 bg-primary-700 hover:bg-primary-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'>
               Browse Other Businesses
             </button>
           </div>
@@ -318,19 +306,14 @@ function businessDetailsPage() {
   }
 
   return (
-    <div className='min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900 relative overflow-hidden'>
-      {/* Background elements - static to prevent flickering */}
-      <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/15 to-cyan-200/8 dark:from-primary-800/10 dark:to-cyan-600/5 rounded-full blur-3xl' />
-        <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/15 to-teal-200/8 dark:from-emerald-600/10 dark:to-sage-600/5 rounded-full blur-3xl' />
-      </div>
+    <div className='min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
       <div className='w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 space-y-3 sm:space-y-4 flex-none relative z-10'>
         {/* Header Section - Full width seamless design */}
         <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700'>
           <div className='p-4 sm:p-6 select-text'>
             <div className='flex flex-col md:flex-row gap-4 sm:gap-6'>
               {/* Business Image */}
-              <div className='w-full md:w-48 lg:w-56 h-40 sm:h-48 lg:h-56 bg-gradient-to-br from-primary-200 to-sage-200 dark:from-primary-800/50 dark:to-sage-800/50 rounded-xl overflow-hidden select-none'>
+              <div className='w-full md:w-48 lg:w-56 h-40 sm:h-48 lg:h-56 bg-primary-100 dark:bg-primary-900/50 rounded-xl overflow-hidden select-none'>
                 <img
                   src={
                     (business as any).logoUrl || (business as any).coverImageUrl || '/images/business-placeholder.jpg'
@@ -487,13 +470,11 @@ function businessDetailsPage() {
                         </span>
                       </div>
                       <div className='flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700'>
-                        <div className='text-xl font-bold text-primary-800 dark:text-primary-400'>
-                          ${service.price}
-                        </div>
+                        <div className='text-xl font-bold text-primary-800 dark:text-primary-400'>${service.price}</div>
                         <Button
                           buttonText={{ plainText: 'Book Now' }}
                           variant='contained'
-                          className='bg-primary-800 hover:bg-primary-700 text-white text-sm px-4 py-2 rounded-lg touch-manipulation'
+                          className='bg-primary-700 hover:bg-primary-800 text-white text-sm px-4 py-2 rounded-lg touch-manipulation'
                           onClick={() => handelBookService(service)}
                         />
                       </div>
@@ -531,9 +512,7 @@ function businessDetailsPage() {
                           size='lg'
                         />
                         <div className='flex-1 min-w-0'>
-                          <h3 className='text-base font-semibold text-gray-900 dark:text-white'>
-                            {branch.name}
-                          </h3>
+                          <h3 className='text-base font-semibold text-gray-900 dark:text-white'>{branch.name}</h3>
                           <div className='space-y-1 text-sm text-gray-500 dark:text-gray-400 mt-2'>
                             <div className='flex items-center gap-2'>
                               <MapPin className='w-4 h-4 flex-shrink-0' />
@@ -576,7 +555,9 @@ function businessDetailsPage() {
                               </div>
                               {imageIndex === 2 && branch.galleryUrls.length > 3 && (
                                 <div className='absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center'>
-                                  <span className='text-white text-sm font-medium'>+{branch.galleryUrls.length - 3}</span>
+                                  <span className='text-white text-sm font-medium'>
+                                    +{branch.galleryUrls.length - 3}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -589,7 +570,9 @@ function businessDetailsPage() {
               ) : (
                 <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 text-center'>
                   <MapPin className='w-12 h-12 mx-auto text-gray-400 mb-3' />
-                  <h3 className='text-base font-medium text-gray-900 dark:text-white'>{t('business.noBranches.title')}</h3>
+                  <h3 className='text-base font-medium text-gray-900 dark:text-white'>
+                    {t('business.noBranches.title')}
+                  </h3>
                   <p className='text-sm text-gray-500'>{t('business.noBranches.description')}</p>
                 </div>
               )}
@@ -623,9 +606,7 @@ function businessDetailsPage() {
                         />
                       ))}
                     </div>
-                    <div className='text-xs text-gray-500 mt-0.5'>
-                      {business.reviews?.length || 0} reviews
-                    </div>
+                    <div className='text-xs text-gray-500 mt-0.5'>{business.reviews?.length || 0} reviews</div>
                   </div>
                   <div className='flex-1 space-y-1'>
                     {[5, 4, 3, 2, 1].map(rating => (
@@ -670,7 +651,9 @@ function businessDetailsPage() {
                         </div>
                         <div className='flex-1 min-w-0'>
                           <div className='flex items-center gap-2'>
-                            <span className='text-base font-medium text-gray-900 dark:text-white'>{review.authorName}</span>
+                            <span className='text-base font-medium text-gray-900 dark:text-white'>
+                              {review.authorName}
+                            </span>
                             <span className='text-sm text-gray-400'>{format(review.date, 'MMM d')}</span>
                           </div>
                           <div className='flex items-center my-1'>
@@ -683,9 +666,7 @@ function businessDetailsPage() {
                               />
                             ))}
                           </div>
-                          <p className='text-sm text-gray-600 dark:text-gray-400 line-clamp-3'>
-                            {review.comment}
-                          </p>
+                          <p className='text-sm text-gray-600 dark:text-gray-400 line-clamp-3'>{review.comment}</p>
                         </div>
                       </div>
                     </div>
@@ -755,12 +736,8 @@ function businessDetailsPage() {
                 <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 border border-gray-100/50 dark:border-gray-700/50'>
                   <h3 className='text-base font-semibold text-gray-900 dark:text-white mb-3'>Contact</h3>
                   <div className='space-y-2 text-sm text-gray-600 dark:text-gray-400'>
-                    {branches.length > 0 && branches[0].address && (
-                      <p>{branches[0].address}</p>
-                    )}
-                    {branches.length > 0 && branches[0].mobile && (
-                      <p>{branches[0].mobile}</p>
-                    )}
+                    {branches.length > 0 && branches[0].address && <p>{branches[0].address}</p>}
+                    {branches.length > 0 && branches[0].mobile && <p>{branches[0].mobile}</p>}
                     {business.email && <p>{business.email}</p>}
                     {business.socialLinks && business.socialLinks.length > 0 && (
                       <div className='flex items-center gap-3 mt-2'>

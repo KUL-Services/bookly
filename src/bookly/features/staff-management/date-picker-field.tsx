@@ -26,8 +26,10 @@ export function DatePickerField({
   minDate,
   size = 'medium',
   sx,
-  fullWidth = false
-}: DatePickerFieldProps) {
+  fullWidth = false,
+  error,
+  helperText
+}: DatePickerFieldProps & { error?: boolean; helperText?: string }) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
 
@@ -64,9 +66,11 @@ export function DatePickerField({
         disabled={disabled}
         size={size}
         fullWidth={fullWidth}
+        error={error}
+        helperText={helperText}
         InputProps={{
           readOnly: true,
-          endAdornment: <i className="ri-calendar-line" style={{ fontSize: 20, opacity: 0.5 }} />
+          endAdornment: <i className='ri-calendar-line' style={{ fontSize: 20, opacity: 0.5 }} />
         }}
         InputLabelProps={{ shrink: true }}
         sx={{
@@ -211,7 +215,7 @@ export function DatePickerField({
             }}
           >
             <Calendar
-              mode="single"
+              mode='single'
               selected={dateValue}
               onSelect={handleDateSelect}
               disabled={minDate ? { before: minDate } : undefined}

@@ -188,7 +188,7 @@ export const BranchDetailsModal = ({
         >
           {/* Header */}
           <div className='relative'>
-            <div className='bg-gradient-to-r from-primary-700 to-blue-600 p-6 text-white'>
+            <div className='btn-gradient p-6 text-white'>
               <button
                 onClick={onClose}
                 className='absolute top-4 end-4 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors'
@@ -406,7 +406,7 @@ export const BranchDetailsModal = ({
                         <Button
                           buttonText={{ plainText: t('business.branchDetails.bookNow') }}
                           variant='contained'
-                          className='bg-primary-700 hover:bg-primary-800 dark:bg-primary-800 dark:hover:bg-primary-900 text-white'
+                          className='btn-gradient text-white'
                           onClick={() => onBookService?.(service.id)}
                         />
                       </div>

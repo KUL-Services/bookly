@@ -124,7 +124,7 @@ function compareTime(time1: string, time2: string): number {
 
 const detailsFormSchema = z.object({
   name: z.string().min(2, 'Name required'),
-  email: z.email('Invalid email'),
+  email: z.string().email('Invalid email'),
   phone: z.string().optional(),
   notes: z.string().optional()
 })
@@ -158,62 +158,75 @@ function SortableServiceCard({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className='bg-slate-700 dark:bg-slate-700 rounded-xl p-4 relative border-2 border-slate-600'>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className='bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 relative shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700'
+    >
       {/* Drag Handle */}
       <div
         {...attributes}
         {...listeners}
-        className='absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-3 hover:bg-slate-600 dark:hover:bg-slate-600 rounded-lg transition-colors touch-none'
+        className='absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors touch-none'
         style={{ touchAction: 'none' }}
       >
-        <KulIcon icon='lucide:grip-vertical' className='w-5 h-5 text-slate-400 hover:text-teal-400' />
+        <KulIcon icon='lucide:grip-vertical' className='w-5 h-5 text-gray-400 hover:text-primary-600' />
       </div>
 
       <button
         onClick={onRemove}
-        className='absolute top-2 right-2 p-1.5 bg-red-500/20 dark:bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 hover:text-red-300 transition-all'
+        className='absolute top-3 right-3 p-2 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-all'
       >
         <KulIcon icon='lucide:x' className='w-4 h-4' />
       </button>
 
-      <div className='flex items-start justify-between mb-3 pr-8 pl-10'>
+      <div className='flex items-start justify-between mb-3 pr-10 pl-10'>
         <div className='flex-1'>
-          <div className='font-semibold text-lg text-white'>{selected.service.name}</div>
-          <div className='text-sm text-teal-400'>
-            {selected.time && selected.endTime ? `${selected.time} - ${selected.endTime}` : 'Time pending - select start time'}
+          <div className='font-bold text-lg text-gray-900 dark:text-white'>{selected.service.name}</div>
+          <div className='text-sm text-primary-600 dark:text-teal-400 font-medium'>
+            {selected.time && selected.endTime
+              ? `${selected.time} - ${selected.endTime}`
+              : 'Time pending - select start time'}
           </div>
         </div>
-        <div className='text-xl font-bold text-teal-400'>£{(selected.service.price / 100).toFixed(2)}</div>
+        <div className='text-xl font-bold text-primary-700 dark:text-teal-400'>
+          £{(selected.service.price / 100).toFixed(2)}
+        </div>
       </div>
 
-      <div className='flex items-center justify-between pt-3 border-t border-slate-600 dark:border-slate-600 pl-10'>
-        <div className='text-sm text-slate-300 dark:text-slate-300'>Staff: {selected.providerName}</div>
-        <button onClick={onToggleStaffSelector} className='text-teal-400 hover:text-teal-300 font-semibold text-sm px-3 py-1.5 rounded-lg hover:bg-primary-700/10 transition-all'>
+      <div className='flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700/50 pl-10'>
+        <div className='text-sm text-gray-600 dark:text-gray-300'>
+          Staff: <span className='font-medium'>{selected.providerName}</span>
+        </div>
+        <button
+          onClick={onToggleStaffSelector}
+          className='text-primary-600 dark:text-teal-400 hover:text-primary-700 dark:hover:text-teal-300 font-semibold text-sm px-3 py-1.5 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all'
+        >
           Change
         </button>
       </div>
 
       {/* Staff Selector Dropdown */}
       {showStaffSelector && (
-        <div className='mt-3 p-3 bg-slate-800 dark:bg-slate-800 rounded-lg border border-slate-600 space-y-2 max-h-60 overflow-y-auto ml-10'>
+        <div className='mt-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl space-y-2 max-h-60 overflow-y-auto ml-10'>
           {availableStaff.map(staff => (
             <button
               key={staff.id}
               onClick={() => onChangeStaff(staff.id)}
-              className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
+              className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
                 selected.providerId === staff.id
-                  ? 'bg-primary-700/20 border-2 border-primary-700 shadow-md'
-                  : 'bg-slate-700 border-2 border-transparent hover:bg-slate-600 hover:border-primary-700/50'
+                  ? 'bg-primary-100 dark:bg-primary-900/30 border border-primary-300 dark:border-primary-700 shadow-sm'
+                  : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent'
               }`}
             >
               {staff.profilePhotoUrl ? (
-                <img src={staff.profilePhotoUrl} alt={staff.name} className='w-10 h-10 rounded-full object-cover' />
+                <img src={staff.profilePhotoUrl} alt={staff.name} className='w-10 h-10 rounded-xl object-cover' />
               ) : (
-                <div className='w-10 h-10 rounded-full bg-primary-700 flex items-center justify-center text-white font-semibold'>
+                <div className='w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center text-white font-semibold'>
                   {staff.name.charAt(0)}
                 </div>
               )}
-              <span className='font-semibold text-white'>{staff.name}</span>
+              <span className='font-semibold text-gray-900 dark:text-white'>{staff.name}</span>
             </button>
           ))}
         </div>
@@ -222,7 +235,14 @@ function SortableServiceCard({
   )
 }
 
-function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, branchId, businessId }: BookingModalV2FixedProps) {
+function BookingModalV2Fixed({
+  isOpen,
+  onClose,
+  initialService,
+  initialTime,
+  branchId,
+  businessId
+}: BookingModalV2FixedProps) {
   const [currentStep, setCurrentStep] = useState<'selection' | 'details' | 'success'>('selection')
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedPeriod, setSelectedPeriod] = useState<Period>('Afternoon')
@@ -243,8 +263,8 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 8px of movement required before drag starts
-      },
+        distance: 8 // 8px of movement required before drag starts
+      }
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates
@@ -691,17 +711,20 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
   if (!isOpen) return null
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 sm:p-4' onClick={onClose}>
+    <div
+      className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4'
+      onClick={onClose}
+    >
       <div
-        className='bg-white dark:bg-gray-900 rounded-none sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-5xl sm:max-h-[95vh] overflow-y-auto'
+        className='bg-white dark:bg-gray-900 rounded-none sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-5xl sm:max-h-[95vh] overflow-y-auto shadow-2xl animate-[fadeInScale_0.3s_ease-out]'
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className='sticky top-0 bg-white dark:bg-gray-900 z-10 flex items-center justify-between p-3 sm:p-4 border-b'>
-          <h2 className='text-lg sm:text-xl font-semibold'>Book Appointment</h2>
+        <div className='sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md z-10 flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-700'>
+          <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white'>Book Appointment</h2>
           <button
             onClick={onClose}
-            className='p-2 hover:bg-primary-100 dark:hover:bg-primary-900/20 text-gray-600 dark:text-gray-400 hover:text-primary-800 dark:hover:text-sage-400 rounded-full transition-colors touch-manipulation'
+            className='p-2.5 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-xl transition-all touch-manipulation'
           >
             <KulIcon icon='lucide:x' className='w-5 h-5 sm:w-6 sm:h-6' />
           </button>
@@ -709,33 +732,33 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
         {/* STEP 1: Selection */}
         {currentStep === 'selection' && (
-          <div className='p-3 sm:p-4 space-y-3 sm:space-y-4'>
+          <div className='p-4 sm:p-6 space-y-4 sm:space-y-5'>
             {/* Quick Navigation Buttons */}
-            <div className='flex gap-2 justify-end'>
+            <div className='flex gap-3 justify-end'>
               <button
                 onClick={goToToday}
-                className='px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-sage-300 hover:bg-primary-200 dark:hover:bg-primary-900/40 rounded-lg font-medium transition-colors border border-primary-200 dark:border-primary-800 touch-manipulation'
+                className='px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base bg-white dark:bg-gray-800 text-primary-800 dark:text-teal-300 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-xl font-semibold transition-all shadow-sm hover:shadow-md border border-primary-200/50 dark:border-primary-800/50 touch-manipulation'
               >
                 Today
               </button>
               <button
                 onClick={goToNextAvailable}
-                className='px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm bg-primary-700 text-white hover:bg-primary-800 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md touch-manipulation'
+                className='btn-gradient px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base text-white hover:bg-primary-800 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg touch-manipulation'
               >
                 Next Available
               </button>
             </div>
 
             {/* Days Carousel */}
-            <div className='flex items-center gap-1 sm:gap-2'>
+            <div className='flex items-center gap-2 sm:gap-3'>
               <button
                 onClick={() => scrollDays('left')}
-                className='p-1.5 sm:p-2 bg-primary-100 dark:bg-primary-900/20 hover:bg-primary-200 dark:hover:bg-primary-900/40 text-primary-800 dark:text-sage-400 rounded-full flex-shrink-0 transition-colors touch-manipulation'
+                className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
               >
-                <KulIcon icon='lucide:chevron-left' className='w-4 h-4 sm:w-5 sm:h-5' />
+                <KulIcon icon='lucide:chevron-left' className='w-5 h-5' />
               </button>
 
-              <div ref={daysScrollRef} className='flex-1 flex gap-1.5 sm:gap-2 overflow-x-auto scrollbar-hide'>
+              <div ref={daysScrollRef} className='flex-1 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide py-1'>
                 {weekDates.map((date, idx) => {
                   const isSelected = format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
                   // Week starts Saturday (6), ends Friday (5): Sat, Sun, Mon, Tue, Wed, Thu, Fri
@@ -745,14 +768,18 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                     <button
                       key={idx}
                       onClick={() => setSelectedDate(date)}
-                      className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[60px] sm:min-w-[80px] h-16 sm:h-24 rounded-xl sm:rounded-2xl border-2 transition-all touch-manipulation ${
+                      className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[70px] sm:min-w-[90px] h-20 sm:h-28 rounded-2xl transition-all touch-manipulation ${
                         isSelected
-                          ? 'border-primary-700 bg-primary-700 text-white shadow-lg'
-                          : 'border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 hover:border-teal-400 hover:bg-slate-600'
+                          ? 'bg-primary-800 text-white shadow-lg shadow-primary-500/30 scale-105'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-md border border-gray-200 dark:border-gray-700'
                       }`}
                     >
-                      <span className='text-xs sm:text-sm'>{weekdays[idx]}</span>
-                      <span className='text-xl sm:text-2xl font-bold mt-0.5 sm:mt-1'>{format(date, 'd')}</span>
+                      <span
+                        className={`text-xs sm:text-sm font-medium ${isSelected ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}
+                      >
+                        {weekdays[idx]}
+                      </span>
+                      <span className='text-2xl sm:text-3xl font-bold mt-1'>{format(date, 'd')}</span>
                     </button>
                   )
                 })}
@@ -760,22 +787,22 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
               <button
                 onClick={() => scrollDays('right')}
-                className='p-1.5 sm:p-2 bg-primary-100 dark:bg-primary-900/20 hover:bg-primary-200 dark:hover:bg-primary-900/40 text-primary-800 dark:text-sage-400 rounded-full flex-shrink-0 transition-colors touch-manipulation'
+                className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
               >
-                <KulIcon icon='lucide:chevron-right' className='w-4 h-4 sm:w-5 sm:h-5' />
+                <KulIcon icon='lucide:chevron-right' className='w-5 h-5' />
               </button>
             </div>
 
             {/* Period Tabs */}
-            <div className='flex gap-1 sm:gap-2 bg-slate-800/50 dark:bg-slate-800/50 rounded-lg sm:rounded-xl p-1 sm:p-1.5 border border-slate-700 dark:border-slate-700'>
+            <div className='flex bg-gray-100 dark:bg-gray-800 rounded-2xl p-1.5'>
               {(['Morning', 'Afternoon', 'Evening'] as Period[]).map(period => (
                 <button
                   key={period}
                   onClick={() => setSelectedPeriod(period)}
-                  className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-lg transition-all font-medium text-xs sm:text-sm touch-manipulation ${
+                  className={`flex-1 py-3 sm:py-3.5 px-4 sm:px-6 rounded-xl transition-all font-semibold text-sm sm:text-base touch-manipulation ${
                     selectedPeriod === period
-                      ? 'bg-primary-700 text-white shadow-lg scale-[1.02]'
-                      : 'bg-slate-700 dark:bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white'
+                      ? 'bg-primary-800 text-white shadow-md'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
                   }`}
                 >
                   {period}
@@ -784,31 +811,31 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
             </div>
 
             {/* Time Slots Carousel */}
-            <div className='flex items-center gap-2'>
+            <div className='flex items-center gap-2 sm:gap-3'>
               <button
                 onClick={() => scrollTimes('left')}
-                className='p-2 bg-primary-100 dark:bg-primary-900/20 hover:bg-primary-200 dark:hover:bg-primary-900/40 text-primary-800 dark:text-sage-400 rounded-full flex-shrink-0 transition-colors'
+                className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
               >
-                <KulIcon icon='lucide:chevron-left' />
+                <KulIcon icon='lucide:chevron-left' className='w-5 h-5' />
               </button>
 
-              <div ref={timesScrollRef} className='flex-1 flex gap-2 overflow-x-auto scrollbar-hide'>
+              <div ref={timesScrollRef} className='flex-1 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide py-1'>
                 {availableTimeSlots.length > 0 ? (
                   availableTimeSlots.map(time => (
                     <button
                       key={time}
                       onClick={() => handleTimeSelect(time)}
-                      className={`flex-shrink-0 min-w-[100px] py-3 px-4 rounded-xl border-2 transition-all font-medium ${
+                      className={`flex-shrink-0 min-w-[90px] sm:min-w-[110px] py-3 sm:py-3.5 px-4 sm:px-5 rounded-xl transition-all font-semibold text-sm sm:text-base touch-manipulation ${
                         selectedTime === time
-                          ? 'border-primary-700 bg-primary-700 text-white shadow-lg'
-                          : 'border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 text-slate-200 hover:border-teal-400 hover:bg-slate-600'
+                          ? 'bg-primary-800 text-white shadow-lg shadow-primary-500/20'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-md border border-gray-200 dark:border-gray-700'
                       }`}
                     >
                       {time}
                     </button>
                   ))
                 ) : (
-                  <div className='flex-1 text-center text-gray-500 py-4'>
+                  <div className='flex-1 text-center text-gray-400 dark:text-gray-500 py-6 bg-gray-50 dark:bg-gray-800 rounded-xl'>
                     No available slots for this period
                   </div>
                 )}
@@ -816,9 +843,9 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
               <button
                 onClick={() => scrollTimes('right')}
-                className='p-2 bg-primary-100 dark:bg-primary-900/20 hover:bg-primary-200 dark:hover:bg-primary-900/40 text-primary-800 dark:text-sage-400 rounded-full flex-shrink-0 transition-colors'
+                className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
               >
-                <KulIcon icon='lucide:chevron-right' />
+                <KulIcon icon='lucide:chevron-right' className='w-5 h-5' />
               </button>
             </div>
 
@@ -830,7 +857,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
                 </div>
                 <button
                   onClick={() => setShowServiceSelector(true)}
-                  className='w-full bg-primary-700 hover:bg-primary-800 text-white py-2 rounded-lg'
+                  className='w-full btn-gradient hover:bg-primary-800 text-white py-2 rounded-lg'
                 >
                   Select Service
                 </button>
@@ -883,7 +910,7 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
             {/* Add Another Service */}
             <button
               onClick={() => setShowServiceSelector(true)}
-              className='w-full py-4 border-2 border-dashed border-primary-700/60 dark:border-primary-700/60 bg-slate-700/50 dark:bg-slate-700/50 rounded-xl text-teal-400 hover:bg-primary-700/10 hover:border-teal-400 dark:hover:bg-primary-900/30 dark:hover:border-sage-400 flex items-center justify-center gap-2 font-semibold transition-all shadow-sm hover:shadow-md'
+              className='w-full py-4 sm:py-5 border-2 border-dashed border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/20 rounded-2xl text-primary-700 dark:text-teal-400 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:border-primary-400 dark:hover:border-primary-600 flex items-center justify-center gap-2 font-semibold transition-all'
             >
               <KulIcon icon='lucide:plus' className='w-5 h-5' />
               Add another service
@@ -891,32 +918,40 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
             {/* Service Selector Modal */}
             {showServiceSelector && (
-              <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-                <div className='bg-white dark:bg-gray-900 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6'>
-                  <div className='flex justify-between items-center mb-4'>
-                    <h3 className='text-xl font-bold'>Select Service</h3>
+              <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+                <div className='bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 shadow-2xl'>
+                  <div className='flex justify-between items-center mb-5'>
+                    <h3 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white'>Select Service</h3>
                     <button
                       onClick={() => setShowServiceSelector(false)}
-                      className='p-2 hover:bg-primary-100 dark:hover:bg-primary-900/20 text-gray-600 dark:text-gray-400 hover:text-primary-800 dark:hover:text-sage-400 rounded-full transition-colors'
+                      className='p-2.5 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 text-gray-500 dark:text-gray-400 rounded-xl transition-all'
                     >
-                      <KulIcon icon='lucide:x' />
+                      <KulIcon icon='lucide:x' className='w-5 h-5' />
                     </button>
                   </div>
                   <div className='space-y-3'>
                     {availableServices.map(service => (
                       <button
                         key={service.id}
-                        onClick={() => handleAddServiceWithTime(service, selectedTime || '00:00', 'no-preference', false)}
-                        className='w-full border-2 border-slate-600 dark:border-slate-600 bg-slate-700 dark:bg-slate-700 rounded-xl p-5 hover:border-primary-700 hover:bg-slate-600 dark:hover:bg-slate-600 hover:shadow-lg transition-all text-left group'
+                        onClick={() =>
+                          handleAddServiceWithTime(service, selectedTime || '00:00', 'no-preference', false)
+                        }
+                        className='w-full bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 hover:bg-white dark:hover:bg-gray-700 hover:shadow-lg transition-all text-left group border border-gray-200 dark:border-gray-700'
                       >
                         <div className='flex justify-between items-start mb-2'>
                           <div className='flex-1'>
-                            <div className='font-bold text-lg text-white group-hover:text-teal-400 transition-colors'>{service.name}</div>
-                            <div className='text-sm text-slate-400 mt-1'>{service.description}</div>
+                            <div className='font-bold text-lg text-gray-900 dark:text-white group-hover:text-primary-700 dark:group-hover:text-teal-400 transition-colors'>
+                              {service.name}
+                            </div>
+                            <div className='text-sm text-gray-500 dark:text-gray-400 mt-1'>{service.description}</div>
                           </div>
-                          <div className='text-xl font-bold text-teal-400 ml-4'>£{(service.price / 100).toFixed(2)}</div>
+                          <div className='text-xl font-bold text-primary-700 dark:text-teal-400 ml-4'>
+                            £{(service.price / 100).toFixed(2)}
+                          </div>
                         </div>
-                        <div className='text-sm text-slate-300 bg-slate-800 px-3 py-1 rounded-full inline-block'>{service.duration}min</div>
+                        <div className='text-sm text-gray-600 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-700/50 px-4 py-1.5 rounded-full inline-block font-medium'>
+                          {service.duration}min
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -926,17 +961,19 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
             {/* Total & Continue */}
             {selectedServices.length > 0 && (
-              <div className='sticky bottom-0 bg-white dark:bg-gray-900 border-t pt-3 sm:pt-4 mt-3 sm:mt-4'>
-                <div className='flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4'>
+              <div className='sticky bottom-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 pt-4 sm:pt-5 mt-4 sm:mt-5 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-6'>
+                <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
                   <div className='w-full sm:w-auto text-center sm:text-left'>
-                    <div className='text-xs sm:text-sm text-gray-500'>Total</div>
-                    <div className='text-2xl sm:text-3xl font-bold'>£{(calculateTotal() / 100).toFixed(2)}</div>
-                    <div className='text-xs sm:text-sm text-gray-500'>{calculateTotalDuration()}min</div>
+                    <div className='text-sm text-gray-500 dark:text-gray-400'>Total</div>
+                    <div className='text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white'>
+                      £{(calculateTotal() / 100).toFixed(2)}
+                    </div>
+                    <div className='text-sm text-gray-500 dark:text-gray-400'>{calculateTotalDuration()}min</div>
                   </div>
                   <button
                     onClick={() => setCurrentStep('details')}
                     disabled={!selectedTime}
-                    className='w-full sm:w-auto bg-primary-700 hover:bg-primary-800 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+                    className='w-full sm:w-auto btn-gradient hover:bg-primary-800 text-white px-8 sm:px-10 py-4 rounded-2xl text-lg font-semibold transition-all shadow-lg shadow-primary-500/20 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
                   >
                     Continue
                   </button>
@@ -949,101 +986,137 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
         {/* STEP 2: Details */}
         {currentStep === 'details' && (
           <div className='p-4 sm:p-6 space-y-4 sm:space-y-6'>
-            <h3 className='text-xl sm:text-2xl font-bold text-center'>Review and confirm</h3>
+            <h3 className='text-xl sm:text-2xl font-bold text-center text-gray-900 dark:text-white'>
+              Review and confirm
+            </h3>
 
-            <div className='bg-gray-50 dark:bg-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4'>
-              <div className='text-center mb-3 sm:mb-4'>
-                <div className='text-lg sm:text-2xl font-bold'>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</div>
+            <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700'>
+              <div className='text-center mb-4 sm:mb-5'>
+                <div className='text-lg sm:text-2xl font-bold text-gray-900 dark:text-white'>
+                  {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                </div>
               </div>
-              {selectedServices.map(service => (
-                <div key={service.id} className='bg-white dark:bg-gray-900 rounded-lg p-3 sm:p-4 mb-2'>
-                  <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-0'>
-                    <div className='flex-1'>
-                      <div className='font-semibold text-sm sm:text-base'>{service.service.name}</div>
-                      <div className='text-xs sm:text-sm text-gray-500'>
-                        {service.time} - {service.endTime} • Staff: {service.providerName}
+              <div className='space-y-3'>
+                {selectedServices.map(service => (
+                  <div
+                    key={service.id}
+                    className='bg-white dark:bg-gray-900 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all'
+                  >
+                    <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-0'>
+                      <div className='flex-1'>
+                        <div className='font-bold text-base sm:text-lg text-gray-900 dark:text-white'>
+                          {service.service.name}
+                        </div>
+                        <div className='text-sm text-primary-600 dark:text-teal-400 font-medium mt-1'>
+                          {service.time} - {service.endTime} • Staff: {service.providerName}
+                        </div>
+                      </div>
+                      <div className='font-bold text-lg sm:text-xl text-primary-700 dark:text-teal-400'>
+                        £{(service.service.price / 100).toFixed(2)}
                       </div>
                     </div>
-                    <div className='font-bold text-base sm:text-lg'>£{(service.service.price / 100).toFixed(2)}</div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             <Form {...detailsForm}>
               <form onSubmit={detailsForm.handleSubmit(handleDetailsSubmit)} className='space-y-4'>
-                <FormField
-                  control={detailsForm.control}
-                  name='name'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input {...field} placeholder='Name' className='rounded-lg' />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 space-y-4'>
+                  <FormField
+                    control={detailsForm.control}
+                    name='name'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder='Name'
+                            className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={detailsForm.control}
-                  name='email'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input {...field} type='email' placeholder='Email' className='rounded-lg' />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={detailsForm.control}
+                    name='email'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type='email'
+                            placeholder='Email'
+                            className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={detailsForm.control}
-                  name='phone'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input {...field} placeholder='Phone (optional)' className='rounded-lg' />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={detailsForm.control}
+                    name='phone'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder='Phone (optional)'
+                            className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={detailsForm.control}
-                  name='notes'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input {...field} placeholder='Leave note (optional)' className='rounded-lg' />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <div className='pt-3 sm:pt-4 border-t'>
-                  <div className='flex justify-between items-center mb-3 sm:mb-4'>
-                    <span className='text-sm sm:text-base text-gray-600'>Total to pay</span>
-                    <span className='text-2xl sm:text-4xl font-bold'>£{(calculateTotal() / 100).toFixed(2)}</span>
-                  </div>
+                  <FormField
+                    control={detailsForm.control}
+                    name='notes'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder='Leave note (optional)'
+                            className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
-                <div className='flex flex-col sm:flex-row gap-2 sm:gap-3'>
-                  <button
-                    type='button'
-                    onClick={() => setCurrentStep('selection')}
-                    className='flex-1 border-2 border-primary-700 dark:border-primary-800 text-primary-800 dark:text-sage-400 py-3 h-12 sm:h-auto rounded-xl font-semibold hover:bg-primary-100 dark:hover:bg-primary-900/20 transition-colors touch-manipulation'
-                  >
-                    Back
-                  </button>
-                  <button
-                    type='submit'
-                    disabled={loading}
-                    className='flex-1 bg-primary-700 hover:bg-primary-800 text-white py-3 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50 shadow-md hover:shadow-lg transition-all touch-manipulation'
-                  >
-                    {loading ? 'Processing...' : 'Confirm & Book'}
-                  </button>
+                <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700'>
+                  <div className='flex justify-between items-center mb-4 sm:mb-5'>
+                    <span className='text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium'>
+                      Total to pay
+                    </span>
+                    <span className='text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white'>
+                      £{(calculateTotal() / 100).toFixed(2)}
+                    </span>
+                  </div>
+
+                  <div className='flex flex-col sm:flex-row gap-3'>
+                    <button
+                      type='button'
+                      onClick={() => setCurrentStep('selection')}
+                      className='flex-1 bg-white dark:bg-gray-900 border-2 border-primary-300 dark:border-primary-700 text-primary-800 dark:text-teal-400 py-3.5 h-12 sm:h-auto rounded-xl font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:border-primary-400 dark:hover:border-primary-600 transition-all touch-manipulation'
+                    >
+                      Back
+                    </button>
+                    <button
+                      type='submit'
+                      disabled={loading}
+                      className='flex-1 btn-gradient hover:bg-primary-800 text-white py-3.5 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50 shadow-lg shadow-primary-500/20 hover:shadow-xl transition-all touch-manipulation'
+                    >
+                      {loading ? 'Processing...' : 'Confirm & Book'}
+                    </button>
+                  </div>
                 </div>
               </form>
             </Form>
@@ -1052,32 +1125,39 @@ function BookingModalV2Fixed({ isOpen, onClose, initialService, initialTime, bra
 
         {/* STEP 3: Success */}
         {currentStep === 'success' && (
-          <div className='p-6 sm:p-8 lg:p-12 text-center space-y-4 sm:space-y-6'>
+          <div className='p-6 sm:p-8 lg:p-12 text-center space-y-5 sm:space-y-6'>
             <div className='flex justify-center'>
-              <div className='w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-full bg-primary-200 dark:bg-primary-900/30 flex items-center justify-center'>
-                <KulIcon icon='lucide:check' className='w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-primary-700' />
+              <div className='w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-primary-600 flex items-center justify-center shadow-xl shadow-primary-500/30'>
+                <KulIcon icon='lucide:check' className='w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 text-white' />
               </div>
             </div>
 
-            <div>
-              <h3 className='text-2xl sm:text-3xl font-bold mb-2'>Appointment Confirmed</h3>
-              <div className='text-lg sm:text-xl'>{format(selectedDate, 'MMM d, yyyy')}</div>
-              <div className='text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-2 px-4'>You're done! We'll send you a reminder before your appointment.</div>
+            <div className='space-y-3'>
+              <h3 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white'>Appointment Confirmed</h3>
+              <div className='text-lg sm:text-xl font-semibold text-primary-700 dark:text-teal-400'>
+                {format(selectedDate, 'MMM d, yyyy')}
+              </div>
+              <div className='text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-sm mx-auto'>
+                You're done! We'll send you a reminder before your appointment.
+              </div>
             </div>
 
-            <button
-              onClick={handleDownloadICS}
-              className='w-full max-w-md mx-auto bg-primary-700 hover:bg-primary-800 text-white py-3 h-12 sm:h-auto rounded-xl font-semibold transition-colors shadow-md touch-manipulation'
-            >
-              Download Calendar Event
-            </button>
+            <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 sm:p-6 border border-gray-200 dark:border-gray-700 max-w-md mx-auto space-y-3'>
+              <button
+                onClick={handleDownloadICS}
+                className='w-full btn-gradient hover:bg-primary-800 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-primary-500/20 hover:shadow-xl transition-all touch-manipulation flex items-center justify-center gap-2'
+              >
+                <KulIcon icon='lucide:calendar-plus' className='w-5 h-5' />
+                Download Calendar Event
+              </button>
 
-            <button
-              onClick={onClose}
-              className='w-full max-w-md mx-auto bg-slate-700 hover:bg-slate-600 dark:bg-slate-700 dark:hover:bg-slate-600 text-white py-3 h-12 sm:h-auto rounded-xl font-semibold transition-colors shadow-md touch-manipulation'
-            >
-              Close
-            </button>
+              <button
+                onClick={onClose}
+                className='w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-3.5 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all touch-manipulation'
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
       </div>

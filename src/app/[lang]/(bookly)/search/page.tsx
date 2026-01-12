@@ -277,7 +277,7 @@ export default function SearchPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900'>
+      <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900'>
         <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-primary-100/30 dark:border-gray-700/30 sticky top-0 z-40'>
           <div className='mx-auto max-w-7xl px-3 sm:px-4 py-2 sm:py-3'>
             <div className='flex gap-2'>
@@ -295,7 +295,7 @@ export default function SearchPage() {
   }
 
   return (
-    <div className='min-h-screen w-full bg-gradient-to-br from-slate-50 via-teal-50/10 to-cyan-50/5 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900'>
+    <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900'>
       {/* Top search bar - Full width stretch */}
       <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-primary-100/30 dark:border-gray-700/30 sticky top-0 z-40'>
         <div className='w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4'>
@@ -313,7 +313,7 @@ export default function SearchPage() {
                 startIcon: filtersLoading ? <ButtonLoader size={16} /> : undefined
               }}
               disabled={filtersLoading}
-              className='bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 text-white font-semibold px-8 py-3 h-12 text-base rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='bg-primary-700 hover:bg-primary-800 text-white font-semibold px-8 py-3 h-12 text-base rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
             />
           </div>
         </div>
@@ -366,7 +366,12 @@ export default function SearchPage() {
                 className='lg:hidden flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-gray-800/90 border border-gray-200/50 dark:border-gray-700/50 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors touch-manipulation'
               >
                 <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z' />
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z'
+                  />
                 </svg>
                 Filters
               </button>
@@ -495,10 +500,7 @@ export default function SearchPage() {
       {showMobileFilters && (
         <div className='fixed inset-0 z-50 lg:hidden'>
           {/* Backdrop */}
-          <div
-            className='absolute inset-0 bg-black/40 backdrop-blur-sm'
-            onClick={() => setShowMobileFilters(false)}
-          />
+          <div className='absolute inset-0 bg-black/40 backdrop-blur-sm' onClick={() => setShowMobileFilters(false)} />
 
           {/* Drawer - Full width on mobile, larger on tablet */}
           <div className='absolute right-0 top-0 bottom-0 w-full sm:w-96 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto animate-slide-in-right'>
@@ -580,23 +582,45 @@ export default function SearchPage() {
                         {index + 1}
                       </div>
                       <div className='flex-1 min-w-0'>
-                        <h4 className='font-semibold text-sm text-gray-900 dark:text-white mb-0.5'>{branch.branchName}</h4>
+                        <h4 className='font-semibold text-sm text-gray-900 dark:text-white mb-0.5'>
+                          {branch.branchName}
+                        </h4>
                         <div className='flex items-start gap-1 text-xs text-gray-600 dark:text-gray-400'>
-                          <svg className='w-3 h-3 flex-shrink-0 mt-0.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                          <svg
+                            className='w-3 h-3 flex-shrink-0 mt-0.5'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
                             <path
                               strokeLinecap='round'
                               strokeLinejoin='round'
                               strokeWidth={2}
                               d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z'
                             />
-                            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M15 11a3 3 0 11-6 0 3 3 0 016 0z'
+                            />
                           </svg>
                           <span className='break-words line-clamp-2'>{branch.address}</span>
                         </div>
                         {branch.phone && (
                           <div className='flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mt-0.5'>
-                            <svg className='w-3 h-3 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
+                            <svg
+                              className='w-3 h-3 flex-shrink-0'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z'
+                              />
                             </svg>
                             <span>{branch.phone}</span>
                           </div>

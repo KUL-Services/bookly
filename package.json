@@ -101,7 +101,7 @@
     "tailwind-merge": "^2.6.0",
     "valibot": "0.36.0",
     "xlsx": "^0.18.5",
-    "zod": "^4.0.17",
+    "zod": "^3.23.8",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

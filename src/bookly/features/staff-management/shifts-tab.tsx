@@ -271,7 +271,7 @@ export function ShiftsTab() {
   const [selectedStaffIds, setSelectedStaffIds] = useState<string[]>([])
   const [bulkMode, setBulkMode] = useState(false)
   const [bulkEditError, setBulkEditError] = useState<string | null>(null)
-  
+
   // Optimistic state for staff type toggles
   const [optimisticStaffTypes, setOptimisticStaffTypes] = useState<Record<string, 'static' | 'dynamic' | null>>({})
 
@@ -546,26 +546,26 @@ export function ShiftsTab() {
     if (!staffTypeChangeContext) return
 
     scheduleStaffTypeChange(staffTypeChangeContext.staffId, staffTypeChangeContext.targetType, effectiveDate)
-    
+
     // Clear optimistic state (store will take over, or optimistic remains valid if store is slow)
     setOptimisticStaffTypes(prev => {
-        const newState = { ...prev }
-        delete newState[staffTypeChangeContext.staffId]
-        return newState
+      const newState = { ...prev }
+      delete newState[staffTypeChangeContext.staffId]
+      return newState
     })
-    
+
     setIsStaffTypeChangeDialogOpen(false)
     setStaffTypeChangeContext(null)
   }
-  
+
   const handleStaffTypeChangeCancel = () => {
     if (staffTypeChangeContext) {
-        // Revert optimistic state
-        setOptimisticStaffTypes(prev => {
-            const newState = { ...prev }
-            delete newState[staffTypeChangeContext.staffId]
-            return newState
-        })
+      // Revert optimistic state
+      setOptimisticStaffTypes(prev => {
+        const newState = { ...prev }
+        delete newState[staffTypeChangeContext.staffId]
+        return newState
+      })
     }
     setIsStaffTypeChangeDialogOpen(false)
     setStaffTypeChangeContext(null)
@@ -574,14 +574,14 @@ export function ShiftsTab() {
   const handleConfirmCancelChange = () => {
     if (cancelChangeStaffId) {
       cancelStaffTypeChange(cancelChangeStaffId)
-      
+
       // Also revert optimistic state if any exists (though usually cleared on confirm)
       setOptimisticStaffTypes(prev => {
         const newState = { ...prev }
         delete newState[cancelChangeStaffId]
         return newState
       })
-      
+
       setCancelChangeStaffId(null)
       setIsCancelChangeDialogOpen(false)
     }
@@ -664,12 +664,18 @@ export function ShiftsTab() {
       </FormControl>
 
       <FormControlLabel
-        control={<Checkbox checked={bulkMode} onChange={e => {
-          setBulkMode(e.target.checked)
-          if (!e.target.checked) {
-            setBulkEditError(null)
-          }
-        }} color='primary' />}
+        control={
+          <Checkbox
+            checked={bulkMode}
+            onChange={e => {
+              setBulkMode(e.target.checked)
+              if (!e.target.checked) {
+                setBulkEditError(null)
+              }
+            }}
+            color='primary'
+          />
+        }
         label='Bulk Edit'
       />
 
@@ -688,7 +694,9 @@ export function ShiftsTab() {
 
                 if (hasDynamic && hasStatic) {
                   // Show error - cannot bulk edit mixed types
-                  setBulkEditError('Cannot bulk edit staff with mixed schedule types. Please select only Flex or only Fixed staff members.')
+                  setBulkEditError(
+                    'Cannot bulk edit staff with mixed schedule types. Please select only Flex or only Fixed staff members.'
+                  )
                   return
                 }
 
@@ -875,39 +883,39 @@ export function ShiftsTab() {
                 return (
                   <>
                     {(() => {
-                        // Use optimistic type if available, otherwise fall back to store type
-                        const optimisticType = optimisticStaffTypes[staff.id]
-                        const displayType = optimisticType ?? effectiveStaffType
-                        const isFixed = displayType === 'static'
+                      // Use optimistic type if available, otherwise fall back to store type
+                      const optimisticType = optimisticStaffTypes[staff.id]
+                      const displayType = optimisticType ?? effectiveStaffType
+                      const isFixed = displayType === 'static'
 
-                        return (
-                         <>
-                            <FormControlLabel
+                      return (
+                        <>
+                          <FormControlLabel
                             control={
-                                <Switch
+                              <Switch
                                 checked={isFixed}
                                 onChange={e => {
-                                    handleStaffTypeToggle(staff.id, staff.name, e.target.checked)
+                                  handleStaffTypeToggle(staff.id, staff.name, e.target.checked)
                                 }}
                                 size='small'
                                 color='primary'
-                                />
+                              />
                             }
                             label={
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                 <i
-                                    className={isFixed ? 'ri-calendar-schedule-line' : 'ri-time-line'}
-                                    style={{ fontSize: 12 }}
+                                  className={isFixed ? 'ri-calendar-schedule-line' : 'ri-time-line'}
+                                  style={{ fontSize: 12 }}
                                 />
                                 <Typography variant='caption' fontSize='0.65rem'>
-                                    {isFixed ? 'Fixed' : 'Flex'}
+                                  {isFixed ? 'Fixed' : 'Flex'}
                                 </Typography>
-                                </Box>
+                              </Box>
                             }
                             sx={{ ml: 0, mr: 1 }}
-                            />
-                         </>
-                        )
+                          />
+                        </>
+                      )
                     })()}
                     <Tooltip
                       title={
@@ -927,8 +935,8 @@ export function ShiftsTab() {
                               display='block'
                               sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
                             >
-                              Works in pre-defined time slots with set capacity. Ideal for group classes, workshops,
-                              or shared resource bookings.
+                              Works in pre-defined time slots with set capacity. Ideal for group classes, workshops, or
+                              shared resource bookings.
                             </Typography>
                           </Box>
                         ) : (
@@ -947,8 +955,8 @@ export function ShiftsTab() {
                               display='block'
                               sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
                             >
-                              Available for individual appointments during working hours. Clients book directly
-                              with this staff member.
+                              Available for individual appointments during working hours. Clients book directly with
+                              this staff member.
                             </Typography>
                           </Box>
                         )
@@ -1098,12 +1106,12 @@ export function ShiftsTab() {
                     }}
                   >
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
-                        <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
+                      <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
                         {shiftStart.toLowerCase()}
-                        </Typography>
-                        <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
+                      </Typography>
+                      <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
                         {shiftEnd.toLowerCase()}
-                        </Typography>
+                      </Typography>
                     </Box>
 
                     <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
@@ -1499,7 +1507,9 @@ export function ShiftsTab() {
                     {/* Staff in this branch - grouped by type */}
                     {(() => {
                       // Group staff by type based on selected date
-                      const dynamicStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, selectedDate) === 'dynamic')
+                      const dynamicStaff = branchStaff.filter(
+                        s => getStaffTypeForDate(s.id, selectedDate) === 'dynamic'
+                      )
                       const staticStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, selectedDate) === 'static')
 
                       return (
@@ -1519,7 +1529,10 @@ export function ShiftsTab() {
                                   gap: 1
                                 }}
                               >
-                                <i className='ri-time-line' style={{ fontSize: 14, color: 'var(--mui-palette-primary-main)' }} />
+                                <i
+                                  className='ri-time-line'
+                                  style={{ fontSize: 14, color: 'var(--mui-palette-primary-main)' }}
+                                />
                                 <Typography variant='caption' fontWeight={600} color='primary'>
                                   Flex
                                 </Typography>
@@ -1546,7 +1559,10 @@ export function ShiftsTab() {
                                   gap: 1
                                 }}
                               >
-                                <i className='ri-calendar-schedule-line' style={{ fontSize: 14, color: 'var(--mui-palette-text-secondary)' }} />
+                                <i
+                                  className='ri-calendar-schedule-line'
+                                  style={{ fontSize: 14, color: 'var(--mui-palette-text-secondary)' }}
+                                />
                                 <Typography variant='caption' fontWeight={600} color='text.secondary'>
                                   Fixed
                                 </Typography>
@@ -1688,7 +1704,13 @@ export function ShiftsTab() {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                 <thead>
                   <tr>
-                    <th style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', backgroundColor: 'var(--mui-palette-customColors-tableHeaderBg)' }}>
+                    <th
+                      style={{
+                        border: '1px solid var(--mui-palette-divider)',
+                        padding: '8px',
+                        backgroundColor: 'var(--mui-palette-customColors-tableHeaderBg)'
+                      }}
+                    >
                       Staff Member
                     </th>
                     {weekDates.map((date, idx) => (
@@ -1711,13 +1733,22 @@ export function ShiftsTab() {
                 <tbody>
                   {displayStaff.map(staff => (
                     <tr key={staff.id}>
-                      <td style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', fontWeight: 600 }}>{staff.name}</td>
+                      <td style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', fontWeight: 600 }}>
+                        {staff.name}
+                      </td>
                       {weekDates.map((date, idx) => {
                         const timeOff = timeOffRequests.find(
                           req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
                         )
                         return (
-                          <td key={idx} style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', textAlign: 'center' }}>
+                          <td
+                            key={idx}
+                            style={{
+                              border: '1px solid var(--mui-palette-divider)',
+                              padding: '8px',
+                              textAlign: 'center'
+                            }}
+                          >
                             {timeOff ? (
                               <Box>
                                 <Typography variant='caption' display='block' fontWeight={500}>
@@ -1746,7 +1777,15 @@ export function ShiftsTab() {
               </table>
 
               {/* Footer */}
-              <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid var(--mui-palette-divider)', display: 'flex', justifyContent: 'space-between' }}>
+              <Box
+                sx={{
+                  mt: 3,
+                  pt: 2,
+                  borderTop: '1px solid var(--mui-palette-divider)',
+                  display: 'flex',
+                  justifyContent: 'space-between'
+                }}
+              >
                 <Typography variant='caption' color='text.secondary'>
                   {new Date().toLocaleDateString()}
                 </Typography>
@@ -1795,11 +1834,8 @@ export function ShiftsTab() {
           )}
 
           {/* Holiday Hours Modal */}
-          <SpecialDaysModal
-            open={isSpecialDaysModalOpen}
-            onClose={closeSpecialDays}
-          />
-          
+          <SpecialDaysModal open={isSpecialDaysModalOpen} onClose={closeSpecialDays} />
+
           {/* Cancel Change Confirmation Dialog */}
           <Dialog
             open={isCancelChangeDialogOpen}
@@ -1809,9 +1845,10 @@ export function ShiftsTab() {
           >
             <DialogTitle>Cancel Pending Change?</DialogTitle>
             <DialogContent>
-               <Typography variant='body2' color='text.secondary'>
-                  Are you sure you want to cancel the pending staff type change? This will revert the staff member to their previous type.
-               </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Are you sure you want to cancel the pending staff type change? This will revert the staff member to
+                their previous type.
+              </Typography>
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setIsCancelChangeDialogOpen(false)}>Keep Change</Button>
@@ -1974,7 +2011,12 @@ export function ShiftsTab() {
                             >
                               {branch?.name || branchId}
                             </Typography>
-                            <Typography variant='caption' color='text.secondary' fontSize='0.65rem' sx={{ flexShrink: 0 }}>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                              fontSize='0.65rem'
+                              sx={{ flexShrink: 0 }}
+                            >
                               ({branchStaff.length})
                             </Typography>
                           </Box>
@@ -1991,7 +2033,9 @@ export function ShiftsTab() {
                     {/* Staff in this branch - grouped by type */}
                     {(() => {
                       // Group staff by type based on selected date
-                      const dynamicStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, selectedDate) === 'dynamic')
+                      const dynamicStaff = branchStaff.filter(
+                        s => getStaffTypeForDate(s.id, selectedDate) === 'dynamic'
+                      )
                       const staticStaff = branchStaff.filter(s => getStaffTypeForDate(s.id, selectedDate) === 'static')
 
                       return (
@@ -2011,11 +2055,19 @@ export function ShiftsTab() {
                                   gap: 0.5
                                 }}
                               >
-                                <i className='ri-time-line' style={{ fontSize: 12, color: 'var(--mui-palette-primary-main)' }} />
+                                <i
+                                  className='ri-time-line'
+                                  style={{ fontSize: 12, color: 'var(--mui-palette-primary-main)' }}
+                                />
                                 <Typography variant='caption' fontWeight={600} fontSize='0.65rem' color='primary'>
                                   Flex
                                 </Typography>
-                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem' sx={{ opacity: 0.7 }}>
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                  fontSize='0.6rem'
+                                  sx={{ opacity: 0.7 }}
+                                >
                                   {dynamicStaff.length}
                                 </Typography>
                               </Box>
@@ -2079,7 +2131,10 @@ export function ShiftsTab() {
                                   gap: 0.5
                                 }}
                               >
-                                <i className='ri-calendar-schedule-line' style={{ fontSize: 12, color: 'var(--mui-palette-text-secondary)' }} />
+                                <i
+                                  className='ri-calendar-schedule-line'
+                                  style={{ fontSize: 12, color: 'var(--mui-palette-text-secondary)' }}
+                                />
                                 <Typography
                                   variant='caption'
                                   fontWeight={600}
@@ -2088,7 +2143,12 @@ export function ShiftsTab() {
                                 >
                                   Fixed
                                 </Typography>
-                                <Typography variant='caption' color='text.secondary' fontSize='0.6rem' sx={{ opacity: 0.7 }}>
+                                <Typography
+                                  variant='caption'
+                                  color='text.secondary'
+                                  fontSize='0.6rem'
+                                  sx={{ opacity: 0.7 }}
+                                >
                                   {staticStaff.length}
                                 </Typography>
                               </Box>
@@ -2336,10 +2396,18 @@ export function ShiftsTab() {
                                     borderColor: 'success.light'
                                   }}
                                 >
-                                  <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}>
+                                  <Typography
+                                    variant='caption'
+                                    fontWeight={500}
+                                    sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}
+                                  >
                                     {formatTime(businessHours.shifts[0].start)}
                                   </Typography>
-                                  <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}>
+                                  <Typography
+                                    variant='caption'
+                                    fontWeight={500}
+                                    sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}
+                                  >
                                     {formatTime(businessHours.shifts[0].end)}
                                   </Typography>
                                 </Box>
@@ -2800,7 +2868,10 @@ export function ShiftsTab() {
                                           width: '100%',
                                           height: shifts.length > 1 ? `calc(${100 / shifts.length}% - 4px)` : '100%',
                                           mb: shifts.length > 1 && idx < shifts.length - 1 ? 0.5 : 0,
-                                          bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(120, 120, 120, 0.3)' : 'rgba(158, 158, 158, 0.25)',
+                                          bgcolor: theme =>
+                                            theme.palette.mode === 'dark'
+                                              ? 'rgba(120, 120, 120, 0.3)'
+                                              : 'rgba(158, 158, 158, 0.25)',
                                           borderRadius: 1,
                                           display: 'flex',
                                           flexDirection: 'column',
@@ -2814,7 +2885,10 @@ export function ShiftsTab() {
                                           transition: 'all 0.2s',
                                           overflow: 'hidden',
                                           '&:hover': {
-                                            bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(120, 120, 120, 0.4)' : 'rgba(158, 158, 158, 0.35)',
+                                            bgcolor: theme =>
+                                              theme.palette.mode === 'dark'
+                                                ? 'rgba(120, 120, 120, 0.4)'
+                                                : 'rgba(158, 158, 158, 0.35)',
                                             borderColor: 'grey.500'
                                           }
                                         }}
@@ -2871,7 +2945,14 @@ export function ShiftsTab() {
                                           >
                                             {shiftEnd.toLowerCase()}
                                           </Typography>
-                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
+                                          <Box
+                                            sx={{
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              gap: 0.5,
+                                              justifyContent: 'center'
+                                            }}
+                                          >
                                             <Typography
                                               variant='caption'
                                               color='text.secondary'
@@ -3244,7 +3325,15 @@ export function ShiftsTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
             <thead>
               <tr>
-                <th style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', backgroundColor: 'var(--mui-palette-customColors-tableHeaderBg)' }}>Staff Member</th>
+                <th
+                  style={{
+                    border: '1px solid var(--mui-palette-divider)',
+                    padding: '8px',
+                    backgroundColor: 'var(--mui-palette-customColors-tableHeaderBg)'
+                  }}
+                >
+                  Staff Member
+                </th>
                 {weekDates.map((date, idx) => (
                   <th
                     key={idx}
@@ -3265,13 +3354,18 @@ export function ShiftsTab() {
             <tbody>
               {displayStaff.map(staff => (
                 <tr key={staff.id}>
-                  <td style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', fontWeight: 600 }}>{staff.name}</td>
+                  <td style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', fontWeight: 600 }}>
+                    {staff.name}
+                  </td>
                   {weekDates.map((date, idx) => {
                     const timeOff = timeOffRequests.find(
                       req => req.staffId === staff.id && req.approved && isSameDay(req.range.start, date)
                     )
                     return (
-                      <td key={idx} style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', textAlign: 'center' }}>
+                      <td
+                        key={idx}
+                        style={{ border: '1px solid var(--mui-palette-divider)', padding: '8px', textAlign: 'center' }}
+                      >
                         {timeOff ? (
                           <Box>
                             <Typography variant='caption' display='block' fontWeight={500}>
@@ -3300,7 +3394,15 @@ export function ShiftsTab() {
           </table>
 
           {/* Footer */}
-          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid var(--mui-palette-divider)', display: 'flex', justifyContent: 'space-between' }}>
+          <Box
+            sx={{
+              mt: 3,
+              pt: 2,
+              borderTop: '1px solid var(--mui-palette-divider)',
+              display: 'flex',
+              justifyContent: 'space-between'
+            }}
+          >
             <Typography variant='caption' color='text.secondary'>
               {new Date().toLocaleDateString()}
             </Typography>
@@ -3312,10 +3414,7 @@ export function ShiftsTab() {
       </Box>
 
       {/* Holiday Hours Modal */}
-      <SpecialDaysModal
-        open={isSpecialDaysModalOpen}
-        onClose={closeSpecialDays}
-      />
+      <SpecialDaysModal open={isSpecialDaysModalOpen} onClose={closeSpecialDays} />
 
       {/* Calendar Picker Popover */}
       <CalendarPopover

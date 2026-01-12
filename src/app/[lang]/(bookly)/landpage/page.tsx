@@ -34,31 +34,20 @@ function LandPage() {
     router.push(`/${params?.lang}/search${sp.toString() ? `?${sp.toString()}` : ''}`)
   }
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900'>
+    <div className='min-h-screen bg-gray-50 dark:bg-gray-900'>
       {/* Shared BooklyNavbar is rendered in the (bookly) layout */}
 
       <main className='relative overflow-hidden'>
-        {/* Background elements - static to prevent flickering */}
-        <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-          <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/15 to-cyan-200/8 dark:from-primary-800/10 dark:to-cyan-600/5 rounded-full blur-3xl' />
-          <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/15 to-teal-200/8 dark:from-emerald-600/10 dark:to-sage-600/5 rounded-full blur-3xl' />
-        </div>
         {/* Hero Section - Full width with generous padding */}
         <section className='relative py-12 sm:py-16 md:py-20 lg:py-28'>
+
           <div
-            className='absolute inset-0 bg-cover bg-center opacity-15'
+            className='absolute inset-0 bg-cover bg-center opacity-10'
             style={{
               backgroundImage: "url('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&h=800&fit=crop')"
             }}
           />
 
-          {/* Subtle decorative elements */}
-          <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-            <div className='absolute top-16 left-8 w-2 h-2 bg-teal-400/60 dark:bg-primary-700/60 rounded-full' />
-            <div className='absolute top-32 right-16 w-1.5 h-1.5 bg-cyan-400/60 dark:bg-cyan-500/60 rounded-full' />
-            <div className='absolute bottom-24 left-16 w-2.5 h-2.5 bg-emerald-400/60 dark:bg-emerald-500/60 rounded-full' />
-            <div className='absolute bottom-16 right-8 w-1.5 h-1.5 bg-primary-700/60 dark:bg-sage-400/60 rounded-full' />
-          </div>
           <div className='relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
             <div
               className={`text-center space-y-4 sm:space-y-5 lg:space-y-6 ${mounted ? 'opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]' : 'opacity-0'}`}
@@ -68,18 +57,18 @@ function LandPage() {
                   localeKey: 'landing.hero.title'
                 }}
                 i18nTFn={t}
-                className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold bg-gradient-to-r from-gray-900 via-teal-800 to-gray-900 dark:from-white dark:via-teal-300 dark:to-white bg-clip-text text-transparent leading-tight'
+                className='text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-primary-800 dark:text-white leading-tight pb-2'
               />
 
-              <p className='text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed'>
+              <p className='text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed'>
                 {t('landing.hero.subtitle')}
               </p>
-              {/* Search Bar - Stretched to fill more width */}
+              {/* Search Bar */}
               <div
-                className={`w-full max-w-5xl mx-auto ${mounted ? 'opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]' : 'opacity-0'}`}
+                className={`w-full max-w-4xl mx-auto mt-8 ${mounted ? 'opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]' : 'opacity-0'}`}
               >
-                <div className='p-2 sm:p-3 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-white/50 dark:border-gray-700/50'>
-                  <div className='flex flex-col md:flex-row gap-2 sm:gap-3 p-2 sm:p-3'>
+                <div className='p-2 sm:p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/50 dark:border-gray-700/50 hover:shadow-2xl transition-shadow duration-300'>
+                  <div className='flex flex-col md:flex-row gap-2 sm:gap-3 p-1'>
                     <div className='flex-1'>
                       <SearchInput
                         value={q}
@@ -88,7 +77,7 @@ function LandPage() {
                           localeKey: 'landing.search.servicePlaceholder'
                         }}
                         i18nTFn={t}
-                        className='w-full h-12 sm:h-14 text-base border-0 focus:ring-2 focus:ring-primary-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
+                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus:ring-2 focus:ring-primary-500/20'
                       />
                     </div>
                     <div className='flex-1'>
@@ -100,14 +89,14 @@ function LandPage() {
                         }}
                         i18nTFn={t}
                         leadingIcon={MapPin}
-                        className='w-full h-12 sm:h-14 text-base border-0 focus:ring-2 focus:ring-primary-500 rounded-lg bg-gray-50/50 dark:bg-gray-700/50 dark:text-white'
+                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus:ring-2 focus:ring-primary-500/20'
                       />
                     </div>
                     <Button
                       onClick={goSearch}
                       buttonText={{ localeKey: 'landing.search.button' }}
                       i18nTFn={t}
-                      className='w-full md:w-auto bg-gradient-to-r from-primary-800 to-cyan-600 hover:from-primary-700 hover:to-cyan-700 px-8 sm:px-10 py-3 h-12 sm:h-14 text-base sm:text-lg text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.01] active:scale-[0.99] transition-all duration-200'
+                      className='w-full md:w-auto bg-primary-700 hover:bg-primary-800 px-8 sm:px-10 py-3 h-12 sm:h-14 text-lg text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200'
                     />
                   </div>
                 </div>
@@ -135,14 +124,14 @@ function LandPage() {
         </section>
 
         {/* Categories Section */}
-        <div className='relative bg-gradient-to-b from-transparent via-white/90 to-white dark:via-gray-800/90 dark:to-gray-800'>
+        <div className='relative bg-white dark:bg-gray-800'>
           <div className={`${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.5s_forwards]' : 'opacity-0'}`}>
             <ExploreSection />
           </div>
         </div>
 
         {/* Features Section */}
-        <div className='relative bg-gradient-to-b from-white to-gray-50/30 dark:from-gray-800 dark:to-gray-900/30'>
+        <div className='relative bg-gray-50 dark:bg-gray-900'>
           <div className={`${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.6s_forwards]' : 'opacity-0'}`}>
             <FeaturesSection />
           </div>
@@ -150,14 +139,14 @@ function LandPage() {
 
         {/* App Download Section */}
         <div
-          className={`relative bg-gradient-to-b from-gray-50/30 to-white dark:from-gray-900/30 dark:to-gray-800 ${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.7s_forwards]' : 'opacity-0'}`}
+          className={`relative bg-white dark:bg-gray-800 ${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.7s_forwards]' : 'opacity-0'}`}
         >
           <AppDownloadSection />
         </div>
 
         {/* Footer */}
         <div
-          className={`relative bg-gradient-to-t from-gray-900 to-gray-800 ${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.8s_forwards]' : 'opacity-0'}`}
+          className={`relative bg-gray-900 ${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.8s_forwards]' : 'opacity-0'}`}
         >
           <FooterSection />
         </div>
