@@ -519,18 +519,18 @@ iconify-icon {
   -webkit-text-fill-color: transparent;
 }
 
-/* Page Background Gradient */
+/* Page Background - Solid colors */
 .page-gradient {
-  background-image: linear-gradient(to bottom right, #f8fafc, rgba(226, 244, 245, 0.1), rgba(236, 254, 255, 0.05));
+  background-color: #f9fafb;
 }
 .dark .page-gradient {
-  background-image: linear-gradient(to bottom right, #0f172a, rgba(31, 41, 55, 0.5), #0f172a);
+  background-color: #111827;
 }
 
-/* Base button gradient */
+/* Base button - Solid colors */
 .btn-gradient {
-  background-image: linear-gradient(to right, var(--primary-800), #2a7679);
+  background-color: var(--primary-800);
 }
 .btn-gradient:hover {
-  background-image: linear-gradient(to right, var(--primary-700), #51b4b7);
+  background-color: var(--primary-700);
 }

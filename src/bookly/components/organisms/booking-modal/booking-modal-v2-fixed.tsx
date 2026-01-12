@@ -743,7 +743,7 @@ function BookingModalV2Fixed({
               </button>
               <button
                 onClick={goToNextAvailable}
-                className='btn-gradient px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base text-white hover:bg-primary-800 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg touch-manipulation'
+                className='bg-primary-700 hover:bg-primary-800 px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg touch-manipulation'
               >
                 Next Available
               </button>
@@ -768,18 +768,16 @@ function BookingModalV2Fixed({
                     <button
                       key={idx}
                       onClick={() => setSelectedDate(date)}
-                      className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[70px] sm:min-w-[90px] h-20 sm:h-28 rounded-2xl transition-all touch-manipulation ${
+                      className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[60px] sm:min-w-[80px] h-16 sm:h-24 rounded-xl transition-all duration-200 touch-manipulation border ${
                         isSelected
-                          ? 'bg-primary-800 text-white shadow-lg shadow-primary-500/30 scale-105'
-                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-md border border-gray-200 dark:border-gray-700'
+                          ? 'bg-primary-800 text-white shadow-md border-primary-800 opacity-100'
+                          : 'bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 opacity-60 hover:opacity-100 hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300'
                       }`}
                     >
-                      <span
-                        className={`text-xs sm:text-sm font-medium ${isSelected ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}
-                      >
+                      <span className={`text-xs font-medium ${isSelected ? 'text-white/80' : 'text-inherit'}`}>
                         {weekdays[idx]}
                       </span>
-                      <span className='text-2xl sm:text-3xl font-bold mt-1'>{format(date, 'd')}</span>
+                      <span className='text-lg sm:text-2xl font-bold mt-1'>{format(date, 'd')}</span>
                     </button>
                   )
                 })}
@@ -799,10 +797,10 @@ function BookingModalV2Fixed({
                 <button
                   key={period}
                   onClick={() => setSelectedPeriod(period)}
-                  className={`flex-1 py-3 sm:py-3.5 px-4 sm:px-6 rounded-xl transition-all font-semibold text-sm sm:text-base touch-manipulation ${
+                  className={`flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base touch-manipulation ${
                     selectedPeriod === period
-                      ? 'bg-primary-800 text-white shadow-md'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                      ? 'bg-primary-800 text-white shadow-sm opacity-100'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-white/50 dark:hover:bg-gray-800/50 opacity-70 hover:opacity-100'
                   }`}
                 >
                   {period}
@@ -825,10 +823,10 @@ function BookingModalV2Fixed({
                     <button
                       key={time}
                       onClick={() => handleTimeSelect(time)}
-                      className={`flex-shrink-0 min-w-[90px] sm:min-w-[110px] py-3 sm:py-3.5 px-4 sm:px-5 rounded-xl transition-all font-semibold text-sm sm:text-base touch-manipulation ${
+                      className={`flex-shrink-0 min-w-[80px] sm:min-w-[100px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base touch-manipulation border ${
                         selectedTime === time
-                          ? 'bg-primary-800 text-white shadow-lg shadow-primary-500/20'
-                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-md border border-gray-200 dark:border-gray-700'
+                          ? 'bg-primary-800 text-white shadow-md border-primary-800 opacity-100'
+                          : 'bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 opacity-60 hover:opacity-100 hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300'
                       }`}
                     >
                       {time}
@@ -857,7 +855,7 @@ function BookingModalV2Fixed({
                 </div>
                 <button
                   onClick={() => setShowServiceSelector(true)}
-                  className='w-full btn-gradient hover:bg-primary-800 text-white py-2 rounded-lg'
+                  className='w-full bg-primary-700 hover:bg-primary-800 text-white py-2 rounded-lg'
                 >
                   Select Service
                 </button>
@@ -973,7 +971,7 @@ function BookingModalV2Fixed({
                   <button
                     onClick={() => setCurrentStep('details')}
                     disabled={!selectedTime}
-                    className='w-full sm:w-auto btn-gradient hover:bg-primary-800 text-white px-8 sm:px-10 py-4 rounded-2xl text-lg font-semibold transition-all shadow-lg shadow-primary-500/20 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+                    className='w-full sm:w-auto bg-primary-700 hover:bg-primary-800 text-white px-8 sm:px-10 py-4 rounded-2xl text-lg font-semibold transition-all shadow-lg shadow-primary-500/20 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
                   >
                     Continue
                   </button>
@@ -1112,7 +1110,7 @@ function BookingModalV2Fixed({
                     <button
                       type='submit'
                       disabled={loading}
-                      className='flex-1 btn-gradient hover:bg-primary-800 text-white py-3.5 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50 shadow-lg shadow-primary-500/20 hover:shadow-xl transition-all touch-manipulation'
+                      className='flex-1 bg-primary-700 hover:bg-primary-800 text-white py-3.5 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50 shadow-lg shadow-primary-500/20 hover:shadow-xl transition-all touch-manipulation'
                     >
                       {loading ? 'Processing...' : 'Confirm & Book'}
                     </button>
@@ -1145,7 +1143,7 @@ function BookingModalV2Fixed({
             <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 sm:p-6 border border-gray-200 dark:border-gray-700 max-w-md mx-auto space-y-3'>
               <button
                 onClick={handleDownloadICS}
-                className='w-full btn-gradient hover:bg-primary-800 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-primary-500/20 hover:shadow-xl transition-all touch-manipulation flex items-center justify-center gap-2'
+                className='w-full bg-primary-700 hover:bg-primary-800 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-primary-500/20 hover:shadow-xl transition-all touch-manipulation flex items-center justify-center gap-2'
               >
                 <KulIcon icon='lucide:calendar-plus' className='w-5 h-5' />
                 Download Calendar Event

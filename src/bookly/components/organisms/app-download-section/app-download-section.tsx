@@ -4,7 +4,7 @@ import { Button } from '@/bookly/components/molecules'
 
 function AppDownloadSection() {
   return (
-    <section className='py-8 sm:py-12 lg:py-16 bg-gradient-to-r from-primary-700 to-blue-600'>
+    <section className='py-8 sm:py-12 lg:py-16 bg-primary-700'>
       <div className='max-w-6xl mx-auto px-4 sm:px-6'>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center'>
           <div className='flex flex-col items-center md:items-start text-white text-center md:text-left'>

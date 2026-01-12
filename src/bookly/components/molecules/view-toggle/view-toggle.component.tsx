@@ -16,7 +16,7 @@ export function ViewToggle({ currentView, onViewChange, className = '' }: ViewTo
         aria-label='List view'
         className={`px-4 py-2 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
           currentView === 'list'
-            ? 'bg-gradient-to-r from-primary-700 to-cyan-500 text-white shadow-lg'
+            ? 'bg-primary-700 text-white shadow-lg'
             : 'bg-white dark:bg-gray-800 border border-primary-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-gray-700 hover:border-primary-300 dark:hover:border-gray-500'
         }`}
       >
@@ -30,7 +30,7 @@ export function ViewToggle({ currentView, onViewChange, className = '' }: ViewTo
         aria-label='Map view'
         className={`px-4 py-2 text-sm rounded-lg flex items-center gap-2 transition-all duration-200 ${
           currentView === 'map'
-            ? 'bg-gradient-to-r from-primary-700 to-cyan-500 text-white shadow-lg'
+            ? 'bg-primary-700 text-white shadow-lg'
             : 'bg-white dark:bg-gray-800 border border-primary-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-gray-700 hover:border-primary-300 dark:hover:border-gray-500'
         }`}
       >

@@ -78,7 +78,7 @@ export default function ServiceDetailPage() {
             <div className='flex flex-col md:flex-row gap-6'>
               {/* Service Image */}
               <div className='w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden'>
-                <div className='w-full h-full bg-gradient-to-br from-primary-200 to-teal-200 flex items-center justify-center'>
+                <div className='w-full h-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center'>
                   <div className='text-4xl text-primary-800'>
                     {service.name.charAt(0)}
                   </div>

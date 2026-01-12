@@ -109,5 +109,29 @@
     "bookings": "Bookings",
     "staff": "Staff",
     "reviews": "Reviews"
+  },
+  "business": {
+    "branchDetails": {
+      "calendar": "Calendar",
+      "overview": "Overview",
+      "services": "Services",
+      "staff": "Staff",
+      "location": "Location",
+      "viewOnGoogleMaps": "View on Google Maps",
+      "contact": "Contact",
+      "gallery": "Gallery",
+      "galleryImageAlt": "Gallery Image",
+      "quickInfo": "Quick Info",
+      "servicesCount": "Services",
+      "staffMembersCount": "Staff Members",
+      "ratingLabel": "Rating",
+      "availableServices": "Available Services",
+      "noServicesTitle": "No services available for this branch",
+      "duration": "min",
+      "bookNow": "Book Now",
+      "ourTeam": "Our Team",
+      "noStaffTitle": "No staff members available for this branch",
+      "staffSchedule": "Staff Schedule"
+    }
   }
 }

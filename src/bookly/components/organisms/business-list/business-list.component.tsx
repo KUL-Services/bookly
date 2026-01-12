@@ -112,7 +112,7 @@ export function BusinessList({
                         const parent = target.parentElement
                         if (parent) {
                           parent.innerHTML = `
-                            <div class="w-full h-full bg-gradient-to-br from-primary-200 to-sage-200 dark:from-primary-800/50 dark:to-sage-800/50 flex items-center justify-center">
+                            <div class="w-full h-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center">
                               <div class="text-center p-2">
                                 <div class="text-sm font-bold text-primary-900 dark:text-sage-300 line-clamp-2">${business.name}</div>
                               </div>
@@ -128,7 +128,7 @@ export function BusinessList({
                     w-full h-full rounded-xl shadow-md flex items-center justify-center
                     transition-all duration-300
                     ${isSelected || isHovered ? 'scale-105 shadow-lg' : ''}
-                    bg-gradient-to-br from-primary-200 to-sage-200 dark:from-primary-800/50 dark:to-sage-800/50
+                    bg-primary-100 dark:bg-primary-900/50
                   `}
                   >
                     <div className='text-center p-2'>
@@ -198,7 +198,7 @@ export function BusinessList({
                         e.stopPropagation()
                         onBookNow?.(business.id)
                       }}
-                      className='btn-gradient text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200'
+                      className='bg-primary-700 hover:bg-primary-800 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200'
                     >
                       Book Now
                     </button>

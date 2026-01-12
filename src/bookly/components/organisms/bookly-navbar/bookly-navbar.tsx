@@ -79,7 +79,7 @@ const BooklyNavbar = () => {
 
             <button
               onClick={() => to('/landpage')}
-              className='flex items-center gap-2 text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-800 to-sage-500 bg-clip-text text-transparent hover:from-primary-700 hover:to-sage-600 transition-colors duration-200 touch-manipulation'
+              className='flex items-center gap-2 text-xl sm:text-2xl font-bold text-primary-800 dark:text-white hover:text-primary-700 dark:hover:text-gray-200 transition-colors duration-200 touch-manipulation'
             >
               <Sparkles className='w-6 h-6 text-sage-500' />
               Zerv
@@ -122,7 +122,7 @@ const BooklyNavbar = () => {
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className='flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-xl bg-primary-100/80 dark:bg-primary-900/30 hover:bg-primary-200/80 dark:hover:bg-primary-800/40 border border-primary-200/50 dark:border-primary-700/50 transition-all duration-200 hover:shadow-md touch-manipulation'
                 >
-                  <div className='w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-primary-500 to-sage-500 flex items-center justify-center text-white font-semibold text-xs sm:text-sm shadow-lg'>
+                  <div className='w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary-700 flex items-center justify-center text-white font-semibold text-xs sm:text-sm shadow-lg'>
                     {booklyUser.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                   <span className='hidden sm:block text-slate-700 dark:text-slate-200 font-medium hover:text-primary-700 dark:hover:text-sage-400 transition-colors duration-200 text-sm sm:text-base'>
@@ -167,7 +167,7 @@ const BooklyNavbar = () => {
                 </button>
                 <button
                   onClick={() => router.push(`/${params?.lang}/customer/register`)}
-                  className='flex items-center px-3 sm:px-4 py-2.5 h-10 rounded-lg bg-gradient-to-r from-primary-800 to-sage-600 dark:from-primary-600 dark:to-sage-500 text-white hover:from-primary-700 hover:to-sage-700 dark:hover:from-primary-500 dark:hover:to-sage-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation text-sm sm:text-base'
+                  className='flex items-center px-3 sm:px-4 py-2.5 h-10 rounded-lg bg-primary-700 hover:bg-primary-800 dark:bg-primary-600 dark:hover:bg-primary-500 text-white transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation text-sm sm:text-base'
                 >
                   <span className='hidden sm:inline'>{t('nav.signUp')}</span>
                   <span className='sm:hidden'>{t('nav.join')}</span>
@@ -249,7 +249,7 @@ const BooklyNavbar = () => {
                         router.push(`/${params?.lang}/customer/register`)
                       }, 100)
                     }}
-                    className='w-full px-4 py-4 text-center bg-gradient-to-r from-primary-800 to-sage-600 dark:from-primary-600 dark:to-sage-500 text-white hover:from-primary-700 hover:to-sage-700 dark:hover:from-primary-500 dark:hover:to-sage-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] rounded-lg touch-manipulation text-base'
+                    className='w-full px-4 py-4 text-center bg-primary-700 hover:bg-primary-800 dark:bg-primary-600 dark:hover:bg-primary-500 text-white transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] rounded-lg touch-manipulation text-base'
                   >
                     {t('nav.signUp')}
                   </button>

@@ -27,18 +27,13 @@ export default function RegisterPage({ params }: PageProps) {
   }, [locale])
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-teal-50/20 to-cyan-50/10 dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900 relative overflow-hidden'>
-      {/* Animated background elements */}
-      <div className='absolute inset-0 overflow-hidden pointer-events-none'>
-        <div className='absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-teal-200/20 to-cyan-200/10 dark:from-primary-800/15 dark:to-cyan-600/8 rounded-full blur-3xl animate-pulse' />
-        <div className='absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-200/20 to-teal-200/10 dark:from-emerald-600/15 dark:to-sage-600/8 rounded-full blur-3xl animate-pulse animation-delay-1000' />
-      </div>
+    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
 
       <main className='container mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10'>
         <div className='w-full max-w-md mx-auto'>
           {/* Mobile-optimized header */}
           <div className='text-center mb-6 sm:mb-8 animate-in fade-in slide-in-from-top-4 duration-700'>
-            <h1 className='text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary-800 to-sage-600 dark:from-sage-400 dark:to-primary-400 bg-clip-text text-transparent mb-2'>
+            <h1 className='text-2xl sm:text-3xl font-bold text-primary-800 dark:text-white mb-2'>
               {t('auth.register.title')}
             </h1>
             <p className='text-gray-600 dark:text-gray-300 text-sm sm:text-base'>{t('auth.register.description')}</p>

@@ -269,7 +269,7 @@ export function BusinessMapImpl({
                         e.stopPropagation()
                         onBookNow?.(business.id)
                       }}
-                      className='w-full bg-gradient-to-r from-primary-700 to-cyan-500 hover:from-primary-800 hover:to-cyan-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg'
+                      className='w-full bg-primary-700 hover:bg-primary-800 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md hover:shadow-lg'
                     >
                       Book Now
                     </button>

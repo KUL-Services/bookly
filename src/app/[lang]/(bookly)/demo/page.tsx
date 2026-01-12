@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/boo
 
 export default function DemoPage() {
   return (
-    <main className='min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-950 dark:to-secondary-950'>
+    <main className='min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-900'>
       <Card className='w-full max-w-xl'>
         <CardHeader>
           <CardTitle>

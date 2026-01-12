@@ -109,5 +109,29 @@
     "bookings": "الحجوزات",
     "staff": "الموظفون",
     "reviews": "المراجعات"
+  },
+  "business": {
+    "branchDetails": {
+      "calendar": "التقويم",
+      "overview": "نظرة عامة",
+      "services": "الخدمات",
+      "staff": "الموظفون",
+      "location": "الموقع",
+      "viewOnGoogleMaps": "عرض على خرائط جوجل",
+      "contact": "اتصل بنا",
+      "gallery": "معرض الصور",
+      "galleryImageAlt": "صورة المعرض",
+      "quickInfo": "معلومات سريعة",
+      "servicesCount": "الخدمات",
+      "staffMembersCount": "عدد الموظفين",
+      "ratingLabel": "التقييم",
+      "availableServices": "الخدمات المتاحة",
+      "noServicesTitle": "لا توجد خدمات متاحة لهذا الفرع",
+      "duration": "دقيقة",
+      "bookNow": "احجز الآن",
+      "ourTeam": "فريقنا",
+      "noStaffTitle": "لا يوجد موظفون متاحون لهذا الفرع",
+      "staffSchedule": "جدول الموظفين"
+    }
   }
 }

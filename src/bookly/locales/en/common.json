@@ -152,6 +152,11 @@
       "noProfile": "No business profile found. Please contact support."
     },
     "branchDetails": {
+      "email": "Email",
+      "calendar": "Calendar",
+      "gallery": "Gallery",
+      "galleryImageAlt": "Gallery Image",
+      "staffSchedule": "Staff Schedule",
       "overview": "Overview",
       "services": "Services",
       "staff": "Staff",

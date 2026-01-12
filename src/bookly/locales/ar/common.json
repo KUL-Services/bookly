@@ -152,6 +152,11 @@
       "noProfile": "لم يتم العثور على ملف المتجر. يرجى التواصل مع الدعم."
     },
     "branchDetails": {
+      "email": "البريد الإلكتروني",
+      "calendar": "التقويم",
+      "gallery": "معرض الصور",
+      "galleryImageAlt": "صورة المعرض",
+      "staffSchedule": "جدول الموظفين",
       "overview": "نظرة عامة",
       "services": "الخدمات",
       "staff": "الفريق",

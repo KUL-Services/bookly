@@ -107,7 +107,7 @@ export const StaffCalendarView = ({ staff, t, showActions = false, showCustomerN
   return (
     <div className='space-y-4'>
       {/* Staff Selector */}
-      <div className='bg-gradient-to-r from-primary-100 to-teal-100 dark:from-primary-900/20 dark:to-secondary-900/20 rounded-lg p-4 border border-primary-200 dark:border-primary-700'>
+      <div className='bg-primary-100 dark:bg-primary-900/20 rounded-lg p-4 border border-primary-200 dark:border-primary-700'>
         <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
           Select Staff Member
         </label>
