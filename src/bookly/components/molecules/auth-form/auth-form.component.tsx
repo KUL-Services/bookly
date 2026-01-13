@@ -7,7 +7,6 @@ import { useForm } from 'react-hook-form'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/bookly/components/ui/form'
 import { Input } from '@/bookly/components/ui/input'
 import { Button } from '@/bookly/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/bookly/components/ui/card'
 import { Checkbox } from '@/bookly/components/ui/checkbox'
 import { useTranslation } from 'react-i18next'
 import Link from 'next/link'
@@ -28,7 +27,10 @@ const registerSchema = z
   .object({
     firstName: z.string().min(1, 'First name is required').min(2, 'First name must be at least 2 characters'),
     lastName: z.string().min(1, 'Last name is required').min(2, 'Last name must be at least 2 characters'),
-    mobile: z.string().min(1, 'Mobile number is required').regex(/^\+[1-9]\d{1,14}$/, 'Please enter a valid mobile number with country code (e.g., +1234567890)'),
+    mobile: z
+      .string()
+      .min(1, 'Mobile number is required')
+      .regex(/^\+[1-9]\d{1,14}$/, 'Please enter a valid mobile number with country code (e.g., +1234567890)'),
     email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
     password: z.string().min(1, 'Password is required').min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
@@ -49,7 +51,6 @@ type AuthFormProps = {
   successMessage?: string | null
   onClearError?: () => void
 }
-
 
 export function AuthForm({ type, onSubmit, loading = false, error, successMessage, onClearError }: AuthFormProps) {
   const { t } = useTranslation()
@@ -138,12 +139,14 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
         const errorMessage = error.message.toLowerCase()
 
         // Map common server errors to field-specific validation errors
-        if (errorMessage.includes('invalid email or password') ||
-            errorMessage.includes('invalid credentials') ||
-            errorMessage.includes('incorrect password') ||
-            errorMessage.includes('wrong password') ||
-            errorMessage.includes('password is incorrect') ||
-            errorMessage.includes('authentication failed')) {
+        if (
+          errorMessage.includes('invalid email or password') ||
+          errorMessage.includes('invalid credentials') ||
+          errorMessage.includes('incorrect password') ||
+          errorMessage.includes('wrong password') ||
+          errorMessage.includes('password is incorrect') ||
+          errorMessage.includes('authentication failed')
+        ) {
           // For "Invalid email or password" - show on password field to be consistent
           form.setError('password', {
             type: 'server',
@@ -152,10 +155,12 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
           return // Don't show general error if we have field-specific error
         }
 
-        if (errorMessage.includes('user not found') ||
-            errorMessage.includes('email not found') ||
-            errorMessage.includes('no account found') ||
-            errorMessage.includes('invalid email')) {
+        if (
+          errorMessage.includes('user not found') ||
+          errorMessage.includes('email not found') ||
+          errorMessage.includes('no account found') ||
+          errorMessage.includes('invalid email')
+        ) {
           form.setError('email', {
             type: 'server',
             message: 'No account found with this email address.'
@@ -163,9 +168,11 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
           return // Don't show general error if we have field-specific error
         }
 
-        if (errorMessage.includes('account not verified') ||
-            errorMessage.includes('please verify') ||
-            errorMessage.includes('email not verified')) {
+        if (
+          errorMessage.includes('account not verified') ||
+          errorMessage.includes('please verify') ||
+          errorMessage.includes('email not verified')
+        ) {
           form.setError('email', {
             type: 'server',
             message: 'Please verify your email address before logging in.'
@@ -173,9 +180,11 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
           return // Don't show general error if we have field-specific error
         }
 
-        if (errorMessage.includes('account locked') ||
-            errorMessage.includes('account disabled') ||
-            errorMessage.includes('account suspended')) {
+        if (
+          errorMessage.includes('account locked') ||
+          errorMessage.includes('account disabled') ||
+          errorMessage.includes('account suspended')
+        ) {
           form.setError('email', {
             type: 'server',
             message: 'This account has been locked or disabled. Please contact support.'
@@ -184,9 +193,11 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
         }
 
         // For registration-specific errors
-        if (errorMessage.includes('email already exists') ||
-            errorMessage.includes('email already taken') ||
-            errorMessage.includes('user already exists')) {
+        if (
+          errorMessage.includes('email already exists') ||
+          errorMessage.includes('email already taken') ||
+          errorMessage.includes('user already exists')
+        ) {
           form.setError('email', {
             type: 'server',
             message: 'An account with this email already exists. Try logging in instead.'
@@ -202,284 +213,247 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
   const isLogin = type === 'login'
 
   return (
-    <Card className='w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'>
-      <CardHeader className='space-y-1'>
-        <CardTitle className='text-2xl font-bold text-center text-gray-900 dark:text-white'>
-          {isLogin ? t('auth.login.title') : t('auth.register.title')}
-        </CardTitle>
-        <CardDescription className='text-center text-gray-600 dark:text-gray-300'>
-          {isLogin ? t('auth.login.description') : t('auth.register.description')}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {error && !form.formState.errors.email && !form.formState.errors.password && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error}
-              {onClearError && (
-                <button
-                  type="button"
-                  onClick={onClearError}
-                  className="ml-2 text-sm underline hover:no-underline"
-                >
-                  Dismiss
-                </button>
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
+    <div className='w-full space-y-4'>
+      {error && !form.formState.errors.email && !form.formState.errors.password && (
+        <Alert variant='destructive' className='mb-4'>
+          <AlertCircle className='h-4 w-4' />
+          <AlertDescription>
+            {error}
+            {onClearError && (
+              <button type='button' onClick={onClearError} className='ml-2 text-sm underline hover:no-underline'>
+                Dismiss
+              </button>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {successMessage && (
-          <Alert variant="success" className="mb-4">
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>{successMessage}</AlertDescription>
-          </Alert>
-        )}
+      {successMessage && (
+        <Alert variant='success' className='mb-4'>
+          <CheckCircle className='h-4 w-4' />
+          <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+      )}
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => {
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(handleSubmit, errors => {
             console.log('Form validation errors:', errors)
             // Handle form validation errors here if needed
-          })} className='space-y-4'>
-            {!isLogin && (
-              <div className='grid grid-cols-2 gap-4'>
-                <FormField
-                  control={form.control}
-                  name='firstName'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('auth.register.firstName')}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t('auth.register.firstNamePlaceholder')} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name='lastName'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('auth.register.lastName')}</FormLabel>
-                      <FormControl>
-                        <Input placeholder={t('auth.register.lastNamePlaceholder')} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {!isLogin && (
+          })}
+          className='space-y-4'
+        >
+          {!isLogin && (
+            <div className='grid grid-cols-2 gap-4'>
               <FormField
                 control={form.control}
-                name='mobile'
+                name='firstName'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('auth.register.mobile')}</FormLabel>
+                    <FormLabel>{t('auth.register.firstName')}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('auth.register.mobilePlaceholder')} {...field} />
+                      <Input placeholder={t('auth.register.firstNamePlaceholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            )}
+              <FormField
+                control={form.control}
+                name='lastName'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('auth.register.lastName')}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('auth.register.lastNamePlaceholder')} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
 
+          {!isLogin && (
             <FormField
               control={form.control}
-              name='email'
-              render={({ field, fieldState }) => (
+              name='mobile'
+              render={({ field }) => (
                 <FormItem>
-                  <FormLabel className={fieldState.error ? 'text-red-600 dark:text-red-400' : ''}>
-                    {t('auth.login.emailLabel')}
-                  </FormLabel>
+                  <FormLabel>{t('auth.register.mobile')}</FormLabel>
                   <FormControl>
+                    <Input placeholder={t('auth.register.mobilePlaceholder')} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
+          <FormField
+            control={form.control}
+            name='email'
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel className={fieldState.error ? 'text-red-600 dark:text-red-400' : ''}>
+                  {t('auth.login.emailLabel')}
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={t('auth.login.emailPlaceholder')}
+                    type='email'
+                    {...field}
+                    className={fieldState.error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+                  />
+                </FormControl>
+                <FormMessage className='text-red-600 dark:text-red-400 text-sm mt-1' />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='password'
+            render={({ field, fieldState }) => (
+              <FormItem>
+                <FormLabel className={fieldState.error ? 'text-red-600 dark:text-red-400' : ''}>
+                  {t('auth.login.passwordLabel')}
+                </FormLabel>
+                <FormControl>
+                  <div className='relative'>
                     <Input
-                      placeholder={t('auth.login.emailPlaceholder')}
-                      type='email'
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder={
+                        isLogin ? t('auth.login.passwordPlaceholder') : t('auth.register.passwordPlaceholder')
+                      }
                       {...field}
                       className={fieldState.error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
                     />
-                  </FormControl>
-                  <FormMessage className="text-red-600 dark:text-red-400 text-sm mt-1" />
-                </FormItem>
-              )}
-            />
+                    <button
+                      type='button'
+                      onClick={() => setShowPassword(!showPassword)}
+                      className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                    >
+                      {showPassword ? (
+                        <KulIcon icon='lucide:eye-off' fontSize={FontSize.L} />
+                      ) : (
+                        <KulIcon icon='lucide:eye' fontSize={FontSize.L} />
+                      )}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage className='text-red-600 dark:text-red-400 text-sm mt-1' />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name='password'
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel className={fieldState.error ? 'text-red-600 dark:text-red-400' : ''}>
-                    {t('auth.login.passwordLabel')}
-                  </FormLabel>
-                  <FormControl>
-                    <div className='relative'>
-                      <Input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder={isLogin ? t('auth.login.passwordPlaceholder') : t('auth.register.passwordPlaceholder')}
-                        {...field}
-                        className={fieldState.error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
-                      />
-                      <button
-                        type='button'
-                        onClick={() => setShowPassword(!showPassword)}
-                        className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                      >
-                        {showPassword ? (
-                          <KulIcon icon='lucide:eye-off' fontSize={FontSize.L} />
-                        ) : (
-                          <KulIcon icon='lucide:eye' fontSize={FontSize.L} />
-                        )}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage className="text-red-600 dark:text-red-400 text-sm mt-1" />
-                </FormItem>
-              )}
-            />
-
-            {!isLogin && (
-              <>
-                <FormField
-                  control={form.control}
-                  name='confirmPassword'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('auth.register.confirmPasswordLabel')}</FormLabel>
-                      <FormControl>
-                        <div className='relative'>
-                          <Input
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            placeholder={t('auth.register.confirmPasswordPlaceholder')}
-                            {...field}
-                          />
-                          <button
-                            type='button'
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                          >
-                            {showConfirmPassword ? (
-                              <KulIcon icon='lucide:eye-off' fontSize={FontSize.L} />
-                            ) : (
-                              <KulIcon icon='lucide:eye' fontSize={FontSize.L} />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name='terms'
-                  render={({ field }) => (
-                    <FormItem className='flex flex-row items-start space-x-3 space-y-0'>
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <div className='space-y-1 leading-none'>
-                        <FormLabel>
-                          {t('auth.register.agreeToTerms')}{' '}
-                          <Link href='/terms' className='text-primary-700 dark:text-sage-400 hover:underline'>
-                            {t('auth.register.termsOfService')}
-                          </Link>{' '}
-                          {t('auth.register.and')}{' '}
-                          <Link href='/privacy' className='text-primary-700 dark:text-sage-400 hover:underline'>
-                            {t('auth.register.privacyPolicy')}
-                          </Link>
-                        </FormLabel>
+          {!isLogin && (
+            <>
+              <FormField
+                control={form.control}
+                name='confirmPassword'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('auth.register.confirmPasswordLabel')}</FormLabel>
+                    <FormControl>
+                      <div className='relative'>
+                        <Input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          placeholder={t('auth.register.confirmPasswordPlaceholder')}
+                          {...field}
+                        />
+                        <button
+                          type='button'
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                        >
+                          {showConfirmPassword ? (
+                            <KulIcon icon='lucide:eye-off' fontSize={FontSize.L} />
+                          ) : (
+                            <KulIcon icon='lucide:eye' fontSize={FontSize.L} />
+                          )}
+                        </button>
                       </div>
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {isLogin && (
-              <div className='flex items-center justify-between'>
-                <FormField
-                  control={form.control}
-                  name='rememberMe'
-                  render={({ field }) => (
-                    <FormItem className='flex items-center space-x-2'>
-                      <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
-                      <FormLabel className='text-sm'>{t('auth.login.rememberMe')}</FormLabel>
-                    </FormItem>
-                  )}
-                />
-                <Link href='/customer/forgot-password' className='text-sm text-primary-700 dark:text-sage-400 hover:underline'>
-                  {t('auth.login.forgotPassword')}
-                </Link>
-              </div>
-            )}
-
-            <Button
-              type='submit'
-              className='w-full text-white bg-primary-700 hover:bg-primary-800'
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  {isLogin ? t('auth.login.signingIn') : t('auth.register.creatingAccount')}
-                </>
-              ) : (
-                isLogin ? t('auth.login.submitButton') : t('auth.register.submitButton')
-              )}
-            </Button>
-          </form>
-        </Form>
-
-        <div className='relative my-6'>
-          <div className='absolute inset-0 flex items-center'>
-            <div className='w-full border-t border-gray-300 dark:border-gray-600' />
-          </div>
-          <div className='relative flex justify-center text-sm'>
-            <span className='bg-white dark:bg-gray-800 px-2 text-gray-600 dark:text-gray-300'>{t('auth.orContinueWith')}</span>
-          </div>
-        </div>
-
-        {/* <div className='grid grid-cols-2 gap-4'>
-          <Button variant='outline' type='button' className='w-full border border-gray-300'>
-            <KulIcon icon='flat-color-icons:google' className='mr-2' />
-            Google
-          </Button>
-          <Button variant='outline' type='button' className='w-full border border-gray-300'>
-            <KulIcon icon='logos:facebook' className='mr-2' />
-            Facebook
-          </Button>
-        </div> */}
-      </CardContent>
-
-      <CardFooter>
-        <div className='text-sm text-gray-600 dark:text-gray-300 text-center w-full'>
-          {isLogin ? (
-            <>
-              {t('auth.login.noAccount')}{' '}
-              <Link href='/customer/register' className='text-primary-700 dark:text-sage-400 hover:underline'>
-                {t('auth.login.createAccount')}
-              </Link>
-            </>
-          ) : (
-            <>
-              Already have an account?{' '}
-              <Link href='/customer/login' className='text-primary-700 dark:text-sage-400 hover:underline'>
-                Log in
-              </Link>
+              <FormField
+                control={form.control}
+                name='terms'
+                render={({ field }) => (
+                  <FormItem className='flex flex-row items-start space-x-3 space-y-0'>
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <div className='space-y-1 leading-none'>
+                      <FormLabel>
+                        {t('auth.register.agreeToTerms')}{' '}
+                        <Link href='/terms' className='text-primary-700 dark:text-sage-400 hover:underline'>
+                          {t('auth.register.termsOfService')}
+                        </Link>{' '}
+                        {t('auth.register.and')}{' '}
+                        <Link href='/privacy' className='text-primary-700 dark:text-sage-400 hover:underline'>
+                          {t('auth.register.privacyPolicy')}
+                        </Link>
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
             </>
           )}
+
+          {isLogin && (
+            <div className='flex items-center justify-between'>
+              <FormField
+                control={form.control}
+                name='rememberMe'
+                render={({ field }) => (
+                  <FormItem className='flex items-center space-x-2'>
+                    <FormControl>
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                    <FormLabel className='text-sm'>{t('auth.login.rememberMe')}</FormLabel>
+                  </FormItem>
+                )}
+              />
+              <Link
+                href='/customer/forgot-password'
+                className='text-sm text-primary-700 dark:text-sage-400 hover:underline'
+              >
+                {t('auth.login.forgotPassword')}
+              </Link>
+            </div>
+          )}
+
+          <Button type='submit' className='w-full text-white bg-primary-700 hover:bg-primary-800' disabled={loading}>
+            {loading ? (
+              <>
+                <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
+                {isLogin ? t('auth.login.signingIn') : t('auth.register.creatingAccount')}
+              </>
+            ) : isLogin ? (
+              t('auth.login.submitButton')
+            ) : (
+              t('auth.register.submitButton')
+            )}
+          </Button>
+        </form>
+      </Form>
+
+      <div className='relative my-6'>
+        <div className='absolute inset-0 flex items-center'>
+          <div className='w-full border-t border-gray-300 dark:border-gray-600' />
         </div>
-      </CardFooter>
-    </Card>
+        <div className='relative flex justify-center text-sm'>
+          <span className='bg-white dark:bg-gray-800 px-2 text-gray-600 dark:text-gray-300'>
+            {t('auth.orContinueWith')}
+          </span>
+        </div>
+      </div>
+    </div>
   )
 }

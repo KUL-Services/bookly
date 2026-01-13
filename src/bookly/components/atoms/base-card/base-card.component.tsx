@@ -36,15 +36,13 @@ export const BaseCard = ({
 }: BaseCardProps) => {
   return (
     <Card className={cn('w-full', className)}>
-      {(titleProps || descriptionProps || imageSrc || customImageComponent) && (
+      {(customImageComponent || imageSrc) && (
+        <div className='relative w-full h-48 object-cover'>
+          {customImageComponent || <BaseImage src={imageSrc!} alt={imageAlt || ''} className='rounded-t-lg' />}
+        </div>
+      )}
+      {(titleProps || descriptionProps) && (
         <CardHeader className={headerClassName}>
-          {(customImageComponent || imageSrc) && (
-            <div className='relative w-full h-48 object-cover'>
-              {customImageComponent || (
-                <BaseImage src={imageSrc!} alt={imageAlt || ''} className='rounded-t-lg' />
-              )}
-            </div>
-          )}
           {titleProps && (
             <CardTitle>
               <H3 stringProps={titleProps} i18nTFn={i18nTFn} className='font-bold text-gray-900 dark:text-white mb-2' />

@@ -49,7 +49,7 @@ function LandPage() {
 
           <div className='relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
             <div
-              className={`text-center space-y-4 sm:space-y-5 lg:space-y-6 ${mounted ? 'opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]' : 'opacity-0'}`}
+              className={`text-center space-y-4 sm:space-y-5 lg:space-y-6 ${mounted ? 'opacity-0 animate-blur-in' : 'opacity-0'}`}
             >
               <h1 className='text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-primary-800 dark:text-white leading-tight pb-2'>
                 {t('landing.hero.titlePrefix')}
@@ -57,14 +57,18 @@ function LandPage() {
                 {t('landing.hero.titleSuffix')}
               </h1>
 
-              <p className='text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed'>
+              <p
+                className='text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed delay-100 animate-blur-in opacity-0'
+                style={{ animationFillMode: 'forwards' }}
+              >
                 {t('landing.hero.subtitle')}
               </p>
               {/* Search Bar */}
               <div
-                className={`w-full max-w-4xl mx-auto mt-8 ${mounted ? 'opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]' : 'opacity-0'}`}
+                className={`w-full max-w-4xl mx-auto mt-8 delay-200 ${mounted ? 'opacity-0 animate-scale-up-soft' : 'opacity-0'}`}
+                style={{ animationFillMode: 'forwards' }}
               >
-                <div className='glass-card p-2 sm:p-3 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300'>
+                <div className='glass-card p-2 sm:p-3 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1'>
                   <div className='flex flex-col md:flex-row gap-2 sm:gap-3 p-1'>
                     <div className='flex-1'>
                       <SearchInput
@@ -74,7 +78,7 @@ function LandPage() {
                           localeKey: 'landing.search.servicePlaceholder'
                         }}
                         i18nTFn={t}
-                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus-glow font-mono'
+                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus-glow font-mono transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                       />
                     </div>
                     <div className='flex-1'>
@@ -86,14 +90,14 @@ function LandPage() {
                         }}
                         i18nTFn={t}
                         leadingIcon={MapPin}
-                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus-glow font-mono'
+                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus-glow font-mono transition-all duration-300 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
                       />
                     </div>
                     <Button
                       onClick={goSearch}
                       buttonText={{ localeKey: 'landing.search.button' }}
                       i18nTFn={t}
-                      className='w-full md:w-auto btn-primary-enhanced btn-press px-8 sm:px-10 py-3 h-12 sm:h-14 text-lg font-semibold rounded-xl'
+                      className='w-full md:w-auto btn-primary-enhanced btn-press px-8 sm:px-10 py-3 h-12 sm:h-14 text-lg font-semibold rounded-xl hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300'
                     />
                   </div>
                 </div>
@@ -101,17 +105,18 @@ function LandPage() {
 
               {/* Trust indicators - Stretched with more spacing */}
               <div
-                className={`flex flex-wrap justify-center items-center gap-6 sm:gap-8 lg:gap-12 pt-4 sm:pt-6 ${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.4s_forwards]' : 'opacity-0'}`}
+                className={`flex flex-wrap justify-center items-center gap-6 sm:gap-8 lg:gap-12 pt-4 sm:pt-6 delay-300 ${mounted ? 'opacity-0 animate-blur-in' : 'opacity-0'}`}
+                style={{ animationFillMode: 'forwards' }}
               >
-                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 stagger-1 animate-slide-up-fade'>
+                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-300 cursor-default'>
                   <div className='w-2.5 h-2.5 bg-sage-500 rounded-full animate-pulse-soft' />
                   <span className='text-sm sm:text-base font-medium font-mono'>{t('landing.stats.businesses')}</span>
                 </div>
-                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 stagger-2 animate-slide-up-fade'>
+                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300 cursor-default'>
                   <div className='w-2.5 h-2.5 bg-teal-500 rounded-full animate-pulse-soft' />
                   <span className='text-sm sm:text-base font-medium font-mono'>{t('landing.stats.customers')}</span>
                 </div>
-                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 stagger-3 animate-slide-up-fade'>
+                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-coral-600 dark:hover:text-coral-400 transition-colors duration-300 cursor-default'>
                   <div className='w-2.5 h-2.5 bg-coral-500 rounded-full animate-pulse-soft' />
                   <span className='text-sm sm:text-base font-medium font-mono'>{t('landing.stats.rating')}</span>
                 </div>
@@ -122,28 +127,36 @@ function LandPage() {
 
         {/* Categories Section */}
         <div className='relative bg-white dark:bg-gray-800'>
-          <div className={`${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.5s_forwards]' : 'opacity-0'}`}>
+          <div
+            className={`${mounted ? 'opacity-0 animate-blur-in delay-200' : 'opacity-0'}`}
+            style={{ animationFillMode: 'forwards' }}
+          >
             <ExploreSection />
           </div>
         </div>
 
         {/* Features Section */}
         <div className='relative bg-gray-50 dark:bg-gray-900'>
-          <div className={`${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.6s_forwards]' : 'opacity-0'}`}>
+          <div
+            className={`${mounted ? 'opacity-0 animate-blur-in delay-300' : 'opacity-0'}`}
+            style={{ animationFillMode: 'forwards' }}
+          >
             <FeaturesSection />
           </div>
         </div>
 
         {/* App Download Section */}
         <div
-          className={`relative bg-white dark:bg-gray-800 ${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.7s_forwards]' : 'opacity-0'}`}
+          className={`relative bg-white dark:bg-gray-800 ${mounted ? 'opacity-0 animate-blur-in delay-400' : 'opacity-0'}`}
+          style={{ animationFillMode: 'forwards' }}
         >
           <AppDownloadSection />
         </div>
 
         {/* Footer */}
         <div
-          className={`relative bg-gray-900 ${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.8s_forwards]' : 'opacity-0'}`}
+          className={`relative bg-gray-900 ${mounted ? 'opacity-0 animate-blur-in delay-500' : 'opacity-0'}`}
+          style={{ animationFillMode: 'forwards' }}
         >
           <FooterSection />
         </div>

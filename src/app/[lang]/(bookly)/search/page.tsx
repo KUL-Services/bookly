@@ -278,7 +278,7 @@ export default function SearchPage() {
   if (loading) {
     return (
       <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900 font-sans'>
-        <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-primary-100/30 dark:border-gray-700/30 sticky top-0 z-40'>
+        <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-700/30 sticky top-0 z-40'>
           <div className='mx-auto max-w-7xl px-3 sm:px-4 py-2 sm:py-3'>
             <div className='flex gap-2'>
               <div className='flex-1 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse'></div>
@@ -297,7 +297,7 @@ export default function SearchPage() {
   return (
     <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900 font-sans'>
       {/* Top search bar - Full width stretch */}
-      <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-primary-100/30 dark:border-gray-700/30 sticky top-0 z-40'>
+      <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-700/30 sticky top-0 z-40'>
         <div className='w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4'>
           <div className='flex flex-col sm:flex-row gap-3'>
             <SearchInput
@@ -363,7 +363,7 @@ export default function SearchPage() {
               {/* Mobile Filter Button */}
               <button
                 onClick={() => setShowMobileFilters(true)}
-                className='lg:hidden flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-gray-800/90 border border-gray-200/50 dark:border-gray-700/50 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors touch-manipulation'
+                className='lg:hidden flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700/50 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors touch-manipulation'
               >
                 <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path
@@ -505,7 +505,7 @@ export default function SearchPage() {
           {/* Drawer - Full width on mobile, larger on tablet */}
           <div className='absolute right-0 top-0 bottom-0 w-full sm:w-96 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto animate-slide-in-right'>
             {/* Header */}
-            <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200/50 dark:border-gray-700/50 p-4 flex items-center justify-between z-10'>
+            <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700/50 p-4 flex items-center justify-between z-10'>
               <h2 className='text-lg font-bold text-gray-900 dark:text-white'>Filters</h2>
               <button
                 onClick={() => setShowMobileFilters(false)}

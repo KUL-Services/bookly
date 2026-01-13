@@ -632,7 +632,10 @@ a,
 .btn-primary-enhanced {
   background-color: var(--primary-800);
   color: white;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    background-color 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
   box-shadow: 0 4px 14px 0 rgba(10, 44, 36, 0.25);
 }
 .btn-primary-enhanced:hover {
@@ -765,12 +768,123 @@ select:focus {
   opacity: 0;
   transform: translateY(20px);
   transition:
-    opacity 0.6s ease-out,
-    transform 0.6s ease-out;
+    opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .reveal.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ==================================================================================
+   PREMIUM CINEMATIC ANIMATIONS (Slower, Relaxed, Luxurious)
+   ================================================================================== */
+
+/* Hero Image Reveal - Slow Zoom Out + Fade */
+@keyframes heroReveal {
+  0% {
+    opacity: 0;
+    transform: scale(1.05);
+    filter: brightness(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+.animate-hero-reveal {
+  will-change: opacity, transform, filter;
+  animation: heroReveal 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Card Entrance - Slide Up + Subtle Scale */
+@keyframes cardEntrance {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-card-entrance {
+  will-change: opacity, transform;
+  animation: cardEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Content Slide Up - Relaxed */
+@keyframes slideUpRelaxed {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-relaxed {
+  will-change: opacity, transform;
+  animation: slideUpRelaxed 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Update existing generics to be slower */
+@keyframes blurIn {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-blur-in {
+  will-change: opacity, transform;
+  animation: blurIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Scale Up - Slower */
+@keyframes scaleUpSoft {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-up-soft {
+  will-change: opacity, transform;
+  animation: scaleUpSoft 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Extended Stagger Delays */
+.delay-100 {
+  animation-delay: 100ms;
+}
+.delay-200 {
+  animation-delay: 200ms;
+}
+.delay-300 {
+  animation-delay: 300ms;
+}
+.delay-400 {
+  animation-delay: 400ms;
+}
+.delay-500 {
+  animation-delay: 500ms;
+}
+.delay-700 {
+  animation-delay: 700ms;
 }
 
 /* Enhanced link hover */

@@ -64,7 +64,7 @@ const BooklyLanguageDropdown = () => {
       <button
         ref={anchorRef}
         onClick={handleToggle}
-        className='flex items-center gap-2 px-3 py-2.5 h-10 rounded-lg bg-primary-100/60 dark:bg-primary-900/40 hover:bg-primary-200/80 dark:hover:bg-primary-800/50 text-primary-900 dark:text-sage-300 hover:text-primary-900 dark:hover:text-sage-200 transition-all duration-200 touch-manipulation border border-primary-200/50 dark:border-primary-700/50'
+        className='flex items-center gap-2 px-3 py-2.5 h-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300 transition-all duration-200 touch-manipulation'
         aria-label='Change language'
       >
         <span className='text-lg'>{currentLanguage.flag}</span>
@@ -78,7 +78,7 @@ const BooklyLanguageDropdown = () => {
           <div className='fixed inset-0 z-40' onClick={handleClose} />
 
           {/* Dropdown */}
-          <div className='absolute right-0 mt-2 w-48 bg-slate-800 dark:bg-slate-800 rounded-xl shadow-xl border border-slate-600 dark:border-slate-600 p-1 z-50 animate-in slide-in-from-top-2 duration-200'>
+          <div className='absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-200 dark:border-slate-600 p-1 z-50 animate-in slide-in-from-top-2 duration-200'>
             {languageData.map(language => (
               <button
                 key={language.langCode}
@@ -86,7 +86,7 @@ const BooklyLanguageDropdown = () => {
                 className={`flex items-center gap-3 w-full px-3 py-2.5 text-left transition-all duration-200 touch-manipulation rounded-lg ${
                   lang === language.langCode
                     ? 'bg-primary-700 text-white shadow-md font-semibold'
-                    : 'bg-transparent text-slate-300 hover:bg-slate-700 hover:text-white'
+                    : 'bg-transparent text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
                 <span className='text-lg'>{language.flag}</span>

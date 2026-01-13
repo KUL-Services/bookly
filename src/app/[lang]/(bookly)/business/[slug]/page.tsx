@@ -413,7 +413,7 @@ function businessDetailsPage() {
         {/* Tabs Navigation - Full width seamless */}
         <div className='w-full rounded-xl bg-white/95 dark:bg-gray-800/95 sticky top-0 z-30 animate-in fade-in slide-in-from-top-4 duration-700'>
           <nav className='flex p-1'>
-            <div className='flex w-full bg-gray-100/80 dark:bg-gray-700/80 rounded-lg p-0.5 gap-0.5 overflow-x-auto'>
+            <div className='flex w-full bg-white dark:bg-gray-700/80 border border-gray-200 dark:border-gray-600 rounded-lg p-0.5 gap-0.5 overflow-x-auto'>
               {getTabsWithTranslation(t).map(tab => (
                 <Button
                   key={tab.id}

@@ -77,18 +77,18 @@ export function BusinessList({
             onMouseEnter={() => onBusinessHover?.(business.id)}
             onMouseLeave={() => onBusinessHover?.(null)}
             className={`
-              group bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border-2 cursor-pointer
-              card-hover
+              group bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border cursor-pointer
+              card-hover will-change-transform
               ${
                 isSelected
-                  ? 'border-primary-700 shadow-lg scale-[1.02]'
+                  ? 'border-primary-500 shadow-lg'
                   : isHovered
-                    ? 'border-primary-300 shadow-md scale-[1.01]'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-200'
+                    ? 'border-primary-200 shadow-md'
+                    : 'border-gray-100 dark:border-gray-700 hover:border-primary-100'
               }
-              animate-in fade-in slide-in-from-bottom-4 duration-500
+              animate-card-entrance
             `}
-            style={{ animationDelay: `${index * 50}ms` }}
+            style={{ animationDelay: `${Math.min(index * 150, 1500)}ms`, animationFillMode: 'forwards' }}
           >
             <div className='flex flex-col sm:flex-row gap-4'>
               {/* Business Image/Avatar */}
