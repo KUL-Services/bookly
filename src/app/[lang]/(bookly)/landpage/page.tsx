@@ -1,5 +1,4 @@
 'use client'
-import { H1 } from '@/bookly/components/atoms'
 import { SearchInput } from '@/bookly/components/atoms/search-input/search-input.component'
 import { Button } from '@/bookly/components/molecules'
 import { ExploreSection } from '@/bookly/components/organisms'
@@ -10,6 +9,7 @@ import { MapPin } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import initTranslations from '@/app/i18n/i18n'
+import { InlineZervLogo } from '@/bookly/components/atoms/inline-zerv-logo'
 
 function LandPage() {
   const [q, setQ] = useState('')
@@ -51,13 +51,11 @@ function LandPage() {
             <div
               className={`text-center space-y-4 sm:space-y-5 lg:space-y-6 ${mounted ? 'opacity-0 animate-[fadeInUp_0.7s_ease-out_forwards]' : 'opacity-0'}`}
             >
-              <H1
-                stringProps={{
-                  localeKey: 'landing.hero.title'
-                }}
-                i18nTFn={t}
-                className='text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-gradient-brand dark:text-white leading-tight pb-2'
-              />
+              <h1 className='text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-primary-800 dark:text-white leading-tight pb-2'>
+                {t('landing.hero.titlePrefix')}
+                <InlineZervLogo />
+                {t('landing.hero.titleSuffix')}
+              </h1>
 
               <p className='text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed'>
                 {t('landing.hero.subtitle')}

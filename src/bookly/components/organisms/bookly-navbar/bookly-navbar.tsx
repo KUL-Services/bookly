@@ -9,8 +9,6 @@ import BooklyLanguageDropdown from '../../atoms/language-dropdown/language-dropd
 import BooklyThemeToggle from '../../atoms/theme-toggle/theme-toggle.component'
 
 // Assets
-import GreenWordLogo from '@assets/logos/words/Green_Word.png'
-import WhiteWordLogo from '@assets/logos/words/White_Word.png'
 import GreenIconLogo from '@assets/logos/icons/Green_Icon.png'
 import WhiteIconLogo from '@assets/logos/icons/White_Icon.png'
 
@@ -87,31 +85,18 @@ const BooklyNavbar = () => {
               onClick={() => to('/landpage')}
               className='flex items-center transition-opacity duration-200 hover:opacity-90 touch-manipulation bg-transparent border-none p-0'
             >
-              <div className='relative w-[32px] sm:w-[120px] h-[32px] sm:h-[40px] bg-transparent'>
-                {/* Light Mode: Green Word (Desktop) */}
-                <img
-                  src={GreenWordLogo.src}
-                  alt='Zerv'
-                  className='hidden dark:hidden sm:block object-contain object-left w-full h-full'
-                />
-                {/* Dark Mode: White Word (Desktop) */}
-                <img
-                  src={WhiteWordLogo.src}
-                  alt='Zerv'
-                  className='hidden sm:dark:block object-contain object-left w-full h-full'
-                />
-
-                {/* Light Mode: Green Icon (Mobile) */}
+              <div className='relative w-[50px] sm:w-[64px] h-[50px] sm:h-[64px] bg-transparent'>
+                {/* Light Mode: Green Icon */}
                 <img
                   src={GreenIconLogo.src}
                   alt='Zerv'
-                  className='block dark:hidden sm:hidden object-contain object-left w-full h-full'
+                  className='dark:hidden block object-contain object-left w-full h-full'
                 />
-                {/* Dark Mode: White Icon (Mobile) */}
+                {/* Dark Mode: White Icon */}
                 <img
                   src={WhiteIconLogo.src}
                   alt='Zerv'
-                  className='hidden dark:block sm:hidden object-contain object-left w-full h-full'
+                  className='hidden dark:block object-contain object-left w-full h-full'
                 />
               </div>
             </button>

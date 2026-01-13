@@ -6,7 +6,7 @@ import { categories, mockBusinesses } from '@/bookly/data/mock-data'
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { CategoriesService } from '@/lib/api/services/categories.service'
-import type { Category } from '@/lib/api/types'
+import type { Category } from '@/bookly/data/types'
 
 export const ExploreSection = () => {
   const router = useRouter()
@@ -15,29 +15,49 @@ export const ExploreSection = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await CategoriesService.getCategories()
-        if (response.data && Array.isArray(response.data)) {
-          // Map API categories to component format
-          const apiCategories = response.data.map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            slug: cat.slug || cat.name.toLowerCase().replace(/\s+/g, '-'),
-            image: cat.image || '/images/categories/default.jpg',
-            icon: cat.icon || 'default-icon'
-          }))
-          setCategoriesData(apiCategories)
-        }
-      } catch (error) {
-        console.warn('Failed to fetch categories from API, using fallback data:', error)
-        // Keep using mock categories as fallback
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchCategories()
+    // Mock categories till connected with backend
+    const mockCategoriesData: (Category & { image: string })[] = [
+      {
+        id: '1',
+        name: 'Health & Beauty',
+        slug: 'health-beauty',
+        icon: 'ri-heart-pulse-line',
+        image: '/images/categories/health.jpg'
+      },
+      {
+        id: '2',
+        name: 'Sports & Fitness',
+        slug: 'sports-fitness',
+        icon: 'ri-run-line',
+        image: '/images/categories/sports.jpg'
+      },
+      {
+        id: '3',
+        name: 'Education',
+        slug: 'education',
+        icon: 'ri-book-open-line',
+        image: '/images/categories/education.jpg'
+      },
+      {
+        id: '4',
+        name: 'Professional Services',
+        slug: 'professional-services',
+        icon: 'ri-briefcase-line',
+        image: '/images/categories/professional.jpg'
+      },
+      {
+        id: '5',
+        name: 'Home & Garden',
+        slug: 'home-garden',
+        icon: 'ri-home-line',
+        image: '/images/categories/home.jpg'
+      },
+      { id: '6', name: 'Automotive', slug: 'automotive', icon: 'ri-car-line', image: '/images/categories/auto.jpg' },
+      { id: '7', name: 'Medical', slug: 'medical', icon: 'ri-hospital-line', image: '/images/categories/medical.jpg' },
+      { id: '8', name: 'Legal', slug: 'legal', icon: 'ri-scales-line', image: '/images/categories/legal.jpg' }
+    ]
+    setCategoriesData(mockCategoriesData)
+    setLoading(false)
   }, [])
 
   const handleCategoryClick = (slug: string) => {
@@ -54,19 +74,21 @@ export const ExploreSection = () => {
           />
         </div>
         <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-8 px-4 sm:px-6'>
-          {loading ? (
-            // Loading skeleton
-            Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className='animate-pulse'>
-                <div className='bg-gray-200 dark:bg-gray-700 rounded-lg h-20 sm:h-24 w-full mb-2'></div>
-                <div className='bg-gray-200 dark:bg-gray-700 rounded h-3 sm:h-4 w-3/4 mx-auto'></div>
-              </div>
-            ))
-          ) : (
-            categoriesData.map(category => (
-              <CategoryCard key={category.id} category={category} onClick={() => handleCategoryClick(category.slug)} />
-            ))
-          )}
+          {loading
+            ? // Loading skeleton
+              Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className='animate-pulse'>
+                  <div className='bg-gray-200 dark:bg-gray-700 rounded-lg h-20 sm:h-24 w-full mb-2'></div>
+                  <div className='bg-gray-200 dark:bg-gray-700 rounded h-3 sm:h-4 w-3/4 mx-auto'></div>
+                </div>
+              ))
+            : categoriesData.map(category => (
+                <CategoryCard
+                  key={category.id}
+                  category={category}
+                  onClick={() => handleCategoryClick(category.slug)}
+                />
+              ))}
         </div>
       </section>
     </>

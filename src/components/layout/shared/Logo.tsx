@@ -48,7 +48,7 @@ const LogoText = styled.span<LogoTextProps>`
       : 'opacity: 1; margin-inline-start: 8px;'}
 `
 
-const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
+const Logo = ({ color, forceIcon = false }: { color?: CSSProperties['color']; forceIcon?: boolean }) => {
   // Refs
   const logoTextRef = useRef<HTMLSpanElement>(null)
 
@@ -63,12 +63,11 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
   const { layout } = settings
 
   // Logic to determine if we should show the full logo or just the icon
-  // If layout is collapsed and not hovered, show icon. Otherwise show word.
-  // We handle this with CSS classes to avoid hydration mismatches if possible,
-  // but since we have layout state available we can do it conditionally.
+  // If forceIcon is true, always show icon.
+  // Else if layout is collapsed and not hovered, show icon. Otherwise show word.
 
   // Default to false (expanded) if context values are missing
-  const isCollapsedState = !isBreakpointReached && layout === 'collapsed' && !isHovered
+  const isCollapsedState = forceIcon || (!isBreakpointReached && layout === 'collapsed' && !isHovered)
 
   useEffect(() => {
     if (layout !== 'collapsed') {
@@ -93,18 +92,18 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
 
       {/* EXPANDED STATE (WORD LOGO) */}
       <div className={`flex items-center ${isCollapsedState ? 'hidden' : 'block'}`}>
-        {/* Light Mode: Green Word */}
-        <div className='dark:hidden block relative w-[120px] h-[32px]'>
+        {/* Light Mode: Green Icon (Expanded) */}
+        <div className='dark:hidden block relative w-[50px] h-[50px]'>
           <img
-            src={GreenWordLogo.src}
+            src={GreenIconLogo.src}
             alt={themeConfig.templateName}
             className='object-contain object-left w-full h-full'
           />
         </div>
-        {/* Dark Mode: White Word */}
-        <div className='hidden dark:block relative w-[120px] h-[32px]'>
+        {/* Dark Mode: White Icon (Expanded) */}
+        <div className='hidden dark:block relative w-[50px] h-[50px]'>
           <img
-            src={WhiteWordLogo.src}
+            src={WhiteIconLogo.src}
             alt={themeConfig.templateName}
             className='object-contain object-left w-full h-full'
           />
