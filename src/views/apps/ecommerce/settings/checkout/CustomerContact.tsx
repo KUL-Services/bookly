@@ -9,6 +9,7 @@ import Alert from '@mui/material/Alert'
 import Radio from '@mui/material/Radio'
 import RadioGroup from '@mui/material/RadioGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import Typography from '@mui/material/Typography'
 
 const CustomerContact = () => {
   // States
@@ -16,7 +17,14 @@ const CustomerContact = () => {
 
   return (
     <Card>
-      <CardHeader title='Customer contact method' subheader='Select what contact method customers use to check out.' />
+      <CardHeader
+        title='Customer contact method'
+        subheader={
+          <Typography variant='body2' color='text.secondary' style={{ fontFamily: 'var(--font-fira-code)' }}>
+            Select what contact method customers use to check out.
+          </Typography>
+        }
+      />
       <CardContent>
         <RadioGroup
           value={method}

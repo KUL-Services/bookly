@@ -74,7 +74,7 @@ export function StaffMembersTab() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [staffToDelete, setStaffToDelete] = useState<{ id: string; name: string } | null>(null)
   const [editingStaff, setEditingStaff] = useState<(typeof mockStaff)[0] | null>(null)
-  
+
   // Action Menu State
   const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null)
 
@@ -211,24 +211,26 @@ export function StaffMembersTab() {
           flexShrink: 0,
           borderRadius: 3,
           border: '1px solid',
-          borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+          borderColor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
         }}
       >
         {/* Header */}
-        <Box sx={{
-          p: 2,
-          bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.15)' : 'rgba(10, 44, 36, 0.04)',
-          borderBottom: '1px solid',
-          borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
-        }}>
+        <Box
+          sx={{
+            p: 2,
+            bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.15)' : 'rgba(10, 44, 36, 0.04)'),
+            borderBottom: '1px solid',
+            borderColor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)')
+          }}
+        >
           <Typography variant='subtitle1' fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <i className='ri-team-line' style={{ fontSize: 18 }} />
             Team Directory
           </Typography>
-          <Typography variant='caption' color='text.secondary'>
+          <Typography variant='caption' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
             {filteredByService.length} team member{filteredByService.length !== 1 ? 's' : ''}
           </Typography>
         </Box>
@@ -238,7 +240,7 @@ export function StaffMembersTab() {
           sx={{
             p: 2,
             borderBottom: '1px solid',
-            borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+            borderColor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
             display: 'flex',
             flexDirection: 'column',
             gap: 1.5
@@ -300,9 +302,9 @@ export function StaffMembersTab() {
                 sx={{
                   px: 2,
                   py: 1.25,
-                  bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                  bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
                   borderBottom: '1px solid',
-                  borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+                  borderColor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
                   position: 'sticky',
                   top: 0,
                   zIndex: 1,
@@ -315,12 +317,23 @@ export function StaffMembersTab() {
                   variant='caption'
                   fontWeight={700}
                   color='text.primary'
-                  sx={{ display: 'flex', alignItems: 'center', gap: 0.75, letterSpacing: 0.5 }}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    letterSpacing: 0.5,
+                    fontFamily: 'var(--font-fira-code)'
+                  }}
                 >
                   <i className='ri-map-pin-2-line' style={{ fontSize: 14, opacity: 0.7 }} />
                   {group.name}
                 </Typography>
-                <Typography variant='caption' color='text.secondary' fontWeight={500}>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  fontWeight={500}
+                  sx={{ fontFamily: 'var(--font-fira-code)' }}
+                >
                   {group.staff.length}
                 </Typography>
               </Box>
@@ -337,13 +350,15 @@ export function StaffMembersTab() {
                     borderColor: selectedStaffId === staff.id ? 'primary.main' : 'transparent',
                     transition: 'all 0.15s ease',
                     '&.Mui-selected': {
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.06)',
+                      bgcolor: theme =>
+                        theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.06)',
                       '&:hover': {
-                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.25)' : 'rgba(10, 44, 36, 0.08)'
+                        bgcolor: theme =>
+                          theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.25)' : 'rgba(10, 44, 36, 0.08)'
                       }
                     },
                     '&:hover': {
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'
+                      bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)')
                     }
                   }}
                 >
@@ -366,15 +381,17 @@ export function StaffMembersTab() {
                     primary={staff.name}
                     secondary={staff.title}
                     primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }}
-                    secondaryTypographyProps={{ fontSize: '0.75rem', color: 'text.secondary' }}
+                    secondaryTypographyProps={{
+                      fontSize: '0.75rem',
+                      color: 'text.secondary',
+                      fontFamily: 'var(--font-fira-code)'
+                    }}
                   />
                 </ListItemButton>
               ))}
             </Box>
           ))}
         </List>
-
-
       </Paper>
 
       {/* Right Panel - Staff Details */}
@@ -385,7 +402,7 @@ export function StaffMembersTab() {
             flexGrow: 1,
             borderRadius: 3,
             border: '1px solid',
-            borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+            borderColor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column'
@@ -396,8 +413,8 @@ export function StaffMembersTab() {
             sx={{
               p: 3,
               borderBottom: '1px solid',
-              borderColor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-              bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.02)'
+              borderColor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+              bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.02)')
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5, mb: 2 }}>
@@ -419,40 +436,54 @@ export function StaffMembersTab() {
                 <Typography variant='h5' fontWeight={700} sx={{ mb: 0.5 }}>
                   {selectedStaff.name}
                 </Typography>
-                <Typography variant='body2' color='text.secondary' sx={{ mb: 1.5 }}>
+                <Typography
+                  variant='body2'
+                  color='text.secondary'
+                  sx={{ mb: 1.5, fontFamily: 'var(--font-fira-code)' }}
+                >
                   {selectedStaff.title}
                 </Typography>
 
                 {/* Contact Info with improved styling */}
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                   {selectedStaff.email && (
-                    <Box sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.75,
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 1.5,
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                      fontSize: '0.8rem'
-                    }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1.5,
+                        bgcolor: theme =>
+                          theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                        fontSize: '0.8rem'
+                      }}
+                    >
                       <i className='ri-mail-line' style={{ fontSize: 14, opacity: 0.7 }} />
-                      <Typography variant='caption' color='text.secondary'>{selectedStaff.email}</Typography>
+                      <Typography variant='caption' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                        {selectedStaff.email}
+                      </Typography>
                     </Box>
                   )}
                   {selectedStaff.phone && (
-                    <Box sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.75,
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 1.5,
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                      fontSize: '0.8rem'
-                    }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.75,
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1.5,
+                        bgcolor: theme =>
+                          theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                        fontSize: '0.8rem'
+                      }}
+                    >
                       <i className='ri-phone-line' style={{ fontSize: 14, opacity: 0.7 }} />
-                      <Typography variant='caption' color='text.secondary'>{selectedStaff.phone}</Typography>
+                      <Typography variant='caption' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                        {selectedStaff.phone}
+                      </Typography>
                     </Box>
                   )}
                 </Box>
@@ -462,46 +493,49 @@ export function StaffMembersTab() {
               <IconButton
                 onClick={handleOpenActionMenu}
                 sx={{
-                  bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                  bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
                   '&:hover': {
-                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+                    bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)')
                   }
                 }}
               >
                 <i className='ri-more-2-fill' />
               </IconButton>
-              
+
               <Menu
                 anchorEl={actionMenuAnchor}
                 open={Boolean(actionMenuAnchor)}
                 onClose={handleCloseActionMenu}
                 anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
+                  vertical: 'bottom',
+                  horizontal: 'right'
                 }}
                 transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
+                  vertical: 'top',
+                  horizontal: 'right'
                 }}
               >
                 <MenuItem onClick={() => handleMenuAction('edit')}>
-                    <ListItemIcon>
-                        <i className='ri-edit-line' style={{ fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText>Edit Details</ListItemText>
+                  <ListItemIcon>
+                    <i className='ri-edit-line' style={{ fontSize: 20 }} />
+                  </ListItemIcon>
+                  <ListItemText>Edit Details</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={() => handleMenuAction('calendar')}>
-                    <ListItemIcon>
-                        <i className='ri-calendar-line' style={{ fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText>Show Calendar</ListItemText>
+                  <ListItemIcon>
+                    <i className='ri-calendar-line' style={{ fontSize: 20 }} />
+                  </ListItemIcon>
+                  <ListItemText>Show Calendar</ListItemText>
                 </MenuItem>
                 <Divider />
                 <MenuItem onClick={() => handleMenuAction('delete')} sx={{ color: 'error.main' }}>
-                    <ListItemIcon>
-                        <i className='ri-delete-bin-line' style={{ fontSize: 20, color: 'var(--mui-palette-error-main)' }} />
-                    </ListItemIcon>
-                    <ListItemText>Delete Staff</ListItemText>
+                  <ListItemIcon>
+                    <i
+                      className='ri-delete-bin-line'
+                      style={{ fontSize: 20, color: 'var(--mui-palette-error-main)' }}
+                    />
+                  </ListItemIcon>
+                  <ListItemText>Delete Staff</ListItemText>
                 </MenuItem>
               </Menu>
             </Box>
@@ -556,11 +590,15 @@ export function StaffMembersTab() {
                           <Typography variant='body1' fontWeight={500}>
                             {service.name}
                           </Typography>
-                          <Typography variant='body2' color='text.secondary'>
+                          <Typography
+                            variant='body2'
+                            color='text.secondary'
+                            sx={{ fontFamily: 'var(--font-fira-code)' }}
+                          >
                             {service.duration} min • {service.category}
                           </Typography>
                         </Box>
-                        <Typography variant='h6' color='primary'>
+                        <Typography variant='h6' color='primary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
                           ${service.price}
                         </Typography>
                       </Paper>
@@ -653,17 +691,17 @@ export function StaffMembersTab() {
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* Sticky Add Button */}
       <Fab
         color='primary'
         onClick={() => setIsAddStaffDrawerOpen(true)}
         sx={{
-            position: 'fixed',
-            bottom: 40,
-            right: 40,
-            zIndex: 1050,
-            boxShadow: 4
+          position: 'fixed',
+          bottom: 40,
+          right: 40,
+          zIndex: 1050,
+          boxShadow: 4
         }}
       >
         <i className='ri-add-line' style={{ fontSize: 24 }} />

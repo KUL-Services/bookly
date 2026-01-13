@@ -164,7 +164,7 @@ const LogisticsShipmentStatistics = () => {
         vertical: 0
       },
       fontSize: '15px',
-      fontFamily: 'Open Sans',
+      fontFamily: 'var(--font-helvetica-world), Helvetica, Arial, sans-serif',
       fontWeight: 400,
       labels: {
         colors: 'var(--mui-palette-text-primary)'

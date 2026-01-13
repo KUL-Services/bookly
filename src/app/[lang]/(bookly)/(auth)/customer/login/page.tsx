@@ -25,8 +25,7 @@ export default function LoginPage({ params }: PageProps) {
   }, [locale])
 
   return (
-    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
-
+    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
       <main className='container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10'>
         <div className='w-full max-w-md mx-auto'>
           {/* Mobile-optimized header */}

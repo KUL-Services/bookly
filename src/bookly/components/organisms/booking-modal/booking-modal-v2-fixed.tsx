@@ -26,6 +26,7 @@ import { downloadICS } from '@/bookly/utils/ics-generator.util'
 import { BookingService } from '@/lib/api'
 import type { Service, Staff } from '@/lib/api/types'
 import { getBusinessWithDetails } from '@/mocks/businesses'
+import { Check, CalendarPlus } from 'lucide-react'
 
 interface BookingModalV2FixedProps {
   isOpen: boolean
@@ -183,13 +184,13 @@ function SortableServiceCard({
       <div className='flex items-start justify-between mb-3 pr-10 pl-10'>
         <div className='flex-1'>
           <div className='font-bold text-lg text-gray-900 dark:text-white'>{selected.service.name}</div>
-          <div className='text-sm text-primary-600 dark:text-teal-400 font-medium'>
+          <div className='text-sm text-primary-600 dark:text-teal-400 font-medium font-mono'>
             {selected.time && selected.endTime
               ? `${selected.time} - ${selected.endTime}`
               : 'Time pending - select start time'}
           </div>
         </div>
-        <div className='text-xl font-bold text-primary-700 dark:text-teal-400'>
+        <div className='text-xl font-bold text-primary-700 dark:text-teal-400 font-mono'>
           £{(selected.service.price / 100).toFixed(2)}
         </div>
       </div>
@@ -774,10 +775,12 @@ function BookingModalV2Fixed({
                           : 'bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 opacity-60 hover:opacity-100 hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300'
                       }`}
                     >
-                      <span className={`text-xs font-medium ${isSelected ? 'text-white/80' : 'text-inherit'}`}>
+                      <span
+                        className={`text-xs font-medium font-mono ${isSelected ? 'text-white/80' : 'text-inherit'}`}
+                      >
                         {weekdays[idx]}
                       </span>
-                      <span className='text-lg sm:text-2xl font-bold mt-1'>{format(date, 'd')}</span>
+                      <span className='text-lg sm:text-2xl font-bold mt-1 font-mono'>{format(date, 'd')}</span>
                     </button>
                   )
                 })}
@@ -823,7 +826,7 @@ function BookingModalV2Fixed({
                     <button
                       key={time}
                       onClick={() => handleTimeSelect(time)}
-                      className={`flex-shrink-0 min-w-[80px] sm:min-w-[100px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base touch-manipulation border ${
+                      className={`flex-shrink-0 min-w-[80px] sm:min-w-[100px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base touch-manipulation border font-mono ${
                         selectedTime === time
                           ? 'bg-primary-800 text-white shadow-md border-primary-800 opacity-100'
                           : 'bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 opacity-60 hover:opacity-100 hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300'
@@ -851,7 +854,7 @@ function BookingModalV2Fixed({
             {selectedTime && selectedServices.length === 0 && availableServices.length > 0 && !initialService && (
               <div className='bg-primary-100 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-4'>
                 <div className='text-sm text-primary-900 dark:text-sage-300 mb-2'>
-                  Time {selectedTime} selected. Choose a service to continue:
+                  Time <span className='font-mono'>{selectedTime}</span> selected. Choose a service to continue:
                 </div>
                 <button
                   onClick={() => setShowServiceSelector(true)}
@@ -943,11 +946,11 @@ function BookingModalV2Fixed({
                             </div>
                             <div className='text-sm text-gray-500 dark:text-gray-400 mt-1'>{service.description}</div>
                           </div>
-                          <div className='text-xl font-bold text-primary-700 dark:text-teal-400 ml-4'>
+                          <div className='text-xl font-bold text-primary-700 dark:text-teal-400 ml-4 font-mono'>
                             £{(service.price / 100).toFixed(2)}
                           </div>
                         </div>
-                        <div className='text-sm text-gray-600 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-700/50 px-4 py-1.5 rounded-full inline-block font-medium'>
+                        <div className='text-sm text-gray-600 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-700/50 px-4 py-1.5 rounded-full inline-block font-medium font-mono'>
                           {service.duration}min
                         </div>
                       </button>
@@ -963,10 +966,12 @@ function BookingModalV2Fixed({
                 <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
                   <div className='w-full sm:w-auto text-center sm:text-left'>
                     <div className='text-sm text-gray-500 dark:text-gray-400'>Total</div>
-                    <div className='text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white'>
+                    <div className='text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-mono'>
                       £{(calculateTotal() / 100).toFixed(2)}
                     </div>
-                    <div className='text-sm text-gray-500 dark:text-gray-400'>{calculateTotalDuration()}min</div>
+                    <div className='text-sm text-gray-500 dark:text-gray-400 font-mono'>
+                      {calculateTotalDuration()}min
+                    </div>
                   </div>
                   <button
                     onClick={() => setCurrentStep('details')}
@@ -1005,11 +1010,11 @@ function BookingModalV2Fixed({
                         <div className='font-bold text-base sm:text-lg text-gray-900 dark:text-white'>
                           {service.service.name}
                         </div>
-                        <div className='text-sm text-primary-600 dark:text-teal-400 font-medium mt-1'>
+                        <div className='text-sm text-primary-600 dark:text-teal-400 font-medium mt-1 font-mono'>
                           {service.time} - {service.endTime} • Staff: {service.providerName}
                         </div>
                       </div>
-                      <div className='font-bold text-lg sm:text-xl text-primary-700 dark:text-teal-400'>
+                      <div className='font-bold text-lg sm:text-xl text-primary-700 dark:text-teal-400 font-mono'>
                         £{(service.service.price / 100).toFixed(2)}
                       </div>
                     </div>
@@ -1094,7 +1099,7 @@ function BookingModalV2Fixed({
                     <span className='text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium'>
                       Total to pay
                     </span>
-                    <span className='text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white'>
+                    <span className='text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white font-mono'>
                       £{(calculateTotal() / 100).toFixed(2)}
                     </span>
                   </div>
@@ -1110,7 +1115,7 @@ function BookingModalV2Fixed({
                     <button
                       type='submit'
                       disabled={loading}
-                      className='flex-1 bg-primary-700 hover:bg-primary-800 text-white py-3.5 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50 shadow-lg shadow-primary-500/20 hover:shadow-xl transition-all touch-manipulation'
+                      className='flex-1 btn-primary-enhanced btn-press py-3.5 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50'
                     >
                       {loading ? 'Processing...' : 'Confirm & Book'}
                     </button>
@@ -1125,14 +1130,14 @@ function BookingModalV2Fixed({
         {currentStep === 'success' && (
           <div className='p-6 sm:p-8 lg:p-12 text-center space-y-5 sm:space-y-6'>
             <div className='flex justify-center'>
-              <div className='w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-primary-600 flex items-center justify-center shadow-xl shadow-primary-500/30'>
-                <KulIcon icon='lucide:check' className='w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 text-white' />
+              <div className='w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-primary-600 flex items-center justify-center shadow-xl shadow-primary-500/30 animate-scale-in'>
+                <Check className='w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-white stroke-[3]' />
               </div>
             </div>
 
             <div className='space-y-3'>
               <h3 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white'>Appointment Confirmed</h3>
-              <div className='text-lg sm:text-xl font-semibold text-primary-700 dark:text-teal-400'>
+              <div className='text-lg sm:text-xl font-semibold text-primary-700 dark:text-teal-400 font-mono'>
                 {format(selectedDate, 'MMM d, yyyy')}
               </div>
               <div className='text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-sm mx-auto'>
@@ -1143,9 +1148,9 @@ function BookingModalV2Fixed({
             <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 sm:p-6 border border-gray-200 dark:border-gray-700 max-w-md mx-auto space-y-3'>
               <button
                 onClick={handleDownloadICS}
-                className='w-full bg-primary-700 hover:bg-primary-800 text-white py-3.5 rounded-xl font-semibold shadow-lg shadow-primary-500/20 hover:shadow-xl transition-all touch-manipulation flex items-center justify-center gap-2'
+                className='w-full btn-primary-enhanced btn-press py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2'
               >
-                <KulIcon icon='lucide:calendar-plus' className='w-5 h-5' />
+                <CalendarPlus className='w-5 h-5' />
                 Download Calendar Event
               </button>
 

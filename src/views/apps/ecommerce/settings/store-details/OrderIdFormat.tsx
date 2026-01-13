@@ -12,7 +12,11 @@ const OrderIdFormat = () => {
     <Card>
       <CardHeader
         title='Order id format'
-        subheader='Shown on the Orders page, customer pages, and customer order notifications to identify orders.'
+        subheader={
+          <Typography variant='body2' color='text.secondary' style={{ fontFamily: 'var(--font-fira-code)' }}>
+            Shown on the Orders page, customer pages, and customer order notifications to identify orders.
+          </Typography>
+        }
       />
       <CardContent>
         <Grid container spacing={5}>
@@ -37,7 +41,11 @@ const OrderIdFormat = () => {
             />
           </Grid>
         </Grid>
-        <Typography className='mbs-2'>Your order ID will appear as #1001, #1002, #1003 ...</Typography>
+        <Typography className='mbs-2'>
+          Your order ID will appear as <span style={{ fontFamily: 'var(--font-fira-code)' }}>#1001</span>,{' '}
+          <span style={{ fontFamily: 'var(--font-fira-code)' }}>#1002</span>,{' '}
+          <span style={{ fontFamily: 'var(--font-fira-code)' }}>#1003</span> ...
+        </Typography>
       </CardContent>
     </Card>
   )

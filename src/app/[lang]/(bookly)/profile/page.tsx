@@ -174,14 +174,14 @@ function ProfilePage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center'>
+      <div className='min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center font-sans'>
         <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-primary-800'></div>
       </div>
     )
   }
 
   return (
-    <div className='min-h-screen w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col items-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
+    <div className='min-h-screen w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col items-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
       <div className='w-full max-w-4xl space-y-6 sm:space-y-8 relative z-10'>
         {/* Header */}
         {/* <div className='flex items-center justify-between gap-3 sm:gap-2 animate-in fade-in slide-in-from-top-4 duration-700'>
@@ -233,17 +233,18 @@ function ProfilePage() {
                   <div className='mt-2 flex flex-col sm:flex-row sm:items-center sm:gap-6 text-gray-600 dark:text-gray-300 space-y-1 sm:space-y-0'>
                     <div className='flex items-center gap-2'>
                       <KulIcon icon='lucide:mail' iconClass='w-4 h-4 text-gray-500 dark:text-gray-400' />
-                      <P stringProps={{ plainText: user.email }} />
+                      <P stringProps={{ plainText: user.email }} className='font-mono' />
                     </div>
                     <div className='flex items-center gap-2'>
                       <KulIcon icon='lucide:phone' iconClass='w-4 h-4 text-gray-500 dark:text-gray-400' />
-                      <P stringProps={{ plainText: user.phone }} />
+                      <P stringProps={{ plainText: user.phone }} className='font-mono' />
                     </div>
                     <div className='flex items-center gap-2'>
                       <KulIcon icon='lucide:id-card' iconClass='w-4 h-4 text-gray-500 dark:text-gray-400' />
                       <P
                         i18nTFn={t}
                         stringProps={{ localeKey: 'profile.memberSince', localeProps: { date: user.memberSince } }}
+                        className='font-mono'
                       />
                     </div>
                   </div>
@@ -264,7 +265,7 @@ function ProfilePage() {
             <div className='mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6'>
               <div className='group rounded-xl border border-primary-100 dark:border-primary-700/50 p-6 bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <H6
-                  className='text-2xl font-bold text-primary-800 dark:text-sage-400 mb-1'
+                  className='text-2xl font-bold text-primary-800 dark:text-sage-400 mb-1 font-mono'
                   stringProps={{ plainText: String(user.stats.totalBookings) }}
                 />
                 <P
@@ -276,7 +277,7 @@ function ProfilePage() {
               </div>
               <div className='group rounded-xl border border-emerald-100 dark:border-emerald-700/50 p-6 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <H6
-                  className='text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1'
+                  className='text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1 font-mono'
                   stringProps={{ plainText: String(user.stats.favorites) }}
                 />
                 <P
@@ -289,7 +290,7 @@ function ProfilePage() {
               <div className='group rounded-xl border border-yellow-100 dark:border-yellow-700/50 p-6 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <div className='flex items-center gap-2 mb-1'>
                   <H6
-                    className='text-2xl font-bold text-yellow-600 dark:text-yellow-400'
+                    className='text-2xl font-bold text-yellow-600 dark:text-yellow-400 font-mono'
                     stringProps={{ plainText: String(user.stats.avgRating) }}
                   />
                   <KulIcon
@@ -373,25 +374,25 @@ function ProfilePage() {
                       <H6 className='text-gray-900 dark:text-white' stringProps={{ plainText: b.business }} />
                       <P className='text-gray-600 dark:text-gray-300' stringProps={{ plainText: b.service }} />
                       <P
-                        className='text-gray-600 dark:text-gray-300'
+                        className='text-gray-600 dark:text-gray-300 font-mono'
                         i18nTFn={t}
                         stringProps={{ localeKey: 'profile.bookings.withStaff', localeProps: { staff: b.staff } }}
                       />
                     </div>
                     {b.status === 'confirmed' && (
-                      <span className='inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium px-2 py-1'>
+                      <span className='inline-flex items-center gap-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium px-2 py-1 font-mono'>
                         <span className='h-2 w-2 rounded-full bg-green-600 dark:bg-green-400' />
                         {t('profile.bookings.confirmed')}
                       </span>
                     )}
                     {b.status === 'completed' && (
-                      <span className='inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 text-xs font-medium px-2 py-1'>
+                      <span className='inline-flex items-center gap-1 rounded-full bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 text-xs font-medium px-2 py-1 font-mono'>
                         <span className='h-2 w-2 rounded-full bg-slate-600 dark:bg-slate-400' />
                         {t('profile.bookings.completed')}
                       </span>
                     )}
                     {b.status === 'canceled' && (
-                      <span className='inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-medium px-2 py-1'>
+                      <span className='inline-flex items-center gap-1 rounded-full bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-medium px-2 py-1 font-mono'>
                         <span className='h-2 w-2 rounded-full bg-red-600 dark:bg-red-400' />
                         {t('profile.bookings.canceled')}
                       </span>
@@ -400,7 +401,7 @@ function ProfilePage() {
                   <div className='mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2 text-gray-600 dark:text-gray-300'>
                     <div className='flex items-center gap-2'>
                       <KulIcon icon='lucide:calendar' iconClass='w-4 h-4 text-gray-500 dark:text-gray-400' />
-                      <P stringProps={{ plainText: b.date }} />
+                      <P stringProps={{ plainText: b.date }} className='font-mono' />
                     </div>
                     <div className='flex items-center gap-2'>
                       <KulIcon icon='lucide:clock' iconClass='w-4 h-4 text-gray-500 dark:text-gray-400' />
@@ -413,8 +414,8 @@ function ProfilePage() {
                       />
                     </div>
                     <div className='flex items-center gap-2'>
-                      <Strong stringProps={{ plainText: '£' }} />
-                      <P stringProps={{ plainText: String(b.price) }} />
+                      <Strong stringProps={{ plainText: '£' }} className='font-mono' />
+                      <P stringProps={{ plainText: String(b.price) }} className='font-mono' />
                     </div>
                   </div>
                   <div className='mt-4 flex gap-2'>

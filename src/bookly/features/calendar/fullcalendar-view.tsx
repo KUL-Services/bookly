@@ -319,7 +319,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           overflow: 'hidden',
           '& .fc': {
             height: '100%',
-            fontFamily: theme.typography.fontFamily,
+            fontFamily: 'var(--font-helvetica-world), Helvetica, Arial, sans-serif !important',
             '--fc-border-color': isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
             '--fc-button-bg-color': theme.palette.primary.main,
             '--fc-button-border-color': theme.palette.primary.main,
@@ -450,7 +450,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             fontSize: '0.7rem',
             fontWeight: 500,
             marginBottom: '2px',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            fontFamily: 'var(--font-fira-code)'
           },
           '& .fc-timegrid-event .fc-event-title': {
             fontSize: '0.8125rem',
@@ -553,7 +554,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
             fontSize: '0.75rem',
             opacity: 0.95,
             marginBottom: '2px',
-            display: 'block'
+            display: 'block',
+            fontFamily: 'var(--font-fira-code)'
           },
           '& .fc-timegrid-slot': {
             height: '2.5rem',
@@ -574,7 +576,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
           '& .fc-timegrid-slot-label': {
             fontSize: '0.75rem',
             verticalAlign: 'top',
-            paddingTop: '4px'
+            paddingTop: '4px',
+            fontFamily: 'var(--font-fira-code)'
           },
           '& .time-off-event, & .time-reservation-event': {
             background:
@@ -730,7 +733,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                     sx={{
                       fontWeight: 600,
                       color: 'text.secondary',
-                      fontSize: '0.75rem'
+                      fontSize: '0.75rem',
+                      fontFamily: 'var(--font-fira-code)'
                     }}
                   >
                     {dayName}
@@ -741,7 +745,8 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
                       sx={{
                         fontWeight: 600,
                         color: 'text.secondary',
-                        fontSize: '0.75rem'
+                        fontSize: '0.75rem',
+                        fontFamily: 'var(--font-fira-code)'
                       }}
                     >
                       {monthName}

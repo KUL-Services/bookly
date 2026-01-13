@@ -39,7 +39,7 @@ export default function ClientPickerDialog({ open, onClose, onSelect, selectedCl
     return (
       fullName.includes(query) ||
       client.email.toLowerCase().includes(query) ||
-      client.phone.includes(query)
+      (client.phone && client.phone.includes(query))
     )
   })
 
@@ -61,11 +61,11 @@ export default function ClientPickerDialog({ open, onClose, onSelect, selectedCl
   }
 
   return (
-    <Dialog open={open} onClose={handleCancel} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleCancel} maxWidth='sm' fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Typography variant="h6">Select Client</Typography>
-          <Button variant="outlined" size="small" onClick={handleWalkIn} startIcon={<i className="ri-walk-line" />}>
+          <Typography variant='h6'>Select Client</Typography>
+          <Button variant='outlined' size='small' onClick={handleWalkIn} startIcon={<i className='ri-walk-line' />}>
             Walk-in
           </Button>
         </Box>
@@ -73,14 +73,14 @@ export default function ClientPickerDialog({ open, onClose, onSelect, selectedCl
       <DialogContent>
         <TextField
           fullWidth
-          placeholder="Search by name, email, or phone"
+          placeholder='Search by name, email, or phone'
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           sx={{ mb: 2 }}
           InputProps={{
             startAdornment: (
-              <InputAdornment position="start">
-                <i className="ri-search-line" />
+              <InputAdornment position='start'>
+                <i className='ri-search-line' />
               </InputAdornment>
             )
           }}
@@ -89,7 +89,7 @@ export default function ClientPickerDialog({ open, onClose, onSelect, selectedCl
         <List sx={{ maxHeight: 400, overflow: 'auto' }}>
           {filteredClients.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary' fontFamily='var(--font-fira-code)'>
                 No clients found
               </Typography>
             </Box>
@@ -119,21 +119,31 @@ export default function ClientPickerDialog({ open, onClose, onSelect, selectedCl
                   <ListItemText
                     primary={
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body1">
+                        <Typography variant='body1'>
                           {client.firstName} {client.lastName}
                         </Typography>
                         {client.totalBookings >= 10 && (
-                          <Chip label="VIP" size="small" color="primary" sx={{ height: 18, fontSize: '0.65rem' }} />
+                          <Chip label='VIP' size='small' color='primary' sx={{ height: 18, fontSize: '0.65rem' }} />
                         )}
                       </Box>
                     }
                     secondary={
                       <>
-                        <Typography variant="body2" color="text.secondary" component="span">
+                        <Typography
+                          variant='body2'
+                          color='text.secondary'
+                          component='span'
+                          fontFamily='var(--font-fira-code)'
+                        >
                           {client.email}
                         </Typography>
                         <br />
-                        <Typography variant="caption" color="text.secondary" component="span">
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          component='span'
+                          fontFamily='var(--font-fira-code)'
+                        >
                           {client.phone} • {client.totalBookings} booking{client.totalBookings !== 1 ? 's' : ''}
                         </Typography>
                       </>

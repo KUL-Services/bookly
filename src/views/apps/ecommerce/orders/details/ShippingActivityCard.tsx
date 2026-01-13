@@ -50,9 +50,11 @@ const ShippingActivity = ({ order }: { order: string }) => {
             <TimelineContent>
               <div className='flex flex-wrap items-center justify-between gap-x-2 mbe-2.5'>
                 <Typography color='text.primary' className='font-medium'>
-                  Order was placed (Order ID: #{order})
+                  Order was placed (Order ID: <span style={{ fontFamily: 'var(--font-fira-code)' }}>#{order}</span>)
                 </Typography>
-                <Typography variant='caption'>Tuesday 11:29 AM</Typography>
+                <Typography variant='caption' style={{ fontFamily: 'var(--font-fira-code)' }}>
+                  Tuesday 11:29 AM
+                </Typography>
               </div>
               <Typography className='mbe-2'>Your order has been placed successfully</Typography>
             </TimelineContent>
@@ -67,7 +69,9 @@ const ShippingActivity = ({ order }: { order: string }) => {
                 <Typography color='text.primary' className='font-medium'>
                   Pick-up
                 </Typography>
-                <Typography variant='caption'>Wednesday 11:29 AM</Typography>
+                <Typography variant='caption' style={{ fontFamily: 'var(--font-fira-code)' }}>
+                  Wednesday 11:29 AM
+                </Typography>
               </div>
               <Typography className='mbe-2'>Pick-up scheduled with courier</Typography>
             </TimelineContent>
@@ -82,7 +86,9 @@ const ShippingActivity = ({ order }: { order: string }) => {
                 <Typography color='text.primary' className='font-medium'>
                   Dispatched
                 </Typography>
-                <Typography variant='caption'>Thursday 8:15 AM</Typography>
+                <Typography variant='caption' style={{ fontFamily: 'var(--font-fira-code)' }}>
+                  Thursday 8:15 AM
+                </Typography>
               </div>
               <Typography className='mbe-2'>Item has been picked up by courier.</Typography>
             </TimelineContent>
@@ -97,7 +103,9 @@ const ShippingActivity = ({ order }: { order: string }) => {
                 <Typography color='text.primary' className='font-medium'>
                   Package arrived
                 </Typography>
-                <Typography variant='caption'>Saturday 15:20 AM</Typography>
+                <Typography variant='caption' style={{ fontFamily: 'var(--font-fira-code)' }}>
+                  Saturday 15:20 AM
+                </Typography>
               </div>
               <Typography className='mbe-2'>Package arrived at an Amazon facility, NY</Typography>
             </TimelineContent>
@@ -112,7 +120,9 @@ const ShippingActivity = ({ order }: { order: string }) => {
                 <Typography color='text.primary' className='font-medium'>
                   Dispatched for delivery
                 </Typography>
-                <Typography variant='caption'>Today 14:12 PM</Typography>
+                <Typography variant='caption' style={{ fontFamily: 'var(--font-fira-code)' }}>
+                  Today 14:12 PM
+                </Typography>
               </div>
               <Typography className='mbe-2'>Package has left an Amazon facility , NY</Typography>
             </TimelineContent>

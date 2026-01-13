@@ -40,7 +40,7 @@ export default function ServiceDetailPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
+      <div className='min-h-screen flex items-center justify-center font-sans'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-primary-800'></div>
           <p className='mt-4 text-gray-600'>Loading service...</p>
@@ -51,10 +51,10 @@ export default function ServiceDetailPage() {
 
   if (error || !service) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
+      <div className='min-h-screen flex items-center justify-center font-sans'>
         <div className='text-center'>
           <h1 className='text-2xl font-bold text-gray-900 mb-4'>Service Not Found</h1>
-          <p className='text-gray-600 mb-6'>{error || 'The service you\'re looking for doesn\'t exist.'}</p>
+          <p className='text-gray-600 mb-6'>{error || "The service you're looking for doesn't exist."}</p>
           <Button
             buttonText={{ plainText: 'Back to Search' }}
             variant='contained'
@@ -70,7 +70,7 @@ export default function ServiceDetailPage() {
   }
 
   return (
-    <div className='min-h-screen bg-white'>
+    <div className='min-h-screen bg-white font-sans'>
       <div className='container mx-auto p-4 space-y-6'>
         {/* Header Section */}
         <Card className='shadow-sm'>
@@ -79,9 +79,7 @@ export default function ServiceDetailPage() {
               {/* Service Image */}
               <div className='w-full md:w-48 h-48 bg-gray-200 rounded-lg overflow-hidden'>
                 <div className='w-full h-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center'>
-                  <div className='text-4xl text-primary-800'>
-                    {service.name.charAt(0)}
-                  </div>
+                  <div className='text-4xl text-primary-800'>{service.name.charAt(0)}</div>
                 </div>
               </div>
 
@@ -98,7 +96,11 @@ export default function ServiceDetailPage() {
                           buttonText={{ plainText: service.business.name }}
                           variant='text'
                           className='text-primary-800 hover:text-primary-900 p-0 text-lg'
-                          onClick={() => router.push(`/${params.lang}/business/${service.business?.name.toLowerCase().replace(/\s+/g, '-')}`)}
+                          onClick={() =>
+                            router.push(
+                              `/${params.lang}/business/${service.business?.name.toLowerCase().replace(/\s+/g, '-')}`
+                            )
+                          }
                         />
                       </div>
                     )}
@@ -115,7 +117,7 @@ export default function ServiceDetailPage() {
 
                     {/* Categories */}
                     <div className='flex gap-2 mt-2'>
-                      {service.categories?.map((category) => (
+                      {service.categories?.map(category => (
                         <Badge key={category.id} className='bg-primary-200 text-primary-900'>
                           {category.name}
                         </Badge>
@@ -178,7 +180,10 @@ export default function ServiceDetailPage() {
           <Card className='shadow-sm'>
             <CardContent className='p-6'>
               <H2 stringProps={{ plainText: 'About This Service' }} className='text-2xl font-bold text-gray-900 mb-4' />
-              <P stringProps={{ plainText: service.description }} className='text-gray-700 dark:[color:rgb(55_65_81)] leading-relaxed' />
+              <P
+                stringProps={{ plainText: service.description }}
+                className='text-gray-700 dark:[color:rgb(55_65_81)] leading-relaxed'
+              />
             </CardContent>
           </Card>
         )}
@@ -187,9 +192,12 @@ export default function ServiceDetailPage() {
         {service.branches && service.branches.length > 0 && (
           <Card className='shadow-sm'>
             <CardContent className='p-6'>
-              <H2 stringProps={{ plainText: 'Available Locations' }} className='text-2xl font-bold text-gray-900 mb-4' />
+              <H2
+                stringProps={{ plainText: 'Available Locations' }}
+                className='text-2xl font-bold text-gray-900 mb-4'
+              />
               <div className='space-y-4'>
-                {service.branches.map((branch) => (
+                {service.branches.map(branch => (
                   <div key={branch.id} className='border border-gray-200 rounded-lg p-4'>
                     <H3 stringProps={{ plainText: branch.name }} className='font-semibold text-lg text-gray-900' />
                     {branch.address && (
@@ -225,7 +233,7 @@ export default function ServiceDetailPage() {
               </div>
 
               <div className='space-y-4'>
-                {service.reviews.slice(0, 3).map((review) => (
+                {service.reviews.slice(0, 3).map(review => (
                   <div key={review.id} className='border border-gray-200 rounded-lg p-4'>
                     <div className='flex items-start gap-3'>
                       <Avatar

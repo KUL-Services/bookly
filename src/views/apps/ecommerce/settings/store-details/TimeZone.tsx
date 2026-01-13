@@ -21,7 +21,11 @@ const TimeZone = () => {
     <Card>
       <CardHeader
         title='Time zone and units of measurement'
-        subheader='Used to calculate product prices, shipping weights, and order times.'
+        subheader={
+          <Typography variant='body2' color='text.secondary' style={{ fontFamily: 'var(--font-fira-code)' }}>
+            Used to calculate product prices, shipping weights, and order times.
+          </Typography>
+        }
       />
       <CardContent>
         <Grid container spacing={5}>

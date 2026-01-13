@@ -88,7 +88,7 @@ export function LocationFilters({
       <div>
         <label
           htmlFor='country-select'
-          className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
+          className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-mono'
         >
           Country
         </label>
@@ -111,7 +111,7 @@ export function LocationFilters({
       <div>
         <label
           htmlFor='city-select'
-          className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
+          className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-mono'
         >
           City
         </label>
@@ -135,7 +135,7 @@ export function LocationFilters({
       <div>
         <label
           htmlFor='region-select'
-          className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'
+          className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-mono'
         >
           Region
         </label>

@@ -78,13 +78,13 @@ export function BusinessList({
             onMouseLeave={() => onBusinessHover?.(null)}
             className={`
               group bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border-2 cursor-pointer
-              transition-all duration-300 transform
+              card-hover
               ${
                 isSelected
                   ? 'border-primary-700 shadow-lg scale-[1.02]'
                   : isHovered
                     ? 'border-primary-300 shadow-md scale-[1.01]'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-200 hover:shadow-sm'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-primary-200'
               }
               animate-in fade-in slide-in-from-bottom-4 duration-500
             `}
@@ -147,7 +147,7 @@ export function BusinessList({
                   <div className='flex-1'>
                     <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-1'>{business.name}</h3>
 
-                    <div className='flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-2'>
+                    <div className='flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-2 font-mono'>
                       <div className='flex items-center'>
                         <span className='text-yellow-500 mr-1'>★</span>
                         <span className='font-medium'>{business.rating}</span>
@@ -163,7 +163,7 @@ export function BusinessList({
                     <p className='text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3'>{business.description}</p>
 
                     <div className='flex flex-wrap items-center gap-2 text-xs'>
-                      <div className='flex items-center text-gray-500 dark:text-gray-400'>
+                      <div className='flex items-center text-gray-500 dark:text-gray-400 font-mono'>
                         <svg className='w-4 h-4 mr-1' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                           <path
                             strokeLinecap='round'
@@ -183,7 +183,7 @@ export function BusinessList({
                       {business.categories.map((category, idx) => (
                         <span
                           key={idx}
-                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-200 dark:bg-primary-800/50 text-primary-900 dark:text-sage-200'
+                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-200 dark:bg-primary-800/50 text-primary-900 dark:text-sage-200 font-mono'
                         >
                           {category}
                         </span>
@@ -198,7 +198,7 @@ export function BusinessList({
                         e.stopPropagation()
                         onBookNow?.(business.id)
                       }}
-                      className='bg-primary-700 hover:bg-primary-800 text-white px-6 py-2.5 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200'
+                      className='btn-primary-enhanced btn-press px-6 py-2.5 rounded-lg text-sm font-semibold'
                     >
                       Book Now
                     </button>

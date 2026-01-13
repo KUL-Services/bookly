@@ -38,9 +38,7 @@ function CategoryMultiSelect({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const selectedCategoryNames = categories
-    .filter(cat => selectedCategories.includes(cat.id))
-    .map(cat => cat.name)
+  const selectedCategoryNames = categories.filter(cat => selectedCategories.includes(cat.id)).map(cat => cat.name)
 
   return (
     <div className='relative' ref={dropdownRef}>
@@ -88,7 +86,9 @@ function CategoryMultiSelect({
                   />
                   <span className='flex-1 text-sm text-gray-700 dark:text-gray-300'>
                     {category.name}
-                    {category.count && <span className='text-gray-400 dark:text-gray-500 ml-1'>({category.count})</span>}
+                    {category.count && (
+                      <span className='text-gray-400 dark:text-gray-500 ml-1'>({category.count})</span>
+                    )}
                   </span>
                 </label>
               ))}
@@ -294,7 +294,7 @@ export function SearchFilters({
       {showAppliedFilters && getAppliedFiltersCount() > 0 && (
         <div className='mb-6'>
           <div className='flex items-center justify-between mb-3'>
-            <h4 className='text-sm font-medium text-gray-900 dark:text-white'>
+            <h4 className='text-sm font-medium text-gray-900 dark:text-white font-mono'>
               {t('search.filters.appliedFilters')} ({getAppliedFiltersCount()})
             </h4>
             <Button
@@ -311,7 +311,7 @@ export function SearchFilters({
               <Badge
                 key={`${filter.key}-${index}`}
                 variant='secondary'
-                className='bg-primary-200 dark:bg-primary-900/30 text-primary-900 dark:text-sage-300 hover:bg-primary-300 dark:hover:bg-primary-800/40 cursor-pointer'
+                className='bg-primary-200 dark:bg-primary-900/30 text-primary-900 dark:text-sage-300 hover:bg-primary-300 dark:hover:bg-primary-800/40 cursor-pointer font-mono'
                 onClick={() => removeFilter(filter.key, filter.value)}
               >
                 {filter.label}
@@ -326,7 +326,7 @@ export function SearchFilters({
 
       {/* Search Query */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-mono'>
           {t('search.filters.searchLabel')}
         </label>
         <Input
@@ -368,20 +368,20 @@ export function SearchFilters({
 
       {/* Categories */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-mono'>
           {t('search.filters.categoriesLabel')}
         </label>
         <CategoryMultiSelect
           categories={options.categories}
           selectedCategories={filters.category}
-          onToggleCategory={(categoryId) => toggleArrayFilter('category', categoryId)}
+          onToggleCategory={categoryId => toggleArrayFilter('category', categoryId)}
           placeholder={t('search.filters.selectCategories') || 'Select categories...'}
         />
       </div>
 
       {/* Price Range */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 font-mono'>
           {t('search.filters.priceRangeLabel')}
         </label>
         <div className='grid grid-cols-2 gap-3'>
@@ -418,7 +418,7 @@ export function SearchFilters({
             />
           </div>
         </div>
-        <div className='mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded px-3 py-2'>
+        <div className='mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded px-3 py-2 font-mono'>
           {t('search.filters.priceRange', {
             min: filters.priceMin || 0,
             max: filters.priceMax === undefined ? 'Any' : filters.priceMax
@@ -428,7 +428,7 @@ export function SearchFilters({
 
       {/* Rating */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 font-mono'>
           {t('search.filters.ratingLabel')}
         </label>
         <div className='flex flex-wrap gap-2'>
@@ -452,7 +452,7 @@ export function SearchFilters({
       {/* Time of Day */}
       {options.timeSlots.length > 0 && (
         <div className='mb-6'>
-          <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
+          <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 font-mono'>
             {t('search.filters.preferredTimeLabel')}
           </label>
           <div className='space-y-2'>
@@ -477,7 +477,7 @@ export function SearchFilters({
 
       {/* Sort */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-mono'>
           {t('search.filters.sortByLabel')}
         </label>
         <select
@@ -495,7 +495,11 @@ export function SearchFilters({
 
       {/* Action Buttons */}
       <div className='flex gap-3'>
-        <Button onClick={onApplyFilters} disabled={loading} className='flex-1 bg-primary-800 hover:bg-primary-900 text-white'>
+        <Button
+          onClick={onApplyFilters}
+          disabled={loading}
+          className='flex-1 bg-primary-800 hover:bg-primary-900 text-white'
+        >
           {loading ? t('search.filters.applying') : t('search.filters.applyFilters')}
         </Button>
         <Button variant='outline' onClick={onResetFilters} disabled={loading} className='flex-1'>

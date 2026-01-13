@@ -99,7 +99,11 @@ const ShippingDelivery = () => {
     <Card>
       <CardHeader
         title='Shipping zones'
-        subheader='Choose where you ship and how much you charge for shipping at checkout.'
+        subheader={
+          <Typography variant='body2' color='text.secondary' style={{ fontFamily: 'var(--font-fira-code)' }}>
+            Choose where you ship and how much you charge for shipping at checkout.
+          </Typography>
+        }
         action={
           <Typography component={Link} color='primary' className='font-medium'>
             Create zone

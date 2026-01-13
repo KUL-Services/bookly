@@ -89,7 +89,14 @@ const BusinessProfileTab = () => {
       {/* Business Identity */}
       <Grid item xs={12}>
         <Card>
-          <CardHeader title='Business Identity' subheader='Your business name, logo, and basic information' />
+          <CardHeader
+            title='Business Identity'
+            subheader={
+              <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                Your business name, logo, and basic information
+              </Typography>
+            }
+          />
           <CardContent>
             <Grid container spacing={4}>
               {/* Logo & Cover Section */}
@@ -97,7 +104,11 @@ const BusinessProfileTab = () => {
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 4, flexWrap: 'wrap' }}>
                   {/* Logo */}
                   <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mb: 1, fontFamily: 'var(--font-fira-code)' }}
+                    >
                       Business Logo
                     </Typography>
                     <Box sx={{ position: 'relative', display: 'inline-block' }}>
@@ -131,14 +142,23 @@ const BusinessProfileTab = () => {
                       </IconButton>
                     </Box>
                     <input ref={logoInputRef} type='file' accept='image/*' hidden onChange={handleLogoChange} />
-                    <Typography variant='caption' display='block' color='text.secondary' sx={{ mt: 1 }}>
+                    <Typography
+                      variant='caption'
+                      display='block'
+                      color='text.secondary'
+                      sx={{ mt: 1, fontFamily: 'var(--font-fira-code)' }}
+                    >
                       Recommended: 200x200px
                     </Typography>
                   </Box>
 
                   {/* Cover Image */}
                   <Box sx={{ flex: 1, minWidth: 200 }}>
-                    <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      sx={{ mb: 1, fontFamily: 'var(--font-fira-code)' }}
+                    >
                       Cover Image
                     </Typography>
                     <Box
@@ -165,14 +185,24 @@ const BusinessProfileTab = () => {
                             className='ri-image-add-line'
                             style={{ fontSize: '2rem', color: 'var(--mui-palette-text-secondary)' }}
                           />
-                          <Typography variant='caption' display='block' color='text.secondary'>
+                          <Typography
+                            variant='caption'
+                            display='block'
+                            color='text.secondary'
+                            sx={{ fontFamily: 'var(--font-fira-code)' }}
+                          >
                             Click to upload cover image
                           </Typography>
                         </Box>
                       )}
                     </Box>
                     <input ref={coverInputRef} type='file' accept='image/*' hidden onChange={handleCoverChange} />
-                    <Typography variant='caption' display='block' color='text.secondary' sx={{ mt: 1 }}>
+                    <Typography
+                      variant='caption'
+                      display='block'
+                      color='text.secondary'
+                      sx={{ mt: 1, fontFamily: 'var(--font-fira-code)' }}
+                    >
                       Recommended: 1200x400px
                     </Typography>
                   </Box>
@@ -208,7 +238,7 @@ const BusinessProfileTab = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position='start'>
-                        <Typography variant='body2' color='text.secondary'>
+                        <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
                           bookly.com/
                         </Typography>
                       </InputAdornment>
@@ -237,7 +267,14 @@ const BusinessProfileTab = () => {
       {/* Contact Information */}
       <Grid item xs={12} md={6}>
         <Card sx={{ height: '100%' }}>
-          <CardHeader title='Contact Information' subheader='How customers can reach you' />
+          <CardHeader
+            title='Contact Information'
+            subheader={
+              <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                How customers can reach you
+              </Typography>
+            }
+          />
           <CardContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <TextField
@@ -296,7 +333,14 @@ const BusinessProfileTab = () => {
       {/* Regional Settings */}
       <Grid item xs={12} md={6}>
         <Card sx={{ height: '100%' }}>
-          <CardHeader title='Regional Settings' subheader='Timezone and language preferences' />
+          <CardHeader
+            title='Regional Settings'
+            subheader={
+              <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                Timezone and language preferences
+              </Typography>
+            }
+          />
           <CardContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <FormControl fullWidth size='small'>
@@ -329,7 +373,7 @@ const BusinessProfileTab = () => {
                 </Select>
               </FormControl>
 
-              <Alert severity='info' sx={{ fontSize: '0.875rem' }}>
+              <Alert severity='info' sx={{ fontSize: '0.875rem', fontFamily: 'var(--font-fira-code)' }}>
                 <strong>Note:</strong> Timezone affects booking times and calendar display. Language affects your public
                 booking page.
               </Alert>
@@ -341,7 +385,14 @@ const BusinessProfileTab = () => {
       {/* Social Media Links */}
       <Grid item xs={12}>
         <Card>
-          <CardHeader title='Social Media' subheader='Connect your social media profiles' />
+          <CardHeader
+            title='Social Media'
+            subheader={
+              <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                Connect your social media profiles
+              </Typography>
+            }
+          />
           <CardContent>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6} md={4}>

@@ -48,7 +48,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
 
   if (isSubmitted) {
     return (
-      <div className='min-h-screen'>
+      <div className='min-h-screen font-sans'>
         <main className='container mx-auto px-4 py-8'>
           <div className='w-full max-w-md mx-auto flex justify-center'>
             <Card className='w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'>
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
   }
 
   return (
-    <div className='min-h-screen'>
+    <div className='min-h-screen font-sans'>
       <main className='container mx-auto px-4 py-8'>
         <div className='w-full max-w-md mx-auto flex justify-center'>
           <Card className='w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'>

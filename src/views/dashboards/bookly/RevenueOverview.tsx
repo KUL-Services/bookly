@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 // React Imports
 import dynamic from 'next/dynamic'
@@ -10,6 +10,7 @@ import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
 
 // Data Imports
 import { mockBookings } from '@/bookly/data/mock-data'
@@ -61,10 +62,24 @@ const RevenueOverview = () => {
     },
     dataLabels: { enabled: false },
     stroke: { curve: 'smooth', width: 3 },
-    xaxis: { categories: monthLabels },
-    yaxis: { labels: { formatter: val => `$${val.toFixed(0)}` } },
+    xaxis: {
+      categories: monthLabels,
+      labels: {
+        style: {
+          fontFamily: 'var(--font-fira-code)'
+        }
+      }
+    },
+    yaxis: {
+      labels: {
+        formatter: val => `$${val.toFixed(0)}`,
+        style: {
+          fontFamily: 'var(--font-fira-code)'
+        }
+      }
+    },
     fill: { type: 'gradient', gradient: { shadeIntensity: 0.6, opacityFrom: 0.4, opacityTo: 0.1 } },
-    legend: { position: 'top' }
+    legend: { position: 'top', fontFamily: 'var(--font-fira-code)' }
   }
 
   // Summary KPIs
@@ -86,12 +101,34 @@ const RevenueOverview = () => {
 
   return (
     <Card>
-      <CardHeader title='Revenue Overview' subheader='Completed vs projected (last 6 months)' />
+      <CardHeader
+        title='Revenue Overview'
+        subheader={
+          <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+            Completed vs projected (last 6 months)
+          </Typography>
+        }
+      />
       <CardContent>
         <Box className='mb-4 flex flex-wrap gap-2'>
-          <Chip label={`Last 30d: $${total30.toFixed(0)}`} color='primary' variant='tonal' />
-          <Chip label={`AOV: $${aov.toFixed(0)}`} color='success' variant='tonal' />
-          <Chip label={`Cancel rate: ${cancellationRate.toFixed(1)}%`} color='warning' variant='tonal' />
+          <Chip
+            label={`Last 30d: $${total30.toFixed(0)}`}
+            color='primary'
+            variant='tonal'
+            sx={{ '& .MuiChip-label': { fontFamily: 'var(--font-fira-code)' } }}
+          />
+          <Chip
+            label={`AOV: $${aov.toFixed(0)}`}
+            color='success'
+            variant='tonal'
+            sx={{ '& .MuiChip-label': { fontFamily: 'var(--font-fira-code)' } }}
+          />
+          <Chip
+            label={`Cancel rate: ${cancellationRate.toFixed(1)}%`}
+            color='warning'
+            variant='tonal'
+            sx={{ '& .MuiChip-label': { fontFamily: 'var(--font-fira-code)' } }}
+          />
         </Box>
         <AppReactApexCharts type='area' height={280} width='100%' options={options} series={series} />
       </CardContent>
@@ -100,4 +137,3 @@ const RevenueOverview = () => {
 }
 
 export default RevenueOverview
-

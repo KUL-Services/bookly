@@ -9,6 +9,7 @@ import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
+import Typography from '@mui/material/Typography'
 
 const StoreCurrency = () => {
   // States
@@ -16,7 +17,14 @@ const StoreCurrency = () => {
 
   return (
     <Card>
-      <CardHeader title='Store currency' subheader='The currency your products are sold in.' />
+      <CardHeader
+        title='Store currency'
+        subheader={
+          <Typography variant='body2' color='text.secondary' style={{ fontFamily: 'var(--font-fira-code)' }}>
+            The currency your products are sold in.
+          </Typography>
+        }
+      />
       <CardContent>
         <FormControl fullWidth>
           <InputLabel>Store currency</InputLabel>

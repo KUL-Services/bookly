@@ -51,6 +51,7 @@ const menuSectionStyles = (verticalNavOptions: VerticalNavState, theme: Theme): 
           fontSize: '13px',
           lineHeight: 1.38462,
           letterSpacing: '0.4px',
+          fontFamily: 'var(--font-fira-code)',
           ...(collapsedNotHovered && {
             display: 'none'
           })

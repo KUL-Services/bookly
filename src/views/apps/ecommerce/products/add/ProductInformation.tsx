@@ -140,10 +140,20 @@ const ProductInformation = () => {
             <TextField fullWidth label='Product Name' placeholder='iPhone 14' />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField fullWidth label='SKU' placeholder='FXSK123U' />
+            <TextField
+              fullWidth
+              label='SKU'
+              placeholder='FXSK123U'
+              InputProps={{ style: { fontFamily: 'var(--font-fira-code)' } }}
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField fullWidth label='Barcode' placeholder='0123-4567' />
+            <TextField
+              fullWidth
+              label='Barcode'
+              placeholder='0123-4567'
+              InputProps={{ style: { fontFamily: 'var(--font-fira-code)' } }}
+            />
           </Grid>
         </Grid>
         <Typography className='mbe-1'>Description (Optional)</Typography>

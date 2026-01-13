@@ -17,6 +17,12 @@ const config: Config = {
   plugins: [require('tailwindcss-logical'), require('./src/@core/tailwind/plugin')],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-helvetica-world)', 'Helvetica', 'Arial', 'sans-serif'],
+        helvetica: ['var(--font-helvetica-world)', 'Helvetica', 'Arial', 'sans-serif'],
+        fira: ['var(--font-fira-code)', 'monospace'],
+        mono: ['var(--font-fira-code)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace']
+      },
       colors: {
         // Shadcn/ui-style tokens mapped to existing CSS variables
         background: 'var(--background)',

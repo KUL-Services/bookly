@@ -28,7 +28,7 @@ const RecentReviews = ({ items }: { items: Review[] }) => {
                 primary={<Typography>{r.authorName}</Typography>}
                 secondary={
                   <>
-                    <Typography variant='body2' color='text.secondary'>
+                    <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
                       {new Date(r.date).toLocaleDateString()} • {r.rating} ⭐
                     </Typography>
                     <Typography variant='body2'>{r.comment}</Typography>
@@ -44,4 +44,3 @@ const RecentReviews = ({ items }: { items: Review[] }) => {
 }
 
 export default RecentReviews
-

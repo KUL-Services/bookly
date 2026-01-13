@@ -34,13 +34,12 @@ function LandPage() {
     router.push(`/${params?.lang}/search${sp.toString() ? `?${sp.toString()}` : ''}`)
   }
   return (
-    <div className='min-h-screen bg-gray-50 dark:bg-gray-900'>
+    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 font-sans'>
       {/* Shared BooklyNavbar is rendered in the (bookly) layout */}
 
       <main className='relative overflow-hidden'>
         {/* Hero Section - Full width with generous padding */}
         <section className='relative py-12 sm:py-16 md:py-20 lg:py-28'>
-
           <div
             className='absolute inset-0 bg-cover bg-center opacity-10'
             style={{
@@ -57,7 +56,7 @@ function LandPage() {
                   localeKey: 'landing.hero.title'
                 }}
                 i18nTFn={t}
-                className='text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-primary-800 dark:text-white leading-tight pb-2'
+                className='text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-gradient-brand dark:text-white leading-tight pb-2'
               />
 
               <p className='text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed'>
@@ -67,7 +66,7 @@ function LandPage() {
               <div
                 className={`w-full max-w-4xl mx-auto mt-8 ${mounted ? 'opacity-0 animate-[fadeInUp_0.6s_ease-out_0.2s_forwards]' : 'opacity-0'}`}
               >
-                <div className='p-2 sm:p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/50 dark:border-gray-700/50 hover:shadow-2xl transition-shadow duration-300'>
+                <div className='glass-card p-2 sm:p-3 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300'>
                   <div className='flex flex-col md:flex-row gap-2 sm:gap-3 p-1'>
                     <div className='flex-1'>
                       <SearchInput
@@ -77,7 +76,7 @@ function LandPage() {
                           localeKey: 'landing.search.servicePlaceholder'
                         }}
                         i18nTFn={t}
-                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus:ring-2 focus:ring-primary-500/20'
+                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus-glow font-mono'
                       />
                     </div>
                     <div className='flex-1'>
@@ -89,14 +88,14 @@ function LandPage() {
                         }}
                         i18nTFn={t}
                         leadingIcon={MapPin}
-                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus:ring-2 focus:ring-primary-500/20'
+                        className='w-full h-12 sm:h-14 text-lg border-0 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl focus-glow font-mono'
                       />
                     </div>
                     <Button
                       onClick={goSearch}
                       buttonText={{ localeKey: 'landing.search.button' }}
                       i18nTFn={t}
-                      className='w-full md:w-auto bg-primary-700 hover:bg-primary-800 px-8 sm:px-10 py-3 h-12 sm:h-14 text-lg text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200'
+                      className='w-full md:w-auto btn-primary-enhanced btn-press px-8 sm:px-10 py-3 h-12 sm:h-14 text-lg font-semibold rounded-xl'
                     />
                   </div>
                 </div>
@@ -106,17 +105,17 @@ function LandPage() {
               <div
                 className={`flex flex-wrap justify-center items-center gap-6 sm:gap-8 lg:gap-12 pt-4 sm:pt-6 ${mounted ? 'opacity-0 animate-[fadeInUp_0.5s_ease-out_0.4s_forwards]' : 'opacity-0'}`}
               >
-                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300'>
-                  <div className='w-2 h-2 bg-green-500 rounded-full' />
-                  <span className='text-sm sm:text-base font-medium'>{t('landing.stats.businesses')}</span>
+                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 stagger-1 animate-slide-up-fade'>
+                  <div className='w-2.5 h-2.5 bg-sage-500 rounded-full animate-pulse-soft' />
+                  <span className='text-sm sm:text-base font-medium font-mono'>{t('landing.stats.businesses')}</span>
                 </div>
-                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300'>
-                  <div className='w-2 h-2 bg-blue-500 rounded-full' />
-                  <span className='text-sm sm:text-base font-medium'>{t('landing.stats.customers')}</span>
+                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 stagger-2 animate-slide-up-fade'>
+                  <div className='w-2.5 h-2.5 bg-teal-500 rounded-full animate-pulse-soft' />
+                  <span className='text-sm sm:text-base font-medium font-mono'>{t('landing.stats.customers')}</span>
                 </div>
-                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300'>
-                  <div className='w-2 h-2 bg-purple-500 rounded-full' />
-                  <span className='text-sm sm:text-base font-medium'>{t('landing.stats.rating')}</span>
+                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 stagger-3 animate-slide-up-fade'>
+                  <div className='w-2.5 h-2.5 bg-coral-500 rounded-full animate-pulse-soft' />
+                  <span className='text-sm sm:text-base font-medium font-mono'>{t('landing.stats.rating')}</span>
                 </div>
               </div>
             </div>

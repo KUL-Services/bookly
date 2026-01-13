@@ -18,14 +18,27 @@ const CardStatWithImage = (props: CardStatsCharacterProps) => {
         <Grid container>
           <Grid item xs={7} className='flex flex-col justify-between gap-5'>
             <div className='flex flex-col items-start gap-2'>
-              <Typography color='text.primary' className='text-nowrap font-medium'>
+              <Typography
+                color='text.primary'
+                className='text-nowrap font-medium'
+                sx={{ fontFamily: 'var(--font-fira-code)' }}
+              >
                 {title}
               </Typography>
-              <Chip size='small' variant='tonal' label={chipText} color={chipColor} />
+              <Chip
+                size='small'
+                variant='tonal'
+                label={chipText}
+                color={chipColor}
+                sx={{ '& .MuiChip-label': { fontFamily: 'var(--font-fira-code)' } }}
+              />
             </div>
             <div className='flex flex-wrap items-center gap-x-2'>
               <Typography variant='h4'>{stats}</Typography>
-              <Typography color={trend === 'negative' ? 'error.main' : 'success.main'}>
+              <Typography
+                color={trend === 'negative' ? 'error.main' : 'success.main'}
+                sx={{ fontFamily: 'var(--font-fira-code)' }}
+              >
                 {`${trend === 'negative' ? '-' : '+'}${trendNumber}`}
               </Typography>
             </div>

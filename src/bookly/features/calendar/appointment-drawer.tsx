@@ -331,11 +331,17 @@ export default function AppointmentDrawer() {
               <Typography variant='caption' sx={{ px: 2, py: 0.5, color: 'text.secondary', display: 'block' }}>
                 Past Booking Status
               </Typography>
-              <MuiMenuItem onClick={() => handleStatusChange('attended')} sx={{ bgcolor: status === 'attended' ? 'action.selected' : undefined }}>
+              <MuiMenuItem
+                onClick={() => handleStatusChange('attended')}
+                sx={{ bgcolor: status === 'attended' ? 'action.selected' : undefined }}
+              >
                 <i className='ri-check-double-line' style={{ marginRight: 8, color: 'green' }} />
                 Attended
               </MuiMenuItem>
-              <MuiMenuItem onClick={() => handleStatusChange('no_show')} sx={{ bgcolor: status === 'no_show' ? 'action.selected' : undefined }}>
+              <MuiMenuItem
+                onClick={() => handleStatusChange('no_show')}
+                sx={{ bgcolor: status === 'no_show' ? 'action.selected' : undefined }}
+              >
                 <i className='ri-user-unfollow-line' style={{ marginRight: 8, color: 'red' }} />
                 No Show
               </MuiMenuItem>
@@ -346,7 +352,11 @@ export default function AppointmentDrawer() {
             </>
           )}
           {(['confirmed', 'pending', 'need_confirm', 'cancelled'] as AppointmentStatus[]).map(s => (
-            <MuiMenuItem key={s} onClick={() => handleStatusChange(s)} sx={{ bgcolor: status === s ? 'action.selected' : undefined }}>
+            <MuiMenuItem
+              key={s}
+              onClick={() => handleStatusChange(s)}
+              sx={{ bgcolor: status === s ? 'action.selected' : undefined }}
+            >
               {getStatusLabel(s)}
             </MuiMenuItem>
           ))}
@@ -354,7 +364,11 @@ export default function AppointmentDrawer() {
             <>
               <Divider sx={{ my: 1 }} />
               {(['attended', 'no_show'] as AppointmentStatus[]).map(s => (
-                <MuiMenuItem key={s} onClick={() => handleStatusChange(s)} sx={{ bgcolor: status === s ? 'action.selected' : undefined }}>
+                <MuiMenuItem
+                  key={s}
+                  onClick={() => handleStatusChange(s)}
+                  sx={{ bgcolor: status === s ? 'action.selected' : undefined }}
+                >
                   {getStatusLabel(s)}
                 </MuiMenuItem>
               ))}
@@ -410,7 +424,11 @@ export default function AppointmentDrawer() {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {/* Date & Time */}
             <Box>
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ display: 'block', mb: 0.5, fontFamily: 'var(--font-fira-code)' }}
+              >
                 DATE & TIME
               </Typography>
               <Typography variant='body1' fontWeight={500}>
@@ -435,7 +453,11 @@ export default function AppointmentDrawer() {
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
               {/* Customer */}
               <Box sx={{ flex: 1, minWidth: 180 }}>
-                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: 'block', mb: 0.5, fontFamily: 'var(--font-fira-code)' }}
+                >
                   CUSTOMER
                 </Typography>
                 {isEditing ? (
@@ -457,7 +479,12 @@ export default function AppointmentDrawer() {
                       </Typography>
                       {(extendedProps.customerEmail || extendedProps.customerPhone) && (
                         <Typography variant='caption' color='text.secondary' sx={{ display: 'block', lineHeight: 1.2 }}>
-                          {extendedProps.customerPhone && <span><i className='ri-phone-line' style={{ fontSize: '0.65rem', marginRight: 2 }} />{extendedProps.customerPhone}</span>}
+                          {extendedProps.customerPhone && (
+                            <span>
+                              <i className='ri-phone-line' style={{ fontSize: '0.65rem', marginRight: 2 }} />
+                              {extendedProps.customerPhone}
+                            </span>
+                          )}
                           {extendedProps.customerEmail && extendedProps.customerPhone && ' • '}
                           {extendedProps.customerEmail && <span>{extendedProps.customerEmail}</span>}
                         </Typography>
@@ -469,7 +496,11 @@ export default function AppointmentDrawer() {
 
               {/* Staff */}
               <Box sx={{ flex: 1, minWidth: 180 }}>
-                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: 'block', mb: 0.5, fontFamily: 'var(--font-fira-code)' }}
+                >
                   STAFF
                 </Typography>
                 {isEditing ? (
@@ -509,7 +540,11 @@ export default function AppointmentDrawer() {
             <Box sx={{ display: 'flex', gap: 2 }}>
               {/* Price */}
               <Box sx={{ flex: 1 }}>
-                <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                <Typography
+                  variant='caption'
+                  color='text.secondary'
+                  sx={{ display: 'block', mb: 0.5, fontFamily: 'var(--font-fira-code)' }}
+                >
                   PRICE
                 </Typography>
                 <Typography variant='body1' fontWeight={600} color='primary.main'>
@@ -520,7 +555,11 @@ export default function AppointmentDrawer() {
               {/* Party Size for Static Mode */}
               {isStaticSlotBooking && (
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ display: 'block', mb: 0.5, fontFamily: 'var(--font-fira-code)' }}
+                  >
                     PARTY SIZE
                   </Typography>
                   {isEditing ? (
@@ -543,12 +582,18 @@ export default function AppointmentDrawer() {
               {/* Room for Static Mode - in main tab */}
               {room && !isStaticSlotBooking && (
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ display: 'block', mb: 0.5, fontFamily: 'var(--font-fira-code)' }}
+                  >
                     ROOM
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <i className='ri-home-4-line' style={{ fontSize: '1rem', color: theme.palette.text.secondary }} />
-                    <Typography variant='body2' fontWeight={500}>{room.name}</Typography>
+                    <Typography variant='body2' fontWeight={500}>
+                      {room.name}
+                    </Typography>
                   </Box>
                 </Box>
               )}
@@ -593,29 +638,42 @@ export default function AppointmentDrawer() {
 
             {/* References */}
             <Box sx={{ bgcolor: 'action.hover', borderRadius: 1, p: 1.5 }}>
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 1 }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ display: 'block', mb: 1, fontFamily: 'var(--font-fira-code)' }}
+              >
                 REFERENCES
               </Typography>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant='caption' color='text.secondary'>Booking Ref:</Typography>
-                  <Typography variant='body2' fontFamily='monospace' fontWeight={600}>
+                  <Typography variant='caption' color='text.secondary'>
+                    Booking Ref:
+                  </Typography>
+                  <Typography variant='body2' fontWeight={600} fontFamily='var(--font-fira-code)'>
                     {extendedProps.bookingReference || extendedProps.bookingId}
                   </Typography>
                 </Box>
                 {extendedProps.paymentReference && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant='caption' color='text.secondary'>Payment Ref:</Typography>
-                    <Typography variant='body2' fontFamily='monospace' fontWeight={600}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Payment Ref:
+                    </Typography>
+                    <Typography variant='body2' fontWeight={600} fontFamily='var(--font-fira-code)'>
                       {extendedProps.paymentReference}
                     </Typography>
                   </Box>
                 )}
                 {extendedProps.paymentMethod && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant='caption' color='text.secondary'>Payment Method:</Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      Payment Method:
+                    </Typography>
                     <Chip
-                      label={PAYMENT_METHOD_LABELS[extendedProps.paymentMethod as PaymentMethod] || extendedProps.paymentMethod}
+                      label={
+                        PAYMENT_METHOD_LABELS[extendedProps.paymentMethod as PaymentMethod] ||
+                        extendedProps.paymentMethod
+                      }
                       size='small'
                       sx={{ height: 22, fontSize: '0.7rem' }}
                     />
@@ -639,7 +697,11 @@ export default function AppointmentDrawer() {
                       {room.name}
                     </Typography>
                     {(room as any).capacity && (
-                      <Chip label={`Capacity: ${(room as any).capacity}`} size='small' sx={{ height: 20, fontSize: '0.65rem' }} />
+                      <Chip
+                        label={`Capacity: ${(room as any).capacity}`}
+                        size='small'
+                        sx={{ height: 20, fontSize: '0.65rem' }}
+                      />
                     )}
                   </Box>
                 </Box>
@@ -649,7 +711,11 @@ export default function AppointmentDrawer() {
 
             {/* Booked By */}
             <Box>
-              <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mb: 0.5 }}>
+              <Typography
+                variant='caption'
+                color='text.secondary'
+                sx={{ display: 'block', mb: 0.5, fontFamily: 'var(--font-fira-code)' }}
+              >
                 BOOKED BY
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -659,7 +725,12 @@ export default function AppointmentDrawer() {
                 </Typography>
                 {requestedByClient && (
                   <Chip
-                    icon={<i className='ri-heart-fill' style={{ fontSize: '0.7rem', color: 'var(--mui-palette-customColors-coral)' }} />}
+                    icon={
+                      <i
+                        className='ri-heart-fill'
+                        style={{ fontSize: '0.7rem', color: 'var(--mui-palette-customColors-coral)' }}
+                      />
+                    }
                     label='Staff Requested'
                     size='small'
                     sx={{ height: 20, fontSize: '0.65rem' }}

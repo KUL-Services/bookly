@@ -6,15 +6,13 @@ const typography = (fontFamily: string): Theme['typography'] =>
     fontFamily:
       typeof fontFamily === 'undefined' || fontFamily === ''
         ? [
-            'Inter',
+            'var(--font-helvetica-world)',
+            'Helvetica',
+            'Arial',
             'sans-serif',
             '-apple-system',
             'BlinkMacSystemFont',
             '"Segoe UI"',
-            'Roboto',
-            '"Helvetica Neue"',
-            'Arial',
-            'sans-serif',
             '"Apple Color Emoji"',
             '"Segoe UI Emoji"',
             '"Segoe UI Symbol"'

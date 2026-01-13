@@ -108,6 +108,7 @@ const menuItemStyles = (verticalNavOptions: VerticalNavState, theme: Theme): Men
     label: ({ level }) => ({
       ...((!isPopoutWhenCollapsed || popoutExpanded || (popoutCollapsed && level === 0)) && {
         transition: `opacity ${transitionDuration}ms ease-in-out`,
+        fontFamily: 'var(--font-fira-code)',
         ...(collapsedNotHovered && {
           opacity: 0
         })

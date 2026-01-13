@@ -66,7 +66,7 @@ const renderEventTooltip = (event: CalendarEvent) => {
           <i className='ri-bookmark-line' style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }} />
           <Typography
             variant='caption'
-            sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'monospace' }}
+            sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)', fontFamily: 'var(--font-fira-code)' }}
           >
             {extendedProps.bookingId}
           </Typography>

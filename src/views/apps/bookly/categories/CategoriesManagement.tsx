@@ -68,7 +68,11 @@ const CategoriesManagement = () => {
         <Card>
           <CardHeader
             title='Categories'
-            subheader={`Available service categories (${categories.length})`}
+            subheader={
+              <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                {`Available service categories (${categories.length})`}
+              </Typography>
+            }
           />
           <CardContent>
             {error && (
@@ -91,34 +95,39 @@ const CategoriesManagement = () => {
                 <Table size='small' sx={{ minWidth: { xs: 500, md: 'auto' } }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Category</TableCell>
-                      <TableCell>Slug</TableCell>
-                      <TableCell>Created</TableCell>
+                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Category</TableCell>
+                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Slug</TableCell>
+                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Created</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {categories.map((category) => (
+                    {categories.map(category => (
                       <TableRow key={category.id} hover>
                         <TableCell>
                           <div className='flex items-center gap-3'>
-                            <Avatar
-                              src={category.image}
-                              className='w-8 h-8'
-                            >
+                            <Avatar src={category.image} className='w-8 h-8'>
                               {category.icon || category.name.charAt(0).toUpperCase()}
                             </Avatar>
                             <div>
-                              <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{category.name}</Typography>
+                              <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>
+                                {category.name}
+                              </Typography>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Typography variant='body2' color='textSecondary' sx={{ whiteSpace: 'nowrap' }}>
+                          <Typography
+                            variant='body2'
+                            color='textSecondary'
+                            sx={{ whiteSpace: 'nowrap', fontFamily: 'var(--font-fira-code)' }}
+                          >
                             {category.slug || category.name.toLowerCase().replace(/\s+/g, '-')}
                           </Typography>
                         </TableCell>
                         <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                          {new Date(category.createdAt).toLocaleDateString()}
+                          <Typography variant='body2' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                            {new Date(category.createdAt).toLocaleDateString()}
+                          </Typography>
                         </TableCell>
                       </TableRow>
                     ))}

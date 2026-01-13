@@ -47,7 +47,8 @@ const ReviewsManagement = () => {
         {
           id: '1',
           rating: 5,
-          comment: 'Absolutely fantastic service! The haircut exceeded my expectations. Maria is incredibly skilled and professional. I will definitely be coming back!',
+          comment:
+            'Absolutely fantastic service! The haircut exceeded my expectations. Maria is incredibly skilled and professional. I will definitely be coming back!',
           userId: 'user1',
           serviceId: 'service1',
           user: {
@@ -76,7 +77,8 @@ const ReviewsManagement = () => {
         {
           id: '2',
           rating: 4,
-          comment: 'Great experience overall. The manicure was well done and the staff was friendly. Only minor issue was the wait time, but worth it!',
+          comment:
+            'Great experience overall. The manicure was well done and the staff was friendly. Only minor issue was the wait time, but worth it!',
           userId: 'user2',
           serviceId: 'service2',
           user: {
@@ -105,7 +107,8 @@ const ReviewsManagement = () => {
         {
           id: '3',
           rating: 3,
-          comment: 'Service was okay. The staff could be more attentive and the facilities need some updating. Not bad but room for improvement.',
+          comment:
+            'Service was okay. The staff could be more attentive and the facilities need some updating. Not bad but room for improvement.',
           userId: 'user3',
           serviceId: 'service3',
           user: {
@@ -134,7 +137,8 @@ const ReviewsManagement = () => {
         {
           id: '4',
           rating: 5,
-          comment: 'Incredible massage therapy session! John really knows what he\'s doing. I felt completely relaxed and rejuvenated afterwards.',
+          comment:
+            "Incredible massage therapy session! John really knows what he's doing. I felt completely relaxed and rejuvenated afterwards.",
           userId: 'user4',
           serviceId: 'service4',
           user: {
@@ -163,7 +167,8 @@ const ReviewsManagement = () => {
         {
           id: '5',
           rating: 2,
-          comment: 'Disappointing experience. The service was rushed and the end result didn\'t meet my expectations. Staff seemed unprepared.',
+          comment:
+            "Disappointing experience. The service was rushed and the end result didn't meet my expectations. Staff seemed unprepared.",
           userId: 'user5',
           serviceId: 'service5',
           user: {
@@ -206,11 +211,16 @@ const ReviewsManagement = () => {
 
   const getFilteredReviews = () => {
     switch (tabValue) {
-      case 0: return reviews // All
-      case 1: return reviews.filter(r => r.rating >= 4) // Positive (4-5 stars)
-      case 2: return reviews.filter(r => r.rating === 3) // Neutral (3 stars)
-      case 3: return reviews.filter(r => r.rating <= 2) // Negative (1-2 stars)
-      default: return reviews
+      case 0:
+        return reviews // All
+      case 1:
+        return reviews.filter(r => r.rating >= 4) // Positive (4-5 stars)
+      case 2:
+        return reviews.filter(r => r.rating === 3) // Neutral (3 stars)
+      case 3:
+        return reviews.filter(r => r.rating <= 2) // Negative (1-2 stars)
+      default:
+        return reviews
     }
   }
 
@@ -270,7 +280,11 @@ const ReviewsManagement = () => {
                 <Typography variant='h4' color='primary' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.total}
                 </Typography>
-                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                <Typography
+                  variant='body2'
+                  color='textSecondary'
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontFamily: 'var(--font-fira-code)' }}
+                >
                   Total Reviews
                 </Typography>
               </CardContent>
@@ -282,7 +296,11 @@ const ReviewsManagement = () => {
                 <Typography variant='h4' color='success.main' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.avgRating.toFixed(1)}
                 </Typography>
-                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                <Typography
+                  variant='body2'
+                  color='textSecondary'
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontFamily: 'var(--font-fira-code)' }}
+                >
                   Average Rating
                 </Typography>
               </CardContent>
@@ -294,7 +312,11 @@ const ReviewsManagement = () => {
                 <Typography variant='h4' color='success.main' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.positive}
                 </Typography>
-                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                <Typography
+                  variant='body2'
+                  color='textSecondary'
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontFamily: 'var(--font-fira-code)' }}
+                >
                   Positive Reviews
                 </Typography>
               </CardContent>
@@ -306,7 +328,11 @@ const ReviewsManagement = () => {
                 <Typography variant='h4' color='error.main' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.negative}
                 </Typography>
-                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                <Typography
+                  variant='body2'
+                  color='textSecondary'
+                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontFamily: 'var(--font-fira-code)' }}
+                >
                   Negative Reviews
                 </Typography>
               </CardContent>
@@ -320,7 +346,11 @@ const ReviewsManagement = () => {
         <Card>
           <CardHeader
             title='Reviews Management'
-            subheader='Manage customer reviews and feedback'
+            subheader={
+              <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                Manage customer reviews and feedback
+              </Typography>
+            }
           />
           <CardContent>
             {error && (
@@ -337,10 +367,10 @@ const ReviewsManagement = () => {
                 indicatorColor='primary'
                 textColor='primary'
               >
-                <Tab label={`All (${stats.total})`} />
-                <Tab label={`Positive (${stats.positive})`} />
-                <Tab label={`Neutral (${stats.neutral})`} />
-                <Tab label={`Negative (${stats.negative})`} />
+                <Tab label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>All ({stats.total})</span>} />
+                <Tab label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Positive ({stats.positive})</span>} />
+                <Tab label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Neutral ({stats.neutral})</span>} />
+                <Tab label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Negative ({stats.negative})</span>} />
               </Tabs>
             </Box>
 
@@ -358,27 +388,41 @@ const ReviewsManagement = () => {
                 <Table sx={{ minWidth: { xs: 800, md: 'auto' } }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Customer</TableCell>
-                      <TableCell>Service</TableCell>
-                      <TableCell>Rating</TableCell>
-                      <TableCell>Comment</TableCell>
-                      <TableCell>Date</TableCell>
-                      <TableCell align='center'>Actions</TableCell>
+                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Customer</TableCell>
+                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Service</TableCell>
+                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Rating</TableCell>
+                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Comment</TableCell>
+                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Date</TableCell>
+                      <TableCell align='center' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                        Actions
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {filteredReviews.map((review) => (
+                    {filteredReviews.map(review => (
                       <TableRow key={review.id} hover>
                         <TableCell>
                           <Box className='flex items-center gap-3' sx={{ minWidth: 180 }}>
                             <Avatar>
-                              {review.user.firstName[0]}{review.user.lastName[0]}
+                              {review.user.firstName[0]}
+                              {review.user.lastName[0]}
                             </Avatar>
                             <div>
                               <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>
                                 {review.user.firstName} {review.user.lastName}
                               </Typography>
-                              <Typography variant='caption' color='textSecondary' sx={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
+                              <Typography
+                                variant='caption'
+                                color='textSecondary'
+                                sx={{
+                                  display: 'block',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  maxWidth: 150,
+                                  fontFamily: 'var(--font-fira-code)'
+                                }}
+                              >
                                 {review.user.email}
                               </Typography>
                               {review.user.isVerified && (
@@ -389,8 +433,14 @@ const ReviewsManagement = () => {
                         </TableCell>
                         <TableCell sx={{ minWidth: 140 }}>
                           <div>
-                            <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{review.service.name}</Typography>
-                            <Typography variant='caption' color='textSecondary' sx={{ whiteSpace: 'nowrap' }}>
+                            <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>
+                              {review.service.name}
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              color='textSecondary'
+                              sx={{ whiteSpace: 'nowrap', fontFamily: 'var(--font-fira-code)' }}
+                            >
                               {review.service.location}
                             </Typography>
                           </div>
@@ -402,16 +452,27 @@ const ReviewsManagement = () => {
                               label={`${review.rating}/5`}
                               size='small'
                               color={getRatingColor(review.rating) as any}
+                              sx={{ '& .MuiChip-label': { fontFamily: 'var(--font-fira-code)' } }}
                             />
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Typography variant='body2' sx={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
+                          <Typography
+                            variant='body2'
+                            sx={{
+                              maxWidth: 250,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: 'vertical'
+                            }}
+                          >
                             {review.comment}
                           </Typography>
                         </TableCell>
                         <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                          <Typography variant='body2'>
+                          <Typography variant='body2' sx={{ fontFamily: 'var(--font-fira-code)' }}>
                             {new Date(review.createdAt).toLocaleDateString()}
                           </Typography>
                         </TableCell>

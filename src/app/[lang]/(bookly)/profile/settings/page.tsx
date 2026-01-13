@@ -208,15 +208,14 @@ export default function ProfileSettingsPage() {
 
   if (!hydrated || !booklyUser || fetchingDetails) {
     return (
-      <div className='min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center'>
+      <div className='min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center font-sans'>
         <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-primary-800'></div>
       </div>
     )
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
-
+    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
       <main className='container mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10'>
         <div className='w-full max-w-2xl mx-auto'>
           {/* Header */}

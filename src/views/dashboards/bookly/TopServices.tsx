@@ -7,6 +7,7 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
 import TableBody from '@mui/material/TableBody'
+import Typography from '@mui/material/Typography'
 
 // Data Imports
 import { mockBookings, mockServices, mockBusinesses } from '@/bookly/data/mock-data'
@@ -41,24 +42,41 @@ const TopServices = () => {
 
   // Compute avg price using mockServices if possible
   for (const row of map.values()) {
-    const svc = mockServices.find(s => s.name === row.serviceName && mockBusinesses.find(b => b.id === s.businessId)?.name === row.business)
+    const svc = mockServices.find(
+      s => s.name === row.serviceName && mockBusinesses.find(b => b.id === s.businessId)?.name === row.business
+    )
     row.avgPrice = svc ? svc.price : row.revenue / Math.max(1, row.bookings)
   }
 
-  const rows = Array.from(map.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 6)
+  const rows = Array.from(map.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 6)
 
   return (
     <Card>
-      <CardHeader title='Top Performing Services' subheader='By revenue' />
+      <CardHeader
+        title='Top Performing Services'
+        subheader={
+          <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+            By revenue
+          </Typography>
+        }
+      />
       <CardContent>
         <Table size='small' aria-label='Top services table'>
           <TableHead>
             <TableRow>
-              <TableCell>Service</TableCell>
-              <TableCell>Business</TableCell>
-              <TableCell align='right'>Bookings</TableCell>
-              <TableCell align='right'>Avg Price</TableCell>
-              <TableCell align='right'>Revenue</TableCell>
+              <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Service</TableCell>
+              <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Business</TableCell>
+              <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                Bookings
+              </TableCell>
+              <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                Avg Price
+              </TableCell>
+              <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                Revenue
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -66,9 +84,15 @@ const TopServices = () => {
               <TableRow key={r.key}>
                 <TableCell>{r.serviceName}</TableCell>
                 <TableCell>{r.business}</TableCell>
-                <TableCell align='right'>{r.bookings}</TableCell>
-                <TableCell align='right'>${r.avgPrice.toFixed(2)}</TableCell>
-                <TableCell align='right'>${r.revenue.toFixed(2)}</TableCell>
+                <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                  {r.bookings}
+                </TableCell>
+                <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                  ${r.avgPrice.toFixed(2)}
+                </TableCell>
+                <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                  ${r.revenue.toFixed(2)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -79,4 +103,3 @@ const TopServices = () => {
 }
 
 export default TopServices
-

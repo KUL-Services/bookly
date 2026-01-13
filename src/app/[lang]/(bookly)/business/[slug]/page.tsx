@@ -259,16 +259,14 @@ function businessDetailsPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
+      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
         <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
           <div className='relative'>
             <div className='animate-spin rounded-full h-24 w-24 border-4 border-primary-200 border-t-primary-800 mx-auto shadow-lg'></div>
             <div className='absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-primary-700 animate-ping mx-auto'></div>
           </div>
           <div className='mt-6 space-y-2'>
-            <p className='text-xl font-semibold text-primary-800 dark:text-white'>
-              {t('business.loading')}
-            </p>
+            <p className='text-xl font-semibold text-primary-800 dark:text-white'>{t('business.loading')}</p>
             <div className='flex justify-center space-x-1'>
               <div className='w-2 h-2 bg-primary-700 rounded-full animate-bounce'></div>
               <div className='w-2 h-2 bg-primary-700 rounded-full animate-bounce animation-delay-200'></div>
@@ -282,16 +280,14 @@ function businessDetailsPage() {
 
   if (!business) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
+      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
         <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
           <div className='mb-6'>
             <div className='w-24 h-24 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center shadow-lg'>
               <div className='text-3xl'>🏪</div>
             </div>
           </div>
-          <h1 className='text-3xl font-bold text-gray-900 dark:text-white mb-4'>
-            Business not found
-          </h1>
+          <h1 className='text-3xl font-bold text-gray-900 dark:text-white mb-4'>Business not found</h1>
           <p className='text-gray-600 dark:text-gray-300 text-lg max-w-md mx-auto leading-relaxed'>
             The business you're looking for doesn't exist or may have been removed.
           </p>
@@ -306,7 +302,7 @@ function businessDetailsPage() {
   }
 
   return (
-    <div className='min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
+    <div className='min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
       <div className='w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 space-y-3 sm:space-y-4 flex-none relative z-10'>
         {/* Header Section - Full width seamless design */}
         <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700'>
@@ -340,7 +336,7 @@ function businessDetailsPage() {
                           />
                         ))}
                       </div>
-                      <span className='text-sm text-gray-600 dark:text-gray-300 select-text'>
+                      <span className='text-sm text-gray-600 dark:text-gray-300 select-text font-mono'>
                         {business.rating || 0} ({business.reviews?.length || 0})
                       </span>
                     </div>
@@ -369,7 +365,7 @@ function businessDetailsPage() {
                 </div>
 
                 {/* Contact Info */}
-                <div className='space-y-1.5 text-sm text-gray-600 dark:text-gray-300 select-text'>
+                <div className='space-y-1.5 text-sm text-gray-600 dark:text-gray-300 select-text font-mono'>
                   {(business as any).address && (
                     <div className='flex items-start gap-2'>
                       <MapPin className='w-4 h-4 flex-shrink-0 mt-0.5 select-none' />
@@ -448,7 +444,7 @@ function businessDetailsPage() {
                 {services.map((service, index) => (
                   <div
                     key={service.id || index}
-                    className='group bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 hover:bg-white dark:hover:bg-gray-800 transition-colors duration-200 opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
+                    className='group bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 card-hover opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
                     style={{
                       animationDelay: `${0.1 + index * 0.05}s`,
                       animationFillMode: 'forwards'
@@ -464,17 +460,19 @@ function businessDetailsPage() {
                           stringProps={{ plainText: service.description || '' }}
                           className='text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2'
                         />
-                        <span className='inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mt-2'>
+                        <span className='inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mt-2 font-mono'>
                           <Clock className='w-4 h-4' />
                           {service.duration} min
                         </span>
                       </div>
                       <div className='flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700'>
-                        <div className='text-xl font-bold text-primary-800 dark:text-primary-400'>${service.price}</div>
+                        <div className='text-xl font-bold text-primary-800 dark:text-primary-400 font-mono'>
+                          ${service.price}
+                        </div>
                         <Button
                           buttonText={{ plainText: 'Book Now' }}
                           variant='contained'
-                          className='bg-primary-700 hover:bg-primary-800 text-white text-sm px-4 py-2 rounded-lg touch-manipulation'
+                          className='btn-primary-enhanced btn-press text-sm px-4 py-2 rounded-lg touch-manipulation'
                           onClick={() => handelBookService(service)}
                         />
                       </div>
@@ -495,7 +493,7 @@ function businessDetailsPage() {
                   {branches.map((branch, index) => (
                     <div
                       key={branch.id || index}
-                      className='group bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 cursor-pointer hover:bg-white dark:hover:bg-gray-800 transition-colors duration-200 opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
+                      className='group bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 cursor-pointer card-hover opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
                       style={{
                         animationDelay: `${0.1 + index * 0.05}s`,
                         animationFillMode: 'forwards'
@@ -513,7 +511,7 @@ function businessDetailsPage() {
                         />
                         <div className='flex-1 min-w-0'>
                           <h3 className='text-base font-semibold text-gray-900 dark:text-white'>{branch.name}</h3>
-                          <div className='space-y-1 text-sm text-gray-500 dark:text-gray-400 mt-2'>
+                          <div className='space-y-1 text-sm text-gray-500 dark:text-gray-400 mt-2 font-mono'>
                             <div className='flex items-center gap-2'>
                               <MapPin className='w-4 h-4 flex-shrink-0' />
                               <span className='truncate'>{branch.address}</span>
@@ -531,7 +529,7 @@ function businessDetailsPage() {
                             </span>
                             <div className='flex items-center gap-1'>
                               <Star className='w-4 h-4 fill-yellow-400 text-yellow-400' />
-                              <span className='text-sm text-gray-500'>4.8</span>
+                              <span className='text-sm text-gray-500 font-mono'>4.8</span>
                             </div>
                           </div>
                         </div>
@@ -606,7 +604,9 @@ function businessDetailsPage() {
                         />
                       ))}
                     </div>
-                    <div className='text-xs text-gray-500 mt-0.5'>{business.reviews?.length || 0} reviews</div>
+                    <div className='text-xs text-gray-500 mt-0.5 font-mono'>
+                      {business.reviews?.length || 0} reviews
+                    </div>
                   </div>
                   <div className='flex-1 space-y-1'>
                     {[5, 4, 3, 2, 1].map(rating => (
@@ -619,7 +619,7 @@ function businessDetailsPage() {
                             style={{ width: rating === 5 ? '85%' : rating === 4 ? '12%' : '3%' }}
                           />
                         </div>
-                        <span className='text-xs text-gray-500 w-6'>
+                        <span className='text-xs text-gray-500 w-6 font-mono'>
                           {business.reviews ? business.reviews.filter(r => r.rating === rating).length : 0}
                         </span>
                       </div>
@@ -654,7 +654,7 @@ function businessDetailsPage() {
                             <span className='text-base font-medium text-gray-900 dark:text-white'>
                               {review.authorName}
                             </span>
-                            <span className='text-sm text-gray-400'>{format(review.date, 'MMM d')}</span>
+                            <span className='text-sm text-gray-400 font-mono'>{format(review.date, 'MMM d')}</span>
                           </div>
                           <div className='flex items-center my-1'>
                             {[...Array(5)].map((_, i) => (

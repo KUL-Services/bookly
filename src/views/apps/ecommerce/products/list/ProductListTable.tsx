@@ -209,7 +209,7 @@ const ProductListTable = ({ productData }: { productData?: ProductType[] }) => {
       }),
       columnHelper.accessor('sku', {
         header: 'SKU',
-        cell: ({ row }) => <Typography>{row.original.sku}</Typography>
+        cell: ({ row }) => <Typography style={{ fontFamily: 'var(--font-fira-code)' }}>{row.original.sku}</Typography>
       }),
       columnHelper.accessor('price', {
         header: 'Price',

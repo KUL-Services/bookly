@@ -277,7 +277,7 @@ export default function SearchPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900'>
+      <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900 font-sans'>
         <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-primary-100/30 dark:border-gray-700/30 sticky top-0 z-40'>
           <div className='mx-auto max-w-7xl px-3 sm:px-4 py-2 sm:py-3'>
             <div className='flex gap-2'>
@@ -295,7 +295,7 @@ export default function SearchPage() {
   }
 
   return (
-    <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900'>
+    <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900 font-sans'>
       {/* Top search bar - Full width stretch */}
       <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-primary-100/30 dark:border-gray-700/30 sticky top-0 z-40'>
         <div className='w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4'>
@@ -585,7 +585,7 @@ export default function SearchPage() {
                         <h4 className='font-semibold text-sm text-gray-900 dark:text-white mb-0.5'>
                           {branch.branchName}
                         </h4>
-                        <div className='flex items-start gap-1 text-xs text-gray-600 dark:text-gray-400'>
+                        <div className='flex items-start gap-1 text-xs text-gray-600 dark:text-gray-400 font-mono'>
                           <svg
                             className='w-3 h-3 flex-shrink-0 mt-0.5'
                             fill='none'
@@ -608,7 +608,7 @@ export default function SearchPage() {
                           <span className='break-words line-clamp-2'>{branch.address}</span>
                         </div>
                         {branch.phone && (
-                          <div className='flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mt-0.5'>
+                          <div className='flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mt-0.5 font-mono'>
                             <svg
                               className='w-3 h-3 flex-shrink-0'
                               fill='none'

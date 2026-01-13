@@ -13,7 +13,14 @@ import CustomIconButton from '@core/components/mui/IconButton'
 const TwoStepVerification = () => {
   return (
     <Card>
-      <CardHeader title='Two-step verification' subheader='Keep your account secure with authentication step.' />
+      <CardHeader
+        title='Two-step verification'
+        subheader={
+          <Typography variant='body2' color='text.secondary' style={{ fontFamily: 'var(--font-fira-code)' }}>
+            Keep your account secure with authentication step.
+          </Typography>
+        }
+      />
       <CardContent>
         <InputLabel htmlFor='sms' className='font-medium text-textPrimary mbe-1'>
           SMS

@@ -1,18 +1,6 @@
 'use client'
 
-import {
-  Drawer,
-  Box,
-  Typography,
-  IconButton,
-  Button,
-  List,
-  ListItem,
-  Chip,
-  Stack,
-  Divider,
-  Alert
-} from '@mui/material'
+import { Drawer, Box, Typography, IconButton, Button, List, ListItem, Chip, Stack, Divider, Alert } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format } from 'date-fns'
 import { useCalendarStore } from './state'
@@ -52,7 +40,7 @@ export default function TemplateManagementDrawer() {
 
   return (
     <Drawer
-      anchor="right"
+      anchor='right'
       open={isOpen}
       onClose={toggleTemplateManagement}
       PaperProps={{
@@ -76,15 +64,15 @@ export default function TemplateManagementDrawer() {
           }}
         >
           <Box>
-            <Typography variant="h6" fontWeight={600}>
+            <Typography variant='h6' fontWeight={600}>
               Schedule Templates
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant='caption' color='text.secondary' fontFamily='var(--font-fira-code)'>
               Manage recurring weekly schedules
             </Typography>
           </Box>
-          <IconButton onClick={toggleTemplateManagement} size="small">
-            <i className="ri-close-line" />
+          <IconButton onClick={toggleTemplateManagement} size='small'>
+            <i className='ri-close-line' />
           </IconButton>
         </Box>
 
@@ -112,18 +100,26 @@ export default function TemplateManagementDrawer() {
                   justifyContent: 'center'
                 }}
               >
-                <i className="ri-calendar-schedule-line" style={{ fontSize: '2.5rem', color: theme.palette.primary.main }} />
+                <i
+                  className='ri-calendar-schedule-line'
+                  style={{ fontSize: '2.5rem', color: theme.palette.primary.main }}
+                />
               </Box>
-              <Typography variant="h6" color="text.secondary" textAlign="center">
+              <Typography variant='h6' color='text.secondary' textAlign='center' fontFamily='var(--font-fira-code)'>
                 No Templates Yet
               </Typography>
-              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ maxWidth: 300 }}>
+              <Typography
+                variant='body2'
+                color='text.secondary'
+                textAlign='center'
+                sx={{ maxWidth: 300, fontFamily: 'var(--font-fira-code)' }}
+              >
                 Create your first schedule template to automatically generate recurring weekly slots
               </Typography>
             </Box>
           ) : (
             <Stack spacing={2}>
-              <Alert severity="info" sx={{ mb: 1 }}>
+              <Alert severity='info' sx={{ mb: 1 }}>
                 Templates define recurring weekly patterns. Generate slots to create bookable time slots from templates.
               </Alert>
 
@@ -145,62 +141,75 @@ export default function TemplateManagementDrawer() {
                       }}
                     >
                       {/* Template Name and Status */}
-                      <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                      <Box
+                        sx={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          justifyContent: 'space-between'
+                        }}
+                      >
                         <Box sx={{ flex: 1 }}>
-                          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 0.5 }}>
+                          <Typography variant='subtitle1' fontWeight={600} sx={{ mb: 0.5 }}>
                             {template.name}
                           </Typography>
-                          <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                          <Stack direction='row' spacing={1} sx={{ mb: 1 }}>
                             <Chip
                               label={template.isActive ? 'Active' : 'Inactive'}
-                              size="small"
+                              size='small'
                               color={template.isActive ? 'success' : 'default'}
                               sx={{ height: 20, fontSize: '0.7rem' }}
                             />
                             <Chip
                               label={`${template.weeklyPattern.length} weekly slots`}
-                              size="small"
-                              variant="outlined"
+                              size='small'
+                              variant='outlined'
                               sx={{ height: 20, fontSize: '0.7rem' }}
                             />
                           </Stack>
                         </Box>
                         <IconButton
-                          size="small"
+                          size='small'
                           onClick={() => handleDeleteTemplate(template.id)}
                           sx={{ color: 'error.main' }}
                         >
-                          <i className="ri-delete-bin-line" />
+                          <i className='ri-delete-bin-line' />
                         </IconButton>
                       </Box>
 
                       {/* Date Range */}
                       <Box sx={{ width: '100%' }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          sx={{ display: 'block', mb: 0.5, fontFamily: 'var(--font-fira-code)' }}
+                        >
                           Active Period
                         </Typography>
-                        <Typography variant="body2">
+                        <Typography variant='body2'>
                           {format(new Date(template.activeFrom), 'MMM dd, yyyy')}
                           {' → '}
-                          {template.activeUntil
-                            ? format(new Date(template.activeUntil), 'MMM dd, yyyy')
-                            : 'Ongoing'}
+                          {template.activeUntil ? format(new Date(template.activeUntil), 'MMM dd, yyyy') : 'Ongoing'}
                         </Typography>
                       </Box>
 
                       {/* Weekly Pattern Preview */}
                       <Box sx={{ width: '100%' }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                        <Typography
+                          variant='caption'
+                          color='text.secondary'
+                          sx={{ display: 'block', mb: 1, fontFamily: 'var(--font-fira-code)' }}
+                        >
                           Weekly Pattern
                         </Typography>
-                        <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                        <Stack direction='row' spacing={0.5} flexWrap='wrap' useFlexGap>
                           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => {
                             const count = template.weeklyPattern.filter(p => p.dayOfWeek === day).length
                             return (
                               <Chip
                                 key={day}
                                 label={`${day}: ${count}`}
-                                size="small"
+                                size='small'
                                 variant={count > 0 ? 'filled' : 'outlined'}
                                 color={count > 0 ? 'primary' : 'default'}
                                 sx={{
@@ -215,9 +224,9 @@ export default function TemplateManagementDrawer() {
                       </Box>
 
                       {/* Actions */}
-                      <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
+                      <Stack direction='row' spacing={1} sx={{ width: '100%' }}>
                         <Button
-                          size="small"
+                          size='small'
                           variant={template.isActive ? 'outlined' : 'contained'}
                           color={template.isActive ? 'warning' : 'success'}
                           onClick={() => toggleTemplateActive(template.id)}
@@ -229,10 +238,10 @@ export default function TemplateManagementDrawer() {
                           {template.isActive ? 'Deactivate' : 'Activate'}
                         </Button>
                         <Button
-                          size="small"
-                          variant="outlined"
+                          size='small'
+                          variant='outlined'
                           onClick={() => handleGenerateSlots(template)}
-                          startIcon={<i className="ri-calendar-check-line" />}
+                          startIcon={<i className='ri-calendar-check-line' />}
                           sx={{ flex: 1 }}
                         >
                           Generate Slots
@@ -241,7 +250,7 @@ export default function TemplateManagementDrawer() {
 
                       {/* Metadata */}
                       <Box sx={{ width: '100%', pt: 1, borderTop: 1, borderColor: 'divider' }}>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant='caption' color='text.secondary' fontFamily='var(--font-fira-code)'>
                           Created: {format(new Date(template.createdAt), 'MMM dd, yyyy')}
                           {' • '}
                           Updated: {format(new Date(template.updatedAt), 'MMM dd, yyyy')}
@@ -254,7 +263,6 @@ export default function TemplateManagementDrawer() {
             </Stack>
           )}
         </Box>
-
       </Box>
     </Drawer>
   )

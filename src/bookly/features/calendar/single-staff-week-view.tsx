@@ -117,21 +117,16 @@ export default function SingleStaffWeekView({
       >
         <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
           {onBack && (
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<i className="ri-arrow-left-line" />}
-              onClick={onBack}
-            >
+            <Button variant='outlined' size='small' startIcon={<i className='ri-arrow-left-line' />} onClick={onBack}>
               All Staff
             </Button>
           )}
 
           {staffOptions.length > 0 && onStaffChange && onBack && (
-            <FormControl size="small" sx={{ minWidth: 180 }}>
+            <FormControl size='small' sx={{ minWidth: 180 }}>
               <Select
                 value={staff.id}
-                onChange={(e) => {
+                onChange={e => {
                   const value = e.target.value
                   if (value === 'all-staff') {
                     onBack()
@@ -142,22 +137,24 @@ export default function SingleStaffWeekView({
                 displayEmpty
                 sx={{ fontSize: '0.875rem' }}
               >
-                <MenuItem value="all-staff">
+                <MenuItem value='all-staff'>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <i className="ri-group-line" style={{ fontSize: '1.25rem' }} />
-                    <Typography variant="body2" fontWeight={600}>All Staff</Typography>
+                    <i className='ri-group-line' style={{ fontSize: '1.25rem' }} />
+                    <Typography variant='body2' fontWeight={600}>
+                      All Staff
+                    </Typography>
                   </Box>
                 </MenuItem>
-                {staffOptions.map((option) => (
+                {staffOptions.map(option => (
                   <MenuItem key={option.id} value={option.id}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar
-                        src={option.photo}
-                        sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
-                      >
-                        {option.name.split(' ').map(n => n[0]).join('')}
+                      <Avatar src={option.photo} sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                        {option.name
+                          .split(' ')
+                          .map(n => n[0])
+                          .join('')}
                       </Avatar>
-                      <Typography variant="body2">{option.name}</Typography>
+                      <Typography variant='body2'>{option.name}</Typography>
                     </Box>
                   </MenuItem>
                 ))}
@@ -177,13 +174,16 @@ export default function SingleStaffWeekView({
               fontWeight: 600
             }}
           >
-            {staff.name.split(' ').map(n => n[0]).join('')}
+            {staff.name
+              .split(' ')
+              .map(n => n[0])
+              .join('')}
           </Avatar>
           <Box>
-            <Typography variant="h6" fontWeight={600}>
+            <Typography variant='h6' fontWeight={600}>
               {staff.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant='caption' color='text.secondary' fontFamily='var(--font-fira-code)'>
               {staff.workingHours || '10:00 AM-7:00 PM'} • {weekAppointments.length} appointments this week
             </Typography>
           </Box>
@@ -235,7 +235,7 @@ export default function SingleStaffWeekView({
                   onClick={() => onDateClick?.(day)}
                 >
                   <Typography
-                    variant="caption"
+                    variant='caption'
                     sx={{
                       display: 'block',
                       fontWeight: 600,
@@ -246,8 +246,9 @@ export default function SingleStaffWeekView({
                     {format(day, 'EEE')}
                   </Typography>
                   <Typography
-                    variant="h5"
+                    variant='h5'
                     fontWeight={700}
+                    fontFamily='var(--font-fira-code)'
                     sx={{
                       color: isToday(day) ? 'primary.contrastText' : 'text.primary'
                     }}
@@ -255,7 +256,7 @@ export default function SingleStaffWeekView({
                     {format(day, 'd')}
                   </Typography>
                   <Typography
-                    variant="caption"
+                    variant='caption'
                     sx={{
                       display: 'block',
                       color: isToday(day) ? 'primary.contrastText' : 'text.secondary',
@@ -266,7 +267,8 @@ export default function SingleStaffWeekView({
                     {dayEvents.length} appointment{dayEvents.length !== 1 ? 's' : ''}
                   </Typography>
                   <Typography
-                    variant="caption"
+                    variant='caption'
+                    fontFamily='var(--font-fira-code)'
                     sx={{
                       display: 'block',
                       color: isToday(day) ? 'primary.contrastText' : 'text.secondary',
@@ -279,7 +281,17 @@ export default function SingleStaffWeekView({
                 </Box>
 
                 {/* Day events */}
-                <Box sx={{ flex: 1, p: 1.5, display: 'flex', flexDirection: 'column', gap: 1, overflow: 'auto', position: 'relative' }}>
+                <Box
+                  sx={{
+                    flex: 1,
+                    p: 1.5,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                    overflow: 'auto',
+                    position: 'relative'
+                  }}
+                >
                   {/* Current time indicator */}
                   {timeIndicator && (
                     <Box
@@ -308,7 +320,7 @@ export default function SingleStaffWeekView({
                       }}
                     >
                       <Typography
-                        variant="caption"
+                        variant='caption'
                         sx={{
                           position: 'absolute',
                           left: 16,
@@ -340,7 +352,7 @@ export default function SingleStaffWeekView({
                         py: 4
                       }}
                     >
-                      <Typography variant="caption" color="text.disabled">
+                      <Typography variant='caption' color='text.disabled' fontFamily='var(--font-fira-code)'>
                         No appointments
                       </Typography>
                     </Box>
@@ -360,7 +372,9 @@ export default function SingleStaffWeekView({
                         isFaded ? baseFillOpacity * 0.6 : baseFillOpacity
                       )
                       const baseTextColor = theme.palette.text.primary
-                      const effectiveTextColor = isFaded ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6) : baseTextColor
+                      const effectiveTextColor = isFaded
+                        ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6)
+                        : baseTextColor
 
                       return (
                         <Box
@@ -391,7 +405,8 @@ export default function SingleStaffWeekView({
                           }}
                         >
                           <Typography
-                            variant="caption"
+                            variant='caption'
+                            fontFamily='var(--font-fira-code)'
                             sx={{
                               display: 'block',
                               fontWeight: 700,
@@ -403,7 +418,8 @@ export default function SingleStaffWeekView({
                             {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
                           </Typography>
                           <Typography
-                            variant="body2"
+                            variant='body2'
+                            fontFamily='var(--font-fira-code)'
                             sx={{
                               fontWeight: 700,
                               color: effectiveTextColor,
@@ -431,7 +447,7 @@ export default function SingleStaffWeekView({
                               ) : null
                             })()}
                             <Typography
-                              variant="caption"
+                              variant='caption'
                               sx={{
                                 color: effectiveTextColor,
                                 fontSize: '0.7rem',

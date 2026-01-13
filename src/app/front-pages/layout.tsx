@@ -25,6 +25,9 @@ import '@/app/globals.css'
 // Generated Icon CSS Imports
 import '@assets/iconify-icons/generated-icons.css'
 
+// Config Imports
+import { helveticaWorld, firaCode } from '@/configs/fonts'
+
 export const metadata = {
   title: 'Zerv',
   description: 'Zerv Booking Platform'
@@ -35,8 +38,9 @@ const Layout = ({ children }: ChildrenType) => {
   const systemMode = getSystemMode()
 
   return (
-    <html id='__next' suppressHydrationWarning>
-      <body suppressHydrationWarning className='flex is-full min-bs-full flex-auto flex-col'>
+    // Replaced html/body with divs to avoid invalid nesting since RootLayout already defines them
+    <div id='front-pages-root' className={`contents ${helveticaWorld.variable} ${firaCode.variable}`}>
+      <div className={`flex is-full min-bs-full flex-auto flex-col ${helveticaWorld.className}`}>
         <Providers direction='ltr'>
           <BlankLayout systemMode={systemMode}>
             <IntersectionProvider>
@@ -54,8 +58,8 @@ const Layout = ({ children }: ChildrenType) => {
             </IntersectionProvider>
           </BlankLayout>
         </Providers>
-      </body>
-    </html>
+      </div>
+    </div>
   )
 }
 

@@ -30,7 +30,7 @@ export default function VerifyPage({ params }: PageProps) {
   }
 
   return (
-    <div className='min-h-screen flex items-center justify-center animate-in fade-in slide-in-from-top-4 duration-700'>
+    <div className='min-h-screen flex items-center justify-center animate-in fade-in slide-in-from-top-4 duration-700 font-sans'>
       <div className='container mx-auto px-4 py-8'>
         <div className='w-full max-w-md mx-auto'>
           <Card className='shadow-lg animate-in fade-in slide-in-from-bottom-8 duration-500 delay-150'>
@@ -42,7 +42,10 @@ export default function VerifyPage({ params }: PageProps) {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className='space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500'>
+              <form
+                onSubmit={handleSubmit}
+                className='space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-500'
+              >
                 <BaseInput
                   type='email'
                   placeholderProps={{ plainText: 'Email Address' }}
@@ -61,7 +64,9 @@ export default function VerifyPage({ params }: PageProps) {
                   className='w-full'
                 />
 
-                {error && <div className='text-red-600 text-sm text-center animate-in fade-in duration-300'>{error}</div>}
+                {error && (
+                  <div className='text-red-600 text-sm text-center animate-in fade-in duration-300'>{error}</div>
+                )}
 
                 <div className='relative'>
                   <Button
@@ -69,10 +74,12 @@ export default function VerifyPage({ params }: PageProps) {
                     buttonText={{
                       plainText: loading ? (
                         <div className='flex items-center justify-center'>
-                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
                           Verifying...
                         </div>
-                      ) : 'Verify Email'
+                      ) : (
+                        'Verify Email'
+                      )
                     }}
                     variant='contained'
                     className='w-full bg-black hover:bg-gray-900 text-white transition-all duration-300'

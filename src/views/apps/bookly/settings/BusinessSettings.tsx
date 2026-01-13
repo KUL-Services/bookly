@@ -18,6 +18,7 @@ import Alert from '@mui/material/Alert'
 import Snackbar from '@mui/material/Snackbar'
 import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
 
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
@@ -124,7 +125,11 @@ const BusinessSettings = () => {
             <Card>
               <CardHeader
                 title='Business Settings'
-                subheader='Configure your business profile, policies, payment options, notifications, and more'
+                subheader={
+                  <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                    Configure your business profile, policies, payment options, notifications, and more
+                  </Typography>
+                }
                 action={
                   <Box sx={{ display: 'flex', gap: 2 }}>
                     <Button
@@ -160,35 +165,55 @@ const BusinessSettings = () => {
           <Grid item xs={12}>
             <CustomTabList onChange={handleTabChange} variant='scrollable' pill='true'>
               <Tab
-                label='Business Profile'
+                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Business Profile</span>}
                 icon={<i className='ri-store-3-line' />}
                 iconPosition='start'
                 value='business-profile'
               />
-              <Tab label='Services' icon={<i className='ri-service-line' />} iconPosition='start' value='services' />
-              <Tab label='Branches' icon={<i className='ri-building-line' />} iconPosition='start' value='branches' />
               <Tab
-                label='Booking Policies'
+                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Services</span>}
+                icon={<i className='ri-service-line' />}
+                iconPosition='start'
+                value='services'
+              />
+              <Tab
+                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Branches</span>}
+                icon={<i className='ri-building-line' />}
+                iconPosition='start'
+                value='branches'
+              />
+              <Tab
+                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Booking Policies</span>}
                 icon={<i className='ri-calendar-check-line' />}
                 iconPosition='start'
                 value='booking-policies'
               />
-              <Tab label='Payment' icon={<i className='ri-bank-card-line' />} iconPosition='start' value='payment' />
               <Tab
-                label='Notifications'
+                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Payment</span>}
+                icon={<i className='ri-bank-card-line' />}
+                iconPosition='start'
+                value='payment'
+              />
+              <Tab
+                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Notifications</span>}
                 icon={<i className='ri-notification-4-line' />}
                 iconPosition='start'
                 value='notifications'
               />
-              <Tab label='Scheduling' icon={<i className='ri-time-line' />} iconPosition='start' value='scheduling' />
               <Tab
-                label='Calendar Display'
+                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Scheduling</span>}
+                icon={<i className='ri-time-line' />}
+                iconPosition='start'
+                value='scheduling'
+              />
+              <Tab
+                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Calendar Display</span>}
                 icon={<i className='ri-calendar-view' />}
                 iconPosition='start'
                 value='calendar'
               />
               <Tab
-                label='Customer Options'
+                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Customer Options</span>}
                 icon={<i className='ri-user-settings-line' />}
                 iconPosition='start'
                 value='customer'
@@ -281,7 +306,10 @@ const BusinessSettings = () => {
                   <Box component='h3' sx={{ m: 0, fontWeight: 600 }}>
                     Reset All Settings?
                   </Box>
-                  <Box component='p' sx={{ m: 0, color: 'text.secondary', fontSize: '0.875rem' }}>
+                  <Box
+                    component='p'
+                    sx={{ m: 0, color: 'text.secondary', fontSize: '0.875rem', fontFamily: 'var(--font-fira-code)' }}
+                  >
                     This will reset all settings to their default values. This action cannot be undone.
                   </Box>
                 </Box>

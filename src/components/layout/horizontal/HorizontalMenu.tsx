@@ -220,7 +220,7 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
             <MenuItem href={`/${locale}/apps/permissions`}>{dictionary['navigation'].permissions}</MenuItem>
           </SubMenu>
         </SubMenu>
-        <SubMenu label={dictionary['navigation'].pages} icon={<i className='ri-file-list-2-line' />}>
+        {/* <SubMenu label={dictionary['navigation'].pages} icon={<i className='ri-file-list-2-line' />}>
           <MenuItem href={`/${locale}/pages/user-profile`} icon={<i className='ri-user-line' />}>
             {dictionary['navigation'].userProfile}
           </MenuItem>
@@ -341,8 +341,8 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
               {dictionary['navigation'].helpCenter}
             </MenuItem>
           </SubMenu>
-        </SubMenu>
-        <SubMenu label={dictionary['navigation'].formsAndTables} icon={<i className='ri-pages-line' />}>
+        </SubMenu> */}
+        {/* <SubMenu label={dictionary['navigation'].formsAndTables} icon={<i className='ri-pages-line' />}>
           <MenuItem href={`/${locale}/forms/form-layouts`} icon={<i className='ri-layout-4-line' />}>
             {dictionary['navigation'].formLayouts}
           </MenuItem>
@@ -371,16 +371,18 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           >
             {dictionary['navigation'].muiTables}
           </MenuItem>
-        </SubMenu>
-        <SubMenu label={dictionary['navigation'].charts} icon={<i className='ri-bar-chart-2-line' />}>
+        </SubMenu> */}
+
+        {/* <SubMenu label={dictionary['navigation'].charts} icon={<i className='ri-bar-chart-2-line' />}>
           <MenuItem href={`/${locale}/charts/apex-charts`} icon={<i className='ri-line-chart-line' />}>
             {dictionary['navigation'].apex}
           </MenuItem>
           <MenuItem href={`/${locale}/charts/recharts`} icon={<i className='ri-bar-chart-line' />}>
             {dictionary['navigation'].recharts}
           </MenuItem>
-        </SubMenu>
-        <SubMenu label={dictionary['navigation'].others} icon={<i className='ri-more-line' />}>
+        </SubMenu> */}
+
+        {/* <SubMenu label={dictionary['navigation'].others} icon={<i className='ri-more-line' />}>
           <MenuItem
             href={`${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/foundation`}
             suffix={<i className='ri-external-link-line text-xl' />}
@@ -443,7 +445,7 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
             </SubMenu>
           </SubMenu>
           <MenuItem disabled>{dictionary['navigation'].disabledMenu}</MenuItem>
-        </SubMenu>
+        </SubMenu> */}
       </Menu>
       {/* <Menu
         rootStyles={menuRootStyles(theme)}

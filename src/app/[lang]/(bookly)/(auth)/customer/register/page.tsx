@@ -27,8 +27,7 @@ export default function RegisterPage({ params }: PageProps) {
   }, [locale])
 
   return (
-    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden'>
-
+    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
       <main className='container mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10'>
         <div className='w-full max-w-md mx-auto'>
           {/* Mobile-optimized header */}
@@ -44,13 +43,16 @@ export default function RegisterPage({ params }: PageProps) {
             {registrationSuccess ? (
               <div className='text-center space-y-4'>
                 <div className='w-16 h-16 mx-auto bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center'>
-                  <svg className='w-8 h-8 text-green-600 dark:text-green-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <svg
+                    className='w-8 h-8 text-green-600 dark:text-green-400'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
                     <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
                   </svg>
                 </div>
-                <h3 className='text-xl font-semibold text-gray-900 dark:text-white'>
-                  Registration Successful!
-                </h3>
+                <h3 className='text-xl font-semibold text-gray-900 dark:text-white'>Registration Successful!</h3>
                 <p className='text-gray-600 dark:text-gray-300 text-sm'>
                   Your account has been created. You can now login with your credentials.
                 </p>

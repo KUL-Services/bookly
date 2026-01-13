@@ -1209,10 +1209,10 @@ export default function UnifiedBookingDrawer({
                 <Stack spacing={2.5}>
                   {/* Booking Reference (read-only) */}
                   <Box>
-                    <Typography variant='caption' color='text.secondary' fontWeight={600}>
+                    <Typography variant='caption' sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
                       BOOKING REFERENCE
                     </Typography>
-                    <Typography variant='body1' fontWeight={500}>
+                    <Typography variant='body1' fontWeight={600} fontFamily='var(--font-fira-code)'>
                       {bookingReference}
                     </Typography>
                   </Box>
@@ -1622,7 +1622,7 @@ export default function UnifiedBookingDrawer({
                 <Stack spacing={1.5}>
                   {/* Booking Info - Clean compact display */}
                   <Box sx={{ mb: 1 }}>
-                    <Typography variant='caption' color='text.secondary' sx={{ fontFamily: 'monospace' }}>
+                    <Typography variant='caption' color='text.secondary'>
                       {bookingReference}
                     </Typography>
                   </Box>
@@ -1870,8 +1870,7 @@ export default function UnifiedBookingDrawer({
                           <Typography variant='caption' color='text.secondary'>
                             {isSessionInPast
                               ? `${attendedCount} attended • ${noShowCount} no-show${pendingCount > 0 ? ` • ${pendingCount} unmarked` : ''}`
-                              : `${bookedCount} booked • ${availableCapacity} spots remaining`
-                            }
+                              : `${bookedCount} booked • ${availableCapacity} spots remaining`}
                           </Typography>
                           <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
                             Click to manage session clients
@@ -1889,7 +1888,9 @@ export default function UnifiedBookingDrawer({
                               label={`${attendedCount}/${bookedCount} attended`}
                               size='small'
                               variant='outlined'
-                              color={attendedCount === bookedCount ? 'success' : noShowCount > 0 ? 'warning' : 'default'}
+                              color={
+                                attendedCount === bookedCount ? 'success' : noShowCount > 0 ? 'warning' : 'default'
+                              }
                               icon={<i className='ri-check-double-line' style={{ fontSize: '0.75rem' }} />}
                             />
                           )}

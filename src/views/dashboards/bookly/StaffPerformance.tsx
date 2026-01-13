@@ -7,6 +7,7 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
 import TableBody from '@mui/material/TableBody'
+import Typography from '@mui/material/Typography'
 
 // Data Imports
 import { mockBookings, mockStaff, mockBusinesses } from '@/bookly/data/mock-data'
@@ -28,9 +29,7 @@ const StaffPerformance = () => {
     const revenue = completed.reduce((sum, b) => sum + b.price, 0)
     const businessName = mockBusinesses.find(b => b.id === st.businessId)?.name || '—'
     const branchName = businessName
-      ? mockBusinesses
-          .find(b => b.id === st.businessId)
-          ?.branches.find(br => br.id === st.branchId)?.name || '—'
+      ? mockBusinesses.find(b => b.id === st.businessId)?.branches.find(br => br.id === st.branchId)?.name || '—'
       : '—'
 
     return {
@@ -49,17 +48,28 @@ const StaffPerformance = () => {
 
   return (
     <Card>
-      <CardHeader title='Staff Performance' subheader='Completed bookings and revenue' />
+      <CardHeader
+        title='Staff Performance'
+        subheader={
+          <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+            Completed bookings and revenue
+          </Typography>
+        }
+      />
       <CardContent>
         <Table size='small' aria-label='Staff performance table'>
           <TableHead>
             <TableRow>
-              <TableCell>Staff</TableCell>
-              <TableCell>Title</TableCell>
-              <TableCell>Business</TableCell>
-              <TableCell>Branch</TableCell>
-              <TableCell align='right'>Completed</TableCell>
-              <TableCell align='right'>Revenue</TableCell>
+              <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Staff</TableCell>
+              <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Title</TableCell>
+              <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Business</TableCell>
+              <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Branch</TableCell>
+              <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                Completed
+              </TableCell>
+              <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                Revenue
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -69,8 +79,12 @@ const StaffPerformance = () => {
                 <TableCell>{r.title}</TableCell>
                 <TableCell>{r.business}</TableCell>
                 <TableCell>{r.branch}</TableCell>
-                <TableCell align='right'>{r.completed}</TableCell>
-                <TableCell align='right'>${r.revenue.toFixed(2)}</TableCell>
+                <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                  {r.completed}
+                </TableCell>
+                <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                  ${r.revenue.toFixed(2)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -81,4 +95,3 @@ const StaffPerformance = () => {
 }
 
 export default StaffPerformance
-

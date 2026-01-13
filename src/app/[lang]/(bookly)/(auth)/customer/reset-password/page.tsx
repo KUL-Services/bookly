@@ -66,14 +66,12 @@ export default function ResetPasswordPage({ params }: PageProps) {
   }
 
   return (
-    <div className='min-h-screen'>
+    <div className='min-h-screen font-sans'>
       <main className='container mx-auto px-4 py-8'>
         <div className='w-1/3 mx-auto flex justify-center'>
           <Card className='w-full border border-gray-300'>
             <CardHeader className='space-y-1'>
-              <CardTitle className='text-2xl font-bold text-center text-primary-800'>
-                Create New Password
-              </CardTitle>
+              <CardTitle className='text-2xl font-bold text-center text-primary-800'>Create New Password</CardTitle>
               <CardDescription className='text-center'>
                 Enter your reset code and create a new password for your account
               </CardDescription>
@@ -88,12 +86,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
                       <FormItem>
                         <FormLabel>Email address</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder='Enter your email address'
-                            type='email'
-                            {...field}
-                            disabled={isLoading}
-                          />
+                          <Input placeholder='Enter your email address' type='email' {...field} disabled={isLoading} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -107,11 +100,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
                       <FormItem>
                         <FormLabel>Reset Code</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder='Enter the reset code from your email'
-                            {...field}
-                            disabled={isLoading}
-                          />
+                          <Input placeholder='Enter the reset code from your email' {...field} disabled={isLoading} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -195,10 +184,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
               </Form>
 
               <div className='mt-6 text-center'>
-                <Link
-                  href={`/${locale}/customer/login`}
-                  className='text-sm text-primary-800 hover:underline'
-                >
+                <Link href={`/${locale}/customer/login`} className='text-sm text-primary-800 hover:underline'>
                   Back to Login
                 </Link>
               </div>

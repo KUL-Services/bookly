@@ -12,7 +12,7 @@ export default function AuthLayout({
   const router = useRouter()
   const params = useParams<{ lang: string }>()
   return (
-    <div className='min-h-screen bg-gray-50 dark:bg-gray-900'>
+    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 font-sans'>
       {/* <header className='  bg-white relative shadow-md '> */}
       <div className='container mx-auto  flex items-center justify-between px-6 py-6'>
         {/* <div className='text-2xl font-bold text-primary-700'>Bookly</div>

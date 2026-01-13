@@ -62,10 +62,22 @@ const StaffManagement = () => {
           variant='scrollable'
           scrollButtons='auto'
         >
-          <Tab label='STAFF MEMBERS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
-          <Tab label='SHIFTS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
-          <Tab label='RESOURCES' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
-          <Tab label='ROOMS' sx={{ textTransform: 'uppercase', fontWeight: 600 }} />
+          <Tab
+            label='STAFF MEMBERS'
+            sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'var(--font-fira-code)' }}
+          />
+          <Tab
+            label='SHIFTS'
+            sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'var(--font-fira-code)' }}
+          />
+          <Tab
+            label='RESOURCES'
+            sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'var(--font-fira-code)' }}
+          />
+          <Tab
+            label='ROOMS'
+            sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'var(--font-fira-code)' }}
+          />
         </Tabs>
       </Box>
 

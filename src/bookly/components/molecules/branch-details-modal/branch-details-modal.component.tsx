@@ -228,12 +228,12 @@ export const BranchDetailsModal = ({
                   <p className='text-white text-opacity-90 mb-2'>{businessName}</p>
                   <div className='flex items-center gap-2 text-white text-opacity-80'>
                     <KulIcon icon='lucide:map-pin' className='w-4 h-4' />
-                    <span className='text-sm'>{branch.address}</span>
+                    <span className='text-sm font-mono'>{branch.address}</span>
                   </div>
                   {branch.mobile && (
                     <div className='flex items-center gap-2 text-white text-opacity-80 mt-1'>
                       <KulIcon icon='lucide:phone' className='w-4 h-4' />
-                      <span className='text-sm'>{branch.mobile}</span>
+                      <span className='text-sm font-mono'>{branch.mobile}</span>
                     </div>
                   )}
                 </div>
@@ -276,7 +276,7 @@ export const BranchDetailsModal = ({
                     {t('business.branchDetails.location')}
                   </h3>
                   <div className='bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4'>
-                    <p className='text-gray-700 dark:text-gray-300 mb-2'>{branch.address}</p>
+                    <p className='text-gray-700 dark:text-gray-300 mb-2 font-mono'>{branch.address}</p>
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.address || '')}`}
                       target='_blank'
@@ -304,7 +304,7 @@ export const BranchDetailsModal = ({
                         <KulIcon icon='lucide:phone' className='w-4 h-4 text-gray-500 dark:text-gray-400' />
                         <a
                           href={`tel:${branch.mobile}`}
-                          className='text-primary-800 hover:text-primary-900 dark:text-sage-400 dark:hover:text-sage-300'
+                          className='text-primary-800 hover:text-primary-900 dark:text-sage-400 dark:hover:text-sage-300 font-mono'
                         >
                           {branch.mobile}
                         </a>
@@ -348,19 +348,23 @@ export const BranchDetailsModal = ({
                   </h3>
                   <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
                     <div className='bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center'>
-                      <div className='text-2xl font-bold text-blue-600 dark:text-blue-400'>{branchServices.length}</div>
+                      <div className='text-2xl font-bold text-blue-600 dark:text-blue-400 font-mono'>
+                        {branchServices.length}
+                      </div>
                       <div className='text-sm text-blue-600 dark:text-blue-400'>
                         {t('business.branchDetails.servicesCount')}
                       </div>
                     </div>
                     <div className='bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center'>
-                      <div className='text-2xl font-bold text-green-600 dark:text-green-400'>{branchStaff.length}</div>
+                      <div className='text-2xl font-bold text-green-600 dark:text-green-400 font-mono'>
+                        {branchStaff.length}
+                      </div>
                       <div className='text-sm text-green-600 dark:text-green-400'>
                         {t('business.branchDetails.staffMembersCount')}
                       </div>
                     </div>
                     <div className='bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 text-center'>
-                      <div className='text-2xl font-bold text-purple-600 dark:text-purple-400'>4.8</div>
+                      <div className='text-2xl font-bold text-purple-600 dark:text-purple-400 font-mono'>4.8</div>
                       <div className='text-sm text-purple-600 dark:text-purple-400'>
                         {t('business.branchDetails.ratingLabel')}
                       </div>
@@ -396,11 +400,13 @@ export const BranchDetailsModal = ({
                             <p className='text-sm text-gray-600 dark:text-gray-400 mt-1'>{service.description}</p>
                           )}
                           <div className='flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400'>
-                            <span className='flex items-center gap-1'>
+                            <span className='flex items-center gap-1 font-mono'>
                               <KulIcon icon='lucide:clock' className='w-4 h-4' />
                               {service.duration} {t('business.branchDetails.duration')}
                             </span>
-                            <span className='font-medium text-primary-800 dark:text-sage-400'>£{service.price}</span>
+                            <span className='font-medium text-primary-800 dark:text-sage-400 font-mono'>
+                              £{service.price}
+                            </span>
                           </div>
                         </div>
                         <Button
@@ -436,7 +442,9 @@ export const BranchDetailsModal = ({
                         <BusinessAvatar businessName={member.name} className='w-12 h-12 rounded-full' size='md' />
                         <div className='flex-1'>
                           <h4 className='font-medium text-gray-900 dark:text-gray-100'>{member.name}</h4>
-                          {member.mobile && <p className='text-sm text-gray-600 dark:text-gray-400'>{member.mobile}</p>}
+                          {member.mobile && (
+                            <p className='text-sm text-gray-600 dark:text-gray-400 font-mono'>{member.mobile}</p>
+                          )}
                         </div>
                       </div>
                     ))}
