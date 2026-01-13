@@ -8,6 +8,12 @@ import initTranslations from '@/app/i18n/i18n'
 import BooklyLanguageDropdown from '../../atoms/language-dropdown/language-dropdown.component'
 import BooklyThemeToggle from '../../atoms/theme-toggle/theme-toggle.component'
 
+// Assets
+import GreenWordLogo from '@assets/logos/words/Green_Word.png'
+import WhiteWordLogo from '@assets/logos/words/White_Word.png'
+import GreenIconLogo from '@assets/logos/icons/Green_Icon.png'
+import WhiteIconLogo from '@assets/logos/icons/White_Icon.png'
+
 const BooklyNavbar = () => {
   const router = useRouter()
   const params = useParams<{ lang: string }>()
@@ -79,10 +85,35 @@ const BooklyNavbar = () => {
 
             <button
               onClick={() => to('/landpage')}
-              className='flex items-center gap-2 text-xl sm:text-2xl font-bold text-primary-800 dark:text-white hover:text-primary-700 dark:hover:text-gray-200 transition-colors duration-200 touch-manipulation'
+              className='flex items-center transition-opacity duration-200 hover:opacity-90 touch-manipulation bg-transparent border-none p-0'
             >
-              <Sparkles className='w-6 h-6 text-sage-500' />
-              Zerv
+              <div className='relative w-[32px] sm:w-[120px] h-[32px] sm:h-[40px] bg-transparent'>
+                {/* Light Mode: Green Word (Desktop) */}
+                <img
+                  src={GreenWordLogo.src}
+                  alt='Zerv'
+                  className='hidden dark:hidden sm:block object-contain object-left w-full h-full'
+                />
+                {/* Dark Mode: White Word (Desktop) */}
+                <img
+                  src={WhiteWordLogo.src}
+                  alt='Zerv'
+                  className='hidden sm:dark:block object-contain object-left w-full h-full'
+                />
+
+                {/* Light Mode: Green Icon (Mobile) */}
+                <img
+                  src={GreenIconLogo.src}
+                  alt='Zerv'
+                  className='block dark:hidden sm:hidden object-contain object-left w-full h-full'
+                />
+                {/* Dark Mode: White Icon (Mobile) */}
+                <img
+                  src={WhiteIconLogo.src}
+                  alt='Zerv'
+                  className='hidden dark:block sm:hidden object-contain object-left w-full h-full'
+                />
+              </div>
             </button>
           </div>
 

@@ -1,24 +1,27 @@
 'use client'
 
 // React Imports
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useContext } from 'react'
 import type { CSSProperties } from 'react'
 
 // Third-party Imports
 import styled from '@emotion/styled'
 
-// Type Imports
+// Context Imports
+import VerticalNavContext from '@menu/contexts/verticalNavContext'
 import type { VerticalNavContextProps } from '@menu/contexts/verticalNavContext'
-
-// Component Imports
-import MaterializeLogo from '@core/svg/Logo'
 
 // Config Imports
 import themeConfig from '@configs/themeConfig'
 
 // Hook Imports
-import useVerticalNav from '@menu/hooks/useVerticalNav'
 import { useSettings } from '@core/hooks/useSettings'
+
+// Assets
+import GreenWordLogo from '@assets/logos/words/Green_Word.png'
+import WhiteWordLogo from '@assets/logos/words/White_Word.png'
+import GreenIconLogo from '@assets/logos/icons/Green_Icon.png'
+import WhiteIconLogo from '@assets/logos/icons/White_Icon.png'
 
 type LogoTextProps = {
   isHovered?: VerticalNavContextProps['isHovered']
@@ -50,11 +53,22 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
   const logoTextRef = useRef<HTMLSpanElement>(null)
 
   // Hooks
-  const { isHovered, transitionDuration, isBreakpointReached } = useVerticalNav()
+  // Safely get context, defaulting to empty object if provider is missing
+  const context = useContext(VerticalNavContext) || {}
+  const { isHovered, transitionDuration, isBreakpointReached } = context
+
   const { settings } = useSettings()
 
   // Vars
   const { layout } = settings
+
+  // Logic to determine if we should show the full logo or just the icon
+  // If layout is collapsed and not hovered, show icon. Otherwise show word.
+  // We handle this with CSS classes to avoid hydration mismatches if possible,
+  // but since we have layout state available we can do it conditionally.
+
+  // Default to false (expanded) if context values are missing
+  const isCollapsedState = !isBreakpointReached && layout === 'collapsed' && !isHovered
 
   useEffect(() => {
     if (layout !== 'collapsed') {
@@ -68,22 +82,46 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
         logoTextRef.current.classList.remove('hidden')
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isHovered, layout, isBreakpointReached])
 
   return (
-    <div className='flex items-center min-bs-[24px]'>
-      <MaterializeLogo />
-      <LogoText
-        color={color}
-        ref={logoTextRef}
-        isHovered={isHovered}
-        isCollapsed={layout === 'collapsed'}
-        transitionDuration={transitionDuration}
-        isBreakpointReached={isBreakpointReached}
-      >
-        {themeConfig.templateName}
-      </LogoText>
+    <div className='flex items-center min-bs-[24px] relative'>
+      {/* 
+        We render both sets of images and toggle visibility via CSS classes for light/dark mode.
+        If isCollapsedState is true, we show Icons. Else we show Words.
+      */}
+
+      {/* EXPANDED STATE (WORD LOGO) */}
+      <div className={`flex items-center ${isCollapsedState ? 'hidden' : 'block'}`}>
+        {/* Light Mode: Green Word */}
+        <div className='dark:hidden block relative w-[120px] h-[32px]'>
+          <img
+            src={GreenWordLogo.src}
+            alt={themeConfig.templateName}
+            className='object-contain object-left w-full h-full'
+          />
+        </div>
+        {/* Dark Mode: White Word */}
+        <div className='hidden dark:block relative w-[120px] h-[32px]'>
+          <img
+            src={WhiteWordLogo.src}
+            alt={themeConfig.templateName}
+            className='object-contain object-left w-full h-full'
+          />
+        </div>
+      </div>
+
+      {/* COLLAPSED STATE (ICON LOGO) */}
+      <div className={`flex items-center ${isCollapsedState ? 'block' : 'hidden'}`}>
+        {/* Light Mode: Green Icon */}
+        <div className='dark:hidden block relative w-[32px] h-[32px]'>
+          <img src={GreenIconLogo.src} alt={themeConfig.templateName} className='object-contain w-full h-full' />
+        </div>
+        {/* Dark Mode: White Icon */}
+        <div className='hidden dark:block relative w-[32px] h-[32px]'>
+          <img src={WhiteIconLogo.src} alt={themeConfig.templateName} className='object-contain w-full h-full' />
+        </div>
+      </div>
     </div>
   )
 }
