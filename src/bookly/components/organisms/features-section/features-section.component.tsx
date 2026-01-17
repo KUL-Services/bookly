@@ -1,8 +1,8 @@
 'use client'
 
-import { BaseCard, H2 } from '@/bookly/components/atoms'
-import { CategoryCard, BusinessCard } from '@/bookly/components/molecules'
-import { categories, mockBusinesses } from '@/bookly/data/mock-data'
+import { H2 } from '@/bookly/components/atoms'
+import { BusinessCard } from '@/bookly/components/molecules'
+import { mockBusinesses } from '@/bookly/data/mock-data'
 import { useRouter } from 'next/navigation'
 
 export const FeaturesSection = () => {
@@ -19,16 +19,16 @@ export const FeaturesSection = () => {
         <div className='max-w-6xl mx-auto px-4 sm:px-6'>
           <H2
             stringProps={{ plainText: 'Check out top businesses ' }}
-            className='text-xl sm:text-2xl lg:text-3xl font-bold text-center text-gray-900 dark:text-white mb-6 sm:mb-8 lg:mb-12'
+            className='text-xl sm:text-2xl lg:text-3xl font-semibold text-left text-gray-900 dark:text-white'
           />
         </div>
 
-        <div className='mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8'>
+        <div className='mx-auto mt-6 sm:mt-8 px-4 sm:px-6 flex gap-4 overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 lg:gap-8 md:overflow-visible'>
           {mockBusinesses.map(business => (
             <BusinessCard
               key={business.id}
               business={business}
-              className='bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden border-none'
+              className='min-w-[260px] sm:min-w-[300px]'
               onClick={() => handleBusinessClick(business.id)}
             />
           ))}

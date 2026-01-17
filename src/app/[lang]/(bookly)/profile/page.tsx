@@ -174,14 +174,14 @@ function ProfilePage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center font-sans'>
-        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-primary-800'></div>
+      <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] flex items-center justify-center font-sans'>
+        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-[#0a2c24] dark:border-[#77b6a3]'></div>
       </div>
     )
   }
 
   return (
-    <div className='min-h-screen w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col items-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
+    <div className='min-h-screen w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col items-center bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
       <div className='w-full max-w-4xl space-y-6 sm:space-y-8 relative z-10'>
         {/* Header */}
         {/* <div className='flex items-center justify-between gap-3 sm:gap-2 animate-in fade-in slide-in-from-top-4 duration-700'>
@@ -208,7 +208,7 @@ function ProfilePage() {
         </div> */}
 
         {/* Profile Card */}
-        <Card className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-primary-100/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+        <Card className='bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm shadow-xl border border-[#0a2c24]/10 dark:border-white/10 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
           <CardHeader className='flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6'>
             <CardTitle>
               <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6'>
@@ -310,7 +310,7 @@ function ProfilePage() {
         </Card>
 
         {/* Bookings Card */}
-        <Card className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-primary-100/50 dark:border-gray-700/50 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-600'>
+        <Card className='bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm shadow-xl border border-[#0a2c24]/10 dark:border-white/10 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-600'>
           <CardHeader>
             <CardTitle>
               <H5
@@ -320,18 +320,18 @@ function ProfilePage() {
               />
             </CardTitle>
             <CardDescription className='w-full'>
-              <div className='mt-4 p-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl grid grid-cols-2 gap-1 touch-manipulation'>
+              <div className='mt-4 p-1 bg-white dark:bg-[#0a2c24]/50 border border-[#0a2c24]/10 dark:border-white/10 rounded-xl grid grid-cols-2 gap-1 touch-manipulation'>
                 <button
                   onClick={() => setActiveTab('upcoming')}
                   className={
                     activeTab === 'upcoming'
-                      ? 'bg-primary-700 text-white py-3 px-6 text-center font-semibold rounded-lg shadow-md transform scale-105 transition-all duration-300'
-                      : 'text-gray-600 dark:text-gray-300 py-3 px-6 text-center font-medium hover:bg-white/50 dark:hover:bg-gray-600/50 rounded-lg transition-all duration-200'
+                      ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] py-3 px-6 text-center font-semibold rounded-lg shadow-md transform scale-105 transition-all duration-300'
+                      : 'text-[#0a2c24] dark:text-white py-3 px-6 text-center font-medium hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 rounded-lg transition-all duration-200'
                   }
                 >
                   <P
                     i18nTFn={t}
-                    className={activeTab === 'upcoming' ? 'text-white' : 'text-gray-700 dark:[color:rgb(55_65_81)]'}
+                    className={activeTab === 'upcoming' ? 'text-white dark:text-[#0a2c24]' : 'text-[#0a2c24] dark:text-white'}
                     stringProps={{
                       localeKey: 'profile.bookings.upcomingWithCount',
                       localeProps: { count: upcomingBookings.length }
@@ -342,13 +342,13 @@ function ProfilePage() {
                   onClick={() => setActiveTab('past')}
                   className={
                     activeTab === 'past'
-                      ? 'bg-primary-700 text-white py-3 px-6 text-center font-semibold rounded-lg shadow-md transform scale-105 transition-all duration-300'
-                      : 'text-gray-600 dark:text-gray-300 py-3 px-6 text-center font-medium hover:bg-white/50 dark:hover:bg-gray-600/50 rounded-lg transition-all duration-200'
+                      ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] py-3 px-6 text-center font-semibold rounded-lg shadow-md transform scale-105 transition-all duration-300'
+                      : 'text-[#0a2c24] dark:text-white py-3 px-6 text-center font-medium hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 rounded-lg transition-all duration-200'
                   }
                 >
                   <P
                     i18nTFn={t}
-                    className={activeTab === 'past' ? 'text-white' : 'text-gray-700 dark:[color:rgb(55_65_81)]'}
+                    className={activeTab === 'past' ? 'text-white dark:text-[#0a2c24]' : 'text-[#0a2c24] dark:text-white'}
                     stringProps={{
                       localeKey: 'profile.bookings.pastWithCount',
                       localeProps: { count: pastBookings.length }
@@ -362,7 +362,7 @@ function ProfilePage() {
             {(activeTab === 'upcoming' ? upcomingBookings : pastBookings).map((b, index) => (
               <div
                 key={b.id}
-                className={`group border border-gray-200/50 dark:border-gray-700/50 rounded-xl p-6 flex gap-4 items-start bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm hover:bg-white dark:hover:bg-gray-800 hover:shadow-lg transition-all duration-300 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4 duration-500`}
+                className={`group border border-[#0a2c24]/10 dark:border-white/10 rounded-xl p-6 flex gap-4 items-start bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm hover:bg-white dark:hover:bg-[#202c39] hover:shadow-lg transition-all duration-300 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4 duration-500`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className='w-20 h-20 rounded-xl overflow-hidden bg-primary-100 dark:bg-primary-900/50 flex-shrink-0 relative shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105'>

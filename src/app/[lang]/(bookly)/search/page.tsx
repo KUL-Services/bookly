@@ -277,12 +277,12 @@ export default function SearchPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900 font-sans'>
-        <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-700/30 sticky top-0 z-40'>
+      <div className='min-h-screen w-full bg-[#f7f8f9] dark:bg-[#0a2c24] font-sans'>
+        <div className='bg-white/95 dark:bg-[#202c39]/95 backdrop-blur-sm border-b border-[#0a2c24]/10 dark:border-white/10 sticky top-0 z-40'>
           <div className='mx-auto max-w-7xl px-3 sm:px-4 py-2 sm:py-3'>
             <div className='flex gap-2'>
-              <div className='flex-1 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse'></div>
-              <div className='w-24 h-10 bg-primary-200 dark:bg-primary-900 rounded-lg animate-pulse'></div>
+              <div className='flex-1 h-10 bg-[#f7f8f9] dark:bg-[#202c39] rounded-lg animate-pulse'></div>
+              <div className='w-24 h-10 bg-[#77b6a3]/30 dark:bg-[#77b6a3]/20 rounded-lg animate-pulse'></div>
             </div>
           </div>
         </div>
@@ -295,16 +295,16 @@ export default function SearchPage() {
   }
 
   return (
-    <div className='min-h-screen w-full bg-gray-50 dark:bg-gray-900 font-sans'>
+    <div className='min-h-screen w-full bg-[#f7f8f9] dark:bg-[#0a2c24] font-sans'>
       {/* Top search bar - Full width stretch */}
-      <div className='bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-b border-gray-100 dark:border-gray-700/30 sticky top-0 z-40'>
+      <div className='bg-white/95 dark:bg-[#202c39]/95 backdrop-blur-sm border-b border-[#0a2c24]/10 dark:border-white/10 sticky top-0 z-40'>
         <div className='w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4'>
           <div className='flex flex-col sm:flex-row gap-3'>
             <SearchInput
               value={filters.q}
               onChange={e => setFilters({ ...filters, q: e.target.value })}
               placeholderProps={{ plainText: 'Search businesses or services...' }}
-              className='flex-1 h-12 text-base dark:bg-gray-700/50 dark:text-white dark:border-gray-600'
+              className='flex-1 h-12 text-base dark:bg-[#0a2c24]/50 dark:text-white dark:border-white/10'
             />
             <Button
               onClick={handleApplyFilters}
@@ -313,7 +313,7 @@ export default function SearchPage() {
                 startIcon: filtersLoading ? <ButtonLoader size={16} /> : undefined
               }}
               disabled={filtersLoading}
-              className='bg-primary-700 hover:bg-primary-800 text-white font-semibold px-8 py-3 h-12 text-base rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24] font-semibold px-8 py-3 h-12 text-base rounded-lg shadow-md hover:shadow-lg transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
             />
           </div>
         </div>
@@ -324,7 +324,7 @@ export default function SearchPage() {
           {/* Sidebar Filters - Hidden on mobile, show as drawer or modal */}
           <aside className='hidden lg:block space-y-4'>
             {/* Location Filters */}
-            <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 shadow-sm border border-gray-200/50 dark:border-gray-700/50'>
+            <div className='bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-4 shadow-sm border border-[#0a2c24]/10 dark:border-white/10'>
               <h3 className='font-semibold text-base text-gray-900 dark:text-white mb-3'>Location</h3>
               <LocationFilters
                 selectedCountry={selectedCountry}
@@ -350,10 +350,10 @@ export default function SearchPage() {
           {/* Main Content */}
           <main className='relative'>
             {filtersLoading && (
-              <div className='absolute inset-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg'>
+              <div className='absolute inset-0 bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg'>
                 <div className='flex flex-col items-center space-y-2'>
-                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-primary-800'></div>
-                  <p className='text-gray-600 dark:text-gray-300 text-xs font-medium'>Searching...</p>
+                  <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-[#0a2c24] dark:border-[#77b6a3]'></div>
+                  <p className='text-[#0a2c24]/70 dark:text-white/70 text-xs font-medium'>Searching...</p>
                 </div>
               </div>
             )}
@@ -363,7 +363,7 @@ export default function SearchPage() {
               {/* Mobile Filter Button */}
               <button
                 onClick={() => setShowMobileFilters(true)}
-                className='lg:hidden flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-gray-800/90 border border-gray-100 dark:border-gray-700/50 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors touch-manipulation'
+                className='lg:hidden flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-[#202c39]/90 border border-[#0a2c24]/10 dark:border-white/10 rounded-lg text-sm font-medium hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 transition-colors touch-manipulation'
               >
                 <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path
@@ -443,13 +443,13 @@ export default function SearchPage() {
 
                 {/* Mobile: Stacked with toggle */}
                 <div className='lg:hidden space-y-4'>
-                  <div className='flex justify-center gap-2 bg-white/90 dark:bg-gray-800/90 p-1.5 rounded-xl'>
+                  <div className='flex justify-center gap-2 bg-white/90 dark:bg-[#202c39]/90 p-1.5 rounded-xl'>
                     <button
                       onClick={() => setViewMode('list')}
                       className={`flex-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${
                         viewMode === 'list'
-                          ? 'bg-primary-700 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24]'
+                          : 'bg-[#f7f8f9] dark:bg-[#0a2c24] text-[#0a2c24] dark:text-white'
                       }`}
                     >
                       List
@@ -458,8 +458,8 @@ export default function SearchPage() {
                       onClick={() => setViewMode('map')}
                       className={`flex-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${
                         viewMode === 'map'
-                          ? 'bg-primary-700 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24]'
+                          : 'bg-[#f7f8f9] dark:bg-[#0a2c24] text-[#0a2c24] dark:text-white'
                       }`}
                     >
                       Map
@@ -503,9 +503,9 @@ export default function SearchPage() {
           <div className='absolute inset-0 bg-black/40 backdrop-blur-sm' onClick={() => setShowMobileFilters(false)} />
 
           {/* Drawer - Full width on mobile, larger on tablet */}
-          <div className='absolute right-0 top-0 bottom-0 w-full sm:w-96 bg-white dark:bg-gray-800 shadow-xl overflow-y-auto animate-slide-in-right'>
+          <div className='absolute right-0 top-0 bottom-0 w-full sm:w-96 bg-white dark:bg-[#202c39] shadow-xl overflow-y-auto animate-slide-in-right'>
             {/* Header */}
-            <div className='sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700/50 p-4 flex items-center justify-between z-10'>
+            <div className='sticky top-0 bg-white dark:bg-[#202c39] border-b border-[#0a2c24]/10 dark:border-white/10 p-4 flex items-center justify-between z-10'>
               <h2 className='text-lg font-bold text-gray-900 dark:text-white'>Filters</h2>
               <button
                 onClick={() => setShowMobileFilters(false)}
@@ -520,7 +520,7 @@ export default function SearchPage() {
             {/* Filter Content */}
             <div className='p-4 space-y-4'>
               {/* Location Filters */}
-              <div className='bg-gray-50 dark:bg-gray-900 rounded-xl p-4'>
+              <div className='bg-[#f7f8f9] dark:bg-[#0a2c24] rounded-xl p-4'>
                 <h3 className='font-semibold text-base text-gray-900 dark:text-white mb-4'>Location</h3>
                 <LocationFilters
                   selectedCountry={selectedCountry}
@@ -555,7 +555,7 @@ export default function SearchPage() {
       {/* Branch Selection Modal */}
       {showBranchModal && branchModalBusinessId && (
         <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4'>
-          <div className='bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-auto max-h-[85vh] overflow-y-auto'>
+          <div className='bg-white dark:bg-[#202c39] rounded-xl shadow-xl w-full max-w-md mx-auto max-h-[85vh] overflow-y-auto'>
             <div className='p-4 sm:p-5'>
               <div className='flex items-center justify-between mb-4'>
                 <h3 className='text-lg font-bold text-gray-900 dark:text-white'>Select a Branch</h3>
@@ -575,7 +575,7 @@ export default function SearchPage() {
                   <button
                     key={branch.id}
                     onClick={() => handleBranchClick(branch.id)}
-                    className='w-full text-left p-2.5 mb-2 rounded-lg border border-gray-200/50 dark:border-gray-700/50 hover:border-primary-700 dark:hover:border-primary-700 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all touch-manipulation'
+                    className='w-full text-left p-2.5 mb-2 rounded-lg border border-[#0a2c24]/10 dark:border-white/10 hover:border-[#77b6a3] dark:hover:border-[#77b6a3] hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 transition-all touch-manipulation'
                   >
                     <div className='flex items-start gap-2.5'>
                       <div className='flex-shrink-0 w-7 h-7 bg-primary-100 dark:bg-primary-900/50 rounded-full flex items-center justify-center text-primary-800 dark:text-sage-400 font-semibold text-xs'>

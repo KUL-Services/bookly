@@ -66,13 +66,13 @@ export default function ResetPasswordPage({ params }: PageProps) {
   }
 
   return (
-    <div className='min-h-screen font-sans'>
+    <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] font-sans'>
       <main className='container mx-auto px-4 py-8'>
-        <div className='w-1/3 mx-auto flex justify-center'>
-          <Card className='w-full border border-gray-300'>
+        <div className='w-full max-w-md mx-auto flex justify-center'>
+          <Card className='w-full border border-[#0a2c24]/10 dark:border-white/10 bg-white dark:bg-[#202c39]'>
             <CardHeader className='space-y-1'>
-              <CardTitle className='text-2xl font-bold text-center text-primary-800'>Create New Password</CardTitle>
-              <CardDescription className='text-center'>
+              <CardTitle className='text-2xl font-bold text-center text-[#0a2c24] dark:text-white'>Create New Password</CardTitle>
+              <CardDescription className='text-center text-[#0a2c24]/70 dark:text-white/70'>
                 Enter your reset code and create a new password for your account
               </CardDescription>
             </CardHeader>
@@ -175,7 +175,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
 
                   <Button
                     type='submit'
-                    className='w-full text-white bg-primary-700 hover:bg-primary-800'
+                    className='w-full text-white bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 dark:text-[#0a2c24]'
                     disabled={isLoading}
                   >
                     {isLoading ? 'Resetting...' : 'Reset Password'}
@@ -184,7 +184,7 @@ export default function ResetPasswordPage({ params }: PageProps) {
               </Form>
 
               <div className='mt-6 text-center'>
-                <Link href={`/${locale}/customer/login`} className='text-sm text-primary-800 hover:underline'>
+                <Link href={`/${locale}/customer/login`} className='text-sm text-[#0a2c24] dark:text-[#77b6a3] hover:underline'>
                   Back to Login
                 </Link>
               </div>

@@ -48,23 +48,23 @@ export default function ForgotPasswordPage({ params }: PageProps) {
 
   if (isSubmitted) {
     return (
-      <div className='min-h-screen font-sans'>
+      <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] font-sans'>
         <main className='container mx-auto px-4 py-8'>
           <div className='w-full max-w-md mx-auto flex justify-center'>
-            <Card className='w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'>
+            <Card className='w-full border border-[#0a2c24]/10 dark:border-white/10 bg-white dark:bg-[#202c39]'>
               <CardHeader className='space-y-1'>
-                <CardTitle className='text-2xl font-bold text-center text-primary-800 dark:text-white'>
+                <CardTitle className='text-2xl font-bold text-center text-[#0a2c24] dark:text-white'>
                   {t('auth.forgotPassword.successTitle')}
                 </CardTitle>
-                <CardDescription className='text-center text-gray-600 dark:text-gray-300'>
+                <CardDescription className='text-center text-[#0a2c24]/70 dark:text-white/70'>
                   {t('auth.forgotPassword.successDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='text-center space-y-4'>
-                  <div className='w-16 h-16 mx-auto bg-primary-200 dark:bg-primary-900/30 rounded-full flex items-center justify-center'>
+                  <div className='w-16 h-16 mx-auto bg-[#77b6a3]/20 dark:bg-[#77b6a3]/10 rounded-full flex items-center justify-center'>
                     <svg
-                      className='w-8 h-8 text-primary-800 dark:text-primary-400'
+                      className='w-8 h-8 text-[#77b6a3]'
                       fill='none'
                       stroke='currentColor'
                       viewBox='0 0 24 24'
@@ -77,13 +77,13 @@ export default function ForgotPasswordPage({ params }: PageProps) {
                       />
                     </svg>
                   </div>
-                  <p className='text-gray-600 dark:text-gray-300'>{t('auth.forgotPassword.checkSpam')}</p>
+                  <p className='text-[#0a2c24]/70 dark:text-white/70'>{t('auth.forgotPassword.checkSpam')}</p>
                   <div className='space-y-2'>
                     <Button onClick={() => setIsSubmitted(false)} variant='outline' className='w-full'>
                       {t('auth.forgotPassword.sendAnother')}
                     </Button>
                     <Link href={`/${locale}/customer/login`} className='block'>
-                      <Button variant='link' className='w-full text-primary-800 dark:text-sage-400'>
+                      <Button variant='link' className='w-full text-[#0a2c24] dark:text-[#77b6a3]'>
                         {t('auth.forgotPassword.backToLogin')}
                       </Button>
                     </Link>
@@ -98,15 +98,15 @@ export default function ForgotPasswordPage({ params }: PageProps) {
   }
 
   return (
-    <div className='min-h-screen font-sans'>
+    <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] font-sans'>
       <main className='container mx-auto px-4 py-8'>
         <div className='w-full max-w-md mx-auto flex justify-center'>
-          <Card className='w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'>
+          <Card className='w-full border border-[#0a2c24]/10 dark:border-white/10 bg-white dark:bg-[#202c39]'>
             <CardHeader className='space-y-1'>
-              <CardTitle className='text-2xl font-bold text-center text-primary-800 dark:text-white'>
+              <CardTitle className='text-2xl font-bold text-center text-[#0a2c24] dark:text-white'>
                 {t('auth.forgotPassword.title')}
               </CardTitle>
-              <CardDescription className='text-center text-gray-600 dark:text-gray-300'>
+              <CardDescription className='text-center text-[#0a2c24]/70 dark:text-white/70'>
                 {t('auth.forgotPassword.description')}
               </CardDescription>
             </CardHeader>
@@ -134,7 +134,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
 
                   <Button
                     type='submit'
-                    className='w-full text-white bg-primary-700 hover:bg-primary-800'
+                    className='w-full text-white bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 dark:text-[#0a2c24]'
                     disabled={isLoading}
                   >
                     {isLoading ? t('auth.forgotPassword.sending') : t('auth.forgotPassword.submitButton')}
@@ -145,7 +145,7 @@ export default function ForgotPasswordPage({ params }: PageProps) {
               <div className='mt-6 text-center'>
                 <Link
                   href={`/${locale}/customer/login`}
-                  className='text-sm text-primary-800 dark:text-sage-400 hover:underline'
+                  className='text-sm text-[#0a2c24] dark:text-[#77b6a3] hover:underline'
                 >
                   {t('auth.forgotPassword.rememberPassword')}
                 </Link>

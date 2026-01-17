@@ -35,7 +35,7 @@ export const BaseCard = ({
   i18nTFn
 }: BaseCardProps) => {
   return (
-    <Card className={cn('w-full', className)}>
+    <Card className={cn('w-full rounded-2xl border-none shadow-sm', className)}>
       {(customImageComponent || imageSrc) && (
         <div className='relative w-full h-48 object-cover'>
           {customImageComponent || <BaseImage src={imageSrc!} alt={imageAlt || ''} className='rounded-t-lg' />}

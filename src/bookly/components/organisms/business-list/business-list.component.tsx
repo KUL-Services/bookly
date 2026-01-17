@@ -39,10 +39,10 @@ export function BusinessList({
 
   if (businesses.length === 0) {
     return (
-      <div className={`${className} flex items-center justify-center p-12 bg-white dark:bg-gray-800 rounded-lg`}>
+      <div className={`${className} flex items-center justify-center p-12 bg-white dark:bg-[#202c39] rounded-lg`}>
         <div className='text-center'>
           <svg
-            className='w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4'
+            className='w-16 h-16 text-[#77b6a3]/50 mx-auto mb-4'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -54,8 +54,8 @@ export function BusinessList({
               d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
             />
           </svg>
-          <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-2'>No businesses found</h3>
-          <p className='text-gray-600 dark:text-gray-300'>Try adjusting your filters to find more results</p>
+          <h3 className='text-lg font-semibold text-[#0a2c24] dark:text-white mb-2'>No businesses found</h3>
+          <p className='text-[#0a2c24]/70 dark:text-white/70'>Try adjusting your filters to find more results</p>
         </div>
       </div>
     )
@@ -77,18 +77,18 @@ export function BusinessList({
             onMouseEnter={() => onBusinessHover?.(business.id)}
             onMouseLeave={() => onBusinessHover?.(null)}
             className={`
-              group bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 border cursor-pointer
+              group bg-white dark:bg-[#202c39] rounded-xl p-4 sm:p-6 border cursor-pointer
               card-hover will-change-transform
               ${
                 isSelected
-                  ? 'border-primary-500 shadow-lg'
+                  ? 'border-[#77b6a3] shadow-lg'
                   : isHovered
-                    ? 'border-primary-200 shadow-md'
-                    : 'border-gray-100 dark:border-gray-700 hover:border-primary-100'
+                    ? 'border-[#77b6a3]/50 shadow-md'
+                    : 'border-[#0a2c24]/10 dark:border-white/10 hover:border-[#77b6a3]/30'
               }
               animate-card-entrance
             `}
-            style={{ animationDelay: `${Math.min(index * 150, 1500)}ms`, animationFillMode: 'forwards' }}
+            style={{ animationDelay: `${Math.min(index * 50, 400)}ms`, animationFillMode: 'forwards' }}
           >
             <div className='flex flex-col sm:flex-row gap-4'>
               {/* Business Image/Avatar */}
@@ -98,7 +98,7 @@ export function BusinessList({
                     className={`
                     w-full h-full rounded-xl shadow-md overflow-hidden
                     transition-all duration-300
-                    ${isSelected || isHovered ? 'scale-105 shadow-lg ring-2 ring-primary-500' : ''}
+                    ${isSelected || isHovered ? 'scale-105 shadow-lg ring-2 ring-[#77b6a3]' : ''}
                   `}
                   >
                     <img
@@ -112,9 +112,9 @@ export function BusinessList({
                         const parent = target.parentElement
                         if (parent) {
                           parent.innerHTML = `
-                            <div class="w-full h-full bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center">
+                            <div class="w-full h-full bg-[#77b6a3]/20 dark:bg-[#77b6a3]/10 flex items-center justify-center">
                               <div class="text-center p-2">
-                                <div class="text-sm font-bold text-primary-900 dark:text-sage-300 line-clamp-2">${business.name}</div>
+                                <div class="text-sm font-bold text-[#0a2c24] dark:text-[#77b6a3] line-clamp-2">${business.name}</div>
                               </div>
                             </div>
                           `
@@ -128,14 +128,14 @@ export function BusinessList({
                     w-full h-full rounded-xl shadow-md flex items-center justify-center
                     transition-all duration-300
                     ${isSelected || isHovered ? 'scale-105 shadow-lg' : ''}
-                    bg-primary-100 dark:bg-primary-900/50
+                    bg-[#77b6a3]/20 dark:bg-[#77b6a3]/10
                   `}
                   >
                     <div className='text-center p-2'>
-                      <div className='text-sm font-bold text-primary-900 dark:text-sage-300 line-clamp-2'>
+                      <div className='text-sm font-bold text-[#0a2c24] dark:text-[#77b6a3] line-clamp-2'>
                         {business.name}
                       </div>
-                      <div className='text-xs text-primary-800 dark:text-sage-400 mt-1'>★ {business.rating}/5</div>
+                      <div className='text-xs text-[#0a2c24]/70 dark:text-[#77b6a3]/70 mt-1'>★ {business.rating}/5</div>
                     </div>
                   </div>
                 )}
@@ -183,7 +183,7 @@ export function BusinessList({
                       {business.categories.map((category, idx) => (
                         <span
                           key={idx}
-                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-primary-200 dark:bg-primary-800/50 text-primary-900 dark:text-sage-200 font-mono'
+                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-[#77b6a3]/20 dark:bg-[#77b6a3]/10 text-[#0a2c24] dark:text-[#77b6a3] font-mono'
                         >
                           {category}
                         </span>

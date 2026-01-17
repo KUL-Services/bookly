@@ -30,14 +30,14 @@ export default function VerifyPage({ params }: PageProps) {
   }
 
   return (
-    <div className='min-h-screen flex items-center justify-center animate-in fade-in slide-in-from-top-4 duration-700 font-sans'>
+    <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] flex items-center justify-center animate-in fade-in slide-in-from-top-4 duration-700 font-sans'>
       <div className='container mx-auto px-4 py-8'>
         <div className='w-full max-w-md mx-auto'>
-          <Card className='shadow-lg animate-in fade-in slide-in-from-bottom-8 duration-500 delay-150'>
+          <Card className='shadow-lg animate-in fade-in slide-in-from-bottom-8 duration-500 delay-150 bg-white dark:bg-[#202c39] border border-[#0a2c24]/10 dark:border-white/10'>
             <CardContent className='p-6'>
               <div className='text-center mb-6 animate-in fade-in slide-in-from-top-4 duration-500 delay-300'>
-                <h1 className='text-2xl font-bold text-gray-900'>Verify Your Email</h1>
-                <p className='text-gray-600 mt-2'>
+                <h1 className='text-2xl font-bold text-[#0a2c24] dark:text-white'>Verify Your Email</h1>
+                <p className='text-[#0a2c24]/70 dark:text-white/70 mt-2'>
                   We sent a verification code to your email address. Please enter it below.
                 </p>
               </div>
@@ -82,7 +82,7 @@ export default function VerifyPage({ params }: PageProps) {
                       )
                     }}
                     variant='contained'
-                    className='w-full bg-black hover:bg-gray-900 text-white transition-all duration-300'
+                    className='w-full bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24] transition-all duration-300'
                     disabled={loading}
                   />
                 </div>
@@ -93,7 +93,7 @@ export default function VerifyPage({ params }: PageProps) {
                   buttonText={{ plainText: 'Back to Login' }}
                   variant='text'
                   onClick={() => router.push(`/${locale}/customer/login`)}
-                  className='text-gray-600 hover:text-gray-900 transition-colors duration-300'
+                  className='text-[#0a2c24] dark:text-[#77b6a3] hover:text-[#77b6a3] dark:hover:text-[#77b6a3]/80 transition-colors duration-300'
                 />
               </div>
             </CardContent>

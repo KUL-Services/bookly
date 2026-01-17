@@ -1,7 +1,7 @@
 // Brand colors: Dark Green #0a2c24 | Navy Blue #202c39 | Off-White #f7f8f9
 // Using CSS variables for brand consistency
 export const buttonConfig = {
-  base: 'rounded-md transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2',
+  base: 'rounded-xl transition-colors duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2',
   variant: {
     text: 'bg-transparent text-primary-800 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/30',
     outlined:

@@ -2,7 +2,6 @@ import { BaseCard } from '@/bookly/components/atoms/base-card/base-card.componen
 import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
 import { Business } from '@/bookly/types/api.types'
 import { cn } from '@/bookly/lib/utils'
-import Button from '../button/button.component'
 import { KulIcon } from '@/bookly/components/atoms'
 import { i18n } from 'i18next'
 
@@ -14,16 +13,21 @@ interface BusinessCardProps {
 }
 
 export const BusinessCard = ({ business, className, onClick, i18nTFn }: BusinessCardProps) => {
+  const bookLabel = i18nTFn ? i18nTFn('business.book') : 'Book'
+
   return (
     <div onClick={onClick}>
       <BaseCard
-        className={cn('overflow-hidden', className)}
+        className={cn(
+          'overflow-hidden rounded-[24px] border border-[#0a2c24]/10 dark:border-white/10 bg-white/90 dark:bg-gray-800/90 shadow-sm hover:shadow-lg transition-all duration-300',
+          className
+        )}
         customImageComponent={
           <BusinessAvatar
             businessName={business.name}
             imageSrc={business.coverImage}
             imageAlt={business.name}
-            className='w-full h-full rounded-t-lg'
+            className='w-full h-full rounded-t-[24px]'
             size='xl'
           />
         }
@@ -47,12 +51,10 @@ export const BusinessCard = ({ business, className, onClick, i18nTFn }: Business
               <KulIcon icon={'lucide:map-pin'} />
               {business.city}
             </div>
-            <Button
-              buttonText={i18nTFn ? { localeKey: 'business.book' } : { plainText: 'Book' }}
-              i18nTFn={i18nTFn}
-              variant='contained'
-              className='w-full bg-primary-700 hover:bg-primary-800 text-white'
-            />
+            <div className='inline-flex items-center gap-2 text-primary-700 dark:text-primary-300 font-semibold text-sm'>
+              <span>{bookLabel}</span>
+              <KulIcon icon={'lucide:arrow-up-right'} iconClass='h-4 w-4' />
+            </div>
           </>
         }
       />

@@ -259,18 +259,18 @@ function businessDetailsPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
+      <div className='min-h-screen flex items-center justify-center bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
         <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
           <div className='relative'>
-            <div className='animate-spin rounded-full h-24 w-24 border-4 border-primary-200 border-t-primary-800 mx-auto shadow-lg'></div>
-            <div className='absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-primary-700 animate-ping mx-auto'></div>
+            <div className='animate-spin rounded-full h-24 w-24 border-4 border-[#77b6a3]/30 border-t-[#0a2c24] dark:border-t-[#77b6a3] mx-auto shadow-lg'></div>
+            <div className='absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-[#77b6a3] animate-ping mx-auto'></div>
           </div>
           <div className='mt-6 space-y-2'>
-            <p className='text-xl font-semibold text-primary-800 dark:text-white'>{t('business.loading')}</p>
+            <p className='text-xl font-semibold text-[#0a2c24] dark:text-white'>{t('business.loading')}</p>
             <div className='flex justify-center space-x-1'>
-              <div className='w-2 h-2 bg-primary-700 rounded-full animate-bounce'></div>
-              <div className='w-2 h-2 bg-primary-700 rounded-full animate-bounce animation-delay-200'></div>
-              <div className='w-2 h-2 bg-primary-700 rounded-full animate-bounce animation-delay-400'></div>
+              <div className='w-2 h-2 bg-[#77b6a3] rounded-full animate-bounce'></div>
+              <div className='w-2 h-2 bg-[#77b6a3] rounded-full animate-bounce animation-delay-200'></div>
+              <div className='w-2 h-2 bg-[#77b6a3] rounded-full animate-bounce animation-delay-400'></div>
             </div>
           </div>
         </div>
@@ -280,19 +280,19 @@ function businessDetailsPage() {
 
   if (!business) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
+      <div className='min-h-screen flex items-center justify-center bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
         <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
           <div className='mb-6'>
-            <div className='w-24 h-24 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center shadow-lg'>
+            <div className='w-24 h-24 mx-auto bg-[#e88682]/20 dark:bg-[#e88682]/10 rounded-full flex items-center justify-center shadow-lg'>
               <div className='text-3xl'>🏪</div>
             </div>
           </div>
-          <h1 className='text-3xl font-bold text-gray-900 dark:text-white mb-4'>Business not found</h1>
-          <p className='text-gray-600 dark:text-gray-300 text-lg max-w-md mx-auto leading-relaxed'>
+          <h1 className='text-3xl font-bold text-[#0a2c24] dark:text-white mb-4'>Business not found</h1>
+          <p className='text-[#0a2c24]/70 dark:text-white/70 text-lg max-w-md mx-auto leading-relaxed'>
             The business you're looking for doesn't exist or may have been removed.
           </p>
           <div className='mt-8'>
-            <button className='px-6 py-3 bg-primary-700 hover:bg-primary-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'>
+            <button className='px-6 py-3 bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24] font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'>
               Browse Other Businesses
             </button>
           </div>
@@ -302,14 +302,14 @@ function businessDetailsPage() {
   }
 
   return (
-    <div className='min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
+    <div className='min-h-screen flex flex-col bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
       <div className='w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4 space-y-3 sm:space-y-4 flex-none relative z-10'>
         {/* Header Section - Full width seamless design */}
-        <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700'>
+        <div className='bg-white/90 dark:bg-[#202c39]/90 rounded-xl shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 border border-[#0a2c24]/5 dark:border-white/10'>
           <div className='p-4 sm:p-6 select-text'>
             <div className='flex flex-col md:flex-row gap-4 sm:gap-6'>
               {/* Business Image */}
-              <div className='w-full md:w-48 lg:w-56 h-40 sm:h-48 lg:h-56 bg-primary-100 dark:bg-primary-900/50 rounded-xl overflow-hidden select-none'>
+              <div className='w-full md:w-48 lg:w-56 h-40 sm:h-48 lg:h-56 bg-[#77b6a3]/20 dark:bg-[#77b6a3]/10 rounded-xl overflow-hidden select-none'>
                 <img
                   src={
                     (business as any).logoUrl || (business as any).coverImageUrl || '/images/business-placeholder.jpg'
@@ -340,7 +340,7 @@ function businessDetailsPage() {
                         {business.rating || 0} ({business.reviews?.length || 0})
                       </span>
                     </div>
-                    <Badge className='mt-2 bg-green-500 text-white px-3 py-1 text-sm rounded-full select-none'>
+                    <Badge className='mt-2 bg-[#77b6a3] text-white px-3 py-1 text-sm rounded-full select-none'>
                       <div className='flex items-center gap-1'>
                         <div className='w-1.5 h-1.5 bg-white rounded-full' />
                         Open Now
@@ -353,13 +353,13 @@ function businessDetailsPage() {
                       buttonText={{ plainText: 'Save' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:heart' }}
-                      className='bg-transparent text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm py-2 px-4 touch-manipulation'
+                      className='bg-transparent text-[#0a2c24] dark:text-white border-[#0a2c24]/20 dark:border-white/20 hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 text-sm py-2 px-4 touch-manipulation'
                     />
                     <Button
                       buttonText={{ plainText: 'Share' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:share' }}
-                      className='bg-transparent text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm py-2 px-4 touch-manipulation'
+                      className='bg-transparent text-[#0a2c24] dark:text-white border-[#0a2c24]/20 dark:border-white/20 hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 text-sm py-2 px-4 touch-manipulation'
                     />
                   </div>
                 </div>
@@ -411,9 +411,9 @@ function businessDetailsPage() {
         </div>
 
         {/* Tabs Navigation - Full width seamless */}
-        <div className='w-full rounded-xl bg-white/95 dark:bg-gray-800/95 sticky top-0 z-30 animate-in fade-in slide-in-from-top-4 duration-700'>
+        <div className='w-full rounded-xl bg-white/95 dark:bg-[#202c39]/95 sticky top-0 z-30 animate-in fade-in slide-in-from-top-4 duration-700 border border-[#0a2c24]/5 dark:border-white/10'>
           <nav className='flex p-1'>
-            <div className='flex w-full bg-white dark:bg-gray-700/80 border border-gray-200 dark:border-gray-600 rounded-lg p-0.5 gap-0.5 overflow-x-auto'>
+            <div className='flex w-full bg-white dark:bg-[#0a2c24]/50 border border-[#0a2c24]/10 dark:border-white/10 rounded-lg p-0.5 gap-0.5 overflow-x-auto'>
               {getTabsWithTranslation(t).map(tab => (
                 <Button
                   key={tab.id}
@@ -422,8 +422,8 @@ function businessDetailsPage() {
                   size='md'
                   className={`relative flex-1 px-3 sm:px-4 py-1.5 sm:py-2 font-medium text-xs sm:text-sm transition-all duration-200 rounded-md whitespace-nowrap touch-manipulation ${
                     activeTab === tab.id
-                      ? 'bg-primary-800 text-white'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-600/60'
+                      ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24]'
+                      : 'text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20'
                   }`}
                   buttonText={{ plainText: tab.label }}
                 />
@@ -444,7 +444,7 @@ function businessDetailsPage() {
                 {services.map((service, index) => (
                   <div
                     key={service.id || index}
-                    className='group bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 card-hover opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
+                    className='group bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-4 sm:p-5 card-hover opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-[#0a2c24]/5 dark:border-white/10'
                     style={{
                       animationDelay: `${0.1 + index * 0.05}s`,
                       animationFillMode: 'forwards'
@@ -493,7 +493,7 @@ function businessDetailsPage() {
                   {branches.map((branch, index) => (
                     <div
                       key={branch.id || index}
-                      className='group bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 cursor-pointer card-hover opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
+                      className='group bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-4 sm:p-5 cursor-pointer card-hover opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-[#0a2c24]/5 dark:border-white/10'
                       style={{
                         animationDelay: `${0.1 + index * 0.05}s`,
                         animationFillMode: 'forwards'
@@ -566,7 +566,7 @@ function businessDetailsPage() {
                   ))}
                 </div>
               ) : (
-                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 text-center'>
+                <div className='bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-6 text-center'>
                   <MapPin className='w-12 h-12 mx-auto text-gray-400 mb-3' />
                   <h3 className='text-base font-medium text-gray-900 dark:text-white'>
                     {t('business.noBranches.title')}
@@ -592,7 +592,7 @@ function businessDetailsPage() {
               </div>
 
               {/* Review Summary */}
-              <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5'>
+              <div className='bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-4 sm:p-5'>
                 <div className='flex items-center gap-4'>
                   <div className='text-center'>
                     <div className='text-2xl font-bold text-gray-900 dark:text-white'>{business.rating || 0}</div>
@@ -634,7 +634,7 @@ function businessDetailsPage() {
                   businessReview().map((review, index) => (
                     <div
                       key={review.id || index}
-                      className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-gray-100/50 dark:border-gray-700/50'
+                      className='bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-4 sm:p-5 opacity-0 animate-[fadeInUp_0.4s_ease-out_forwards] border border-[#0a2c24]/5 dark:border-white/10'
                       style={{
                         animationDelay: `${0.1 + index * 0.05}s`,
                         animationFillMode: 'forwards'
@@ -672,7 +672,7 @@ function businessDetailsPage() {
                     </div>
                   ))
                 ) : (
-                  <div className='col-span-full bg-white/90 dark:bg-gray-800/90 rounded-xl p-6 text-center'>
+                  <div className='col-span-full bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-6 text-center'>
                     <Star className='w-12 h-12 mx-auto text-gray-400 mb-3' />
                     <h3 className='text-base font-medium text-gray-900 dark:text-white'>No reviews yet</h3>
                     <p className='text-sm text-gray-500'>Be the first to leave a review!</p>
@@ -689,7 +689,7 @@ function businessDetailsPage() {
               </h2>
 
               <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 border border-gray-100/50 dark:border-gray-700/50'>
+                <div className='bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-4 sm:p-5 border border-[#0a2c24]/5 dark:border-white/10'>
                   <h3 className='text-base font-semibold text-gray-900 dark:text-white mb-2'>Our Story</h3>
                   <p className='text-sm text-gray-600 dark:text-gray-400 leading-relaxed'>
                     {business.description ||
@@ -697,7 +697,7 @@ function businessDetailsPage() {
                   </p>
                 </div>
 
-                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 border border-gray-100/50 dark:border-gray-700/50'>
+                <div className='bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-4 sm:p-5 border border-[#0a2c24]/5 dark:border-white/10'>
                   <h3 className='text-base font-semibold text-gray-900 dark:text-white mb-3'>What Makes Us Special</h3>
                   <ul className='space-y-2 text-sm text-gray-600 dark:text-gray-400'>
                     <li className='flex items-start gap-2'>
@@ -719,7 +719,7 @@ function businessDetailsPage() {
                   </ul>
                 </div>
 
-                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 border border-gray-100/50 dark:border-gray-700/50'>
+                <div className='bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-4 sm:p-5 border border-[#0a2c24]/5 dark:border-white/10'>
                   <h3 className='text-base font-semibold text-gray-900 dark:text-white mb-3'>Hours</h3>
                   <div className='space-y-2 text-sm text-gray-600 dark:text-gray-400'>
                     <div className='flex justify-between'>
@@ -733,7 +733,7 @@ function businessDetailsPage() {
                   </div>
                 </div>
 
-                <div className='bg-white/90 dark:bg-gray-800/90 rounded-xl p-4 sm:p-5 border border-gray-100/50 dark:border-gray-700/50'>
+                <div className='bg-white/90 dark:bg-[#202c39]/90 rounded-xl p-4 sm:p-5 border border-[#0a2c24]/5 dark:border-white/10'>
                   <h3 className='text-base font-semibold text-gray-900 dark:text-white mb-3'>Contact</h3>
                   <div className='space-y-2 text-sm text-gray-600 dark:text-gray-400'>
                     {branches.length > 0 && branches[0].address && <p>{branches[0].address}</p>}

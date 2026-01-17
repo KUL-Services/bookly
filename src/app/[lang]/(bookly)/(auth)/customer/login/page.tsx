@@ -25,19 +25,19 @@ export default function LoginPage({ params }: PageProps) {
   }, [locale])
 
   return (
-    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
+    <div className='min-h-screen bg-zerv-pattern dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
       <main className='container mx-auto px-4 sm:px-6 py-8 sm:py-12 relative z-10'>
         <div className='w-full max-w-md mx-auto'>
           {/* Mobile-optimized header */}
           <div className='text-center mb-8 animate-in fade-in slide-in-from-top-4 duration-700'>
-            <h1 className='text-2xl sm:text-3xl font-bold text-primary-800 dark:text-white mb-2'>
+            <h1 className='text-2xl sm:text-3xl font-bold text-[#0a2c24] dark:text-white mb-2'>
               {t('auth.login.title')}
             </h1>
-            <p className='text-gray-600 dark:text-gray-300 text-sm sm:text-base'>{t('auth.login.description')}</p>
+            <p className='text-[#0a2c24]/70 dark:text-white/70 text-sm sm:text-base'>{t('auth.login.description')}</p>
           </div>
 
           {/* Form container with mobile-friendly styling */}
-          <div className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-xl border border-primary-100/50 dark:border-gray-700/50 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+          <div className='bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm rounded-2xl shadow-xl border border-[#0a2c24]/10 dark:border-white/10 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
             <AuthForm
               type='login'
               loading={loading}
@@ -60,11 +60,11 @@ export default function LoginPage({ params }: PageProps) {
 
           {/* Mobile-friendly footer */}
           <div className='text-center mt-6 animate-in fade-in slide-in-from-bottom-4 duration-700 animation-delay-600'>
-            <p className='text-sm text-gray-600 dark:text-gray-300'>
+            <p className='text-sm text-[#0a2c24]/70 dark:text-white/70'>
               {t('auth.login.noAccount')}{' '}
               <button
                 onClick={() => router.push(`/${locale}/customer/register`)}
-                className='text-primary-800 dark:text-sage-400 hover:text-primary-900 dark:hover:text-sage-300 font-medium transition-colors duration-200'
+                className='text-[#0a2c24] dark:text-[#77b6a3] hover:text-[#77b6a3] dark:hover:text-[#77b6a3]/80 font-medium transition-colors duration-200'
               >
                 {t('auth.login.createAccount')}
               </button>

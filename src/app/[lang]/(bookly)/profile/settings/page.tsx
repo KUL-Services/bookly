@@ -208,14 +208,14 @@ export default function ProfileSettingsPage() {
 
   if (!hydrated || !booklyUser || fetchingDetails) {
     return (
-      <div className='min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center font-sans'>
-        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-primary-800'></div>
+      <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] flex items-center justify-center font-sans'>
+        <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-[#0a2c24] dark:border-[#77b6a3]'></div>
       </div>
     )
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 dark:bg-gray-900 relative overflow-hidden font-sans'>
+    <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
       <main className='container mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10'>
         <div className='w-full max-w-2xl mx-auto'>
           {/* Header */}
@@ -228,7 +228,7 @@ export default function ProfileSettingsPage() {
             </button>
             <div>
               <H1
-                className='text-2xl sm:text-3xl font-bold text-primary-800 dark:text-white'
+                className='text-2xl sm:text-3xl font-bold text-[#0a2c24] dark:text-white'
                 stringProps={{ localeKey: 'profile.settings.title' }}
               />
 
@@ -242,10 +242,10 @@ export default function ProfileSettingsPage() {
           </div>
 
           {/* Form container */}
-          <Card className='bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-xl border border-primary-100/50 dark:border-gray-700/50 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+          <Card className='bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm shadow-xl border border-[#0a2c24]/10 dark:border-white/10 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
             <CardHeader>
               <CardTitle className='flex items-center gap-2'>
-                <Save className='w-5 h-5 text-primary-800 dark:text-sage-400' />
+                <Save className='w-5 h-5 text-[#0a2c24] dark:text-[#77b6a3]' />
                 {t('profile.settings.personalInfo') || 'Personal Information'}
               </CardTitle>
             </CardHeader>
@@ -349,7 +349,7 @@ export default function ProfileSettingsPage() {
                   <Button
                     type='submit'
                     disabled={loading}
-                    className='flex-1 bg-primary-700 hover:bg-primary-800 text-white'
+                    className='flex-1 bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24]'
                   >
                     {loading ? (
                       <>
