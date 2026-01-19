@@ -6,27 +6,24 @@ import AppDownloadSection from '@/bookly/components/organisms/app-download-secti
 import { FeaturesSection } from '@/bookly/components/organisms/features-section/features-section.component'
 import FooterSection from '@/bookly/components/organisms/footer-section/footer-section'
 import { MapPin } from 'lucide-react'
+import { RecommendedSection } from '@/bookly/components/organisms/recommended-section'
+import { BusinessGrowthBanner } from '@/bookly/components/organisms/business-growth-banner'
 import { useState, useEffect, type KeyboardEvent } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import initTranslations from '@/app/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import { InlineZervLogo } from '@/bookly/components/atoms/inline-zerv-logo'
 
 function LandPage() {
   const [q, setQ] = useState('')
   const [loc, setLoc] = useState('')
   const [mounted, setMounted] = useState(false)
-  const [t, setT] = useState<any>(() => (key: string) => key)
+  const { t } = useTranslation()
   const params = useParams<{ lang: string }>()
   const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
-    const initializeTranslations = async () => {
-      const { t: tFn } = await initTranslations(params.lang || 'en', ['common'])
-      setT(() => tFn)
-    }
-    initializeTranslations()
-  }, [params.lang])
+  }, [])
 
   const handleSearchKey = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -60,26 +57,18 @@ function LandPage() {
           </div>
 
           <div className='relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div
-              className={`text-center space-y-4 sm:space-y-5 lg:space-y-6 ${mounted ? 'opacity-0 animate-blur-in' : 'opacity-0'}`}
-            >
+            <div className='text-center space-y-4 sm:space-y-5 lg:space-y-6'>
               <h1 className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-primary-900 dark:text-white leading-tight tracking-tight pb-2 max-w-4xl mx-auto'>
                 {t('landing.hero.titlePrefix')}
                 <InlineZervLogo className='h-[0.9em] w-[2.6em] -mx-[0.45em] translate-y-[0.1em]' />
                 {t('landing.hero.titleSuffix')}
               </h1>
 
-              <p
-                className='text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed delay-100 animate-blur-in opacity-0'
-                style={{ animationFillMode: 'forwards' }}
-              >
+              <p className='text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed'>
                 {t('landing.hero.subtitle')}
               </p>
               {/* Search Bar */}
-              <div
-                className={`w-full max-w-3xl mx-auto mt-8 delay-200 ${mounted ? 'opacity-0 animate-scale-up-soft' : 'opacity-0'}`}
-                style={{ animationFillMode: 'forwards' }}
-              >
+              <div className='w-full max-w-3xl mx-auto mt-8'>
                 <div className='glass-card p-2.5 sm:p-3 rounded-[22px] shadow-lg hover:shadow-xl transition-all duration-300'>
                   <div className='grid grid-cols-1 md:grid-cols-[1.2fr_1fr_auto] gap-2 sm:gap-3 p-1'>
                     <div className='flex-1'>
@@ -118,10 +107,7 @@ function LandPage() {
               </div>
 
               {/* Trust indicators - Stretched with more spacing */}
-              <div
-                className={`flex flex-wrap justify-center items-center gap-6 sm:gap-8 lg:gap-12 pt-4 sm:pt-6 delay-300 ${mounted ? 'opacity-0 animate-blur-in' : 'opacity-0'}`}
-                style={{ animationFillMode: 'forwards' }}
-              >
+              <div className='flex flex-wrap justify-center items-center gap-6 sm:gap-8 lg:gap-12 pt-4 sm:pt-6'>
                 <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-300 cursor-default'>
                   <div className='w-2.5 h-2.5 bg-sage-500 rounded-full animate-pulse-soft' />
                   <span className='text-xs sm:text-sm font-medium'>{t('landing.stats.businesses')}</span>
@@ -139,39 +125,31 @@ function LandPage() {
           </div>
         </section>
 
+        {/* Recommended Businesses Section */}
+        <div className='relative bg-white dark:bg-[#202c39]'>
+          <RecommendedSection />
+        </div>
+
         {/* Categories Section */}
         <div className='relative bg-white dark:bg-[#202c39]'>
-          <div
-            className={`${mounted ? 'opacity-0 animate-blur-in delay-200' : 'opacity-0'}`}
-            style={{ animationFillMode: 'forwards' }}
-          >
-            <ExploreSection />
-          </div>
+          <ExploreSection />
         </div>
 
         {/* Features Section */}
         <div className='relative bg-[#f7f8f9] dark:bg-[#0a2c24]'>
-          <div
-            className={`${mounted ? 'opacity-0 animate-blur-in delay-300' : 'opacity-0'}`}
-            style={{ animationFillMode: 'forwards' }}
-          >
-            <FeaturesSection />
-          </div>
+          <FeaturesSection />
         </div>
 
+        {/* Business Growth Banner */}
+        <BusinessGrowthBanner />
+
         {/* App Download Section */}
-        <div
-          className={`relative bg-white dark:bg-[#202c39] ${mounted ? 'opacity-0 animate-blur-in delay-400' : 'opacity-0'}`}
-          style={{ animationFillMode: 'forwards' }}
-        >
+        <div className='relative bg-white dark:bg-[#202c39]'>
           <AppDownloadSection />
         </div>
 
         {/* Footer */}
-        <div
-          className={`relative bg-[#0a2c24] ${mounted ? 'opacity-0 animate-blur-in delay-500' : 'opacity-0'}`}
-          style={{ animationFillMode: 'forwards' }}
-        >
+        <div className='relative bg-[#0a2c24]'>
           <FooterSection />
         </div>
       </main>

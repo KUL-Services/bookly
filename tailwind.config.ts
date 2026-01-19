@@ -128,6 +128,25 @@ const config: Config = {
         h6: 'var(--text-h6)',
         p: 'var(--text-p)',
         small: 'var(--text-small)'
+      },
+      keyframes: {
+        'blur-in': {
+          '0%': { opacity: '0', filter: 'blur(8px)' },
+          '100%': { opacity: '1', filter: 'blur(0)' }
+        },
+        'scale-up-soft': {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' }
+        },
+        'pulse-soft': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' }
+        }
+      },
+      animation: {
+        'blur-in': 'blur-in 0.6s ease-out forwards',
+        'scale-up-soft': 'scale-up-soft 0.5s ease-out forwards',
+        'pulse-soft': 'pulse-soft 2s infinite ease-in-out'
       }
     }
   }

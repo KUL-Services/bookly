@@ -7,6 +7,7 @@ import type { PageProps } from '@/bookly/types'
 import { ThemeChanger } from '@/bookly/components/temporary'
 import BooklyNavbar from '@/bookly/components/organisms/bookly-navbar/bookly-navbar'
 import AuthInitializer from '@/components/AuthInitializer'
+import initTranslations from '@/app/i18n/i18n'
 import LanguageNavigationGuard from '@/components/LanguageNavigationGuard'
 
 export const metadata: Metadata = {
@@ -22,9 +23,10 @@ export default async function RootLayout({
   params: PageProps['params']
 }>) {
   const { lang: locale } = await params
+  const { resources } = await initTranslations(locale || 'en', ['common'])
 
   return (
-    <TranslationsProvider locale={locale}>
+    <TranslationsProvider locale={locale || 'en'} resources={resources}>
       <ThemeProvider attribute='class' enableSystem>
         <AuthInitializer />
         <LanguageNavigationGuard />

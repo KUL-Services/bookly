@@ -47,7 +47,7 @@ function businessDetailsPage() {
 
   useEffect(() => {
     const initializeTranslations = async () => {
-      const { t: tFn } = await initTranslations(params.lang || 'en', ['common'])
+      const { t: tFn } = await initTranslations((params.lang || 'en') as any, ['common'])
       setT(() => tFn)
     }
     initializeTranslations()
@@ -74,11 +74,11 @@ function businessDetailsPage() {
             rating: mockBusinessData.rating,
             socialLinks: mockBusinessData.socialLinks,
             services: mockBusinessData.services,
-            branches: mockBusinessData.fullBranches || mockBusinessData.branches,
+            branches: (mockBusinessData.fullBranches || mockBusinessData.branches) as any[],
             reviews: mockBusinessData.reviews as any,
             logoUrl: mockBusinessData.logoUrl,
             coverImageUrl: mockBusinessData.coverImageUrl
-          }
+          } as any
           setBusiness(business)
           setError(null)
           setLoading(false)
@@ -184,7 +184,7 @@ function businessDetailsPage() {
       rating: review.rating,
       comment: review.comment || '',
       date: new Date(review.createdAt),
-      businessId: review.businessId || business.id
+      businessId: (review as any).businessId || business.id
     }))
   }
   // const oldservices = [
@@ -268,9 +268,9 @@ function businessDetailsPage() {
           <div className='mt-6 space-y-2'>
             <p className='text-xl font-semibold text-[#0a2c24] dark:text-white'>{t('business.loading')}</p>
             <div className='flex justify-center space-x-1'>
-              <div className='w-2 h-2 bg-[#77b6a3] rounded-full animate-bounce'></div>
-              <div className='w-2 h-2 bg-[#77b6a3] rounded-full animate-bounce animation-delay-200'></div>
-              <div className='w-2 h-2 bg-[#77b6a3] rounded-full animate-bounce animation-delay-400'></div>
+              <div className='w-2 h-2 bg-[#0a2c24] rounded-full animate-bounce'></div>
+              <div className='w-2 h-2 bg-[#0a2c24] rounded-full animate-bounce animation-delay-200'></div>
+              <div className='w-2 h-2 bg-[#0a2c24] rounded-full animate-bounce animation-delay-400'></div>
             </div>
           </div>
         </div>
@@ -353,13 +353,13 @@ function businessDetailsPage() {
                       buttonText={{ plainText: 'Save' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:heart' }}
-                      className='bg-transparent text-[#0a2c24] dark:text-white border-[#0a2c24]/20 dark:border-white/20 hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 text-sm py-2 px-4 touch-manipulation'
+                      className='bg-transparent text-[#0a2c24] dark:text-white border-[#0a2c24]/20 hover:bg-[#0a2c24]/5 text-sm py-2 px-4 touch-manipulation'
                     />
                     <Button
                       buttonText={{ plainText: 'Share' }}
                       variant='outlined'
                       prefixIcon={{ icon: 'lucide:share' }}
-                      className='bg-transparent text-[#0a2c24] dark:text-white border-[#0a2c24]/20 dark:border-white/20 hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 text-sm py-2 px-4 touch-manipulation'
+                      className='bg-transparent text-[#0a2c24] dark:text-white border-[#0a2c24]/20 hover:bg-[#0a2c24]/5 text-sm py-2 px-4 touch-manipulation'
                     />
                   </div>
                 </div>
@@ -421,9 +421,7 @@ function businessDetailsPage() {
                   variant='text'
                   size='md'
                   className={`relative flex-1 px-3 sm:px-4 py-1.5 sm:py-2 font-medium text-xs sm:text-sm transition-all duration-200 rounded-md whitespace-nowrap touch-manipulation ${
-                    activeTab === tab.id
-                      ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24]'
-                      : 'text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20'
+                    activeTab === tab.id ? 'bg-[#0a2c24] text-white shadow-md' : 'text-[#0a2c24] hover:bg-[#0a2c24]/10'
                   }`}
                   buttonText={{ plainText: tab.label }}
                 />
@@ -470,9 +468,9 @@ function businessDetailsPage() {
                           ${service.price}
                         </div>
                         <Button
-                          buttonText={{ plainText: 'Book Now' }}
+                          buttonText={{ plainText: 'Book' }}
                           variant='contained'
-                          className='btn-primary-enhanced btn-press text-sm px-4 py-2 rounded-lg touch-manipulation'
+                          className='bg-[#0a2c24] hover:bg-[#0a2c24]/90 text-white font-bold text-sm px-6 py-2 rounded-lg touch-manipulation shadow-md transform transition hover:scale-105'
                           onClick={() => handelBookService(service)}
                         />
                       </div>
@@ -538,7 +536,7 @@ function businessDetailsPage() {
                       {/* Branch Gallery Preview */}
                       {branch.galleryUrls && branch.galleryUrls.length > 0 && (
                         <div className='mt-3 flex gap-2 overflow-x-auto'>
-                          {branch.galleryUrls.slice(0, 3).map((imageUrl, imageIndex) => (
+                          {branch.galleryUrls.slice(0, 3).map((imageUrl: string, imageIndex: number) => (
                             <div key={imageIndex} className='relative flex-shrink-0'>
                               <div className='w-20 h-20 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700'>
                                 <img
@@ -551,10 +549,10 @@ function businessDetailsPage() {
                                   }}
                                 />
                               </div>
-                              {imageIndex === 2 && branch.galleryUrls.length > 3 && (
+                              {imageIndex === 2 && (branch.galleryUrls?.length || 0) > 3 && (
                                 <div className='absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center'>
                                   <span className='text-white text-sm font-medium'>
-                                    +{branch.galleryUrls.length - 3}
+                                    +{(branch.galleryUrls?.length || 0) - 3}
                                   </span>
                                 </div>
                               )}

@@ -129,6 +129,7 @@ export interface FilterState {
   available: boolean
   duration?: number[]
   timeOfDay: string[]
+  location: string
 }
 
 export interface FilterOptions {
@@ -165,7 +166,7 @@ export function SearchFilters({
 
   React.useEffect(() => {
     const initializeTranslations = async () => {
-      const { t: tFn } = await initTranslations(params?.lang || 'en', ['common'])
+      const { t: tFn } = await initTranslations((params?.lang as any) || 'en', ['common'])
       setT(() => tFn)
     }
     initializeTranslations()
@@ -339,7 +340,7 @@ export function SearchFilters({
       </div>
 
       {/* Location */}
-      {/* <div className='mb-6'>
+      <div className='mb-6'>
         <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
           {t('search.filters.locationLabel')}
         </label>
@@ -350,21 +351,7 @@ export function SearchFilters({
           onChange={e => updateFilter('location', e.target.value)}
           className='w-full'
         />
-        {options.locations.length > 0 && (
-          <div className='mt-2 max-h-32 overflow-y-auto'>
-            {options.locations.map(location => (
-              <button
-                key={location.value}
-                onClick={() => updateFilter('location', location.value)}
-                className='block w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded'
-              >
-                {location.label}
-                {location.count && <span className='text-gray-400 dark:text-gray-500 ml-auto'>({location.count})</span>}
-              </button>
-            ))}
-          </div>
-        )}
-      </div> */}
+      </div>
 
       {/* Categories */}
       <div className='mb-6'>

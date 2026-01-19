@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/stores/auth.store'
 import { CalendarCheck, ChevronDown, Heart, LogOut, Menu, User, Building2, X } from 'lucide-react'
-import initTranslations from '@/app/i18n/i18n'
+import { useTranslation } from 'react-i18next'
 import BooklyLanguageDropdown from '../../atoms/language-dropdown/language-dropdown.component'
 import BooklyThemeToggle from '../../atoms/theme-toggle/theme-toggle.component'
 
@@ -24,7 +24,6 @@ const BooklyNavbar = () => {
   const [hydrated, setHydrated] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
-  const [t, setT] = useState<any>(() => (key: string) => key)
 
   useEffect(() => {
     // Wait for Zustand store to rehydrate from localStorage
@@ -32,13 +31,13 @@ const BooklyNavbar = () => {
     return () => clearTimeout(timer)
   }, [])
 
+  const { t } = useTranslation()
+
   useEffect(() => {
-    const initializeTranslations = async () => {
-      const { t: tFn } = await initTranslations(params?.lang || 'en', ['common'])
-      setT(() => tFn)
-    }
-    initializeTranslations()
-  }, [params?.lang])
+    // Wait for Zustand store to rehydrate from localStorage
+    const timer = setTimeout(() => setHydrated(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   const to = (path: string) => {
     console.log('Navigating to:', `/${params?.lang}${path}`)
