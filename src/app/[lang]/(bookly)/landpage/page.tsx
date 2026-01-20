@@ -45,7 +45,7 @@ function LandPage() {
 
       <main className='relative overflow-hidden'>
         {/* Hero Section - Zerv Dark Brand */}
-        <section className='relative py-16 sm:py-20 md:py-24 lg:py-32 rounded-br-[5rem] rounded-bl-[2.5rem] overflow-hidden bg-[#0a2c24] shadow-2xl'>
+        <section className='relative py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden bg-[#0a2c24] shadow-2xl'>
           {/* Background Texture - Z Pattern */}
           <div className='absolute inset-0 opacity-[0.05] bg-zerv-pattern' />
 
@@ -137,6 +137,27 @@ function LandPage() {
               </div>
             </div>
           </div>
+          {/* Bottom Curved Separator - Organic / branded shape */}
+          <div className='absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-20 pointer-events-none'>
+            <svg
+              className='relative block w-[calc(100%+1.3px)] h-[80px] sm:h-[120px]'
+              data-name='Layer 1'
+              xmlns='http://www.w3.org/2000/svg'
+              viewBox='0 0 1200 120'
+              preserveAspectRatio='none'
+            >
+              <path
+                d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z'
+                className='fill-[#0a2c24] dark:fill-[#0a2c24]'
+              ></path>
+              <path
+                d='M1200 120L0 120 0 0C61.32 0 102.7 18.06 150.36 38.67C224.28 70.63 301.75 30.64 366.69 16.32C450.48 -2.15 545.96 15.65 628.71 45.41C705.47 73.01 785.49 84.7 866.52 75.29C942.22 66.5 1013.9 44.3 1083.5 18.36C1123.6 3.42 1162.72 -1.5 1200 0V120Z'
+                fill='#f7f8f9'
+                className='dark:fill-[#202c39]'
+                transform='scale(1, -1) translate(0, -120)'
+              />
+            </svg>
+          </div>
         </section>
 
         {/* Recommended Businesses Section */}
@@ -151,18 +172,18 @@ function LandPage() {
           <ExploreSection />
         </div>
 
+        {/* Business Growth Banner */}
+        <BusinessGrowthBanner />
+
         {/* Features Section */}
         <div className='relative bg-[#f7f8f9] dark:bg-[#0a2c24]'>
           <FeaturesSection />
         </div>
 
-        {/* Business Growth Banner */}
-        <BusinessGrowthBanner />
-
         {/* App Download Section */}
-        <div className='relative bg-white dark:bg-[#202c39]'>
+        {/* <div className='relative bg-white dark:bg-[#202c39]'>
           <AppDownloadSection />
-        </div>
+        </div> */}
 
         {/* Footer */}
         <div className='relative bg-[#0a2c24]'>

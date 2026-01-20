@@ -86,8 +86,12 @@ export const FeaturesSection = () => {
                 <div className='absolute inset-0 bg-zerv-pattern opacity-10' />
                 {/* Mock App Interface or Gradient */}
                 <div className='absolute inset-0 bg-gradient-to-br from-[#0a2c24] to-[#202c39]' />
-                <div className='absolute inset-0 flex items-center justify-center text-white/5 font-fira text-9xl font-bold select-none'>
-                  Z
+                <div className='absolute inset-0 flex items-center justify-center'>
+                  <img
+                    src='/brand/zerv-z.svg'
+                    alt='Zerv Logo'
+                    className='w-48 h-48 opacity-20 invert brightness-0 filter'
+                  />
                 </div>
               </div>
               <div className='absolute inset-0 bg-[#77b6a3] rounded-[3rem] transform rotate-3 scale-95 origin-bottom-right z-0 opacity-80' />

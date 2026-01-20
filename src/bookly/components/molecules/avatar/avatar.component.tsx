@@ -6,14 +6,15 @@ import { getInitials } from '@/bookly/utils'
 import getAvatarSize from './avatar-size.util'
 import clsx from 'clsx'
 
-const Avatar = ({ avatarTitle, iconProps, imageUrl, size, testId, alt }: AvatarProps) => {
+const Avatar = ({ avatarTitle, iconProps, imageUrl, size, testId, alt, className }: AvatarProps) => {
   const avatarSize = getAvatarSize(size)
   if (imageUrl)
     return (
       <div
         className={clsx(
           'border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative',
-          avatarSize
+          avatarSize,
+          className
         )}
       >
         <BaseImage src={imageUrl} alt={alt || ''} />

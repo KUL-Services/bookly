@@ -208,7 +208,7 @@ function ProfilePage() {
         </div> */}
 
         {/* Profile Card */}
-        <Card className='bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm shadow-xl border border-[#0a2c24]/10 dark:border-white/10 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+        <Card className='bg-white/90 dark:bg-[#202c39]/90 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.04)] border-none rounded-[2.5rem] hover:shadow-[0_25px_60px_rgba(0,0,0,0.08)] transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
           <CardHeader className='flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6'>
             <CardTitle>
               <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6'>
@@ -263,7 +263,7 @@ function ProfilePage() {
           </CardHeader>
           <CardContent className='pt-0'>
             <div className='mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6'>
-              <div className='group rounded-xl border border-primary-100 dark:border-primary-700/50 p-6 bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
+              <div className='group rounded-[2rem] border-none p-6 bg-[#f7f8f9] dark:bg-black/20 hover:bg-[#0a2c24] hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <H6
                   className='text-2xl font-bold text-primary-800 dark:text-sage-400 mb-1 font-mono'
                   stringProps={{ plainText: String(user.stats.totalBookings) }}
@@ -275,7 +275,7 @@ function ProfilePage() {
                 />
                 <div className='mt-2 w-8 h-1 bg-teal-500 rounded-full' />
               </div>
-              <div className='group rounded-xl border border-emerald-100 dark:border-emerald-700/50 p-6 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
+              <div className='group rounded-[2rem] border-none p-6 bg-[#f7f8f9] dark:bg-black/20 hover:bg-[#0a2c24] hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <H6
                   className='text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1 font-mono'
                   stringProps={{ plainText: String(user.stats.favorites) }}
@@ -287,7 +287,7 @@ function ProfilePage() {
                 />
                 <div className='mt-2 w-8 h-1 bg-emerald-500 rounded-full' />
               </div>
-              <div className='group rounded-xl border border-yellow-100 dark:border-yellow-700/50 p-6 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-800/40 transition-all duration-300 hover:scale-105 hover:shadow-lg'>
+              <div className='group rounded-[2rem] border-none p-6 bg-[#f7f8f9] dark:bg-black/20 hover:bg-[#0a2c24] hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg'>
                 <div className='flex items-center gap-2 mb-1'>
                   <H6
                     className='text-2xl font-bold text-yellow-600 dark:text-yellow-400 font-mono'
@@ -310,7 +310,7 @@ function ProfilePage() {
         </Card>
 
         {/* Bookings Card */}
-        <Card className='bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm shadow-xl border border-[#0a2c24]/10 dark:border-white/10 hover:shadow-2xl transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-600'>
+        <Card className='bg-white/90 dark:bg-[#202c39]/90 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.04)] border-none rounded-[2.5rem] hover:shadow-[0_25px_60px_rgba(0,0,0,0.08)] transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-600'>
           <CardHeader>
             <CardTitle>
               <H5
@@ -331,7 +331,9 @@ function ProfilePage() {
                 >
                   <P
                     i18nTFn={t}
-                    className={activeTab === 'upcoming' ? 'text-white dark:text-[#0a2c24]' : 'text-[#0a2c24] dark:text-white'}
+                    className={
+                      activeTab === 'upcoming' ? 'text-white dark:text-[#0a2c24]' : 'text-[#0a2c24] dark:text-white'
+                    }
                     stringProps={{
                       localeKey: 'profile.bookings.upcomingWithCount',
                       localeProps: { count: upcomingBookings.length }
@@ -348,7 +350,9 @@ function ProfilePage() {
                 >
                   <P
                     i18nTFn={t}
-                    className={activeTab === 'past' ? 'text-white dark:text-[#0a2c24]' : 'text-[#0a2c24] dark:text-white'}
+                    className={
+                      activeTab === 'past' ? 'text-white dark:text-[#0a2c24]' : 'text-[#0a2c24] dark:text-white'
+                    }
                     stringProps={{
                       localeKey: 'profile.bookings.pastWithCount',
                       localeProps: { count: pastBookings.length }

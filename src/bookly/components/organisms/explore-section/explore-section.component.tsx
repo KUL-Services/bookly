@@ -72,8 +72,12 @@ export const ExploreSection = () => {
             className='text-xl sm:text-2xl lg:text-3xl font-semibold text-left text-gray-900 dark:text-white'
           />
         </div>
-        <div className='mt-6 sm:mt-8'>
-          <div className='flex gap-3 sm:gap-4 lg:gap-6 overflow-x-auto px-4 sm:px-6 pb-4 snap-x snap-mandatory'>
+        <div className='mt-6 sm:mt-8 relative'>
+          {/* Gradient Masks for Carousel Fade Effect */}
+          <div className='absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white dark:from-[#202c39] to-transparent z-10 pointer-events-none lg:w-24' />
+          <div className='absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white dark:from-[#202c39] to-transparent z-10 pointer-events-none lg:w-24' />
+
+          <div className='flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto px-4 sm:px-6 pb-8 pt-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
             {loading
               ? // Loading skeleton
                 Array.from({ length: 6 }).map((_, index) => (

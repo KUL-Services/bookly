@@ -41,7 +41,7 @@ export default function RegisterPage({ params }: PageProps) {
           </div>
 
           {/* Form container with mobile-friendly styling */}
-          <div className='bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm rounded-2xl shadow-xl border border-[#0a2c24]/10 dark:border-white/10 p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+          <div className='bg-white/90 dark:bg-[#202c39]/90 backdrop-blur-md rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-[#0a2c24]/5 dark:border-white/5 p-6 sm:p-10 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
             {registrationSuccess ? (
               <div className='text-center space-y-4'>
                 <div className='w-16 h-16 mx-auto bg-[#77b6a3]/20 dark:bg-[#77b6a3]/10 rounded-full flex items-center justify-center'>
