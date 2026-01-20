@@ -158,7 +158,7 @@ export default function SearchPage() {
                   // Logic handles auto-update in useEffect, but we could add manual trigger here
                 }}
                 onResetFilters={handleResetFilters}
-                className='shadow-sm'
+                className=''
               />
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function SearchPage() {
                 )}
               </div>
             ) : (
-              <div className='h-[600px] rounded-lg overflow-hidden border border-gray-200 shadow-sm'>
+              <div className='h-[600px] rounded-lg overflow-hidden border border-gray-200'>
                 <SearchMap businesses={results} />
               </div>
             )}

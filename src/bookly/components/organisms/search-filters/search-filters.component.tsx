@@ -46,30 +46,32 @@ function CategoryMultiSelect({
       <button
         type='button'
         onClick={() => setIsOpen(!isOpen)}
-        className='w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors'
+        className='w-full flex items-center justify-between px-5 py-3.5 bg-white dark:bg-[#202c39] border border-transparent shadow-[0_4px_20px_rgb(0,0,0,0.03)] rounded-[1.5rem] text-sm hover:shadow-[0_8px_25px_rgb(0,0,0,0.08)] transition-all duration-300 focus:outline-none outline-none group'
       >
-        <span className='text-gray-700 dark:text-gray-300 truncate'>
+        <span className='text-gray-900 dark:text-white font-bold truncate group-hover:text-[#0a2c24] dark:group-hover:text-[#77b6a3] transition-colors'>
           {selectedCategories.length === 0 ? (
-            <span className='text-gray-400 dark:text-gray-500'>{placeholder}</span>
+            <span className='text-gray-400 dark:text-gray-500 font-normal'>{placeholder}</span>
           ) : selectedCategories.length === 1 ? (
             selectedCategoryNames[0]
           ) : (
             `${selectedCategories.length} categories selected`
           )}
         </span>
-        <svg
-          className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          fill='none'
-          stroke='currentColor'
-          viewBox='0 0 24 24'
-        >
-          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
-        </svg>
+        <div className='bg-gray-50 dark:bg-white/5 p-2 rounded-full group-hover:bg-[#0a2c24]/5 transition-colors'>
+          <svg
+            className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2.5} d='M19 9l-7 7-7-7' />
+          </svg>
+        </div>
       </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className='absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto'>
+        <div className='absolute z-50 w-full mt-3 bg-white dark:bg-[#202c39] border border-gray-100 dark:border-gray-700/50 rounded-[1.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.12)] max-h-72 overflow-y-auto overflow-hidden animate-in fade-in zoom-in-95 duration-200 p-2'>
           {categories.length === 0 ? (
             <div className='px-3 py-2 text-sm text-gray-500 dark:text-gray-400'>No categories available</div>
           ) : (
@@ -289,7 +291,10 @@ export function SearchFilters({
 
   return (
     <div
-      className={cn('bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6', className)}
+      className={cn(
+        'bg-white dark:bg-[#202c39] rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 sm:p-8',
+        className
+      )}
     >
       {/* Applied Filters */}
       {showAppliedFilters && getAppliedFiltersCount() > 0 && (

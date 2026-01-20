@@ -8,11 +8,15 @@ interface BranchMapViewProps {
   branch: Branch
 }
 
+// Define libraries outside component to prevent re-render issues
+const LIBRARIES: ('places' | 'geometry')[] = ['places', 'geometry']
+
 const BranchMapView = ({ branch }: BranchMapViewProps) => {
-  // Load Google Maps (use same id as business-map to avoid conflicts)
+  // Load Google Maps (use same id and libraries as business-map to avoid conflicts)
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    id: 'google-map-script'
+    id: 'google-map-script',
+    libraries: LIBRARIES
   })
 
   // Extract coordinates from branch or use default (Cairo coordinates as fallback)

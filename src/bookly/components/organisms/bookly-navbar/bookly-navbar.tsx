@@ -245,7 +245,7 @@ const BooklyNavbar = () => {
                     }
                   }, 100)
                 }}
-                className='flex items-center gap-3 w-full px-4 py-4 text-left bg-[#f7f8f9] dark:bg-[#202c39] text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 rounded-xl transition-all duration-300 touch-manipulation text-base border border-[#0a2c24]/10 dark:border-white/10'
+                className='flex items-center gap-3 w-full px-4 py-4 text-left bg-[#f7f8f9] dark:bg-[#202c39] text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 rounded-full transition-all duration-300 touch-manipulation text-base border border-[#0a2c24]/10 dark:border-white/10'
               >
                 <Building2 className='w-5 h-5' />
                 {t('nav.forBusinesses')}
@@ -263,7 +263,7 @@ const BooklyNavbar = () => {
                         router.push(`/${params?.lang}/customer/login`)
                       }, 100)
                     }}
-                    className='w-full px-4 py-4 text-center border border-[#0a2c24]/15 dark:border-white/15 bg-white dark:bg-transparent text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 rounded-xl transition-all duration-300 font-medium touch-manipulation text-base'
+                    className='w-full px-4 py-4 text-center border border-[#0a2c24]/15 dark:border-white/15 bg-white dark:bg-transparent text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 rounded-full transition-all duration-300 font-medium touch-manipulation text-base'
                   >
                     {t('nav.login')}
                   </button>
@@ -277,7 +277,7 @@ const BooklyNavbar = () => {
                         router.push(`/${params?.lang}/customer/register`)
                       }, 100)
                     }}
-                    className='w-full px-4 py-4 text-center bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24] transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:scale-[1.01] active:scale-[0.99] rounded-xl touch-manipulation text-base'
+                    className='w-full px-4 py-4 text-center bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24] transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:scale-[1.01] active:scale-[0.99] rounded-full touch-manipulation text-base'
                   >
                     {t('nav.signUp')}
                   </button>

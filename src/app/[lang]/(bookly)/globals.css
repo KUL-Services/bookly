@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Zerv Brand Utilities for Masks/Cuts (Refined) */
+.zerv-mask {
+  -webkit-mask-image: url('/brand/zerv-z.svg');
+  mask-image: url('/brand/zerv-z.svg');
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.zerv-mask-top-right {
+  -webkit-mask-image: url('/brand/zerv-z.svg');
+  mask-image: url('/brand/zerv-z.svg');
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: top right;
+  mask-position: top right;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
 /*
  * Bookly Brand Color System
  * Primary: Dark Green #0a2c24 | Navy Blue #202c39 | Off-White #f7f8f9
@@ -136,12 +159,18 @@ body {
 }
 
 /* Ensure all text elements use the correct font */
+/* Ensure all text elements use the correct font */
 h1,
 h2,
 h3,
 h4,
 h5,
-h6,
+h6 {
+  font-family: var(--font-fira-code), monospace !important;
+  font-weight: 700; /* Bold for Fira Code headings */
+  letter-spacing: -0.02em; /* Tighter tracking for headings */
+}
+
 p,
 span,
 div,
@@ -151,7 +180,7 @@ input,
 textarea,
 select,
 label {
-  font-family: inherit;
+  font-family: var(--font-helvetica-world), Helvetica, Arial, sans-serif;
 }
 
 /* Code blocks - Fira Code */
@@ -282,7 +311,8 @@ samp {
 /* Simple brand utility classes using the variables above */
 .bg-zerv-pattern {
   background-color: var(--background);
-  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2377b6a3' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  /* Diagonal Z-check pattern approximation using a repeated SVG background */
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230a2c24' fill-opacity='0.03'%3E%3Cpath d='M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41zM20 18.6l2.83-2.83 1.41 1.41L21.41 20l2.83 2.83-1.41 1.41L20 21.41l-2.83 2.83-1.41-1.41L18.59 20l-2.83-2.83 1.41-1.41L20 18.59z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 .dark .bg-zerv-pattern {
   background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2377b6a3' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");

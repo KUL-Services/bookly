@@ -82,14 +82,19 @@ export const ExploreSection = () => {
                     <div className='bg-gray-200 dark:bg-gray-700 rounded h-3 sm:h-4 w-3/4 mx-auto'></div>
                   </div>
                 ))
-              : categoriesData.map(category => (
-                  <CategoryCard
-                    key={category.id}
-                    category={category}
-                    onClick={() => handleCategoryClick(category.slug)}
-                    className='min-w-[160px] sm:min-w-[190px] lg:min-w-[210px] snap-start'
-                  />
-                ))}
+              : categoriesData.map((category, index) => {
+                  const variants: ('sage' | 'coral' | 'teal')[] = ['sage', 'coral', 'teal']
+                  const variant = variants[index % variants.length]
+                  return (
+                    <CategoryCard
+                      key={category.id}
+                      category={category}
+                      onClick={() => handleCategoryClick(category.slug)}
+                      className='min-w-[160px] sm:min-w-[190px] lg:min-w-[210px] snap-start'
+                      variant={variant}
+                    />
+                  )
+                })}
           </div>
         </div>
       </section>

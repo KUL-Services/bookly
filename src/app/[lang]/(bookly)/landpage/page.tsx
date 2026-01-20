@@ -12,6 +12,7 @@ import { useState, useEffect, type KeyboardEvent } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { InlineZervLogo } from '@/bookly/components/atoms/inline-zerv-logo'
+import { ZWatermark, ZDivider } from '@/bookly/components/atoms/zerv-assets'
 
 function LandPage() {
   const [q, setQ] = useState('')
@@ -43,35 +44,48 @@ function LandPage() {
       {/* Shared BooklyNavbar is rendered in the (bookly) layout */}
 
       <main className='relative overflow-hidden'>
-        {/* Hero Section - Full width with generous padding */}
-        <section className='relative py-12 sm:py-16 md:py-20 lg:py-28'>
+        {/* Hero Section - Zerv Dark Brand */}
+        <section className='relative py-16 sm:py-20 md:py-24 lg:py-32 rounded-br-[5rem] rounded-bl-[2.5rem] overflow-hidden bg-[#0a2c24] shadow-2xl'>
+          {/* Background Texture - Z Pattern */}
+          <div className='absolute inset-0 opacity-[0.05] bg-zerv-pattern' />
+
+          {/* Large Z-Ribbon Motif - Hero Backdrop */}
+          <div className='absolute right-[-10%] top-[-20%] h-[120%] w-[80%] pointer-events-none overflow-hidden opacity-10'>
+            <div
+              className='absolute inset-0 zerv-mask'
+              style={{
+                background: 'linear-gradient(135deg, #f7f8f9 0%, transparent 60%)',
+                transform: 'rotate(-15deg) scale(1.5)'
+              }}
+            />
+          </div>
+
           <div
-            className='absolute inset-0 bg-cover bg-center opacity-10'
+            className='absolute inset-0 bg-cover bg-center opacity-[0.15] mix-blend-overlay'
             style={{
               backgroundImage: "url('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&h=800&fit=crop')"
             }}
           />
-          <div className='absolute inset-0 pointer-events-none'>
-            <div className='absolute -top-24 right-[-120px] h-64 w-64 rounded-full bg-gradient-to-br from-sage-200/40 via-teal-100/30 to-transparent blur-3xl dark:from-sage-800/30 dark:via-teal-900/20' />
-            <div className='absolute bottom-[-120px] left-[-80px] h-72 w-72 rounded-full bg-gradient-to-tr from-coral-200/30 via-sage-100/20 to-transparent blur-3xl dark:from-coral-800/25 dark:via-sage-900/15' />
-          </div>
 
-          <div className='relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='text-center space-y-4 sm:space-y-5 lg:space-y-6'>
-              <h1 className='text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-primary-900 dark:text-white leading-tight tracking-tight pb-2 max-w-4xl mx-auto'>
+          <div className='relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10'>
+            <div className='text-center space-y-6 sm:space-y-8'>
+              <h1 className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight pb-2 max-w-5xl mx-auto'>
                 {t('landing.hero.titlePrefix')}
-                <InlineZervLogo className='h-[0.9em] w-[2.6em] -mx-[0.45em] translate-y-[0.1em]' />
+                <span className='relative inline-block px-4'>
+                  <InlineZervLogo className='h-[0.8em] w-[2.6em] translate-y-[0.1em] text-white' />
+                </span>
                 {t('landing.hero.titleSuffix')}
               </h1>
 
-              <p className='text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed'>
+              <p className='text-base sm:text-lg md:text-xl lg:text-2xl text-gray-200/90 max-w-3xl mx-auto leading-relaxed font-light'>
                 {t('landing.hero.subtitle')}
               </p>
-              {/* Search Bar */}
-              <div className='w-full max-w-3xl mx-auto mt-8'>
-                <div className='glass-card p-2.5 sm:p-3 rounded-[22px] shadow-lg hover:shadow-xl transition-all duration-300'>
-                  <div className='grid grid-cols-1 md:grid-cols-[1.2fr_1fr_auto] gap-2 sm:gap-3 p-1'>
-                    <div className='flex-1'>
+
+              {/* Search Bar - Floating Pill */}
+              <div className='w-full max-w-4xl mx-auto mt-12 relative z-20'>
+                <div className='bg-white p-2 rounded-[3rem] shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_70px_rgba(0,0,0,0.4)] transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm bg-white/95'>
+                  <div className='grid grid-cols-1 md:grid-cols-[1.2fr_1fr_auto] gap-2 p-2'>
+                    <div className='flex-1 relative border-b md:border-b-0 md:border-r border-gray-100'>
                       <SearchInput
                         value={q}
                         onChange={e => setQ(e.target.value)}
@@ -80,10 +94,10 @@ function LandPage() {
                           localeKey: 'landing.search.servicePlaceholder'
                         }}
                         i18nTFn={t}
-                        className='w-full h-11 sm:h-12 text-base border-0 bg-white/70 dark:bg-[#202c39]/60 rounded-2xl focus-glow font-sans transition-all duration-300 hover:bg-white dark:hover:bg-[#202c39]'
+                        className='w-full h-14 text-lg border-none bg-transparent focus:bg-gray-50/50 rounded-[2rem] focus:ring-0 font-medium text-gray-800 placeholder:text-gray-400 px-6'
                       />
                     </div>
-                    <div className='flex-1'>
+                    <div className='flex-1 relative'>
                       <SearchInput
                         value={loc}
                         onChange={e => setLoc(e.target.value)}
@@ -93,32 +107,32 @@ function LandPage() {
                         }}
                         i18nTFn={t}
                         leadingIcon={MapPin}
-                        className='w-full h-11 sm:h-12 text-base border-0 bg-white/70 dark:bg-[#202c39]/60 rounded-2xl focus-glow font-sans transition-all duration-300 hover:bg-white dark:hover:bg-[#202c39]'
+                        className='w-full h-14 text-lg border-none bg-transparent focus:bg-gray-50/50 rounded-[2rem] focus:ring-0 font-medium text-gray-800 placeholder:text-gray-400 px-6'
                       />
                     </div>
                     <Button
                       onClick={goSearch}
                       buttonText={{ localeKey: 'landing.search.button' }}
                       i18nTFn={t}
-                      className='w-full md:w-auto btn-primary-enhanced btn-press px-6 sm:px-7 py-2.5 h-11 sm:h-12 text-base font-semibold rounded-2xl hover:shadow-md active:scale-95 transition-all duration-300'
+                      className='w-full md:w-auto bg-[#202c39] text-white px-10 py-4 h-14 text-lg font-bold rounded-full shadow-lg hover:bg-[#0a2c24] transition-all duration-300'
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Trust indicators - Stretched with more spacing */}
-              <div className='flex flex-wrap justify-center items-center gap-6 sm:gap-8 lg:gap-12 pt-4 sm:pt-6'>
-                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors duration-300 cursor-default'>
-                  <div className='w-2.5 h-2.5 bg-sage-500 rounded-full animate-pulse-soft' />
-                  <span className='text-xs sm:text-sm font-medium'>{t('landing.stats.businesses')}</span>
+              {/* Trust indicators - Light on Dark */}
+              <div className='flex flex-wrap justify-center items-center gap-8 sm:gap-12 pt-8 opacity-80'>
+                <div className='flex items-center gap-3 text-white/80 hover:text-white transition-colors duration-300'>
+                  <div className='w-2 h-2 bg-sage-400 rounded-full animate-pulse' />
+                  <span className='text-sm font-medium tracking-wide'>{t('landing.stats.businesses')}</span>
                 </div>
-                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-300 cursor-default'>
-                  <div className='w-2.5 h-2.5 bg-teal-500 rounded-full animate-pulse-soft' />
-                  <span className='text-xs sm:text-sm font-medium'>{t('landing.stats.customers')}</span>
+                <div className='flex items-center gap-3 text-white/80 hover:text-white transition-colors duration-300'>
+                  <div className='w-2 h-2 bg-teal-400 rounded-full animate-pulse' />
+                  <span className='text-sm font-medium tracking-wide'>{t('landing.stats.customers')}</span>
                 </div>
-                <div className='flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-coral-600 dark:hover:text-coral-400 transition-colors duration-300 cursor-default'>
-                  <div className='w-2.5 h-2.5 bg-coral-500 rounded-full animate-pulse-soft' />
-                  <span className='text-xs sm:text-sm font-medium'>{t('landing.stats.rating')}</span>
+                <div className='flex items-center gap-3 text-white/80 hover:text-white transition-colors duration-300'>
+                  <div className='w-2 h-2 bg-coral-400 rounded-full animate-pulse' />
+                  <span className='text-sm font-medium tracking-wide'>{t('landing.stats.rating')}</span>
                 </div>
               </div>
             </div>
@@ -126,12 +140,14 @@ function LandPage() {
         </section>
 
         {/* Recommended Businesses Section */}
-        <div className='relative bg-white dark:bg-[#202c39]'>
+        <div className='relative bg-gray-50/50 dark:bg-[#202c39]/30'>
+          <ZDivider className='absolute top-0 transform -translate-y-1/2 z-10 text-white' />
           <RecommendedSection />
         </div>
 
         {/* Categories Section */}
-        <div className='relative bg-white dark:bg-[#202c39]'>
+        <div className='relative bg-white dark:bg-[#202c39] py-12'>
+          <ZWatermark className='opacity-[0.02]' />
           <ExploreSection />
         </div>
 
