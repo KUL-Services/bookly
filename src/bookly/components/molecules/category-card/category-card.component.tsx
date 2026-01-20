@@ -39,10 +39,14 @@ export const CategoryCard = ({ category, onClick, className, variant = 'default'
         contentClassName='flex flex-col items-center justify-center p-8 space-y-6 text-center h-full z-10 relative'
       >
         {/* Decorative Z-Shape Background Element - Enhanced Visibility */}
-        <div
-          className='absolute -top-10 -right-10 w-40 h-40 bg-current opacity-[0.05] group-hover:opacity-[0.1] transition-all duration-500 transform rotate-12 group-hover:rotate-45 pointer-events-none text-[#0a2c24] dark:text-white'
-          style={{ clipPath: 'polygon(0 0, 100% 0, 100% 20%, 30% 100%, 0 100%, 0 80%, 70% 0)' }}
-        ></div>
+        {/* Decorative Z-Logo Background Element */}
+        <div className='absolute -top-6 -right-6 w-48 h-48 opacity-[0.05] group-hover:opacity-[0.12] transition-all duration-700 ease-out transform translate-x-4 -translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0 group-hover:rotate-[-5deg] pointer-events-none'>
+          <img
+            src='/brand/zerv-z.svg'
+            alt=''
+            className='w-full h-full object-contain filter brightness-0 dark:invert'
+          />
+        </div>
 
         {/* Icon with animated container */}
         <div
