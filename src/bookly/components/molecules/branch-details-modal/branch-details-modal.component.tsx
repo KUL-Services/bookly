@@ -5,7 +5,7 @@ import initTranslations from '@/app/i18n/i18n'
 import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
 import { Button } from '@/bookly/components/molecules'
 import { KulIcon } from '@/bookly/components/atoms'
-import { StaffCalendarView } from './staff-calendar-view'
+
 import { mockStaff } from '@/bookly/data/mock-data'
 import type { Branch, Service, Staff } from '@/lib/api'
 import type { StaffMember, StaffAppointment } from '@/bookly/data/types'
@@ -92,7 +92,7 @@ export const BranchDetailsModal = ({
   onBranchChange,
   onBookService
 }: BranchDetailsModalProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'staff' | 'calendar'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'staff'>('overview')
   const params = useParams<{ lang: string }>()
   const [t, setT] = useState<any>(() => (key: string) => key)
 
@@ -246,8 +246,7 @@ export const BranchDetailsModal = ({
                 {[
                   { id: 'overview', label: t('business.branchDetails.overview'), icon: 'lucide:info' },
                   { id: 'services', label: t('business.branchDetails.services'), icon: 'lucide:scissors' },
-                  { id: 'staff', label: t('business.branchDetails.staff'), icon: 'lucide:users' },
-                  { id: 'calendar', label: t('business.branchDetails.calendar'), icon: 'lucide:calendar-days' }
+                  { id: 'staff', label: t('business.branchDetails.staff'), icon: 'lucide:users' }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -450,15 +449,6 @@ export const BranchDetailsModal = ({
                     ))}
                   </div>
                 )}
-              </div>
-            )}
-
-            {activeTab === 'calendar' && (
-              <div>
-                <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
-                  {t('business.branchDetails.staffSchedule')}
-                </h3>
-                <StaffCalendarView staff={branchStaffMembers} t={t} />
               </div>
             )}
           </div>

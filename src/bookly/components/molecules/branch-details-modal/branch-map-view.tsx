@@ -1,8 +1,7 @@
-'use client'
-
 import { useCallback, useMemo } from 'react'
-import { GoogleMap, MarkerF, InfoWindowF, useJsApiLoader } from '@react-google-maps/api'
+import { GoogleMap, OverlayView, useJsApiLoader } from '@react-google-maps/api'
 import type { Branch } from '@/lib/api'
+import GreenIcon from '@/assets/logos/icons/Green_Icon_filled_transparent.png'
 
 interface BranchMapViewProps {
   branch: Branch
@@ -58,17 +57,6 @@ const BranchMapView = ({ branch }: BranchMapViewProps) => {
     styles: []
   }
 
-  // Custom marker icon (red pin) - created after isLoaded check
-  const markerIcon = {
-    path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-    fillColor: '#e88682',
-    fillOpacity: 1,
-    strokeColor: '#f7f8f9',
-    strokeWeight: 2,
-    scale: 1.5,
-    anchor: new google.maps.Point(12, 22)
-  }
-
   return (
     <GoogleMap
       mapContainerStyle={{ height: '300px', width: '100%' }}
@@ -77,21 +65,20 @@ const BranchMapView = ({ branch }: BranchMapViewProps) => {
       options={mapOptions}
       onLoad={onMapLoad}
     >
-      <MarkerF position={center} icon={markerIcon} title={branch.name}>
-        <InfoWindowF
-          position={center}
-          options={{
-            maxWidth: 250,
-            pixelOffset: new google.maps.Size(0, 0),
-            headerDisabled: true
-          }}
-        >
-          <div className='p-3'>
-            <h3 className='font-semibold text-gray-900 text-sm mb-1'>{branch.name}</h3>
-            <p className='text-xs text-gray-600 leading-relaxed'>{branch.address}</p>
+      <OverlayView position={center} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+        <div className='relative flex flex-col items-center transform -translate-x-1/2 -translate-y-1/2 group'>
+          {/* Pulse Effect */}
+          <div className='absolute w-full h-full bg-[#0a2c24]/30 rounded-full animate-ping' />
+
+          {/* Main Marker */}
+          <div className='relative w-14 h-14 bg-white dark:bg-[#202c39] rounded-full border-[3px] border-[#0a2c24] shadow-[0_8px_20px_rgba(10,44,36,0.3)] flex items-center justify-center p-3 transition-transform duration-300 hover:scale-110 cursor-pointer overflow-hidden'>
+            <img src={GreenIcon.src} alt={branch.name} className='w-full h-full object-contain' />
           </div>
-        </InfoWindowF>
-      </MarkerF>
+
+          {/* Ground Shadow */}
+          <div className='w-4 h-1 bg-black/20 rounded-full blur-[2px] mt-2' />
+        </div>
+      </OverlayView>
     </GoogleMap>
   )
 }

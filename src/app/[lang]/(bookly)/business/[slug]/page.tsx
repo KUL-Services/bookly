@@ -33,6 +33,7 @@ import { useAuthStore } from '@/stores/auth.store'
 const getTabsWithTranslation = (t: any) => [
   { id: 'services', label: t('business.tabs.services') },
   { id: 'details', label: t('business.tabs.details') },
+  { id: 'branches', label: 'Locations' },
   { id: 'reviews', label: t('business.tabs.reviews') }
 ]
 
@@ -615,8 +616,66 @@ function businessDetailsPage() {
                     </div>
                   </div>
 
-                  {/* Branches Section (Merged) */}
-                  {branches.length > 0 && (
+                  {/* Branches Section Moved to separate tab */}
+
+                  {/* Contact / Map Section (Mobile Prominent) */}
+                  {/* <div className='bg-white dark:bg-[#202c39] p-2 rounded-[2.5rem] shadow-sm overflow-hidden'>
+                    <div className='p-6 pb-2'>
+                      <h3 className='text-xl font-bold text-gray-900 dark:text-white mb-1'>Find Us</h3>
+                      <p className='text-sm text-gray-500 mb-4'>{(business as any).address}</p>
+                    </div>
+                    <div className='h-64 w-full rounded-[2rem] overflow-hidden relative'>
+                      {isLoaded ? (
+                        <GoogleMap
+                          mapContainerStyle={{ width: '100%', height: '100%' }}
+                          center={mapCenter}
+                          zoom={15}
+                          options={{ disableDefaultUI: true, zoomControl: true }}
+                        >
+                          <OverlayView position={mapCenter} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+                            <div className='relative w-10 h-10 bg-[#0a2c24] rounded-full border-2 border-white shadow-lg flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2'>
+                              <img src={GreenIcon.src} alt='Marker' className='w-6 h-6 object-contain' />
+                            </div>
+                          </OverlayView>
+                        </GoogleMap>
+                      ) : (
+                        <div className='w-full h-full bg-gray-100 flex items-center justify-center text-gray-400'>
+                          Loading Map...
+                        </div>
+                      )}
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((business as any).address)}`}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-[#0a2c24] px-6 py-3 rounded-full shadow-lg font-bold text-sm flex items-center gap-2 hover:bg-[#0a2c24] hover:text-white transition-all'
+                      >
+                        <MapPin className='w-4 h-4' /> Get Directions
+                      </a>
+                    </div>
+                  </div> */}
+
+                  {/* Social Links */}
+                  {business.socialLinks && business.socialLinks.length > 0 && (
+                    <div className='flex gap-4 justify-center py-4'>
+                      {business.socialLinks.map((link, i) => (
+                        <a
+                          key={i}
+                          href={link.url}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='w-12 h-12 rounded-full bg-white dark:bg-[#202c39] shadow-md flex items-center justify-center hover:scale-110 transition-transform text-[#0a2c24] dark:text-white'
+                        >
+                          <Globe className='w-5 h-5' />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'branches' && (
+                <div className='space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500'>
+                  {branches.length > 0 ? (
                     <div>
                       <h3 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-6'>Our Locations</h3>
                       <div className='grid grid-cols-1 gap-6'>
@@ -654,63 +713,19 @@ function businessDetailsPage() {
                         ))}
                       </div>
                     </div>
-                  )}
-
-                  {/* Contact / Map Section (Mobile Prominent) */}
-                  <div className='bg-white dark:bg-[#202c39] p-2 rounded-[2.5rem] shadow-sm overflow-hidden'>
-                    <div className='p-6 pb-2'>
-                      <h3 className='text-xl font-bold text-gray-900 dark:text-white mb-1'>Find Us</h3>
-                      <p className='text-sm text-gray-500 mb-4'>{(business as any).address}</p>
-                    </div>
-                    <div className='h-64 w-full rounded-[2rem] overflow-hidden relative'>
-                      {isLoaded ? (
-                        <GoogleMap
-                          mapContainerStyle={{ width: '100%', height: '100%' }}
-                          center={mapCenter}
-                          zoom={15}
-                          options={{ disableDefaultUI: true, zoomControl: true }}
-                        >
-                          <OverlayView position={mapCenter} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-                            <div className='relative w-10 h-10 bg-[#0a2c24] rounded-full border-2 border-white shadow-lg flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2'>
-                              <img src={GreenIcon.src} alt='Marker' className='w-6 h-6 object-contain' />
-                            </div>
-                          </OverlayView>
-                        </GoogleMap>
-                      ) : (
-                        <div className='w-full h-full bg-gray-100 flex items-center justify-center text-gray-400'>
-                          Loading Map...
-                        </div>
-                      )}
-                      <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((business as any).address)}`}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-[#0a2c24] px-6 py-3 rounded-full shadow-lg font-bold text-sm flex items-center gap-2 hover:bg-[#0a2c24] hover:text-white transition-all'
-                      >
-                        <MapPin className='w-4 h-4' /> Get Directions
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Social Links */}
-                  {business.socialLinks && business.socialLinks.length > 0 && (
-                    <div className='flex gap-4 justify-center py-4'>
-                      {business.socialLinks.map((link, i) => (
-                        <a
-                          key={i}
-                          href={link.url}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='w-12 h-12 rounded-full bg-white dark:bg-[#202c39] shadow-md flex items-center justify-center hover:scale-110 transition-transform text-[#0a2c24] dark:text-white'
-                        >
-                          <Globe className='w-5 h-5' />
-                        </a>
-                      ))}
+                  ) : (
+                    <div className='text-center py-12 bg-white dark:bg-[#202c39] rounded-[2rem]'>
+                      <div className='w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4'>
+                        <MapPin className='w-8 h-8 text-gray-400' />
+                      </div>
+                      <h3 className='text-lg font-bold text-gray-900 dark:text-white'>No additional locations</h3>
+                      <p className='text-gray-500 text-sm'>
+                        This business currently operates from a single location found in the details tab.
+                      </p>
                     </div>
                   )}
                 </div>
               )}
-
               {activeTab === 'reviews' && (
                 <div className='animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6'>
                   <div className='flex items-center justify-between mb-4'>
