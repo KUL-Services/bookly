@@ -3,12 +3,12 @@
 import { H2 } from '@/bookly/components/atoms'
 import { CategoryCard } from '@/bookly/components/molecules'
 import { categories } from '@/bookly/data/mock-data'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import type { Category } from '@/bookly/data/types'
 
 export const ExploreSection = () => {
-  const router = useRouter()
   const params = useParams<{ lang: string }>()
   const [categoriesData, setCategoriesData] = useState(categories)
   const [loading, setLoading] = useState(true)
@@ -19,14 +19,14 @@ export const ExploreSection = () => {
       {
         id: '1',
         name: 'Health & Beauty',
-        slug: 'health-beauty',
+        slug: 'beauty',
         icon: 'ri-heart-pulse-line',
         image: '/images/categories/health.jpg'
       },
       {
         id: '2',
         name: 'Sports & Fitness',
-        slug: 'sports-fitness',
+        slug: 'fitness',
         icon: 'ri-run-line',
         image: '/images/categories/sports.jpg'
       },
@@ -40,28 +40,24 @@ export const ExploreSection = () => {
       {
         id: '4',
         name: 'Professional Services',
-        slug: 'professional-services',
+        slug: 'services',
         icon: 'ri-briefcase-line',
         image: '/images/categories/professional.jpg'
       },
       {
         id: '5',
         name: 'Home & Garden',
-        slug: 'home-garden',
+        slug: 'home',
         icon: 'ri-home-line',
         image: '/images/categories/home.jpg'
       },
-      { id: '6', name: 'Automotive', slug: 'automotive', icon: 'ri-car-line', image: '/images/categories/auto.jpg' },
-      { id: '7', name: 'Medical', slug: 'medical', icon: 'ri-hospital-line', image: '/images/categories/medical.jpg' },
+      { id: '6', name: 'Automotive', slug: 'auto', icon: 'ri-car-line', image: '/images/categories/auto.jpg' },
+      { id: '7', name: 'Medical', slug: 'dental', icon: 'ri-hospital-line', image: '/images/categories/medical.jpg' },
       { id: '8', name: 'Legal', slug: 'legal', icon: 'ri-scales-line', image: '/images/categories/legal.jpg' }
     ]
     setCategoriesData(mockCategoriesData)
     setLoading(false)
   }, [])
-
-  const handleCategoryClick = (slug: string) => {
-    router.push(`/${params?.lang}/category/${slug}`)
-  }
   return (
     <>
       {/* Categories Section */}
@@ -90,13 +86,13 @@ export const ExploreSection = () => {
                   const variants: ('sage' | 'coral' | 'teal')[] = ['sage', 'coral', 'teal']
                   const variant = variants[index % variants.length]
                   return (
-                    <CategoryCard
+                    <Link
                       key={category.id}
-                      category={category}
-                      onClick={() => handleCategoryClick(category.slug)}
+                      href={`/${params?.lang}/search?category=${category.slug}`}
                       className='min-w-[160px] sm:min-w-[190px] lg:min-w-[210px] snap-start'
-                      variant={variant}
-                    />
+                    >
+                      <CategoryCard category={category} variant={variant} />
+                    </Link>
                   )
                 })}
           </div>

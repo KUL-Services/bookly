@@ -8,7 +8,9 @@ import clsx from 'clsx'
 
 const Avatar = ({ avatarTitle, iconProps, imageUrl, size, testId, alt, className }: AvatarProps) => {
   const avatarSize = getAvatarSize(size)
-  if (imageUrl)
+  const [imgError, setImgError] = React.useState(false)
+
+  if (imageUrl && !imgError)
     return (
       <div
         className={clsx(
@@ -17,7 +19,12 @@ const Avatar = ({ avatarTitle, iconProps, imageUrl, size, testId, alt, className
           className
         )}
       >
-        <BaseImage src={imageUrl} alt={alt || ''} />
+        <BaseImage
+          src={imageUrl}
+          alt={alt || ''}
+          unoptimized={imageUrl.includes('.svg')}
+          onError={() => setImgError(true)}
+        />
       </div>
     )
   if (iconProps)
@@ -25,7 +32,8 @@ const Avatar = ({ avatarTitle, iconProps, imageUrl, size, testId, alt, className
       <div
         className={clsx(
           'border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative',
-          avatarSize
+          avatarSize,
+          className
         )}
       >
         <KulIcon {...iconProps}></KulIcon>
@@ -37,7 +45,8 @@ const Avatar = ({ avatarTitle, iconProps, imageUrl, size, testId, alt, className
       <div
         className={clsx(
           'border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative',
-          avatarSize
+          avatarSize,
+          className
         )}
       >
         <H6 stringProps={{ plainText: initials }}></H6>

@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/bookly/components/ui/alert'
 import { AlertCircle, CheckCircle, ArrowLeft, Save } from 'lucide-react'
 import { ImageUpload } from '@/components/media/ImageUpload'
 import initTranslations from '@/app/i18n/i18n'
+import { MOCK_USER } from '@/mocks/user'
 
 export default function ProfileSettingsPage() {
   const router = useRouter()
@@ -48,34 +49,11 @@ export default function ProfileSettingsPage() {
   const fetchUserDetails = async () => {
     try {
       setFetchingDetails(true)
-      setError(null)
+      // Simulate API delay for realistic feel
+      await new Promise(resolve => setTimeout(resolve, 600))
 
-      // Ensure we have a token before making the API call
-      const storedToken = AuthService.getStoredToken()
-      if (!storedToken) {
-        console.warn('No auth token found, skipping user details fetch')
-        setFetchingDetails(false)
-        return
-      }
-
-      // Ensure the API client has the token
-      AuthService.initializeAuth()
-
-      console.log('Fetching user details...')
-      const response = await AuthService.getUserDetails()
-      console.log('User details response:', response)
-
-      if (response.error) {
-        console.error('User details fetch error:', response.error)
-        throw new Error(response.error)
-      }
-
-      const details = response.data
-      if (!details) {
-        throw new Error('No user details received from server')
-      }
-
-      console.log('User details:', details)
+      const details = MOCK_USER
+      console.log('Using mock user details:', details)
       setUserDetails(details)
 
       // Initialize form with fetched user data
@@ -83,11 +61,11 @@ export default function ProfileSettingsPage() {
         firstName: details.firstName || '',
         lastName: details.lastName || '',
         mobile: details.mobile || '',
-        profilePhoto: details.profilePhoto || null
+        profilePhoto: details.profilePhotoUrl || null
       })
     } catch (err) {
-      console.error('Failed to fetch user details:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load user details')
+      console.error('Failed to load user details:', err)
+      setError('Failed to load user details')
     } finally {
       setFetchingDetails(false)
     }
@@ -169,36 +147,18 @@ export default function ProfileSettingsPage() {
     setSuccess(null)
 
     try {
-      const updateData: UpdateUserRequest = {
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        mobile: formData.mobile.trim(),
-        profilePhoto: formData.profilePhoto
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800))
 
-      console.log('Updating user profile with data:', updateData)
-      console.log('Auth token before request:', localStorage.getItem('auth_token') ? 'Present' : 'Missing')
-
-      const response = await AuthService.updateUser(updateData)
-      console.log('Update response:', response)
-      console.log('Auth token after request:', localStorage.getItem('auth_token') ? 'Present' : 'Missing')
-
-      if (response.error) {
-        console.error('Profile update error:', response.error)
-        throw new Error(response.error)
-      }
+      console.log('Simulating successful profile update for:', formData)
 
       setSuccess('Profile updated successfully!')
 
-      // Refresh user details after successful update
-      try {
-        await fetchUserDetails()
-      } catch (refreshError) {
-        console.warn('Failed to refresh user details after update:', refreshError)
-      }
+      // Refresh user details (re-fetch mock data)
+      await fetchUserDetails()
     } catch (err) {
       console.error('Update failed:', err)
-      setError(err instanceof Error ? err.message : 'Failed to update profile')
+      setError('Failed to update profile')
     } finally {
       setLoading(false)
     }

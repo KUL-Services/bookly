@@ -38,7 +38,10 @@ export default async function initTranslations(
     defaultNS: Array.isArray(namespaces) ? namespaces[0] : namespaces,
     fallbackNS: Array.isArray(namespaces) ? namespaces[0] : namespaces,
     ns: namespaces,
-    preload: resources ? [] : i18nConfig.locales
+    preload: resources ? [] : i18nConfig.locales,
+    interpolation: {
+      escapeValue: false
+    }
   })
 
   return {

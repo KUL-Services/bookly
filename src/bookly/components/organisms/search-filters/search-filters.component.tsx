@@ -300,7 +300,7 @@ export function SearchFilters({
       {showAppliedFilters && getAppliedFiltersCount() > 0 && (
         <div className='mb-6'>
           <div className='flex items-center justify-between mb-3'>
-            <h4 className='text-sm font-medium text-gray-900 dark:text-white font-mono'>
+            <h4 className='text-sm font-medium text-gray-900 dark:text-white'>
               {t('search.filters.appliedFilters')} ({getAppliedFiltersCount()})
             </h4>
             <Button
@@ -317,7 +317,7 @@ export function SearchFilters({
               <Badge
                 key={`${filter.key}-${index}`}
                 variant='secondary'
-                className='bg-primary-200 dark:bg-primary-900/30 text-primary-900 dark:text-sage-300 hover:bg-primary-300 dark:hover:bg-primary-800/40 cursor-pointer font-mono'
+                className='bg-primary-200 dark:bg-primary-900/30 text-primary-900 dark:text-sage-300 hover:bg-primary-300 dark:hover:bg-primary-800/40 cursor-pointer'
                 onClick={() => removeFilter(filter.key, filter.value)}
               >
                 {filter.label}
@@ -332,7 +332,7 @@ export function SearchFilters({
 
       {/* Search Query */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-mono'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
           {t('search.filters.searchLabel')}
         </label>
         <Input
@@ -360,7 +360,7 @@ export function SearchFilters({
 
       {/* Categories */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-mono'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
           {t('search.filters.categoriesLabel')}
         </label>
         <CategoryMultiSelect
@@ -373,7 +373,7 @@ export function SearchFilters({
 
       {/* Price Range */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 font-mono'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
           {t('search.filters.priceRangeLabel')}
         </label>
         <div className='grid grid-cols-2 gap-3'>
@@ -410,7 +410,7 @@ export function SearchFilters({
             />
           </div>
         </div>
-        <div className='mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded px-3 py-2 font-mono'>
+        <div className='mt-2 text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 rounded px-3 py-2'>
           {t('search.filters.priceRange', {
             min: filters.priceMin || 0,
             max: filters.priceMax === undefined ? 'Any' : filters.priceMax
@@ -420,7 +420,7 @@ export function SearchFilters({
 
       {/* Rating */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 font-mono'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
           {t('search.filters.ratingLabel')}
         </label>
         <div className='flex flex-wrap gap-2'>
@@ -444,7 +444,7 @@ export function SearchFilters({
       {/* Time of Day */}
       {options.timeSlots.length > 0 && (
         <div className='mb-6'>
-          <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 font-mono'>
+          <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
             {t('search.filters.preferredTimeLabel')}
           </label>
           <div className='space-y-2'>
@@ -469,7 +469,7 @@ export function SearchFilters({
 
       {/* Sort */}
       <div className='mb-6'>
-        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 font-mono'>
+        <label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2'>
           {t('search.filters.sortByLabel')}
         </label>
         <select

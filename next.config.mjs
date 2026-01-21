@@ -21,6 +21,16 @@ const nextConfig = {
         hostname: 'gratisography.com',
         pathname: '/**'
       },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+        pathname: '/**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**'
+      },
       //TODO: REMOVE THIS BEFORE DEPLOYMENT
       {
         protocol: 'https',

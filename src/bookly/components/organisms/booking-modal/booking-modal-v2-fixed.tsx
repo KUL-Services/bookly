@@ -26,7 +26,7 @@ import { downloadICS } from '@/bookly/utils/ics-generator.util'
 import { BookingService } from '@/lib/api'
 import type { Service, Staff } from '@/lib/api/types'
 import { getBusinessWithDetails } from '@/mocks/businesses'
-import { Check, CalendarPlus } from 'lucide-react'
+import { Check, CalendarPlus, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface BookingModalV2FixedProps {
   isOpen: boolean
@@ -158,17 +158,29 @@ function SortableServiceCard({
     opacity: isDragging ? 0.5 : 1
   }
 
+  const staffScrollRef = useRef<HTMLDivElement>(null)
+
+  const scrollStaff = (direction: 'left' | 'right') => {
+    if (staffScrollRef.current) {
+      const scrollAmount = 100
+      staffScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      })
+    }
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className='bg-white dark:bg-gray-800 rounded-2xl p-4 sm:p-5 relative shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700'
+      className='bg-white dark:bg-[#202c39] rounded-2xl p-5 relative shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700'
     >
       {/* Drag Handle */}
       <div
         {...attributes}
         {...listeners}
-        className='absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors touch-none'
+        className='absolute left-2 top-4 cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl transition-colors touch-none'
         style={{ touchAction: 'none' }}
       >
         <KulIcon icon='lucide:grip-vertical' className='w-5 h-5 text-gray-400 hover:text-primary-600' />
@@ -181,57 +193,102 @@ function SortableServiceCard({
         <KulIcon icon='lucide:x' className='w-4 h-4' />
       </button>
 
-      <div className='flex items-start justify-between mb-3 pr-10 pl-10'>
+      <div className='flex items-start justify-between mb-4 pr-10 pl-10'>
         <div className='flex-1'>
-          <div className='font-bold text-lg text-gray-900 dark:text-white'>{selected.service.name}</div>
-          <div className='text-sm text-primary-600 dark:text-teal-400 font-medium font-mono'>
-            {selected.time && selected.endTime
-              ? `${selected.time} - ${selected.endTime}`
-              : 'Time pending - select start time'}
+          <h3 className='font-bold text-lg text-gray-900 dark:text-white mb-1'>{selected.service.name}</h3>
+          <div className='text-sm text-gray-500 dark:text-gray-400 font-medium font-mono'>
+            {selected.time && selected.endTime ? (
+              <span className='flex items-center gap-2'>
+                <Clock className='w-3.5 h-3.5' /> {selected.time} - {selected.endTime}
+              </span>
+            ) : (
+              'Time pending - select start time'
+            )}
           </div>
+          <div className='text-xs text-gray-400 mt-1 font-mono'>{selected.service.duration}min</div>
         </div>
-        <div className='text-xl font-bold text-primary-700 dark:text-teal-400 font-mono'>
+        <div className='text-xl font-bold text-gray-900 dark:text-white font-mono'>
           £{(selected.service.price / 100).toFixed(2)}
         </div>
       </div>
 
-      <div className='flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700/50 pl-10'>
-        <div className='text-sm text-gray-600 dark:text-gray-300'>
-          Staff: <span className='font-medium'>{selected.providerName}</span>
-        </div>
-        <button
-          onClick={onToggleStaffSelector}
-          className='text-primary-600 dark:text-teal-400 hover:text-primary-700 dark:hover:text-teal-300 font-semibold text-sm px-3 py-1.5 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all'
-        >
-          Change
-        </button>
-      </div>
-
-      {/* Staff Selector Dropdown */}
-      {showStaffSelector && (
-        <div className='mt-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl space-y-2 max-h-60 overflow-y-auto ml-10'>
-          {availableStaff.map(staff => (
+      {/* Staff Selection - Horizontal Scroll */}
+      <div className='pl-10 mt-4 border-t border-gray-100 dark:border-gray-700/50 pt-4'>
+        <div className='flex items-center justify-between mb-3'>
+          <h4 className='text-sm font-bold text-gray-900 dark:text-white'>Available staff</h4>
+          <div className='flex gap-1'>
             <button
-              key={staff.id}
-              onClick={() => onChangeStaff(staff.id)}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
-                selected.providerId === staff.id
-                  ? 'bg-primary-100 dark:bg-primary-900/30 border border-primary-300 dark:border-primary-700 shadow-sm'
-                  : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-transparent'
-              }`}
+              onClick={() => scrollStaff('left')}
+              className='p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors'
             >
-              {staff.profilePhotoUrl ? (
-                <img src={staff.profilePhotoUrl} alt={staff.name} className='w-10 h-10 rounded-xl object-cover' />
-              ) : (
-                <div className='w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center text-white font-semibold'>
-                  {staff.name.charAt(0)}
-                </div>
-              )}
-              <span className='font-semibold text-gray-900 dark:text-white'>{staff.name}</span>
+              <ChevronLeft className='w-4 h-4' />
             </button>
-          ))}
+            <button
+              onClick={() => scrollStaff('right')}
+              className='p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors'
+            >
+              <ChevronRight className='w-4 h-4' />
+            </button>
+          </div>
         </div>
-      )}
+
+        <div ref={staffScrollRef} className='flex gap-4 overflow-x-auto no-scrollbar pb-2 items-start scroll-smooth'>
+          {availableStaff.map(staff => {
+            const isSelected = selected.providerId === staff.id
+            return (
+              <button
+                key={staff.id}
+                onClick={() => onChangeStaff(staff.id)}
+                className='bg-transparent flex flex-col items-center gap-2 group min-w-[70px] flex-shrink-0'
+              >
+                <div
+                  className={`relative w-14 h-14 rounded-full p-0.5 transition-all duration-200 ${
+                    isSelected
+                      ? 'border-2 border-[#0a2c24] dark:border-white ring-2 ring-[#0a2c24]/20 dark:ring-white/20'
+                      : 'border border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  {staff.profilePhotoUrl ? (
+                    <img
+                      src={staff.profilePhotoUrl}
+                      alt={staff.name}
+                      className='w-full h-full rounded-full object-cover'
+                    />
+                  ) : staff.id === 'no-preference' ? (
+                    <div
+                      className={`w-full h-full rounded-full flex items-center justify-center ${isSelected ? 'bg-[#0a2c24] text-white' : 'bg-white border-2 border-[#0a2c24] text-[#0a2c24]'}`}
+                    >
+                      <KulIcon icon='lucide:users' className='w-6 h-6' />
+                    </div>
+                  ) : (
+                    <div className='w-full h-full rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold'>
+                      {staff.name.charAt(0)}
+                    </div>
+                  )}
+
+                  {/* Green Dot Indicator */}
+                  {isSelected && (
+                    <div className='absolute bottom-0 right-0 w-4 h-4 bg-[#22c55e] border-2 border-white dark:border-[#202c39] rounded-full z-10' />
+                  )}
+                </div>
+
+                <span
+                  className={`text-xs text-center max-w-[80px] leading-tight ${
+                    isSelected
+                      ? 'font-bold text-[#0a2c24] dark:text-white'
+                      : 'font-medium text-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  {staff.name === 'No preference' ? 'No preference' : staff.name.split(' ')[0]}
+                  {staff.name !== 'No preference' && staff.name.split(' ').length > 1 && (
+                    <span className='block text-[10px] text-gray-400 font-normal'>{(staff as any).location || ''}</span>
+                  )}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
@@ -383,12 +440,12 @@ function BookingModalV2Fixed({
   // Auto-add initial service with selected time (only once when modal opens)
   useEffect(() => {
     // If we have an initialService and user selected a time (or we have initialTime from props)
-    const timeToUse = initialTime || selectedTime
+    // We allow empty string for time so the service card appears ("Time pending")
+    const timeToUse = initialTime || selectedTime || ''
 
     if (
       isOpen &&
       initialService &&
-      timeToUse &&
       selectedServices.length === 0 &&
       availableStaff.length > 0 &&
       !hasAutoAddedInitialService.current
@@ -415,8 +472,8 @@ function BookingModalV2Fixed({
 
         // Get staff from the specific branch or all branches
         const allStaff: Staff[] = []
-        if (businessData.branches) {
-          businessData.branches.forEach(branch => {
+        if (businessData.fullBranches) {
+          businessData.fullBranches.forEach(branch => {
             if (!branchId || branch.id === branchId) {
               if (branch.staff) {
                 allStaff.push(...branch.staff)
@@ -453,7 +510,7 @@ function BookingModalV2Fixed({
       businessId: s.businessId || '1',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      business: { name: s.location }
+      business: { id: '1', name: s.location }
     }))
     setAvailableServices(services)
 

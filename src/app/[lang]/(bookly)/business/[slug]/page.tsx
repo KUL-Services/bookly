@@ -8,21 +8,32 @@ import BookingModalV2Fixed from '@/bookly/components/organisms/booking-modal/boo
 import { Card, CardContent } from '@/bookly/components/ui/card'
 import { mockBusinesses, mockReviews, mockServices } from '@/bookly/data/mock-data'
 import { format } from 'date-fns'
-import { Clock, Globe, MapPin, Phone, Star, Heart, Share, ChevronRight } from 'lucide-react'
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import {
+  Clock,
+  Globe,
+  MapPin,
+  Phone,
+  Star,
+  Heart,
+  Share,
+  ChevronRight,
+  User as UserLockIcon,
+  ChevronLeft
+} from 'lucide-react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { BusinessService, ServicesService, BranchesService, StaffService } from '@/lib/api'
 import { GoogleMap, useJsApiLoader, OverlayView } from '@react-google-maps/api'
 import GreenIcon from '@/assets/logos/icons/Green_Icon_filled_transparent.png'
 import type { Business, Service as ApiService, Branch, Staff } from '@/lib/api'
 import initTranslations from '@/app/i18n/i18n'
 import { getBusinessWithDetails } from '@/mocks/businesses'
+import { useAuthStore } from '@/stores/auth.store'
 
 const getTabsWithTranslation = (t: any) => [
   { id: 'services', label: t('business.tabs.services') },
-  { id: 'branches', label: t('business.tabs.branches') },
-  { id: 'reviews', label: t('business.tabs.reviews') },
-  { id: 'about', label: t('business.tabs.about') }
+  { id: 'details', label: t('business.tabs.details') },
+  { id: 'reviews', label: t('business.tabs.reviews') }
 ]
 
 interface Review {
@@ -261,14 +272,46 @@ function businessDetailsPage() {
   const [selectedBranch, setSelectedBranch] = useState<any>(null)
   const [branchModalOpen, setBranchModalOpen] = useState(false)
 
+  const { booklyUser } = useAuthStore()
+  const router = useRouter()
+  const [showLoginGuestModal, setShowLoginGuestModal] = useState(false)
+  const staffScrollRef = useRef<HTMLDivElement>(null)
+
+  const scrollStaff = (direction: 'left' | 'right') => {
+    if (staffScrollRef.current) {
+      const scrollAmount = 200
+      staffScrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      })
+    }
+  }
+
   const handelBookService = (service?: ApiService) => {
     if (service) {
       setSelectedService(service)
     } else {
       /* Alert you must choose a service */
     }
+
+    // Check if user is logged in
+    if (booklyUser) {
+      setIsBookingModalOpen(true)
+    } else {
+      setShowLoginGuestModal(true)
+    }
+  }
+
+  const handleLoginRedirect = () => {
+    // Redirect to login with return url
+    const returnUrl = encodeURIComponent(`/business/${params.slug}`)
+    router.push(`/${params.lang}/login?redirect=${returnUrl}`)
+    setShowLoginGuestModal(false)
+  }
+
+  const handleContinueAsGuest = () => {
+    setShowLoginGuestModal(false)
     setIsBookingModalOpen(true)
-    console.log(`Booking Modal is ${isBookingModalOpen}`)
   }
 
   if (loading) {
@@ -280,7 +323,7 @@ function businessDetailsPage() {
             <div className='absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-[#77b6a3] animate-ping mx-auto'></div>
           </div>
           <div className='mt-6 space-y-2'>
-            <p className='text-xl font-semibold text-[#0a2c24] dark:text-white'>{t('business.loading')}</p>
+            <p className='text-xl font-semibold text-[#0a2c24] dark:text-white'>Loading...</p>
             <div className='flex justify-center space-x-1'>
               <div className='w-2 h-2 bg-[#0a2c24] rounded-full animate-bounce'></div>
               <div className='w-2 h-2 bg-[#0a2c24] rounded-full animate-bounce animation-delay-200'></div>
@@ -318,7 +361,7 @@ function businessDetailsPage() {
   return (
     <div className='min-h-screen flex flex-col bg-[#f7f8f9] dark:bg-[#0a2c24] relative font-sans'>
       {/* Hero Cover Section */}
-      <div className='relative h-[40vh] min-h-[300px] lg:h-[50vh] w-full overflow-hidden group rounded-b-[4rem] border-b-2 border-[#0a2c24]'>
+      <div className='relative h-[65vh] min-h-[550px] lg:h-[50vh] w-full overflow-hidden group rounded-b-[4rem] border-b-2 border-[#0a2c24]'>
         <div className='absolute inset-0 bg-gray-900'>
           <img
             src={(business as any).coverImageUrl || '/images/business-placeholder.jpg'}
@@ -389,12 +432,12 @@ function businessDetailsPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className='max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-12 relative z-10'>
+      <div className='max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-12 relative z-10'>
         <div className='flex flex-col lg:flex-row gap-8'>
           {/* Tabs & Content - Left Side */}
           <div className='flex-1 min-w-0'>
             {/* Refined Sticky Navigation */}
-            <div className='sticky top-24 z-30 mb-8 bg-[#f7f8f9] dark:bg-[#0a2c24] py-4'>
+            <div className='sticky top-[64px] z-30 mb-8 bg-[#f7f8f9] dark:bg-[#0a2c24] py-4'>
               <div className='flex items-center gap-2 overflow-x-auto no-scrollbar pb-4 px-1'>
                 {getTabsWithTranslation(t).map(tab => (
                   <button
@@ -486,146 +529,238 @@ function businessDetailsPage() {
                 </div>
               )}
 
-              {activeTab === 'branches' && (
-                <div className='space-y-8'>
-                  <h2 className='text-3xl font-bold text-[#0a2c24] dark:text-white tracking-tight'>Our Locations</h2>
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
-                    {branches.map((branch, index) => (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          setSelectedBranch(branch)
-                          setBranchModalOpen(true)
-                        }}
-                        className='group relative h-64 overflow-hidden rounded-[2.5rem] cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1'
-                      >
-                        <div
-                          className='absolute inset-4 zerv-mask opacity-[0.75] transition duration-300 group-hover:opacity-[0.95] z-10 pointer-events-none'
-                          style={{
-                            backgroundImage: `url(${(branch.galleryUrls && branch.galleryUrls[0]) || '/images/placeholder-image2.jpg'})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            filter: 'contrast(1.05) saturate(1.05)'
-                          }}
-                        />
-                        <div
-                          className='absolute inset-4 zerv-mask opacity-[0.12] blur-[10px] transition duration-300 group-hover:opacity-[0.18] pointer-events-none'
-                          style={{
-                            backgroundImage: `url(${(branch.galleryUrls && branch.galleryUrls[0]) || '/images/placeholder-image2.jpg'})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center'
-                          }}
-                        />
-                        <img
-                          src={(branch.galleryUrls && branch.galleryUrls[0]) || '/images/placeholder-image2.jpg'}
-                          className='absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110'
-                          alt={branch.name}
-                        />
-                        <div className='absolute inset-0 bg-[#0a2c24]/50 group-hover:bg-[#0a2c24]/40 transition-colors' />
-
-                        <div className='absolute bottom-0 left-0 p-8 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500'>
-                          <h3 className='text-2xl font-bold text-white mb-2 shadow-sm'>{branch.name}</h3>
-                          <p className='text-gray-300 text-sm flex items-center gap-2 mb-4'>
-                            <MapPin className='w-4 h-4 text-[#77b6a3]' /> {branch.address}
-                          </p>
-                          <span className='inline-flex items-center gap-2 text-white bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-sm font-bold group-hover:bg-[#77b6a3] group-hover:text-white transition-all'>
-                            View Details <ChevronRight className='w-4 h-4' />
-                          </span>
+              {activeTab === 'details' && (
+                <div className='space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500'>
+                  {/* Staff Carousel Section */}
+                  {staff.length > 0 && (
+                    <div className='bg-white dark:bg-[#202c39] p-6 rounded-[2.5rem] shadow-sm relative overflow-hidden'>
+                      <h2 className='text-xl font-bold text-[#0a2c24] dark:text-white mb-6 flex items-center justify-between'>
+                        <span>Meet the Team</span>
+                        <div className='flex gap-2'>
+                          <button
+                            onClick={() => scrollStaff('left')}
+                            className='p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
+                          >
+                            <ChevronLeft className='w-4 h-4 text-gray-600 dark:text-gray-300' />
+                          </button>
+                          <button
+                            onClick={() => scrollStaff('right')}
+                            className='p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
+                          >
+                            <ChevronRight className='w-4 h-4 text-gray-600 dark:text-gray-300' />
+                          </button>
                         </div>
+                      </h2>
+
+                      <div ref={staffScrollRef} className='flex gap-6 overflow-x-auto no-scrollbar pb-2 scroll-smooth'>
+                        {staff.map((member, index) => (
+                          <div
+                            key={member.id || index}
+                            className='flex flex-col items-center gap-3 min-w-[100px] cursor-pointer group'
+                          >
+                            <div className='w-24 h-24 rounded-full p-1 bg-gradient-to-br from-[#0a2c24] to-[#77b6a3] group-hover:scale-105 transition-transform shadow-md'>
+                              <img
+                                src={
+                                  (member as any).image ||
+                                  `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`
+                                }
+                                alt={member.name}
+                                className='w-full h-full rounded-full object-cover border-4 border-white dark:border-[#202c39] bg-white'
+                              />
+                            </div>
+                            <div className='text-center'>
+                              <span className='block text-sm font-bold text-gray-800 dark:text-gray-200'>
+                                {member.name.split(' ')[0]}
+                              </span>
+                              <span className='text-xs text-gray-500 dark:text-gray-400'>Specialist</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  )}
+
+                  {/* About Section */}
+                  <div className='bg-white dark:bg-[#202c39] p-8 md:p-10 rounded-[2.5rem] shadow-sm relative overflow-hidden'>
+                    <div
+                      className='absolute right-[-40px] top-[-40px] h-64 w-64 zerv-mask opacity-[0.05] dark:opacity-[0.08]'
+                      style={{ background: 'radial-gradient(circle, #0a2c24 0%, transparent 70%)' }}
+                    />
+                    <h2 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-6'>About {business.name}</h2>
+                    <div className='prose prose-lg text-gray-600 dark:text-gray-300 max-w-none'>
+                      <p className='leading-relaxed'>{business.description}</p>
+                    </div>
+
+                    <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mt-8'>
+                      <div className='p-4 bg-gray-50 dark:bg-black/20 rounded-2xl text-center'>
+                        <Clock className='w-6 h-6 mx-auto text-[#0a2c24] dark:text-[#77b6a3] mb-2' />
+                        <div className='text-xs font-bold'>Hours</div>
+                        <div className='text-[10px] text-gray-500'>9AM - 8PM</div>
+                      </div>
+                      <div className='p-4 bg-gray-50 dark:bg-black/20 rounded-2xl text-center'>
+                        <Globe className='w-6 h-6 mx-auto text-[#0a2c24] dark:text-[#77b6a3] mb-2' />
+                        <div className='text-xs font-bold'>Booking</div>
+                        <div className='text-[10px] text-gray-500'>24/7 Online</div>
+                      </div>
+                      <div className='p-4 bg-gray-50 dark:bg-black/20 rounded-2xl text-center'>
+                        <Star className='w-6 h-6 mx-auto text-[#0a2c24] dark:text-[#77b6a3] mb-2' />
+                        <div className='text-xs font-bold'>Quality</div>
+                        <div className='text-[10px] text-gray-500'>Premium</div>
+                      </div>
+                      <div className='p-4 bg-gray-50 dark:bg-black/20 rounded-2xl text-center'>
+                        <Phone className='w-6 h-6 mx-auto text-[#0a2c24] dark:text-[#77b6a3] mb-2' />
+                        <div className='text-xs font-bold'>Contact</div>
+                        <div className='text-[10px] text-gray-500'>Direct</div>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Branches Section (Merged) */}
+                  {branches.length > 0 && (
+                    <div>
+                      <h3 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-6'>Our Locations</h3>
+                      <div className='grid grid-cols-1 gap-6'>
+                        {branches.map((branch, index) => (
+                          <div
+                            key={index}
+                            onClick={() => {
+                              setSelectedBranch(branch)
+                              setBranchModalOpen(true)
+                            }}
+                            className='group bg-white dark:bg-[#202c39] p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 items-center'
+                          >
+                            <div className='w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 relative'>
+                              <img
+                                src={(branch.galleryUrls && branch.galleryUrls[0]) || '/images/placeholder-image2.jpg'}
+                                className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                                alt={branch.name}
+                              />
+                            </div>
+                            <div className='flex-1'>
+                              <h4 className='text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-[#2a9d8f] transition-colors'>
+                                {branch.name}
+                              </h4>
+                              <p className='text-sm text-gray-500 flex items-center gap-1.5 mb-2'>
+                                <MapPin className='w-3.5 h-3.5 text-[#2a9d8f]' /> {branch.address}
+                              </p>
+                              <div className='flex items-center gap-2'>
+                                <span className='text-xs bg-[#2a9d8f]/10 text-[#2a9d8f] px-2 py-1 rounded-full font-medium'>
+                                  View Details
+                                </span>
+                              </div>
+                            </div>
+                            <ChevronRight className='w-5 h-5 text-gray-300 group-hover:text-[#2a9d8f] transition-colors' />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Contact / Map Section (Mobile Prominent) */}
+                  <div className='bg-white dark:bg-[#202c39] p-2 rounded-[2.5rem] shadow-sm overflow-hidden'>
+                    <div className='p-6 pb-2'>
+                      <h3 className='text-xl font-bold text-gray-900 dark:text-white mb-1'>Find Us</h3>
+                      <p className='text-sm text-gray-500 mb-4'>{(business as any).address}</p>
+                    </div>
+                    <div className='h-64 w-full rounded-[2rem] overflow-hidden relative'>
+                      {isLoaded ? (
+                        <GoogleMap
+                          mapContainerStyle={{ width: '100%', height: '100%' }}
+                          center={mapCenter}
+                          zoom={15}
+                          options={{ disableDefaultUI: true, zoomControl: true }}
+                        >
+                          <OverlayView position={mapCenter} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
+                            <div className='relative w-10 h-10 bg-[#0a2c24] rounded-full border-2 border-white shadow-lg flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2'>
+                              <img src={GreenIcon.src} alt='Marker' className='w-6 h-6 object-contain' />
+                            </div>
+                          </OverlayView>
+                        </GoogleMap>
+                      ) : (
+                        <div className='w-full h-full bg-gray-100 flex items-center justify-center text-gray-400'>
+                          Loading Map...
+                        </div>
+                      )}
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((business as any).address)}`}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-[#0a2c24] px-6 py-3 rounded-full shadow-lg font-bold text-sm flex items-center gap-2 hover:bg-[#0a2c24] hover:text-white transition-all'
+                      >
+                        <MapPin className='w-4 h-4' /> Get Directions
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Social Links */}
+                  {business.socialLinks && business.socialLinks.length > 0 && (
+                    <div className='flex gap-4 justify-center py-4'>
+                      {business.socialLinks.map((link, i) => (
+                        <a
+                          key={i}
+                          href={link.url}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='w-12 h-12 rounded-full bg-white dark:bg-[#202c39] shadow-md flex items-center justify-center hover:scale-110 transition-transform text-[#0a2c24] dark:text-white'
+                        >
+                          <Globe className='w-5 h-5' />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
               {activeTab === 'reviews' && (
-                <div className='space-y-8'>
-                  <div className='flex items-center justify-between'>
-                    <h2 className='text-3xl font-bold text-[#202c39] dark:text-white tracking-tight'>Client Reviews</h2>
-                    <Button
-                      variant='outlined'
-                      className='border-2 border-[#0a2c24] text-[#0a2c24] rounded-full hover:bg-[#0a2c24] hover:text-white transition-all active:translate-y-px'
-                      buttonText={{ plainText: 'Write a Review' }}
-                    />
+                <div className='animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6'>
+                  <div className='flex items-center justify-between mb-4'>
+                    <h2 className='text-2xl font-bold text-[#0a2c24] dark:text-white'>Customer Reviews</h2>
+                    <div className='text-sm text-gray-500'>based on {businessReview().length} reviews</div>
                   </div>
 
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-                    {businessReview().map((review, i) => (
-                      <div
-                        key={i}
-                        className='bg-white dark:bg-[#202c39] p-8 rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-xl transition-all duration-300 flex flex-col relative overflow-hidden group'
-                      >
+                  {businessReview().length > 0 ? (
+                    <div className='grid gap-4'>
+                      {businessReview().map(review => (
                         <div
-                          className='pointer-events-none absolute right-[-20px] top-[-20px] h-32 w-32 zerv-mask-top-right opacity-[0.03] transition duration-500 group-hover:opacity-[0.08]'
-                          style={{
-                            background: 'linear-gradient(135deg, #0a2c24 0%, #77b6a3 100%)',
-                            transform: 'scale(1.5)'
-                          }}
-                        />
-                        <div className='flex items-center gap-4 mb-6'>
-                          <div className='w-12 h-12 rounded-full bg-[#0a2c24] flex items-center justify-center text-white font-bold text-xl shadow-lg'>
-                            {review.authorName[0]}
-                          </div>
-                          <div>
-                            <h4 className='font-bold text-lg text-gray-900 dark:text-white'>{review.authorName}</h4>
-                            <div className='flex gap-1 text-yellow-400 mt-1'>
-                              {[...Array(5)].map((_, r) => (
-                                <Star
-                                  key={r}
-                                  className={`w-3.5 h-3.5 ${r < review.rating ? 'fill-current' : 'text-gray-200 dark:text-gray-700'}`}
-                                />
-                              ))}
+                          key={review.id}
+                          className='bg-white dark:bg-[#202c39] p-6 rounded-[2rem] shadow-sm border border-gray-100 dark:border-gray-800'
+                        >
+                          <div className='flex items-start gap-4'>
+                            <div className='w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-lg font-bold text-[#0a2c24] dark:text-white'>
+                              {review.authorName.charAt(0)}
+                            </div>
+                            <div className='flex-1'>
+                              <div className='flex justify-between items-start'>
+                                <div>
+                                  <h4 className='font-bold text-gray-900 dark:text-white'>{review.authorName}</h4>
+                                  <div className='flex items-center gap-1 mt-1'>
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star
+                                        key={i}
+                                        className={`w-3.5 h-3.5 ${i < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                                <span className='text-xs text-gray-400'>{format(review.date, 'MMM d, yyyy')}</span>
+                              </div>
+                              <p className='mt-3 text-gray-600 dark:text-gray-300 text-sm leading-relaxed'>
+                                {review.comment}
+                              </p>
                             </div>
                           </div>
                         </div>
-                        <p className='text-gray-600 dark:text-gray-300 leading-relaxed italic flex-1 relative'>
-                          <span className='text-4xl text-[#77b6a3]/20 absolute -top-4 -left-2 font-serif'>&ldquo;</span>
-                          {review.comment}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === 'about' && (
-                <div className='bg-white dark:bg-[#202c39] p-10 rounded-[3rem] shadow-[0_8px_30px_rgba(0,0,0,0.06)] relative overflow-hidden'>
-                  <div
-                    className='absolute right-[-40px] top-[-40px] h-64 w-64 zerv-mask opacity-[0.05] dark:opacity-[0.08]'
-                    style={{ background: 'radial-gradient(circle, #0a2c24 0%, transparent 70%)' }}
-                  />
-
-                  <h2 className='text-3xl font-bold text-[#0a2c24] dark:text-white mb-8 tracking-tight'>Our Story</h2>
-                  <div className='prose prose-lg text-gray-600 dark:text-gray-300 max-w-none relative z-10'>
-                    <p className='text-lg leading-relaxed'>{business.description}</p>
-                    <p className='leading-relaxed'>
-                      Welcome to an exclusive experience where luxury meets dedicated care. We pride ourselves on
-                      providing top-tier services tailored to refine and rejuvenate.
-                    </p>
-
-                    <div className='grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 not-prose'>
-                      <div className='p-6 bg-[#f7f8f9] dark:bg-black/20 rounded-2xl text-center hover:transform hover:scale-105 transition-transform duration-300'>
-                        <Clock className='w-8 h-8 mx-auto text-[#0a2c24] dark:text-[#77b6a3] mb-3' />
-                        <div className='text-sm font-bold text-gray-900 dark:text-white'>Hours</div>
-                        <div className='text-xs text-gray-500 mt-1'>9AM - 8PM</div>
-                      </div>
-                      <div className='p-6 bg-[#f7f8f9] dark:bg-black/20 rounded-2xl text-center hover:transform hover:scale-105 transition-transform duration-300'>
-                        <Globe className='w-8 h-8 mx-auto text-[#0a2c24] dark:text-[#77b6a3] mb-3' />
-                        <div className='text-sm font-bold text-gray-900 dark:text-white'>Booking</div>
-                        <div className='text-xs text-gray-500 mt-1'>24/7 Online</div>
-                      </div>
-                      <div className='p-6 bg-[#f7f8f9] dark:bg-black/20 rounded-2xl text-center hover:transform hover:scale-105 transition-transform duration-300'>
-                        <Star className='w-8 h-8 mx-auto text-[#0a2c24] dark:text-[#77b6a3] mb-3' />
-                        <div className='text-sm font-bold text-gray-900 dark:text-white'>Quality</div>
-                        <div className='text-xs text-gray-500 mt-1'>Premium</div>
-                      </div>
-                      <div className='p-6 bg-[#f7f8f9] dark:bg-black/20 rounded-2xl text-center hover:transform hover:scale-105 transition-transform duration-300'>
-                        <Phone className='w-8 h-8 mx-auto text-[#0a2c24] dark:text-[#77b6a3] mb-3' />
-                        <div className='text-sm font-bold text-gray-900 dark:text-white'>Contact</div>
-                        <div className='text-xs text-gray-500 mt-1'>Direct Line</div>
-                      </div>
+                      ))}
                     </div>
-                  </div>
+                  ) : (
+                    <div className='text-center py-12 bg-white dark:bg-[#202c39] rounded-[2rem]'>
+                      <div className='w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4'>
+                        <Star className='w-8 h-8 text-gray-400' />
+                      </div>
+                      <h3 className='text-lg font-bold text-gray-900 dark:text-white'>No reviews yet</h3>
+                      <p className='text-gray-500 text-sm'>Be the first to leave a review for this business!</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -729,7 +864,6 @@ function businessDetailsPage() {
         </div>
       </div>
 
-      {/* Booking Modal */}
       <BookingModalV2Fixed
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
@@ -737,6 +871,44 @@ function businessDetailsPage() {
         branchId={selectedBranch?.id}
         businessId={params.slug}
       />
+
+      {/* Login vs Guest Modal */}
+      {showLoginGuestModal && (
+        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200'>
+          <div className='bg-white dark:bg-[#202c39] rounded-[2rem] p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200'>
+            <div className='text-center mb-8'>
+              <div className='w-16 h-16 bg-[#0a2c24]/10 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <UserLockIcon className='w-8 h-8 text-[#0a2c24] dark:text-white' />
+              </div>
+              <h3 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-2'>Sign in to Book</h3>
+              <p className='text-gray-600 dark:text-gray-300'>
+                Sign in to access your saved details and manage your booking easily, or continue as a guest.
+              </p>
+            </div>
+
+            <div className='space-y-3'>
+              <Button
+                onClick={handleLoginRedirect}
+                className='w-full bg-[#0a2c24] text-white py-4 rounded-xl font-bold hover:bg-[#0a2c24]/90 transition-all shadow-lg active:scale-[0.98]'
+                buttonText={{ plainText: 'Sign In' }}
+              />
+              <Button
+                onClick={handleContinueAsGuest}
+                variant='outlined'
+                className='w-full border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 py-4 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all active:scale-[0.98]'
+                buttonText={{ plainText: 'Continue as Guest' }}
+              />
+            </div>
+
+            <button
+              onClick={() => setShowLoginGuestModal(false)}
+              className='mt-6 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 w-full text-center hover:underline transition-all'
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Branch Details Modal */}
       {selectedBranch && business && (

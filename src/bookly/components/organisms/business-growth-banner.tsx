@@ -2,6 +2,7 @@
 
 import { Button } from '@/bookly/components/molecules'
 import { CheckCircle } from 'lucide-react'
+import { InlineZervLogo } from '../atoms/inline-zerv-logo'
 
 export function BusinessGrowthBanner() {
   return (
@@ -21,7 +22,8 @@ export function BusinessGrowthBanner() {
             </div>
 
             <h2 className='text-3xl md:text-5xl font-bold leading-tight'>
-              Grow your business with <span className='text-sage-400'>Bookly</span>
+              Grow your business with
+              <InlineZervLogo className='h-[2em] w-[2.25em] translate-y-[0.3em] translate-x-[1em] text-white' />
             </h2>
 
             <p className='text-lg text-gray-300 max-w-lg'>

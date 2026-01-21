@@ -6,7 +6,8 @@ import { MOCK_BUSINESSES, BusinessLocation } from '@/mocks/businesses'
 import { BusinessCard } from '@/bookly/components/marketplace/business-card'
 import { SearchMap } from '@/bookly/components/marketplace/search-map'
 import { Button } from '@/bookly/components/ui/button'
-import { Map, Filter, ChevronDown, Search, MapPin, Calendar } from 'lucide-react'
+import { Input } from '@/bookly/components/ui/input'
+import { Map, Filter, ChevronDown, Search, MapPin, Calendar, LayoutList } from 'lucide-react'
 import { SearchFilters, FilterState } from '@/bookly/components/organisms/search-filters/search-filters.component'
 export default function SearchPage() {
   const searchParams = useSearchParams()
@@ -131,15 +132,36 @@ export default function SearchPage() {
   return (
     <div className='min-h-screen bg-gray-50'>
       {/* Mobile Top Bar */}
-      <div className='lg:hidden bg-white border-b border-gray-200 sticky top-0 z-30 px-4 py-3 flex items-center justify-between'>
-        <h1 className='font-bold text-lg text-gray-900'>Results</h1>
-        <div className='flex gap-2'>
-          <Button variant='outline' size='sm' onClick={() => setIsFilterOpen(!isFilterOpen)}>
-            <Filter className='w-4 h-4 mr-2' /> Filter
+      <div className='lg:hidden bg-white border-b border-gray-200 sticky top-16 z-30 px-4 py-3 space-y-3 shadow-sm'>
+        <div className='flex items-center gap-3'>
+          <div className='relative flex-1'>
+            <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400' />
+            <Input
+              placeholder='Search services...'
+              className='pl-10 bg-gray-100 border-none rounded-full h-11 focus:ring-[1.5px] focus:ring-[#0a2c24] text-base'
+              value={filters.q}
+              onChange={e => setFilters(prev => ({ ...prev, q: e.target.value }))}
+            />
+          </div>
+          <Button
+            size='icon'
+            variant='ghost'
+            className='h-11 w-11 rounded-full bg-gray-100 text-gray-700'
+            onClick={() => setView(view === 'list' ? 'map' : 'list')}
+          >
+            {view === 'list' ? <Map className='w-5 h-5' /> : <LayoutList className='w-5 h-5' />}
           </Button>
-          <Button size='sm' variant='ghost' onClick={() => setView(view === 'list' ? 'map' : 'list')}>
-            {view === 'list' ? <Map className='w-4 h-4' /> : <Filter className='w-4 h-4' />}
-            {/* Icon logic strictly for toggle visual */}
+        </div>
+
+        <div className='flex items-center justify-between px-1'>
+          <span className='text-xs font-semibold text-gray-400 uppercase tracking-wide'>{results.length} RESULTS</span>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className='rounded-full text-xs font-semibold h-8 border-gray-300 mr-1'
+          >
+            <Filter className='w-3 h-3 mr-1.5' /> Filters
           </Button>
         </div>
       </div>
@@ -171,19 +193,21 @@ export default function SearchPage() {
               <div className='flex items-center gap-2'>
                 <Button
                   variant={view === 'list' ? 'default' : 'outline'}
-                  size='sm'
+                  size='icon'
                   onClick={() => setView('list')}
-                  className={view === 'list' ? 'bg-[#0a2c24] text-white' : ''}
+                  className={`w-10 h-10 rounded-full ${view === 'list' ? 'bg-[#0a2c24] text-white' : ''}`}
+                  title='List View'
                 >
-                  List
+                  <LayoutList className='w-4 h-4' />
                 </Button>
                 <Button
                   variant={view === 'map' ? 'default' : 'outline'}
-                  size='sm'
+                  size='icon'
                   onClick={() => setView('map')}
-                  className={view === 'map' ? 'bg-[#0a2c24] text-white' : ''}
+                  className={`w-10 h-10 rounded-full ${view === 'map' ? 'bg-[#0a2c24] text-white' : ''}`}
+                  title='Map View'
                 >
-                  Map
+                  <Map className='w-4 h-4' />
                 </Button>
               </div>
             </div>

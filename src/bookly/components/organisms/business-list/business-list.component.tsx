@@ -147,7 +147,7 @@ export function BusinessList({
                   <div className='flex-1'>
                     <h3 className='text-lg font-semibold text-gray-900 dark:text-white mb-1'>{business.name}</h3>
 
-                    <div className='flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-2 font-mono'>
+                    <div className='flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300 mb-2'>
                       <div className='flex items-center'>
                         <span className='text-yellow-500 mr-1'>★</span>
                         <span className='font-medium'>{business.rating}</span>
@@ -163,7 +163,7 @@ export function BusinessList({
                     <p className='text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3'>{business.description}</p>
 
                     <div className='flex flex-wrap items-center gap-2 text-xs'>
-                      <div className='flex items-center text-gray-500 dark:text-gray-400 font-mono'>
+                      <div className='flex items-center text-gray-500 dark:text-gray-400'>
                         <svg className='w-4 h-4 mr-1' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                           <path
                             strokeLinecap='round'
@@ -183,7 +183,7 @@ export function BusinessList({
                       {business.categories.map((category, idx) => (
                         <span
                           key={idx}
-                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-[#77b6a3]/20 dark:bg-[#77b6a3]/10 text-[#0a2c24] dark:text-[#77b6a3] font-mono'
+                          className='inline-flex items-center px-2 py-1 rounded-full text-xs bg-[#77b6a3]/20 dark:bg-[#77b6a3]/10 text-[#0a2c24] dark:text-[#77b6a3]'
                         >
                           {category}
                         </span>

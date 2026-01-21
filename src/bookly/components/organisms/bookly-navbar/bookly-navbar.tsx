@@ -148,7 +148,7 @@ const BooklyNavbar = () => {
 
                 <div className='relative'>
                   <button
-                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                    onClick={() => to('/profile')}
                     className='flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-full bg-[#77b6a3]/10 dark:bg-[#77b6a3]/20 hover:bg-[#77b6a3]/20 dark:hover:bg-[#77b6a3]/30 border border-[#0a2c24]/10 dark:border-white/10 transition-all duration-300 hover:shadow-md touch-manipulation'
                   >
                     <div className='w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#0a2c24] dark:bg-[#77b6a3] flex items-center justify-center text-white dark:text-[#0a2c24] font-semibold text-xs sm:text-sm'>
@@ -157,34 +157,7 @@ const BooklyNavbar = () => {
                     <span className='hidden sm:block text-[#0a2c24] dark:text-white font-medium transition-colors duration-200 text-sm sm:text-base'>
                       {booklyUser.name || 'User'}
                     </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-[#0a2c24]/60 dark:text-white/60 transition-transform duration-300 ${userDropdownOpen ? 'rotate-180' : ''}`}
-                    />
                   </button>
-
-                  {/* User Dropdown */}
-                  {userDropdownOpen && (
-                    <div className='absolute right-0 mt-2 w-48 bg-white dark:bg-[#202c39] rounded-xl shadow-xl border border-[#0a2c24]/10 dark:border-white/10 p-1.5 z-50 animate-in slide-in-from-top-2 duration-200'>
-                      <button
-                        onClick={() => {
-                          to('/profile')
-                          setUserDropdownOpen(false)
-                        }}
-                        className='flex items-center gap-3 w-full px-4 py-2.5 text-left text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 rounded-lg transition-all duration-200 touch-manipulation'
-                      >
-                        <User className='w-4 h-4' />
-                        {t('nav.profile')}
-                      </button>
-                      <hr className='my-1 border-[#0a2c24]/10 dark:border-white/10' />
-                      <button
-                        onClick={handleLogout}
-                        className='flex items-center gap-3 w-full px-4 py-2.5 text-left text-[#e88682] hover:bg-[#e88682]/10 rounded-lg transition-all duration-200 touch-manipulation'
-                      >
-                        <LogOut className='w-4 h-4' />
-                        {t('nav.logout')}
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
             ) : (

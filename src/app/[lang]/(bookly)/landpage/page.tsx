@@ -61,7 +61,7 @@ function LandPage() {
           </div>
 
           <div
-            className='absolute inset-0 bg-cover bg-center opacity-[0.15] mix-blend-overlay'
+            className='absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay'
             style={{
               backgroundImage: "url('https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&h=800&fit=crop')"
             }}
@@ -72,7 +72,7 @@ function LandPage() {
               <h1 className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight pb-2 max-w-5xl mx-auto'>
                 {t('landing.hero.titlePrefix')}
                 <span className='relative inline-block px-4'>
-                  <InlineZervLogo className='h-[0.8em] w-[2.6em] translate-y-[0.1em] text-white' />
+                  <InlineZervLogo className='h-[2em] w-[2.25em] translate-y-[0.3em] text-white' />
                 </span>
                 {t('landing.hero.titleSuffix')}
               </h1>

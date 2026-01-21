@@ -1,5 +1,6 @@
 import { Badge } from '@/bookly/components/ui/badge'
 import { Check, Calendar, Star, Shield } from 'lucide-react'
+import { InlineZervLogo } from '../../atoms/inline-zerv-logo'
 
 export const FeaturesSection = () => {
   const features = [
@@ -48,7 +49,8 @@ export const FeaturesSection = () => {
                 Why Choose Us
               </Badge>
               <h2 className='text-3xl sm:text-4xl lg:text-5xl font-bold text-[#0a2c24] dark:text-white leading-tight'>
-                Experience the <span className='text-[#77b6a3]'>Zerv</span> difference.
+                Experience the{' '}
+                <InlineZervLogo color='green' className='h-[2em] w-[2.25em] translate-y-[0.3em] translate-x-8' />
               </h2>
               <p className='mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-lg leading-relaxed font-light'>
                 We combine luxury design with seamless functionality to provide the best booking experience on the

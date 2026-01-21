@@ -19,7 +19,7 @@ export const BusinessCard = ({ business, className, onClick, i18nTFn }: Business
     <div onClick={onClick}>
       <BaseCard
         className={cn(
-          'overflow-hidden rounded-[24px] border border-[#0a2c24]/10 dark:border-white/10 bg-white/90 dark:bg-gray-800/90 shadow-sm hover:shadow-lg transition-all duration-300',
+          'overflow-hidden rounded-tl-[2rem] rounded-tr-[3.5rem] rounded-bl-[3.5rem] rounded-br-[2rem] border border-[#0a2c24]/10 dark:border-white/10 bg-white/90 dark:bg-gray-800/90 shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_25px_50px_rgba(0,0,0,0.08)] transition-all duration-300 hover:-translate-y-2',
           className
         )}
         customImageComponent={
@@ -27,7 +27,7 @@ export const BusinessCard = ({ business, className, onClick, i18nTFn }: Business
             businessName={business.name}
             imageSrc={business.coverImage}
             imageAlt={business.name}
-            className='w-full h-full rounded-t-[24px]'
+            className='w-full h-full rounded-tl-[2rem] rounded-tr-[3.5rem]'
             size='xl'
           />
         }

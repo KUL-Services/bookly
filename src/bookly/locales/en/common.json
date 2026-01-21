@@ -102,8 +102,9 @@
     "notFound": "Business not found",
     "tabs": {
       "services": "Services",
-      "branches": "Branches",
+      "details": "Details",
       "reviews": "Reviews",
+      "branches": "Branches",
       "about": "About"
     },
     "sections": {
