@@ -145,8 +145,7 @@ export default function SearchPage() {
           </div>
           <Button
             size='icon'
-            variant='ghost'
-            className='h-11 w-11 rounded-full bg-gray-100/50 text-gray-700 hover:bg-gray-200/50'
+            className='h-11 w-11 rounded-full bg-[#0a2c24] text-white hover:bg-[#0a2c24]/90 shadow-md transition-all'
             onClick={() => setView(view === 'list' ? 'map' : 'list')}
           >
             {view === 'list' ? <Map className='w-5 h-5' /> : <LayoutList className='w-5 h-5' />}

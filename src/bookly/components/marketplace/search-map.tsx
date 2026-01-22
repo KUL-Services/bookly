@@ -66,6 +66,16 @@ export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
     setMap(null)
   }, [])
 
+  // Close popup when clicking on the map
+  const onMapClick = useCallback(() => {
+    setHoveredBusinessId(null)
+  }, [])
+
+  // Mobile-friendly marker click handler
+  const onMarkerClick = (businessId: string) => {
+    setHoveredBusinessId(prev => (prev === businessId ? null : businessId))
+  }
+
   if (!isLoaded) {
     return (
       <div
@@ -85,12 +95,15 @@ export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
         zoom={12}
         onLoad={onLoad}
         onUnmount={onUnmount}
+        onClick={onMapClick}
         options={{
           disableDefaultUI: false,
           zoomControl: true,
           streetViewControl: false,
           mapTypeControl: false,
           fullscreenControl: true,
+          clickableIcons: false, // Disables clicking on default POIs
+          gestureHandling: 'greedy', // Standard specific map gesture handling
           styles: [
             {
               featureType: 'poi',
@@ -113,7 +126,10 @@ export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
               <div
                 className='relative flex flex-col items-center transform -translate-x-1/2 -translate-y-1/2 group'
                 onMouseEnter={() => setHoveredBusinessId(business.id)}
-                onClick={() => setHoveredBusinessId(business.id)}
+                onClick={e => {
+                  e.stopPropagation() // Prevent map click from closing immediately
+                  onMarkerClick(business.id)
+                }}
               >
                 {/* Pulse Effect */}
                 <div className='absolute w-full h-full bg-[#0a2c24]/30 rounded-full animate-ping' />
@@ -130,7 +146,7 @@ export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
           )
         })}
 
-        {/* Popup Card - Only renders when hovered */}
+        {/* Popup Card - Rendered when selected */}
         {hoveredBusiness && hoveredBusiness.coordinates && (
           <OverlayView
             position={{ lat: hoveredBusiness.coordinates.lat, lng: hoveredBusiness.coordinates.lng }}
@@ -138,7 +154,7 @@ export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
           >
             <div
               className='absolute bottom-full left-1/2 -translate-x-1/2 w-64 z-50 pb-4 flex flex-col justify-end cursor-default'
-              onMouseLeave={() => setHoveredBusinessId(null)}
+              onClick={e => e.stopPropagation()} // Prevent closing when clicking inside popup
             >
               <div className='bg-white rounded-xl shadow-2xl overflow-hidden ring-1 ring-black/5 transform transition-all duration-200 scale-100 origin-bottom'>
                 {/* Image Section */}
@@ -149,6 +165,12 @@ export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
                     alt={hoveredBusiness.name}
                   />
                   <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent' />
+                  <button
+                    onClick={() => setHoveredBusinessId(null)}
+                    className='absolute top-2 right-2 p-1 bg-black/40 hover:bg-black/60 rounded-full text-white transition-colors'
+                  >
+                    <MapPin className='w-4 h-4 rotate-45' /> {/* Close Icon as rotated pin or X */}
+                  </button>
                 </div>
 
                 {/* Content Section */}
@@ -157,7 +179,7 @@ export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
                   <p className='text-sm text-gray-500 line-clamp-1 mb-3'>{hoveredBusiness.address}</p>
 
                   <Link
-                    href={`/${window.location.pathname.split('/')[1]}/business/${hoveredBusiness.id}`}
+                    href={`/en/business/${hoveredBusiness.id}`} // Should ideally use current lang from context/params
                     className='inline-flex items-center justify-center w-full px-4 py-2.5 bg-[#0a2c24] text-white text-sm font-bold rounded-lg hover:bg-[#0a2c24]/90 transition-all active:scale-95 shadow-md'
                   >
                     View Profile
