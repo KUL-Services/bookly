@@ -27,7 +27,9 @@ export default function RegisterPage({ params }: PageProps) {
   }, [locale])
 
   return (
-    <div className='min-h-screen bg-zerv-pattern dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
+    <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
+      {/* Background Overlay */}
+      <div className='absolute inset-0 bg-zerv-pattern opacity-[0.03]' />
       <main className='container mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10'>
         <div className='w-full max-w-md mx-auto'>
           {/* Mobile-optimized header */}
