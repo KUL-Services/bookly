@@ -20,7 +20,7 @@ import {
   User as UserLockIcon,
   ChevronLeft
 } from 'lucide-react'
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, TouchEvent, MouseEvent } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { BusinessService, ServicesService, BranchesService, StaffService } from '@/lib/api'
 import { GoogleMap, useJsApiLoader, OverlayView } from '@react-google-maps/api'
@@ -276,7 +276,41 @@ function businessDetailsPage() {
   const { booklyUser } = useAuthStore()
   const router = useRouter()
   const [showLoginGuestModal, setShowLoginGuestModal] = useState(false)
-  const staffScrollRef = useRef<HTMLDivElement>(null)
+  const staffScrollRef = useRef<HTMLDivElement>(null) // Fix for Safari iOS touch issues - use standard click with touch-action CSS
+  // The key fix is using touch-action: manipulation on interactive elements
+  // and ensuring onClick works properly on iOS Safari
+  const handleButtonClick = useCallback((callback: () => void) => {
+    return (e: MouseEvent<HTMLButtonElement | HTMLDivElement>) => {
+      e.stopPropagation()
+      callback()
+    }
+  }, [])
+
+  const handleTap = useCallback((callback: () => void) => {
+    let touchMoved = false
+    let touchStartTime = 0
+    return {
+      onTouchStart: () => {
+        touchMoved = false
+        touchStartTime = Date.now()
+      },
+      onTouchMove: () => {
+        touchMoved = true
+      },
+      onTouchEnd: (e: TouchEvent) => {
+        const touchDuration = Date.now() - touchStartTime
+        // Only trigger if it was a quick tap without movement
+        if (!touchMoved && touchDuration < 500) {
+          e.preventDefault()
+          callback()
+        }
+      },
+      onClick: (e: MouseEvent) => {
+        e.stopPropagation()
+        callback()
+      }
+    }
+  }, [])
 
   const scrollStaff = (direction: 'left' | 'right') => {
     if (staffScrollRef.current) {
@@ -358,9 +392,27 @@ function businessDetailsPage() {
       </div>
     )
   }
-
   return (
-    <div className='min-h-screen flex flex-col bg-[#f7f8f9] dark:bg-[#0a2c24] relative font-sans'>
+    <div
+      className='min-h-screen flex flex-col bg-[#f7f8f9] dark:bg-[#0a2c24] relative font-sans'
+      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+    >
+      {/* Global styles for iOS Safari touch fix */}
+      <style jsx global>{`
+        /* Fix iOS Safari touch delay */
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+        button,
+        a,
+        [role='button'],
+        .cursor-pointer {
+          touch-action: manipulation;
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          user-select: none;
+        }
+      `}</style>
       {/* Hero Cover Section */}
       <div className='relative h-[65vh] min-h-[550px] lg:h-[50vh] w-full overflow-hidden group rounded-b-[4rem] border-b-2 border-[#0a2c24]'>
         <div className='absolute inset-0 bg-gray-900'>
@@ -540,13 +592,13 @@ function businessDetailsPage() {
                         <span>Meet the Team</span>
                         <div className='flex gap-2'>
                           <button
-                            onClick={() => scrollStaff('left')}
+                            {...handleTap(() => scrollStaff('left'))}
                             className='p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
                           >
                             <ChevronLeft className='w-4 h-4 text-gray-600 dark:text-gray-300' />
                           </button>
                           <button
-                            onClick={() => scrollStaff('right')}
+                            {...handleTap(() => scrollStaff('right'))}
                             className='p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
                           >
                             <ChevronRight className='w-4 h-4 text-gray-600 dark:text-gray-300' />
@@ -680,13 +732,16 @@ function businessDetailsPage() {
                     <div>
                       <h3 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-6'>Our Locations</h3>
                       <div className='grid grid-cols-1 gap-6'>
+                        {' '}
                         {branches.map((branch, index) => (
                           <div
                             key={index}
-                            onClick={() => {
+                            role='button'
+                            tabIndex={0}
+                            {...handleTap(() => {
                               setSelectedBranch(branch)
                               setBranchModalOpen(true)
-                            }}
+                            })}
                             className='group bg-white dark:bg-[#202c39] p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 items-center'
                           >
                             <div className='w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 relative'>
