@@ -20,7 +20,7 @@ export const SearchInput = ({ className, placeholderProps, leadingIcon, i18nTFn,
       type='search'
       placeholderProps={placeholderProps || defaultPlaceholder}
       i18nTFn={i18nTFn}
-      className={className}
+      className={`${className} transition-all duration-300 focus:ring-2 focus:ring-sage-400/20`}
       {...props}
     />
   )

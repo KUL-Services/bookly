@@ -36,7 +36,7 @@ export function BusinessCard({
     <Link href={`/en/business/${id}`} className='block h-full'>
       <Card
         className={cn(
-          'h-full border-none shadow-[0_15px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_25px_50px_rgba(10,44,36,0.15)] transition-all duration-300 group overflow-hidden bg-white dark:bg-[#202c39] rounded-tl-[2rem] rounded-tr-[3.5rem] rounded-bl-[3.5rem] rounded-br-[2rem] relative z-0 isolate',
+          'h-full border-none shadow-[0_15px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_30px_60px_rgba(10,44,36,0.2)] transition-all duration-300 group overflow-hidden bg-white dark:bg-[#202c39] rounded-tl-[2rem] rounded-tr-[3.5rem] rounded-bl-[3.5rem] rounded-br-[2rem] relative z-0 isolate',
           isPromoted && 'ring-2 ring-[#0a2c24] dark:ring-[#77b6a3]',
           className
         )}

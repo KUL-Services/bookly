@@ -132,13 +132,13 @@ export default function SearchPage() {
   return (
     <div className='min-h-screen bg-gray-50'>
       {/* Mobile Top Bar */}
-      <div className='lg:hidden bg-white border-b border-gray-200 sticky top-16 z-30 px-4 py-3 space-y-3 shadow-sm'>
+      <div className='lg:hidden bg-white/90 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-30 px-4 py-3 space-y-3 shadow-sm transition-all duration-300'>
         <div className='flex items-center gap-3'>
           <div className='relative flex-1'>
             <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400' />
             <Input
               placeholder='Search services...'
-              className='pl-10 bg-gray-100 border-none rounded-full h-11 focus:ring-[1.5px] focus:ring-[#0a2c24] text-base'
+              className='pl-10 bg-gray-100/50 border-none rounded-2xl h-11 focus:ring-2 focus:ring-[#0a2c24]/20 text-base transition-all duration-300'
               value={filters.q}
               onChange={e => setFilters(prev => ({ ...prev, q: e.target.value }))}
             />
@@ -146,7 +146,7 @@ export default function SearchPage() {
           <Button
             size='icon'
             variant='ghost'
-            className='h-11 w-11 rounded-full bg-gray-100 text-gray-700'
+            className='h-11 w-11 rounded-full bg-gray-100/50 text-gray-700 hover:bg-gray-200/50'
             onClick={() => setView(view === 'list' ? 'map' : 'list')}
           >
             {view === 'list' ? <Map className='w-5 h-5' /> : <LayoutList className='w-5 h-5' />}
@@ -159,7 +159,7 @@ export default function SearchPage() {
             variant='outline'
             size='sm'
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className='rounded-full text-xs font-semibold h-8 border-gray-300 mr-1'
+            className='rounded-full text-xs font-semibold h-8 border-gray-200 bg-white/50 hover:bg-white transition-all mr-1 shadow-sm'
           >
             <Filter className='w-3 h-3 mr-1.5' /> Filters
           </Button>
@@ -168,20 +168,38 @@ export default function SearchPage() {
 
       <div className='max-w-7xl mx-auto px-4 py-6'>
         <div className='flex flex-col lg:flex-row gap-6'>
-          {/* Sidebar Filters (Desktop) */}
-          <div className={`lg:w-1/4 ${isFilterOpen ? 'block' : 'hidden lg:block'}`}>
-            <div className='sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2 custom-scrollbar'>
+          {/* Sidebar Filters (Desktop) / Overlay (Mobile) */}
+          <div
+            className={`
+              fixed inset-0 z-50 bg-white lg:bg-transparent lg:static lg:z-auto lg:w-1/4 lg:block
+              ${isFilterOpen ? 'block animate-in fade-in slide-in-from-bottom-10 duration-300' : 'hidden'}
+            `}
+          >
+            {/* Mobile Filter Header */}
+            <div className='lg:hidden sticky top-0 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 py-4 flex items-center justify-between z-10'>
+              <h2 className='text-lg font-bold text-[#0a2c24]'>Filters</h2>
+              <Button
+                variant='ghost'
+                size='sm'
+                onClick={() => setIsFilterOpen(false)}
+                className='rounded-full h-8 w-8 p-0'
+              >
+                <ChevronDown className='w-5 h-5' />
+              </Button>
+            </div>
+
+            <div className='h-full lg:h-auto overflow-y-auto lg:overflow-visible p-4 lg:p-0 pb-20 lg:pb-0 custom-scrollbar lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)]'>
               <SearchFilters
                 filters={filters}
                 options={filterOptions}
                 onFiltersChange={setFilters}
                 onApplyFilters={() => {
                   setIsFilterOpen(false) // Close mobile menu if open
-                  // Logic handles auto-update in useEffect, but we could add manual trigger here
                 }}
                 onResetFilters={handleResetFilters}
-                className=''
+                className='shadow-none p-0 bg-transparent lg:bg-white lg:dark:bg-[#202c39] lg:p-6 lg:shadow-[0_8px_30px_rgb(0,0,0,0.04)]'
               />
+              {/* Mobile Footer Spacing/Actions could go here */}
             </div>
           </div>
 

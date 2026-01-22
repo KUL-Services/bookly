@@ -190,40 +190,29 @@ function ProfilePage() {
                     }
                     alt={user.firstName}
                     avatarTitle={user.firstName}
-                    className='ring-4 ring-primary-100 shadow-lg group-hover:ring-primary-200 transition-all duration-300'
+                    className='ring-4 ring-primary-100 shadow-xl group-hover:ring-primary-200 transition-all duration-300 transform group-hover:scale-105'
                   />
                   <div className='absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg animate-pulse' />
                 </div>
                 <div className='text-center sm:text-left'>
                   <H4
-                    className='text-gray-900 dark:text-white text-xl sm:text-2xl'
+                    className='text-gray-900 dark:text-white text-2xl sm:text-3xl font-bold tracking-tight'
                     stringProps={{ plainText: `${user.firstName} ${user.lastName}` }}
                   />
-                  <div className='mt-2 flex flex-col sm:flex-row sm:items-center sm:gap-6 text-gray-600 dark:text-gray-300 space-y-1 sm:space-y-0'>
-                    <div className='flex items-center gap-2'>
-                      <KulIcon icon='lucide:mail' iconClass='w-4 h-4 text-gray-500 dark:text-gray-400' />
-                      <P stringProps={{ plainText: user.email }} className='' />
+                  <div className='mt-3 flex flex-col sm:flex-row sm:items-center sm:gap-6 text-gray-600 dark:text-gray-300 space-y-2 sm:space-y-0'>
+                    <div className='flex items-center justify-center sm:justify-start gap-2 bg-gray-50 dark:bg-white/5 px-3 py-1 rounded-full'>
+                      <KulIcon icon='lucide:mail' iconClass='w-3.5 h-3.5 text-primary-600' />
+                      <P stringProps={{ plainText: user.email }} className='text-sm font-medium' />
                     </div>
-                    <div className='flex items-center gap-2'>
-                      <KulIcon icon='lucide:phone' iconClass='w-4 h-4 text-gray-500 dark:text-gray-400' />
-                      <P stringProps={{ plainText: user.mobile }} className='' />
-                    </div>
-                    <div className='flex items-center gap-2'>
-                      <KulIcon icon='lucide:id-card' iconClass='w-4 h-4 text-gray-500 dark:text-gray-400' />
-                      <P
-                        i18nTFn={t}
-                        stringProps={{
-                          localeKey: 'profile.memberSince',
-                          localeProps: { date: new Date(user.createdAt).toLocaleDateString() }
-                        }}
-                        className=''
-                      />
+                    <div className='flex items-center justify-center sm:justify-start gap-2 bg-gray-50 dark:bg-white/5 px-3 py-1 rounded-full'>
+                      <KulIcon icon='lucide:phone' iconClass='w-3.5 h-3.5 text-primary-600' />
+                      <P stringProps={{ plainText: user.mobile }} className='text-sm font-medium' />
                     </div>
                   </div>
                 </div>
               </div>
             </CardTitle>
-            <CardAction className='flex items-center gap-2 ml-auto'>
+            <CardAction className='absolute top-6 right-6 sm:relative sm:top-auto sm:right-auto flex items-center gap-2 ml-auto'>
               <button
                 onClick={() => router.push(`/${params?.lang}/profile/settings`)}
                 className='p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors group'
@@ -245,8 +234,8 @@ function ProfilePage() {
             </CardAction>
             <CardDescription className='sr-only'>Profile overview</CardDescription>
           </CardHeader>
-          <CardContent className='pt-0'>
-            <div className='mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6'>
+          <CardContent className='pt-2 sm:pt-0'>
+            <div className='mt-8 grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6'>
               {/* Total Bookings Card */}
               <div
                 onClick={() => setActiveTab('past')}

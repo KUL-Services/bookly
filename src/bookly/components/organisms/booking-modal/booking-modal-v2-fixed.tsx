@@ -770,456 +770,480 @@ function BookingModalV2Fixed({
 
   return (
     <div
-      className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4'
+      className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4 transition-all duration-300'
       onClick={onClose}
     >
       <div
-        className='bg-white dark:bg-gray-900 rounded-none sm:rounded-2xl w-full h-full sm:h-auto sm:max-w-5xl sm:max-h-[95vh] overflow-y-auto shadow-2xl animate-[fadeInScale_0.3s_ease-out]'
+        className='bg-white dark:bg-gray-900 w-full h-full sm:h-auto sm:max-w-5xl sm:max-h-[90vh] sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col animate-in slide-in-from-bottom-5 duration-500'
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className='sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md z-10 flex items-center justify-between p-4 sm:p-5 border-b border-gray-200 dark:border-gray-700'>
-          <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white'>Book Appointment</h2>
+        <div className='sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md z-20 flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800'>
+          <div>
+            <h2 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white'>Book Appointment</h2>
+            <p className='text-xs text-gray-500 dark:text-gray-400 mt-1 hidden sm:block'>
+              Select your preferred time and services
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className='p-2.5 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-xl transition-all touch-manipulation'
+            className='p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white'
           >
-            <KulIcon icon='lucide:x' className='w-5 h-5 sm:w-6 sm:h-6' />
+            <KulIcon icon='lucide:n' className='w-6 h-6' /> {/* Using 'n' as 'x' alias close icon usually */}
+            <span className='sr-only'>Close</span>
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              width='24'
+              height='24'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              className='lucide lucide-x'
+            >
+              <path d='M18 6 6 18' />
+              <path d='m6 6 18 18' />
+            </svg>
           </button>
         </div>
 
-        {/* STEP 1: Selection */}
-        {currentStep === 'selection' && (
-          <div className='p-4 sm:p-6 space-y-4 sm:space-y-5'>
-            {/* Quick Navigation Buttons */}
-            <div className='flex gap-3 justify-end'>
-              <button
-                onClick={goToToday}
-                className='px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base bg-white dark:bg-gray-800 text-primary-800 dark:text-teal-300 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-xl font-semibold transition-all shadow-sm hover:shadow-md border border-primary-200/50 dark:border-primary-800/50 touch-manipulation'
-              >
-                Today
-              </button>
-              <button
-                onClick={goToNextAvailable}
-                className='bg-primary-700 hover:bg-primary-800 px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg touch-manipulation'
-              >
-                Next Available
-              </button>
-            </div>
-
-            {/* Days Carousel */}
-            <div className='flex items-center gap-2 sm:gap-3'>
-              <button
-                onClick={() => scrollDays('left')}
-                className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
-              >
-                <KulIcon icon='lucide:chevron-left' className='w-5 h-5' />
-              </button>
-
-              <div ref={daysScrollRef} className='flex-1 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide py-1'>
-                {weekDates.map((date, idx) => {
-                  const isSelected = format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
-                  // Week starts Saturday (6), ends Friday (5): Sat, Sun, Mon, Tue, Wed, Thu, Fri
-                  const weekdays = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedDate(date)}
-                      className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[60px] sm:min-w-[80px] h-16 sm:h-24 rounded-xl transition-all duration-200 touch-manipulation border ${
-                        isSelected
-                          ? 'bg-primary-800 text-white shadow-md border-primary-800 opacity-100'
-                          : 'bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 opacity-60 hover:opacity-100 hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300'
-                      }`}
-                    >
-                      <span
-                        className={`text-xs font-medium font-mono ${isSelected ? 'text-white/80' : 'text-inherit'}`}
-                      >
-                        {weekdays[idx]}
-                      </span>
-                      <span className='text-lg sm:text-2xl font-bold mt-1 font-mono'>{format(date, 'd')}</span>
-                    </button>
-                  )
-                })}
-              </div>
-
-              <button
-                onClick={() => scrollDays('right')}
-                className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
-              >
-                <KulIcon icon='lucide:chevron-right' className='w-5 h-5' />
-              </button>
-            </div>
-
-            {/* Period Tabs */}
-            <div className='flex bg-gray-100 dark:bg-gray-800 rounded-2xl p-1.5'>
-              {(['Morning', 'Afternoon', 'Evening'] as Period[]).map(period => (
+        {/* Scrollable Content */}
+        <div className='flex-1 overflow-y-auto custom-scrollbar bg-gray-50/50 dark:bg-black/20'>
+          {/* STEP 1: Selection */}
+          {currentStep === 'selection' && (
+            <div className='p-4 sm:p-6 space-y-4 sm:space-y-5'>
+              {/* Quick Navigation Buttons */}
+              <div className='flex gap-3 justify-end'>
                 <button
-                  key={period}
-                  onClick={() => setSelectedPeriod(period)}
-                  className={`flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base touch-manipulation ${
-                    selectedPeriod === period
-                      ? 'bg-primary-800 text-white shadow-sm opacity-100'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-white/50 dark:hover:bg-gray-800/50 opacity-70 hover:opacity-100'
-                  }`}
+                  onClick={goToToday}
+                  className='px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base bg-white dark:bg-gray-800 text-primary-800 dark:text-teal-300 hover:bg-primary-50 dark:hover:bg-gray-700 rounded-xl font-semibold transition-all shadow-sm hover:shadow-md border border-primary-200/50 dark:border-primary-800/50 touch-manipulation'
                 >
-                  {period}
+                  Today
                 </button>
-              ))}
-            </div>
-
-            {/* Time Slots Carousel */}
-            <div className='flex items-center gap-2 sm:gap-3'>
-              <button
-                onClick={() => scrollTimes('left')}
-                className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
-              >
-                <KulIcon icon='lucide:chevron-left' className='w-5 h-5' />
-              </button>
-
-              <div ref={timesScrollRef} className='flex-1 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide py-1'>
-                {availableTimeSlots.length > 0 ? (
-                  availableTimeSlots.map(time => (
-                    <button
-                      key={time}
-                      onClick={() => handleTimeSelect(time)}
-                      className={`flex-shrink-0 min-w-[80px] sm:min-w-[100px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base touch-manipulation border font-mono ${
-                        selectedTime === time
-                          ? 'bg-primary-800 text-white shadow-md border-primary-800 opacity-100'
-                          : 'bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 opacity-60 hover:opacity-100 hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300'
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))
-                ) : (
-                  <div className='flex-1 text-center text-gray-400 dark:text-gray-500 py-6 bg-gray-50 dark:bg-gray-800 rounded-xl'>
-                    No available slots for this period
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={() => scrollTimes('right')}
-                className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
-              >
-                <KulIcon icon='lucide:chevron-right' className='w-5 h-5' />
-              </button>
-            </div>
-
-            {/* Quick Add Button (when time selected but no service added yet, and no initial service) */}
-            {selectedTime && selectedServices.length === 0 && availableServices.length > 0 && !initialService && (
-              <div className='bg-primary-100 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-4'>
-                <div className='text-sm text-primary-900 dark:text-sage-300 mb-2'>
-                  Time <span className='font-mono'>{selectedTime}</span> selected. Choose a service to continue:
-                </div>
                 <button
-                  onClick={() => setShowServiceSelector(true)}
-                  className='w-full bg-primary-700 hover:bg-primary-800 text-white py-2 rounded-lg'
+                  onClick={goToNextAvailable}
+                  className='bg-primary-700 hover:bg-primary-800 px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg touch-manipulation'
                 >
-                  Select Service
+                  Next Available
                 </button>
               </div>
-            )}
 
-            {/* Time Warning */}
-            {timeWarning && (
-              <div className='bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-3'>
-                <div className='flex items-center gap-2 text-sm text-orange-700 dark:text-orange-300'>
-                  <KulIcon icon='lucide:alert-triangle' className='w-4 h-4' />
-                  {timeWarning}
-                </div>
-              </div>
-            )}
+              {/* Days Carousel */}
+              <div className='flex items-center gap-2 sm:gap-3'>
+                <button
+                  onClick={() => scrollDays('left')}
+                  className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
+                >
+                  <KulIcon icon='lucide:chevron-left' className='w-5 h-5' />
+                </button>
 
-            {/* Prompt to select time if no anchor */}
-            {!selectedTime && selectedServices.length > 0 && (
-              <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3'>
-                <div className='flex items-center gap-2 text-sm text-red-700 dark:text-red-300 font-medium'>
-                  <KulIcon icon='lucide:alert-circle' className='w-4 h-4' />
-                  Please select a start time above to schedule your services
-                </div>
-              </div>
-            )}
+                <div ref={daysScrollRef} className='flex-1 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide py-1'>
+                  {weekDates.map((date, idx) => {
+                    const isSelected = format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
+                    // Week starts Saturday (6), ends Friday (5): Sat, Sun, Mon, Tue, Wed, Thu, Fri
+                    const weekdays = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
-            {/* Selected Services Cards with Drag-and-Drop */}
-            {selectedServices.length > 0 && (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={selectedServices.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                  <div className='space-y-3'>
-                    {selectedServices.map(selected => (
-                      <SortableServiceCard
-                        key={selected.id}
-                        selected={selected}
-                        showStaffSelector={showStaffSelector === selected.id}
-                        availableStaff={availableStaff}
-                        onRemove={() => handleRemoveService(selected.id)}
-                        onToggleStaffSelector={() =>
-                          setShowStaffSelector(showStaffSelector === selected.id ? null : selected.id)
-                        }
-                        onChangeStaff={providerId => handleChangeStaff(selected.id, providerId)}
-                      />
-                    ))}
-                  </div>
-                </SortableContext>
-              </DndContext>
-            )}
-
-            {/* Add Another Service */}
-            <button
-              onClick={() => setShowServiceSelector(true)}
-              className='w-full py-4 sm:py-5 border-2 border-dashed border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/20 rounded-2xl text-primary-700 dark:text-teal-400 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:border-primary-400 dark:hover:border-primary-600 flex items-center justify-center gap-2 font-semibold transition-all'
-            >
-              <KulIcon icon='lucide:plus' className='w-5 h-5' />
-              Add another service
-            </button>
-
-            {/* Service Selector Modal */}
-            {showServiceSelector && (
-              <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-                <div className='bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 shadow-2xl'>
-                  <div className='flex justify-between items-center mb-5'>
-                    <h3 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white'>Select Service</h3>
-                    <button
-                      onClick={() => setShowServiceSelector(false)}
-                      className='p-2.5 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 text-gray-500 dark:text-gray-400 rounded-xl transition-all'
-                    >
-                      <KulIcon icon='lucide:x' className='w-5 h-5' />
-                    </button>
-                  </div>
-                  <div className='space-y-3'>
-                    {availableServices.map(service => (
+                    return (
                       <button
-                        key={service.id}
-                        onClick={() =>
-                          handleAddServiceWithTime(service, selectedTime || '00:00', 'no-preference', false)
-                        }
-                        className='w-full bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 hover:bg-white dark:hover:bg-gray-700 hover:shadow-lg transition-all text-left group border border-gray-200 dark:border-gray-700'
+                        key={idx}
+                        onClick={() => setSelectedDate(date)}
+                        className={`flex-shrink-0 flex flex-col items-center justify-center min-w-[60px] sm:min-w-[80px] h-16 sm:h-24 rounded-xl transition-all duration-200 touch-manipulation border ${
+                          isSelected
+                            ? 'bg-primary-800 text-white shadow-md border-primary-800 opacity-100'
+                            : 'bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 opacity-60 hover:opacity-100 hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300'
+                        }`}
                       >
-                        <div className='flex justify-between items-start mb-2'>
-                          <div className='flex-1'>
-                            <div className='font-bold text-lg text-gray-900 dark:text-white group-hover:text-primary-700 dark:group-hover:text-teal-400 transition-colors'>
-                              {service.name}
-                            </div>
-                            <div className='text-sm text-gray-500 dark:text-gray-400 mt-1'>{service.description}</div>
-                          </div>
-                          <div className='text-xl font-bold text-primary-700 dark:text-teal-400 ml-4 font-mono'>
-                            £{(service.price / 100).toFixed(2)}
-                          </div>
-                        </div>
-                        <div className='text-sm text-gray-600 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-700/50 px-4 py-1.5 rounded-full inline-block font-medium font-mono'>
-                          {service.duration}min
-                        </div>
+                        <span
+                          className={`text-xs font-medium font-mono ${isSelected ? 'text-white/80' : 'text-inherit'}`}
+                        >
+                          {weekdays[idx]}
+                        </span>
+                        <span className='text-lg sm:text-2xl font-bold mt-1 font-mono'>{format(date, 'd')}</span>
                       </button>
-                    ))}
-                  </div>
+                    )
+                  })}
                 </div>
-              </div>
-            )}
 
-            {/* Total & Continue */}
-            {selectedServices.length > 0 && (
-              <div className='sticky bottom-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 pt-4 sm:pt-5 mt-4 sm:mt-5 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-6'>
-                <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
-                  <div className='w-full sm:w-auto text-center sm:text-left'>
-                    <div className='text-sm text-gray-500 dark:text-gray-400'>Total</div>
-                    <div className='text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-mono'>
-                      £{(calculateTotal() / 100).toFixed(2)}
-                    </div>
-                    <div className='text-sm text-gray-500 dark:text-gray-400 font-mono'>
-                      {calculateTotalDuration()}min
-                    </div>
-                  </div>
+                <button
+                  onClick={() => scrollDays('right')}
+                  className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
+                >
+                  <KulIcon icon='lucide:chevron-right' className='w-5 h-5' />
+                </button>
+              </div>
+
+              {/* Period Tabs */}
+              <div className='flex bg-gray-100 dark:bg-gray-800 rounded-2xl p-1.5'>
+                {(['Morning', 'Afternoon', 'Evening'] as Period[]).map(period => (
                   <button
-                    onClick={() => setCurrentStep('details')}
-                    disabled={!selectedTime}
-                    className='w-full sm:w-auto bg-primary-700 hover:bg-primary-800 text-white px-8 sm:px-10 py-4 rounded-2xl text-lg font-semibold transition-all shadow-lg shadow-primary-500/20 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
+                    key={period}
+                    onClick={() => setSelectedPeriod(period)}
+                    className={`flex-1 py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base touch-manipulation ${
+                      selectedPeriod === period
+                        ? 'bg-primary-800 text-white shadow-sm opacity-100'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-primary-700 dark:hover:text-primary-300 hover:bg-white/50 dark:hover:bg-gray-800/50 opacity-70 hover:opacity-100'
+                    }`}
                   >
-                    Continue
+                    {period}
                   </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* STEP 2: Details */}
-        {currentStep === 'details' && (
-          <div className='p-4 sm:p-6 space-y-4 sm:space-y-6'>
-            <h3 className='text-xl sm:text-2xl font-bold text-center text-gray-900 dark:text-white'>
-              Review and confirm
-            </h3>
-
-            <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700'>
-              <div className='text-center mb-4 sm:mb-5'>
-                <div className='text-lg sm:text-2xl font-bold text-gray-900 dark:text-white'>
-                  {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-                </div>
-              </div>
-              <div className='space-y-3'>
-                {selectedServices.map(service => (
-                  <div
-                    key={service.id}
-                    className='bg-white dark:bg-gray-900 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all'
-                  >
-                    <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-0'>
-                      <div className='flex-1'>
-                        <div className='font-bold text-base sm:text-lg text-gray-900 dark:text-white'>
-                          {service.service.name}
-                        </div>
-                        <div className='text-sm text-primary-600 dark:text-teal-400 font-medium mt-1 font-mono'>
-                          {service.time} - {service.endTime} • Staff: {service.providerName}
-                        </div>
-                      </div>
-                      <div className='font-bold text-lg sm:text-xl text-primary-700 dark:text-teal-400 font-mono'>
-                        £{(service.service.price / 100).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
                 ))}
               </div>
-            </div>
 
-            <Form {...detailsForm}>
-              <form onSubmit={detailsForm.handleSubmit(handleDetailsSubmit)} className='space-y-4'>
-                <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 space-y-4'>
-                  <FormField
-                    control={detailsForm.control}
-                    name='name'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder='Name'
-                            className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {/* Time Slots Carousel */}
+              <div className='flex items-center gap-2 sm:gap-3'>
+                <button
+                  onClick={() => scrollTimes('left')}
+                  className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
+                >
+                  <KulIcon icon='lucide:chevron-left' className='w-5 h-5' />
+                </button>
 
-                  <FormField
-                    control={detailsForm.control}
-                    name='email'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type='email'
-                            placeholder='Email'
-                            className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={detailsForm.control}
-                    name='phone'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder='Phone (optional)'
-                            className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={detailsForm.control}
-                    name='notes'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder='Leave note (optional)'
-                            className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                <div ref={timesScrollRef} className='flex-1 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide py-1'>
+                  {availableTimeSlots.length > 0 ? (
+                    availableTimeSlots.map(time => (
+                      <button
+                        key={time}
+                        onClick={() => handleTimeSelect(time)}
+                        className={`flex-shrink-0 min-w-[80px] sm:min-w-[100px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base touch-manipulation border font-mono ${
+                          selectedTime === time
+                            ? 'bg-primary-800 text-white shadow-md border-primary-800 opacity-100'
+                            : 'bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 opacity-60 hover:opacity-100 hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300'
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))
+                  ) : (
+                    <div className='flex-1 text-center text-gray-400 dark:text-gray-500 py-6 bg-gray-50 dark:bg-gray-800 rounded-xl'>
+                      No available slots for this period
+                    </div>
+                  )}
                 </div>
 
-                <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700'>
-                  <div className='flex justify-between items-center mb-4 sm:mb-5'>
-                    <span className='text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium'>
-                      Total to pay
-                    </span>
-                    <span className='text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white font-mono'>
-                      £{(calculateTotal() / 100).toFixed(2)}
-                    </span>
-                  </div>
+                <button
+                  onClick={() => scrollTimes('right')}
+                  className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
+                >
+                  <KulIcon icon='lucide:chevron-right' className='w-5 h-5' />
+                </button>
+              </div>
 
-                  <div className='flex flex-col sm:flex-row gap-3'>
+              {/* Quick Add Button (when time selected but no service added yet, and no initial service) */}
+              {selectedTime && selectedServices.length === 0 && availableServices.length > 0 && !initialService && (
+                <div className='bg-primary-100 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-4'>
+                  <div className='text-sm text-primary-900 dark:text-sage-300 mb-2'>
+                    Time <span className='font-mono'>{selectedTime}</span> selected. Choose a service to continue:
+                  </div>
+                  <button
+                    onClick={() => setShowServiceSelector(true)}
+                    className='w-full bg-primary-700 hover:bg-primary-800 text-white py-2 rounded-lg'
+                  >
+                    Select Service
+                  </button>
+                </div>
+              )}
+
+              {/* Time Warning */}
+              {timeWarning && (
+                <div className='bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-3'>
+                  <div className='flex items-center gap-2 text-sm text-orange-700 dark:text-orange-300'>
+                    <KulIcon icon='lucide:alert-triangle' className='w-4 h-4' />
+                    {timeWarning}
+                  </div>
+                </div>
+              )}
+
+              {/* Prompt to select time if no anchor */}
+              {!selectedTime && selectedServices.length > 0 && (
+                <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3'>
+                  <div className='flex items-center gap-2 text-sm text-red-700 dark:text-red-300 font-medium'>
+                    <KulIcon icon='lucide:alert-circle' className='w-4 h-4' />
+                    Please select a start time above to schedule your services
+                  </div>
+                </div>
+              )}
+
+              {/* Selected Services Cards with Drag-and-Drop */}
+              {selectedServices.length > 0 && (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={selectedServices.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                    <div className='space-y-3'>
+                      {selectedServices.map(selected => (
+                        <SortableServiceCard
+                          key={selected.id}
+                          selected={selected}
+                          showStaffSelector={showStaffSelector === selected.id}
+                          availableStaff={availableStaff}
+                          onRemove={() => handleRemoveService(selected.id)}
+                          onToggleStaffSelector={() =>
+                            setShowStaffSelector(showStaffSelector === selected.id ? null : selected.id)
+                          }
+                          onChangeStaff={providerId => handleChangeStaff(selected.id, providerId)}
+                        />
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
+              )}
+
+              {/* Add Another Service */}
+              <button
+                onClick={() => setShowServiceSelector(true)}
+                className='w-full py-4 sm:py-5 border-2 border-dashed border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/20 rounded-2xl text-primary-700 dark:text-teal-400 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:border-primary-400 dark:hover:border-primary-600 flex items-center justify-center gap-2 font-semibold transition-all'
+              >
+                <KulIcon icon='lucide:plus' className='w-5 h-5' />
+                Add another service
+              </button>
+
+              {/* Service Selector Modal */}
+              {showServiceSelector && (
+                <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+                  <div className='bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 shadow-2xl'>
+                    <div className='flex justify-between items-center mb-5'>
+                      <h3 className='text-xl sm:text-2xl font-bold text-gray-900 dark:text-white'>Select Service</h3>
+                      <button
+                        onClick={() => setShowServiceSelector(false)}
+                        className='p-2.5 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 text-gray-500 dark:text-gray-400 rounded-xl transition-all'
+                      >
+                        <KulIcon icon='lucide:x' className='w-5 h-5' />
+                      </button>
+                    </div>
+                    <div className='space-y-3'>
+                      {availableServices.map(service => (
+                        <button
+                          key={service.id}
+                          onClick={() =>
+                            handleAddServiceWithTime(service, selectedTime || '00:00', 'no-preference', false)
+                          }
+                          className='w-full bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 hover:bg-white dark:hover:bg-gray-700 hover:shadow-lg transition-all text-left group border border-gray-200 dark:border-gray-700'
+                        >
+                          <div className='flex justify-between items-start mb-2'>
+                            <div className='flex-1'>
+                              <div className='font-bold text-lg text-gray-900 dark:text-white group-hover:text-primary-700 dark:group-hover:text-teal-400 transition-colors'>
+                                {service.name}
+                              </div>
+                              <div className='text-sm text-gray-500 dark:text-gray-400 mt-1'>{service.description}</div>
+                            </div>
+                            <div className='text-xl font-bold text-primary-700 dark:text-teal-400 ml-4 font-mono'>
+                              £{(service.price / 100).toFixed(2)}
+                            </div>
+                          </div>
+                          <div className='text-sm text-gray-600 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-700/50 px-4 py-1.5 rounded-full inline-block font-medium font-mono'>
+                            {service.duration}min
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Total & Continue */}
+              {selectedServices.length > 0 && (
+                <div className='sticky bottom-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 pt-4 sm:pt-5 mt-4 sm:mt-5 -mx-4 sm:-mx-6 px-4 sm:px-6 pb-4 sm:pb-6'>
+                  <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
+                    <div className='w-full sm:w-auto text-center sm:text-left'>
+                      <div className='text-sm text-gray-500 dark:text-gray-400'>Total</div>
+                      <div className='text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-mono'>
+                        £{(calculateTotal() / 100).toFixed(2)}
+                      </div>
+                      <div className='text-sm text-gray-500 dark:text-gray-400 font-mono'>
+                        {calculateTotalDuration()}min
+                      </div>
+                    </div>
                     <button
-                      type='button'
-                      onClick={() => setCurrentStep('selection')}
-                      className='flex-1 bg-white dark:bg-gray-900 border-2 border-primary-300 dark:border-primary-700 text-primary-800 dark:text-teal-400 py-3.5 h-12 sm:h-auto rounded-xl font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:border-primary-400 dark:hover:border-primary-600 transition-all touch-manipulation'
+                      onClick={() => setCurrentStep('details')}
+                      disabled={!selectedTime}
+                      className='w-full sm:w-auto bg-primary-700 hover:bg-primary-800 text-white px-8 sm:px-10 py-4 rounded-2xl text-lg font-semibold transition-all shadow-lg shadow-primary-500/20 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation'
                     >
-                      Back
-                    </button>
-                    <button
-                      type='submit'
-                      disabled={loading}
-                      className='flex-1 btn-primary-enhanced btn-press py-3.5 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50'
-                    >
-                      {loading ? 'Processing...' : 'Confirm & Book'}
+                      Continue
                     </button>
                   </div>
                 </div>
-              </form>
-            </Form>
-          </div>
-        )}
+              )}
+            </div>
+          )}
 
-        {/* STEP 3: Success */}
-        {currentStep === 'success' && (
-          <div className='p-6 sm:p-8 lg:p-12 text-center space-y-5 sm:space-y-6'>
-            <div className='flex justify-center'>
-              <div className='w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-primary-600 flex items-center justify-center shadow-xl shadow-primary-500/30 animate-scale-in'>
-                <Check className='w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-white stroke-[3]' />
+          {/* STEP 2: Details */}
+          {currentStep === 'details' && (
+            <div className='p-4 sm:p-6 space-y-4 sm:space-y-6'>
+              <h3 className='text-xl sm:text-2xl font-bold text-center text-gray-900 dark:text-white'>
+                Review and confirm
+              </h3>
+
+              <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700'>
+                <div className='text-center mb-4 sm:mb-5'>
+                  <div className='text-lg sm:text-2xl font-bold text-gray-900 dark:text-white'>
+                    {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+                  </div>
+                </div>
+                <div className='space-y-3'>
+                  {selectedServices.map(service => (
+                    <div
+                      key={service.id}
+                      className='bg-white dark:bg-gray-900 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all'
+                    >
+                      <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-0'>
+                        <div className='flex-1'>
+                          <div className='font-bold text-base sm:text-lg text-gray-900 dark:text-white'>
+                            {service.service.name}
+                          </div>
+                          <div className='text-sm text-primary-600 dark:text-teal-400 font-medium mt-1 font-mono'>
+                            {service.time} - {service.endTime} • Staff: {service.providerName}
+                          </div>
+                        </div>
+                        <div className='font-bold text-lg sm:text-xl text-primary-700 dark:text-teal-400 font-mono'>
+                          £{(service.service.price / 100).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Form {...detailsForm}>
+                <form onSubmit={detailsForm.handleSubmit(handleDetailsSubmit)} className='space-y-4'>
+                  <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700 space-y-4'>
+                    <FormField
+                      control={detailsForm.control}
+                      name='name'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder='Name'
+                              className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={detailsForm.control}
+                      name='email'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type='email'
+                              placeholder='Email'
+                              className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={detailsForm.control}
+                      name='phone'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder='Phone (optional)'
+                              className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={detailsForm.control}
+                      name='notes'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder='Leave note (optional)'
+                              className='rounded-xl bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 focus:border-primary-500 focus:ring-primary-500/20'
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-gray-700'>
+                    <div className='flex justify-between items-center mb-4 sm:mb-5'>
+                      <span className='text-sm sm:text-base text-gray-600 dark:text-gray-400 font-medium'>
+                        Total to pay
+                      </span>
+                      <span className='text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white font-mono'>
+                        £{(calculateTotal() / 100).toFixed(2)}
+                      </span>
+                    </div>
+
+                    <div className='flex flex-col sm:flex-row gap-3'>
+                      <button
+                        type='button'
+                        onClick={() => setCurrentStep('selection')}
+                        className='flex-1 bg-white dark:bg-gray-900 border-2 border-primary-300 dark:border-primary-700 text-primary-800 dark:text-teal-400 py-3.5 h-12 sm:h-auto rounded-xl font-semibold hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:border-primary-400 dark:hover:border-primary-600 transition-all touch-manipulation'
+                      >
+                        Back
+                      </button>
+                      <button
+                        type='submit'
+                        disabled={loading}
+                        className='flex-1 btn-primary-enhanced btn-press py-3.5 h-12 sm:h-auto rounded-xl font-semibold disabled:opacity-50'
+                      >
+                        {loading ? 'Processing...' : 'Confirm & Book'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </Form>
+            </div>
+          )}
+
+          {/* STEP 3: Success */}
+          {currentStep === 'success' && (
+            <div className='p-6 sm:p-8 lg:p-12 text-center space-y-5 sm:space-y-6'>
+              <div className='flex justify-center'>
+                <div className='w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full bg-primary-600 flex items-center justify-center shadow-xl shadow-primary-500/30 animate-scale-in'>
+                  <Check className='w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-white stroke-[3]' />
+                </div>
+              </div>
+
+              <div className='space-y-3'>
+                <h3 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white'>Appointment Confirmed</h3>
+                <div className='text-lg sm:text-xl font-semibold text-primary-700 dark:text-teal-400 font-mono'>
+                  {format(selectedDate, 'MMM d, yyyy')}
+                </div>
+                <div className='text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-sm mx-auto'>
+                  You're done! We'll send you a reminder before your appointment.
+                </div>
+              </div>
+
+              <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 sm:p-6 border border-gray-200 dark:border-gray-700 max-w-md mx-auto space-y-3'>
+                <button
+                  onClick={handleDownloadICS}
+                  className='w-full btn-primary-enhanced btn-press py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2'
+                >
+                  <CalendarPlus className='w-5 h-5' />
+                  Download Calendar Event
+                </button>
+
+                <button
+                  onClick={onClose}
+                  className='w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-3.5 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all touch-manipulation'
+                >
+                  Close
+                </button>
               </div>
             </div>
-
-            <div className='space-y-3'>
-              <h3 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white'>Appointment Confirmed</h3>
-              <div className='text-lg sm:text-xl font-semibold text-primary-700 dark:text-teal-400 font-mono'>
-                {format(selectedDate, 'MMM d, yyyy')}
-              </div>
-              <div className='text-sm sm:text-base text-gray-600 dark:text-gray-300 max-w-sm mx-auto'>
-                You're done! We'll send you a reminder before your appointment.
-              </div>
-            </div>
-
-            <div className='bg-gray-50 dark:bg-gray-800 rounded-2xl p-5 sm:p-6 border border-gray-200 dark:border-gray-700 max-w-md mx-auto space-y-3'>
-              <button
-                onClick={handleDownloadICS}
-                className='w-full btn-primary-enhanced btn-press py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2'
-              >
-                <CalendarPlus className='w-5 h-5' />
-                Download Calendar Event
-              </button>
-
-              <button
-                onClick={onClose}
-                className='w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 py-3.5 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all touch-manipulation'
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <style jsx global>{`

@@ -50,7 +50,7 @@ function LandPage() {
           <div className='absolute inset-0 opacity-[0.05] bg-zerv-pattern' />
 
           {/* Large Z-Ribbon Motif - Hero Backdrop */}
-          <div className='absolute right-[-10%] top-[-20%] h-[120%] w-[80%] pointer-events-none overflow-hidden opacity-10'>
+          <div className='absolute right-[-10%] top-[-20%] h-[120%] w-[80%] pointer-events-none overflow-hidden opacity-15'>
             <div
               className='absolute inset-0 zerv-mask'
               style={{
@@ -69,7 +69,7 @@ function LandPage() {
 
           <div className='relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10'>
             <div className='text-center space-y-6 sm:space-y-8'>
-              <h1 className='text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight pb-2 max-w-5xl mx-auto'>
+              <h1 className='text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight pb-2 max-w-5xl mx-auto'>
                 {t('landing.hero.titlePrefix')}
                 <span className='relative inline-block px-4'>
                   <InlineZervLogo className='h-[2em] w-[2.25em] translate-y-[0.3em] text-white' />
@@ -83,9 +83,9 @@ function LandPage() {
 
               {/* Search Bar - Floating Pill */}
               <div className='w-full max-w-4xl mx-auto mt-12 relative z-20'>
-                <div className='bg-white p-2 rounded-[3rem] shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_70px_rgba(0,0,0,0.4)] transition-all duration-300 transform hover:-translate-y-1 backdrop-blur-sm bg-white/95'>
-                  <div className='grid grid-cols-1 md:grid-cols-[1.2fr_1fr_auto] gap-2 p-2'>
-                    <div className='flex-1 relative border-b md:border-b-0 md:border-r border-gray-100'>
+                <div className='bg-white/95 backdrop-blur-md p-3 sm:p-2 rounded-[2rem] sm:rounded-[3rem] shadow-[0_20px_60px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_70px_rgba(0,0,0,0.4)] transition-all duration-300 transform hover:-translate-y-1 ring-1 ring-white/20'>
+                  <div className='grid grid-cols-1 md:grid-cols-[1.2fr_1fr_auto] gap-3 md:gap-2 p-1 sm:p-2'>
+                    <div className='flex-1 relative border-b border-gray-100 md:border-b-0 md:border-r bg-gray-50/50 md:bg-transparent rounded-xl md:rounded-none mb-2 md:mb-0'>
                       <SearchInput
                         value={q}
                         onChange={e => setQ(e.target.value)}
@@ -94,10 +94,10 @@ function LandPage() {
                           localeKey: 'landing.search.servicePlaceholder'
                         }}
                         i18nTFn={t}
-                        className='w-full h-14 text-lg border-none bg-transparent focus:bg-gray-50/50 rounded-[2rem] focus:ring-0 font-medium text-gray-800 placeholder:text-gray-400 px-6'
+                        className='w-full h-12 md:h-14 text-lg border-none bg-transparent focus:bg-transparent rounded-[2rem] focus:ring-0 font-medium text-gray-800 placeholder:text-gray-500 pl-10 md:pl-12 pr-4'
                       />
                     </div>
-                    <div className='flex-1 relative'>
+                    <div className='flex-1 relative bg-gray-50/50 md:bg-transparent rounded-xl md:rounded-none mb-2 md:mb-0'>
                       <SearchInput
                         value={loc}
                         onChange={e => setLoc(e.target.value)}
@@ -107,14 +107,14 @@ function LandPage() {
                         }}
                         i18nTFn={t}
                         leadingIcon={MapPin}
-                        className='w-full h-14 text-lg border-none bg-transparent focus:bg-gray-50/50 rounded-[2rem] focus:ring-0 font-medium text-gray-800 placeholder:text-gray-400 px-6'
+                        className='w-full h-12 md:h-14 text-lg border-none bg-transparent focus:bg-transparent rounded-[2rem] focus:ring-0 font-medium text-gray-800 placeholder:text-gray-500 pl-10 md:pl-12 pr-4'
                       />
                     </div>
                     <Button
                       onClick={goSearch}
                       buttonText={{ localeKey: 'landing.search.button' }}
                       i18nTFn={t}
-                      className='w-full md:w-auto bg-[#202c39] text-white px-10 py-4 h-14 text-lg font-bold rounded-full shadow-lg hover:bg-[#0a2c24] transition-all duration-300'
+                      className='w-full md:w-auto bg-[#202c39] text-white px-8 lg:px-10 py-3 md:py-4 h-12 md:h-14 text-lg font-bold rounded-xl md:rounded-full shadow-lg hover:bg-[#0a2c24] transition-all duration-300 transform hover:scale-105 active:scale-95'
                     />
                   </div>
                 </div>
@@ -162,7 +162,7 @@ function LandPage() {
         </div>
 
         {/* Categories Section */}
-        <div className='relative bg-white dark:bg-[#202c39] py-12'>
+        <div className='relative bg-white dark:bg-[#202c39] py-16 sm:py-24'>
           <ZWatermark className='opacity-[0.02]' />
           <ExploreSection />
         </div>
@@ -171,7 +171,7 @@ function LandPage() {
         <BusinessGrowthBanner />
 
         {/* Features Section */}
-        <div className='relative bg-[#f7f8f9] dark:bg-[#0a2c24]'>
+        <div className='relative bg-[#f7f8f9] dark:bg-[#0a2c24] py-12 sm:py-16'>
           <FeaturesSection />
         </div>
 

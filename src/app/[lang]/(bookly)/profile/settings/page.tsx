@@ -179,21 +179,21 @@ export default function ProfileSettingsPage() {
       <main className='container mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10'>
         <div className='w-full max-w-2xl mx-auto'>
           {/* Header */}
-          <div className='flex items-center gap-4 mb-6 animate-in fade-in slide-in-from-top-4 duration-700'>
+          <div className='flex items-center gap-4 mb-8 animate-in fade-in slide-in-from-top-4 duration-700'>
             <button
               onClick={goBack}
-              className='inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-700/80 text-gray-600 dark:text-gray-300 transition-all duration-200 hover:scale-105 active:scale-95'
+              className='inline-flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-[#202c39] shadow-md hover:shadow-lg text-gray-600 dark:text-gray-300 transition-all duration-200 hover:scale-105 active:scale-95 border border-gray-100 dark:border-gray-800'
             >
               <ArrowLeft className='w-5 h-5' />
             </button>
             <div>
               <H1
-                className='text-2xl sm:text-3xl font-bold text-[#0a2c24] dark:text-white'
+                className='text-2xl sm:text-3xl font-bold text-[#0a2c24] dark:text-white tracking-tight'
                 stringProps={{ localeKey: 'profile.settings.title' }}
               />
 
               <P
-                className='text-gray-600 dark:text-gray-300 text-sm sm:text-base'
+                className='text-gray-600 dark:text-gray-300 text-sm sm:text-base mt-1'
                 stringProps={{
                   localeKey: 'profile.settings.description'
                 }}
@@ -202,8 +202,8 @@ export default function ProfileSettingsPage() {
           </div>
 
           {/* Form container */}
-          <Card className='bg-white/80 dark:bg-[#202c39]/80 backdrop-blur-sm shadow-xl border border-[#0a2c24]/10 dark:border-white/10 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
-            <CardHeader>
+          <Card className='bg-white/95 dark:bg-[#202c39]/95 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.06)] border-none rounded-[2.5rem] animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+            <CardHeader className='pb-2'>
               <CardTitle className='flex items-center gap-2'>
                 <Save className='w-5 h-5 text-[#0a2c24] dark:text-[#77b6a3]' />
                 {t('profile.settings.personalInfo') || 'Personal Information'}

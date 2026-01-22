@@ -438,18 +438,19 @@ function businessDetailsPage() {
           {/* Tabs & Content - Left Side */}
           <div className='flex-1 min-w-0'>
             {/* Refined Sticky Navigation */}
-            <div className='sticky top-[64px] z-30 mb-8 bg-[#f7f8f9] dark:bg-[#0a2c24] py-4'>
-              <div className='flex items-center gap-2 overflow-x-auto no-scrollbar pb-4 px-1'>
+            <div className='sticky top-[64px] z-30 mb-8 bg-[#f7f8f9]/95 dark:bg-[#0a2c24]/95 backdrop-blur-md py-4 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all duration-300 border-b border-gray-200/50 dark:border-white/5'>
+              <div className='flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 sm:pb-0'>
                 {getTabsWithTranslation(t).map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                      px-8 py-3 rounded-full text-base font-bold transition-all duration-300 border-2
+                      px-6 py-2.5 rounded-full text-base font-bold transition-all duration-300 border
+                      whitespace-nowrap flex-shrink-0
                       ${
                         activeTab === tab.id
-                          ? 'bg-[#0a2c24] text-white border-[#0a2c24] transform -translate-y-1'
-                          : 'bg-transparent text-[#0a2c24] border-[#0a2c24] hover:bg-[#0a2c24]/5'
+                          ? 'bg-[#0a2c24] text-white border-[#0a2c24] shadow-lg transform -translate-y-0.5'
+                          : 'bg-white/50 dark:bg-white/5 text-[#0a2c24] dark:text-white border-transparent hover:bg-white dark:hover:bg-white/10 hover:shadow-md'
                       }
                     `}
                   >
