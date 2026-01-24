@@ -1166,7 +1166,19 @@ export default function UnifiedBookingDrawer({
         sx: { borderRadius: 2, maxHeight: '90vh' }
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+      <Box
+        sx={{ display: 'flex', flexDirection: 'column', maxHeight: '90vh', position: 'relative', overflow: 'hidden' }}
+      >
+        {/* Brand Watermark Overlay */}
+        <div className='absolute inset-0 pointer-events-none z-0'>
+          <div
+            className='absolute -top-20 -right-20 w-[400px] h-[400px] bg-contain bg-no-repeat opacity-[0.03]'
+            style={{
+              backgroundImage: "url('/brand/zerv-z.svg')",
+              transform: 'rotate(-10deg)'
+            }}
+          />
+        </div>
         {/* Header */}
         <Box
           sx={{

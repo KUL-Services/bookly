@@ -9,6 +9,7 @@ import { ResourcesTab } from '@/bookly/features/staff-management/resources-tab'
 import { RoomsTab } from '@/bookly/features/staff-management/rooms-tab'
 import { CommissionsTab } from '@/bookly/features/staff-management/commissions-tab'
 import { useStaffManagementStore } from '@/bookly/features/staff-management/staff-store'
+import { BrandWatermark } from '@/bookly/components/atoms/brand-watermark'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -52,9 +53,26 @@ const StaffManagement = () => {
   }, [searchParams, isTimeOffOpen, isTimeReservationOpen, toggleTimeOff, toggleTimeReservation])
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
+    <Box
+      sx={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.default',
+        position: 'relative'
+      }}
+    >
+      <BrandWatermark placement='top-right' size={400} opacity={0.05} offsetX={0} offsetY={0} rotate={10} />
       {/* Tabs Header */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
         <Tabs
           value={currentTab}
           onChange={(_, newValue) => setCurrentTab(newValue)}
@@ -62,22 +80,10 @@ const StaffManagement = () => {
           variant='scrollable'
           scrollButtons='auto'
         >
-          <Tab
-            label='STAFF MEMBERS'
-            sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'var(--font-fira-code)' }}
-          />
-          <Tab
-            label='SHIFTS'
-            sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'var(--font-fira-code)' }}
-          />
-          <Tab
-            label='RESOURCES'
-            sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'var(--font-fira-code)' }}
-          />
-          <Tab
-            label='ROOMS'
-            sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'var(--font-fira-code)' }}
-          />
+          <Tab label='STAFF MEMBERS' sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit' }} />
+          <Tab label='SHIFTS' sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit' }} />
+          <Tab label='RESOURCES' sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit' }} />
+          <Tab label='ROOMS' sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit' }} />
         </Tabs>
       </Box>
 

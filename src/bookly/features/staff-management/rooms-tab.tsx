@@ -659,7 +659,7 @@ export function RoomsTab() {
               const hours = Math.floor(durationMinutes / 60)
 
               // Get booking count for this shift
-              const dateStr = format(date, 'yyyy-MM-dd')
+              const dateStr = format(selectedDate, 'yyyy-MM-dd')
               const bookingData = getShiftBookingCount(room.id, dateStr, shift.start, shift.end)
               const hasBookings = bookingData !== null
               const isFull = hasBookings && bookingData.bookedSpots >= bookingData.capacity
@@ -699,12 +699,12 @@ export function RoomsTab() {
                     }}
                   >
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
-                        <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
+                      <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
                         {shiftStart.toLowerCase()}
-                        </Typography>
-                        <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
+                      </Typography>
+                      <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
                         {shiftEnd.toLowerCase()}
-                        </Typography>
+                      </Typography>
                     </Box>
 
                     <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
@@ -1964,7 +1964,14 @@ export function RoomsTab() {
                                       }}
                                     >
                                       {/* Show time range for fixed rooms */}
-                                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.25 }}>
+                                      <Box
+                                        sx={{
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          alignItems: 'center',
+                                          gap: 0.25
+                                        }}
+                                      >
                                         <Typography
                                           variant='caption'
                                           fontWeight={500}
@@ -1984,10 +1991,20 @@ export function RoomsTab() {
                                         {/* Show capacity */}
                                         {schedule.shifts[0].capacity && (
                                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, mt: 0.25 }}>
-                                            <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.55rem' }}>
-                                              {schedule.shifts.reduce((total: number, s: any) => total + (s.capacity || 0), 0)}
+                                            <Typography
+                                              variant='caption'
+                                              color='text.secondary'
+                                              sx={{ fontSize: '0.55rem' }}
+                                            >
+                                              {schedule.shifts.reduce(
+                                                (total: number, s: any) => total + (s.capacity || 0),
+                                                0
+                                              )}
                                             </Typography>
-                                            <i className='ri-group-line' style={{ fontSize: '0.5rem', color: 'var(--mui-palette-text-secondary)' }} />
+                                            <i
+                                              className='ri-group-line'
+                                              style={{ fontSize: '0.5rem', color: 'var(--mui-palette-text-secondary)' }}
+                                            />
                                           </Box>
                                         )}
                                       </Box>

@@ -497,7 +497,8 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         display: 'flex',
         flexDirection: 'column',
         bgcolor: 'background.default',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        position: 'relative'
       }}
     >
       {/* Header */}

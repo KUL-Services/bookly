@@ -118,15 +118,27 @@ const BusinessSettings = () => {
 
   return (
     <>
+      {/* Brand Background Watermark */}
+      <div className='fixed right-0 bottom-0 w-[600px] h-[600px] pointer-events-none opacity-[0.02] z-0'>
+        <div
+          className='w-full h-full bg-no-repeat bg-contain'
+          style={{
+            backgroundImage: "url('/brand/zerv-z.svg')",
+            transform: 'rotate(-15deg)',
+            backgroundPosition: 'bottom right'
+          }}
+        />
+      </div>
+
       <TabContext value={activeTab}>
-        <Grid container spacing={6}>
+        <Grid container spacing={6} className='relative z-10'>
           {/* Header */}
           <Grid item xs={12}>
             <Card>
               <CardHeader
                 title='Business Settings'
                 subheader={
-                  <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                  <Typography variant='body2' color='text.secondary'>
                     Configure your business profile, policies, payment options, notifications, and more
                   </Typography>
                 }
@@ -165,58 +177,67 @@ const BusinessSettings = () => {
           <Grid item xs={12}>
             <CustomTabList onChange={handleTabChange} variant='scrollable' pill='true'>
               <Tab
-                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Business Profile</span>}
+                label='Business Profile'
                 icon={<i className='ri-store-3-line' />}
                 iconPosition='start'
                 value='business-profile'
+                sx={{ fontFamily: 'inherit' }}
               />
               <Tab
-                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Services</span>}
+                label='Services'
                 icon={<i className='ri-service-line' />}
                 iconPosition='start'
                 value='services'
+                sx={{ fontFamily: 'inherit' }}
               />
               <Tab
-                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Branches</span>}
+                label='Branches'
                 icon={<i className='ri-building-line' />}
                 iconPosition='start'
                 value='branches'
+                sx={{ fontFamily: 'inherit' }}
               />
               <Tab
-                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Booking Policies</span>}
+                label='Booking Policies'
                 icon={<i className='ri-calendar-check-line' />}
                 iconPosition='start'
                 value='booking-policies'
+                sx={{ fontFamily: 'inherit' }}
               />
               <Tab
-                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Payment</span>}
+                label='Payment'
                 icon={<i className='ri-bank-card-line' />}
                 iconPosition='start'
                 value='payment'
+                sx={{ fontFamily: 'inherit' }}
               />
               <Tab
-                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Notifications</span>}
+                label='Notifications'
                 icon={<i className='ri-notification-4-line' />}
                 iconPosition='start'
                 value='notifications'
+                sx={{ fontFamily: 'inherit' }}
               />
               <Tab
-                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Scheduling</span>}
+                label='Scheduling'
                 icon={<i className='ri-time-line' />}
                 iconPosition='start'
                 value='scheduling'
+                sx={{ fontFamily: 'inherit' }}
               />
               <Tab
-                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Calendar Display</span>}
+                label='Calendar Display'
                 icon={<i className='ri-calendar-view' />}
                 iconPosition='start'
                 value='calendar'
+                sx={{ fontFamily: 'inherit' }}
               />
               <Tab
-                label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Customer Options</span>}
+                label='Customer Options'
                 icon={<i className='ri-user-settings-line' />}
                 iconPosition='start'
                 value='customer'
+                sx={{ fontFamily: 'inherit' }}
               />
             </CustomTabList>
           </Grid>
@@ -306,10 +327,7 @@ const BusinessSettings = () => {
                   <Box component='h3' sx={{ m: 0, fontWeight: 600 }}>
                     Reset All Settings?
                   </Box>
-                  <Box
-                    component='p'
-                    sx={{ m: 0, color: 'text.secondary', fontSize: '0.875rem', fontFamily: 'var(--font-fira-code)' }}
-                  >
+                  <Box component='p' sx={{ m: 0, color: 'text.secondary', fontSize: '0.875rem' }}>
                     This will reset all settings to their default values. This action cannot be undone.
                   </Box>
                 </Box>

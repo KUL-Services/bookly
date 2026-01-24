@@ -20,6 +20,8 @@ import {
 import type { CalendarEvent, DayOfWeek, WeeklyStaffHours } from './types'
 import { useMemo } from 'react'
 
+import { BrandWatermark } from '@/bookly/components/atoms/brand-watermark'
+
 // Helper to adjust color opacity for faded events
 const adjustColorOpacity = (color: string, opacity: number): string => {
   // Handle hex colors
@@ -992,7 +994,8 @@ export default function UnifiedMultiResourceWeekView({
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
-          WebkitOverflowScrolling: 'touch'
+          WebkitOverflowScrolling: 'touch',
+          position: 'relative'
         }}
       >
         <Box
@@ -1000,9 +1003,13 @@ export default function UnifiedMultiResourceWeekView({
             minWidth: { xs: `${220 + weekDays.length * 120}px`, md: '100%' },
             display: 'flex',
             flexDirection: 'column',
-            flex: 1
+            flex: 1,
+            position: 'relative'
           }}
         >
+          {/* Brand Watermark - Inside scrollable content */}
+          <BrandWatermark position='bottom-right' size={500} offsetX={-50} offsetY={50} rotate={-20} />
+
           {/* Week header */}
           <Box
             sx={{

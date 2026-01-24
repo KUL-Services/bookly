@@ -270,9 +270,21 @@ const ReviewsManagement = () => {
   const filteredReviews = getFilteredReviews()
 
   return (
-    <Grid container spacing={6}>
+    <Grid container spacing={6} className='relative'>
+      {/* Brand Background Graphic */}
+      <div
+        className='absolute top-0 right-0 w-[500px] h-[500px] pointer-events-none opacity-[0.03] z-0'
+        style={{
+          backgroundImage: "url('/brand/zerv-z.svg')",
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'top right',
+          backgroundSize: 'contain',
+          transform: 'rotate(-20deg) translate(20%, -20%)'
+        }}
+      />
+
       {/* Statistics Cards */}
-      <Grid item xs={12}>
+      <Grid item xs={12} className='relative z-10'>
         <Grid container spacing={{ xs: 3, sm: 4 }}>
           <Grid item xs={6} sm={6} md={3}>
             <Card>
@@ -280,11 +292,7 @@ const ReviewsManagement = () => {
                 <Typography variant='h4' color='primary' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.total}
                 </Typography>
-                <Typography
-                  variant='body2'
-                  color='textSecondary'
-                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontFamily: 'var(--font-fira-code)' }}
-                >
+                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   Total Reviews
                 </Typography>
               </CardContent>
@@ -296,11 +304,7 @@ const ReviewsManagement = () => {
                 <Typography variant='h4' color='success.main' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.avgRating.toFixed(1)}
                 </Typography>
-                <Typography
-                  variant='body2'
-                  color='textSecondary'
-                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontFamily: 'var(--font-fira-code)' }}
-                >
+                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   Average Rating
                 </Typography>
               </CardContent>
@@ -312,11 +316,7 @@ const ReviewsManagement = () => {
                 <Typography variant='h4' color='success.main' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.positive}
                 </Typography>
-                <Typography
-                  variant='body2'
-                  color='textSecondary'
-                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontFamily: 'var(--font-fira-code)' }}
-                >
+                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   Positive Reviews
                 </Typography>
               </CardContent>
@@ -328,11 +328,7 @@ const ReviewsManagement = () => {
                 <Typography variant='h4' color='error.main' sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                   {stats.negative}
                 </Typography>
-                <Typography
-                  variant='body2'
-                  color='textSecondary'
-                  sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, fontFamily: 'var(--font-fira-code)' }}
-                >
+                <Typography variant='body2' color='textSecondary' sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   Negative Reviews
                 </Typography>
               </CardContent>
@@ -342,12 +338,12 @@ const ReviewsManagement = () => {
       </Grid>
 
       {/* Reviews Management */}
-      <Grid item xs={12}>
+      <Grid item xs={12} className='relative z-10'>
         <Card>
           <CardHeader
             title='Reviews Management'
             subheader={
-              <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+              <Typography variant='body2' color='text.secondary'>
                 Manage customer reviews and feedback
               </Typography>
             }
@@ -367,10 +363,10 @@ const ReviewsManagement = () => {
                 indicatorColor='primary'
                 textColor='primary'
               >
-                <Tab label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>All ({stats.total})</span>} />
-                <Tab label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Positive ({stats.positive})</span>} />
-                <Tab label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Neutral ({stats.neutral})</span>} />
-                <Tab label={<span style={{ fontFamily: 'var(--font-fira-code)' }}>Negative ({stats.negative})</span>} />
+                <Tab label={`All (${stats.total})`} sx={{ fontFamily: 'inherit' }} />
+                <Tab label={`Positive (${stats.positive})`} sx={{ fontFamily: 'inherit' }} />
+                <Tab label={`Neutral (${stats.neutral})`} sx={{ fontFamily: 'inherit' }} />
+                <Tab label={`Negative (${stats.negative})`} sx={{ fontFamily: 'inherit' }} />
               </Tabs>
             </Box>
 
@@ -388,14 +384,12 @@ const ReviewsManagement = () => {
                 <Table sx={{ minWidth: { xs: 800, md: 'auto' } }}>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Customer</TableCell>
-                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Service</TableCell>
-                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Rating</TableCell>
-                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Comment</TableCell>
-                      <TableCell sx={{ fontFamily: 'var(--font-fira-code)' }}>Date</TableCell>
-                      <TableCell align='center' sx={{ fontFamily: 'var(--font-fira-code)' }}>
-                        Actions
-                      </TableCell>
+                      <TableCell>Customer</TableCell>
+                      <TableCell>Service</TableCell>
+                      <TableCell>Rating</TableCell>
+                      <TableCell>Comment</TableCell>
+                      <TableCell>Date</TableCell>
+                      <TableCell align='center'>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -419,8 +413,7 @@ const ReviewsManagement = () => {
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
-                                  maxWidth: 150,
-                                  fontFamily: 'var(--font-fira-code)'
+                                  maxWidth: 150
                                 }}
                               >
                                 {review.user.email}
@@ -436,11 +429,7 @@ const ReviewsManagement = () => {
                             <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>
                               {review.service.name}
                             </Typography>
-                            <Typography
-                              variant='caption'
-                              color='textSecondary'
-                              sx={{ whiteSpace: 'nowrap', fontFamily: 'var(--font-fira-code)' }}
-                            >
+                            <Typography variant='caption' color='textSecondary' sx={{ whiteSpace: 'nowrap' }}>
                               {review.service.location}
                             </Typography>
                           </div>
@@ -452,7 +441,7 @@ const ReviewsManagement = () => {
                               label={`${review.rating}/5`}
                               size='small'
                               color={getRatingColor(review.rating) as any}
-                              sx={{ '& .MuiChip-label': { fontFamily: 'var(--font-fira-code)' } }}
+                              sx={{ '& .MuiChip-label': { fontFamily: 'inherit' } }}
                             />
                           </Box>
                         </TableCell>
@@ -472,9 +461,7 @@ const ReviewsManagement = () => {
                           </Typography>
                         </TableCell>
                         <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                          <Typography variant='body2' sx={{ fontFamily: 'var(--font-fira-code)' }}>
-                            {new Date(review.createdAt).toLocaleDateString()}
-                          </Typography>
+                          <Typography variant='body2'>{new Date(review.createdAt).toLocaleDateString()}</Typography>
                         </TableCell>
                         <TableCell align='center'>
                           <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>

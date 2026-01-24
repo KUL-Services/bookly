@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
+import { BrandWatermark } from '@/bookly/components/atoms/brand-watermark'
 import {
   getBranchName,
   getBranchHours,
@@ -1222,16 +1223,27 @@ export default function UnifiedMultiResourceDayView({
       }}
     >
       <Box
-        sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', WebkitOverflowScrolling: 'touch' }}
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          position: 'relative'
+        }}
       >
         <Box
           sx={{
             minWidth: { xs: `${60 + orderedResources.length * 150}px`, md: '100%' },
             display: 'flex',
             flexDirection: 'column',
-            flex: 1
+            flex: 1,
+            position: 'relative'
           }}
         >
+          {/* Brand Watermark - Inside scrollable content */}
+          <BrandWatermark placement='bottom-right' size={500} offsetX={-50} offsetY={50} rotate={-20} />
+
           {/* Header with three-layer grouping */}
           <Box
             sx={{

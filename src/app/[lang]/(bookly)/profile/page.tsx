@@ -175,6 +175,18 @@ function ProfilePage() {
 
   return (
     <div className='min-h-screen w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col items-center bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
+      {/* Brand Watermark */}
+      <div className='fixed -left-20 top-20 w-[800px] h-[800px] pointer-events-none opacity-[0.03] z-0'>
+        <div
+          className='w-full h-full bg-no-repeat bg-contain'
+          style={{
+            backgroundImage: "url('/brand/zerv-z.svg')",
+            transform: 'rotate(15deg)',
+            backgroundPosition: 'center'
+          }}
+        />
+      </div>
+
       <div className='w-full max-w-4xl space-y-6 sm:space-y-8 relative z-10'>
         {/* Profile Card */}
         <Card className='bg-white/90 dark:bg-[#202c39]/90 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.04)] border-none rounded-[2.5rem] hover:shadow-[0_25px_60px_rgba(0,0,0,0.08)] transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>

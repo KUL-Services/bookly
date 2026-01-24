@@ -130,7 +130,19 @@ export default function SearchPage() {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className='min-h-screen bg-gray-50 relative overflow-hidden'>
+      {/* Brand Watermark */}
+      <div className='fixed right-0 top-20 w-[600px] h-[600px] pointer-events-none opacity-[0.03] z-0'>
+        <div
+          className='w-full h-full bg-no-repeat bg-contain'
+          style={{
+            backgroundImage: "url('/brand/zerv-z.svg')",
+            transform: 'rotate(-15deg)',
+            backgroundPosition: 'top right'
+          }}
+        />
+      </div>
+
       {/* Mobile Top Bar */}
       <div className='lg:hidden bg-white/90 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-30 px-4 py-3 space-y-3 shadow-sm transition-all duration-300'>
         <div className='flex items-center gap-3'>

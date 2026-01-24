@@ -486,6 +486,17 @@ function businessDetailsPage() {
 
       {/* Main Content Area */}
       <div className='max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-12 relative z-10'>
+        {/* Brand Background Graphic */}
+        <div
+          className='absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none opacity-[0.03] z-0'
+          style={{
+            backgroundImage: "url('/brand/zerv-z.svg')",
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'top right',
+            backgroundSize: 'contain',
+            transform: 'rotate(-15deg)'
+          }}
+        />
         <div className='flex flex-col lg:flex-row gap-8'>
           {/* Tabs & Content - Left Side */}
           <div className='flex-1 min-w-0'>

@@ -28,6 +28,25 @@ export default function LoginPage({ params }: PageProps) {
     <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
       {/* Background Pattern Overlay */}
       <div className='absolute inset-0 bg-zerv-pattern opacity-[0.06]' />
+
+      {/* Brand Watermark Overlay */}
+      <div className='absolute inset-0 pointer-events-none overflow-hidden z-0'>
+        <div
+          className='absolute -top-24 -right-24 w-[500px] h-[500px] bg-contain bg-no-repeat opacity-[0.04]'
+          style={{
+            backgroundImage: "url('/brand/zerv-z.svg')",
+            transform: 'rotate(-15deg)'
+          }}
+        />
+        <div
+          className='absolute bottom-0 left-0 w-[400px] h-[400px] bg-contain bg-no-repeat opacity-5'
+          style={{
+            backgroundImage: "url('/brand/zerv-z.svg')",
+            transform: 'rotate(15deg) translate(-30%, 30%)'
+          }}
+        />
+      </div>
+
       <main className='container mx-auto px-4 sm:px-6 py-4 sm:py-6 relative z-10'>
         <div className='w-full max-w-md mx-auto'>
           {/* Mobile-optimized header */}
@@ -39,7 +58,10 @@ export default function LoginPage({ params }: PageProps) {
           </div>
 
           {/* Form container with mobile-friendly styling */}
-          <div className='bg-white/90 dark:bg-[#202c39]/90 backdrop-blur-md rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-[#0a2c24]/5 dark:border-white/5 p-6 sm:p-10 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+          <div className='bg-white/90 dark:bg-[#202c39]/90 backdrop-blur-md rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-[#0a2c24]/5 dark:border-white/5 p-6 sm:p-10 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300 relative overflow-hidden'>
+            {/* Subtle inner accent */}
+            <div className='absolute top-0 right-0 w-32 h-32 bg-zerv-pattern opacity-[0.03] -mr-10 -mt-10 rotate-12 pointer-events-none'></div>
+
             <AuthForm
               type='login'
               loading={loading}
