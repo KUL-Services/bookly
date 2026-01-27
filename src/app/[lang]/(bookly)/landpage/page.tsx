@@ -13,6 +13,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { InlineZervLogo } from '@/bookly/components/atoms/inline-zerv-logo'
 import { ZWatermark, ZDivider } from '@/bookly/components/atoms/zerv-assets'
+import { ScrollReveal } from '@/bookly/components/molecules/scroll-reveal'
 
 function LandPage() {
   const [q, setQ] = useState('')
@@ -45,12 +46,12 @@ function LandPage() {
 
       <main className='relative overflow-hidden'>
         {/* Hero Section - Zerv Dark Brand */}
-        <section className='relative py-16 sm:py-20 md:py-24 lg:py-32 overflow-hidden bg-[#0a2c24] shadow-2xl'>
+        <section className='relative pt-16 pb-32 sm:pt-20 sm:pb-40 md:pt-24 md:pb-48 lg:pt-32 lg:pb-56 overflow-hidden bg-[#0a2c24] shadow-2xl'>
           {/* Background Texture - Z Pattern */}
           <div className='absolute inset-0 opacity-[0.05] bg-zerv-pattern' />
 
-          {/* Large Z-Ribbon Motif - Hero Backdrop */}
-          <div className='absolute right-[-10%] top-[-20%] h-[120%] w-[80%] pointer-events-none overflow-hidden opacity-15'>
+          {/* Large Z-Ribbon Motif - Hero Backdrop - Reduced Opacity */}
+          <div className='absolute right-[-10%] top-[-20%] h-[120%] w-[80%] pointer-events-none overflow-hidden opacity-[0.05]'>
             <div
               className='absolute inset-0 zerv-mask'
               style={{
@@ -121,26 +122,28 @@ function LandPage() {
               </div>
 
               {/* Trust indicators - Light on Dark */}
-              <div className='flex flex-wrap justify-center items-center gap-8 sm:gap-12 pt-8 opacity-80'>
-                <div className='flex items-center gap-3 text-white/80 hover:text-white transition-colors duration-300'>
-                  <div className='w-2 h-2 bg-sage-400 rounded-full animate-pulse' />
-                  <span className='text-sm font-medium tracking-wide'>{t('landing.stats.businesses')}</span>
+              <ScrollReveal delay={400} animation='fade-up'>
+                <div className='flex flex-wrap justify-center items-center gap-8 sm:gap-12 pt-8 opacity-80'>
+                  <div className='flex items-center gap-3 text-white/80 hover:text-white transition-colors duration-300'>
+                    <div className='w-2 h-2 bg-sage-400 rounded-full animate-pulse' />
+                    <span className='text-sm font-medium tracking-wide'>{t('landing.stats.businesses')}</span>
+                  </div>
+                  <div className='flex items-center gap-3 text-white/80 hover:text-white transition-colors duration-300'>
+                    <div className='w-2 h-2 bg-teal-400 rounded-full animate-pulse' />
+                    <span className='text-sm font-medium tracking-wide'>{t('landing.stats.customers')}</span>
+                  </div>
+                  <div className='flex items-center gap-3 text-white/80 hover:text-white transition-colors duration-300'>
+                    <div className='w-2 h-2 bg-coral-400 rounded-full animate-pulse' />
+                    <span className='text-sm font-medium tracking-wide'>{t('landing.stats.rating')}</span>
+                  </div>
                 </div>
-                <div className='flex items-center gap-3 text-white/80 hover:text-white transition-colors duration-300'>
-                  <div className='w-2 h-2 bg-teal-400 rounded-full animate-pulse' />
-                  <span className='text-sm font-medium tracking-wide'>{t('landing.stats.customers')}</span>
-                </div>
-                <div className='flex items-center gap-3 text-white/80 hover:text-white transition-colors duration-300'>
-                  <div className='w-2 h-2 bg-coral-400 rounded-full animate-pulse' />
-                  <span className='text-sm font-medium tracking-wide'>{t('landing.stats.rating')}</span>
-                </div>
-              </div>
+              </ScrollReveal>
             </div>
           </div>
           {/* Bottom Curved Separator - Z-Swoosh */}
           <div className='absolute bottom-0 left-0 w-full overflow-hidden leading-[0] z-20 pointer-events-none'>
             <svg
-              className='relative block w-[calc(100%+1.3px)] h-[80px] sm:h-[150px]'
+              className='relative block w-[calc(100%+1.3px)] h-[120px] sm:h-[200px]'
               data-name='Layer 1'
               xmlns='http://www.w3.org/2000/svg'
               viewBox='0 0 1200 120'
@@ -156,23 +159,27 @@ function LandPage() {
         </section>
 
         {/* Recommended Businesses Section */}
-        <div className='relative bg-gray-50/50 dark:bg-[#202c39]/30'>
+        <ScrollReveal animation='fade-up' delay={100} className='relative bg-gray-50/50 dark:bg-[#202c39]/30'>
           <ZDivider className='absolute top-0 transform -translate-y-1/2 z-10 text-white' />
           <RecommendedSection />
-        </div>
+        </ScrollReveal>
 
         {/* Categories Section */}
-        <div className='relative bg-white dark:bg-[#202c39] py-16 sm:py-24'>
+        <ScrollReveal animation='fade-up' delay={200} className='relative bg-white dark:bg-[#202c39] py-16 sm:py-24'>
           <ZWatermark className='opacity-[0.02]' />
           <ExploreSection />
-        </div>
+        </ScrollReveal>
 
         {/* Business Growth Banner */}
-        <BusinessGrowthBanner />
+        <ScrollReveal animation='slide-in-left' delay={100}>
+          <BusinessGrowthBanner />
+        </ScrollReveal>
 
         {/* Features Section */}
         <div className='relative bg-[#f7f8f9] dark:bg-[#0a2c24] py-12 sm:py-16'>
-          <FeaturesSection />
+          <ScrollReveal animation='fade-up'>
+            <FeaturesSection />
+          </ScrollReveal>
         </div>
 
         {/* App Download Section */}

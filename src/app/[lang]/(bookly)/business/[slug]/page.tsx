@@ -9,6 +9,9 @@ import { Card, CardContent } from '@/bookly/components/ui/card'
 import { mockBusinesses, mockReviews, mockServices } from '@/bookly/data/mock-data'
 import { format } from 'date-fns'
 import {
+  Facebook,
+  Instagram,
+  Twitter,
   Clock,
   Globe,
   MapPin,
@@ -29,11 +32,11 @@ import type { Business, Service as ApiService, Branch, Staff } from '@/lib/api'
 import initTranslations from '@/app/i18n/i18n'
 import { getBusinessWithDetails } from '@/mocks/businesses'
 import { useAuthStore } from '@/stores/auth.store'
+import { useSettings } from '@/contexts/settings.context'
 
 const getTabsWithTranslation = (t: any) => [
   { id: 'services', label: t('business.tabs.services') },
   { id: 'details', label: t('business.tabs.details') },
-  { id: 'branches', label: 'Locations' },
   { id: 'reviews', label: t('business.tabs.reviews') }
 ]
 
@@ -54,8 +57,23 @@ function businessDetailsPage() {
   const [error, setError] = useState<string | null>(null)
   const [t, setT] = useState<any>(() => (key: string) => key)
 
+  const { country, currency } = useSettings() // Using standard hook for settings
   // Extract services, branches, and staff from business data
   const services = business?.services || []
+
+  // Group services by category
+  const groupedServices = useMemo(() => {
+    return services.reduce(
+      (acc, service) => {
+        const category = (service as any).category || 'General'
+        if (!acc[category]) acc[category] = []
+        acc[category].push(service)
+        return acc
+      },
+      {} as Record<string, ApiService[]>
+    )
+  }, [services])
+
   const branches = business?.branches || []
   const staff = branches.flatMap(branch => branch.staff || [])
 
@@ -468,13 +486,13 @@ function businessDetailsPage() {
             {/* Action Buttons */}
             <div className='flex gap-3 mb-6'>
               <button
-                className='p-3 rounded-2xl border-2 border-white/30 hover:bg-white text-white hover:text-[#0a2c24] backdrop-blur-md transition-all duration-300 hover:scale-110 active:scale-95 group'
+                className='p-3 rounded-full hover:bg-white/10 text-white transition-all duration-300 hover:scale-110 active:scale-95 group'
                 aria-label='Save'
               >
-                <Heart className='w-6 h-6 group-hover:fill-[#0a2c24]' />
+                <Heart className='w-6 h-6' />
               </button>
               <button
-                className='p-3 rounded-2xl border-2 border-white/30 hover:bg-white text-white hover:text-[#0a2c24] backdrop-blur-md transition-all duration-300 hover:scale-110 active:scale-95'
+                className='p-3 rounded-full hover:bg-white/10 text-white transition-all duration-300 hover:scale-110 active:scale-95'
                 aria-label='Share'
               >
                 <Share className='w-6 h-6' />
@@ -524,78 +542,63 @@ function businessDetailsPage() {
             </div>
 
             {/* Tab Content */}
-            <div className='animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100'>
+            <div key={activeTab} className='animate-in fade-in slide-in-from-bottom-4 duration-500'>
               {activeTab === 'services' && (
-                <div className='space-y-8'>
-                  <div className='flex items-center justify-between'>
-                    <h2 className='text-3xl font-bold text-[#202c39] dark:text-white tracking-tight'>
-                      Signature Services
-                    </h2>
-                  </div>
-
-                  <div className='grid gap-5'>
-                    {services.map((service, index) => (
-                      <div
-                        key={service.id || index}
-                        className='group relative bg-white dark:bg-[#202c39] rounded-[2.5rem] p-8 shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:shadow-[0_20px_50px_rgba(10,44,36,0.15)] transition-all duration-300 transform hover:-translate-y-1 overflow-hidden'
-                      >
-                        <div
-                          className='pointer-events-none absolute right-[-40px] top-[-40px] h-[220px] w-[220px] zerv-mask-top-right opacity-[0.10] transition duration-300 group-hover:opacity-[0.18] z-10'
-                          style={{
-                            background: 'conic-gradient(from 180deg, #111 0%, #777 30%, #111 60%, #aaa 85%, #111 100%)',
-                            filter: 'drop-shadow(0 10px 30px rgba(0,0,0,0.12))'
-                          }}
-                        />
-                        <div
-                          className='pointer-events-none absolute right-[-40px] top-[-40px] h-[220px] w-[220px] zerv-mask-top-right opacity-0 transition duration-300 group-hover:opacity-[0.55] z-10'
-                          style={{
-                            background:
-                              'linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.8) 45%, transparent 70%)',
-                            transform: 'translateX(-30%)'
-                          }}
-                        />
-
-                        <div className='relative z-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center'>
-                          <div className='flex-1 space-y-2'>
-                            <div className='flex items-center gap-3'>
-                              <h3 className='text-xl font-bold text-gray-900 dark:text-white group-hover:text-[#0a2c24] dark:group-hover:text-[#77b6a3] transition-colors'>
-                                {service.name}
-                              </h3>
-                              <span className='px-2.5 py-1 bg-[#0a2c24]/5 dark:bg-white/5 text-xs font-medium text-[#0a2c24] dark:text-[#77b6a3] rounded-full'>
-                                {service.duration} min
-                              </span>
-                            </div>
-
-                            <p className='text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-xl'>
-                              {service.description ||
-                                'Experience our premium service delivered by expert professionals.'}
-                            </p>
-                          </div>
-
-                          <div className='flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end mt-4 sm:mt-0'>
-                            <div className='text-right'>
-                              <div className='text-xs text-gray-400 uppercase tracking-wider font-semibold mb-0.5'>
-                                Price
-                              </div>
-                              <span className='block text-2xl font-bold text-[#0a2c24] dark:text-[#77b6a3]'>
-                                ${service.price}
-                              </span>
-                            </div>
-                            <Button
-                              onClick={() => handelBookService(service)}
-                              buttonText={{ plainText: 'Book' }}
-                              className='bg-[#0a2c24] text-white px-8 py-3 rounded-full font-bold border-2 border-[#0a2c24] hover:translate-y-px transition-all active:translate-y-1'
-                            />
-                          </div>
-                        </div>
+                <div className='space-y-12'>
+                  {Object.entries(groupedServices).map(([category, categoryServices]) => (
+                    <div key={category} className='space-y-6'>
+                      <div className='flex items-center justify-between'>
+                        <h2 className='text-2xl font-bold text-[#202c39] dark:text-white tracking-tight flex items-center gap-3'>
+                          <span className='w-2 h-8 bg-[#0a2c24] dark:bg-[#77b6a3] rounded-full'></span>
+                          {category}
+                        </h2>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className='grid gap-5'>
+                        {categoryServices.map((service, index) => (
+                          <div
+                            key={service.id || index}
+                            className='group relative bg-white dark:bg-[#202c39] rounded-[2rem] p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-white/5'
+                          >
+                            <div className='relative z-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center'>
+                              <div className='flex-1 space-y-2'>
+                                <div className='flex items-center gap-3'>
+                                  <h3 className='text-lg font-bold text-gray-900 dark:text-white group-hover:text-[#0a2c24] dark:group-hover:text-[#77b6a3] transition-colors'>
+                                    {service.name}
+                                  </h3>
+                                  <span className='px-2.5 py-1 bg-[#0a2c24]/5 dark:bg-white/5 text-xs font-medium text-[#0a2c24] dark:text-[#77b6a3] rounded-full'>
+                                    {service.duration} min
+                                  </span>
+                                </div>
+
+                                <p className='text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-xl'>
+                                  {service.description || 'Experience our premium service.'}
+                                </p>
+                              </div>
+
+                              <div className='flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end mt-4 sm:mt-0'>
+                                <div className='text-right'>
+                                  <span className='block text-xl font-bold text-[#0a2c24] dark:text-[#77b6a3]'>
+                                    {currency === 'AED' ? 'AED' : currency === 'SAR' ? 'SAR' : 'EGP'} {service.price}
+                                  </span>
+                                </div>
+                                <Button
+                                  onClick={() => handelBookService(service)}
+                                  buttonText={{ plainText: 'Book' }}
+                                  className='bg-[#0a2c24] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#0a2c24]/90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5'
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
               {activeTab === 'details' && (
-                <div className='space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500'>
+                <div className='space-y-12'>
                   {/* Staff Carousel Section */}
                   {staff.length > 0 && (
                     <div className='bg-white dark:bg-[#202c39] p-6 rounded-[2.5rem] shadow-sm relative overflow-hidden'>
@@ -680,10 +683,46 @@ function businessDetailsPage() {
                     </div>
                   </div>
 
-                  {/* Branches Section Moved to separate tab */}
+                  {/* Branches Section moved into Details */}
+                  {branches.length > 0 && (
+                    <div className='mt-8'>
+                      <h3 className='text-xl font-bold text-[#0a2c24] dark:text-white mb-6'>Our Locations</h3>
+                      <div className='grid grid-cols-1 gap-4'>
+                        {branches.map((branch, index) => (
+                          <div
+                            key={index}
+                            role='button'
+                            tabIndex={0}
+                            {...handleTap(() => {
+                              setSelectedBranch(branch)
+                              setBranchModalOpen(true)
+                            })}
+                            className='group bg-white dark:bg-[#202c39] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 items-center border border-gray-100 dark:border-white/5'
+                          >
+                            <div className='w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 relative'>
+                              <img
+                                src={(branch.galleryUrls && branch.galleryUrls[0]) || '/images/placeholder-image2.jpg'}
+                                className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                                alt={branch.name}
+                              />
+                            </div>
+                            <div className='flex-1'>
+                              <h4 className='text-base font-bold text-gray-900 dark:text-white mb-0.5'>
+                                {branch.name}
+                              </h4>
+                              <p className='text-xs text-gray-500 flex items-center gap-1'>
+                                <MapPin className='w-3 h-3 text-[#2a9d8f]' /> {branch.address}
+                              </p>
+                            </div>
+                            <ChevronRight className='w-5 h-5 text-gray-300 group-hover:text-[#2a9d8f] transition-colors' />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-                  {/* Contact / Map Section (Mobile Prominent) */}
-                  {/* <div className='bg-white dark:bg-[#202c39] p-2 rounded-[2.5rem] shadow-sm overflow-hidden'>
+                  {/* Contact / Map Section */}
+                  <div className='bg-white dark:bg-[#202c39] p-2 rounded-[2.5rem] shadow-sm overflow-hidden mt-8'>
                     <div className='p-6 pb-2'>
                       <h3 className='text-xl font-bold text-gray-900 dark:text-white mb-1'>Find Us</h3>
                       <p className='text-sm text-gray-500 mb-4'>{(business as any).address}</p>
@@ -707,94 +746,61 @@ function businessDetailsPage() {
                           Loading Map...
                         </div>
                       )}
-                      <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((business as any).address)}`}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white text-[#0a2c24] px-6 py-3 rounded-full shadow-lg font-bold text-sm flex items-center gap-2 hover:bg-[#0a2c24] hover:text-white transition-all'
-                      >
-                        <MapPin className='w-4 h-4' /> Get Directions
-                      </a>
+
+                      {/* Map Action Buttons */}
+                      <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3 w-full justify-center px-4'>
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent((business as any).address)}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='flex-1 max-w-[160px] bg-white text-[#0a2c24] py-3 rounded-xl shadow-lg font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#0a2c24] hover:text-white transition-all'
+                        >
+                          <MapPin className='w-4 h-4' /> Google Maps
+                        </a>
+                        <a
+                          href={`https://waze.com/ul?q=${encodeURIComponent((business as any).address)}`}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='flex-1 max-w-[160px] bg-[#33ccff] text-white py-3 rounded-xl shadow-lg font-bold text-xs flex items-center justify-center gap-2 hover:bg-[#33ccff]/90 transition-all'
+                        >
+                          <MapPin className='w-4 h-4' /> Waze
+                        </a>
+                      </div>
                     </div>
-                  </div> */}
+                  </div>
 
                   {/* Social Links */}
                   {business.socialLinks && business.socialLinks.length > 0 && (
-                    <div className='flex gap-4 justify-center py-4'>
-                      {business.socialLinks.map((link, i) => (
-                        <a
-                          key={i}
-                          href={link.url}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='w-12 h-12 rounded-full bg-white dark:bg-[#202c39] shadow-md flex items-center justify-center hover:scale-110 transition-transform text-[#0a2c24] dark:text-white'
-                        >
-                          <Globe className='w-5 h-5' />
-                        </a>
-                      ))}
+                    <div className='flex gap-4 justify-center py-6'>
+                      {business.socialLinks.map((link, i) => {
+                        const platform = link.platform.toLowerCase()
+                        const Icon = platform.includes('facebook')
+                          ? Facebook
+                          : platform.includes('instagram')
+                            ? Instagram
+                            : platform.includes('twitter')
+                              ? Twitter
+                              : Globe
+                        return (
+                          <a
+                            key={i}
+                            href={link.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='w-12 h-12 rounded-full bg-white dark:bg-[#202c39] shadow-md flex items-center justify-center hover:scale-110 transition-transform text-[#0a2c24] dark:text-white border border-gray-100 dark:border-white/5'
+                          >
+                            <Icon className='w-5 h-5' />
+                          </a>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
               )}
 
-              {activeTab === 'branches' && (
-                <div className='space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500'>
-                  {branches.length > 0 ? (
-                    <div>
-                      <h3 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-6'>Our Locations</h3>
-                      <div className='grid grid-cols-1 gap-6'>
-                        {' '}
-                        {branches.map((branch, index) => (
-                          <div
-                            key={index}
-                            role='button'
-                            tabIndex={0}
-                            {...handleTap(() => {
-                              setSelectedBranch(branch)
-                              setBranchModalOpen(true)
-                            })}
-                            className='group bg-white dark:bg-[#202c39] p-6 rounded-[2rem] shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 items-center'
-                          >
-                            <div className='w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 relative'>
-                              <img
-                                src={(branch.galleryUrls && branch.galleryUrls[0]) || '/images/placeholder-image2.jpg'}
-                                className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                                alt={branch.name}
-                              />
-                            </div>
-                            <div className='flex-1'>
-                              <h4 className='text-lg font-bold text-gray-900 dark:text-white mb-1 group-hover:text-[#2a9d8f] transition-colors'>
-                                {branch.name}
-                              </h4>
-                              <p className='text-sm text-gray-500 flex items-center gap-1.5 mb-2'>
-                                <MapPin className='w-3.5 h-3.5 text-[#2a9d8f]' /> {branch.address}
-                              </p>
-                              <div className='flex items-center gap-2'>
-                                <span className='text-xs bg-[#2a9d8f]/10 text-[#2a9d8f] px-2 py-1 rounded-full font-medium'>
-                                  View Details
-                                </span>
-                              </div>
-                            </div>
-                            <ChevronRight className='w-5 h-5 text-gray-300 group-hover:text-[#2a9d8f] transition-colors' />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className='text-center py-12 bg-white dark:bg-[#202c39] rounded-[2rem]'>
-                      <div className='w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4'>
-                        <MapPin className='w-8 h-8 text-gray-400' />
-                      </div>
-                      <h3 className='text-lg font-bold text-gray-900 dark:text-white'>No additional locations</h3>
-                      <p className='text-gray-500 text-sm'>
-                        This business currently operates from a single location found in the details tab.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Branches (Old tab removed) */}
               {activeTab === 'reviews' && (
-                <div className='animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6'>
+                <div className='space-y-6'>
                   <div className='flex items-center justify-between mb-4'>
                     <h2 className='text-2xl font-bold text-[#0a2c24] dark:text-white'>Customer Reviews</h2>
                     <div className='text-sm text-gray-500'>based on {businessReview().length} reviews</div>

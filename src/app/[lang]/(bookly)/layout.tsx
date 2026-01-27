@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes'
 import { TranslationsProvider } from '@/bookly/providers'
 import type { PageProps } from '@/bookly/types'
 import { ThemeChanger } from '@/bookly/components/temporary'
+import { SettingsProvider } from '@/contexts/settings.context'
 import BooklyNavbar from '@/bookly/components/organisms/bookly-navbar/bookly-navbar'
 import AuthInitializer from '@/components/AuthInitializer'
 import initTranslations from '@/app/i18n/i18n'
@@ -28,19 +29,21 @@ export default async function RootLayout({
   return (
     <TranslationsProvider locale={locale || 'en'} resources={resources}>
       <ThemeProvider attribute='class' enableSystem>
-        <AuthInitializer />
-        <LanguageNavigationGuard />
-        {/* <ThemeChanger /> */}
-        <div
-          style={{
-            background: 'var(--background)',
-            color: 'var(--foreground)'
-          }}
-          className='antialiased font-sans'
-        >
-          <BooklyNavbar />
-          {children}
-        </div>
+        <SettingsProvider>
+          <AuthInitializer />
+          <LanguageNavigationGuard />
+          {/* <ThemeChanger /> */}
+          <div
+            style={{
+              background: 'var(--background)',
+              color: 'var(--foreground)'
+            }}
+            className='antialiased font-sans'
+          >
+            <BooklyNavbar />
+            {children}
+          </div>
+        </SettingsProvider>
       </ThemeProvider>
     </TranslationsProvider>
   )

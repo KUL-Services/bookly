@@ -37,6 +37,15 @@ import type { Resource } from '../calendar/types'
 type ViewMode = 'grid' | 'list'
 type NavigationView = 'branch-selection' | 'resource-management'
 
+// Helper function to get 2 initials from a name
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase()
+  }
+  return parts[0].substring(0, 2).toUpperCase()
+}
+
 export function ResourcesTab() {
   const [navigationView, setNavigationView] = useState<NavigationView>('branch-selection')
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null)
@@ -68,9 +77,7 @@ export function ResourcesTab() {
   const branchResourceCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     mockBranches.forEach(branch => {
-      counts[branch.id] = resources.filter(r =>
-        r.branchId === branch.id && (r.capacity ?? 1) >= 1
-      ).length
+      counts[branch.id] = resources.filter(r => r.branchId === branch.id && (r.capacity ?? 1) >= 1).length
     })
     return counts
   }, [resources])
@@ -203,10 +210,13 @@ export function ResourcesTab() {
                           sx={{
                             bgcolor: 'primary.main',
                             width: 56,
-                            height: 56
+                            height: 56,
+                            color: '#fff',
+                            fontWeight: 600,
+                            fontSize: '1.25rem'
                           }}
                         >
-                          <i className='ri-building-line' style={{ fontSize: 28 }} />
+                          {getInitials(branch.name)}
                         </Avatar>
                         <Box sx={{ flexGrow: 1 }}>
                           <Typography variant='h6' fontWeight={600}>
@@ -447,7 +457,11 @@ export function ResourcesTab() {
                           >
                             Edit
                           </Button>
-                          <IconButton size='small' color='error' onClick={() => handleDeleteResource({ id: resource.id, name: resource.name })}>
+                          <IconButton
+                            size='small'
+                            color='error'
+                            onClick={() => handleDeleteResource({ id: resource.id, name: resource.name })}
+                          >
                             <i className='ri-delete-bin-line' />
                           </IconButton>
                         </Box>
@@ -525,7 +539,11 @@ export function ResourcesTab() {
                       Edit
                     </Button>
 
-                    <IconButton size='small' color='error' onClick={() => handleDeleteResource({ id: resource.id, name: resource.name })}>
+                    <IconButton
+                      size='small'
+                      color='error'
+                      onClick={() => handleDeleteResource({ id: resource.id, name: resource.name })}
+                    >
                       <i className='ri-delete-bin-line' />
                     </IconButton>
                   </Paper>
@@ -568,12 +586,7 @@ export function ResourcesTab() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteCancel}
-        maxWidth='xs'
-        fullWidth
-      >
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} maxWidth='xs' fullWidth>
         <DialogTitle>Delete Resource</DialogTitle>
         <DialogContent>
           <DialogContentText>

@@ -24,7 +24,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '../../ui/fo
 import { combineDateTimeToUTC } from '@/bookly/utils/timezone.util'
 import { downloadICS } from '@/bookly/utils/ics-generator.util'
 import { BookingService } from '@/lib/api'
-import type { Service, Staff } from '@/lib/api/types'
+import type { Service, Staff, TimeSlot } from '@/lib/api/types'
 import { getBusinessWithDetails } from '@/mocks/businesses'
 import { Check, CalendarPlus, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -309,7 +309,7 @@ function BookingModalV2Fixed({
   const [availableServices, setAvailableServices] = useState<Service[]>([])
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([])
   const [availableStaff, setAvailableStaff] = useState<Staff[]>([])
-  const [availableTimeSlots, setAvailableTimeSlots] = useState<string[]>([])
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([])
   const [showStaffSelector, setShowStaffSelector] = useState<string | null>(null)
   const [showServiceSelector, setShowServiceSelector] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -551,10 +551,18 @@ function BookingModalV2Fixed({
     const periodSlots = slots
       .filter((slot: any) => isTimeInPeriod(slot.time, selectedPeriod))
       .filter((slot: any) => slot.available)
-      .map((slot: any) => slot.time)
+      .map((slot: any) => ({
+        time: slot.time,
+        endTime: slot.endTime,
+        type: slot.type || 'dynamic',
+        available: slot.available
+      }))
 
     setAvailableTimeSlots(periodSlots)
   }
+
+  const dynamicSlots = availableTimeSlots.filter(s => s.type !== 'static')
+  const staticSlots = availableTimeSlots.filter(s => s.type === 'static')
 
   const handleTimeSelect = (time: string) => {
     setSelectedTime(time)
@@ -891,44 +899,73 @@ function BookingModalV2Fixed({
                 ))}
               </div>
 
-              {/* Time Slots Carousel */}
-              <div className='flex items-center gap-2 sm:gap-3'>
-                <button
-                  onClick={() => scrollTimes('left')}
-                  className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
-                >
-                  <KulIcon icon='lucide:chevron-left' className='w-5 h-5' />
-                </button>
+              {/* Time Slots Carousel (Dynamic) */}
+              {dynamicSlots.length > 0 && (
+                <div className='flex items-center gap-2 sm:gap-3'>
+                  <button
+                    onClick={() => scrollTimes('left')}
+                    className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
+                  >
+                    <KulIcon icon='lucide:chevron-left' className='w-5 h-5' />
+                  </button>
 
-                <div ref={timesScrollRef} className='flex-1 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide py-1'>
-                  {availableTimeSlots.length > 0 ? (
-                    availableTimeSlots.map(time => (
+                  <div ref={timesScrollRef} className='flex-1 flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide py-1'>
+                    {dynamicSlots.map(slot => (
                       <button
-                        key={time}
-                        onClick={() => handleTimeSelect(time)}
+                        key={slot.time}
+                        onClick={() => handleTimeSelect(slot.time)}
                         className={`flex-shrink-0 min-w-[80px] sm:min-w-[100px] py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base touch-manipulation border font-mono ${
-                          selectedTime === time
+                          selectedTime === slot.time
                             ? 'bg-primary-800 text-white shadow-md border-primary-800 opacity-100'
                             : 'bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 opacity-60 hover:opacity-100 hover:border-primary-500 hover:bg-primary-50/50 dark:hover:bg-primary-900/20 hover:text-primary-700 dark:hover:text-primary-300'
                         }`}
                       >
-                        {time}
+                        {slot.time}
                       </button>
-                    ))
-                  ) : (
-                    <div className='flex-1 text-center text-gray-400 dark:text-gray-500 py-6 bg-gray-50 dark:bg-gray-800 rounded-xl'>
-                      No available slots for this period
-                    </div>
-                  )}
-                </div>
+                    ))}
+                  </div>
 
-                <button
-                  onClick={() => scrollTimes('right')}
-                  className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
-                >
-                  <KulIcon icon='lucide:chevron-right' className='w-5 h-5' />
-                </button>
-              </div>
+                  <button
+                    onClick={() => scrollTimes('right')}
+                    className='p-2 sm:p-2.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-700 dark:text-teal-400 rounded-xl flex-shrink-0 transition-all shadow-sm hover:shadow-md touch-manipulation border border-gray-200 dark:border-gray-700'
+                  >
+                    <KulIcon icon='lucide:chevron-right' className='w-5 h-5' />
+                  </button>
+                </div>
+              )}
+
+              {/* Static Slots Grid */}
+              {staticSlots.length > 0 && (
+                <div className='mt-4'>
+                  <h4 className='text-sm font-bold text-gray-900 dark:text-white mb-2 pl-1'>Fixed Time Slots</h4>
+                  <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
+                    {staticSlots.map(slot => (
+                      <button
+                        key={slot.time}
+                        onClick={() => handleTimeSelect(slot.time)}
+                        className={`py-3 px-4 rounded-xl text-left border transition-all ${
+                          selectedTime === slot.time
+                            ? 'bg-primary-800 text-white border-primary-800 shadow-md transform scale-[1.02]'
+                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-primary-500 hover:shadow-sm'
+                        }`}
+                      >
+                        <div className='text-sm font-bold font-mono'>
+                          {slot.time} - {slot.endTime || '...'}
+                        </div>
+                        <div className='text-[10px] mt-1 opacity-70'>
+                          {selectedTime === slot.time ? 'Selected' : 'Available'}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {availableTimeSlots.length === 0 && (
+                <div className='text-center text-gray-400 dark:text-gray-500 py-6 bg-gray-50 dark:bg-gray-800 rounded-xl'>
+                  No available slots for this period
+                </div>
+              )}
 
               {/* Quick Add Button (when time selected but no service added yet, and no initial service) */}
               {selectedTime && selectedServices.length === 0 && availableServices.length > 0 && !initialService && (

@@ -292,6 +292,8 @@ export interface Addon {
 
 export interface TimeSlot {
   time: string
+  endTime?: string
+  type?: 'static' | 'dynamic'
   available: boolean
 }
 

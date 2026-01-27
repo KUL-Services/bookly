@@ -1071,7 +1071,6 @@ export function ShiftsTab() {
 
               return (
                 <Box key={shift.id}>
-                  {/* Main Shift Box */}
                   <Box
                     sx={{
                       position: 'absolute',
@@ -1089,9 +1088,9 @@ export function ShiftsTab() {
                       borderColor: staffTypeForDate === 'dynamic' ? 'success.light' : 'grey.400',
                       display: 'flex',
                       flexDirection: 'row',
-                      gap: 1.5,
+                      px: 1, // Add padding
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      justifyContent: 'space-between', // Push content to edges
                       transition: 'all 0.2s',
                       '&:hover': {
                         bgcolor:
@@ -1105,35 +1104,50 @@ export function ShiftsTab() {
                       }
                     }}
                   >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
-                      <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
-                        {shiftStart.toLowerCase()}
-                      </Typography>
-                      <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
-                        {shiftEnd.toLowerCase()}
-                      </Typography>
-                    </Box>
-
-                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
-                      {hours}h
+                    {/* Start Time - Left Aligned */}
+                    <Typography
+                      variant='caption'
+                      fontWeight={500}
+                      color='text.primary'
+                      sx={{ lineHeight: 1.2, fontSize: '0.7rem' }}
+                    >
+                      {shiftStart.toLowerCase()}
                     </Typography>
 
-                    {/* Booking count indicator */}
-                    {hasBookings && bookingData && (
-                      <Chip
-                        icon={<i className='ri-calendar-check-line' style={{ fontSize: '0.7rem' }} />}
-                        label={`${bookingData.bookedSlots}/${bookingData.totalCapacity}`}
-                        size='small'
-                        color={isFull ? 'error' : isAlmostFull ? 'warning' : 'success'}
-                        sx={{
-                          height: 18,
-                          fontSize: '0.65rem',
-                          fontWeight: 600,
-                          '& .MuiChip-label': { px: 0.75 },
-                          '& .MuiChip-icon': { ml: 0.5 }
-                        }}
-                      />
-                    )}
+                    {/* Center Content (Duration & Capacity) */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                      <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
+                        {hours}h
+                      </Typography>
+
+                      {/* Booking count indicator */}
+                      {hasBookings && bookingData && (
+                        <Chip
+                          icon={<i className='ri-calendar-check-line' style={{ fontSize: '0.7rem' }} />}
+                          label={`${bookingData.bookedSlots}/${bookingData.totalCapacity}`}
+                          size='small'
+                          color={isFull ? 'error' : isAlmostFull ? 'warning' : 'success'}
+                          sx={{
+                            height: 18,
+                            fontSize: '0.65rem',
+                            fontWeight: 600,
+                            '& .MuiChip-label': { px: 0.75 },
+                            '& .MuiChip-icon': { ml: 0.5 }
+                          }}
+                        />
+                      )}
+                    </Box>
+
+                    {/* End Time - Right Aligned */}
+                    <Typography
+                      variant='caption'
+                      fontWeight={500}
+                      color='text.primary'
+                      sx={{ lineHeight: 1.2, fontSize: '0.7rem' }}
+                    >
+                      {shiftEnd.toLowerCase()}
+                    </Typography>
+
                     {shifts.length > 1 && (
                       <Chip
                         label={`${idx + 1}/${shifts.length}`}
@@ -1143,7 +1157,14 @@ export function ShiftsTab() {
                     )}
                     <IconButton
                       size='small'
-                      sx={{ position: 'absolute', top: 2, right: 2, color: 'text.primary' }}
+                      sx={{
+                        position: 'absolute',
+                        top: 2,
+                        right: 2,
+                        color: 'text.primary',
+                        opacity: 0.5,
+                        '&:hover': { opacity: 1 }
+                      }}
                       onClick={e => {
                         e.stopPropagation()
                         openShiftEditor({ id: staff.id, name: staff.name }, selectedDate, {
@@ -1156,7 +1177,7 @@ export function ShiftsTab() {
                     </IconButton>
                   </Box>
 
-                  {/* Break Boxes - Height is 1/3 of shift height */}
+                  {/* Break Boxes - Centered Vertically */}
                   {shift.breaks &&
                     shift.breaks.map(breakItem => {
                       const breakStart = formatTime12Hour(breakItem.start)
@@ -1164,13 +1185,22 @@ export function ShiftsTab() {
                       const [breakEndH, breakEndM] = breakItem.end.split(':').map(Number)
                       const breakDurationMinutes = breakEndH * 60 + breakEndM - (breakStartH * 60 + breakStartM)
 
-                      // Break height is 1/3 of the shift height, centered vertically
-                      const shiftHeight = shifts.length > 1 ? 90 / shifts.length : 100
-                      const breakHeight = shiftHeight / 3
-                      const breakTop =
-                        shifts.length > 1
-                          ? idx * (100 / shifts.length) + (shiftHeight - breakHeight) / 2
-                          : 100 - breakHeight
+                      // Center break vertically in the shift
+                      // Use a percentage height relative to the single shift bar (not dependent on multiple shifts logic here as we are inside the context of ONE shift bar now?
+                      // Wait, the break is absolutely positioned relative to the outer container which contains ALL shifts for a staff?
+                      // No, looking at lines 1073 <Box key={shift.id}> contains BOTH the Shift Box and the Break Boxes as siblings.
+                      // The Shift Box is positioned at `top: shifts.length > 1 ? ... : 0`
+                      // So the Break Box MUST be positioned similarly relative to the CONTAINER, effectively "on top" of the Shift Box.
+
+                      const shiftTopPercent = shifts.length > 1 ? idx * (100 / shifts.length) : 0
+                      const shiftHeightPercent = shifts.length > 1 ? 100 / shifts.length : 100 // Using full available slot logic
+
+                      // We want the break to be vertically centered within the shift bar
+                      // Let's say we want break to be 60% height of the shift bar.
+                      const breakHeightPercent = shiftHeightPercent * 0.6
+
+                      // Center it: Top of shift + (Shift Height - Break Height) / 2
+                      const breakTopPercent = shiftTopPercent + (shiftHeightPercent - breakHeightPercent) / 2
 
                       return (
                         <Box
@@ -1179,8 +1209,8 @@ export function ShiftsTab() {
                             position: 'absolute',
                             left: `${timeToPosition(breakStart, dayOfWeek)}%`,
                             width: `${calculateWidth(breakItem.start, breakItem.end, dayOfWeek)}%`,
-                            top: `${breakTop}%`,
-                            height: `${breakHeight}%`,
+                            top: `${breakTopPercent}%`,
+                            height: `${breakHeightPercent}%`,
                             bgcolor: 'background.paper',
                             borderRadius: 1,
                             border: 1,
@@ -1189,11 +1219,16 @@ export function ShiftsTab() {
                             alignItems: 'center',
                             justifyContent: 'center',
                             pointerEvents: 'none',
-                            zIndex: 1
+                            zIndex: 2, // Ensure it sits on top of shift content
+                            boxShadow: 1
                           }}
                         >
-                          <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
-                            Break ({breakDurationMinutes}min)
+                          <Typography
+                            variant='caption'
+                            color='text.secondary'
+                            sx={{ fontSize: '0.65rem', fontWeight: 500 }}
+                          >
+                            Break
                           </Typography>
                         </Box>
                       )

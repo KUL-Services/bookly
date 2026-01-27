@@ -686,7 +686,8 @@ export function RoomsTab() {
                       flexDirection: 'row',
                       gap: 1.5,
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      justifyContent: 'space-between', // Push content to edges
+                      px: 1, // Add padding
                       transition: 'all 0.2s',
                       overflow: 'hidden',
                       '&:hover': {
@@ -698,68 +699,83 @@ export function RoomsTab() {
                       }
                     }}
                   >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
-                      <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
-                        {shiftStart.toLowerCase()}
-                      </Typography>
-                      <Typography variant='caption' fontWeight={500} color='text.primary' sx={{ lineHeight: 1.2 }}>
-                        {shiftEnd.toLowerCase()}
-                      </Typography>
-                    </Box>
-
-                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
-                      {hours}h{shift.capacity ? ` • Cap: ${shift.capacity}` : ''}
+                    {/* Start Time - Left Aligned */}
+                    <Typography
+                      variant='caption'
+                      fontWeight={500}
+                      color='text.primary'
+                      sx={{ lineHeight: 1.2, fontSize: '0.7rem' }}
+                    >
+                      {shiftStart.toLowerCase()}
                     </Typography>
 
-                    {/* Booking count indicator */}
-                    {hasBookings && bookingData && (
-                      <Chip
-                        icon={<i className='ri-user-line' style={{ fontSize: '0.7rem' }} />}
-                        label={`${bookingData.bookedSpots}/${bookingData.capacity}`}
-                        size='small'
-                        color={isFull ? 'error' : isAlmostFull ? 'warning' : 'success'}
-                        sx={{
-                          height: 18,
-                          fontSize: '0.65rem',
-                          fontWeight: 600,
-                          '& .MuiChip-label': { px: 0.75 },
-                          '& .MuiChip-icon': { ml: 0.5 }
-                        }}
-                      />
-                    )}
+                    {/* Center Content Group */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                      <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
+                        {hours}h{shift.capacity ? ` • Cap: ${shift.capacity}` : ''}
+                      </Typography>
 
-                    {shiftServices.length > 0 && (
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3, justifyContent: 'center', mt: 0.5 }}>
-                        {shiftServices.slice(0, 2).map(service => (
-                          <Chip
-                            key={service.id}
-                            label={service.name}
-                            size='small'
-                            sx={{
-                              height: 14,
-                              fontSize: '0.55rem',
-                              bgcolor: service.color ? `${service.color}20` : 'rgba(0,0,0,0.08)',
-                              color: service.color || 'text.primary',
-                              border: service.color ? `1px solid ${service.color}40` : 'none',
-                              fontWeight: 500,
-                              '& .MuiChip-label': { px: 0.5 }
-                            }}
-                          />
-                        ))}
-                        {shiftServices.length > 2 && (
-                          <Chip
-                            label={`+${shiftServices.length - 2}`}
-                            size='small'
-                            sx={{
-                              height: 14,
-                              fontSize: '0.55rem',
-                              bgcolor: 'rgba(0,0,0,0.08)',
-                              '& .MuiChip-label': { px: 0.5 }
-                            }}
-                          />
-                        )}
-                      </Box>
-                    )}
+                      {/* Booking count indicator */}
+                      {hasBookings && bookingData && (
+                        <Chip
+                          icon={<i className='ri-user-line' style={{ fontSize: '0.7rem' }} />}
+                          label={`${bookingData.bookedSpots}/${bookingData.capacity}`}
+                          size='small'
+                          color={isFull ? 'error' : isAlmostFull ? 'warning' : 'success'}
+                          sx={{
+                            height: 18,
+                            fontSize: '0.65rem',
+                            fontWeight: 600,
+                            '& .MuiChip-label': { px: 0.75 },
+                            '& .MuiChip-icon': { ml: 0.5 }
+                          }}
+                        />
+                      )}
+
+                      {shiftServices.length > 0 && (
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.3, justifyContent: 'center' }}>
+                          {shiftServices.slice(0, 2).map(service => (
+                            <Chip
+                              key={service.id}
+                              label={service.name}
+                              size='small'
+                              sx={{
+                                height: 14,
+                                fontSize: '0.55rem',
+                                bgcolor: service.color ? `${service.color}20` : 'rgba(0,0,0,0.08)',
+                                color: service.color || 'text.primary',
+                                border: service.color ? `1px solid ${service.color}40` : 'none',
+                                fontWeight: 500,
+                                '& .MuiChip-label': { px: 0.5 }
+                              }}
+                            />
+                          ))}
+                          {shiftServices.length > 2 && (
+                            <Chip
+                              label={`+${shiftServices.length - 2}`}
+                              size='small'
+                              sx={{
+                                height: 14,
+                                fontSize: '0.55rem',
+                                bgcolor: 'rgba(0,0,0,0.08)',
+                                '& .MuiChip-label': { px: 0.5 }
+                              }}
+                            />
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+
+                    {/* End Time - Right Aligned */}
+                    <Typography
+                      variant='caption'
+                      fontWeight={500}
+                      color='text.primary'
+                      sx={{ lineHeight: 1.2, fontSize: '0.7rem' }}
+                    >
+                      {shiftEnd.toLowerCase()}
+                    </Typography>
+
                     {schedule.shifts.length > 1 && (
                       <Chip
                         label={`${idx + 1}/${schedule.shifts.length}`}
@@ -769,7 +785,14 @@ export function RoomsTab() {
                     )}
                     <IconButton
                       size='small'
-                      sx={{ position: 'absolute', top: 2, right: 2, color: 'text.primary' }}
+                      sx={{
+                        position: 'absolute',
+                        top: 2,
+                        right: 2,
+                        color: 'text.primary',
+                        opacity: 0.5,
+                        '&:hover': { opacity: 1 }
+                      }}
                       onClick={e => {
                         e.stopPropagation()
                         handleEditShift(room, shift, dayOfWeek)
