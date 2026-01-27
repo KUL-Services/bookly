@@ -23,6 +23,7 @@ import {
   User as UserLockIcon,
   ChevronLeft
 } from 'lucide-react'
+import { PageLoader } from '@/components/LoadingStates'
 import { useState, useEffect, useMemo, useCallback, useRef, TouchEvent, MouseEvent } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { BusinessService, ServicesService, BranchesService, StaffService } from '@/lib/api'
@@ -370,20 +371,7 @@ function businessDetailsPage() {
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
-        <div className='text-center relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000'>
-          <div className='relative'>
-            <div className='animate-spin rounded-full h-24 w-24 border-4 border-[#77b6a3]/30 border-t-[#0a2c24] dark:border-t-[#77b6a3] mx-auto shadow-lg'></div>
-            <div className='absolute inset-0 rounded-full h-24 w-24 border-4 border-transparent border-t-[#77b6a3] animate-ping mx-auto'></div>
-          </div>
-          <div className='mt-6 space-y-2'>
-            <p className='text-xl font-semibold text-[#0a2c24] dark:text-white'>Loading...</p>
-            <div className='flex justify-center space-x-1'>
-              <div className='w-2 h-2 bg-[#0a2c24] rounded-full animate-bounce'></div>
-              <div className='w-2 h-2 bg-[#0a2c24] rounded-full animate-bounce animation-delay-200'></div>
-              <div className='w-2 h-2 bg-[#0a2c24] rounded-full animate-bounce animation-delay-400'></div>
-            </div>
-          </div>
-        </div>
+        <PageLoader />
       </div>
     )
   }

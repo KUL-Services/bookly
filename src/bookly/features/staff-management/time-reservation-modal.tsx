@@ -25,6 +25,7 @@ import { mockStaff, mockBranches, mockRooms } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { TimeSelectField } from './time-select-field'
 import { DatePickerField } from './date-picker-field'
+import { BrandedDialogTitle } from '@/bookly/components/molecules/branded-dialog-title'
 import type { DayOfWeek } from '../calendar/types'
 import { useCalendarStore } from '../calendar/state'
 
@@ -142,9 +143,10 @@ export function TimeReservationModal({
     setStaffIds(nextStaffIds)
     setRoomIds([])
     setDate(defaultDate)
-    const suggested = nextStaffIds.length === 1
-      ? getSuggestedTimes(nextStaffIds[0], defaultDate)
-      : getBranchSuggestedTimes(branchId, defaultDate)
+    const suggested =
+      nextStaffIds.length === 1
+        ? getSuggestedTimes(nextStaffIds[0], defaultDate)
+        : getBranchSuggestedTimes(branchId, defaultDate)
     setStartTime(suggested?.start || '14:00')
     setEndTime(suggested?.end || '15:00')
     setReason('')
@@ -222,9 +224,7 @@ export function TimeReservationModal({
         if (!businessHours.isOpen || businessHours.shifts.length === 0) {
           warnings.push(`${staff?.name || 'Staff'}: branch closed on ${dayName}`)
         } else if (!isWithinShifts(startTime, endTime, businessHours.shifts)) {
-          warnings.push(
-            `${staff?.name || 'Staff'}: outside branch hours (${formatShiftRanges(businessHours.shifts)})`
-          )
+          warnings.push(`${staff?.name || 'Staff'}: outside branch hours (${formatShiftRanges(businessHours.shifts)})`)
         }
       }
 
@@ -316,33 +316,25 @@ export function TimeReservationModal({
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
       {selected.map(id => {
         const label = options.find(option => option.id === id)?.name || id
-        return <Chip key={id} label={label} size="small" />
+        return <Chip key={id} label={label} size='small' />
       })}
     </Box>
   )
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleCancel}
-      maxWidth="sm"
-      fullWidth
-    >
-      <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <Dialog open={open} onClose={handleCancel} maxWidth='sm' fullWidth>
+      <BrandedDialogTitle onClose={handleCancel}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Box>
-            <Typography variant="h6" fontWeight={600}>
+            <Typography variant='h6' fontWeight={600}>
               Add Time Reservation
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               Block time for meetings, training, or other activities
             </Typography>
           </Box>
-          <IconButton size="small" onClick={handleCancel}>
-            <i className="ri-close-line" />
-          </IconButton>
         </Box>
-      </DialogTitle>
+      </BrandedDialogTitle>
 
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -351,9 +343,9 @@ export function TimeReservationModal({
             <Select
               multiple
               value={staffIds}
-              onChange={(e) => setStaffIds(e.target.value as string[])}
-              label="Staff Members"
-              renderValue={(selected) => renderSelectedChips(selected as string[], availableStaff)}
+              onChange={e => setStaffIds(e.target.value as string[])}
+              label='Staff Members'
+              renderValue={selected => renderSelectedChips(selected as string[], availableStaff)}
             >
               {availableStaff.map(staff => (
                 <MenuItem key={staff.id} value={staff.id}>
@@ -369,9 +361,9 @@ export function TimeReservationModal({
             <Select
               multiple
               value={roomIds}
-              onChange={(e) => setRoomIds(e.target.value as string[])}
-              label="Rooms"
-              renderValue={(selected) => renderSelectedChips(selected as string[], availableRooms)}
+              onChange={e => setRoomIds(e.target.value as string[])}
+              label='Rooms'
+              renderValue={selected => renderSelectedChips(selected as string[], availableRooms)}
             >
               {availableRooms.map(room => (
                 <MenuItem key={room.id} value={room.id}>
@@ -382,12 +374,12 @@ export function TimeReservationModal({
             </Select>
           </FormControl>
 
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant='caption' color='text.secondary'>
             Select one or more staff members, rooms, or both
           </Typography>
 
           {selectedBranch && (
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant='caption' color='text.secondary'>
               Branch: {selectedBranch.name}
             </Typography>
           )}
@@ -395,32 +387,25 @@ export function TimeReservationModal({
           <Divider />
 
           {/* Date */}
-          <DatePickerField label="Date" value={date} onChange={setDate} required fullWidth />
+          <DatePickerField label='Date' value={date} onChange={setDate} required fullWidth />
 
           {/* Time Range */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <TimeSelectField
-              label="Start Time"
+              label='Start Time'
               value={startTime}
               onChange={setStartTime}
-              size="small"
+              size='small'
               required
               fullWidth
             />
-            <TimeSelectField
-              label="End Time"
-              value={endTime}
-              onChange={setEndTime}
-              size="small"
-              required
-              fullWidth
-            />
+            <TimeSelectField label='End Time' value={endTime} onChange={setEndTime} size='small' required fullWidth />
           </Box>
 
           {availabilityWarning && (
             <Paper sx={{ p: 1.5, bgcolor: 'warning.lighter', border: 1, borderColor: 'warning.main' }}>
-              <Typography variant="body2" color="warning.dark">
-                <i className="ri-alert-line" style={{ marginRight: 8 }} />
+              <Typography variant='body2' color='warning.dark'>
+                <i className='ri-alert-line' style={{ marginRight: 8 }} />
                 {availabilityWarning}
               </Typography>
             </Paper>
@@ -428,8 +413,8 @@ export function TimeReservationModal({
 
           {validationError && (
             <Paper sx={{ p: 1.5, bgcolor: 'error.lighter', border: 1, borderColor: 'error.main' }}>
-              <Typography variant="body2" color="error.dark">
-                <i className="ri-error-warning-line" style={{ marginRight: 8 }} />
+              <Typography variant='body2' color='error.dark'>
+                <i className='ri-error-warning-line' style={{ marginRight: 8 }} />
                 {validationError}
               </Typography>
             </Paper>
@@ -437,20 +422,20 @@ export function TimeReservationModal({
 
           {/* Reason */}
           <TextField
-            label="Reason"
+            label='Reason'
             value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="e.g., Staff meeting, Training session"
+            onChange={e => setReason(e.target.value)}
+            placeholder='e.g., Staff meeting, Training session'
             required
             fullWidth
           />
 
           {/* Note */}
           <TextField
-            label="Note"
+            label='Note'
             value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Additional details (optional)"
+            onChange={e => setNote(e.target.value)}
+            placeholder='Additional details (optional)'
             multiline
             rows={3}
             fullWidth
@@ -459,10 +444,10 @@ export function TimeReservationModal({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleCancel} variant="outlined">
+        <Button onClick={handleCancel} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained" disabled={!hasTargets || !reason.trim() || !!validationError}>
+        <Button onClick={handleSave} variant='contained' disabled={!hasTargets || !reason.trim() || !!validationError}>
           Add Reservation
         </Button>
       </DialogActions>

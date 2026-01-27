@@ -32,6 +32,7 @@ import { mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { ResourceEditorDrawer } from './resource-editor-drawer'
 import { ResourceAssignServicesModal } from './resource-assign-services-modal'
+import { BrandedEmptyState } from '@/bookly/components/molecules/branded-empty-state'
 import type { Resource } from '../calendar/types'
 
 type ViewMode = 'grid' | 'list'
@@ -358,35 +359,24 @@ export function ResourcesTab() {
             }}
           >
             {filteredResources.length === 0 ? (
-              <Box
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'text.secondary'
-                }}
-              >
-                <Box sx={{ textAlign: 'center' }}>
-                  <i className='ri-tools-line' style={{ fontSize: 64, opacity: 0.3 }} />
-                  <Typography variant='h6' sx={{ mt: 2 }}>
-                    No resources found
-                  </Typography>
-                  <Typography variant='body2'>
-                    {searchQuery ? 'Try adjusting your search' : `Add your first equipment to ${selectedBranch.name}`}
-                  </Typography>
-                  {!searchQuery && (
-                    <Button
-                      variant='contained'
-                      startIcon={<i className='ri-add-line' />}
-                      onClick={handleAddResource}
-                      sx={{ mt: 3 }}
-                    >
-                      Add Resource
-                    </Button>
-                  )}
-                </Box>
-              </Box>
+              <BrandedEmptyState
+                title='No resources found'
+                description={
+                  searchQuery
+                    ? 'Try adjusting your search filters to find what you are looking for.'
+                    : `Add your first equipment to ${selectedBranch ? selectedBranch.name : 'this branch'} to get started.`
+                }
+                scale={0.8}
+                action={
+                  !searchQuery
+                    ? {
+                        label: 'Add Resource',
+                        onClick: handleAddResource,
+                        props: { startIcon: <i className='ri-add-line' /> }
+                      }
+                    : undefined
+                }
+              />
             ) : viewMode === 'grid' ? (
               <Grid container spacing={3}>
                 {filteredResources.map(resource => (

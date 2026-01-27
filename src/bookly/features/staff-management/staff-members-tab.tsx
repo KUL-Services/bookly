@@ -31,6 +31,7 @@ import {
   Menu,
   ListItemIcon
 } from '@mui/material'
+import { BrandedEmptyState } from '@/bookly/components/molecules/branded-empty-state'
 import { mockStaff, mockServices, mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { EditServicesModal } from './edit-services-modal'
@@ -393,7 +394,6 @@ export function StaffMembersTab() {
           ))}
         </List>
       </Paper>
-
       {/* Right Panel - Staff Details */}
       {selectedStaff ? (
         <Paper
@@ -408,6 +408,8 @@ export function StaffMembersTab() {
             flexDirection: 'column'
           }}
         >
+          {/* ... existing selected staff content ... */}
+          {/* Be careful not to replace the content inside the if block, only the else block */}
           {/* Header */}
           <Box
             sx={{
@@ -417,6 +419,7 @@ export function StaffMembersTab() {
               bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.08)' : 'rgba(10, 44, 36, 0.02)')
             }}
           >
+            {/* ... rest of header ... */}
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2.5, mb: 2 }}>
               <Avatar
                 alt={selectedStaff.name}
@@ -630,19 +633,16 @@ export function StaffMembersTab() {
             borderColor: 'divider',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            overflow: 'hidden'
           }}
         >
-          <Box sx={{ textAlign: 'center', color: 'text.secondary' }}>
-            <i className='ri-team-line' style={{ fontSize: 64, opacity: 0.3 }} />
-            <Typography variant='h6' sx={{ mt: 2 }}>
-              Select a staff member
-            </Typography>
-            <Typography variant='body2'>Choose a staff member from the list to view details</Typography>
-          </Box>
+          <BrandedEmptyState
+            title='Select a staff member'
+            description='Choose a staff member from the list to view their details, schedule, and services.'
+          />
         </Paper>
       )}
-
       {/* Edit Services Modal */}
       {selectedStaffId && (
         <EditServicesModal
@@ -652,10 +652,8 @@ export function StaffMembersTab() {
           staffName={selectedStaff?.name || ''}
         />
       )}
-
       {/* Time Off Modal */}
       <TimeOffModal open={isTimeOffOpen} onClose={toggleTimeOff} />
-
       {/* Time Reservation Modal */}
       <TimeReservationModal
         open={isTimeReservationOpen}
@@ -663,7 +661,6 @@ export function StaffMembersTab() {
         initialStaffId={selectedStaffId || undefined}
         branchId={branchFilter}
       />
-
       {/* Add Staff Member Drawer */}
       <AddStaffMemberDrawer
         open={isAddStaffDrawerOpen}
@@ -673,7 +670,6 @@ export function StaffMembersTab() {
         }}
         editingStaff={editingStaff}
       />
-
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} maxWidth='xs' fullWidth>
         <DialogTitle>Delete Staff Member</DialogTitle>
@@ -691,7 +687,6 @@ export function StaffMembersTab() {
           </Button>
         </DialogActions>
       </Dialog>
-
       {/* Sticky Add Button */}
       <Fab
         color='primary'

@@ -26,6 +26,7 @@ import type { Business, Service, Branch, Staff } from '@/lib/api'
 // Component Imports
 import { PageLoader, CardSkeleton, StatsSkeleton } from '@/components/LoadingStates'
 import { BrandWatermark } from '@/bookly/components/atoms/brand-watermark'
+import { BrandedSectionDivider } from '@/bookly/components/atoms/branded-section-divider'
 
 // Fallback Imports
 import { mockServices, mockBookings, mockReviews } from '@/bookly/data/mock-data'
@@ -132,30 +133,6 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
 
   return (
     <div className='relative min-h-full'>
-      {/* Zerv Brand Watermark */}
-      <div className='absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-[0.03]'>
-        <BrandWatermark
-          placement='top-right'
-          size={600}
-          offsetX={-80}
-          offsetY={-80}
-          rotate={15}
-          opacity={1} // Component handles opacity in its own style, but here we are inside an opacity wrapper. Actually better to remove the wrapper and use props.
-        />
-        <BrandWatermark
-          placement='bottom-right'
-          size={400}
-          rotate={-15}
-          // Logic for "left bottom" simulation needs careful placement usage or absolute overrides
-          sx={{
-            left: -80,
-            right: 'auto',
-            bottom: 0,
-            opacity: 0.5
-          }}
-        />
-      </div>
-
       <Grid container spacing={6} className='relative z-10'>
         {error && (
           <Grid item xs={12}>
@@ -171,6 +148,10 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
             upcomingCount={upcoming.length}
             completedCount={completedCount}
           />
+        </Grid>
+
+        <Grid item xs={12}>
+          <BrandedSectionDivider opacity={0.15} />
         </Grid>
 
         <Grid item xs={12} md={8}>

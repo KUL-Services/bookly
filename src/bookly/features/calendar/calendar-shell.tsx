@@ -21,6 +21,7 @@ import TemplateManagementDrawer from './template-management-drawer'
 import QuickActionMenu from './quick-action-menu'
 import FloatingActionMenu from './floating-action-menu'
 import { TimeReservationModal } from '../staff-management/time-reservation-modal'
+import { BrandWatermark } from '@/bookly/components/atoms/brand-watermark'
 import type { CalendarEvent, DateRange } from './types'
 
 interface CalendarShellProps {
@@ -501,6 +502,17 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
         position: 'relative'
       }}
     >
+      {/* Background Watermark for Calendar */}
+      <BrandWatermark
+        size='80%'
+        opacity={0.02}
+        placement='center'
+        sx={{
+          pointerEvents: 'none',
+          zIndex: 0
+        }}
+      />
+
       {/* Header */}
       <CalendarHeader
         currentDate={currentDate}
