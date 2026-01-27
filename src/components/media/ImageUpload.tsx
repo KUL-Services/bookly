@@ -1,18 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import {
-  Button,
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  CircularProgress,
-  IconButton,
-  Alert
-} from '@mui/material'
+import { Button, Card, CardContent, Typography, Box, IconButton, Alert } from '@mui/material'
 import { CloudUpload, Delete, Edit } from '@mui/icons-material'
 import { MediaService } from '@/lib/api'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 
 interface ImageUploadProps {
   currentImageUrl?: string | null // Changed from currentImageId to currentImageUrl
@@ -31,12 +23,12 @@ export const ImageUpload = ({
   currentImageUrl,
   onImageUploaded,
   onImageDeleted,
-  label = "Upload Image",
-  description = "Click to upload or drag and drop",
+  label = 'Upload Image',
+  description = 'Click to upload or drag and drop',
   maxSizeMB = 5,
   width = 200,
   height = 200,
-  className = "",
+  className = '',
   disabled = false
 }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false)
@@ -146,8 +138,8 @@ export const ImageUpload = ({
     <div className={className}>
       <input
         ref={fileInputRef}
-        type="file"
-        accept="image/*"
+        type='file'
+        accept='image/*'
         onChange={handleFileInputChange}
         style={{ display: 'none' }}
         disabled={disabled}
@@ -161,7 +153,7 @@ export const ImageUpload = ({
         sx={{
           width: width,
           height: height,
-          cursor: disabled ? 'not-allowed' : (currentImageUrl || previewUrl ? 'default' : 'pointer'),
+          cursor: disabled ? 'not-allowed' : currentImageUrl || previewUrl ? 'default' : 'pointer',
           border: dragOver ? '2px dashed #0a2c24' : '2px dashed #ccc',
           backgroundColor: dragOver ? '#f5f5f5' : 'transparent',
           opacity: disabled ? 0.6 : 1,
@@ -169,19 +161,21 @@ export const ImageUpload = ({
           overflow: 'hidden'
         }}
       >
-        <CardContent sx={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          p: 2,
-          '&:last-child': { pb: 2 }
-        }}>
+        <CardContent
+          sx={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            p: 2,
+            '&:last-child': { pb: 2 }
+          }}
+        >
           {uploading ? (
-            <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-              <CircularProgress />
-              <Typography variant="body2" color="text.secondary">
+            <Box display='flex' flexDirection='column' alignItems='center' gap={2}>
+              <BrandedSpinner size={32} />
+              <Typography variant='body2' color='text.secondary'>
                 Uploading...
               </Typography>
             </Box>
@@ -189,14 +183,14 @@ export const ImageUpload = ({
             <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
               <img
                 src={previewUrl || currentImageUrl}
-                alt="Current image"
+                alt='Current image'
                 style={{
                   width: '100%',
                   height: '100%',
                   objectFit: 'cover',
                   borderRadius: '8px'
                 }}
-                onError={(e) => {
+                onError={e => {
                   // Fallback if image fails to load
                   const target = e.target as HTMLImageElement
                   target.style.display = 'none'
@@ -217,55 +211,57 @@ export const ImageUpload = ({
                   left: 0
                 }}
               >
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Failed to load image
                 </Typography>
               </Box>
 
               {!disabled && (
-                <Box sx={{
-                  position: 'absolute',
-                  top: 4,
-                  right: 4,
-                  display: 'flex',
-                  gap: 1
-                }}>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 4,
+                    right: 4,
+                    display: 'flex',
+                    gap: 1
+                  }}
+                >
                   <IconButton
-                    size="small"
+                    size='small'
                     onClick={openFileDialog}
                     sx={{
                       backgroundColor: 'rgba(255,255,255,0.9)',
                       '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
                     }}
                   >
-                    <Edit fontSize="small" />
+                    <Edit fontSize='small' />
                   </IconButton>
                   {onImageDeleted && (
                     <IconButton
-                      size="small"
+                      size='small'
                       onClick={handleDelete}
-                      color="error"
+                      color='error'
                       sx={{
                         backgroundColor: 'rgba(255,255,255,0.9)',
                         '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
                       }}
                     >
-                      <Delete fontSize="small" />
+                      <Delete fontSize='small' />
                     </IconButton>
                   )}
                 </Box>
               )}
             </Box>
           ) : (
-            <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+            <Box display='flex' flexDirection='column' alignItems='center' gap={1}>
               <CloudUpload sx={{ fontSize: 48, color: 'text.secondary' }} />
-              <Typography variant="subtitle2" textAlign="center">
+              <Typography variant='subtitle2' textAlign='center'>
                 {label}
               </Typography>
-              <Typography variant="body2" color="text.secondary" textAlign="center">
+              <Typography variant='body2' color='text.secondary' textAlign='center'>
                 {description}
               </Typography>
-              <Typography variant="caption" color="text.secondary" textAlign="center">
+              <Typography variant='caption' color='text.secondary' textAlign='center'>
                 Max size: {maxSizeMB}MB
               </Typography>
             </Box>
@@ -274,7 +270,7 @@ export const ImageUpload = ({
       </Card>
 
       {error && (
-        <Alert severity="error" sx={{ mt: 1 }}>
+        <Alert severity='error' sx={{ mt: 1 }}>
           {error}
         </Alert>
       )}

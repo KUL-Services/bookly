@@ -18,9 +18,9 @@ import Rating from '@mui/material/Rating'
 import Chip from '@mui/material/Chip'
 import IconButton from '@mui/material/IconButton'
 import Alert from '@mui/material/Alert'
-import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
+import { TableSkeleton } from '@/components/LoadingStates'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 
@@ -256,11 +256,7 @@ const ReviewsManagement = () => {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
+          <TableSkeleton rows={5} columns={6} />
         </Grid>
       </Grid>
     )

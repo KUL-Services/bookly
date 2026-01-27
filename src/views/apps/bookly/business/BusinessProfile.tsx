@@ -11,7 +11,6 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Avatar from '@mui/material/Avatar'
 import Typography from '@mui/material/Typography'
-import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import Divider from '@mui/material/Divider'
 import Box from '@mui/material/Box'
@@ -151,9 +150,7 @@ const BusinessProfile = () => {
         <Grid item xs={12}>
           <Card>
             <CardContent>
-              <Alert severity='error'>
-                {t('business.profile.noProfile')}
-              </Alert>
+              <Alert severity='error'>{t('business.profile.noProfile')}</Alert>
             </CardContent>
           </Card>
         </Grid>
@@ -165,10 +162,7 @@ const BusinessProfile = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Card>
-          <CardHeader
-            title={t('business.profile.title')}
-            subheader={t('business.profile.subtitle')}
-          />
+          <CardHeader title={t('business.profile.title')} subheader={t('business.profile.subtitle')} />
           <CardContent>
             {error && (
               <Alert severity='error' className='mb-4'>
@@ -184,13 +178,11 @@ const BusinessProfile = () => {
 
             {/* Current Business Info */}
             <Box className='mb-6'>
-              <Typography variant='h6' className='mb-4'>{t('business.profile.currentInfo')}</Typography>
+              <Typography variant='h6' className='mb-4'>
+                {t('business.profile.currentInfo')}
+              </Typography>
               <div className='flex items-center gap-4 mb-4'>
-                <Avatar
-                  src={business.logoUrl}
-                  alt={business.name}
-                  className='w-16 h-16'
-                >
+                <Avatar src={business.logoUrl} alt={business.name} className='w-16 h-16'>
                   {business.name.charAt(0).toUpperCase()}
                 </Avatar>
                 <div>
@@ -213,13 +205,15 @@ const BusinessProfile = () => {
             <Divider className='mb-6' />
 
             {/* Change Request Form */}
-            <Typography variant='h6' className='mb-4'>{t('business.profile.requestChanges')}</Typography>
+            <Typography variant='h6' className='mb-4'>
+              {t('business.profile.requestChanges')}
+            </Typography>
             <form onSubmit={handleSubmit} className='space-y-4'>
               <TextField
                 fullWidth
                 label={t('business.profile.businessName')}
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={e => handleInputChange('name', e.target.value)}
                 required
               />
 
@@ -228,7 +222,7 @@ const BusinessProfile = () => {
                 label={t('business.profile.businessEmail')}
                 type='email'
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                onChange={e => handleInputChange('email', e.target.value)}
               />
 
               <TextField
@@ -237,11 +231,13 @@ const BusinessProfile = () => {
                 multiline
                 rows={4}
                 value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
+                onChange={e => handleInputChange('description', e.target.value)}
               />
 
               <Box>
-                <Typography variant='subtitle2' className='mb-2'>{t('business.profile.businessLogo')}</Typography>
+                <Typography variant='subtitle2' className='mb-2'>
+                  {t('business.profile.businessLogo')}
+                </Typography>
                 <ImageUpload
                   currentImageUrl={formData.logo ? business.logoUrl : null}
                   onImageUploaded={handleLogoUploaded}
@@ -259,7 +255,7 @@ const BusinessProfile = () => {
                   type='submit'
                   variant='contained'
                   disabled={saving}
-                  startIcon={saving ? <CircularProgress size={16} /> : <i className='ri-save-line' />}
+                  startIcon={saving ? <ButtonLoader /> : <i className='ri-save-line' />}
                 >
                   {saving ? t('business.profile.submitting') : t('business.profile.submitRequest')}
                 </Button>

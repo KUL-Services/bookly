@@ -27,6 +27,7 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 import { mockBookings } from '@/bookly/data/mock-data'
+import GreenWordLogo from '@/assets/logos/words/Green_Word.png'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/verticalMenuData'
@@ -149,7 +150,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             <MenuItem href={`/${locale}/apps/ecommerce/referrals`}>{dictionary['navigation'].referrals}</MenuItem>
             <MenuItem href={`/${locale}/apps/ecommerce/settings`}>{dictionary['navigation'].settings}</MenuItem>
           </SubMenu> */}
-          <SubMenu label={dictionary['navigation'].bookly ?? 'Zerv'} icon={<i className='ri-scissors-2-line' />}>
+          <SubMenu label={<img src={GreenWordLogo.src} alt='Zerv' style={{ height: 22, marginTop: 4 }} />}>
             <MenuItem href={`/${locale}/apps/bookly/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
             <MenuItem href={`/${locale}/apps/bookly/calendar`}>
               {dictionary['navigation'].calendar ?? 'Calendar'}

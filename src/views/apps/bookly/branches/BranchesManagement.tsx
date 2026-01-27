@@ -16,7 +16,6 @@ import Button from '@mui/material/Button'
 import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import Alert from '@mui/material/Alert'
-import CircularProgress from '@mui/material/CircularProgress'
 import Chip from '@mui/material/Chip'
 
 // API Imports
@@ -28,6 +27,7 @@ import CreateBranchDialog from './CreateBranchDialog'
 import EditBranchDialog from './EditBranchDialog'
 import { TableSkeleton } from '@/components/LoadingStates'
 import { ErrorDisplay } from '@/components/ErrorComponents'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 
 // Utils
 import { extractErrorMessage, logError, withErrorHandling } from '@/utils/errorHandling'
@@ -67,12 +67,46 @@ const BranchesManagement = () => {
             mobile: '+1 (555) 123-4567',
             businessId: 'business1',
             services: [
-              { id: '1', name: 'Hair Cut', price: 30, duration: 45, location: 'Downtown Branch', businessId: 'business1', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-              { id: '2', name: 'Hair Color', price: 80, duration: 120, location: 'Downtown Branch', businessId: 'business1', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+              {
+                id: '1',
+                name: 'Hair Cut',
+                price: 30,
+                duration: 45,
+                location: 'Downtown Branch',
+                businessId: 'business1',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              },
+              {
+                id: '2',
+                name: 'Hair Color',
+                price: 80,
+                duration: 120,
+                location: 'Downtown Branch',
+                businessId: 'business1',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              }
             ],
             staff: [
-              { id: 'staff1', name: 'Maria Rodriguez', mobile: '+1 (555) 111-1111', businessId: 'business1', branchIds: ['1'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-              { id: 'staff2', name: 'Carlos Mendez', mobile: '+1 (555) 222-2222', businessId: 'business1', branchIds: ['1'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+              {
+                id: 'staff1',
+                name: 'Maria Rodriguez',
+                mobile: '+1 (555) 111-1111',
+                businessId: 'business1',
+                branchIds: ['1'],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              },
+              {
+                id: 'staff2',
+                name: 'Carlos Mendez',
+                mobile: '+1 (555) 222-2222',
+                businessId: 'business1',
+                branchIds: ['1'],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              }
             ],
             createdAt: new Date('2024-01-15').toISOString(),
             updatedAt: new Date('2024-01-15').toISOString()
@@ -84,13 +118,55 @@ const BranchesManagement = () => {
             mobile: '+1 (555) 987-6543',
             businessId: 'business1',
             services: [
-              { id: '3', name: 'Manicure', price: 25, duration: 30, location: 'Westside Branch', businessId: 'business1', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-              { id: '4', name: 'Pedicure', price: 35, duration: 45, location: 'Westside Branch', businessId: 'business1', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+              {
+                id: '3',
+                name: 'Manicure',
+                price: 25,
+                duration: 30,
+                location: 'Westside Branch',
+                businessId: 'business1',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              },
+              {
+                id: '4',
+                name: 'Pedicure',
+                price: 35,
+                duration: 45,
+                location: 'Westside Branch',
+                businessId: 'business1',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              }
             ],
             staff: [
-              { id: 'staff3', name: 'Sofia Gonzalez', mobile: '+1 (555) 333-3333', businessId: 'business1', branchIds: ['2'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-              { id: 'staff4', name: 'Ana Martinez', mobile: '+1 (555) 444-4444', businessId: 'business1', branchIds: ['2'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-              { id: 'staff5', name: 'Isabel Lopez', mobile: '+1 (555) 555-5555', businessId: 'business1', branchIds: ['2'], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+              {
+                id: 'staff3',
+                name: 'Sofia Gonzalez',
+                mobile: '+1 (555) 333-3333',
+                businessId: 'business1',
+                branchIds: ['2'],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              },
+              {
+                id: 'staff4',
+                name: 'Ana Martinez',
+                mobile: '+1 (555) 444-4444',
+                businessId: 'business1',
+                branchIds: ['2'],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              },
+              {
+                id: 'staff5',
+                name: 'Isabel Lopez',
+                mobile: '+1 (555) 555-5555',
+                businessId: 'business1',
+                branchIds: ['2'],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              }
             ],
             createdAt: new Date('2024-01-20').toISOString(),
             updatedAt: new Date('2024-01-20').toISOString()
@@ -121,12 +197,14 @@ const BranchesManagement = () => {
         setBranches(branchesResponse.data || [])
         setServices(servicesResponse.data || [])
       }
-    }, 'Failed to fetch branches data').catch((err) => {
-      logError(err, 'BranchesManagement.fetchData')
-      setError(err)
-    }).finally(() => {
-      setLoading(false)
-    })
+    }, 'Failed to fetch branches data')
+      .catch(err => {
+        logError(err, 'BranchesManagement.fetchData')
+        setError(err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
   useEffect(() => {
@@ -142,7 +220,7 @@ const BranchesManagement = () => {
       await fetchData()
       setCreateDialogOpen(false)
       setSuccess('Branch created successfully!')
-    }, 'Failed to create branch').catch((err) => {
+    }, 'Failed to create branch').catch(err => {
       logError(err, 'BranchesManagement.handleCreateBranch', { branchData })
       setError(err)
     })
@@ -158,7 +236,7 @@ const BranchesManagement = () => {
       setEditDialogOpen(false)
       setSelectedBranch(null)
       setSuccess('Branch updated successfully!')
-    }, 'Failed to update branch').catch((err) => {
+    }, 'Failed to update branch').catch(err => {
       logError(err, 'BranchesManagement.handleEditBranch', { branchData })
       setError(err)
     })
@@ -177,12 +255,14 @@ const BranchesManagement = () => {
       }
       await fetchData()
       setSuccess('Branch deleted successfully!')
-    }, 'Failed to delete branch').catch((err) => {
-      logError(err, 'BranchesManagement.handleDeleteBranch', { branchId })
-      setError(err)
-    }).finally(() => {
-      setActionLoading(null)
-    })
+    }, 'Failed to delete branch')
+      .catch(err => {
+        logError(err, 'BranchesManagement.handleDeleteBranch', { branchId })
+        setError(err)
+      })
+      .finally(() => {
+        setActionLoading(null)
+      })
   }
 
   if (loading) {
@@ -214,16 +294,11 @@ const BranchesManagement = () => {
           />
           <CardContent>
             {error && (
-              <ErrorDisplay
-                error={error}
-                onRetry={fetchData}
-                context="Branches Management"
-                showDetails={false}
-              />
+              <ErrorDisplay error={error} onRetry={fetchData} context='Branches Management' showDetails={false} />
             )}
 
             {success && (
-              <Alert severity="success" className="mb-4" onClose={() => setSuccess(null)}>
+              <Alert severity='success' className='mb-4' onClose={() => setSuccess(null)}>
                 {success}
               </Alert>
             )}
@@ -253,19 +328,22 @@ const BranchesManagement = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {branches.map((branch) => (
+                    {branches.map(branch => (
                       <TableRow key={branch.id} hover>
                         <TableCell>
-                          <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{branch.name}</Typography>
+                          <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>
+                            {branch.name}
+                          </Typography>
                         </TableCell>
                         <TableCell>
-                          <Typography variant='body2' sx={{ maxWidth: 180, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <Typography
+                            variant='body2'
+                            sx={{ maxWidth: 180, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                          >
                             {branch.address || 'No address provided'}
                           </Typography>
                         </TableCell>
-                        <TableCell sx={{ whiteSpace: 'nowrap' }}>
-                          {branch.mobile || 'No mobile number'}
-                        </TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{branch.mobile || 'No mobile number'}</TableCell>
                         <TableCell>
                           <div className='flex flex-wrap gap-1'>
                             {branch.galleryUrls?.length ? (
@@ -294,7 +372,7 @@ const BranchesManagement = () => {
                         <TableCell>
                           <div className='flex flex-wrap gap-1' style={{ minWidth: 120 }}>
                             {branch.services?.length ? (
-                              branch.services.map((service) => (
+                              branch.services.map(service => (
                                 <Chip key={service.id} label={service.name} size='small' variant='outlined' />
                               ))
                             ) : (
@@ -307,8 +385,14 @@ const BranchesManagement = () => {
                         <TableCell>
                           <div className='flex flex-wrap gap-1' style={{ minWidth: 120 }}>
                             {branch.staff?.length ? (
-                              branch.staff.map((staff) => (
-                                <Chip key={staff.id} label={staff.name} size='small' color='primary' variant='outlined' />
+                              branch.staff.map(staff => (
+                                <Chip
+                                  key={staff.id}
+                                  label={staff.name}
+                                  size='small'
+                                  color='primary'
+                                  variant='outlined'
+                                />
                               ))
                             ) : (
                               <Typography variant='body2' color='textSecondary'>
@@ -338,7 +422,7 @@ const BranchesManagement = () => {
                               disabled={actionLoading === `delete-${branch.id}`}
                             >
                               {actionLoading === `delete-${branch.id}` ? (
-                                <CircularProgress size={16} />
+                                <BrandedSpinner size={16} />
                               ) : (
                                 <i className='ri-delete-bin-line' />
                               )}

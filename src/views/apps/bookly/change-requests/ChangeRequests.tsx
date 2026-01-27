@@ -15,9 +15,10 @@ import TableCell from '@mui/material/TableCell'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import Alert from '@mui/material/Alert'
-import CircularProgress from '@mui/material/CircularProgress'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
+import { TableSkeleton } from '@/components/LoadingStates'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 import Accordion from '@mui/material/Accordion'
 import AccordionSummary from '@mui/material/AccordionSummary'
 import AccordionDetails from '@mui/material/AccordionDetails'
@@ -118,7 +119,6 @@ const ChangeRequests = () => {
 
       // Remove from pending list
       setChangeRequests(prev => prev.filter(request => request.id !== requestId))
-
     } catch (err) {
       console.error('Failed to approve change request:', err)
       setError('Failed to approve change request')
@@ -143,7 +143,6 @@ const ChangeRequests = () => {
 
       // Remove from pending list
       setChangeRequests(prev => prev.filter(request => request.id !== requestId))
-
     } catch (err) {
       console.error('Failed to reject change request:', err)
       setError('Failed to reject change request')
@@ -178,11 +177,7 @@ const ChangeRequests = () => {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
+          <TableSkeleton rows={3} columns={6} />
         </Grid>
       </Grid>
     )
@@ -192,10 +187,7 @@ const ChangeRequests = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Card>
-          <CardHeader
-            title='Pending Change Requests'
-            subheader='Review and approve business profile change requests'
-          />
+          <CardHeader title='Pending Change Requests' subheader='Review and approve business profile change requests' />
           <CardContent>
             {error && (
               <Alert severity='error' className='mb-4'>
@@ -225,7 +217,7 @@ const ChangeRequests = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {changeRequests.map((request) => (
+                  {changeRequests.map(request => (
                     <TableRow key={request.id} hover>
                       <TableCell>
                         <Typography variant='subtitle2'>{request.businessName}</Typography>
@@ -240,17 +232,11 @@ const ChangeRequests = () => {
                       <TableCell>
                         <Typography variant='body2'>{request.requestedBy}</Typography>
                       </TableCell>
-                      <TableCell>
-                        {new Date(request.requestedAt).toLocaleDateString()}
-                      </TableCell>
+                      <TableCell>{new Date(request.requestedAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <Accordion>
-                          <AccordionSummary
-                            expandIcon={<i className='ri-arrow-down-s-line' />}
-                          >
-                            <Typography variant='body2'>
-                              {request.requestedChanges.length} change(s)
-                            </Typography>
+                          <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />}>
+                            <Typography variant='body2'>{request.requestedChanges.length} change(s)</Typography>
                           </AccordionSummary>
                           <AccordionDetails>
                             <div className='space-y-3'>
@@ -259,9 +245,7 @@ const ChangeRequests = () => {
                                   <Typography variant='subtitle2' color='primary'>
                                     Reason:
                                   </Typography>
-                                  <Typography variant='body2'>
-                                    {request.reason}
-                                  </Typography>
+                                  <Typography variant='body2'>{request.reason}</Typography>
                                 </div>
                               )}
                               {request.requestedChanges.map((change, index) => (
@@ -289,6 +273,7 @@ const ChangeRequests = () => {
                             color='success'
                             onClick={() => handleApprove(request.id)}
                             disabled={actionLoading[request.id]}
+                            startIcon={actionLoading[request.id] ? <BrandedSpinner size={16} color='inherit' /> : null}
                           >
                             {actionLoading[request.id] ? 'Approving...' : 'Approve'}
                           </Button>
@@ -298,6 +283,7 @@ const ChangeRequests = () => {
                             color='error'
                             onClick={() => handleReject(request.id)}
                             disabled={actionLoading[request.id]}
+                            startIcon={actionLoading[request.id] ? <BrandedSpinner size={16} color='inherit' /> : null}
                           >
                             {actionLoading[request.id] ? 'Rejecting...' : 'Reject'}
                           </Button>

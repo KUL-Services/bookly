@@ -27,6 +27,7 @@ import menuItemStyles from '@core/styles/horizontal/menuItemStyles'
 import menuRootStyles from '@core/styles/horizontal/menuRootStyles'
 import verticalMenuItemStyles from '@core/styles/vertical/menuItemStyles'
 import verticalNavigationCustomStyles from '@core/styles/vertical/navigationCustomStyles'
+import GreenWordLogo from '@/assets/logos/words/Green_Word.png'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/horizontalMenuData'
@@ -115,7 +116,10 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
                 {dictionary['navigation'].category}
               </MenuItem>
             </SubMenu>
-            <SubMenu label={dictionary['navigation'].bookly ?? 'Zerv'} icon={<i className='ri-scissors-2-line' />}>
+            <SubMenu
+              label={<img src={GreenWordLogo.src} alt='Zerv' style={{ height: 22, marginTop: 4 }} />}
+              icon={<i className='ri-scissors-2-line' />}
+            >
               <MenuItem href={`/${locale}/apps/bookly/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
               <MenuItem href={`/${locale}/apps/bookly/calendar`}>
                 {dictionary['navigation'].calendar ?? 'Calendar'}

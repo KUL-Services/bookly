@@ -16,12 +16,13 @@ import CardContent from '@mui/material/CardContent'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Snackbar from '@mui/material/Snackbar'
-import CircularProgress from '@mui/material/CircularProgress'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
+import { PageLoader } from '@/components/LoadingStates'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 
 // Tab Components
 import BusinessProfileTab from './tabs/BusinessProfileTab'
@@ -103,17 +104,7 @@ const BusinessSettings = () => {
   }
 
   if (isLoading) {
-    return (
-      <Grid container spacing={6}>
-        <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    )
+    return <PageLoader />
   }
 
   return (
@@ -156,7 +147,7 @@ const BusinessSettings = () => {
                       variant='contained'
                       onClick={handleSave}
                       disabled={isSaving || !hasUnsavedChanges}
-                      startIcon={isSaving ? <CircularProgress size={16} color='inherit' /> : null}
+                      startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
                     >
                       {isSaving ? 'Saving...' : 'Save Settings'}
                     </Button>

@@ -1,20 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import {
-  Button,
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  CircularProgress,
-  IconButton,
-  Alert,
-  Grid,
-  Chip
-} from '@mui/material'
+import { Button, Card, CardContent, Typography, Box, IconButton, Alert, Grid, Chip } from '@mui/material'
 import { CloudUpload, Delete, Add } from '@mui/icons-material'
 import { MediaService } from '@/lib/api'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 
 interface GalleryUploadProps {
   currentImageIds?: string[]
@@ -36,13 +26,13 @@ export const GalleryUpload = ({
   currentImageUrls = [],
   onImagesUploaded,
   onImageDeleted,
-  label = "Upload Gallery Images",
-  description = "Click to upload or drag and drop multiple images",
+  label = 'Upload Gallery Images',
+  description = 'Click to upload or drag and drop multiple images',
   maxImages = 10,
   maxSizeMB = 5,
   imageWidth = 150,
   imageHeight = 150,
-  className = "",
+  className = '',
   disabled = false
 }: GalleryUploadProps) => {
   const [uploading, setUploading] = useState(false)
@@ -181,14 +171,14 @@ export const GalleryUpload = ({
     }
   }
 
-  const canAddMore = (currentImageUrls.length + previewUrls.length) < maxImages
+  const canAddMore = currentImageUrls.length + previewUrls.length < maxImages
 
   return (
     <div className={className}>
       <input
         ref={fileInputRef}
-        type="file"
-        accept="image/*"
+        type='file'
+        accept='image/*'
         multiple
         onChange={handleFileInputChange}
         style={{ display: 'none' }}
@@ -196,19 +186,19 @@ export const GalleryUpload = ({
       />
 
       <Box mb={2}>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant='h6' gutterBottom>
           {label}
         </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
+        <Typography variant='body2' color='text.secondary' gutterBottom>
           {description}
         </Typography>
-        <Box display="flex" gap={1} flexWrap="wrap" alignItems="center">
+        <Box display='flex' gap={1} flexWrap='wrap' alignItems='center'>
           <Chip
             label={`${currentImageUrls.length + previewUrls.length}/${maxImages} images`}
-            size="small"
-            color={(currentImageUrls.length + previewUrls.length) >= maxImages ? "error" : "default"}
+            size='small'
+            color={currentImageUrls.length + previewUrls.length >= maxImages ? 'error' : 'default'}
           />
-          <Chip label={`Max ${maxSizeMB}MB each`} size="small" variant="outlined" />
+          <Chip label={`Max ${maxSizeMB}MB each`} size='small' variant='outlined' />
         </Box>
       </Box>
 
@@ -226,15 +216,17 @@ export const GalleryUpload = ({
                   overflow: 'hidden'
                 }}
               >
-                <CardContent sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  p: 0,
-                  '&:last-child': { pb: 0 }
-                }}>
+                <CardContent
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    p: 0,
+                    '&:last-child': { pb: 0 }
+                  }}
+                >
                   <Box
                     sx={{
                       width: '100%',
@@ -255,9 +247,9 @@ export const GalleryUpload = ({
 
                     {!disabled && onImageDeleted && imageId && (
                       <IconButton
-                        size="small"
+                        size='small'
                         onClick={() => handleDelete(imageId)}
-                        color="error"
+                        color='error'
                         sx={{
                           position: 'absolute',
                           top: 4,
@@ -266,7 +258,7 @@ export const GalleryUpload = ({
                           '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
                         }}
                       >
-                        <Delete fontSize="small" />
+                        <Delete fontSize='small' />
                       </IconButton>
                     )}
                   </Box>
@@ -288,15 +280,17 @@ export const GalleryUpload = ({
                 opacity: uploading ? 0.7 : 1
               }}
             >
-              <CardContent sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                p: 0,
-                '&:last-child': { pb: 0 }
-              }}>
+              <CardContent
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  p: 0,
+                  '&:last-child': { pb: 0 }
+                }}
+              >
                 <Box
                   sx={{
                     width: '100%',
@@ -332,16 +326,16 @@ export const GalleryUpload = ({
                         color: 'white'
                       }}
                     >
-                      <CircularProgress size={24} sx={{ color: 'white', mb: 1 }} />
-                      <Typography variant="caption">Uploading...</Typography>
+                      <BrandedSpinner size={24} sx={{ mb: 1 }} />
+                      <Typography variant='caption'>Uploading...</Typography>
                     </Box>
                   )}
 
                   {!disabled && !uploading && (
                     <IconButton
-                      size="small"
+                      size='small'
                       onClick={() => handleDeletePreview(index)}
-                      color="error"
+                      color='error'
                       sx={{
                         position: 'absolute',
                         top: 4,
@@ -350,7 +344,7 @@ export const GalleryUpload = ({
                         '&:hover': { backgroundColor: 'rgba(255,255,255,1)' }
                       }}
                     >
-                      <Delete fontSize="small" />
+                      <Delete fontSize='small' />
                     </IconButton>
                   )}
                 </Box>
@@ -376,26 +370,28 @@ export const GalleryUpload = ({
                 opacity: disabled ? 0.6 : 1
               }}
             >
-              <CardContent sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                p: 2,
-                '&:last-child': { pb: 2 }
-              }}>
+              <CardContent
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  p: 2,
+                  '&:last-child': { pb: 2 }
+                }}
+              >
                 {uploading ? (
-                  <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
-                    <CircularProgress size={24} />
-                    <Typography variant="caption" textAlign="center">
+                  <Box display='flex' flexDirection='column' alignItems='center' gap={1}>
+                    <BrandedSpinner size={24} />
+                    <Typography variant='caption' textAlign='center'>
                       Uploading...
                     </Typography>
                   </Box>
                 ) : (
-                  <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+                  <Box display='flex' flexDirection='column' alignItems='center' gap={1}>
                     <Add sx={{ fontSize: 32, color: 'text.secondary' }} />
-                    <Typography variant="caption" textAlign="center">
+                    <Typography variant='caption' textAlign='center'>
                       Add Images
                     </Typography>
                   </Box>
@@ -407,19 +403,19 @@ export const GalleryUpload = ({
       </Grid>
 
       {uploadProgress && (
-        <Alert severity="info" sx={{ mt: 2 }}>
+        <Alert severity='info' sx={{ mt: 2 }}>
           {uploadProgress}
         </Alert>
       )}
 
       {error && (
-        <Alert severity="error" sx={{ mt: 2 }} style={{ whiteSpace: 'pre-line' }}>
+        <Alert severity='error' sx={{ mt: 2 }} style={{ whiteSpace: 'pre-line' }}>
           {error}
         </Alert>
       )}
 
       {!canAddMore && (
-        <Alert severity="warning" sx={{ mt: 2 }}>
+        <Alert severity='warning' sx={{ mt: 2 }}>
           Maximum number of images ({maxImages}) reached. Delete some images to add new ones.
         </Alert>
       )}
