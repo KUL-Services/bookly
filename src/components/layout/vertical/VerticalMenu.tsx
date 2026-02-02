@@ -28,6 +28,7 @@ import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 import { mockBookings } from '@/bookly/data/mock-data'
 import GreenWordLogo from '@/assets/logos/words/Green_Word.png'
+import WhiteWordLogo from '@/assets/logos/words/White_Word.png'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/verticalMenuData'
@@ -90,7 +91,9 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             <Chip label={mockBookings.filter(b => b.status === 'completed').length} size='small' color='success' />
           }
         >
-          <MenuItem href={`/${locale}/apps/bookly/dashboard`}>{dictionary['navigation'].bookly}</MenuItem>
+          <MenuItem href={`/${locale}/apps/bookly/dashboard`}>
+            <img src={WhiteWordLogo.src} alt='Bookly' style={{ height: 22, marginTop: 4 }} />
+          </MenuItem>
           {/* <MenuItem href={`/${locale}/dashboards/crm`}>{dictionary['navigation'].crm}</MenuItem>
           <MenuItem href={`/${locale}/dashboards/analytics`}>{dictionary['navigation'].analytics}</MenuItem>
           <MenuItem href={`/${locale}/dashboards/ecommerce`}>{dictionary['navigation'].eCommerce}</MenuItem>

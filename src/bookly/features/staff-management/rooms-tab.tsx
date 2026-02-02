@@ -50,70 +50,6 @@ const getBusinessHoursForDay = (day: DayOfWeek) => {
   return hours[day] as { isOpen: boolean; shifts: { start: string; end: string }[] }
 }
 
-// Generate timeline hours based on business hours for a specific day
-function generateTimelineHours(dayOfWeek: DayOfWeek): string[] {
-  const businessHours = getBusinessHoursForDay(dayOfWeek)
-
-  if (!businessHours.isOpen || businessHours.shifts.length === 0) {
-    // Default fallback if business is closed
-    return ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM']
-  }
-
-  // Get first shift's start and end times
-  const shift = businessHours.shifts[0]
-  const [startHour] = shift.start.split(':').map(Number)
-  const [endHour] = shift.end.split(':').map(Number)
-
-  const hours: string[] = []
-
-  // Generate hourly labels from start to end
-  for (let hour = startHour; hour <= endHour; hour++) {
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour
-    const period = hour >= 12 ? 'PM' : 'AM'
-    hours.push(`${displayHour}:00 ${period}`)
-  }
-
-  return hours
-}
-
-// Get business hours start/end for a specific day (in minutes from midnight)
-function getBusinessHoursRange(dayOfWeek: DayOfWeek): { start: number; end: number } {
-  const businessHours = getBusinessHoursForDay(dayOfWeek)
-
-  if (!businessHours.isOpen || businessHours.shifts.length === 0) {
-    // Default fallback
-    return { start: 9 * 60, end: 17 * 60 }
-  }
-
-  const shift = businessHours.shifts[0]
-  const [startHour, startMin] = shift.start.split(':').map(Number)
-  const [endHour, endMin] = shift.end.split(':').map(Number)
-
-  return {
-    start: startHour * 60 + startMin,
-    end: endHour * 60 + endMin
-  }
-}
-
-function timeToPosition(time: string, dayOfWeek: DayOfWeek): number {
-  const [hourStr, period] = time.split(' ')
-  let [hours, minutes = 0] = hourStr.split(':').map(Number)
-
-  if (period === 'PM' && hours !== 12) hours += 12
-  if (period === 'AM' && hours === 12) hours = 0
-
-  const totalMinutes = hours * 60 + minutes
-  const { start: startMinutes, end: endMinutes } = getBusinessHoursRange(dayOfWeek)
-
-  return ((totalMinutes - startMinutes) / (endMinutes - startMinutes)) * 100
-}
-
-function calculateWidth(start: string, end: string, dayOfWeek: DayOfWeek): number {
-  const startPos = timeToPosition(start, dayOfWeek)
-  const endPos = timeToPosition(end, dayOfWeek)
-  return endPos - startPos
-}
-
 export function RoomsTab() {
   const [viewMode, setViewMode] = useState('Day')
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -155,6 +91,95 @@ export function RoomsTab() {
 
   // Filter rooms by branch
   const displayRooms = selectedBranch === 'all' ? rooms : getRoomsForBranch(selectedBranch)
+
+  // Calculate dynamic timeline configuration
+  const timelineConfig = useMemo(() => {
+    const dayOfWeek = WEEK_DAYS[selectedDate.getDay()] as DayOfWeek
+    let startMinutes = 24 * 60
+    let endMinutes = 0
+
+    // 1. Check Business Hours
+    const businessHours = getBusinessHoursForDay(dayOfWeek)
+    if (businessHours.isOpen && businessHours.shifts.length > 0) {
+      businessHours.shifts.forEach(shift => {
+        const [startH, startM] = shift.start.split(':').map(Number)
+        const [endH, endM] = shift.end.split(':').map(Number)
+        startMinutes = Math.min(startMinutes, startH * 60 + startM)
+        endMinutes = Math.max(endMinutes, endH * 60 + endM)
+      })
+    }
+
+    // 2. Check Room Schedules
+    displayRooms.forEach(room => {
+      const schedule = getRoomSchedule(room.id, dayOfWeek)
+      if (schedule.isAvailable && schedule.shifts.length > 0) {
+        schedule.shifts.forEach(shift => {
+          const [startH, startM] = shift.start.split(':').map(Number)
+          const [endH, endM] = shift.end.split(':').map(Number)
+          startMinutes = Math.min(startMinutes, startH * 60 + startM)
+          endMinutes = Math.max(endMinutes, endH * 60 + endM)
+        })
+      }
+    })
+
+    // Default fallback if no hours found
+    if (startMinutes === 24 * 60 || endMinutes === 0) {
+      startMinutes = 8 * 60 // Default to 8 AM
+      endMinutes = 18 * 60 // Default to 6 PM
+    }
+
+    // Enforce minimum 8 AM start (8 * 60 = 480 minutes)
+    startMinutes = Math.min(startMinutes, 8 * 60)
+
+    // Add padding (1 hour before/after)
+    startMinutes = Math.max(0, startMinutes - 60)
+    endMinutes = Math.min(24 * 60, endMinutes + 60)
+
+    // Generate Hourly Labels
+    const hours: string[] = []
+    const startHour = Math.floor(startMinutes / 60)
+    const endHour = Math.ceil(endMinutes / 60)
+
+    for (let h = startHour; h <= endHour; h++) {
+      const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h
+      const period = h < 12 ? 'AM' : 'PM' // 12 PM is noon
+      if (h === 24) {
+        hours.push('12:00 AM') // Next day midnight usually handled differently but ok for range
+      } else {
+        hours.push(`${displayHour}:00 ${period}`)
+      }
+    }
+
+    return { startMinutes, endMinutes, hours }
+  }, [selectedDate, displayRooms, getRoomSchedule, selectedBranch]) // businessHours from mock/store effectively const or derived
+
+  // Dynamic Time Positioning Helpers
+  const timeToPosition = (time: string, is12HourFormat: boolean = false) => {
+    let hours, minutes
+
+    if (is12HourFormat) {
+      const [timeStr, period] = time.split(' ')
+      const [hStr, mStr] = timeStr.split(':')
+      hours = parseInt(hStr)
+      minutes = mStr ? parseInt(mStr) : 0
+      if (period === 'PM' && hours !== 12) hours += 12
+      if (period === 'AM' && hours === 12) hours = 0
+    } else {
+      const [h, m] = time.split(':').map(Number)
+      hours = h
+      minutes = m
+    }
+
+    const totalMinutes = hours * 60 + minutes
+    const { startMinutes, endMinutes } = timelineConfig
+    return ((totalMinutes - startMinutes) / (endMinutes - startMinutes)) * 100
+  }
+
+  const calculateWidth = (start: string, end: string, is12HourFormat: boolean = false) => {
+    const startPos = timeToPosition(start, is12HourFormat)
+    const endPos = timeToPosition(end, is12HourFormat)
+    return endPos - startPos
+  }
 
   // Group rooms by branch and sort by schedule start time
   const roomsByBranch = useMemo(() => {
@@ -577,8 +602,8 @@ export function RoomsTab() {
                 onClick={() => handleEditShift(room, null, dayOfWeek)}
                 sx={{
                   position: 'absolute',
-                  left: `${timeToPosition(formatTime12Hour(businessHours.shifts[0].start), dayOfWeek)}%`,
-                  width: `${calculateWidth(formatTime12Hour(businessHours.shifts[0].start), formatTime12Hour(businessHours.shifts[0].end), dayOfWeek)}%`,
+                  left: `${timeToPosition(formatTime12Hour(businessHours.shifts[0].start), true)}%`,
+                  width: `${calculateWidth(formatTime12Hour(businessHours.shifts[0].start), formatTime12Hour(businessHours.shifts[0].end), true)}%`,
                   top: 0,
                   height: '100%',
                   bgcolor: 'rgba(139, 195, 74, 0.3)',
@@ -671,8 +696,8 @@ export function RoomsTab() {
                   <Box
                     sx={{
                       position: 'absolute',
-                      left: `${timeToPosition(shiftStart, dayOfWeek)}%`,
-                      width: `${calculateWidth(shiftStart, shiftEnd, dayOfWeek)}%`,
+                      left: `${timeToPosition(shiftStart, true)}%`,
+                      width: `${calculateWidth(shiftStart, shiftEnd, true)}%`,
                       top: schedule.shifts.length > 1 ? `${idx * (100 / schedule.shifts.length)}%` : 0,
                       height: schedule.shifts.length > 1 ? `${Math.floor(90 / schedule.shifts.length)}%` : '100%',
                       bgcolor: isFlexible
@@ -851,7 +876,8 @@ export function RoomsTab() {
   // Day View
   if (viewMode === 'Day') {
     const dayOfWeek = WEEK_DAYS[selectedDate.getDay()] as DayOfWeek
-    const timelineHours = generateTimelineHours(dayOfWeek)
+    // const timelineHours = generateTimelineHours(dayOfWeek) // Deprecated
+    const { hours: timelineHours } = timelineConfig
 
     return (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>

@@ -7,6 +7,7 @@ import { CalendarCheck, ChevronDown, Heart, LogOut, Menu, User, Building2, X } f
 import { useTranslation } from 'react-i18next'
 import BooklyLanguageDropdown from '../../atoms/language-dropdown/language-dropdown.component'
 import BooklyThemeToggle from '../../atoms/theme-toggle/theme-toggle.component'
+import { i18nConfig } from '@/bookly/i18nConfig'
 
 // Assets
 import GreenIconLogo from '@assets/logos/icons/Green_Icon.png'
@@ -32,6 +33,7 @@ const BooklyNavbar = () => {
   }, [])
 
   const { t } = useTranslation()
+  const currentLang = params?.lang || i18nConfig.defaultLocale
 
   useEffect(() => {
     // Wait for Zustand store to rehydrate from localStorage
@@ -40,8 +42,8 @@ const BooklyNavbar = () => {
   }, [])
 
   const to = (path: string) => {
-    console.log('Navigating to:', `/${params?.lang}${path}`)
-    router.push(`/${params?.lang}${path}`)
+    console.log('Navigating to:', `/${currentLang}${path}`)
+    router.push(`/${currentLang}${path}`)
   }
 
   const handleLogout = () => {
@@ -52,6 +54,11 @@ const BooklyNavbar = () => {
 
   // Avoid mismatches before Zustand rehydrates
   if (!hydrated) return null
+
+  // Hide Navbar on Business Landing Pages
+  if (params.lang && typeof window !== 'undefined' && window.location.pathname.includes('/business')) {
+    return null
+  }
 
   return (
     <header className='sticky top-0 z-50 w-full bg-white/95 dark:bg-[#0a2c24]/95 backdrop-blur-xl border-b border-[#0a2c24]/10 dark:border-white/10'>
@@ -96,12 +103,12 @@ const BooklyNavbar = () => {
               onClick={() => {
                 console.log('For Businesses (desktop) clicked', { userType, materializeUser })
                 // Check if user is already authenticated as business user
-                if (userType === 'business' && materializeUser) {
+                if (materializeUser || userType === 'business') {
                   // Already logged in as business, go to dashboard
-                  router.push(`/${params?.lang}/apps/bookly/dashboard`)
+                  router.push(`/${currentLang}/apps/bookly/dashboard`)
                 } else {
                   // Not business user, go to business login
-                  router.push(`/${params?.lang}/login`)
+                  router.push(`/${currentLang}/login`)
                 }
               }}
               className='flex items-center gap-2 px-3 py-2 rounded-full text-sm text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 transition-all duration-300 border border-transparent'
@@ -163,13 +170,13 @@ const BooklyNavbar = () => {
             ) : (
               <div className='flex items-center gap-3'>
                 <button
-                  onClick={() => router.push(`/${params?.lang}/customer/login`)}
+                  onClick={() => router.push(`/${currentLang}/customer/login`)}
                   className='hidden sm:flex items-center px-4 py-2 h-9 rounded-full border border-[#0a2c24]/15 dark:border-white/15 bg-white dark:bg-transparent text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 hover:border-[#77b6a3]/30 transition-all duration-300 text-sm font-medium touch-manipulation'
                 >
                   {t('nav.login')}
                 </button>
                 <button
-                  onClick={() => router.push(`/${params?.lang}/customer/register`)}
+                  onClick={() => router.push(`/${currentLang}/customer/register`)}
                   className='flex items-center px-4 sm:px-5 py-2.5 h-10 rounded-full bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24] transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:scale-[1.02] active:scale-[0.98] touch-manipulation text-sm sm:text-base'
                 >
                   <span className='hidden sm:inline'>{t('nav.signUp')}</span>
@@ -209,12 +216,12 @@ const BooklyNavbar = () => {
                   setMobileMenuOpen(false)
                   setTimeout(() => {
                     // Check if user is already authenticated as business user
-                    if (userType === 'business' && materializeUser) {
+                    if (materializeUser || userType === 'business') {
                       // Already logged in as business, go to dashboard
-                      router.push(`/${params?.lang}/apps/bookly/dashboard`)
+                      router.push(`/${currentLang}/apps/bookly/dashboard`)
                     } else {
                       // Not business user, go to business login
-                      router.push(`/${params?.lang}/login`)
+                      router.push(`/${currentLang}/login`)
                     }
                   }, 100)
                 }}
@@ -233,7 +240,7 @@ const BooklyNavbar = () => {
                       console.log('Log In clicked')
                       setMobileMenuOpen(false)
                       setTimeout(() => {
-                        router.push(`/${params?.lang}/customer/login`)
+                        router.push(`/${currentLang}/customer/login`)
                       }, 100)
                     }}
                     className='w-full px-4 py-4 text-center border border-[#0a2c24]/15 dark:border-white/15 bg-white dark:bg-transparent text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 rounded-full transition-all duration-300 font-medium touch-manipulation text-base'
@@ -247,7 +254,7 @@ const BooklyNavbar = () => {
                       console.log('Sign Up clicked')
                       setMobileMenuOpen(false)
                       setTimeout(() => {
-                        router.push(`/${params?.lang}/customer/register`)
+                        router.push(`/${currentLang}/customer/register`)
                       }, 100)
                     }}
                     className='w-full px-4 py-4 text-center bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24] transition-all duration-300 font-medium shadow-sm hover:shadow-md transform hover:scale-[1.01] active:scale-[0.99] rounded-full touch-manipulation text-base'

@@ -19,7 +19,7 @@ interface ShiftsTimelineProps {
   viewMode: 'day' | 'week'
   selectedStaffIds: string[]
   selectedDate: Date
-  branchId?: string  // The selected branch ID
+  branchId?: string // The selected branch ID
   onEditBusinessHours: () => void
   onEditStaffShift: () => void
 }
@@ -60,34 +60,62 @@ export function ShiftsTimeline({
   // Days to show based on view mode
   const daysToShow = viewMode === 'day' ? [currentDay] : DAY_NAMES
 
-  // Calculate dynamic hours based on branch business hours
-  const { hours: HOURS, startHour, hourRange } = useMemo(() => {
-    if (!branchId || branchId === 'all') {
-      // Default to full 24 hours if no specific branch selected
-      return { hours: Array.from({ length: 24 }, (_, i) => i), startHour: 0, hourRange: 24 }
-    }
-
+  // Calculate dynamic hours based on branch business hours AND staff shifts
+  const {
+    hours: HOURS,
+    startHour,
+    hourRange
+  } = useMemo(() => {
     // Find the earliest start and latest end across all days
     let earliestStart = 24
     let latestEnd = 0
 
-    daysToShow.forEach(day => {
-      const businessHours = getBusinessHours(branchId, day)
-      if (businessHours.isOpen && businessHours.shifts.length > 0) {
-        businessHours.shifts.forEach(shift => {
-          const [startH] = shift.start.split(':').map(Number)
-          const [endH] = shift.end.split(':').map(Number)
-          earliestStart = Math.min(earliestStart, startH)
-          latestEnd = Math.max(latestEnd, endH)
-        })
-      }
+    // Check branch business hours
+    if (branchId && branchId !== 'all') {
+      daysToShow.forEach(day => {
+        const businessHours = getBusinessHours(branchId, day)
+        if (businessHours.isOpen && businessHours.shifts.length > 0) {
+          businessHours.shifts.forEach(shift => {
+            const [startH] = shift.start.split(':').map(Number)
+            const [endH] = shift.end.split(':').map(Number)
+            earliestStart = Math.min(earliestStart, startH)
+            latestEnd = Math.max(latestEnd, endH)
+          })
+        }
+      })
+    }
+
+    // Check staff shifts
+    filteredStaff.forEach(staff => {
+      daysToShow.forEach(day => {
+        const workingHours = getStaffWorkingHours(staff.id, day)
+        if (workingHours.isWorking && workingHours.shifts.length > 0) {
+          workingHours.shifts.forEach(shift => {
+            const [startH] = shift.start.split(':').map(Number)
+            const [endH, endEnd] = shift.end.split(':').map(Number)
+            earliestStart = Math.min(earliestStart, startH)
+            // If shift ends at e.g. 17:30, endH is 17. Math.ceil might be safer but existing logic uses int hours
+            // If end is 17:00, it's 17. If 17:30, it's 17.5.
+            // Let's use parsing to float to be safe for late shifts?
+            // Existing logic uses split(':').map(Number) -> first is hour.
+            // So 17:30 becomes 17. If we just use max(17), we might cut off half hour?
+            // The existing logic paddedEnd = latestEnd + 1 handles this usually.
+            // But let's look at how it was done: const [endH] = shift.end.split....
+            // Yes, it takes the hour.
+            latestEnd = Math.max(latestEnd, endH)
+          })
+        }
+      })
     })
 
-    // If no business hours found, default to 9 AM - 6 PM
+    // If no data found, default to 8 AM - 6 PM
     if (earliestStart === 24 || latestEnd === 0) {
-      earliestStart = 9
+      earliestStart = 8
       latestEnd = 18
     }
+
+    // Enforce minimum start time of 8 AM (or earlier if shifts exist)
+    earliestStart = Math.min(earliestStart, 8)
 
     // Add padding (1 hour before and after)
     const paddedStart = Math.max(0, earliestStart - 1)
@@ -99,7 +127,7 @@ export function ShiftsTimeline({
       startHour: paddedStart,
       hourRange: range
     }
-  }, [branchId, daysToShow, getBusinessHours])
+  }, [branchId, daysToShow, getBusinessHours, filteredStaff, getStaffWorkingHours])
 
   // Calculate totals for each staff member
   const staffTotals = useMemo(() => {
@@ -246,80 +274,82 @@ export function ShiftsTimeline({
             ))}
 
             {/* Business hours bars */}
-            {branchId && branchId !== 'all' && daysToShow.map((day, index) => {
-              const businessHours = getBusinessHours(branchId, day)
+            {branchId &&
+              branchId !== 'all' &&
+              daysToShow.map((day, index) => {
+                const businessHours = getBusinessHours(branchId, day)
 
-              if (!businessHours.isOpen) {
-                // Show "Closed" indicator when business is closed
-                return (
+                if (!businessHours.isOpen) {
+                  // Show "Closed" indicator when business is closed
+                  return (
+                    <Box
+                      key={`${day}-closed`}
+                      sx={{
+                        position: 'absolute',
+                        left: '0%',
+                        width: '100%',
+                        top: viewMode === 'week' ? `${(index / 7) * 100}%` : '10%',
+                        height: viewMode === 'week' ? `${100 / 7}%` : '80%',
+                        bgcolor: 'grey.700',
+                        borderRadius: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        border: '1px dashed',
+                        borderColor: 'grey.500',
+                        '&:hover': {
+                          bgcolor: 'grey.600'
+                        }
+                      }}
+                      onClick={onEditBusinessHours}
+                    >
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        fontWeight={500}
+                        sx={{
+                          fontStyle: 'italic',
+                          textTransform: 'uppercase',
+                          fontSize: '0.7rem',
+                          letterSpacing: '0.5px'
+                        }}
+                      >
+                        {viewMode === 'week' && `${day}: `}
+                        Closed
+                      </Typography>
+                    </Box>
+                  )
+                }
+
+                return businessHours.shifts.map((shift, shiftIndex) => (
                   <Box
-                    key={`${day}-closed`}
+                    key={`${day}-${shiftIndex}`}
                     sx={{
                       position: 'absolute',
-                      left: '0%',
-                      width: '100%',
+                      left: `${timeToPosition(shift.start, startHour, hourRange)}%`,
+                      width: `${timeToPosition(shift.end, startHour, hourRange) - timeToPosition(shift.start, startHour, hourRange)}%`,
                       top: viewMode === 'week' ? `${(index / 7) * 100}%` : '10%',
                       height: viewMode === 'week' ? `${100 / 7}%` : '80%',
-                      bgcolor: 'grey.700',
+                      bgcolor: 'grey.800',
                       borderRadius: 1,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      border: '1px dashed',
-                      borderColor: 'grey.500',
                       '&:hover': {
-                        bgcolor: 'grey.600'
+                        bgcolor: 'grey.700'
                       }
                     }}
                     onClick={onEditBusinessHours}
                   >
-                    <Typography
-                      variant='caption'
-                      color='text.secondary'
-                      fontWeight={500}
-                      sx={{
-                        fontStyle: 'italic',
-                        textTransform: 'uppercase',
-                        fontSize: '0.7rem',
-                        letterSpacing: '0.5px'
-                      }}
-                    >
+                    <Typography variant='caption' color='white' fontWeight={500}>
                       {viewMode === 'week' && `${day}: `}
-                      Closed
+                      {shift.start} - {shift.end}
                     </Typography>
                   </Box>
-                )
-              }
-
-              return businessHours.shifts.map((shift, shiftIndex) => (
-                <Box
-                  key={`${day}-${shiftIndex}`}
-                  sx={{
-                    position: 'absolute',
-                    left: `${timeToPosition(shift.start, startHour, hourRange)}%`,
-                    width: `${timeToPosition(shift.end, startHour, hourRange) - timeToPosition(shift.start, startHour, hourRange)}%`,
-                    top: viewMode === 'week' ? `${(index / 7) * 100}%` : '10%',
-                    height: viewMode === 'week' ? `${100 / 7}%` : '80%',
-                    bgcolor: 'grey.800',
-                    borderRadius: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    '&:hover': {
-                      bgcolor: 'grey.700'
-                    }
-                  }}
-                  onClick={onEditBusinessHours}
-                >
-                  <Typography variant='caption' color='white' fontWeight={500}>
-                    {viewMode === 'week' && `${day}: `}
-                    {shift.start} - {shift.end}
-                  </Typography>
-                </Box>
-              ))
-            })}
+                ))
+              })}
           </Box>
 
           <Box sx={{ width: 120, flexShrink: 0 }} />

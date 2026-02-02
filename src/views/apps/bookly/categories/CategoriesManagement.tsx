@@ -12,8 +12,8 @@ import TableHead from '@mui/material/TableHead'
 import TableBody from '@mui/material/TableBody'
 import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
-import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
+import { TableSkeleton } from '@/components/LoadingStates'
 import Typography from '@mui/material/Typography'
 import Avatar from '@mui/material/Avatar'
 
@@ -52,11 +52,7 @@ const CategoriesManagement = () => {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
+          <TableSkeleton rows={5} columns={3} />
         </Grid>
       </Grid>
     )

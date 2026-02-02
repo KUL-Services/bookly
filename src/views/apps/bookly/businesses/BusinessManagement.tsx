@@ -13,7 +13,7 @@ import TableBody from '@mui/material/TableBody'
 import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
 import Avatar from '@mui/material/Avatar'
-import CircularProgress from '@mui/material/CircularProgress'
+import { TableSkeleton } from '@/components/LoadingStates'
 import Alert from '@mui/material/Alert'
 import Chip from '@mui/material/Chip'
 import Typography from '@mui/material/Typography'
@@ -66,11 +66,7 @@ const BusinessManagement = () => {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
+          <TableSkeleton rows={5} columns={5} />
         </Grid>
       </Grid>
     )
@@ -80,10 +76,7 @@ const BusinessManagement = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Card>
-          <CardHeader
-            title='Businesses'
-            subheader={`Approved businesses (${businesses.length})`}
-          />
+          <CardHeader title='Businesses' subheader={`Approved businesses (${businesses.length})`} />
           <CardContent>
             {error && (
               <Alert severity='error' className='mb-4'>
@@ -113,21 +106,29 @@ const BusinessManagement = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {businesses.map((business) => (
+                    {businesses.map(business => (
                       <TableRow key={business.id} hover>
                         <TableCell>
                           <div className='flex items-center gap-3' style={{ minWidth: 200 }}>
-                            <Avatar
-                              alt={business.name}
-                              src={business.logoUrl}
-                              className='w-10 h-10'
-                            >
+                            <Avatar alt={business.name} src={business.logoUrl} className='w-10 h-10'>
                               {business.name.charAt(0).toUpperCase()}
                             </Avatar>
                             <div>
-                              <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>{business.name}</Typography>
+                              <Typography variant='subtitle2' sx={{ whiteSpace: 'nowrap' }}>
+                                {business.name}
+                              </Typography>
                               {business.description && (
-                                <Typography variant='caption' color='textSecondary' sx={{ display: 'block', maxWidth: 180, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <Typography
+                                  variant='caption'
+                                  color='textSecondary'
+                                  sx={{
+                                    display: 'block',
+                                    maxWidth: 180,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis'
+                                  }}
+                                >
                                   {business.description}
                                 </Typography>
                               )}

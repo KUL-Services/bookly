@@ -166,9 +166,9 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-fira-code), monospace;
-  font-weight: 700; /* Bold for Fira Code headings */
-  letter-spacing: -0.02em; /* Tighter tracking for headings */
+  font-family: var(--font-helvetica-world), sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .font-primary {

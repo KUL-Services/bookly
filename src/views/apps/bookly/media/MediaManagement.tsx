@@ -18,6 +18,7 @@ import CardMedia from '@mui/material/CardMedia'
 // API Imports
 import { MediaService } from '@/lib/api'
 import type { AssetFile } from '@/lib/api'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 
 const MediaManagement = () => {
   const [mediaFiles, setMediaFiles] = useState<AssetFile[]>([])
@@ -113,7 +114,7 @@ const MediaManagement = () => {
         <Grid item xs={12}>
           <Card>
             <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
+              <BrandedSpinner />
             </CardContent>
           </Card>
         </Grid>
@@ -136,12 +137,7 @@ const MediaManagement = () => {
                 startIcon={uploading ? <CircularProgress size={16} /> : <i className='ri-upload-line' />}
               >
                 {uploading ? 'Uploading...' : 'Upload File'}
-                <input
-                  type='file'
-                  hidden
-                  accept='image/*,video/*'
-                  onChange={handleFileUpload}
-                />
+                <input type='file' hidden accept='image/*,video/*' onChange={handleFileUpload} />
               </Button>
             }
           />
@@ -163,7 +159,7 @@ const MediaManagement = () => {
               </div>
             ) : (
               <Grid container spacing={3}>
-                {mediaFiles.map((media) => (
+                {mediaFiles.map(media => (
                   <Grid item xs={12} sm={6} md={4} lg={3} key={media.id}>
                     <Card className='relative'>
                       <CardMedia

@@ -15,7 +15,7 @@ import TableCell from '@mui/material/TableCell'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
 import Alert from '@mui/material/Alert'
-import CircularProgress from '@mui/material/CircularProgress'
+import { TableSkeleton } from '@/components/LoadingStates'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 
@@ -56,9 +56,7 @@ const BusinessApprovals = () => {
           name: 'TechFix Repair Center',
           email: 'info@techfix.com',
           description: 'Professional electronics and computer repair services',
-          socialLinks: [
-            { platform: 'linkedin', url: 'https://linkedin.com/company/techfix' }
-          ],
+          socialLinks: [{ platform: 'linkedin', url: 'https://linkedin.com/company/techfix' }],
           owner: {
             name: 'John Smith',
             email: 'john@techfix.com'
@@ -94,7 +92,6 @@ const BusinessApprovals = () => {
 
       // Remove from pending list
       setPendingBusinesses(prev => prev.filter(business => business.id !== businessId))
-
     } catch (err) {
       console.error('Failed to approve business:', err)
       setError('Failed to approve business')
@@ -119,7 +116,6 @@ const BusinessApprovals = () => {
 
       // Remove from pending list
       setPendingBusinesses(prev => prev.filter(business => business.id !== businessId))
-
     } catch (err) {
       console.error('Failed to reject business:', err)
       setError('Failed to reject business')
@@ -132,11 +128,7 @@ const BusinessApprovals = () => {
     return (
       <Grid container spacing={6}>
         <Grid item xs={12}>
-          <Card>
-            <CardContent className='flex justify-center items-center py-12'>
-              <CircularProgress />
-            </CardContent>
-          </Card>
+          <TableSkeleton rows={5} columns={6} />
         </Grid>
       </Grid>
     )
@@ -146,10 +138,7 @@ const BusinessApprovals = () => {
     <Grid container spacing={6}>
       <Grid item xs={12}>
         <Card>
-          <CardHeader
-            title='Pending Business Approvals'
-            subheader='Review and approve new business registrations'
-          />
+          <CardHeader title='Pending Business Approvals' subheader='Review and approve new business registrations' />
           <CardContent>
             {error && (
               <Alert severity='error' className='mb-4'>
@@ -180,7 +169,7 @@ const BusinessApprovals = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {pendingBusinesses.map((business) => (
+                  {pendingBusinesses.map(business => (
                     <TableRow key={business.id} hover>
                       <TableCell>
                         <Typography variant='subtitle2'>{business.name}</Typography>
@@ -193,9 +182,7 @@ const BusinessApprovals = () => {
                           </Typography>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {business.email || 'No business email'}
-                      </TableCell>
+                      <TableCell>{business.email || 'No business email'}</TableCell>
                       <TableCell>
                         <Typography variant='body2' className='max-w-xs'>
                           {business.description || 'No description provided'}
@@ -221,9 +208,7 @@ const BusinessApprovals = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {new Date(business.createdAt).toLocaleDateString()}
-                      </TableCell>
+                      <TableCell>{new Date(business.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell align='center'>
                         <Box className='flex gap-2 justify-center'>
                           <Button
