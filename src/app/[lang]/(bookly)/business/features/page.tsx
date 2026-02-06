@@ -211,7 +211,7 @@ export default function FeaturesPage() {
           ]}
         />
 
-        <FeaturesSection
+        {/* <FeaturesSection
           index={8}
           title='Mobile & Web'
           icon={Smartphone}
@@ -221,7 +221,7 @@ export default function FeaturesPage() {
             { name: 'Tablet & Desktop', description: 'Get the full picture on a larger screen at your front desk.' },
             { name: 'Client App', description: 'A beautifully designed app for your clients to find and book you.' }
           ]}
-        />
+        /> */}
       </div>
 
       {/* Bottom CTA */}

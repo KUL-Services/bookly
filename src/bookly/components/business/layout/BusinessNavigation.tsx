@@ -57,6 +57,11 @@ const NAV_ITEMS = {
       }
     ]
   },
+  pricing: {
+    label: 'Pricing',
+    href: '/business/pricing',
+    type: 'link'
+  },
   types: {
     label: 'Business Types',
     type: 'dropdown',
