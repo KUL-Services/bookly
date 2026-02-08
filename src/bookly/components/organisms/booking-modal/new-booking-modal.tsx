@@ -512,7 +512,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                       <div className='flex justify-between text-sm'>
                         <span className='text-gray-600 dark:text-gray-400'>{service?.name}</span>
                         <span className='font-medium text-gray-900 dark:text-white'>
-                          £{((service?.price || 0) / 100).toFixed(2)}
+                          E£{((service?.price || 0) / 100).toFixed(2)}
                         </span>
                       </div>
                       <div className='text-sm text-gray-500 dark:text-gray-400'>
@@ -524,7 +524,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                         <div className='flex justify-between'>
                           <span className='font-semibold text-gray-900 dark:text-white'>Total</span>
                           <span className='font-bold text-xl text-gray-900 dark:text-white'>
-                            £{(calculateTotal() / 100).toFixed(2)}
+                            E£{(calculateTotal() / 100).toFixed(2)}
                           </span>
                         </div>
                         <div className='text-right text-sm text-gray-500 dark:text-gray-400'>
@@ -582,7 +582,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                       </div>
                     </div>
                     <div className='font-semibold text-gray-900 dark:text-white'>
-                      £{((service?.price || 0) / 100).toFixed(2)}
+                      E£{((service?.price || 0) / 100).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -648,7 +648,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                     <div className='flex justify-between items-center mb-4'>
                       <span className='text-gray-600 dark:text-gray-400'>Total to pay</span>
                       <span className='text-4xl font-bold text-gray-900 dark:text-white'>
-                        £{(calculateTotal() / 100).toFixed(2)}
+                        E£{(calculateTotal() / 100).toFixed(2)}
                       </span>
                     </div>
                   </div>

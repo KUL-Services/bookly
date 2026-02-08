@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { ScrollReveal } from '@/bookly/components/molecules/scroll-reveal'
-import { ZWatermark } from '@/bookly/components/atoms/zerv-assets'
 import { Button } from '@/bookly/components/molecules'
 
 export default function PricingPage() {
@@ -62,7 +61,6 @@ export default function PricingPage() {
       <section className='relative pt-32 pb-20 px-4 bg-[#0a2c24] overflow-hidden text-center'>
         <div className='absolute inset-0 bg-[url("https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2929&auto=format&fit=crop")] bg-cover bg-center opacity-10 mix-blend-overlay'></div>
         <div className='absolute inset-0 bg-gradient-to-b from-[#0a2c24] via-[#0a2c24]/90 to-[#0a2c24]'></div>
-        <ZWatermark className='opacity-10 top-20 right-10' />
 
         <div className='relative z-10 max-w-4xl mx-auto'>
           <ScrollReveal animation='fade-up'>
@@ -85,7 +83,9 @@ export default function PricingPage() {
               <button
                 onClick={() => setBillingCycle('monthly')}
                 className={`px-8 py-3 rounded-full text-base font-bold transition-all duration-300 ${
-                  billingCycle === 'monthly' ? 'bg-white text-[#0a2c24]' : 'text-gray-400 hover:text-white'
+                  billingCycle === 'monthly'
+                    ? 'border border-white bg-white text-[#0a2c24]'
+                    : 'border border-white/40 bg-transparent text-gray-300 hover:bg-white hover:text-[#0a2c24]'
                 }`}
               >
                 Monthly
@@ -93,7 +93,9 @@ export default function PricingPage() {
               <button
                 onClick={() => setBillingCycle('annual')}
                 className={`px-8 py-3 rounded-full text-base font-bold transition-all duration-300 flex items-center gap-2 ${
-                  billingCycle === 'annual' ? 'bg-sage-500 text-[#0a2c24]' : 'text-gray-400 hover:text-white'
+                  billingCycle === 'annual'
+                    ? 'border border-sage-500 bg-sage-500 text-[#0a2c24]'
+                    : 'border border-sage-500/60 bg-transparent text-sage-300 hover:bg-sage-500 hover:text-[#0a2c24]'
                 }`}
               >
                 Annual{' '}
@@ -144,13 +146,13 @@ export default function PricingPage() {
                     <span
                       className={`text-5xl font-bold ${plan.highlighted ? 'text-white' : 'text-secondary-600 dark:text-white'}`}
                     >
-                      ${billingCycle === 'annual' ? plan.price.annual : plan.price.monthly}
+                      EGP {billingCycle === 'annual' ? plan.price.annual : plan.price.monthly}
                     </span>
                     <span className={`text-lg ${plan.highlighted ? 'text-gray-400' : 'text-gray-400'}`}>/mo</span>
                   </div>
                   {billingCycle === 'annual' && (
                     <div className='text-sm text-sage-500 font-medium mt-2'>
-                      Billed ${plan.price.annual * 12} yearly
+                      Billed EGP {plan.price.annual * 12} yearly
                     </div>
                   )}
                 </div>

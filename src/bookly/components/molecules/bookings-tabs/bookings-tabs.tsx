@@ -17,7 +17,7 @@ const upcomingBookings = [
     provider: 'Emma Johnson',
     date: 'Saturday, January 25, 2025',
     time: '2:00 PM (60 minutes)',
-    price: '£65',
+    price: 'E£65',
     status: 'Confirmed',
     notes: 'Please trim split ends and add light layers',
     image: `${mockData.galleryImages[1]}`
@@ -29,7 +29,7 @@ const upcomingBookings = [
     provider: 'Lisa Chen',
     date: 'Tuesday, January 28, 2025',
     time: '11:00 AM (45 minutes)',
-    price: '£35',
+    price: 'E£35',
     status: 'Confirmed',
     notes: '',
     image: `${mockData.galleryImages[2]}`
@@ -44,7 +44,7 @@ const pastBookings = [
     provider: 'Michael Brown',
     date: 'Friday, January 17, 2025',
     time: '3:00 PM (90 minutes)',
-    price: '£85',
+    price: 'E£85',
     status: 'Completed',
     notes: '',
     image: `${mockBusinesses[2].galleryImages[1]}`
@@ -56,7 +56,7 @@ const pastBookings = [
     provider: 'Sarah Wilson',
     date: 'Wednesday, January 15, 2025',
     time: '7:00 AM (60 minutes)',
-    price: '£50',
+    price: 'E£50',
     status: 'Completed',
     notes: '',
     image: `${mockBusinesses[1].galleryImages[0]}`
@@ -151,7 +151,7 @@ function BookingsTabs() {
                       variant='text'
                       size='sm'
                       buttonText={{ plainText: 'View Business' }}
-                      onClick={() => router.push(`/buisnees/${2}`)}
+                      onClick={() => router.push(`/business/${2}`)}
                       className='bg-white border border-gray-300 text-gray-800 hover:bg-gray-300'
                     />
 

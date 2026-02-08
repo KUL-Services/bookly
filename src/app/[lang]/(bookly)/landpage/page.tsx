@@ -2,30 +2,24 @@
 import { SearchInput } from '@/bookly/components/atoms/search-input/search-input.component'
 import { Button } from '@/bookly/components/molecules'
 import { ExploreSection } from '@/bookly/components/organisms'
-import AppDownloadSection from '@/bookly/components/organisms/app-download-section/app-download-section'
 import { FeaturesSection } from '@/bookly/components/organisms/features-section/features-section.component'
 import FooterSection from '@/bookly/components/organisms/footer-section/footer-section'
 import { MapPin } from 'lucide-react'
 import { RecommendedSection } from '@/bookly/components/organisms/recommended-section'
 import { BusinessGrowthBanner } from '@/bookly/components/organisms/business-growth-banner'
-import { useState, useEffect, type KeyboardEvent } from 'react'
+import { useState, type KeyboardEvent } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { InlineZervLogo } from '@/bookly/components/atoms/inline-zerv-logo'
-import { ZWatermark, ZDivider } from '@/bookly/components/atoms/zerv-assets'
+import { ZDivider } from '@/bookly/components/atoms/zerv-assets'
 import { ScrollReveal } from '@/bookly/components/molecules/scroll-reveal'
 
 function LandPage() {
   const [q, setQ] = useState('')
   const [loc, setLoc] = useState('')
-  const [mounted, setMounted] = useState(false)
   const { t } = useTranslation()
   const params = useParams<{ lang: string }>()
   const router = useRouter()
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   const handleSearchKey = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -41,26 +35,12 @@ function LandPage() {
     router.push(`/${params?.lang}/search${sp.toString() ? `?${sp.toString()}` : ''}`)
   }
   return (
-    <div className='min-h-screen bg-zerv-pattern dark:bg-[#0a2c24] font-sans'>
+    <div className='min-h-screen dark:bg-[#0a2c24] font-sans'>
       {/* Shared BooklyNavbar is rendered in the (bookly) layout */}
 
       <main className='relative overflow-hidden'>
         {/* Hero Section - Zerv Dark Brand */}
         <section className='relative pt-16 pb-32 sm:pt-20 sm:pb-40 md:pt-24 md:pb-48 lg:pt-32 lg:pb-56 overflow-hidden bg-[#0a2c24] shadow-2xl'>
-          {/* Background Texture - Z Pattern */}
-          <div className='absolute inset-0 opacity-[0.05] bg-zerv-pattern' />
-
-          {/* Large Z-Ribbon Motif - Hero Backdrop - Reduced Opacity */}
-          <div className='absolute right-[-10%] top-[-20%] h-[120%] w-[80%] pointer-events-none overflow-hidden opacity-[0.05]'>
-            <div
-              className='absolute inset-0 zerv-mask'
-              style={{
-                background: 'linear-gradient(135deg, #f7f8f9 0%, transparent 60%)',
-                transform: 'rotate(-15deg) scale(1.5)'
-              }}
-            />
-          </div>
-
           <div
             className='absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay'
             style={{
@@ -115,7 +95,7 @@ function LandPage() {
                       onClick={goSearch}
                       buttonText={{ localeKey: 'landing.search.button' }}
                       i18nTFn={t}
-                      className='w-full md:w-auto bg-[#202c39] text-white px-8 lg:px-10 py-3 md:py-4 h-12 md:h-14 text-lg font-bold rounded-xl md:rounded-full shadow-lg hover:bg-[#0a2c24] transition-all duration-300 transform hover:scale-105 active:scale-95'
+                      className='w-full md:w-auto border border-[#202c39] text-[#202c39] px-8 lg:px-10 py-3 md:py-4 h-12 md:h-14 text-lg font-bold rounded-xl md:rounded-full shadow-lg hover:bg-[#0a2c24] hover:text-white transition-all duration-300 transform hover:scale-105 active:scale-95'
                     />
                   </div>
                 </div>
@@ -166,7 +146,6 @@ function LandPage() {
 
         {/* Categories Section */}
         <ScrollReveal animation='fade-up' delay={200} className='relative bg-white dark:bg-[#202c39] py-16 sm:py-24'>
-          <ZWatermark className='opacity-[0.02]' />
           <ExploreSection />
         </ScrollReveal>
 

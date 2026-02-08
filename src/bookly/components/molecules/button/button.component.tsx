@@ -24,11 +24,11 @@ const Button = ({
     <Pressable
       className={cn(
         buttonConfig.base,
+        className,
         buttonConfig.variant[variant],
         buttonConfig.size[size],
         disabled && buttonConfig.state.disabled,
-        fullWidth && buttonConfig.state.fullWidth,
-        className
+        fullWidth && buttonConfig.state.fullWidth
       )}
       disabled={disabled}
       {...restProps}

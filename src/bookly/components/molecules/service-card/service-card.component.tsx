@@ -20,7 +20,7 @@ export const ServiceCard = ({ service, className, onClick }: ServiceCardProps) =
         footerContent={
           <div className='flex justify-between w-full'>
             <div className='flex items-center space-x-2'>
-              <span className='font-medium'>${service.price}</span>
+              <span className='font-medium'>EGP {service.price}</span>
             </div>
             <div className='text-gray-500'>{service.duration} min</div>
           </div>

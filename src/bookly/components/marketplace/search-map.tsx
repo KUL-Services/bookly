@@ -25,6 +25,9 @@ const defaultCenter = {
 
 const libraries: ('places' | 'geometry')[] = ['places', 'geometry']
 
+// ... existing code ...
+
+// Memoized Marker Component to prevent re-renders
 // Memoized Marker Component to prevent re-renders
 const MapMarker = memo(function MapMarker({
   business,
@@ -39,36 +42,31 @@ const MapMarker = memo(function MapMarker({
 }) {
   if (!business.coordinates) return null
 
+  const icon = {
+    path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+    fillColor: '#0a2c24',
+    fillOpacity: 1,
+    strokeColor: '#ffffff',
+    strokeWeight: 2,
+    scale: 2,
+    anchor: new google.maps.Point(12, 22)
+  }
+
   return (
-    <OverlayView
+    <MarkerF
       position={{ lat: business.coordinates.lat, lng: business.coordinates.lng }}
-      mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-    >
-      <div
-        className='relative flex flex-col items-center transform -translate-x-1/2 -translate-y-1/2 group'
-        onMouseEnter={() => onHover(business.id)}
-        onMouseLeave={() => onHover(null)}
-        onClick={e => {
-          e.stopPropagation()
-          onClick(business.id)
-        }}
-      >
-        {/* Pulse Effect */}
-        <div className='absolute w-full h-full bg-[#0a2c24]/30 rounded-full animate-ping' />
-
-        {/* Main Marker */}
-        <div
-          className={`relative w-14 h-14 bg-white dark:bg-[#202c39] rounded-full border-[3px] shadow-[0_8px_20px_rgba(10,44,36,0.3)] flex items-center justify-center p-3 transition-transform duration-300 hover:scale-110 cursor-pointer overflow-hidden ${
-            isActive ? 'border-[#0a2c24] ring-4 ring-[#0a2c24]/20 scale-110' : 'border-[#0a2c24]'
-          }`}
-        >
-          <img src={GreenIcon.src} alt={business.name} className='w-full h-full object-contain' />
-        </div>
-
-        {/* Ground Shadow */}
-        <div className='w-4 h-1 bg-black/20 rounded-full blur-[2px] mt-2' />
-      </div>
-    </OverlayView>
+      icon={icon}
+      onClick={e => {
+        if (e.domEvent) {
+          e.domEvent.stopPropagation()
+        }
+        onClick(business.id)
+      }}
+      onMouseOver={() => onHover(business.id)}
+      onMouseOut={() => onHover(null)}
+      zIndex={isActive ? 1000 : 1}
+      animation={isActive ? google.maps.Animation.BOUNCE : undefined}
+    />
   )
 })
 

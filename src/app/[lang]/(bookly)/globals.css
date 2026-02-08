@@ -2,29 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Zerv Brand Utilities for Masks/Cuts (Refined) */
-.zerv-mask {
-  -webkit-mask-image: url('/brand/zerv-z.svg');
-  mask-image: url('/brand/zerv-z.svg');
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-}
-
-.zerv-mask-top-right {
-  -webkit-mask-image: url('/brand/zerv-z.svg');
-  mask-image: url('/brand/zerv-z.svg');
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: top right;
-  mask-position: top right;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-}
-
 /*
  * Bookly Brand Color System
  * Primary: Dark Green #0a2c24 | Navy Blue #202c39 | Off-White #f7f8f9
@@ -310,19 +287,6 @@ samp {
   --black-700: #535f6f;
   --black-800: #3d4a5a;
   --black-900: #202c39; /* Navy Blue */
-}
-
-/* Simple brand utility classes using the variables above */
-.bg-zerv-pattern {
-  background-image: url('/brand/zerv-z.svg');
-  background-repeat: repeat;
-  background-size: 60px; /* Adjust scale of the pattern */
-  background-position: center;
-}
-.dark .bg-zerv-pattern {
-  /* Invert color for dark mode to make it visible against dark background */
-  filter: invert(1);
-  background-image: url('/brand/zerv-z.svg');
 }
 
 .brand-bg {
@@ -675,18 +639,29 @@ a,
 
 /* Primary button with enhanced states */
 .btn-primary-enhanced {
-  background-color: var(--primary-800);
-  color: white;
+  background-color: transparent;
+  color: var(--primary-800);
+  border: 1px solid var(--primary-800);
   transition:
     background-color 0.2s,
+    color 0.2s,
     transform 0.2s,
     box-shadow 0.2s;
-  box-shadow: 0 4px 14px 0 rgba(10, 44, 36, 0.25);
+  box-shadow: 0 4px 14px 0 rgba(10, 44, 36, 0.12);
 }
 .btn-primary-enhanced:hover {
-  background-color: var(--primary-700);
+  background-color: var(--primary-800);
+  color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 6px 20px 0 rgba(10, 44, 36, 0.35);
+}
+.dark .btn-primary-enhanced {
+  color: var(--sage-500);
+  border-color: var(--sage-500);
+}
+.dark .btn-primary-enhanced:hover {
+  background-color: var(--sage-500);
+  color: var(--primary-800);
 }
 .btn-primary-enhanced:active {
   transform: translateY(0) scale(0.98);

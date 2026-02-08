@@ -25,9 +25,6 @@ export default function FeaturesPage() {
     <div className='min-h-screen pb-20'>
       {/* Hero Section */}
       <div className='relative bg-[#0a2c24] pt-32 pb-24 px-4 overflow-hidden text-center'>
-        {/* Simple background decorative elements */}
-        <div className='absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#77b6a3] via-[#0a2c24] to-[#0a2c24] pointer-events-none' />
-
         <div className='relative z-10 max-w-4xl mx-auto space-y-6'>
           <h1 className='text-4xl md:text-6xl font-bold text-white tracking-tight'>
             Every feature you need in one app.
@@ -232,7 +229,7 @@ export default function FeaturesPage() {
             Join thousands of professionals who trust Zerv to run their day.
           </p>
           <Button
-            className='bg-[#77b6a3] hover:bg-[#5da891] text-white px-10 py-4 rounded-full font-bold text-lg shadow-xl transform hover:-translate-y-1 transition-all'
+            className='border border-[#77b6a3] bg-transparent text-[#77b6a3] hover:bg-[#77b6a3] hover:text-[#0a2c24] px-10 py-4 rounded-full font-bold text-lg shadow-xl transform hover:-translate-y-1 transition-all'
             buttonText={{ plainText: 'Get Started Free' }}
             onClick={() => (window.location.href = '/customer/register?type=business')}
           />

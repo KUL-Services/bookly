@@ -2,25 +2,10 @@ import React from 'react'
 import { cn } from '@/bookly/lib/utils'
 
 /**
- * A reusable background watermark of the Z logo.
- * Placing this absolutely in a relative container will add that "Zerv" brand feel.
+ * A reusable soft background accent.
+ * Placing this absolutely in a relative container adds subtle depth without logo imagery.
  */
-export const ZWatermark = ({ className }: { className?: string }) => {
-  return (
-    <div className={cn('pointer-events-none absolute inset-0 z-0 overflow-hidden', className)}>
-      <div
-        className='absolute opacity-[0.03] dark:opacity-[0.05] w-[120%] h-[120%] -top-[10%] -left-[10%]'
-        style={{
-          backgroundImage: 'url(/brand/zerv-z.svg)',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          backgroundSize: 'contain',
-          transform: 'rotate(-5deg)'
-        }}
-      />
-    </div>
-  )
-}
+export const ZWatermark = (_props: { className?: string }) => null
 
 /**
  * A section divider that mimics the "ribbon" stroke.

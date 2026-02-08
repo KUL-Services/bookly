@@ -6,9 +6,6 @@ import WhiteIconLogo from '@assets/logos/icons/White_Icon.png'
 function FooterSection() {
   return (
     <footer className='bg-[#0a2c24] text-white py-12 sm:py-16 lg:py-20 relative overflow-hidden'>
-      {/* Background Pattern */}
-      <div className='absolute inset-0 bg-zerv-pattern opacity-[0.03] pointer-events-none' />
-      <div className='absolute -left-[10%] -bottom-[20%] w-[600px] h-[600px] bg-gradient-to-tr from-[#77b6a3]/10 to-transparent rounded-full blur-3xl pointer-events-none' />
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         {/* Top section with logo and tagline */}
         <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-12 pb-8 border-b border-white/10'>

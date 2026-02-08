@@ -156,7 +156,7 @@ export function BusinessList({
                       <span>{business.servicesCount} services</span>
                       <span className='text-gray-400'>•</span>
                       <span className='text-primary-800 dark:text-sage-400 font-medium'>
-                        ${business.priceRange.min} - ${business.priceRange.max}
+                        E£{business.priceRange.min} - E£{business.priceRange.max}
                       </span>
                     </div>
 

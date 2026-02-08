@@ -208,7 +208,7 @@ function SortableServiceCard({
           <div className='text-xs text-gray-400 mt-1 font-mono'>{selected.service.duration}min</div>
         </div>
         <div className='text-xl font-bold text-gray-900 dark:text-white font-mono'>
-          £{(selected.service.price / 100).toFixed(2)}
+          E£{(selected.service.price / 100).toFixed(2)}
         </div>
       </div>
 
@@ -1064,7 +1064,7 @@ function BookingModalV2Fixed({
                               <div className='text-sm text-gray-500 dark:text-gray-400 mt-1'>{service.description}</div>
                             </div>
                             <div className='text-xl font-bold text-primary-700 dark:text-teal-400 ml-4 font-mono'>
-                              £{(service.price / 100).toFixed(2)}
+                              E£{(service.price / 100).toFixed(2)}
                             </div>
                           </div>
                           <div className='text-sm text-gray-600 dark:text-gray-300 bg-gray-100/80 dark:bg-gray-700/50 px-4 py-1.5 rounded-full inline-block font-medium font-mono'>
@@ -1084,7 +1084,7 @@ function BookingModalV2Fixed({
                     <div className='w-full sm:w-auto text-center sm:text-left'>
                       <div className='text-sm text-gray-500 dark:text-gray-400'>Total</div>
                       <div className='text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-mono'>
-                        £{(calculateTotal() / 100).toFixed(2)}
+                        E£{(calculateTotal() / 100).toFixed(2)}
                       </div>
                       <div className='text-sm text-gray-500 dark:text-gray-400 font-mono'>
                         {calculateTotalDuration()}min
@@ -1132,7 +1132,7 @@ function BookingModalV2Fixed({
                           </div>
                         </div>
                         <div className='font-bold text-lg sm:text-xl text-primary-700 dark:text-teal-400 font-mono'>
-                          £{(service.service.price / 100).toFixed(2)}
+                          E£{(service.service.price / 100).toFixed(2)}
                         </div>
                       </div>
                     </div>
@@ -1217,7 +1217,7 @@ function BookingModalV2Fixed({
                         Total to pay
                       </span>
                       <span className='text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white font-mono'>
-                        £{(calculateTotal() / 100).toFixed(2)}
+                        E£{(calculateTotal() / 100).toFixed(2)}
                       </span>
                     </div>
 

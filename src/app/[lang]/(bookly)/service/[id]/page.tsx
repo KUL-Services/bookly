@@ -160,7 +160,7 @@ export default function ServiceDetailPage() {
                 {/* Pricing and Booking */}
                 <div className='flex items-center justify-between'>
                   <div>
-                    <div className='text-3xl font-bold text-gray-900'>${service.price}</div>
+                    <div className='text-3xl font-bold text-gray-900'>E£{service.price}</div>
                     <div className='text-sm text-gray-600'>{service.duration} minutes</div>
                   </div>
                   <Button

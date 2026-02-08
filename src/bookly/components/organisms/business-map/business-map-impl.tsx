@@ -23,14 +23,14 @@ interface BranchMarker extends BusinessBranch {
 
 // Custom marker SVG path for pin icon (similar to previous implementation)
 const createMarkerIcon = (isSelected: boolean, isHovered: boolean) => {
-  const color = isSelected || isHovered ? '#0a2c24' : '#202c39'
+  const color = '#0a2c24' // Always dark green as requested
   return {
     path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
     fillColor: color,
     fillOpacity: 1,
-    strokeColor: '#f7f8f9',
+    strokeColor: '#ffffff',
     strokeWeight: 2,
-    scale: 1.5,
+    scale: 2,
     anchor: new google.maps.Point(12, 22)
   }
 }
@@ -189,7 +189,7 @@ export function BusinessMapImpl({
               key={marker.id}
               position={{ lat: marker.latitude, lng: marker.longitude }}
               icon={createMarkerIcon(isSelected, isHovered)}
-              onClick={(e) => {
+              onClick={e => {
                 if (e.domEvent) {
                   e.domEvent.stopPropagation()
                 }
@@ -224,14 +224,24 @@ export function BusinessMapImpl({
 
                     {/* Branch Address */}
                     <div className='flex items-start gap-1 text-xs text-gray-500 mb-2'>
-                      <svg className='w-4 h-4 flex-shrink-0 mt-0.5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <svg
+                        className='w-4 h-4 flex-shrink-0 mt-0.5'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
                         <path
                           strokeLinecap='round'
                           strokeLinejoin='round'
                           strokeWidth={2}
                           d='M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z'
                         />
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 11a3 3 0 11-6 0 3 3 0 016 0z' />
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth={2}
+                          d='M15 11a3 3 0 11-6 0 3 3 0 016 0z'
+                        />
                       </svg>
                       <span>{marker.address}</span>
                     </div>
@@ -240,7 +250,12 @@ export function BusinessMapImpl({
                     {marker.phone && (
                       <div className='flex items-center gap-1 text-xs text-gray-500 mb-2'>
                         <svg className='w-4 h-4 flex-shrink-0' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z' />
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth={2}
+                            d='M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z'
+                          />
                         </svg>
                         <span>{marker.phone}</span>
                       </div>
@@ -248,7 +263,7 @@ export function BusinessMapImpl({
 
                     {/* Price Range */}
                     <div className='text-sm font-semibold text-primary-800 mb-3'>
-                      ${business.priceRange.min} - ${business.priceRange.max}
+                      EGP {business.priceRange.min} - EGP {business.priceRange.max}
                     </div>
 
                     {/* Categories */}

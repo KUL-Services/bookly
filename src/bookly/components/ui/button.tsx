@@ -9,11 +9,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default:
+          'border border-primary-800 dark:border-primary-400 bg-transparent text-primary-800 dark:text-primary-400 hover:bg-primary-800 hover:text-white dark:hover:bg-primary-400 dark:hover:text-primary-900',
         destructive:
           'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline:
-          'border bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+          'border border-primary-800/70 dark:border-primary-400/70 bg-transparent text-primary-800 dark:text-primary-400 hover:bg-primary-800 hover:text-white dark:hover:bg-primary-400 dark:hover:text-primary-900',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline'
@@ -45,24 +46,8 @@ function Button({
   const Comp = asChild ? Slot : 'button'
 
   return (
-    <Comp
-      data-slot='button'
-      className={cn(buttonVariants({ variant, size, className }), 'group relative overflow-hidden')}
-      {...props}
-    >
-      {/* Z-Reveal Effect for Default Variant */}
-      {variant === 'default' && (
-        <span className='pointer-events-none absolute inset-0 z-0'>
-          <span
-            className='absolute inset-0 zerv-mask opacity-0 transition duration-300 group-hover:opacity-[0.95]'
-            style={{
-              background: 'linear-gradient(90deg, #111 0%, #777 55%, #111 100%)',
-              transform: 'translateX(-18%)'
-            }}
-          />
-        </span>
-      )}
-      <span className='relative z-10 flex items-center gap-2'>{props.children}</span>
+    <Comp data-slot='button' className={cn(className, buttonVariants({ variant, size }))} {...props}>
+      <span className='flex items-center gap-2'>{props.children}</span>
     </Comp>
   )
 }

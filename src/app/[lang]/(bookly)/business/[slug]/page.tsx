@@ -27,8 +27,7 @@ import { PageLoader } from '@/components/LoadingStates'
 import { useState, useEffect, useMemo, useCallback, useRef, TouchEvent, MouseEvent } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { BusinessService, ServicesService, BranchesService, StaffService } from '@/lib/api'
-import { GoogleMap, useJsApiLoader, OverlayView } from '@react-google-maps/api'
-import GreenIcon from '@/assets/logos/icons/Green_Icon_filled_transparent.png'
+import { GoogleMap, useJsApiLoader, OverlayView, Marker } from '@react-google-maps/api'
 import type { Business, Service as ApiService, Branch, Staff } from '@/lib/api'
 import initTranslations from '@/app/i18n/i18n'
 import { getBusinessWithDetails } from '@/mocks/businesses'
@@ -236,25 +235,25 @@ function businessDetailsPage() {
   //   {
   //     name: 'Premium Haircut',
   //     duration: '45 min',
-  //     price: '$45',
+  //     price: 'E£45',
   //     description: 'Professional haircut with wash and styling'
   //   },
   //   {
   //     name: 'Beard Trim',
   //     duration: '20 min',
-  //     price: '$25',
+  //     price: 'E£25',
   //     description: 'Precision beard trimming and shaping'
   //   },
   //   {
   //     name: 'Hair Wash & Style',
   //     duration: '30 min',
-  //     price: '$30',
+  //     price: 'E£30',
   //     description: 'Deep cleansing wash with professional styling'
   //   },
   //   {
   //     name: 'Full Service Package',
   //     duration: '90 min',
-  //     price: '$85',
+  //     price: 'E£85',
   //     description: 'Complete grooming package with haircut, beard trim, and styling'
   //   }
   // ]
@@ -390,7 +389,7 @@ function businessDetailsPage() {
             The business you're looking for doesn't exist or may have been removed.
           </p>
           <div className='mt-8'>
-            <button className='px-6 py-3 bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24] font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'>
+            <button className='px-6 py-3 border border-[#0a2c24] dark:border-[#77b6a3] bg-transparent text-[#0a2c24] dark:text-[#77b6a3] hover:bg-[#0a2c24] hover:text-white dark:hover:bg-[#77b6a3] dark:hover:text-[#0a2c24] font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200'>
               Browse Other Businesses
             </button>
           </div>
@@ -492,17 +491,6 @@ function businessDetailsPage() {
 
       {/* Main Content Area */}
       <div className='max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-12 relative z-10'>
-        {/* Brand Background Graphic */}
-        <div
-          className='absolute top-0 right-0 w-[600px] h-[600px] pointer-events-none opacity-[0.03] z-0'
-          style={{
-            backgroundImage: "url('/brand/zerv-z.svg')",
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'top right',
-            backgroundSize: 'contain',
-            transform: 'rotate(-15deg)'
-          }}
-        />
         <div className='flex flex-col lg:flex-row gap-8'>
           {/* Tabs & Content - Left Side */}
           <div className='flex-1 min-w-0'>
@@ -638,10 +626,6 @@ function businessDetailsPage() {
 
                   {/* About Section */}
                   <div className='bg-white dark:bg-[#202c39] p-8 md:p-10 rounded-[2.5rem] shadow-sm relative overflow-hidden'>
-                    <div
-                      className='absolute right-[-40px] top-[-40px] h-64 w-64 zerv-mask opacity-[0.05] dark:opacity-[0.08]'
-                      style={{ background: 'radial-gradient(circle, #0a2c24 0%, transparent 70%)' }}
-                    />
                     <h2 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-6'>About {business.name}</h2>
                     <div className='prose prose-lg text-gray-600 dark:text-gray-300 max-w-none'>
                       <p className='leading-relaxed'>{business.description}</p>
@@ -723,11 +707,18 @@ function businessDetailsPage() {
                           zoom={15}
                           options={{ disableDefaultUI: true, zoomControl: true }}
                         >
-                          <OverlayView position={mapCenter} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-                            <div className='relative w-10 h-10 bg-[#0a2c24] rounded-full border-2 border-white shadow-lg flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2'>
-                              <img src={GreenIcon.src} alt='Marker' className='w-6 h-6 object-contain' />
-                            </div>
-                          </OverlayView>
+                          <Marker
+                            position={mapCenter}
+                            icon={{
+                              path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+                              fillColor: '#0a2c24',
+                              fillOpacity: 1,
+                              strokeColor: '#ffffff',
+                              strokeWeight: 2,
+                              scale: 2,
+                              anchor: new google.maps.Point(12, 22)
+                            }}
+                          />
                         </GoogleMap>
                       ) : (
                         <div className='w-full h-full bg-gray-100 flex items-center justify-center text-gray-400'>
@@ -847,11 +838,6 @@ function businessDetailsPage() {
             <div className='sticky top-28 space-y-6'>
               {/* Mini Booking Card */}
               <div className='bg-white dark:bg-[#202c39] rounded-[3rem] p-8 shadow-[0_8px_40px_rgba(0,0,0,0.08)] overflow-hidden relative'>
-                <div
-                  className='absolute right-[-20px] top-[-20px] h-40 w-40 zerv-mask opacity-[0.05]'
-                  style={{ background: '#0a2c24' }}
-                />
-
                 <h3 className='text-2xl font-bold text-[#202c39] dark:text-white mb-2 relative z-10'>Ready to Book?</h3>
                 <p className='text-sm text-gray-500 dark:text-gray-400 mb-8 relative z-10 leading-relaxed'>
                   Select your preferred time and service to secure your appointment instantly.
@@ -901,20 +887,18 @@ function businessDetailsPage() {
                         ]
                       }}
                     >
-                      <OverlayView position={mapCenter} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-                        <div className='relative flex flex-col items-center transform -translate-x-1/2 -translate-y-1/2 group'>
-                          {/* Pulse Effect */}
-                          <div className='absolute w-full h-full bg-[#0a2c24]/30 rounded-full animate-ping' />
-
-                          {/* Main Marker */}
-                          <div className='relative w-14 h-14 bg-white dark:bg-[#202c39] rounded-full border-[3px] border-[#0a2c24] shadow-[0_8px_20px_rgba(10,44,36,0.3)] flex items-center justify-center p-3 transition-transform duration-300 hover:scale-110 cursor-pointer'>
-                            <img src={GreenIcon.src} alt='Marker' className='w-full h-full object-contain' />
-                          </div>
-
-                          {/* Ground Shadow */}
-                          <div className='w-4 h-1 bg-black/20 rounded-full blur-[2px] mt-2' />
-                        </div>
-                      </OverlayView>
+                      <Marker
+                        position={mapCenter}
+                        icon={{
+                          path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+                          fillColor: '#0a2c24',
+                          fillOpacity: 1,
+                          strokeColor: '#ffffff',
+                          strokeWeight: 2,
+                          scale: 2,
+                          anchor: new google.maps.Point(12, 22)
+                        }}
+                      />
                     </GoogleMap>
                   ) : (
                     <div className='w-full h-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center'>

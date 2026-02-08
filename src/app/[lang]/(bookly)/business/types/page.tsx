@@ -24,7 +24,6 @@ export default function BusinessTypesPage() {
     <div className='min-h-screen pb-20'>
       {/* Hero */}
       <section className='relative bg-[#0a2c24] text-white py-24 px-4 overflow-hidden'>
-        <div className='absolute inset-0 bg-[url("https://www.transparenttextures.com/patterns/cubes.png")] opacity-10' />
         <div className='relative z-10 max-w-4xl mx-auto text-center'>
           <h1 className='text-4xl md:text-6xl font-bold mb-6 font-sans'>
             Built for <span className='text-[#77b6a3]'>your industry</span>

@@ -8,13 +8,6 @@ export default function WhyZervPage() {
     <div className='bg-primary-800 min-h-screen text-white overflow-hidden'>
       {/* 1. Hero Section: The Zerv Advantage */}
       <section className='relative min-h-[90vh] flex flex-col items-center justify-center text-center px-4 pt-20 overflow-hidden'>
-        {/* Animated Background */}
-        <div className='absolute inset-0 overflow-hidden'>
-          <div className='absolute top-0 left-1/4 w-[500px] h-[500px] bg-sage-500/10 rounded-full blur-[128px] animate-pulse'></div>
-          <div className='absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-[128px] animate-pulse delay-1000'></div>
-          <div className='absolute inset-0 bg-[url("https://www.transparenttextures.com/patterns/cubes.png")] opacity-5'></div>
-        </div>
-
         <div className='relative z-10 max-w-5xl mx-auto'>
           <ScrollReveal animation='fade-up'>
             <div className='inline-block px-4 py-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 backdrop-blur-md mb-8'>
@@ -87,7 +80,6 @@ export default function WhyZervPage() {
             <div className='flex-1 relative'>
               <ScrollReveal animation='slide-in-right'>
                 <div className='relative bg-white rounded-3xl p-8 border border-gray-100 shadow-2xl'>
-                  <div className='absolute -top-10 -right-10 w-40 h-40 bg-teal-500/10 rounded-full blur-[60px]'></div>
                   <div className='flex items-center justify-between mb-8'>
                     <div>
                       <div className='text-sm text-gray-500 uppercase tracking-widest'>Campaign Performance</div>
@@ -103,14 +95,14 @@ export default function WhyZervPage() {
                     </div>
                     <div className='bg-gray-50 p-4 rounded-xl border border-gray-100'>
                       <div className='text-gray-500 text-xs mb-1'>Revenue Generated</div>
-                      <div className='text-2xl font-bold text-teal-600'>$4,250</div>
+                      <div className='text-2xl font-bold text-teal-600'>E£4,250</div>
                     </div>
                   </div>
                   <div className='h-2 bg-gray-100 rounded-full overflow-hidden'>
                     <div className='h-full w-[70%] bg-gradient-to-r from-teal-500 to-teal-300'></div>
                   </div>
                   <div className='mt-4 flex justify-between text-xs text-gray-500'>
-                    <span>Goal: $6,000</span>
+                    <span>Goal: E£6,000</span>
                     <span>70% Reached</span>
                   </div>
                 </div>
@@ -151,7 +143,7 @@ export default function WhyZervPage() {
                       <div className='flex items-center gap-2 font-bold'>
                         <i className='ri-flashlight-fill text-yellow-300'></i> 2:15 AM
                       </div>
-                      <div className='text-sm'>Deposit Received: $50</div>
+                      <div className='text-sm'>Deposit Received: E£50</div>
                     </div>
                   </div>
                 </div>
@@ -203,7 +195,7 @@ export default function WhyZervPage() {
                 <div className='flex justify-between items-end mb-12'>
                   <div>
                     <div className='text-gray-500 uppercase tracking-widest text-sm mb-2'>Net Revenue (This Month)</div>
-                    <div className='text-5xl md:text-7xl font-bold text-secondary-600'>$12,450.00</div>
+                    <div className='text-5xl md:text-7xl font-bold text-secondary-600'>E£12,450.00</div>
                   </div>
                   <div className='hidden md:block text-right'>
                     <div className='text-teal-600 font-bold text-xl'>+15.3%</div>
@@ -251,7 +243,7 @@ export default function WhyZervPage() {
               <div className='space-y-4'>
                 {[
                   { label: 'Booking Fees', zerv: '0%', other: '2-5%', manual: 'N/A' },
-                  { label: 'Marketing Suite', zerv: 'Included', other: 'Extra $$', manual: 'None' },
+                  { label: 'Marketing Suite', zerv: 'Included', other: 'Extra fees', manual: 'None' },
                   { label: 'Instant Payouts', zerv: 'Yes', other: '2-3 Days', manual: 'Cash Only' },
                   { label: 'Client App', zerv: 'No Download', other: 'Required', manual: 'None' },
                   { label: 'Support', zerv: '24/7 Priority', other: 'Email Only', manual: 'None' }
@@ -273,9 +265,6 @@ export default function WhyZervPage() {
 
       {/* 6. Final CTA */}
       <section className='py-32 bg-gradient-to-br from-primary-800 to-primary-600 relative overflow-hidden'>
-        <div className='absolute inset-0 bg-[url("https://www.transparenttextures.com/patterns/cubes.png")] opacity-10'></div>
-        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-sage-500/20 rounded-full blur-[150px] pointer-events-none'></div>
-
         <div className='max-w-4xl mx-auto px-4 text-center relative z-10'>
           <h2 className='text-5xl md:text-7xl font-bold mb-8 leading-tight'>Your empire starts here.</h2>
           <p className='text-xl text-gray-200 mb-12 max-w-2xl mx-auto'>

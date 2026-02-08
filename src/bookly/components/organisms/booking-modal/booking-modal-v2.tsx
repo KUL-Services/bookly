@@ -172,9 +172,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
     const provider = availableStaff.find(s => s.id === providerId)
     setSelectedServices(
       selectedServices.map(s =>
-        s.id === serviceId
-          ? { ...s, providerId, providerName: provider?.name || 'No preference' }
-          : s
+        s.id === serviceId ? { ...s, providerId, providerName: provider?.name || 'No preference' } : s
       )
     )
     setShowStaffSelector(null)
@@ -346,13 +344,11 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                         {selected.time} - {selected.endTime}
                       </div>
                     </div>
-                    <div className='text-xl font-bold'>£{(selected.service.price / 100).toFixed(2)}</div>
+                    <div className='text-xl font-bold'>EGP {(selected.service.price / 100).toFixed(2)}</div>
                   </div>
 
                   <div className='flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700'>
-                    <div className='text-sm text-gray-600 dark:text-gray-400'>
-                      Staff: {selected.providerName}
-                    </div>
+                    <div className='text-sm text-gray-600 dark:text-gray-400'>Staff: {selected.providerName}</div>
                     <button
                       onClick={() => setShowStaffSelector(selected.id)}
                       className='text-primary-800 hover:text-primary-900 font-medium'
@@ -408,7 +404,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                             <div className='font-semibold'>{service.name}</div>
                             <div className='text-sm text-gray-500'>{service.description}</div>
                           </div>
-                          <div className='text-lg font-bold'>£{(service.price / 100).toFixed(2)}</div>
+                          <div className='text-lg font-bold'>EGP {(service.price / 100).toFixed(2)}</div>
                         </div>
                         <div className='text-sm text-gray-500'>{service.duration}min</div>
                         <div className='mt-3 flex gap-2 flex-wrap'>
@@ -441,7 +437,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                 <div className='flex items-center justify-between mb-4'>
                   <div>
                     <div className='text-sm text-gray-500'>Total</div>
-                    <div className='text-3xl font-bold'>£{(calculateTotal() / 100).toFixed(2)}</div>
+                    <div className='text-3xl font-bold'>EGP {(calculateTotal() / 100).toFixed(2)}</div>
                     <div className='text-sm text-gray-500'>
                       {selectedServices.reduce((sum, s) => sum + s.service.duration, 0)}min
                     </div>
@@ -466,9 +462,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
             {/* Booking Summary */}
             <div className='bg-gray-50 dark:bg-gray-800 rounded-xl p-4'>
               <div className='text-center mb-4'>
-                <div className='text-3xl font-bold'>
-                  {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-                </div>
+                <div className='text-3xl font-bold'>{format(selectedDate, 'EEEE, MMMM d, yyyy')}</div>
               </div>
               {selectedServices.map(service => (
                 <div key={service.id} className='bg-white dark:bg-gray-900 rounded-lg p-4 mb-2'>
@@ -479,7 +473,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                         {service.time} - {service.endTime} • Staff: {service.providerName}
                       </div>
                     </div>
-                    <div className='font-bold'>£{(service.service.price / 100).toFixed(2)}</div>
+                    <div className='font-bold'>EGP {(service.service.price / 100).toFixed(2)}</div>
                   </div>
                 </div>
               ))}
@@ -540,7 +534,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
                 <div className='pt-4 border-t'>
                   <div className='flex justify-between items-center mb-4'>
                     <span className='text-gray-600'>Total to pay</span>
-                    <span className='text-4xl font-bold'>£{(calculateTotal() / 100).toFixed(2)}</span>
+                    <span className='text-4xl font-bold'>EGP {(calculateTotal() / 100).toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -568,9 +562,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
             <div>
               <h3 className='text-3xl font-bold mb-2'>Appointment Confirmed</h3>
               <div className='text-xl'>{format(selectedDate, 'MMM d, yyyy')}</div>
-              <div className='text-gray-600 mt-2'>
-                You're done! We'll send you a reminder before your appointment.
-              </div>
+              <div className='text-gray-600 mt-2'>You're done! We'll send you a reminder before your appointment.</div>
             </div>
 
             <button

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { AuthForm, Button } from '@/bookly/components/molecules'
+import { AuthForm } from '@/bookly/components/molecules'
 import { PageProps } from '@/bookly/types'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
@@ -28,8 +28,6 @@ export default function RegisterPage({ params }: PageProps) {
 
   return (
     <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
-      {/* Background Overlay */}
-      <div className='absolute inset-0 bg-zerv-pattern opacity-[0.06]' />
       <main className='container mx-auto px-4 sm:px-6 py-6 sm:py-8 relative z-10'>
         <div className='w-full max-w-md mx-auto'>
           {/* Mobile-optimized header */}
@@ -57,7 +55,7 @@ export default function RegisterPage({ params }: PageProps) {
                 </p>
                 <button
                   onClick={() => router.push(`/${locale}/customer/login`)}
-                  className='w-full py-3 px-4 bg-[#0a2c24] hover:bg-[#0a2c24]/90 dark:bg-[#77b6a3] dark:hover:bg-[#77b6a3]/90 text-white dark:text-[#0a2c24] font-medium rounded-lg transition-colors duration-200'
+                  className='w-full py-3 px-4 border border-[#0a2c24] dark:border-[#77b6a3] bg-transparent text-[#0a2c24] dark:text-[#77b6a3] hover:bg-[#0a2c24] hover:text-white dark:hover:bg-[#77b6a3] dark:hover:text-[#0a2c24] font-medium rounded-lg transition-colors duration-200'
                 >
                   Go to Login
                 </button>

@@ -9,7 +9,7 @@ import { BusinessAppDownload } from '@/bookly/components/organisms/business-app-
 import { MapPin } from 'lucide-react'
 import { RecommendedSection } from '@/bookly/components/organisms/recommended-section'
 import { ScrollReveal } from '@/bookly/components/molecules/scroll-reveal'
-import { ZDivider, ZWatermark } from '@/bookly/components/atoms/zerv-assets'
+import { ZDivider } from '@/bookly/components/atoms/zerv-assets'
 // import { FAQSection } from '@/bookly/components/organisms/faq-section/faq-section'
 
 export default function BusinessHomePage() {
@@ -30,10 +30,6 @@ export default function BusinessHomePage() {
           }}
         />
         <div className='absolute inset-0 bg-gradient-to-b from-primary-800 via-primary-800/90 to-primary-800' />
-
-        {/* Animated Background Orbs */}
-        <div className='absolute top-1/4 left-1/4 w-96 h-96 bg-sage-500/10 rounded-full blur-[128px] animate-pulse pointer-events-none'></div>
-        <div className='absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-[128px] animate-pulse delay-1000 pointer-events-none'></div>
 
         {/* Content */}
         <div className='relative z-10 max-w-5xl mx-auto px-4 text-center space-y-8 flex-1 flex flex-col justify-center'>
@@ -195,15 +191,12 @@ export default function BusinessHomePage() {
             <div className='flex-1 order-2 md:order-1'>
               <ScrollReveal animation='slide-in-left'>
                 <div className='relative bg-secondary-800 rounded-3xl p-8 border border-white/10 shadow-2xl overflow-hidden group'>
-                  {/* Decorative background */}
-                  <div className='absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2'></div>
-
                   {/* Chart Mockup */}
                   <div className='relative z-10 space-y-6'>
                     <div className='flex justify-between items-center mb-8'>
                       <div>
                         <div className='text-gray-400 text-sm font-medium'>Total Revenue</div>
-                        <div className='text-3xl font-bold text-white'>$42,593.00</div>
+                        <div className='text-3xl font-bold text-white'>E£42,593.00</div>
                       </div>
                       <div className='px-3 py-1 bg-teal-500/20 text-teal-300 rounded-full text-xs font-bold'>
                         +18.2%
@@ -360,7 +353,6 @@ export default function BusinessHomePage() {
       {/* <TestimonialsSection /> */}
       {/* 4. Features Bento Grid */}
       <section className='py-32 bg-white dark:bg-primary-800 relative overflow-hidden'>
-        <ZWatermark className='opacity-[0.03] top-10 right-0' />
         <div className='max-w-7xl mx-auto px-4'>
           <div className='text-center mb-20 space-y-4'>
             <ScrollReveal animation='fade-up'>
@@ -379,7 +371,6 @@ export default function BusinessHomePage() {
               animation='fade-up'
               className='md:col-span-8 bg-white dark:bg-secondary-600 rounded-3xl p-8 md:p-12 relative overflow-hidden group hover:shadow-2xl transition-all duration-500 border border-gray-100 dark:border-white/5 shadow-xl'
             >
-              <div className='absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-teal-500/20 transition-colors'></div>
               <div className='relative z-10 h-full flex flex-col justify-between'>
                 <div>
                   <div className='w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white mb-6 text-2xl shadow-lg shadow-teal-500/20'>
@@ -564,7 +555,6 @@ export default function BusinessHomePage() {
       {/* 7. Easy Migration Section (Restored & Redesigned) */}
       {false && (
         <section className='py-24 bg-secondary-700 relative overflow-hidden'>
-          <div className='absolute top-0 right-0 w-[600px] h-[600px] bg-teal-500/10 rounded-full blur-[100px] pointer-events-none'></div>
           <div className='max-w-7xl mx-auto px-4 relative z-10'>
             <div className='flex flex-col md:flex-row items-center gap-16'>
               <div className='flex-1 space-y-8'>
@@ -643,7 +633,6 @@ export default function BusinessHomePage() {
       <BusinessAppDownload />
       {/* 7. Final CTA */}
       <section className='py-24 bg-gradient-to-br from-primary-800 to-primary-600 text-center px-4 relative overflow-hidden'>
-        <div className='absolute inset-0 bg-[url("https://www.transparenttextures.com/patterns/cubes.png")] opacity-10' />
         <div className='relative z-10 max-w-3xl mx-auto space-y-8'>
           <h2 className='text-4xl md:text-5xl font-bold text-white'>Ready to level up?</h2>
           <p className='text-xl text-gray-200'>

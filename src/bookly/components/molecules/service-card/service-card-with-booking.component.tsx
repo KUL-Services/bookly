@@ -41,7 +41,7 @@ export const ServiceCardWithBooking = ({ service, branchId, className }: Service
         <BaseCard
           className='h-full flex flex-col'
           titleProps={{ plainText: service.name }}
-          descriptionProps={{ plainText: service.description }}
+          descriptionProps={{ plainText: service.description || '' }}
           contentClassName='p-4 flex-1'
           footerClassName='p-4 border-t border-gray-200 dark:border-gray-700'
           footerContent={
@@ -49,7 +49,7 @@ export const ServiceCardWithBooking = ({ service, branchId, className }: Service
               <div className='space-y-1'>
                 <div className='flex items-baseline gap-2'>
                   <span className='text-2xl font-bold text-gray-900 dark:text-white'>
-                    £{(service.price / 100).toFixed(2)}
+                    EGP {(service.price / 100).toFixed(2)}
                   </span>
                 </div>
                 <div className='text-sm text-gray-500 dark:text-gray-400'>{service.duration}min</div>

@@ -404,7 +404,7 @@ export const BranchDetailsModal = ({
                               {service.duration} {t('business.branchDetails.duration')}
                             </span>
                             <span className='font-medium text-primary-800 dark:text-sage-400 font-mono'>
-                              £{service.price}
+                              E£{service.price}
                             </span>
                           </div>
                         </div>

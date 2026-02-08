@@ -6,9 +6,6 @@ import { Button } from '@/bookly/components/molecules'
 export const BusinessAppDownload = () => {
   return (
     <section className='py-24 bg-[#0a2c24] text-white overflow-hidden relative'>
-      {/* Background decoration */}
-      <div className='absolute top-0 right-0 w-[500px] h-[500px] bg-[#77b6a3]/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none'></div>
-
       <div className='max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16 relative z-10'>
         {/* Text Content */}
         <div className='flex-1 space-y-8 '>
@@ -49,9 +46,6 @@ export const BusinessAppDownload = () => {
         <div className='flex-1 w-full max-w-xl mx-auto md:max-w-none md:ml-auto relative flex justify-center items-center'>
           <ScrollReveal animation='slide-in-right' delay={200} className='w-full'>
             <div className='relative w-full'>
-              {/* Glow Effect */}
-              <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] bg-[#77b6a3]/20 blur-[80px] rounded-full pointer-events-none'></div>
-
               {/* Laptop Body */}
               <div className='relative z-20'>
                 {/* Screen Lid */}
@@ -98,7 +92,7 @@ export const BusinessAppDownload = () => {
                         <div className='bg-[#1e293b] p-4 rounded-xl border border-white/5 hover:border-white/10 transition-colors group/stat'>
                           <div className='text-xs text-gray-400 font-medium mb-1'>Total Revenue</div>
                           <div className='text-xl font-bold text-white group-hover/stat:text-[#77b6a3] transition-colors'>
-                            $12,450
+                            E£12,450
                           </div>
                           <div className='text-[10px] text-[#77b6a3] mt-1'>+12.5% vs last week</div>
                         </div>

@@ -32,11 +32,6 @@ export const FeaturesSection = () => {
 
   return (
     <section className='py-16 sm:py-24 lg:py-32 overflow-hidden bg-[#f7f8f9] dark:bg-[#0a2c24] relative'>
-      {/* Background Decoration */}
-      <div className='absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-[0.03]'>
-        <div className='absolute right-0 top-0 transform translate-x-1/3 -translate-y-1/3 w-[800px] h-[800px] rounded-full border-[60px] border-[#0a2c24] dark:border-white' />
-      </div>
-
       <div className='container mx-auto px-4 sm:px-6 relative z-10'>
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center'>
           {/* Left Side: Content */}
@@ -80,14 +75,11 @@ export const FeaturesSection = () => {
             </div>
           </div>
 
-          {/* Right Side: Visual Mockup / Z-Pattern */}
+          {/* Right Side: Visual Mockup */}
           <div className='relative lg:h-[600px] w-full flex items-center justify-center'>
-            {/* Abstract Z Layout */}
             <div className='relative w-full max-w-md aspect-[3/4]'>
-              <div className='absolute inset-0 bg-[#0a2c24] rounded-[3rem] transform -rotate-6 shadow-2xl z-10 overflow-hidden'>
-                <div className='absolute inset-0 bg-zerv-pattern opacity-10' />
-                {/* Mock App Interface or Gradient */}
-                <div className='absolute inset-0 bg-gradient-to-br from-[#0a2c24] to-[#202c39]' />
+              <div className='absolute inset-0 bg-gradient-to-br from-[#0a2c24] to-[#202c39] rounded-[3rem] shadow-2xl z-10 overflow-hidden'>
+                <div className='absolute inset-0 bg-gradient-to-t from-black/10 to-transparent' />
                 <div className='absolute inset-0 flex items-center justify-center'>
                   <img
                     src='/brand/zerv-z.svg'
@@ -96,7 +88,6 @@ export const FeaturesSection = () => {
                   />
                 </div>
               </div>
-              <div className='absolute inset-0 bg-[#77b6a3] rounded-[3rem] transform rotate-3 scale-95 origin-bottom-right z-0 opacity-80' />
 
               {/* Floating Badge */}
               <div className='absolute -right-8 top-1/4 bg-white dark:bg-[#202c39] p-4 rounded-[2rem] shadow-xl z-20 flex items-center gap-3 animate-float'>
