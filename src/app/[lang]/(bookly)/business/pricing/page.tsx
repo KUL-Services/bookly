@@ -180,8 +180,8 @@ export default function PricingPage() {
                   variant={plan.highlighted ? 'contained' : 'outlined'}
                   className={`w-full py-6 text-lg rounded-2xl font-bold transition-all ${
                     plan.highlighted
-                      ? 'bg-sage-500 text-[#0a2c24] hover:bg-sage-400 border-none'
-                      : 'border-gray-200 dark:border-white/20 text-secondary-600 dark:text-white hover:bg-gray-50 dark:hover:bg-white/5'
+                      ? 'bg-transparent border border-sage-500 text-sage-500 hover:bg-sage-500 hover:text-[#0a2c24]'
+                      : 'border-gray-200 dark:border-white/20 bg-transparent text-secondary-600 dark:text-white hover:bg-[#0a2c24] hover:text-white dark:hover:bg-white/10'
                   }`}
                   buttonText={{ plainText: plan.cta }}
                 />

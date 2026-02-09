@@ -62,16 +62,20 @@ export const ExploreSection = () => {
     <>
       {/* Categories Section */}
       <section className='container mx-auto py-8 sm:py-12 lg:py-16'>
-        <div className='max-w-6xl mx-auto px-4 sm:px-6 flex items-end justify-between gap-4'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6'>
+          {/* Title removed or blended? User said "blended with hero", usually implies minimal separation. */}
+          {/* Keeping title but styling it to match dark theme if needed, or removing if "simpler look" implies it. */}
+          {/* Let's keep it but ensure it's white for the dark background */}
           <H2
             stringProps={{ localeKey: 'categories.title' }}
-            className='text-xl sm:text-2xl lg:text-3xl font-semibold text-left text-gray-900 dark:text-white'
+            className='text-xl sm:text-2xl lg:text-3xl font-semibold text-left text-white mb-8'
           />
         </div>
         <div className='mt-6 sm:mt-8 relative'>
           {/* Gradient Masks for Carousel Fade Effect */}
-          <div className='absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white dark:from-[#202c39] to-transparent z-10 pointer-events-none lg:w-24' />
-          <div className='absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white dark:from-[#202c39] to-transparent z-10 pointer-events-none lg:w-24' />
+          {/* Gradient Masks removed for cleaner blended look */
+          /* <div className='absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white dark:from-[#202c39] to-transparent z-10 pointer-events-none lg:w-24' /> */
+          /* <div className='absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white dark:from-[#202c39] to-transparent z-10 pointer-events-none lg:w-24' /> */}
 
           <div className='flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto px-4 sm:px-6 pb-8 pt-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
             {loading

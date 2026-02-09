@@ -473,13 +473,13 @@ function businessDetailsPage() {
             {/* Action Buttons */}
             <div className='flex gap-3 mb-6'>
               <button
-                className='p-3 rounded-full hover:bg-white/10 text-white transition-all duration-300 hover:scale-110 active:scale-95 group'
+                className='p-3 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] hover:border-[#0a2c24] transition-all duration-300 hover:scale-110 active:scale-95 group'
                 aria-label='Save'
               >
                 <Heart className='w-6 h-6' />
               </button>
               <button
-                className='p-3 rounded-full hover:bg-white/10 text-white transition-all duration-300 hover:scale-110 active:scale-95'
+                className='p-3 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] hover:border-[#0a2c24] transition-all duration-300 hover:scale-110 active:scale-95'
                 aria-label='Share'
               >
                 <Share className='w-6 h-6' />
@@ -503,11 +503,14 @@ function businessDetailsPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`
                       px-6 py-2.5 rounded-full text-base font-bold transition-all duration-300 border
+                      bg-transparent text-[#0a2c24] dark:text-white border-[#0a2c24]/30 dark:border-[#77b6a3]/40
+                      hover:bg-[#0a2c24] hover:text-white hover:border-[#0a2c24]
+                      dark:hover:bg-[#77b6a3] dark:hover:text-[#0a2c24] dark:hover:border-[#77b6a3]
                       whitespace-nowrap flex-shrink-0
                       ${
                         activeTab === tab.id
-                          ? 'bg-[#0a2c24] text-white border-[#0a2c24] shadow-lg transform -translate-y-0.5'
-                          : 'bg-white/50 dark:bg-white/5 text-[#0a2c24] dark:text-white border-transparent hover:bg-white dark:hover:bg-white/10 hover:shadow-md'
+                          ? 'bg-[#0a2c24]/5 dark:bg-[#77b6a3]/10 text-[#0a2c24] dark:text-[#77b6a3] border-[#0a2c24] dark:border-[#77b6a3] shadow-sm'
+                          : 'bg-white/75 dark:bg-white/5 text-[#0a2c24]/85 dark:text-white/80 hover:shadow-md'
                       }
                     `}
                   >
@@ -561,7 +564,7 @@ function businessDetailsPage() {
                                 <Button
                                   onClick={() => handelBookService(service)}
                                   buttonText={{ plainText: 'Book' }}
-                                  className='bg-[#0a2c24] text-white px-6 py-2.5 rounded-xl font-bold hover:bg-[#0a2c24]/90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5'
+                                  className='bg-transparent border border-[#0a2c24] dark:border-[#77b6a3] text-[#0a2c24] dark:text-[#77b6a3] px-6 py-2.5 rounded-xl font-bold hover:bg-[#0a2c24] hover:text-white dark:hover:bg-[#77b6a3] dark:hover:text-[#0a2c24] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5'
                                 />
                               </div>
                             </div>
@@ -845,7 +848,7 @@ function businessDetailsPage() {
 
                 <Button
                   onClick={() => setIsBookingModalOpen(true)}
-                  className='w-full bg-[#0a2c24] text-white font-bold py-4 rounded-full shadow-[0_10px_30px_rgba(10,44,36,0.3)] hover:shadow-[0_15px_40px_rgba(10,44,36,0.4)] hover:-translate-y-0.5 transition-all active:translate-y-0 active:shadow-md'
+                  className='w-full bg-transparent border border-[#0a2c24] dark:border-[#77b6a3] text-[#0a2c24] dark:text-[#77b6a3] font-bold py-4 rounded-full shadow-md hover:bg-[#0a2c24] hover:text-white dark:hover:bg-[#77b6a3] dark:hover:text-[#0a2c24] hover:shadow-[0_15px_40px_rgba(10,44,36,0.4)] hover:-translate-y-0.5 transition-all active:translate-y-0 active:shadow-md'
                   buttonText={{ plainText: 'Book Appointment Now' }}
                 />
 

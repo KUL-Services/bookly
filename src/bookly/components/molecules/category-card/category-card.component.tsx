@@ -28,39 +28,53 @@ const iconContainerStyles: Record<CategoryCardVariant, string> = {
 }
 
 export const CategoryCard = ({ category, onClick, className, variant = 'default' }: CategoryCardProps) => {
+  // Map slugs to specific background/text colors based on the design requirement
+  const getCardStyle = (slug: string) => {
+    switch (slug) {
+      case 'education':
+        return 'bg-[#e0f7fa] text-[#006064] hover:bg-[#b2ebf2]' // Light Cyan
+      case 'services':
+        return 'bg-[#66bb6a] text-white hover:bg-[#43a047]' // Green
+      case 'beauty':
+        return 'bg-[#f8bbd0] text-[#880e4f] hover:bg-[#f48fb1]' // Pink
+      case 'fitness':
+        return 'bg-[#ffcc80] text-[#e65100] hover:bg-[#ffb74d]' // Orange
+      case 'home':
+        return 'bg-[#d1c4e9] text-[#4a148c] hover:bg-[#b39ddb]' // Purple
+      case 'auto':
+        return 'bg-[#90caf9] text-[#0d47a1] hover:bg-[#64b5f6]' // Blue
+      case 'dental':
+        return 'bg-[#80cbc4] text-[#004d40] hover:bg-[#4db6ac]' // Teal
+      case 'legal':
+        return 'bg-[#bcaaa4] text-[#3e2723] hover:bg-[#a1887f]' // Brown
+      default:
+        // Default blended glass style if no specific color
+        return 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'
+    }
+  }
+
+  // Override variant logic to use our specific blended styles
+  // We ignore the passed 'variant' prop for color in favor of the slug-based design
+  // but keep the props interface compatible.
+
   return (
-    <div onClick={onClick} role='button' tabIndex={0} onKeyDown={e => e.key === 'Enter' && onClick?.()}>
-      <BaseCard
-        className={cn(
-          'group relative h-full overflow-hidden rounded-tl-[2rem] rounded-tr-[3.5rem] rounded-bl-[3.5rem] rounded-br-[2rem] shadow-[0_15px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_25px_50px_rgba(0,0,0,0.08)] transition-all duration-500 transform hover:-translate-y-2 cursor-pointer border border-transparent',
-          variantStyles[variant],
-          className
-        )}
-        contentClassName='flex flex-col items-center justify-center p-8 space-y-6 text-center h-full z-10 relative'
-      >
-        {/* Decorative gradient accent */}
-        <div className='absolute -top-12 -right-12 w-48 h-48 rounded-full bg-[#0a2c24]/10 dark:bg-white/10 blur-2xl opacity-[0.5] group-hover:opacity-[0.7] transition-all duration-700 ease-out transform translate-x-4 -translate-y-4 group-hover:translate-x-0 group-hover:translate-y-0 pointer-events-none' />
+    <div
+      onClick={onClick}
+      role='button'
+      tabIndex={0}
+      onKeyDown={e => e.key === 'Enter' && onClick?.()}
+      className={cn(
+        'group relative flex flex-col items-center justify-center p-6 h-48 w-full transition-all duration-300',
+        'rounded-[2.5rem] hover:-translate-y-1 cursor-pointer',
+        getCardStyle(category.slug),
+        className
+      )}
+    >
+      <div className='mb-4 p-4 rounded-full bg-white/20 backdrop-blur-sm shadow-sm group-hover:scale-110 transition-transform duration-300'>
+        <i className={cn(category.icon, 'text-3xl')} />
+      </div>
 
-        {/* Icon with animated container */}
-        <div
-          className={cn(
-            'relative p-5 rounded-[2rem] transition-all duration-500 shadow-sm group-hover:shadow-xl group-hover:scale-110',
-            iconContainerStyles[variant]
-          )}
-        >
-          <i
-            className={cn(
-              category.icon,
-              'text-3xl sm:text-4xl text-[#0a2c24] dark:text-white group-hover:text-white transition-colors duration-300'
-            )}
-          />
-        </div>
-
-        {/* Text */}
-        <h3 className='text-[#0a2c24] dark:text-gray-100 font-bold text-base sm:text-lg group-hover:text-white transition-colors duration-300 tracking-tight'>
-          {category.name}
-        </h3>
-      </BaseCard>
+      <span className='text-lg font-bold text-center leading-tight tracking-tight'>{category.name}</span>
     </div>
   )
 }

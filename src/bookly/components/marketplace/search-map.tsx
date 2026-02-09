@@ -65,7 +65,6 @@ const MapMarker = memo(function MapMarker({
       onMouseOver={() => onHover(business.id)}
       onMouseOut={() => onHover(null)}
       zIndex={isActive ? 1000 : 1}
-      animation={isActive ? google.maps.Animation.BOUNCE : undefined}
     />
   )
 })
@@ -217,7 +216,7 @@ export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
 
                   <Link
                     href={`/en/business/${activeBusiness.id}`} // Should ideally use current lang from context/params
-                    className='inline-flex items-center justify-center w-full px-4 py-2.5 bg-[#0a2c24] text-white text-sm font-bold rounded-lg hover:bg-[#0a2c24]/90 transition-all active:scale-95 shadow-md'
+                    className='inline-flex items-center justify-center w-full px-4 py-2.5 bg-transparent border border-[#0a2c24] text-[#0a2c24] text-sm font-bold rounded-lg hover:bg-[#0a2c24] hover:text-white transition-all active:scale-95 shadow-md'
                   >
                     View Profile
                   </Link>

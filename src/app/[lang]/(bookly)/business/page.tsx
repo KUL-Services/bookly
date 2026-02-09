@@ -57,7 +57,7 @@ export default function BusinessHomePage() {
           <ScrollReveal animation='fade-up' delay={400} duration={1000}>
             <div className='flex flex-col sm:flex-row items-center justify-center gap-6 pt-4'>
               <Button
-                className='bg-sage-500 hover:bg-sage-600 text-[#0a2c24] px-10 py-5 rounded-full text-lg font-bold shadow-sage-500/50 transform hover:scale-105 transition-all w-full sm:w-auto font-sans border-none'
+                className='bg-transparent border border-sage-500 text-sage-500 hover:bg-sage-500 hover:text-[#0a2c24] px-10 py-5 rounded-full text-lg font-bold shadow-sage-500/20 transform hover:scale-105 transition-all w-full sm:w-auto font-sans'
                 buttonText={{ plainText: 'Start Free Trial' }}
               />
               {/* <Button
@@ -639,7 +639,7 @@ export default function BusinessHomePage() {
             Join the community of professionals who trust Zerv to run their business.
           </p>
           <Button
-            className='bg-sage-500 hover:bg-sage-600 text-white px-10 py-5 rounded-full text-xl font-bold shadow-2xl transform hover:-translate-y-1 transition-all'
+            className='bg-transparent border border-sage-500 text-sage-500 hover:bg-sage-500 hover:text-white px-10 py-5 rounded-full text-xl font-bold shadow-2xl transform hover:-translate-y-1 transition-all'
             buttonText={{ plainText: 'Start your free trial' }}
           />
           <p className='text-sm text-white-800'>No setup fees • Cancel anytime</p>

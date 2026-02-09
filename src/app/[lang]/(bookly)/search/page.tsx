@@ -145,7 +145,7 @@ export default function SearchPage() {
           </div>
           <Button
             size='icon'
-            className='h-11 w-11 rounded-full bg-[#0a2c24] text-white hover:bg-[#0a2c24]/90 shadow-md transition-all'
+            className='h-11 w-11 rounded-full bg-transparent border border-[#0a2c24] text-[#0a2c24] hover:bg-[#0a2c24] hover:text-white shadow-md transition-all'
             onClick={() => setView(view === 'list' ? 'map' : 'list')}
           >
             {view === 'list' ? <Map className='w-5 h-5' /> : <LayoutList className='w-5 h-5' />}
@@ -158,7 +158,7 @@ export default function SearchPage() {
             variant='outline'
             size='sm'
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className='rounded-full text-xs font-semibold h-8 border-gray-200 bg-white/50 hover:bg-white transition-all mr-1 shadow-sm'
+            className='rounded-full text-xs font-semibold h-8 border-gray-200 bg-transparent hover:bg-[#0a2c24] hover:text-white hover:border-[#0a2c24] transition-all mr-1 shadow-sm'
           >
             <Filter className='w-3 h-3 mr-1.5' /> Filters
           </Button>
@@ -212,7 +212,7 @@ export default function SearchPage() {
                   variant={view === 'list' ? 'default' : 'outline'}
                   size='icon'
                   onClick={() => setView('list')}
-                  className={`w-10 h-10 rounded-full ${view === 'list' ? 'bg-[#0a2c24] text-white' : ''}`}
+                  className={`w-10 h-10 rounded-full ${view === 'list' ? 'bg-[#0a2c24] text-white' : 'bg-transparent border border-[#0a2c24] text-[#0a2c24] hover:bg-[#0a2c24] hover:text-white'}`}
                   title='List View'
                 >
                   <LayoutList className='w-4 h-4' />
@@ -221,7 +221,7 @@ export default function SearchPage() {
                   variant={view === 'map' ? 'default' : 'outline'}
                   size='icon'
                   onClick={() => setView('map')}
-                  className={`w-10 h-10 rounded-full ${view === 'map' ? 'bg-[#0a2c24] text-white' : ''}`}
+                  className={`w-10 h-10 rounded-full ${view === 'map' ? 'bg-[#0a2c24] text-white' : 'bg-transparent border border-[#0a2c24] text-[#0a2c24] hover:bg-[#0a2c24] hover:text-white'}`}
                   title='Map View'
                 >
                   <Map className='w-4 h-4' />

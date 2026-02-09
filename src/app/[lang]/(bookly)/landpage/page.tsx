@@ -52,9 +52,7 @@ function LandPage() {
             <div className='text-center space-y-6 sm:space-y-8'>
               <h1 className='text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight tracking-tight pb-2 max-w-5xl mx-auto'>
                 {t('landing.hero.titlePrefix')}
-                <span className='relative inline-block px-4'>
-                  <InlineZervLogo className='h-[2em] w-[2.25em] translate-y-[0.3em] text-white' />
-                </span>
+                <InlineZervLogo className='h-[2em] w-[2.25em] translate-y-[0.3em] mx-0 md:mx-0' />
                 {t('landing.hero.titleSuffix')}
               </h1>
 
@@ -131,22 +129,22 @@ function LandPage() {
             >
               <path
                 d='M1200 120L0 120 0 40C250 130 550 140 850 60C1000 20 1100 0 1200 0V120Z'
-                fill='#f7f8f9'
-                className='dark:fill-[#202c39]'
+                fill='#0a2c24'
+                className='dark:fill-[#0a2c24]'
               />
             </svg>
           </div>
         </section>
 
+        {/* Categories Section */}
+        <ScrollReveal animation='fade-up' delay={200} className='relative bg-[#0a2c24] pt-8 pb-16 sm:pb-24'>
+          <ExploreSection />
+        </ScrollReveal>
+
         {/* Recommended Businesses Section */}
         <ScrollReveal animation='fade-up' delay={100} className='relative bg-gray-50/50 dark:bg-[#202c39]/30'>
           <ZDivider className='absolute top-0 transform -translate-y-1/2 z-10 text-white' />
           <RecommendedSection />
-        </ScrollReveal>
-
-        {/* Categories Section */}
-        <ScrollReveal animation='fade-up' delay={200} className='relative bg-white dark:bg-[#202c39] py-16 sm:py-24'>
-          <ExploreSection />
         </ScrollReveal>
 
         {/* Business Growth Banner */}

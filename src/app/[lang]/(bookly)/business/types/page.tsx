@@ -1,13 +1,11 @@
 'use client'
 
-import { useTranslation } from 'react-i18next'
-import { Button } from '@/bookly/components/molecules'
-import { ScrollReveal } from '@/bookly/components/molecules/scroll-reveal'
 import { Scissors, Store, Sparkles, User, Dumbbell, Coffee, Palette, GraduationCap, HeartPulse } from 'lucide-react'
 
-export default function BusinessTypesPage() {
-  const { t } = useTranslation()
+import { Button } from '@/bookly/components/molecules'
+import { ScrollReveal } from '@/bookly/components/molecules/scroll-reveal'
 
+export default function BusinessTypesPage() {
   const industries = [
     { name: 'Barbers', icon: Scissors, desc: 'Manage appointments, clients, and staff with ease.' },
     { name: 'Salons', icon: Store, desc: 'All-in-one software for hair, nail, and beauty salons.' },
@@ -43,27 +41,33 @@ export default function BusinessTypesPage() {
 
       {/* Industries Grid */}
       <section id='industries-grid' className='py-20 px-4 max-w-7xl mx-auto'>
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
-          {industries.map((industry, idx) => (
-            <ScrollReveal key={idx} delay={idx * 50} animation='fade-up'>
-              <div className='bg-white dark:bg-[#202c39] p-8 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-800 hover:-translate-y-1 group cursor-pointer'>
-                <div className='w-14 h-14 bg-[#f7f8f9] dark:bg-[#15232d] rounded-xl flex items-center justify-center text-[#77b6a3] mb-6 group-hover:bg-[#77b6a3] group-hover:text-white transition-colors'>
-                  <industry.icon size={28} />
+        <div className='rounded-[2.5rem] border border-[#0a2c24]/10 bg-gradient-to-b from-[#eff6f3] via-white to-[#f7f8f9] p-6 md:p-10 shadow-[0_40px_70px_-55px_rgba(10,44,36,0.9)]'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch'>
+            {industries.map((industry, idx) => (
+              <ScrollReveal key={idx} delay={idx * 50} animation='fade-up'>
+                <div className='group h-full min-h-[330px] rounded-[2.25rem] border border-[#0a2c24]/12 bg-gradient-to-br from-[#e6f1ee] via-[#edf5f3] to-[#f9fbfa] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[#5ea893]/45 hover:bg-gradient-to-br hover:from-[#6fb5a1] hover:to-[#5ea893] hover:shadow-[0_24px_45px_-30px_rgba(10,44,36,0.85)] cursor-pointer flex flex-col'>
+                  <div className='mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-[1.75rem] border border-white/70 bg-white/65 text-[#0a2c24] shadow-[0_16px_30px_-22px_rgba(10,44,36,0.75)] transition-all duration-300 group-hover:border-white/20 group-hover:bg-white/20 group-hover:text-white group-hover:shadow-[0_18px_30px_-18px_rgba(10,44,36,0.8)]'>
+                    <industry.icon size={34} />
+                  </div>
+                  <h3 className='text-center text-[2rem] font-bold text-[#0a2c24] mb-4 leading-tight group-hover:text-white'>
+                    {industry.name}
+                  </h3>
+                  <p className='text-center text-[#0a2c24]/70 mb-8 flex-1 leading-relaxed group-hover:text-white/90'>
+                    {industry.desc}
+                  </p>
+                  <div className='mt-auto flex items-center justify-center text-sm font-bold tracking-wide text-[#0a2c24]/80 group-hover:text-white transition-colors'>
+                    Explore solution <i className='ri-arrow-right-line ml-2'></i>
+                  </div>
                 </div>
-                <h3 className='text-2xl font-bold text-[#202c39] dark:text-white mb-3'>{industry.name}</h3>
-                <p className='text-gray-500 dark:text-gray-400 mb-6'>{industry.desc}</p>
-                <div className='flex items-center text-[#77b6a3] font-bold group-hover:translate-x-2 transition-transform'>
-                  Learn more <i className='ri-arrow-right-line ml-2'></i>
-                </div>
-              </div>
-            </ScrollReveal>
-          ))}
+              </ScrollReveal>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Don't see your industry? */}
       <section className='bg-[#f7f8f9] dark:bg-[#1a2430] py-16 px-4 rounded-3xl mx-4 max-w-7xl lg:mx-auto text-center'>
-        <h2 className='text-3xl font-bold text-[#202c39] dark:text-white mb-4'>Don't see your industry?</h2>
+        <h2 className='text-3xl font-bold text-[#202c39] dark:text-white mb-4'>Don&apos;t see your industry?</h2>
         <p className='text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-8'>
           Zerv is flexible enough to work for almost any service-based business. Get in touch to see how we can help.
         </p>

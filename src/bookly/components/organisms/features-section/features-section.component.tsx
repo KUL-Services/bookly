@@ -1,5 +1,6 @@
-import { Badge } from '@/bookly/components/ui/badge'
 import { Check, Calendar, Star, Shield } from 'lucide-react'
+
+import { Badge } from '@/bookly/components/ui/badge'
 import { InlineZervLogo } from '../../atoms/inline-zerv-logo'
 
 export const FeaturesSection = () => {
@@ -57,7 +58,7 @@ export const FeaturesSection = () => {
               {features.map((feature, idx) => (
                 <div
                   key={idx}
-                  className='flex flex-col gap-4 p-6 rounded-[2rem] bg-white dark:bg-[#202c39] shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group'
+                  className='flex flex-col gap-4 p-6 rounded-[2rem] bg-transparent border border-gray-200 dark:border-white/10 hover:bg-white dark:hover:bg-[#202c39] hover:border-transparent shadow-none hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 group'
                 >
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center ${feature.color} transition-transform group-hover:scale-110`}

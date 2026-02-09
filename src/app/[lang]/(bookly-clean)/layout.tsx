@@ -1,0 +1,48 @@
+import type { Metadata } from 'next'
+import '../(bookly)/globals.css'
+import { ThemeProvider } from 'next-themes'
+import BooklyNavbar from '@/bookly/components/organisms/bookly-navbar/bookly-navbar'
+
+import { TranslationsProvider } from '@/bookly/providers'
+import type { PageProps } from '@/bookly/types'
+import { SettingsProvider } from '@/contexts/settings.context'
+import AuthInitializer from '@/components/AuthInitializer'
+import initTranslations from '@/app/i18n/i18n'
+import LanguageNavigationGuard from '@/components/LanguageNavigationGuard'
+
+export const metadata: Metadata = {
+  title: 'Bookly',
+  description: 'Bookly Booking Platform'
+}
+
+export default async function RootLayout({
+  children,
+  params
+}: Readonly<{
+  children: React.ReactNode
+  params: PageProps['params']
+}>) {
+  const { lang: locale } = await params
+  const { resources } = await initTranslations(locale || 'en', ['common'])
+
+  return (
+    <TranslationsProvider locale={locale || 'en'} resources={resources}>
+      <ThemeProvider attribute='class' enableSystem>
+        <SettingsProvider>
+          <AuthInitializer />
+          <LanguageNavigationGuard />
+          <div
+            style={{
+              background: 'var(--background)',
+              color: 'var(--foreground)'
+            }}
+            className='antialiased font-sans'
+          >
+            <BooklyNavbar />
+            {children}
+          </div>
+        </SettingsProvider>
+      </ThemeProvider>
+    </TranslationsProvider>
+  )
+}

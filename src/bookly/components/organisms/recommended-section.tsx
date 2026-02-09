@@ -44,7 +44,7 @@ export function RecommendedSection() {
         <div className='mt-8 text-center sm:hidden'>
           <Link
             href='/en/search'
-            className='block w-full bg-[#0a2c24] text-white font-semibold py-3 rounded-xl hover:bg-[#0a2c24]/90 transition-colors'
+            className='block w-full bg-transparent border border-[#0a2c24] text-[#0a2c24] font-semibold py-3 rounded-xl hover:bg-[#0a2c24] hover:text-white transition-colors'
           >
             View All Businesses
           </Link>

@@ -8,8 +8,7 @@ export function BusinessGrowthBanner() {
   return (
     <section className='py-12 sm:py-16 md:py-20 relative overflow-hidden'>
       {/* Background with Zerv Gradient */}
-      <div className='absolute inset-0 bg-gradient-to-br from-[#0a2c24] to-[#1e4a3d]'>
-      </div>
+      <div className='absolute inset-0 bg-gradient-to-br from-[#0a2c24] to-[#1e4a3d]'></div>
 
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10'>
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'>
@@ -42,7 +41,7 @@ export function BusinessGrowthBanner() {
             <div className='pt-4'>
               <Button
                 buttonText={{ plainText: 'List Your Business' }}
-                className='bg-sage-500 hover:bg-sage-400 text-white border-none py-3 px-8 text-lg font-bold rounded-xl shadow-lg shadow-sage-900/20 transform transition hover:-translate-y-1'
+                className='bg-transparent border border-sage-500 text-sage-400 hover:bg-sage-500 hover:text-white py-3 px-8 text-lg font-bold rounded-xl shadow-lg shadow-sage-900/10 transform transition hover:-translate-y-1'
               />
             </div>
           </div>
