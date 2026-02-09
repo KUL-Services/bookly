@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
   X,
   ChevronLeft,
@@ -44,6 +45,14 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 
 // --- Interfaces ---
+
+// --- Modifiers ---
+const restrictToVerticalAxis = ({ transform }: any) => {
+  return {
+    ...transform,
+    x: 0
+  }
+}
 
 interface BookingModalV2FixedProps {
   isOpen: boolean
@@ -129,6 +138,8 @@ interface SortableServiceItemProps {
   onStaffChangeClick: (id: string) => void
   showStaffPicker: boolean
   onChangeStaff: (serviceId: string, staffId: string, staffName: string) => void
+  startTime?: string // e.g. "14:00"
+  endTime?: string // e.g. "14:45"
 }
 
 function SortableServiceItem({
@@ -140,7 +151,9 @@ function SortableServiceItem({
   onRemove,
   onStaffChangeClick,
   showStaffPicker,
-  onChangeStaff
+  onChangeStaff,
+  startTime,
+  endTime
 }: SortableServiceItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
@@ -149,8 +162,7 @@ function SortableServiceItem({
     transition,
     opacity: isDragging ? 0.3 : 1,
     zIndex: isDragging ? 999 : 'auto',
-    position: 'relative' as const,
-    touchAction: 'none' // Important for dnd-kit on mobile
+    position: 'relative' as const
   }
 
   return (
@@ -168,7 +180,8 @@ function SortableServiceItem({
           <div
             {...attributes}
             {...listeners}
-            className='flex items-center justify-center pt-3 cursor-grab active:cursor-grabbing touch-none text-gray-400 dark:text-gray-500 hover:text-[#0a2c24] dark:hover:text-[#77b6a3] transition-colors self-center sm:self-start'
+            style={{ touchAction: 'none' }}
+            className='flex items-center justify-center pt-3 cursor-grab active:cursor-grabbing text-gray-400 dark:text-gray-500 hover:text-[#0a2c24] dark:hover:text-[#77b6a3] transition-colors self-center sm:self-start'
           >
             <GripVertical className='w-5 h-5' />
           </div>
@@ -178,11 +191,21 @@ function SortableServiceItem({
           <div className='flex items-start justify-between gap-3'>
             <div className='flex-1 min-w-0'>
               <h4 className='text-base font-bold text-gray-900 dark:text-white line-clamp-1'>{item.service.name}</h4>
-              <div className='flex items-center gap-3 mt-1'>
+              <div className='flex items-center gap-3 mt-1.5 flex-wrap'>
                 <span className='inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400'>
                   <Clock className='w-3.5 h-3.5' />
                   {item.service.duration} min
                 </span>
+                {startTime && endTime ? (
+                  <span className='inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-[#0a2c24]/10 dark:bg-[#77b6a3]/20 text-[#0a2c24] dark:text-[#77b6a3]'>
+                    <Calendar className='w-3 h-3' />
+                    {startTime} – {endTime}
+                  </span>
+                ) : (
+                  <span className='inline-flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 italic'>
+                    Select time below
+                  </span>
+                )}
               </div>
             </div>
             <div className='flex items-center gap-2'>
@@ -392,6 +415,39 @@ export function BookingModalV2Fixed({
     }
   }, [currency])
 
+  // Calculate start and end times for each service based on their order
+  const serviceTimeRanges = useMemo(() => {
+    if (!selectedTime) return {}
+
+    const ranges: Record<string, { startTime: string; endTime: string }> = {}
+    let currentMinutes = 0
+
+    // Parse selected time to minutes
+    const [hours, mins] = selectedTime.split(':').map(Number)
+    const startMinutesOfDay = hours * 60 + mins
+
+    selectedServices.forEach(service => {
+      const serviceStartMinutes = startMinutesOfDay + currentMinutes
+      const serviceEndMinutes = serviceStartMinutes + (service.service.duration || 0)
+
+      // Format time as HH:MM
+      const formatTime = (totalMinutes: number) => {
+        const h = Math.floor(totalMinutes / 60) % 24
+        const m = totalMinutes % 60
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+      }
+
+      ranges[service.id] = {
+        startTime: formatTime(serviceStartMinutes),
+        endTime: formatTime(serviceEndMinutes)
+      }
+
+      currentMinutes += service.service.duration || 0
+    })
+
+    return ranges
+  }, [selectedTime, selectedServices])
+
   // --- Handlers ---
 
   const handleClose = useCallback(() => {
@@ -559,12 +615,12 @@ export function BookingModalV2Fixed({
                   </span>
                 )}
               </div>
-
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
+                modifiers={[restrictToVerticalAxis]}
               >
                 <SortableContext items={selectedServices.map(s => s.id)} strategy={verticalListSortingStrategy}>
                   <div className='space-y-3'>
@@ -580,33 +636,46 @@ export function BookingModalV2Fixed({
                         onStaffChangeClick={id => setActiveStaffPickerId(activeStaffPickerId === id ? null : id)}
                         showStaffPicker={activeStaffPickerId === item.id}
                         onChangeStaff={handleChangeStaff}
+                        startTime={serviceTimeRanges[item.id]?.startTime}
+                        endTime={serviceTimeRanges[item.id]?.endTime}
                       />
                     ))}
                   </div>
                 </SortableContext>
 
-                <DragOverlay
-                  dropAnimation={{
-                    sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.5' } } })
-                  }}
-                >
-                  {activeDragId ? (
-                    <SortableServiceItem
-                      item={selectedServices.find(s => s.id === activeDragId)!}
-                      index={0}
-                      isMultiple={true}
-                      isOverlay={true}
-                      currencySymbol={currencySymbol}
-                      availableStaff={availableStaff}
-                      onRemove={() => {}}
-                      onStaffChangeClick={() => {}}
-                      showStaffPicker={false}
-                      onChangeStaff={() => {}}
-                    />
-                  ) : null}
-                </DragOverlay>
+                {/* Use Portal for DragOverlay to fix transform/zIndex issues */}
+                {typeof window !== 'undefined' &&
+                  createPortal(
+                    <DragOverlay
+                      dropAnimation={{
+                        sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.5' } } })
+                      }}
+                      zIndex={9999} // Ensure high z-index
+                    >
+                      {activeDragId ? (
+                        <div className='w-[340px] md:w-[480px]'>
+                          {' '}
+                          {/* Fixed width to prevent collapsing during portal based on modal size guess */}
+                          <SortableServiceItem
+                            item={selectedServices.find(s => s.id === activeDragId)!}
+                            index={0}
+                            isMultiple={true}
+                            isOverlay={true}
+                            currencySymbol={currencySymbol}
+                            availableStaff={availableStaff}
+                            onRemove={() => {}}
+                            onStaffChangeClick={() => {}}
+                            showStaffPicker={false}
+                            onChangeStaff={() => {}}
+                            startTime={serviceTimeRanges[activeDragId]?.startTime}
+                            endTime={serviceTimeRanges[activeDragId]?.endTime}
+                          />
+                        </div>
+                      ) : null}
+                    </DragOverlay>,
+                    document.body
+                  )}
               </DndContext>
-
               <button
                 onClick={() => setShowServicePicker(true)}
                 className='w-full py-3.5 border-2 border-dashed border-[#0a2c24]/20 dark:border-[#77b6a3]/20 rounded-2xl text-[#0a2c24] dark:text-[#77b6a3] hover:bg-[#0a2c24]/5 dark:hover:bg-[#77b6a3]/10 flex items-center justify-center gap-2 font-semibold transition-all active:scale-[0.98]'
@@ -614,7 +683,6 @@ export function BookingModalV2Fixed({
                 <Plus className='w-5 h-5' />
                 Add another service
               </button>
-
               {selectedServices.length > 1 && (
                 <p className='text-center text-xs text-gray-400'>Long press & drag to reorder services</p>
               )}
@@ -748,7 +816,7 @@ export function BookingModalV2Fixed({
                   type='text'
                   value={customerDetails.name}
                   onChange={e => setCustomerDetails({ ...customerDetails, name: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border ${errors.name ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-[#0a2c24] dark:focus:ring-[#77b6a3] transition-all`}
+                  className={`w-full px-4 py-3 text-base rounded-xl border ${errors.name ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-[#0a2c24] dark:focus:ring-[#77b6a3] transition-all`}
                   placeholder='John Doe'
                 />
                 {errors.name && <p className='text-xs text-red-500 mt-1 ml-1'>{errors.name}</p>}
@@ -762,7 +830,7 @@ export function BookingModalV2Fixed({
                   type='email'
                   value={customerDetails.email}
                   onChange={e => setCustomerDetails({ ...customerDetails, email: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border ${errors.email ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-[#0a2c24] dark:focus:ring-[#77b6a3] transition-all`}
+                  className={`w-full px-4 py-3 text-base rounded-xl border ${errors.email ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-[#0a2c24] dark:focus:ring-[#77b6a3] transition-all`}
                   placeholder='john@example.com'
                 />
                 {errors.email && <p className='text-xs text-red-500 mt-1 ml-1'>{errors.email}</p>}
@@ -776,7 +844,7 @@ export function BookingModalV2Fixed({
                   type='tel'
                   value={customerDetails.phone}
                   onChange={e => setCustomerDetails({ ...customerDetails, phone: e.target.value })}
-                  className={`w-full px-4 py-3 rounded-xl border ${errors.phone ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-[#0a2c24] dark:focus:ring-[#77b6a3] transition-all`}
+                  className={`w-full px-4 py-3 text-base rounded-xl border ${errors.phone ? 'border-red-500' : 'border-gray-200 dark:border-white/10'} bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-[#0a2c24] dark:focus:ring-[#77b6a3] transition-all`}
                   placeholder='+1 234 567 8900'
                 />
                 {errors.phone && <p className='text-xs text-red-500 mt-1 ml-1'>{errors.phone}</p>}
