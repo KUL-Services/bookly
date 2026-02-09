@@ -6,7 +6,7 @@ import { cn } from '@/bookly/lib/utils'
 import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
-import { Building2 } from 'lucide-react'
+import { Building2, ChevronRight } from 'lucide-react'
 
 interface BusinessCardProps {
   id: string
@@ -17,6 +17,8 @@ interface BusinessCardProps {
   image: string
   isPromoted?: boolean
   className?: string
+  /** Use compact horizontal layout for mobile */
+  mobile?: boolean
 }
 
 export function BusinessCard({
@@ -27,11 +29,73 @@ export function BusinessCard({
   address,
   image,
   isPromoted,
-  className
+  className,
+  mobile = false
 }: BusinessCardProps) {
   const { t } = useTranslation()
   const [imgError, setImgError] = useState(false)
 
+  // Mobile horizontal compact variant
+  if (mobile) {
+    return (
+      <Link href={`/en/business/${id}`} className='block'>
+        <div
+          className={cn(
+            'flex items-center gap-4 p-3 bg-white dark:bg-[#202c39] rounded-2xl',
+            'border border-gray-100 dark:border-white/10 hover:border-[#0a2c24] dark:hover:border-[#77b6a3]',
+            'shadow-sm hover:shadow-md transition-all duration-300 group touch-manipulation',
+            isPromoted && 'ring-1 ring-[#0a2c24] dark:ring-[#77b6a3]',
+            className
+          )}
+        >
+          {/* Compact Image */}
+          <div className='w-20 h-20 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 relative'>
+            {!imgError && image ? (
+              <BaseImage
+                src={image}
+                alt={name}
+                className='object-cover w-full h-full'
+                unoptimized={true}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className='absolute inset-0 flex items-center justify-center bg-[#0a2c24]/5 dark:bg-[#77b6a3]/10'>
+                <Building2 className='w-8 h-8 text-[#0a2c24]/20 dark:text-[#77b6a3]/20' />
+              </div>
+            )}
+            {isPromoted && (
+              <div className='absolute top-1 left-1 bg-[#0a2c24] px-1.5 py-0.5 rounded text-[8px] font-bold text-white uppercase'>
+                Ad
+              </div>
+            )}
+          </div>
+
+          {/* Details */}
+          <div className='flex-1 min-w-0'>
+            <div className='flex items-start justify-between gap-2'>
+              <h3 className='text-base font-bold text-[#0a2c24] dark:text-white line-clamp-1 group-hover:text-[#2a9d8f] dark:group-hover:text-[#77b6a3] transition-colors'>
+                {name}
+              </h3>
+              <div className='flex items-center gap-1 flex-shrink-0'>
+                <KulIcon icon='lucide:star' iconClass='w-3.5 h-3.5 text-yellow-500 fill-current' />
+                <span className='text-sm font-bold text-[#0a2c24] dark:text-white'>{rating}</span>
+              </div>
+            </div>
+            <p className='text-xs text-gray-500 dark:text-gray-400 mt-0.5'>{reviewCount} reviews</p>
+            <div className='flex items-center gap-1 mt-2 text-gray-500 dark:text-gray-400'>
+              <KulIcon icon='lucide:map-pin' iconClass='w-3 h-3 text-[#2a9d8f] flex-shrink-0' />
+              <span className='text-xs line-clamp-1'>{address}</span>
+            </div>
+          </div>
+
+          {/* Arrow */}
+          <ChevronRight className='w-5 h-5 text-gray-300 dark:text-gray-600 group-hover:text-[#0a2c24] dark:group-hover:text-[#77b6a3] transition-colors flex-shrink-0' />
+        </div>
+      </Link>
+    )
+  }
+
+  // Desktop vertical card (original)
   return (
     <Link href={`/en/business/${id}`} className='block h-full'>
       <Card

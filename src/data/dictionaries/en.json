@@ -108,7 +108,18 @@
     "categories": "Categories",
     "bookings": "Bookings",
     "management": "Management",
-    "reviews": "Reviews"
+    "reviews": "Reviews",
+    "home": "Home",
+    "explore": "Explore",
+    "appointments": "Appointments",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "profile": {
+    "editProfile": "Edit Profile",
+    "totalBookings": "Total Bookings",
+    "favorites": "Favorites",
+    "rating": "Rating"
   },
   "business": {
     "branchDetails": {
@@ -131,7 +142,9 @@
       "bookNow": "Book Now",
       "ourTeam": "Our Team",
       "noStaffTitle": "No staff members available for this branch",
-      "staffSchedule": "Staff Schedule"
+      "staffSchedule": "Staff Schedule",
+      "startingFrom": "Starting from",
+      "book": "Book"
     }
   }
 }

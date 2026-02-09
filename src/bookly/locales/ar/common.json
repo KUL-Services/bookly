@@ -8,7 +8,10 @@
     "login": "تسجيل الدخول",
     "signUp": "إنشاء حساب",
     "join": "انضم",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "home": "الرئيسية",
+    "explore": "استكشف",
+    "appointments": "مواعيدي"
   },
   "profile": {
     "title": "بوكلي",
@@ -172,7 +175,9 @@
       "servicesCount": "خدمات",
       "staffMembersCount": "أعضاء الفريق",
       "ratingLabel": "التقييم",
-      "duration": "دقيقة"
+      "duration": "دقيقة",
+      "book": "حجز",
+      "startingFrom": "يبدأ من"
     }
   },
   "auth": {

@@ -11,6 +11,8 @@ interface CategoryCardProps {
   className?: ClassValue
   onClick?: () => void
   variant?: CategoryCardVariant
+  /** Use circular mobile-optimized layout */
+  mobile?: boolean
 }
 
 const variantStyles: Record<CategoryCardVariant, string> = {
@@ -27,7 +29,26 @@ const iconContainerStyles: Record<CategoryCardVariant, string> = {
   teal: 'bg-white/60 dark:bg-teal-500/20 group-hover:bg-white/20'
 }
 
-export const CategoryCard = ({ category, onClick, className, variant = 'default' }: CategoryCardProps) => {
+// Circular mobile variant gradient backgrounds
+const mobileGradients: Record<string, string> = {
+  beauty: 'from-pink-400/80 to-rose-500/80',
+  fitness: 'from-orange-400/80 to-amber-500/80',
+  education: 'from-cyan-400/80 to-teal-500/80',
+  services: 'from-emerald-400/80 to-green-500/80',
+  home: 'from-purple-400/80 to-violet-500/80',
+  auto: 'from-blue-400/80 to-indigo-500/80',
+  dental: 'from-teal-400/80 to-cyan-500/80',
+  legal: 'from-amber-400/80 to-yellow-600/80',
+  default: 'from-[#0a2c24]/80 to-[#77b6a3]/80'
+}
+
+export const CategoryCard = ({
+  category,
+  onClick,
+  className,
+  variant = 'default',
+  mobile = false
+}: CategoryCardProps) => {
   // Map slugs to specific background/text colors based on the design requirement
   const getCardStyle = (slug: string) => {
     switch (slug) {
@@ -53,10 +74,39 @@ export const CategoryCard = ({ category, onClick, className, variant = 'default'
     }
   }
 
-  // Override variant logic to use our specific blended styles
-  // We ignore the passed 'variant' prop for color in favor of the slug-based design
-  // but keep the props interface compatible.
+  const getMobileGradient = (slug: string) => mobileGradients[slug] || mobileGradients.default
 
+  // Mobile circular variant - for grid layout on mobile
+  if (mobile) {
+    return (
+      <div
+        onClick={onClick}
+        role='button'
+        tabIndex={0}
+        onKeyDown={e => e.key === 'Enter' && onClick?.()}
+        className={cn('group flex flex-col items-center gap-2 cursor-pointer touch-manipulation', className)}
+      >
+        {/* Circular Icon Container */}
+        <div
+          className={cn(
+            'w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-full flex items-center justify-center',
+            'bg-gradient-to-br shadow-lg',
+            'transition-all duration-300 group-hover:scale-110 group-active:scale-95',
+            'border-2 border-white/20',
+            getMobileGradient(category.slug)
+          )}
+        >
+          <i className={cn(category.icon, 'text-2xl sm:text-3xl text-white drop-shadow-sm')} />
+        </div>
+        {/* Label */}
+        <span className='text-xs sm:text-sm font-semibold text-white text-center leading-tight max-w-[80px] line-clamp-2'>
+          {category.name}
+        </span>
+      </div>
+    )
+  }
+
+  // Desktop rectangular variant (original)
   return (
     <div
       onClick={onClick}
@@ -78,6 +128,3 @@ export const CategoryCard = ({ category, onClick, className, variant = 'default'
     </div>
   )
 }
-
-// className={cn("hover:scale-105 transition-transform cursor-pointer", className)}
-//         contentClassName="flex flex-col items-center justify-center p-6 space-y-2"

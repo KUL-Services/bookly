@@ -58,25 +58,39 @@ export const ExploreSection = () => {
     setCategoriesData(mockCategoriesData)
     setLoading(false)
   }, [])
+
   return (
     <>
       {/* Categories Section */}
       <section className='container mx-auto py-8 sm:py-12 lg:py-16'>
         <div className='max-w-6xl mx-auto px-4 sm:px-6'>
-          {/* Title removed or blended? User said "blended with hero", usually implies minimal separation. */}
-          {/* Keeping title but styling it to match dark theme if needed, or removing if "simpler look" implies it. */}
-          {/* Let's keep it but ensure it's white for the dark background */}
+          {/* Title - Hidden on mobile for cleaner integration with hero */}
           <H2
             stringProps={{ localeKey: 'categories.title' }}
-            className='text-xl sm:text-2xl lg:text-3xl font-semibold text-left text-white mb-8'
+            className='hidden lg:block text-xl sm:text-2xl lg:text-3xl font-semibold text-left text-white mb-8'
           />
         </div>
-        <div className='mt-6 sm:mt-8 relative'>
-          {/* Gradient Masks for Carousel Fade Effect */}
-          {/* Gradient Masks removed for cleaner blended look */
-          /* <div className='absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white dark:from-[#202c39] to-transparent z-10 pointer-events-none lg:w-24' /> */
-          /* <div className='absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white dark:from-[#202c39] to-transparent z-10 pointer-events-none lg:w-24' /> */}
 
+        {/* Mobile Grid Layout - 4 columns of circular cards */}
+        <div className='lg:hidden px-4'>
+          <div className='grid grid-cols-4 gap-4'>
+            {loading
+              ? Array.from({ length: 8 }).map((_, index) => (
+                  <div key={index} className='animate-pulse flex flex-col items-center gap-2'>
+                    <div className='w-[72px] h-[72px] bg-white/10 rounded-full' />
+                    <div className='w-12 h-3 bg-white/10 rounded' />
+                  </div>
+                ))
+              : categoriesData.map(category => (
+                  <Link key={category.id} href={`/${params?.lang}/search?category=${category.slug}`}>
+                    <CategoryCard category={category} mobile />
+                  </Link>
+                ))}
+          </div>
+        </div>
+
+        {/* Desktop Horizontal Scroll Carousel */}
+        <div className='hidden lg:block mt-6 sm:mt-8 relative'>
           <div className='flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto px-4 sm:px-6 pb-8 pt-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]'>
             {loading
               ? // Loading skeleton

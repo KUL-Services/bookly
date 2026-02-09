@@ -8,7 +8,10 @@
     "login": "Log In",
     "signUp": "Sign Up",
     "join": "Join",
-    "logout": "Logout"
+    "logout": "Logout",
+    "home": "Home",
+    "explore": "Explore",
+    "appointments": "Appointments"
   },
   "profile": {
     "title": "Bookly",
@@ -174,7 +177,9 @@
       "servicesCount": "Services",
       "staffMembersCount": "Staff Members",
       "ratingLabel": "Rating",
-      "duration": "min"
+      "duration": "min",
+      "book": "Book",
+      "startingFrom": "Starting from"
     }
   },
   "auth": {

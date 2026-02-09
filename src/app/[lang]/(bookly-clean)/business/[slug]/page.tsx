@@ -418,8 +418,34 @@ function businessDetailsPage() {
           user-select: none;
         }
       `}</style>
-      {/* Hero Cover Section */}
-      <div className='relative h-[65vh] min-h-[550px] lg:h-[50vh] w-full overflow-hidden group rounded-b-[4rem] border-b-2 border-[#0a2c24]'>
+
+      {/* Mobile Floating Action Buttons - Top */}
+      <div className='lg:hidden fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none'>
+        <button
+          onClick={() => router.back()}
+          className='pointer-events-auto p-2.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] transition-all active:scale-95 shadow-lg'
+          aria-label='Go back'
+        >
+          <ChevronLeft className='w-5 h-5' />
+        </button>
+        <div className='pointer-events-auto flex gap-2'>
+          <button
+            className='p-2.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] transition-all active:scale-95 shadow-lg'
+            aria-label='Save'
+          >
+            <Heart className='w-5 h-5' />
+          </button>
+          <button
+            className='p-2.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] transition-all active:scale-95 shadow-lg'
+            aria-label='Share'
+          >
+            <Share className='w-5 h-5' />
+          </button>
+        </div>
+      </div>
+
+      {/* Hero Cover Section - Shorter on mobile */}
+      <div className='relative h-[40vh] min-h-[300px] lg:h-[50vh] lg:min-h-[550px] w-full overflow-hidden group rounded-b-[2rem] lg:rounded-b-[4rem] border-b-2 border-[#0a2c24]'>
         <div className='absolute inset-0 bg-gray-900'>
           <img
             src={(business as any).coverImageUrl || '/images/business-placeholder.jpg'}
@@ -429,49 +455,43 @@ function businessDetailsPage() {
           <div className='absolute inset-0 bg-[#202c39]/60' />
         </div>
 
-        {/* Hero Content (Desktop) */}
+        {/* Hero Content */}
         <div className='absolute bottom-0 left-0 right-0 p-4 sm:p-6 lg:p-8 z-20'>
-          <div className='max-w-7xl mx-auto flex flex-col md:flex-row items-end gap-6'>
-            {/* Logo */}
-            <div className='relative -mb-12 md:-mb-16 flex-shrink-0'>
-              <div className='w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 rounded-2xl p-1 bg-white dark:bg-[#202c39] shadow-2xl'>
+          <div className='max-w-7xl mx-auto flex flex-col md:flex-row items-end gap-4 lg:gap-6'>
+            {/* Logo - Smaller on mobile */}
+            <div className='relative -mb-10 lg:-mb-16 flex-shrink-0'>
+              <div className='w-20 h-20 lg:w-40 lg:h-40 rounded-xl lg:rounded-2xl p-1 bg-white dark:bg-[#202c39] shadow-2xl'>
                 <img
                   src={(business as any).logoUrl || '/images/business-placeholder.jpg'}
                   alt='Logo'
-                  className='w-full h-full object-cover rounded-xl'
+                  className='w-full h-full object-cover rounded-lg lg:rounded-xl'
                 />
               </div>
             </div>
 
-            {/* Title & Info */}
-            <div className='flex-1 mb-8 md:mb-4 text-white shadow-sm'>
-              <div className='flex flex-wrap items-center gap-3 mb-3'>
-                <Badge className='bg-[#77b6a3] text-white px-3 py-1 text-xs uppercase tracking-wider font-bold rounded-lg border-none animate-pulse'>
+            {/* Title & Info - Compact on mobile */}
+            <div className='flex-1 mb-4 lg:mb-4 text-white'>
+              <div className='flex flex-wrap items-center gap-2 lg:gap-3 mb-2 lg:mb-3'>
+                <Badge className='bg-[#77b6a3] text-white px-2 lg:px-3 py-0.5 lg:py-1 text-[10px] lg:text-xs uppercase tracking-wider font-bold rounded-md lg:rounded-lg border-none'>
                   Open Now
                 </Badge>
-                <div className='flex items-center gap-1 bg-black/30 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20'>
-                  <Star className='w-4 h-4 text-yellow-400 fill-yellow-400' />
-                  <span className='text-sm font-bold'>{business.rating}</span>
-                  <span className='text-xs text-white/80'>({business.reviews?.length} verified)</span>
+                <div className='flex items-center gap-1 bg-black/30 backdrop-blur-md px-2 lg:px-3 py-0.5 lg:py-1 rounded-md lg:rounded-lg border border-white/20'>
+                  <Star className='w-3 h-3 lg:w-4 lg:h-4 text-yellow-400 fill-yellow-400' />
+                  <span className='text-xs lg:text-sm font-bold'>{business.rating}</span>
+                  <span className='hidden lg:inline text-xs text-white/80'>({business.reviews?.length} verified)</span>
                 </div>
               </div>
-              <h1 className='text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4 drop-shadow-xl'>
+              <h1 className='text-2xl sm:text-3xl lg:text-6xl font-extrabold tracking-tight text-white mb-2 lg:mb-4 drop-shadow-xl line-clamp-2'>
                 {business.name}
               </h1>
-              <div className='flex flex-wrap items-center gap-6 text-sm sm:text-base text-gray-100 font-medium'>
-                <div className='flex items-center gap-2'>
-                  <MapPin className='w-4 h-4 text-[#77b6a3]' />
-                  <span className='line-clamp-1 max-w-xs'>{(business as any).address || 'Location varies'}</span>
-                </div>
-                {business.description && <span className='hidden sm:inline text-white/40'>•</span>}
-                <span className='hidden sm:line-clamp-1 max-w-md text-gray-200'>
-                  {business.description?.substring(0, 100)}...
-                </span>
+              <div className='flex items-center gap-2 text-xs lg:text-base text-gray-100 font-medium'>
+                <MapPin className='w-3 h-3 lg:w-4 lg:h-4 text-[#77b6a3] flex-shrink-0' />
+                <span className='line-clamp-1'>{(business as any).address || 'Location varies'}</span>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className='flex gap-3 mb-6'>
+            {/* Desktop Action Buttons - Hidden on mobile */}
+            <div className='hidden lg:flex gap-3 mb-6'>
               <button
                 className='p-3 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] hover:border-[#0a2c24] transition-all duration-300 hover:scale-110 active:scale-95 group'
                 aria-label='Save'
@@ -495,8 +515,29 @@ function businessDetailsPage() {
           {/* Tabs & Content - Left Side */}
           <div className='flex-1 min-w-0'>
             {/* Refined Sticky Navigation */}
-            <div className='sticky top-[64px] z-30 mb-8 bg-[#f7f8f9]/95 dark:bg-[#0a2c24]/95 backdrop-blur-md py-4 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all duration-300 border-b border-gray-200/50 dark:border-white/5'>
-              <div className='flex items-center gap-3 overflow-x-auto no-scrollbar pb-1 sm:pb-0'>
+            <div className='sticky top-0 lg:top-[64px] z-30 mb-6 lg:mb-8 bg-[#f7f8f9]/95 dark:bg-[#0a2c24]/95 backdrop-blur-md py-3 lg:py-4 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all duration-300 border-b border-gray-200/50 dark:border-white/5'>
+              {/* Mobile: Segmented Control Style */}
+              <div className='lg:hidden flex bg-gray-100 dark:bg-white/10 rounded-xl p-1 relative'>
+                {getTabsWithTranslation(t).map((tab, index) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
+                      flex-1 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all duration-300 touch-manipulation relative z-10
+                      ${
+                        activeTab === tab.id
+                          ? 'bg-white dark:bg-[#0a2c24] text-[#0a2c24] dark:text-white shadow-md'
+                          : 'text-gray-500 dark:text-gray-400'
+                      }
+                    `}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Desktop: Original Pill Style */}
+              <div className='hidden lg:flex items-center gap-3 overflow-x-auto no-scrollbar'>
                 {getTabsWithTranslation(t).map(tab => (
                   <button
                     key={tab.id}
@@ -523,49 +564,84 @@ function businessDetailsPage() {
             {/* Tab Content */}
             <div key={activeTab} className='animate-in fade-in slide-in-from-bottom-4 duration-500'>
               {activeTab === 'services' && (
-                <div className='space-y-12'>
+                <div className='space-y-8 lg:space-y-12'>
                   {Object.entries(groupedServices).map(([category, categoryServices]) => (
-                    <div key={category} className='space-y-6'>
+                    <div key={category} className='space-y-4 lg:space-y-6'>
                       <div className='flex items-center justify-between'>
-                        <h2 className='text-2xl font-bold text-[#202c39] dark:text-white tracking-tight flex items-center gap-3'>
-                          <span className='w-2 h-8 bg-[#0a2c24] dark:bg-[#77b6a3] rounded-full'></span>
+                        <h2 className='text-lg lg:text-2xl font-bold text-[#202c39] dark:text-white tracking-tight flex items-center gap-2 lg:gap-3'>
+                          <span className='w-1.5 lg:w-2 h-6 lg:h-8 bg-[#0a2c24] dark:bg-[#77b6a3] rounded-full'></span>
                           {category}
                         </h2>
                       </div>
 
-                      <div className='grid gap-5'>
+                      <div className='grid gap-3 lg:gap-5'>
                         {categoryServices.map((service, index) => (
                           <div
                             key={service.id || index}
-                            className='group relative bg-white dark:bg-[#202c39] rounded-[2rem] p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-white/5'
+                            className='group relative bg-white dark:bg-[#202c39] rounded-2xl lg:rounded-[2rem] p-4 lg:p-6 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-white/5'
                           >
-                            <div className='relative z-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center'>
-                              <div className='flex-1 space-y-2'>
-                                <div className='flex items-center gap-3'>
-                                  <h3 className='text-lg font-bold text-gray-900 dark:text-white group-hover:text-[#0a2c24] dark:group-hover:text-[#77b6a3] transition-colors'>
+                            {/* Mobile: Compact horizontal layout */}
+                            <div className='lg:hidden'>
+                              <div className='flex flex-col gap-3'>
+                                <div className='flex justify-between items-start gap-4'>
+                                  <h3 className='text-base font-bold text-gray-900 dark:text-white line-clamp-2 leading-tight flex-1'>
                                     {service.name}
                                   </h3>
-                                  <span className='px-2.5 py-1 bg-[#0a2c24]/5 dark:bg-white/5 text-xs font-medium text-[#0a2c24] dark:text-[#77b6a3] rounded-full'>
-                                    {service.duration} min
-                                  </span>
-                                </div>
-
-                                <p className='text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-xl'>
-                                  {service.description || 'Experience our premium service.'}
-                                </p>
-                              </div>
-
-                              <div className='flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end mt-4 sm:mt-0'>
-                                <div className='text-right'>
-                                  <span className='block text-xl font-bold text-[#0a2c24] dark:text-[#77b6a3]'>
+                                  <span className='flex-shrink-0 text-lg font-bold text-[#0a2c24] dark:text-[#77b6a3] whitespace-nowrap'>
                                     {currency === 'AED' ? 'AED' : currency === 'SAR' ? 'SAR' : 'EGP'} {service.price}
                                   </span>
                                 </div>
-                                <Button
-                                  onClick={() => handelBookService(service)}
-                                  buttonText={{ plainText: 'Book' }}
-                                  className='bg-transparent border border-[#0a2c24] dark:border-[#77b6a3] text-[#0a2c24] dark:text-[#77b6a3] px-6 py-2.5 rounded-xl font-bold hover:bg-[#0a2c24] hover:text-white dark:hover:bg-[#77b6a3] dark:hover:text-[#0a2c24] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5'
-                                />
+
+                                <div className='flex items-center justify-between mt-1'>
+                                  <span className='inline-flex items-center px-2.5 py-1 rounded-md bg-gray-100 dark:bg-white/5 text-xs font-medium text-gray-600 dark:text-gray-300'>
+                                    <Clock className='w-3.5 h-3.5 mr-1.5 opacity-70' />
+                                    {service.duration} {t('business.branchDetails.duration')}
+                                  </span>{' '}
+                                  <button
+                                    onClick={() => handelBookService(service)}
+                                    className='bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] px-6 py-2 rounded-lg font-bold text-sm shadow-md active:scale-95 transition-all'
+                                  >
+                                    {t('business.branchDetails.book')}
+                                  </button>
+                                </div>
+                              </div>
+                              {service.description && (
+                                <p className='text-xs text-gray-400 dark:text-gray-500 mt-2 line-clamp-2'>
+                                  {service.description}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Desktop: Original layout */}
+                            <div className='hidden lg:block relative z-10'>
+                              <div className='flex flex-col sm:flex-row gap-6 items-start sm:items-center'>
+                                <div className='flex-1 space-y-2'>
+                                  <div className='flex items-center gap-3'>
+                                    <h3 className='text-lg font-bold text-gray-900 dark:text-white group-hover:text-[#0a2c24] dark:group-hover:text-[#77b6a3] transition-colors'>
+                                      {service.name}
+                                    </h3>
+                                    <span className='px-2.5 py-1 bg-[#0a2c24]/5 dark:bg-white/5 text-xs font-medium text-[#0a2c24] dark:text-[#77b6a3] rounded-full'>
+                                      {service.duration} {t('business.branchDetails.duration')}
+                                    </span>
+                                  </div>
+
+                                  <p className='text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-xl'>
+                                    {service.description || 'Experience our premium service.'}
+                                  </p>
+                                </div>
+
+                                <div className='flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end mt-4 sm:mt-0'>
+                                  <div className='text-right'>
+                                    <span className='block text-xl font-bold text-[#0a2c24] dark:text-[#77b6a3]'>
+                                      {currency === 'AED' ? 'AED' : currency === 'SAR' ? 'SAR' : 'EGP'} {service.price}
+                                    </span>
+                                  </div>{' '}
+                                  <Button
+                                    onClick={() => handelBookService(service)}
+                                    buttonText={{ plainText: t('business.branchDetails.book') }}
+                                    className='bg-transparent border border-[#0a2c24] dark:border-[#77b6a3] text-[#0a2c24] dark:text-[#77b6a3] px-6 py-2.5 rounded-xl font-bold hover:bg-[#0a2c24] hover:text-white dark:hover:bg-[#77b6a3] dark:hover:text-[#0a2c24] transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5'
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -937,41 +1013,73 @@ function businessDetailsPage() {
 
       {/* Login vs Guest Modal */}
       {showLoginGuestModal && (
-        <div className='fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200'>
-          <div className='bg-white dark:bg-[#202c39] rounded-[2rem] p-8 max-w-md w-full shadow-2xl scale-100 animate-in zoom-in-95 duration-200'>
+        <div className='fixed inset-0 bg-black/70 backdrop-blur-md flex items-end lg:items-center justify-center z-[100] p-0 lg:p-4 animate-in fade-in duration-200'>
+          <div className='bg-white dark:bg-[#202c39] rounded-t-[2rem] lg:rounded-[2rem] p-6 lg:p-8 w-full lg:max-w-md shadow-2xl scale-100 animate-in slide-in-from-bottom-4 lg:zoom-in-95 duration-300'>
+            {/* Drag Handle - Mobile only */}
+            <div className='lg:hidden w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-6' />
+
             <div className='text-center mb-8'>
-              <div className='w-16 h-16 bg-[#0a2c24]/10 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <UserLockIcon className='w-8 h-8 text-[#0a2c24] dark:text-white' />
+              <div className='w-20 h-20 bg-gradient-to-br from-[#0a2c24] to-[#2a9d8f] rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg'>
+                <UserLockIcon className='w-10 h-10 text-white' />
               </div>
-              <h3 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-2'>Sign in to Book</h3>
-              <p className='text-gray-600 dark:text-gray-300'>
-                Sign in to access your saved details and manage your booking easily, or continue as a guest.
+              <h3 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-3'>Sign in to Book</h3>
+              <p className='text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-xs mx-auto'>
+                Sign in to save your details and manage bookings, or continue as guest.
               </p>
             </div>
 
-            <div className='space-y-3'>
-              <Button
+            <div className='space-y-4'>
+              <button
                 onClick={handleLoginRedirect}
-                className='w-full bg-[#0a2c24] text-white py-4 rounded-xl font-bold hover:bg-[#0a2c24]/90 transition-all shadow-lg active:scale-[0.98]'
-                buttonText={{ plainText: 'Sign In' }}
-              />
-              <Button
+                className='w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[#0a2c24] to-[#1a4d3e] text-white h-14 rounded-2xl font-bold text-base hover:opacity-90 transition-all shadow-lg active:scale-[0.98] touch-manipulation'
+              >
+                <UserLockIcon className='w-5 h-5' />
+                Sign In
+              </button>
+              <button
                 onClick={handleContinueAsGuest}
-                variant='outlined'
-                className='w-full border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 py-4 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-white/5 transition-all active:scale-[0.98]'
-                buttonText={{ plainText: 'Continue as Guest' }}
-              />
+                className='w-full flex items-center justify-center gap-3 bg-gray-100 dark:bg-white/10 text-[#0a2c24] dark:text-white h-14 rounded-2xl font-bold text-base hover:bg-gray-200 dark:hover:bg-white/15 transition-all active:scale-[0.98] touch-manipulation'
+              >
+                Continue as Guest
+              </button>
             </div>
 
             <button
               onClick={() => setShowLoginGuestModal(false)}
-              className='mt-6 text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 w-full text-center hover:underline transition-all'
+              className='mt-6 text-sm font-medium text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 w-full text-center py-3 transition-all touch-manipulation'
             >
               Cancel
             </button>
           </div>
         </div>
       )}
+
+      {/* Mobile Sticky Booking Button */}
+      <div className='lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#202c39] border-t border-gray-200 dark:border-white/10 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]'>
+        <div className='flex items-center gap-3'>
+          <div className='flex-1 min-w-0'>
+            <p className='text-xs text-gray-500 dark:text-gray-400'>{t('business.branchDetails.startingFrom')}</p>
+            <p className='text-lg font-bold text-[#0a2c24] dark:text-white'>
+              {currency || 'E£'}
+              {services.length > 0 ? Math.min(...services.map(s => parseFloat((s as any).price) || 0)) : '---'}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              if (!booklyUser) {
+                setShowLoginGuestModal(true)
+              } else {
+                setIsBookingModalOpen(true)
+              }
+            }}
+            className='flex-shrink-0 bg-[#0a2c24] text-white px-8 py-3.5 rounded-xl font-bold text-base hover:bg-[#0a2c24]/90 transition-all active:scale-95 touch-manipulation shadow-lg'
+          >
+            Book Now
+          </button>
+        </div>
+        {/* iOS Safe Area */}
+        <div className='h-[env(safe-area-inset-bottom)]' />
+      </div>
 
       {/* Branch Details Modal */}
       {selectedBranch && business && (

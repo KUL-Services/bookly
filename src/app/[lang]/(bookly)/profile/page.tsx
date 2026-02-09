@@ -177,29 +177,50 @@ function ProfilePage() {
     <div className='min-h-screen w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col items-center bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
       <div className='w-full max-w-4xl space-y-6 sm:space-y-8 relative z-10'>
         {/* Profile Card */}
-        <Card className='bg-white/90 dark:bg-[#202c39]/90 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.04)] border-none rounded-[2.5rem] hover:shadow-[0_25px_60px_rgba(0,0,0,0.08)] transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
-          <CardHeader className='flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6'>
+        <Card className='bg-white/90 dark:bg-[#202c39]/90 backdrop-blur-md shadow-[0_20px_50px_rgba(0,0,0,0.04)] border-none rounded-[1.5rem] lg:rounded-[2.5rem] hover:shadow-[0_25px_60px_rgba(0,0,0,0.08)] transition-all duration-500 animate-in fade-in slide-in-from-bottom-6 duration-700 animation-delay-300'>
+          <CardHeader className='flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 p-4 lg:p-6'>
             <CardTitle>
               <div className='flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6'>
+                {/* Avatar - Smaller on mobile */}
                 <div className='relative group'>
-                  <Avatar
-                    size='5XL'
-                    imageUrl={
-                      user.profilePhotoUrl ||
-                      `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.firstName)}`
-                    }
-                    alt={user.firstName}
-                    avatarTitle={user.firstName}
-                    className='ring-4 ring-primary-100 shadow-xl group-hover:ring-primary-200 transition-all duration-300 transform group-hover:scale-105'
-                  />
-                  <div className='absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white shadow-lg animate-pulse' />
+                  <div className='lg:hidden'>
+                    <Avatar
+                      size='XL'
+                      imageUrl={
+                        user.profilePhotoUrl ||
+                        `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.firstName)}`
+                      }
+                      alt={user.firstName}
+                      avatarTitle={user.firstName}
+                      className='ring-2 ring-primary-100 shadow-lg'
+                    />
+                  </div>
+                  <div className='hidden lg:block'>
+                    <Avatar
+                      size='5XL'
+                      imageUrl={
+                        user.profilePhotoUrl ||
+                        `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(user.firstName)}`
+                      }
+                      alt={user.firstName}
+                      avatarTitle={user.firstName}
+                      className='ring-4 ring-primary-100 shadow-xl group-hover:ring-primary-200 transition-all duration-300 transform group-hover:scale-105'
+                    />
+                  </div>
+                  <div className='absolute -bottom-1 -right-1 lg:-bottom-2 lg:-right-2 w-4 h-4 lg:w-6 lg:h-6 bg-green-500 rounded-full border-2 border-white shadow-lg animate-pulse' />
                 </div>
+                {/* User Info - Compact on mobile */}
                 <div className='text-center sm:text-left'>
                   <H4
-                    className='text-gray-900 dark:text-white text-2xl sm:text-3xl font-bold tracking-tight'
+                    className='text-gray-900 dark:text-white text-xl lg:text-3xl font-bold tracking-tight'
                     stringProps={{ plainText: `${user.firstName} ${user.lastName}` }}
                   />
-                  <div className='mt-3 flex flex-col sm:flex-row sm:items-center sm:gap-6 text-gray-600 dark:text-gray-300 space-y-2 sm:space-y-0'>
+                  {/* Mobile: Single line with email only */}
+                  <div className='lg:hidden mt-1.5'>
+                    <P stringProps={{ plainText: user.email }} className='text-xs text-gray-500 dark:text-gray-400' />
+                  </div>
+                  {/* Desktop: Full contact details */}
+                  <div className='hidden lg:flex mt-3 sm:items-center sm:gap-6 text-gray-600 dark:text-gray-300'>
                     <div className='flex items-center justify-center sm:justify-start gap-2 bg-gray-50 dark:bg-white/5 px-3 py-1 rounded-full'>
                       <KulIcon icon='lucide:mail' iconClass='w-3.5 h-3.5 text-primary-600' />
                       <P stringProps={{ plainText: user.email }} className='text-sm font-medium' />
@@ -212,30 +233,56 @@ function ProfilePage() {
                 </div>
               </div>
             </CardTitle>
-            <CardAction className='absolute top-6 right-6 sm:relative sm:top-auto sm:right-auto flex items-center gap-2 ml-auto'>
+            <CardAction className='absolute top-4 right-4 sm:relative sm:top-auto sm:right-auto flex items-center gap-1 lg:gap-2 ml-auto'>
               <button
                 onClick={() => router.push(`/${params?.lang}/profile/settings`)}
-                className='p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors group'
+                className='p-1.5 lg:p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors group'
                 title={t('profile.editProfile')}
               >
-                <div className='w-10 h-10 rounded-full bg-[#0a2c24] dark:bg-[#77b6a3] flex items-center justify-center text-white dark:text-[#0a2c24] shadow-md group-hover:scale-110 transition-transform duration-300'>
-                  <KulIcon icon='lucide:pencil' iconClass='w-5 h-5' />
+                <div className='w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-[#0a2c24] dark:bg-[#77b6a3] flex items-center justify-center text-white dark:text-[#0a2c24] shadow-md group-hover:scale-110 transition-transform duration-300'>
+                  <KulIcon icon='lucide:pencil' iconClass='w-4 h-4 lg:w-5 lg:h-5' />
                 </div>
               </button>
               <button
                 onClick={handleLogout}
-                className='p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors group'
+                className='p-1.5 lg:p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors group'
                 title={t('nav.logout')}
               >
-                <div className='w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500 dark:text-red-400 shadow-md group-hover:scale-110 transition-transform duration-300 border border-red-100 dark:border-red-900/30'>
-                  <LogOut className='w-5 h-5' />
+                <div className='w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500 dark:text-red-400 shadow-md group-hover:scale-110 transition-transform duration-300 border border-red-100 dark:border-red-900/30'>
+                  <LogOut className='w-4 h-4 lg:w-5 lg:h-5' />
                 </div>
               </button>
             </CardAction>
             <CardDescription className='sr-only'>Profile overview</CardDescription>
           </CardHeader>
-          <CardContent className='pt-2 sm:pt-0'>
-            <div className='mt-8 grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6'>
+          <CardContent className='pt-2 sm:pt-0 px-4 lg:px-6'>
+            {/* Mobile: Horizontal scrolling stats bar */}
+            <div className='lg:hidden flex gap-3 overflow-x-auto py-4 -mx-4 px-4 scrollbar-hide'>
+              <button
+                onClick={() => setActiveTab('past')}
+                className='flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-[#0a2c24] text-white rounded-full shadow-md active:scale-95 transition-all touch-manipulation'
+              >
+                <span className='text-lg font-bold text-[#77b6a3]'>{user.stats.totalBookings}</span>
+                <span className='text-xs font-medium text-white/80'>{t('profile.totalBookings')}</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('favorites')}
+                className='flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#202c39] border border-gray-200 dark:border-gray-700 rounded-full shadow-sm active:scale-95 transition-all touch-manipulation'
+              >
+                <span className='text-lg font-bold text-[#0a2c24] dark:text-white'>{user.stats.favorites}</span>
+                <span className='text-xs font-medium text-gray-500 dark:text-gray-400'>{t('profile.favorites')}</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('past')}
+                className='flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#202c39] border border-gray-200 dark:border-gray-700 rounded-full shadow-sm active:scale-95 transition-all touch-manipulation'
+              >
+                <span className='text-lg font-bold text-yellow-500'>{user.stats.averageRating}</span>
+                <KulIcon icon='lucide:star' iconClass='w-3.5 h-3.5 text-yellow-500 fill-current' />
+              </button>
+            </div>
+
+            {/* Desktop: Grid stats cards (original) */}
+            <div className='hidden lg:grid mt-8 grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6'>
               {/* Total Bookings Card */}
               <div
                 onClick={() => setActiveTab('past')}

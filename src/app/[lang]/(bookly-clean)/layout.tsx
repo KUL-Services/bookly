@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import '../(bookly)/globals.css'
 import { ThemeProvider } from 'next-themes'
 import BooklyNavbar from '@/bookly/components/organisms/bookly-navbar/bookly-navbar'
+import { MobileBottomNav } from '@/bookly/components/organisms/mobile-bottom-nav'
 
 import { TranslationsProvider } from '@/bookly/providers'
 import type { PageProps } from '@/bookly/types'
@@ -38,8 +39,14 @@ export default async function RootLayout({
             }}
             className='antialiased font-sans'
           >
-            <BooklyNavbar />
-            {children}
+            {/* Desktop Navbar - hidden on mobile */}
+            <div className='hidden lg:block'>
+              <BooklyNavbar />
+            </div>
+            {/* Main Content - with bottom padding for mobile nav */}
+            <div className='pb-20 lg:pb-0'>{children}</div>
+            {/* Mobile Bottom Nav - hidden on desktop */}
+            <MobileBottomNav />
           </div>
         </SettingsProvider>
       </ThemeProvider>

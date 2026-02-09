@@ -108,7 +108,18 @@
     "categories": "الفئات",
     "bookings": "الحجوزات",
     "management": "الإدارة",
-    "reviews": "المراجعات"
+    "reviews": "المراجعات",
+    "home": "الرئيسية",
+    "explore": "استكشف",
+    "appointments": "مواعيدي",
+    "profile": "الملف الشخصي",
+    "logout": "تسجيل خروج"
+  },
+  "profile": {
+    "editProfile": "تعديل الملف الشخصي",
+    "totalBookings": "إجمالي الحجوزات",
+    "favorites": "المفضلة",
+    "rating": "التقييم"
   },
   "business": {
     "branchDetails": {
@@ -131,7 +142,9 @@
       "bookNow": "احجز الآن",
       "ourTeam": "فريقنا",
       "noStaffTitle": "لا يوجد موظفون متاحون لهذا الفرع",
-      "staffSchedule": "جدول الموظفين"
+      "staffSchedule": "جدول الموظفين",
+      "startingFrom": "يبدأ من",
+      "book": "حجز"
     }
   }
 }

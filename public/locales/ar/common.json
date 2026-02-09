@@ -1,0 +1,15 @@
+{
+    "nav": {
+        "home": "الرئيسية",
+        "explore": "استكشف",
+        "appointments": "المواعيد",
+        "profile": "الملف الشخصي"
+    },
+    "business": {
+        "branchDetails": {
+            "book": "احجز",
+            "duration": "دقيقة",
+            "startingFrom": "يبدأ من"
+        }
+    }
+}

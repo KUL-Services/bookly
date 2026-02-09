@@ -1,0 +1,15 @@
+{
+    "nav": {
+        "home": "Home",
+        "explore": "Explore",
+        "appointments": "Appointments",
+        "profile": "Profile"
+    },
+    "business": {
+        "branchDetails": {
+            "book": "Book",
+            "duration": "min",
+            "startingFrom": "Starting from"
+        }
+    }
+}

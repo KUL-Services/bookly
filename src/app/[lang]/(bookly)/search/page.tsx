@@ -230,32 +230,64 @@ export default function SearchPage() {
             </div>
 
             {view === 'list' ? (
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6'>
-                {results.map(b => (
-                  <BusinessCard
-                    key={b.id}
-                    id={b.id}
-                    name={b.name}
-                    rating={b.rating}
-                    reviewCount={124}
-                    address={b.address}
-                    image={b.coverImageUrl || b.imageUrl || ''}
-                    isPromoted={Math.random() > 0.8}
-                  />
-                ))}
-                {results.length === 0 && (
-                  <div className='col-span-full bg-white rounded-lg border border-gray-200 p-12 text-center'>
-                    <div className='mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4'>
-                      <Search className='w-6 h-6 text-gray-400' />
+              <>
+                {/* Mobile: Single column with horizontal cards */}
+                <div className='lg:hidden flex flex-col gap-3'>
+                  {results.map(b => (
+                    <BusinessCard
+                      key={b.id}
+                      id={b.id}
+                      name={b.name}
+                      rating={b.rating}
+                      reviewCount={124}
+                      address={b.address}
+                      image={b.coverImageUrl || b.imageUrl || ''}
+                      isPromoted={Math.random() > 0.8}
+                      mobile
+                    />
+                  ))}
+                  {results.length === 0 && (
+                    <div className='bg-white rounded-2xl border border-gray-200 p-8 text-center'>
+                      <div className='mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4'>
+                        <Search className='w-6 h-6 text-gray-400' />
+                      </div>
+                      <h3 className='text-lg font-bold text-gray-900 mb-1'>No results found</h3>
+                      <p className='text-sm text-gray-500'>Try adjusting your filters</p>
+                      <Button variant='link' onClick={handleResetFilters} className='mt-2 text-[#0a2c24]'>
+                        Clear all filters
+                      </Button>
                     </div>
-                    <h3 className='text-lg font-bold text-gray-900 mb-1'>No results found</h3>
-                    <p className='text-gray-500'>Try adjusting your filters or search terms</p>
-                    <Button variant='link' onClick={handleResetFilters} className='mt-2 text-[#0a2c24]'>
-                      Clear all filters
-                    </Button>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+
+                {/* Desktop: Grid with vertical cards */}
+                <div className='hidden lg:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6'>
+                  {results.map(b => (
+                    <BusinessCard
+                      key={b.id}
+                      id={b.id}
+                      name={b.name}
+                      rating={b.rating}
+                      reviewCount={124}
+                      address={b.address}
+                      image={b.coverImageUrl || b.imageUrl || ''}
+                      isPromoted={Math.random() > 0.8}
+                    />
+                  ))}
+                  {results.length === 0 && (
+                    <div className='col-span-full bg-white rounded-lg border border-gray-200 p-12 text-center'>
+                      <div className='mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4'>
+                        <Search className='w-6 h-6 text-gray-400' />
+                      </div>
+                      <h3 className='text-lg font-bold text-gray-900 mb-1'>No results found</h3>
+                      <p className='text-gray-500'>Try adjusting your filters or search terms</p>
+                      <Button variant='link' onClick={handleResetFilters} className='mt-2 text-[#0a2c24]'>
+                        Clear all filters
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
               <div className='h-[600px] rounded-lg overflow-hidden border border-gray-200'>
                 <SearchMap businesses={results} />
