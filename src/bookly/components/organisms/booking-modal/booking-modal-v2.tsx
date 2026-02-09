@@ -237,7 +237,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
   if (!isOpen) return null
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4' onClick={onClose}>
+    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60] p-4' onClick={onClose}>
       <div
         className='bg-white dark:bg-gray-900 rounded-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto'
         onClick={e => e.stopPropagation()}
@@ -393,7 +393,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
 
             {/* Service Selector Modal */}
             {showServiceSelector && (
-              <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+              <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4'>
                 <div className='bg-white dark:bg-gray-900 rounded-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6'>
                   <h3 className='text-xl font-bold mb-4'>Select Service</h3>
                   <div className='space-y-3'>

@@ -767,7 +767,7 @@ export function BookingModalV2Fixed({
         )}
 
         {step === 'details' && (
-          <div className='p-5 space-y-5 pb-24'>
+          <div className='p-5 space-y-5'>
             {/* Summary Card */}
             <div className='p-4 bg-[#0a2c24]/5 dark:bg-[#77b6a3]/10 rounded-2xl border border-[#0a2c24]/10 dark:border-[#77b6a3]/20'>
               <h3 className='text-sm font-bold text-gray-900 dark:text-white mb-3'>Booking Summary</h3>
@@ -850,6 +850,21 @@ export function BookingModalV2Fixed({
                 {errors.phone && <p className='text-xs text-red-500 mt-1 ml-1'>{errors.phone}</p>}
               </div>
             </div>
+
+            {/* Static Action Button for Details Step */}
+            <div className='pt-4'>
+              <button
+                onClick={handleConfirmBooking}
+                disabled={isSubmitting}
+                className={`w-full py-4 rounded-2xl text-lg font-bold shadow-lg transition-all active:scale-95 ${
+                  isSubmitting
+                    ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
+                    : 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] hover:shadow-xl'
+                }`}
+              >
+                {isSubmitting ? 'Processing...' : 'Confirm & Pay'}
+              </button>
+            </div>
           </div>
         )}
 
@@ -877,18 +892,19 @@ export function BookingModalV2Fixed({
       </div>
 
       {/* Sticky Footer for Actions */}
-      {step !== 'confirm' && (
+      {/* Sticky Footer for Actions - ONLY for Booking Step */}
+      {step === 'booking' && (
         <div className='absolute bottom-0 left-0 right-0 p-5 bg-white/80 dark:bg-[#0f1f1b]/80 backdrop-blur-md border-t border-gray-200 dark:border-white/10 lg:rounded-b-2xl z-50'>
           <button
-            onClick={step === 'booking' ? handleNext : handleConfirmBooking}
-            disabled={step === 'booking' ? !canProceed : isSubmitting}
+            onClick={handleNext}
+            disabled={!canProceed}
             className={`w-full py-4 rounded-2xl text-lg font-bold shadow-lg transition-all active:scale-95 ${
-              (step === 'booking' ? !canProceed : isSubmitting)
+              !canProceed
                 ? 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
                 : 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] hover:shadow-xl'
             }`}
           >
-            {isSubmitting ? 'Processing...' : step === 'booking' ? 'Continue' : 'Confirm & Pay'}
+            Continue
           </button>
         </div>
       )}

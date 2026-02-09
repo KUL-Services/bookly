@@ -329,7 +329,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
   if (!isOpen) return null
 
   return (
-    <div className='fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-50 p-4' onClick={onClose}>
+    <div className='fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-[60] p-4' onClick={onClose}>
       <div
         className='bg-white dark:bg-gray-900 rounded-2xl max-w-3xl w-full max-h-[95vh] overflow-y-auto shadow-2xl'
         onClick={e => e.stopPropagation()}

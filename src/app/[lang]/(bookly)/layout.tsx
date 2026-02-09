@@ -46,7 +46,7 @@ export default async function RootLayout({
               <BooklyNavbar />
             </div>
             {/* Main Content - with bottom padding for mobile nav */}
-            <div className='pb-20 lg:pb-0'>{children}</div>
+            <div className='pb-[calc(var(--mobile-bottom-nav-offset)+16px)] lg:pb-0'>{children}</div>
             {/* Mobile Bottom Nav - hidden on desktop */}
             <MobileBottomNav />
           </div>

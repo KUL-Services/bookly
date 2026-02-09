@@ -1051,29 +1051,31 @@ function businessDetailsPage() {
         </div>
       )}{' '}
       {/* Mobile Sticky Booking Button - positioned above bottom nav */}
-      <div className='lg:hidden fixed bottom-[60px] left-0 right-0 z-40 bg-white dark:bg-[#202c39] border-t border-gray-200 dark:border-white/10 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]'>
-        <div className='flex items-center gap-3'>
-          <div className='flex-1 min-w-0'>
-            <p className='text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide'>
-              {t('business.branchDetails.startingFrom')}
-            </p>
-            <p className='text-xl font-bold text-[#0a2c24] dark:text-[#77b6a3]'>
-              {currency || 'EGP'}{' '}
-              {services.length > 0 ? Math.min(...services.map(s => parseFloat((s as any).price) || 0)) : '---'}
-            </p>
+      <div className='lg:hidden fixed inset-x-0 bottom-[calc(var(--mobile-bottom-nav-offset)+8px)] z-40 px-3'>
+        <div className='mx-auto max-w-md rounded-2xl border border-[#0a2c24]/10 dark:border-white/15 bg-white/95 dark:bg-[#202c39]/95 backdrop-blur-xl px-3 py-2.5 shadow-[0_12px_28px_rgba(10,44,36,0.16)] dark:shadow-[0_12px_28px_rgba(0,0,0,0.35)]'>
+          <div className='flex items-center gap-3'>
+            <div className='flex-1 min-w-0'>
+              <p className='text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-[0.08em]'>
+                {t('business.branchDetails.startingFrom')}
+              </p>
+              <p className='text-xl font-bold text-[#0a2c24] dark:text-[#77b6a3]'>
+                {currency || 'EGP'}{' '}
+                {services.length > 0 ? Math.min(...services.map(s => parseFloat((s as any).price) || 0)) : '---'}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                if (!booklyUser) {
+                  setShowLoginGuestModal(true)
+                } else {
+                  setIsBookingModalOpen(true)
+                }
+              }}
+              className='flex-shrink-0 bg-gradient-to-r from-[#0a2c24] to-[#155b4a] dark:from-[#77b6a3] dark:to-[#5a9a87] text-white dark:text-[#0a2c24] px-7 py-3 rounded-xl font-bold text-base hover:opacity-95 transition-all duration-300 active:scale-95 touch-manipulation shadow-[0_8px_18px_rgba(10,44,36,0.25)] dark:shadow-[0_8px_18px_rgba(0,0,0,0.35)]'
+            >
+              {t('business.branchDetails.book') || 'Book Now'}
+            </button>
           </div>
-          <button
-            onClick={() => {
-              if (!booklyUser) {
-                setShowLoginGuestModal(true)
-              } else {
-                setIsBookingModalOpen(true)
-              }
-            }}
-            className='flex-shrink-0 bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] px-8 py-3.5 rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95 touch-manipulation shadow-lg'
-          >
-            {t('business.branchDetails.book') || 'Book Now'}
-          </button>
         </div>
       </div>
       {/* Spacer for mobile to account for sticky booking button + bottom nav */}

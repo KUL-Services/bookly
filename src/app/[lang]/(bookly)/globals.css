@@ -13,6 +13,11 @@
   --background: #f7f8f9; /* Off-White */
   --foreground: #0a2c24; /* Dark Green */
   --text-color: #0a2c24; /* Dark Green */
+  --mobile-bottom-nav-shell-height: 74px;
+  --mobile-bottom-nav-floating-gap: 10px;
+  --mobile-bottom-nav-offset: calc(
+    env(safe-area-inset-bottom) + var(--mobile-bottom-nav-shell-height) + var(--mobile-bottom-nav-floating-gap)
+  );
 
   /* Primary (Dark Green #0a2c24 based scale) */
   --primary-100: #c5d8d4;
