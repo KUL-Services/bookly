@@ -41,7 +41,7 @@ export function BusinessGrowthBanner() {
             <div className='pt-4'>
               <Button
                 buttonText={{ plainText: 'List Your Business' }}
-                className='bg-transparent border border-sage-500 text-sage-400 hover:bg-sage-500 hover:text-white py-3 px-8 text-lg font-bold rounded-xl shadow-lg shadow-sage-900/10 transform transition hover:-translate-y-1'
+                className='!bg-white !border-2 !border-white !text-[#0a2c24] !hover:bg-gray-100 py-3 px-8 text-lg font-bold rounded-xl shadow-lg shadow-black/10 transform transition hover:-translate-y-1'
               />
             </div>
           </div>

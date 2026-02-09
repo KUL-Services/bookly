@@ -65,7 +65,7 @@ export const MobileBottomNav = () => {
           id: 'appointments',
           labelKey: 'nav.appointments',
           icon: CalendarDays,
-          href: `/${lang}/profile?section=upcoming`,
+          href: `/${lang}/appointments`,
           requiresAuth: true
         },
         {
@@ -116,6 +116,15 @@ export const MobileBottomNav = () => {
 
     if (itemId === 'signup') {
       return pathname?.includes('/customer/register')
+    }
+
+    if (itemId === 'appointments') {
+      return pathname?.includes('/appointments')
+    }
+
+    if (itemId === 'profile') {
+      // Profile tab should be active for /profile but NOT /appointments
+      return pathname?.includes('/profile') && !pathname?.includes('/appointments')
     }
 
     return pathname?.startsWith(cleanHref)
