@@ -70,6 +70,7 @@ export const ServiceCardWithBooking = ({ service, branchId, className }: Service
         onClose={() => setIsBookingModalOpen(false)}
         initialService={modalService as any}
         branchId={branchId}
+        businessId={service.business?.id || ''}
       />
     </>
   )

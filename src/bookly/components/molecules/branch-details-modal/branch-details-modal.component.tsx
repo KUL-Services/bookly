@@ -1,69 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useParams } from 'next/navigation'
-import dynamic from 'next/dynamic'
-import initTranslations from '@/app/i18n/i18n'
-import { BusinessAvatar } from '@/bookly/components/atoms/business-avatar/business-avatar.component'
-import { Button } from '@/bookly/components/molecules'
-import { KulIcon } from '@/bookly/components/atoms'
+'use client'
 
-import { mockStaff } from '@/bookly/data/mock-data'
-import type { Branch, Service, Staff } from '@/lib/api'
-import type { StaffMember, StaffAppointment } from '@/bookly/data/types'
-
-// Helper function to generate sample appointments for staff
-const generateSampleAppointments = (staffId: string): StaffAppointment[] => {
-  const today = new Date(2025, 9, 17)
-  const appointments: StaffAppointment[] = []
-  const services = ['Haircut', 'Color Treatment', 'Massage', 'Facial', 'Manicure', 'Training Session']
-  const customers = ['Ahmed Ali', 'Sara Mohamed', 'John Smith', 'Emma Davis', 'Michael Brown', 'Lisa Chen']
-
-  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-    const date = new Date(today)
-    date.setDate(date.getDate() + dayOffset)
-
-    const appointmentCount = Math.floor(Math.random() * 4) + 2 // 2-5 appointments per day
-
-    for (let i = 0; i < appointmentCount; i++) {
-      const hour = 9 + Math.floor(Math.random() * 8)
-      const minute = Math.random() > 0.5 ? '00' : '30'
-      const duration = [30, 60, 90][Math.floor(Math.random() * 3)]
-
-      const startTime = `${hour.toString().padStart(2, '0')}:${minute}`
-      const endHour = hour + Math.floor(duration / 60)
-      const endMinute = (parseInt(minute) + (duration % 60)).toString().padStart(2, '0')
-      const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute}`
-
-      let status: 'confirmed' | 'pending' | 'completed' | 'cancelled' = 'confirmed'
-      if (Math.random() > 0.9) status = 'cancelled'
-      else if (Math.random() > 0.8) status = 'pending'
-
-      appointments.push({
-        id: `apt-${staffId}-${dayOffset}-${i}`,
-        date,
-        startTime,
-        endTime,
-        serviceName: services[Math.floor(Math.random() * services.length)],
-        customerName: customers[Math.floor(Math.random() * customers.length)],
-        status
-      })
-    }
-  }
-
-  return appointments.sort((a, b) => {
-    if (a.date.getTime() !== b.date.getTime()) return a.date.getTime() - b.date.getTime()
-    return a.startTime.localeCompare(b.startTime)
-  })
-}
-
-// Dynamically import map component to avoid SSR issues
-const BranchMapView = dynamic(() => import('./branch-map-view'), {
-  ssr: false,
-  loading: () => (
-    <div className='bg-gray-100 dark:bg-gray-700 rounded-lg h-64 flex items-center justify-center'>
-      <div className='text-gray-500 dark:text-gray-400'>Loading map...</div>
-    </div>
-  )
-})
+import { useState, useMemo, useEffect } from 'react'
+import { X, MapPin, Phone, Clock, Users, Scissors, ChevronRight, Star, Info, CheckCircle2 } from 'lucide-react'
+import type { Service as ApiService, Branch, Staff } from '@/lib/api'
 
 interface BranchDetailsModalProps {
   isOpen: boolean
@@ -71,389 +10,307 @@ interface BranchDetailsModalProps {
   branch: Branch
   businessName: string
   businessImage?: string
-  services?: Service[]
-  staff?: Staff[]
-  staffMembers?: StaffMember[] // Optional: If provided, will be used for calendar view with full data
-  allBranches?: Branch[]
-  onBranchChange?: (branch: Branch) => void
-  onBookService?: (serviceId: string) => void
+  services: ApiService[]
+  staff: Staff[]
+  allBranches: Branch[]
+  onBranchChange: (branch: Branch) => void
+  onBookService: (serviceId: string) => void
 }
 
-export const BranchDetailsModal = ({
+type TabId = 'overview' | 'services' | 'staff'
+
+export function BranchDetailsModal({
   isOpen,
   onClose,
   branch,
   businessName,
   businessImage,
-  services = [],
-  staff = [],
-  staffMembers,
-  allBranches = [],
+  services,
+  staff,
+  allBranches,
   onBranchChange,
   onBookService
-}: BranchDetailsModalProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'staff'>('overview')
-  const params = useParams<{ lang: string }>()
-  const [t, setT] = useState<any>(() => (key: string) => key)
+}: BranchDetailsModalProps) {
+  const [activeTab, setActiveTab] = useState<TabId>('overview')
+  const [isClosing, setIsClosing] = useState(false)
 
+  // Reset tab when modal opens
   useEffect(() => {
-    const initializeTranslations = async () => {
-      const { t: tFn } = await initTranslations((params?.lang || 'en') as 'en' | 'ar' | 'fr', ['common'])
-      setT(() => tFn)
+    if (isOpen) {
+      setActiveTab('overview')
+      setIsClosing(false)
     }
-    initializeTranslations()
-  }, [params?.lang])
+  }, [isOpen])
+
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      onClose()
+      setIsClosing(false)
+    }, 200)
+  }
+
+  // Get initials for avatar
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  // Filter staff for this branch
+  const branchStaff = useMemo(() => {
+    return staff.filter(s => s.branchId === branch.id) || staff.slice(0, 5)
+  }, [staff, branch.id])
+
+  const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
+    { id: 'overview', label: 'Overview', icon: <Info className='w-4 h-4' /> },
+    { id: 'services', label: 'Services', icon: <Scissors className='w-4 h-4' /> },
+    { id: 'staff', label: 'Staff', icon: <Users className='w-4 h-4' /> }
+  ]
 
   if (!isOpen) return null
 
-  const branchServices = services.filter(
-    service =>
-      !service.branches ||
-      service.branches.length === 0 ||
-      service.branches.some(serviceBranch => serviceBranch.id === branch.id)
-  )
-
-  const branchStaff = staff.filter(member => member.branchId === branch.id)
-
-  // Convert API Staff to StaffMember format with schedule data
-  const branchStaffMembers = useMemo(() => {
-    // If custom staffMembers provided, use them
-    if (staffMembers && staffMembers.length > 0) {
-      return staffMembers.filter(member => member.branchId === branch.id)
-    }
-
-    // Convert branchStaff (from API) to StaffMember format with mock schedule data
-    if (branchStaff.length > 0) {
-      return branchStaff.map((apiStaff, index) => {
-        // Try to find matching mock staff for schedule data
-        const mockStaffMatch = mockStaff.find(m => m.branchId === branch.id && m.id === apiStaff.id)
-
-        // Get schedule based on index (cycle through different schedules)
-        const schedules = [
-          [
-            { dayOfWeek: 'Mon' as const, startTime: '08:00', endTime: '19:00', isAvailable: true },
-            { dayOfWeek: 'Tue' as const, startTime: '08:00', endTime: '19:00', isAvailable: true },
-            { dayOfWeek: 'Wed' as const, startTime: '08:00', endTime: '19:00', isAvailable: true },
-            { dayOfWeek: 'Thu' as const, startTime: '08:00', endTime: '20:00', isAvailable: true },
-            { dayOfWeek: 'Fri' as const, startTime: '08:00', endTime: '20:00', isAvailable: true },
-            { dayOfWeek: 'Sat' as const, startTime: '08:00', endTime: '18:00', isAvailable: true },
-            { dayOfWeek: 'Sun' as const, startTime: '10:00', endTime: '16:00', isAvailable: true }
-          ],
-          [
-            { dayOfWeek: 'Mon' as const, startTime: '09:00', endTime: '17:00', isAvailable: true },
-            { dayOfWeek: 'Tue' as const, startTime: '09:00', endTime: '17:00', isAvailable: true },
-            { dayOfWeek: 'Wed' as const, startTime: '09:00', endTime: '17:00', isAvailable: true },
-            { dayOfWeek: 'Thu' as const, startTime: '09:00', endTime: '18:00', isAvailable: true },
-            { dayOfWeek: 'Fri' as const, startTime: '09:00', endTime: '18:00', isAvailable: true },
-            { dayOfWeek: 'Sat' as const, startTime: '08:00', endTime: '16:00', isAvailable: true },
-            { dayOfWeek: 'Sun' as const, startTime: '10:00', endTime: '15:00', isAvailable: false }
-          ]
-        ]
-
-        const staffMember: StaffMember = {
-          id: apiStaff.id,
-          name: apiStaff.name,
-          title: 'Staff Member', // API doesn't have title, use generic
-          photo: apiStaff.profilePhotoUrl || '',
-          businessId: apiStaff.businessId || '',
-          branchId: apiStaff.branchId,
-          schedule: mockStaffMatch?.schedule || schedules[index % schedules.length],
-          appointments: mockStaffMatch?.appointments || generateSampleAppointments(apiStaff.id)
-        }
-
-        return staffMember
-      })
-    }
-
-    // Fallback to mock staff data if no API staff
-    const matchedStaff = mockStaff.filter(member => member.branchId === branch.id)
-    if (matchedStaff.length > 0) {
-      return matchedStaff
-    }
-
-    // Last resort: return first 3 mock staff as examples
-    return mockStaff.slice(0, 3)
-  }, [staffMembers, branchStaff, branch.id])
-
   return (
-    <div className='fixed inset-0 z-50 overflow-hidden'>
-      {/* Modal Container with Backdrop Click */}
+    <div
+      className={`fixed inset-0 z-[100] ${isClosing ? 'animate-out fade-out duration-200' : 'animate-in fade-in duration-200'}`}
+      style={{ touchAction: 'none' }}
+    >
+      {/* Backdrop */}
+      <div className='absolute inset-0 bg-black/60 backdrop-blur-sm' onClick={handleClose} />
+
+      {/* Modal - Bottom Sheet Style on Mobile */}
       <div
-        className='absolute inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center p-4'
-        onClick={onClose}
+        className={`absolute bottom-0 left-0 right-0 lg:bottom-auto lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:max-w-lg lg:w-full lg:mx-4 bg-white dark:bg-[#1a2e35] rounded-t-[2rem] lg:rounded-[2rem] max-h-[92vh] lg:max-h-[85vh] flex flex-col overflow-hidden shadow-2xl ${
+          isClosing ? 'animate-out slide-out-to-bottom duration-200' : 'animate-in slide-in-from-bottom duration-300'
+        }`}
       >
-        <div
-          className='bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl'
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className='relative'>
-            <div className='bg-primary-700 p-6 text-white'>
-              <button
-                onClick={onClose}
-                className='absolute top-4 end-4 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-colors'
-              >
-                <KulIcon icon='lucide:x' className='w-5 h-5' />
-              </button>
+        {/* Drag Handle - Mobile Only */}
+        <div className='lg:hidden flex justify-center pt-3 pb-2'>
+          <div className='w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full' />
+        </div>
 
-              <div className='flex items-start gap-4'>
-                <BusinessAvatar
-                  businessName={businessName}
-                  imageSrc={businessImage}
-                  className='w-16 h-16 rounded-lg border-2 border-white'
-                  size='xl'
-                />
-                <div className='flex-1'>
-                  <div className='flex items-center gap-3 mb-1'>
-                    <h2 className='text-2xl font-bold'>{branch.name}</h2>
-                    {allBranches.length > 1 && (
-                      <select
-                        value={branch.id}
-                        onChange={e => {
-                          const selectedBranch = allBranches.find(b => b.id === e.target.value)
-                          if (selectedBranch && onBranchChange) {
-                            onBranchChange(selectedBranch)
-                          }
-                        }}
-                        className='bg-white bg-opacity-20 text-white border border-white border-opacity-30 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50'
-                      >
-                        {allBranches.map(b => (
-                          <option key={b.id} value={b.id} className='text-gray-900'>
-                            {b.name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                  <p className='text-white text-opacity-90 mb-2'>{businessName}</p>
-                  <div className='flex items-center gap-2 text-white text-opacity-80'>
-                    <KulIcon icon='lucide:map-pin' className='w-4 h-4' />
-                    <span className='text-sm font-mono'>{branch.address}</span>
-                  </div>
-                  {branch.mobile && (
-                    <div className='flex items-center gap-2 text-white text-opacity-80 mt-1'>
-                      <KulIcon icon='lucide:phone' className='w-4 h-4' />
-                      <span className='text-sm font-mono'>{branch.mobile}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+        {/* Header */}
+        <div className='relative px-5 pt-2 pb-4 border-b border-gray-100 dark:border-white/10'>
+          {/* Close Button */}
+          <button
+            onClick={handleClose}
+            className='absolute right-4 top-2 lg:top-4 p-2 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors touch-manipulation'
+          >
+            <X className='w-5 h-5' />
+          </button>
+
+          {/* Branch Info */}
+          <div className='flex items-start gap-4 pr-12'>
+            {/* Logo/Avatar */}
+            <div className='w-16 h-16 rounded-2xl bg-gradient-to-br from-[#9b87f5] to-[#7c3aed] flex items-center justify-center text-white text-xl font-bold shadow-lg flex-shrink-0'>
+              {getInitials(businessName)}
             </div>
 
-            {/* Tabs */}
-            <div className='border-b bg-gray-50 dark:bg-gray-700 dark:border-gray-600'>
-              <div className='flex overflow-x-auto'>
-                {[
-                  { id: 'overview', label: t('business.branchDetails.overview'), icon: 'lucide:info' },
-                  { id: 'services', label: t('business.branchDetails.services'), icon: 'lucide:scissors' },
-                  { id: 'staff', label: t('business.branchDetails.staff'), icon: 'lucide:users' }
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                      activeTab === tab.id
-                        ? 'text-primary-800 border-primary-800 bg-white dark:bg-gray-800 dark:text-sage-400 dark:border-sage-400'
-                        : 'text-gray-600 dark:text-white border-transparent hover:text-gray-800 dark:hover:text-sage-300 hover:border-gray-300 dark:hover:border-sage-400 hover:bg-gray-100 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    <KulIcon icon={tab.icon} className='w-4 h-4' />
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+            <div className='flex-1 min-w-0'>
+              <h2 className='text-xl font-bold text-gray-900 dark:text-white leading-tight line-clamp-2'>
+                {branch.name}
+              </h2>
+              <p className='text-sm text-gray-500 dark:text-gray-400 mt-0.5'>{businessName}</p>
 
-          {/* Content */}
-          <div className='p-6 max-h-[60vh] overflow-y-auto'>
-            {activeTab === 'overview' && (
-              <div className='space-y-6'>
-                {/* Location */}
-                <div>
-                  <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3'>
-                    {t('business.branchDetails.location')}
-                  </h3>
-                  <div className='bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4'>
-                    <p className='text-gray-700 dark:text-gray-300 mb-2 font-mono'>{branch.address}</p>
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(branch.address || '')}`}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                      className='inline-flex items-center gap-2 text-primary-800 hover:text-primary-900 dark:text-sage-400 dark:hover:text-sage-300 text-sm'
-                    >
-                      <KulIcon icon='lucide:external-link' className='w-4 h-4' />
-                      {t('business.branchDetails.viewOnGoogleMaps')}
-                    </a>
-                  </div>
-                  {/* Map View */}
-                  <div className='rounded-lg overflow-hidden border border-gray-200 dark:border-gray-600'>
-                    <BranchMapView branch={branch} />
-                  </div>
-                </div>
-
-                {/* Contact */}
+              {/* Quick Info Pills */}
+              <div className='flex flex-wrap gap-2 mt-3'>
+                <span className='inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 dark:bg-white/10 rounded-lg text-xs text-gray-600 dark:text-gray-300'>
+                  <MapPin className='w-3 h-3' />
+                  <span className='truncate max-w-[120px]'>{branch.address}</span>
+                </span>
                 {branch.mobile && (
-                  <div>
-                    <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3'>
-                      {t('business.branchDetails.contact')}
-                    </h3>
-                    <div className='bg-gray-50 dark:bg-gray-700 rounded-lg p-4'>
-                      <div className='flex items-center gap-2'>
-                        <KulIcon icon='lucide:phone' className='w-4 h-4 text-gray-500 dark:text-gray-400' />
-                        <a
-                          href={`tel:${branch.mobile}`}
-                          className='text-primary-800 hover:text-primary-900 dark:text-sage-400 dark:hover:text-sage-300 font-mono'
-                        >
-                          {branch.mobile}
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Gallery */}
-                {branch.galleryUrls && branch.galleryUrls.length > 0 && (
-                  <div>
-                    <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3'>
-                      {t('business.branchDetails.gallery') || 'Gallery'}
-                    </h3>
-
-                    <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3'>
-                      {branch.galleryUrls.map((imageUrl, index) => (
-                        <div key={index} className='relative group'>
-                          <div className='aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700'>
-                            <img
-                              src={imageUrl}
-                              alt={`${branch.name} ${t('business.branchDetails.galleryImageAlt') || 'gallery image'} ${index + 1}`}
-                              className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-300'
-                              onError={e => {
-                                const target = e.target as HTMLImageElement
-                                target.src = '/images/placeholder-image.jpg'
-                              }}
-                            />
-                            <div className='absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300' />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Quick Stats */}
-                <div>
-                  <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3'>
-                    {t('business.branchDetails.quickInfo')}
-                  </h3>
-                  <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
-                    <div className='bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 text-center'>
-                      <div className='text-2xl font-bold text-blue-600 dark:text-blue-400 font-mono'>
-                        {branchServices.length}
-                      </div>
-                      <div className='text-sm text-blue-600 dark:text-blue-400'>
-                        {t('business.branchDetails.servicesCount')}
-                      </div>
-                    </div>
-                    <div className='bg-green-50 dark:bg-green-900/20 rounded-lg p-4 text-center'>
-                      <div className='text-2xl font-bold text-green-600 dark:text-green-400 font-mono'>
-                        {branchStaff.length}
-                      </div>
-                      <div className='text-sm text-green-600 dark:text-green-400'>
-                        {t('business.branchDetails.staffMembersCount')}
-                      </div>
-                    </div>
-                    <div className='bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 text-center'>
-                      <div className='text-2xl font-bold text-purple-600 dark:text-purple-400 font-mono'>4.8</div>
-                      <div className='text-sm text-purple-600 dark:text-purple-400'>
-                        {t('business.branchDetails.ratingLabel')}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'services' && (
-              <div>
-                <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
-                  {t('business.branchDetails.availableServices')}
-                </h3>
-                {branchServices.length === 0 ? (
-                  <div className='text-center py-8 text-gray-500 dark:text-gray-400'>
-                    <KulIcon
-                      icon='lucide:scissors'
-                      className='w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600'
-                    />
-                    <p>{t('business.branchDetails.noServicesTitle')}</p>
-                  </div>
-                ) : (
-                  <div className='grid gap-4'>
-                    {branchServices.map(service => (
-                      <div
-                        key={service.id}
-                        className='flex items-center justify-between p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-primary-200 dark:hover:border-primary-800 transition-colors bg-white dark:bg-gray-800'
-                      >
-                        <div className='flex-1'>
-                          <h4 className='font-medium text-gray-900 dark:text-gray-100'>{service.name}</h4>
-                          {service.description && (
-                            <p className='text-sm text-gray-600 dark:text-gray-400 mt-1'>{service.description}</p>
-                          )}
-                          <div className='flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400'>
-                            <span className='flex items-center gap-1 font-mono'>
-                              <KulIcon icon='lucide:clock' className='w-4 h-4' />
-                              {service.duration} {t('business.branchDetails.duration')}
-                            </span>
-                            <span className='font-medium text-primary-800 dark:text-sage-400 font-mono'>
-                              E£{service.price}
-                            </span>
-                          </div>
-                        </div>
-                        <Button
-                          buttonText={{ plainText: t('business.branchDetails.bookNow') }}
-                          variant='contained'
-                          className='bg-primary-700 hover:bg-primary-800 text-white'
-                          onClick={() => onBookService?.(service.id)}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <a
+                    href={`tel:${branch.mobile}`}
+                    className='inline-flex items-center gap-1 px-2.5 py-1 bg-[#0a2c24]/10 dark:bg-[#77b6a3]/20 rounded-lg text-xs text-[#0a2c24] dark:text-[#77b6a3] font-medium'
+                  >
+                    <Phone className='w-3 h-3' />
+                    Call
+                  </a>
                 )}
               </div>
-            )}
-
-            {activeTab === 'staff' && (
-              <div>
-                <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
-                  {t('business.branchDetails.ourTeam')}
-                </h3>
-                {branchStaff.length === 0 ? (
-                  <div className='text-center py-8 text-gray-500 dark:text-gray-400'>
-                    <KulIcon icon='lucide:users' className='w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600' />
-                    <p>{t('business.branchDetails.noStaffTitle')}</p>
-                  </div>
-                ) : (
-                  <div className='grid md:grid-cols-2 gap-4'>
-                    {branchStaff.map(member => (
-                      <div
-                        key={member.id}
-                        className='flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800'
-                      >
-                        <BusinessAvatar businessName={member.name} className='w-12 h-12 rounded-full' size='md' />
-                        <div className='flex-1'>
-                          <h4 className='font-medium text-gray-900 dark:text-gray-100'>{member.name}</h4>
-                          {member.mobile && (
-                            <p className='text-sm text-gray-600 dark:text-gray-400 font-mono'>{member.mobile}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            </div>
           </div>
         </div>
+
+        {/* Tab Navigation */}
+        <div className='px-4 py-3 border-b border-gray-100 dark:border-white/10 bg-gray-50/50 dark:bg-black/20'>
+          <div className='flex gap-2'>
+            {tabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all touch-manipulation ${
+                  activeTab === tab.id
+                    ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] shadow-md'
+                    : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab Content - Scrollable */}
+        <div className='flex-1 overflow-y-auto overscroll-contain'>
+          {/* Overview Tab */}
+          {activeTab === 'overview' && (
+            <div className='p-5 space-y-6'>
+              {/* Contact Section */}
+              <div>
+                <h3 className='text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2'>
+                  <Phone className='w-4 h-4 text-[#0a2c24] dark:text-[#77b6a3]' />
+                  Contact
+                </h3>
+                <a
+                  href={`tel:${branch.mobile}`}
+                  className='flex items-center gap-3 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors touch-manipulation'
+                >
+                  <div className='w-10 h-10 rounded-full bg-[#0a2c24]/10 dark:bg-[#77b6a3]/20 flex items-center justify-center'>
+                    <Phone className='w-5 h-5 text-[#0a2c24] dark:text-[#77b6a3]' />
+                  </div>
+                  <div className='flex-1'>
+                    <p className='text-base font-semibold text-gray-900 dark:text-white'>
+                      {branch.mobile || '+971-4-234-5678'}
+                    </p>
+                    <p className='text-xs text-gray-500 dark:text-gray-400'>Tap to call</p>
+                  </div>
+                  <ChevronRight className='w-5 h-5 text-gray-400' />
+                </a>
+              </div>
+
+              {/* Quick Info Grid */}
+              <div>
+                <h3 className='text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2'>
+                  <Info className='w-4 h-4 text-[#0a2c24] dark:text-[#77b6a3]' />
+                  Quick Info
+                </h3>
+                <div className='grid grid-cols-2 gap-3'>
+                  <div className='p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/10 rounded-2xl text-center'>
+                    <p className='text-3xl font-bold text-blue-600 dark:text-blue-400'>{services.length}</p>
+                    <p className='text-xs font-medium text-blue-600/70 dark:text-blue-400/70 mt-1'>Services</p>
+                  </div>
+                  <div className='p-4 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-900/20 dark:to-green-800/10 rounded-2xl text-center'>
+                    <p className='text-3xl font-bold text-green-600 dark:text-green-400'>
+                      {branchStaff.length || staff.length}
+                    </p>
+                    <p className='text-xs font-medium text-green-600/70 dark:text-green-400/70 mt-1'>Staff Members</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Section */}
+              <div>
+                <h3 className='text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2'>
+                  <MapPin className='w-4 h-4 text-[#0a2c24] dark:text-[#77b6a3]' />
+                  Location
+                </h3>
+                <div className='p-4 bg-gray-50 dark:bg-white/5 rounded-2xl'>
+                  <p className='text-sm text-gray-700 dark:text-gray-300'>{branch.address}</p>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(branch.address || '')}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='mt-3 flex items-center justify-center gap-2 w-full py-3 bg-white dark:bg-white/10 rounded-xl text-sm font-semibold text-[#0a2c24] dark:text-[#77b6a3] border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/15 transition-colors touch-manipulation'
+                  >
+                    <MapPin className='w-4 h-4' />
+                    Get Directions
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Services Tab */}
+          {activeTab === 'services' && (
+            <div className='p-4 space-y-3'>
+              {services.length > 0 ? (
+                services.map((service, index) => (
+                  <div
+                    key={service.id || index}
+                    className='p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 shadow-sm'
+                  >
+                    <div className='flex items-start justify-between gap-3'>
+                      <div className='flex-1 min-w-0'>
+                        <h4 className='text-base font-bold text-gray-900 dark:text-white line-clamp-1'>
+                          {service.name}
+                        </h4>
+                        <div className='flex items-center gap-3 mt-1.5'>
+                          <span className='inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400'>
+                            <Clock className='w-3.5 h-3.5' />
+                            {service.duration} min
+                          </span>
+                        </div>
+                        {service.description && (
+                          <p className='text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2'>
+                            {service.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className='text-right flex-shrink-0'>
+                        <p className='text-lg font-bold text-[#0a2c24] dark:text-[#77b6a3]'>EGP {service.price}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onBookService(service.id)}
+                      className='mt-3 w-full py-2.5 bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] rounded-xl text-sm font-bold hover:opacity-90 transition-all active:scale-[0.98] touch-manipulation'
+                    >
+                      Book
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className='text-center py-12'>
+                  <Scissors className='w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3' />
+                  <p className='text-gray-500 dark:text-gray-400'>No services available</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Staff Tab */}
+          {activeTab === 'staff' && (
+            <div className='p-4'>
+              {(branchStaff.length > 0 ? branchStaff : staff).length > 0 ? (
+                <div className='grid grid-cols-2 gap-3'>
+                  {(branchStaff.length > 0 ? branchStaff : staff).map((member, index) => (
+                    <div
+                      key={member.id || index}
+                      className='p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 text-center'
+                    >
+                      <div className='w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-[#0a2c24] to-[#2a9d8f] p-0.5 mb-3'>
+                        <img
+                          src={
+                            (member as any).image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${member.name}`
+                          }
+                          alt={member.name}
+                          className='w-full h-full rounded-full object-cover bg-white dark:bg-[#1a2e35]'
+                        />
+                      </div>
+                      <h4 className='text-sm font-bold text-gray-900 dark:text-white line-clamp-1'>{member.name}</h4>
+                      <p className='text-xs text-gray-500 dark:text-gray-400 mt-0.5'>Specialist</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className='text-center py-12'>
+                  <Users className='w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3' />
+                  <p className='text-gray-500 dark:text-gray-400'>No staff information available</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Safe Area */}
+        <div className='h-[env(safe-area-inset-bottom)] bg-white dark:bg-[#1a2e35]' />
       </div>
     </div>
   )
 }
+
+export default BranchDetailsModal

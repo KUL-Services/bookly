@@ -3,7 +3,11 @@
         "home": "الرئيسية",
         "explore": "استكشف",
         "appointments": "المواعيد",
-        "profile": "الملف الشخصي"
+        "profile": "الملف الشخصي",
+        "login": "تسجيل الدخول",
+        "signUp": "إنشاء حساب",
+        "join": "انضم",
+        "forBusinesses": "للأعمال"
     },
     "business": {
         "branchDetails": {

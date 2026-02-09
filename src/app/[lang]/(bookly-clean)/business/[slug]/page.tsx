@@ -418,7 +418,6 @@ function businessDetailsPage() {
           user-select: none;
         }
       `}</style>
-
       {/* Mobile Floating Action Buttons - Top */}
       <div className='lg:hidden fixed top-4 left-4 right-4 z-50 flex justify-between items-center pointer-events-none'>
         <button
@@ -443,7 +442,6 @@ function businessDetailsPage() {
           </button>
         </div>
       </div>
-
       {/* Hero Cover Section - Shorter on mobile */}
       <div className='relative h-[40vh] min-h-[300px] lg:h-[50vh] lg:min-h-[550px] w-full overflow-hidden group rounded-b-[2rem] lg:rounded-b-[4rem] border-b-2 border-[#0a2c24]'>
         <div className='absolute inset-0 bg-gray-900'>
@@ -508,14 +506,14 @@ function businessDetailsPage() {
           </div>
         </div>
       </div>
-
       {/* Main Content Area */}
       <div className='max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-12 relative z-10'>
         <div className='flex flex-col lg:flex-row gap-8'>
           {/* Tabs & Content - Left Side */}
           <div className='flex-1 min-w-0'>
-            {/* Refined Sticky Navigation */}
-            <div className='sticky top-0 lg:top-[64px] z-30 mb-6 lg:mb-8 bg-[#f7f8f9]/95 dark:bg-[#0a2c24]/95 backdrop-blur-md py-3 lg:py-4 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all duration-300 border-b border-gray-200/50 dark:border-white/5'>
+            {' '}
+            {/* Refined Sticky Navigation - Positioned below mobile header buttons */}
+            <div className='sticky top-[60px] lg:top-[64px] z-20 mb-6 lg:mb-8 bg-[#f7f8f9]/95 dark:bg-[#0a2c24]/95 backdrop-blur-md py-3 lg:py-4 -mx-4 px-4 sm:mx-0 sm:px-0 transition-all duration-300 border-b border-gray-200/50 dark:border-white/5'>
               {/* Mobile: Segmented Control Style */}
               <div className='lg:hidden flex bg-gray-100 dark:bg-white/10 rounded-xl p-1 relative'>
                 {getTabsWithTranslation(t).map((tab, index) => (
@@ -560,7 +558,6 @@ function businessDetailsPage() {
                 ))}
               </div>
             </div>
-
             {/* Tab Content */}
             <div key={activeTab} className='animate-in fade-in slide-in-from-bottom-4 duration-500'>
               {activeTab === 'services' && (
@@ -1001,16 +998,16 @@ function businessDetailsPage() {
             </div>
           </div>
         </div>
-      </div>
-
+      </div>{' '}
       <BookingModalV2Fixed
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         initialService={selectedService || undefined}
         branchId={selectedBranch?.id}
         businessId={params.slug}
+        availableServices={services}
+        availableStaff={staff}
       />
-
       {/* Login vs Guest Modal */}
       {showLoginGuestModal && (
         <div className='fixed inset-0 bg-black/70 backdrop-blur-md flex items-end lg:items-center justify-center z-[100] p-0 lg:p-4 animate-in fade-in duration-200'>
@@ -1052,15 +1049,16 @@ function businessDetailsPage() {
             </button>
           </div>
         </div>
-      )}
-
-      {/* Mobile Sticky Booking Button */}
-      <div className='lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-[#202c39] border-t border-gray-200 dark:border-white/10 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]'>
+      )}{' '}
+      {/* Mobile Sticky Booking Button - positioned above bottom nav */}
+      <div className='lg:hidden fixed bottom-[60px] left-0 right-0 z-40 bg-white dark:bg-[#202c39] border-t border-gray-200 dark:border-white/10 px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.1)]'>
         <div className='flex items-center gap-3'>
           <div className='flex-1 min-w-0'>
-            <p className='text-xs text-gray-500 dark:text-gray-400'>{t('business.branchDetails.startingFrom')}</p>
-            <p className='text-lg font-bold text-[#0a2c24] dark:text-white'>
-              {currency || 'E£'}
+            <p className='text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide'>
+              {t('business.branchDetails.startingFrom')}
+            </p>
+            <p className='text-xl font-bold text-[#0a2c24] dark:text-[#77b6a3]'>
+              {currency || 'EGP'}{' '}
               {services.length > 0 ? Math.min(...services.map(s => parseFloat((s as any).price) || 0)) : '---'}
             </p>
           </div>
@@ -1072,15 +1070,14 @@ function businessDetailsPage() {
                 setIsBookingModalOpen(true)
               }
             }}
-            className='flex-shrink-0 bg-[#0a2c24] text-white px-8 py-3.5 rounded-xl font-bold text-base hover:bg-[#0a2c24]/90 transition-all active:scale-95 touch-manipulation shadow-lg'
+            className='flex-shrink-0 bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] px-8 py-3.5 rounded-xl font-bold text-base hover:opacity-90 transition-all active:scale-95 touch-manipulation shadow-lg'
           >
-            Book Now
+            {t('business.branchDetails.book') || 'Book Now'}
           </button>
         </div>
-        {/* iOS Safe Area */}
-        <div className='h-[env(safe-area-inset-bottom)]' />
       </div>
-
+      {/* Spacer for mobile to account for sticky booking button + bottom nav */}
+      <div className='lg:hidden h-[10px]' />
       {/* Branch Details Modal */}
       {selectedBranch && business && (
         <BranchDetailsModal

@@ -1,54 +1,106 @@
 'use client'
 
-import { useParams, usePathname } from 'next/navigation'
+import { useParams, usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Heart, Search, CalendarDays, User } from 'lucide-react'
+import { Home, Search, CalendarDays, User, LogIn } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useAuthStore } from '@/stores/auth.store'
+import { useEffect, useState } from 'react'
 
 interface NavItem {
   id: string
   labelKey: string
   icon: React.ElementType
   href: string
+  requiresAuth?: boolean
 }
 
 export const MobileBottomNav = () => {
   const params = useParams<{ lang: string }>()
   const pathname = usePathname()
+  const router = useRouter()
   const { t } = useTranslation()
   const lang = params?.lang || 'en'
 
-  const navItems: NavItem[] = [
-    {
-      id: 'home',
-      labelKey: 'nav.home',
-      icon: Heart,
-      href: `/${lang}/landpage`
-    },
-    {
-      id: 'explore',
-      labelKey: 'nav.explore',
-      icon: Search,
-      href: `/${lang}/search`
-    },
-    {
-      id: 'appointments',
-      labelKey: 'nav.appointments',
-      icon: CalendarDays,
-      href: `/${lang}/profile?section=upcoming`
-    },
-    {
-      id: 'profile',
-      labelKey: 'nav.profile',
-      icon: User,
-      href: `/${lang}/profile`
-    }
-  ]
+  // Auth state
+  const booklyUser = useAuthStore(s => s.booklyUser)
+  const [hydrated, setHydrated] = useState(false)
 
-  const isActive = (href: string) => {
+  useEffect(() => {
+    // Wait for Zustand store to rehydrate from localStorage
+    const timer = setTimeout(() => setHydrated(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+
+  const isLoggedIn = hydrated && !!booklyUser
+
+  // Nav items change based on auth state
+  const navItems: NavItem[] = isLoggedIn
+    ? [
+        {
+          id: 'home',
+          labelKey: 'nav.home',
+          icon: Home,
+          href: `/${lang}/landpage`
+        },
+        {
+          id: 'explore',
+          labelKey: 'nav.explore',
+          icon: Search,
+          href: `/${lang}/search`
+        },
+        {
+          id: 'appointments',
+          labelKey: 'nav.appointments',
+          icon: CalendarDays,
+          href: `/${lang}/profile?section=upcoming`,
+          requiresAuth: true
+        },
+        {
+          id: 'profile',
+          labelKey: 'nav.profile',
+          icon: User,
+          href: `/${lang}/profile`,
+          requiresAuth: true
+        }
+      ]
+    : [
+        {
+          id: 'home',
+          labelKey: 'nav.home',
+          icon: Home,
+          href: `/${lang}/landpage`
+        },
+        {
+          id: 'explore',
+          labelKey: 'nav.explore',
+          icon: Search,
+          href: `/${lang}/search`
+        },
+        {
+          id: 'login',
+          labelKey: 'nav.login',
+          icon: LogIn,
+          href: `/${lang}/customer/login`
+        },
+        {
+          id: 'signup',
+          labelKey: 'nav.signUp',
+          icon: User,
+          href: `/${lang}/customer/register`
+        }
+      ]
+
+  const isActive = (href: string, itemId: string) => {
     const cleanHref = href.split('?')[0]
     if (cleanHref.endsWith('/landpage')) {
       return pathname?.endsWith('/landpage') || pathname === `/${lang}`
+    }
+    if (itemId === 'login') {
+      return pathname?.includes('/customer/login')
+    }
+    if (itemId === 'signup') {
+      return pathname?.includes('/customer/register')
     }
     return pathname?.startsWith(cleanHref)
   }
@@ -58,7 +110,8 @@ export const MobileBottomNav = () => {
       <div className='flex items-center justify-around h-16 px-2'>
         {navItems.map(item => {
           const Icon = item.icon
-          const active = isActive(item.href)
+          const active = isActive(item.href, item.id)
+          const isSignup = item.id === 'signup'
 
           return (
             <Link
@@ -68,27 +121,38 @@ export const MobileBottomNav = () => {
                 flex flex-col items-center justify-center gap-1 flex-1 py-2 px-1
                 transition-all duration-200 touch-manipulation
                 ${
-                  active
+                  isSignup
                     ? 'text-[#0a2c24] dark:text-[#77b6a3]'
-                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+                    : active
+                      ? 'text-[#0a2c24] dark:text-[#77b6a3]'
+                      : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
                 }
               `}
             >
               <div
                 className={`
                 relative p-2 rounded-full transition-all duration-300
-                ${active ? 'bg-[#0a2c24]/10 dark:bg-[#77b6a3]/20 scale-110' : 'hover:bg-gray-100 dark:hover:bg-white/5'}
+                ${
+                  isSignup
+                    ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24]'
+                    : active
+                      ? 'bg-[#0a2c24]/10 dark:bg-[#77b6a3]/20 scale-110'
+                      : 'hover:bg-gray-100 dark:hover:bg-white/5'
+                }
               `}
               >
                 <Icon
-                  className={`w-5 h-5 transition-transform ${active ? 'scale-110' : ''}`}
+                  className={`w-5 h-5 transition-transform ${active && !isSignup ? 'scale-110' : ''} ${isSignup ? 'text-white dark:text-[#0a2c24]' : ''}`}
                   fill={active && item.id === 'home' ? 'currentColor' : 'none'}
                 />
-                {active && (
+                {active && !isSignup && (
                   <span className='absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#0a2c24] dark:bg-[#77b6a3] rounded-full' />
                 )}
               </div>
-              <span className={`text-[10px] font-medium ${active ? 'font-bold' : ''}`}>{t(item.labelKey)}</span>
+              <span className={`text-[10px] font-medium ${active || isSignup ? 'font-bold' : ''}`}>
+                {t(item.labelKey) ||
+                  (item.id === 'signup' ? 'Sign Up' : item.id === 'login' ? 'Log In' : item.labelKey)}
+              </span>
             </Link>
           )
         })}

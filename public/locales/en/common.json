@@ -3,7 +3,11 @@
         "home": "Home",
         "explore": "Explore",
         "appointments": "Appointments",
-        "profile": "Profile"
+        "profile": "Profile",
+        "login": "Log In",
+        "signUp": "Sign Up",
+        "join": "Join",
+        "forBusinesses": "For Businesses"
     },
     "business": {
         "branchDetails": {
