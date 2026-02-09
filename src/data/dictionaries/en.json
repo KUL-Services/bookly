@@ -119,7 +119,22 @@
     "editProfile": "Edit Profile",
     "totalBookings": "Total Bookings",
     "favorites": "Favorites",
-    "rating": "Rating"
+    "rating": "Rating",
+    "bookings": {
+      "title": "Bookings",
+      "upcoming": "Upcoming",
+      "past": "History",
+      "upcomingWithCount": "Upcoming ({{count}})",
+      "pastWithCount": "Past ({{count}})",
+      "withStaff": "with {{staff}}",
+      "timeWithDuration": "{{time}} ({{duration}})",
+      "viewBusiness": "View Business",
+      "cancel": "Cancel",
+      "rebook": "Rebook",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "canceled": "Canceled"
+    }
   },
   "business": {
     "branchDetails": {
@@ -146,5 +161,11 @@
       "startingFrom": "Starting from",
       "book": "Book"
     }
+  },
+  "common": {
+    "bookNow": "Book Now",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving..."
   }
 }

@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+
 import { useRouter } from 'next/navigation'
-import { Card, CardContent } from '@/bookly/components/ui/card'
-import { Button } from '@/bookly/components/molecules'
+
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 import { BaseInput } from '@/bookly/components/atoms'
+import { Button } from '@/bookly/components/molecules'
+import { Card, CardContent } from '@/bookly/components/ui/card'
 import { useAuthStore } from '@/stores/auth.store'
-import { PageProps } from '@/bookly/types'
+import type { PageProps } from '@/bookly/types'
 
 export default function VerifyPage({ params }: PageProps) {
   const router = useRouter()
@@ -20,8 +23,10 @@ export default function VerifyPage({ params }: PageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     try {
       await verifyCustomer({ email, code })
+
       // Redirect to login after successful verification
       router.push(`/${locale}/customer/login`)
     } catch (error) {
@@ -74,7 +79,7 @@ export default function VerifyPage({ params }: PageProps) {
                     buttonText={{
                       plainText: loading ? (
                         <div className='flex items-center justify-center'>
-                          <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
+                          <BrandedSpinner size={16} color='inherit' sx={{ mr: 1 }} />
                           Verifying...
                         </div>
                       ) : (

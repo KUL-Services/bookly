@@ -1,15 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import { useRouter, useParams } from 'next/navigation'
+
+import { Clock, MapPin, Star, Users } from 'lucide-react'
+
 import { H1, H2, H3, P } from '@/bookly/components/atoms'
 import { Badge } from '@/bookly/components/atoms/base-badge/badge'
 import { Avatar, Button } from '@/bookly/components/molecules'
 import BookingModal from '@/bookly/components/organisms/booking-modal/booking-modal'
 import { Card, CardContent } from '@/bookly/components/ui/card'
+import { PageLoader } from '@/components/LoadingStates'
 import { ServicesService } from '@/lib/api'
 import type { Service } from '@/lib/api'
-import { Clock, MapPin, Star, Users } from 'lucide-react'
 
 export default function ServiceDetailPage() {
   const router = useRouter()
@@ -23,6 +27,7 @@ export default function ServiceDetailPage() {
     const fetchService = async () => {
       try {
         const response = await ServicesService.getService(params.id)
+
         if (response.error) {
           setError(response.error)
         } else if (response.data) {
@@ -40,11 +45,8 @@ export default function ServiceDetailPage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center font-sans'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-32 w-32 border-b-2 border-primary-800'></div>
-          <p className='mt-4 text-gray-600'>Loading service...</p>
-        </div>
+      <div className='min-h-screen bg-[#f7f8f9] dark:bg-[#0a2c24]'>
+        <PageLoader message='Loading service...' />
       </div>
     )
   }

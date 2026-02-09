@@ -14,7 +14,7 @@ const Avatar = ({ avatarTitle, iconProps, imageUrl, size, testId, alt, className
     return (
       <div
         className={clsx(
-          'border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative',
+          'border-2 rounded-full flex justify-center items-center content-center text-center overflow-clip object-cover relative',
           avatarSize,
           className
         )}
@@ -31,7 +31,7 @@ const Avatar = ({ avatarTitle, iconProps, imageUrl, size, testId, alt, className
     return (
       <div
         className={clsx(
-          'border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative',
+          'border-2 rounded-full flex justify-center items-center content-center text-center overflow-clip object-cover relative',
           avatarSize,
           className
         )}
@@ -44,7 +44,7 @@ const Avatar = ({ avatarTitle, iconProps, imageUrl, size, testId, alt, className
     return (
       <div
         className={clsx(
-          'border-2 rounded-full items-center content-center text-center mb-2 overflow-clip object-cover relative',
+          'border-2 rounded-full flex justify-center items-center content-center text-center overflow-clip object-cover relative',
           avatarSize,
           className
         )}

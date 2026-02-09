@@ -1,19 +1,27 @@
 'use client'
 
 import * as React from 'react'
+
+import Link from 'next/link'
+
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useForm } from 'react-hook-form'
+
+import { useTranslation } from 'react-i18next'
+
+import { AlertCircle, CheckCircle } from 'lucide-react'
+
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/bookly/components/ui/form'
 import { Input } from '@/bookly/components/ui/input'
 import { Button } from '@/bookly/components/ui/button'
 import { Checkbox } from '@/bookly/components/ui/checkbox'
-import { useTranslation } from 'react-i18next'
-import Link from 'next/link'
 import KulIcon from '@/bookly/components/atoms/kul-icon/kul-icon.component'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 import { FontSize } from '@/bookly/constants/enums'
 import { Alert, AlertDescription } from '@/bookly/components/ui/alert'
-import { AlertCircle, CheckCircle } from 'lucide-react'
+
+
 import { suppressZodConsoleErrors, restoreConsoleErrors } from '@/bookly/lib/suppress-console-errors'
 
 // More lenient client-side validation - only check for required fields
@@ -61,6 +69,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
   // Suppress Zod console errors
   React.useEffect(() => {
     suppressZodConsoleErrors()
+
     return () => {
       restoreConsoleErrors()
     }
@@ -86,12 +95,14 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
     const subscription = form.watch((value, { name }) => {
       if (name && form.formState.errors[name]?.type === 'server') {
         form.clearErrors(name as keyof typeof value)
+
         // Also clear general error when user starts fixing field errors
         if (onClearError) {
           onClearError()
         }
       }
     })
+
     return () => subscription.unsubscribe()
   }, [form.watch, form.clearErrors, onClearError])
 
@@ -152,6 +163,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
             type: 'server',
             message: error.message // Use the exact API message
           })
+
           return // Don't show general error if we have field-specific error
         }
 
@@ -165,6 +177,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
             type: 'server',
             message: 'No account found with this email address.'
           })
+
           return // Don't show general error if we have field-specific error
         }
 
@@ -177,6 +190,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
             type: 'server',
             message: 'Please verify your email address before logging in.'
           })
+
           return // Don't show general error if we have field-specific error
         }
 
@@ -189,6 +203,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
             type: 'server',
             message: 'This account has been locked or disabled. Please contact support.'
           })
+
           return // Don't show general error if we have field-specific error
         }
 
@@ -202,6 +217,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
             type: 'server',
             message: 'An account with this email already exists. Try logging in instead.'
           })
+
           return // Don't show general error if we have field-specific error
         }
 
@@ -239,6 +255,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
         <form
           onSubmit={form.handleSubmit(handleSubmit, errors => {
             console.log('Form validation errors:', errors)
+
             // Handle form validation errors here if needed
           })}
           className='space-y-4'
@@ -432,7 +449,7 @@ export function AuthForm({ type, onSubmit, loading = false, error, successMessag
           <Button type='submit' className='w-full text-white bg-primary-700 hover:bg-primary-800' disabled={loading}>
             {loading ? (
               <>
-                <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
+                <BrandedSpinner size={16} color='inherit' sx={{ mr: 1 }} />
                 {isLogin ? t('auth.login.signingIn') : t('auth.register.creatingAccount')}
               </>
             ) : isLogin ? (

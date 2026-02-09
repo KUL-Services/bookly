@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 import { AuthService, BusinessService, CategoriesService } from '@/lib/api'
 
 export default function ApiTestPage() {
@@ -9,46 +11,56 @@ export default function ApiTestPage() {
 
   const testLogin = async () => {
     setLoading(true)
+
     try {
       console.log('Testing login API...')
+
       const result = await AuthService.loginUser({
         email: 'test@example.com',
         password: 'password123'
       })
+
       console.log('Login result:', result)
       setResults(prev => ({ ...prev, login: result }))
     } catch (error) {
       console.error('Login error:', error)
       setResults(prev => ({ ...prev, login: { error: error.message } }))
     }
+
     setLoading(false)
   }
 
   const testCategories = async () => {
     setLoading(true)
+
     try {
       console.log('Testing categories API...')
       const result = await CategoriesService.getCategories()
+
       console.log('Categories result:', result)
       setResults(prev => ({ ...prev, categories: result }))
     } catch (error) {
       console.error('Categories error:', error)
       setResults(prev => ({ ...prev, categories: { error: error.message } }))
     }
+
     setLoading(false)
   }
 
   const testBusinesses = async () => {
     setLoading(true)
+
     try {
       console.log('Testing businesses API...')
       const result = await BusinessService.getApprovedBusinesses()
+
       console.log('Businesses result:', result)
       setResults(prev => ({ ...prev, businesses: result }))
     } catch (error) {
       console.error('Businesses error:', error)
       setResults(prev => ({ ...prev, businesses: { error: error.message } }))
     }
+
     setLoading(false)
   }
 
@@ -83,8 +95,8 @@ export default function ApiTestPage() {
       </div>
 
       {loading && (
-        <div className="text-center py-4">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="text-center py-4 flex items-center justify-center">
+          <BrandedSpinner size={32} />
         </div>
       )}
 
