@@ -6,17 +6,17 @@ import type {
   RegisterAdminRequest,
   VerifyAccountRequest,
   VerificationResponse,
-  UpdateUserRequest,
+  UpdateUserRequest
 } from '../types'
 
 export class AuthService {
   // User Authentication
   static async registerUser(data: RegisterUserRequest) {
-    return apiClient.post<{ verificationToken: string }>('/auth/user/register', data)
+    return apiClient.post<{ verificationToken: string }>('/auth/register', data)
   }
 
   static async verifyUser(data: VerifyAccountRequest) {
-    return apiClient.post('/auth/user/verify', data)
+    return apiClient.post('/auth/verify', data)
   }
 
   static async loginUser(data: LoginRequest) {
@@ -24,36 +24,40 @@ export class AuthService {
     formData.append('email', data.email)
     formData.append('password', data.password)
 
-    return apiClient.post<LoginResponse>('/auth/user/login', formData, {
+    return apiClient.post<LoginResponse>('/auth/login', formData, {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     })
   }
 
   static async forgotPasswordUser(email: string) {
-    return apiClient.post<{ verificationToken: string }>('/auth/user/forget-password', { email })
+    return apiClient.post<{ verificationToken: string }>('/auth/forget-password', { email })
   }
 
   static async resetPasswordUser(data: { email: string; code: string; password: string }) {
-    return apiClient.post('/auth/user/reset-password', data)
+    return apiClient.post('/auth/reset-password', data)
   }
 
   static async updateUser(data: UpdateUserRequest) {
-    return apiClient.patch('/auth/user', data)
+    return apiClient.patch('/auth', data)
+  }
+
+  static async changePassword(password: string) {
+    return apiClient.patch<{ message: string }>('/auth/password', { password })
   }
 
   static async getUserDetails() {
-    return apiClient.get('/auth/user/details')
+    return apiClient.get('/auth/details')
   }
 
   // Admin Authentication
   static async registerAdmin(data: RegisterAdminRequest) {
-    return apiClient.post('/auth/admin/register', data)
+    return apiClient.post('/admin/auth/register', data)
   }
 
   static async verifyAdmin(data: VerifyAccountRequest) {
-    return apiClient.post('/auth/admin/verify', data)
+    return apiClient.post('/admin/auth/verify', data)
   }
 
   static async loginAdmin(data: LoginRequest) {
@@ -61,23 +65,23 @@ export class AuthService {
     formData.append('email', data.email)
     formData.append('password', data.password)
 
-    return apiClient.post<LoginResponse>('/auth/admin/login', formData, {
+    return apiClient.post<LoginResponse>('/admin/auth/login', formData, {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     })
   }
 
   static async forgotPasswordAdmin(email: string) {
-    return apiClient.post<{ verificationToken: string }>('/auth/admin/forget-password', { email })
+    return apiClient.post<{ verificationToken: string }>('/admin/auth/forget-password', { email })
   }
 
   static async resetPasswordAdmin(data: { email: string; code: string; password: string }) {
-    return apiClient.post('/auth/admin/reset-password', data)
+    return apiClient.post('/admin/auth/reset-password', data)
   }
 
   static async getAdminDetails() {
-    return apiClient.get('/auth/admin/details')
+    return apiClient.get('/admin/auth/details')
   }
 
   // Super Admin Authentication
@@ -86,10 +90,10 @@ export class AuthService {
     formData.append('email', data.email)
     formData.append('password', data.password)
 
-    return apiClient.post<LoginResponse>('/auth/super-admin/login', formData, {
+    return apiClient.post<LoginResponse>('/superadmin/auth/login', formData, {
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     })
   }
 

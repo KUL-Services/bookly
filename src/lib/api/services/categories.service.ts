@@ -9,16 +9,16 @@ export class CategoriesService {
 
   // Super Admin only - Create category
   static async createCategory(data: CreateCategoryRequest) {
-    return apiClient.post<Category>('/categories', data)
+    return apiClient.post<Category>('/superadmin/categories', data)
   }
 
   // Super Admin only - Update category
   static async updateCategory(id: string, data: UpdateCategoryRequest) {
-    return apiClient.patch<Category>(`/categories/${id}`, data)
+    return apiClient.patch<Category>(`/superadmin/categories/${id}`, data)
   }
 
   // Super Admin only - Delete category
   static async deleteCategory(id: string) {
-    return apiClient.delete<Category>(`/categories/${id}`)
+    return apiClient.delete<Category>(`/superadmin/categories/${id}`)
   }
 }

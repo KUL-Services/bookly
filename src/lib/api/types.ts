@@ -1,25 +1,29 @@
-// API Types based on api-spec.json
+// API Types based on actual tested API responses
 
 export interface User {
   id: string
   firstName: string
   lastName: string
   email: string
-  verified: boolean
-  profilePhoto?: string | null // UUID in requests
-  profilePhotoUrl?: string | null // URL in responses
+  mobile?: string
+  verified?: boolean
+  profilePhoto?: string | null
+  profilePhotoUrl?: string | null
   profileComplete?: boolean
   createdAt: string
+  updatedAt?: string
 }
 
 export interface Admin {
   id: string
   name: string
   email: string
-  isVerified: boolean
+  isVerified?: boolean
+  isOwner?: boolean
   businessId: string
   createdAt: string
   updatedAt: string
+  business?: Business
 }
 
 export interface Business {
@@ -28,13 +32,14 @@ export interface Business {
   email?: string
   description?: string
   approved?: boolean
-  logo?: string | null // UUID in requests
-  logoUrl?: string | null // URL in responses
+  logo?: string | null
+  logoUrl?: string | null
+  coverImageUrl?: string | null
   rating?: number
   socialLinks?: SocialLink[]
-  services?: Service[] // Services offered by this business
-  branches?: Branch[] // Branches of this business
-  reviews?: Review[] // Reviews for this business
+  services?: Service[]
+  branches?: Branch[]
+  reviews?: Review[]
   owner?: {
     name: string
     email: string
@@ -44,8 +49,10 @@ export interface Business {
 }
 
 export interface SocialLink {
+  id?: string
   platform: string
   url: string
+  businessId?: string
 }
 
 export interface Category {
@@ -59,16 +66,35 @@ export interface Service {
   id: string
   name: string
   description?: string
-  location: string
+  location?: string
   price: number
   duration: number
+  maxConcurrent?: number | null
   businessId: string
-  gallery?: string[] // UUIDs in requests
-  galleryUrls?: string[] // URLs in responses
+  gallery?: string[]
+  galleryUrls?: string[]
   business?: Business
   categories?: Category[]
   branches?: Branch[]
   reviews?: Review[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Resource {
+  id: string
+  name: string
+  type: 'STAFF' | 'ASSET'
+  maxConcurrent: number
+  slotInterval: number
+  slotDuration?: number | null
+  mobile?: string | null
+  email?: string | null
+  profilePhoto?: string | null
+  description?: string | null
+  image?: string | null
+  branchId: string
+  services?: Service[]
   createdAt: string
   updatedAt: string
 }
@@ -79,8 +105,8 @@ export interface Staff {
   mobile?: string
   businessId?: string
   branchId: string
-  profilePhoto?: string | null // UUID in requests
-  profilePhotoUrl?: string | null // URL in responses
+  profilePhoto?: string | null
+  profilePhotoUrl?: string | null
   services?: Service[]
   createdAt: string
   updatedAt: string
@@ -94,10 +120,11 @@ export interface Branch {
   businessId: string
   latitude?: number
   longitude?: number
-  gallery?: string[] // UUIDs in requests
-  galleryUrls?: string[] // URLs in responses
+  gallery?: string[]
+  galleryUrls?: string[]
   services?: Service[]
   staff?: Staff[]
+  resources?: Resource[]
   createdAt: string
   updatedAt: string
 }
@@ -107,7 +134,8 @@ export interface Review {
   rating: number
   comment?: string
   userId: string
-  serviceId: string
+  serviceId?: string
+  businessId?: string
   user?: User
   service?: Service
   createdAt: string
@@ -137,8 +165,25 @@ export interface BusinessChangeRequest {
 }
 
 // Request/Response Types
+
+// User login returns { accessToken, user }
+export interface UserLoginResponse {
+  accessToken: string
+  user: User
+}
+
+// Admin login returns { accessToken, admin }
+export interface AdminLoginResponse {
+  accessToken: string
+  user: Admin & { business?: Business }
+}
+
+// Generic login response (handles both camelCase and snake_case from API)
 export interface LoginResponse {
-  access_token: string
+  accessToken?: string
+  access_token?: string
+  user?: any
+  admin?: any
 }
 
 export interface VerificationResponse {
@@ -159,7 +204,7 @@ export interface CreateAssetResponse {
 export interface RegisterUserRequest {
   firstName: string
   lastName: string
-  mobile: string
+  mobile?: string
   email: string
   password: string
 }
@@ -209,7 +254,7 @@ export interface CreateServiceRequest {
   duration: number
   categoryIds?: string[]
   branchIds?: string[]
-  gallery?: string[] // Array of asset UUIDs
+  gallery?: string[]
 }
 
 export interface UpdateServiceRequest {
@@ -221,24 +266,30 @@ export interface UpdateServiceRequest {
   duration?: number
   categoryIds?: string[]
   branchIds?: string[]
-  gallery?: string[] // Array of asset UUIDs
+  gallery?: string[]
 }
 
 export interface CreateStaffRequest {
   name: string
   mobile?: string
+  email?: string
   branchId: string
-  serviceIds?: string[] // Array of service UUIDs that staff can provide
-  profilePhoto?: string | null // Asset UUID
+  serviceIds?: string[]
+  profilePhoto?: string | null
+  slotInterval?: number
+  slotDuration?: number | null
 }
 
 export interface UpdateStaffRequest {
   id: string
-  name: string
+  name?: string
   mobile?: string
+  email?: string
   branchId?: string
-  serviceIds?: string[] // Array of service UUIDs that staff can provide
-  profilePhoto?: string | null // Asset UUID
+  serviceIds?: string[]
+  profilePhoto?: string | null
+  slotInterval?: number
+  slotDuration?: number | null
 }
 
 export interface CreateBranchRequest {
@@ -246,7 +297,7 @@ export interface CreateBranchRequest {
   address?: string
   mobile?: string
   serviceIds?: string[]
-  gallery?: string[] // Array of asset UUIDs
+  gallery?: string[]
 }
 
 export interface UpdateBranchRequest {
@@ -255,7 +306,7 @@ export interface UpdateBranchRequest {
   address?: string
   mobile?: string
   serviceIds?: string[]
-  gallery?: string[] // Array of asset UUIDs
+  gallery?: string[]
 }
 
 export interface UpdateBusinessRequest {
@@ -264,7 +315,7 @@ export interface UpdateBusinessRequest {
   email?: string
   description?: string
   socialLinks?: SocialLink[]
-  logo?: string | null // Asset UUID
+  logo?: string | null
 }
 
 export interface ApproveBusinessRequest {
@@ -279,83 +330,306 @@ export interface UpdateUserRequest {
   firstName: string
   lastName: string
   mobile: string
-  profilePhoto?: string | null // Asset UUID
+  profilePhoto?: string | null
 }
 
 // Booking related types
-export interface Addon {
-  id: string
-  name: string
-  priceCents: number
-  maxQty?: number
-}
 
-export interface TimeSlot {
-  time: string
-  endTime?: string
-  type?: 'static' | 'dynamic'
-  available: boolean
+export interface AvailableSlot {
+  startTime: string
+  endTime: string
 }
 
 export interface AvailabilityResponse {
-  slots: TimeSlot[]
+  resourceId: string
+  resourceName: string
+  resourceType: 'STAFF' | 'ASSET'
+  availableSlots: AvailableSlot[]
 }
 
 export interface Booking {
   id: string
+  userId: string
   serviceId: string
-  providerId: string
-  startsAtUtc: string
-  customer: {
-    name: string
-    email: string
-    phone?: string
-  }
-  addons?: Array<{
-    id: string
-    quantity: number
-  }>
-  totalCents: number
-  status: 'pending' | 'confirmed' | 'cancelled'
+  branchId: string
+  resourceId?: string
+  startTime: string
+  endTime: string
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
   notes?: string
+  service?: {
+    name: string
+    duration: number
+    price: number
+    businessId: string
+  }
+  branch?: {
+    name: string
+    address: string
+    businessId: string
+  }
+  resource?: {
+    name: string
+    type: 'STAFF' | 'ASSET'
+  }
+  user?: {
+    firstName: string
+    lastName: string
+    email: string
+  }
   createdAt: string
   updatedAt: string
 }
 
 export interface CreateBookingRequest {
   serviceId: string
-  providerId: string
-  startsAtUtc: string
-  customer: {
-    name: string
-    email: string
-    phone?: string
-  }
-  addons?: Array<{
-    id: string
-    quantity: number
-  }>
+  branchId: string
+  resourceId?: string
+  startTime: string
   notes?: string
-  couponCode?: string
 }
 
-export interface ValidateCouponRequest {
-  code: string
+export interface GuestBookingRequest extends CreateBookingRequest {
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+}
+
+export interface AdminCreateBookingRequest {
   serviceId: string
+  branchId: string
+  resourceId?: string
+  staffId?: string
+  startTime: string
+  customerName: string
+  customerEmail?: string
+  customerPhone?: string
+  status?: string
+  notes?: string
 }
 
-export interface ValidateCouponResponse {
-  valid: boolean
-  discountPercent?: number
-  discountAmount?: number
+export interface RescheduleBookingRequest {
+  startTime: string
+  resourceId?: string
 }
 
-export interface MockPaymentRequest {
-  bookingId: string
-  amount: number
+// Availability - flat slot format (verified from actual API)
+export interface AvailableSlotFlat {
+  startTime: string
+  endTime: string
+  resourceId: string
 }
 
-export interface MockPaymentResponse {
-  success: boolean
-  transactionId: string
+// Asset (Room/Equipment) types
+export interface Asset {
+  id: string
+  name: string
+  type: 'ASSET'
+  description?: string | null
+  branchId: string
+  maxConcurrent: number
+  slotInterval: number
+  slotDuration?: number | null
+  image?: string | null
+  mobile?: string | null
+  email?: string | null
+  serviceIds?: string[]
+  services?: Service[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateAssetResourceRequest {
+  name: string
+  description?: string
+  branchId: string
+  maxConcurrent?: number
+  serviceIds?: string[]
+  image?: string
+  slotInterval?: number
+  slotDuration?: number | null
+}
+
+export interface UpdateAssetResourceRequest {
+  id: string
+  name?: string
+  description?: string
+  branchId?: string
+  maxConcurrent?: number
+  serviceIds?: string[]
+  image?: string
+  slotInterval?: number
+  slotDuration?: number | null
+}
+
+// Scheduling types
+export interface Schedule {
+  id: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  resourceId?: string
+  branchId?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateScheduleRequest {
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  resourceId?: string
+  branchId?: string
+}
+
+export interface ScheduleBreak {
+  id: string
+  name: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  resourceId?: string
+  branchId?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateBreakRequest {
+  name: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  resourceId?: string
+  branchId?: string
+}
+
+export interface ScheduleException {
+  id: string
+  date: string
+  startTime?: string | null
+  endTime?: string | null
+  reason?: string
+  isAvailable: boolean
+  resourceId?: string
+  branchId?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateExceptionRequest {
+  date: string
+  startTime?: string | null
+  endTime?: string | null
+  reason?: string
+  isAvailable: boolean
+  resourceId?: string
+  branchId?: string
+}
+
+export interface ResourceAssignment {
+  id: string
+  staffId: string
+  assetId: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateAssignmentRequest {
+  staffId: string
+  assetId: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+}
+
+// Commission types
+export interface Commission {
+  id: string
+  serviceId: string
+  resourceId: string
+  percentage: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateCommissionRequest {
+  serviceId: string
+  resourceId: string
+  percentage: number
+}
+
+// Review types
+export interface CreateReviewRequest {
+  businessId: string
+  rating: number
+  comment: string
+  serviceId?: string
+  bookingId?: string
+}
+
+export interface AdminReview extends Review {
+  reply?: string | null
+  flagged?: boolean
+  flagReason?: string | null
+}
+
+// Notification types
+export interface Notification {
+  id: string
+  type: string
+  message: string
+  read: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// Admin bookings query params
+export interface AdminBookingsParams {
+  date?: string
+  fromDate?: string
+  toDate?: string
+  staffId?: string
+  status?: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
+  page?: number
+  pageSize?: number
+  sortBy?: string
+  sortOrder?: 'asc' | 'desc'
+}
+
+// Business Settings
+export interface BookingPolicies {
+  advanceBookingDays?: number
+  cancellationHours?: number
+  allowGuestBooking?: boolean
+  requirePhone?: boolean
+}
+
+export interface PaymentSettings {
+  requirePayment?: boolean
+  depositAmount?: number
+  currency?: string
+}
+
+export interface NotificationSettings {
+  emailEnabled?: boolean
+  smsEnabled?: boolean
+  pushEnabled?: boolean
+}
+
+export interface SchedulingSettings {
+  defaultSlotDuration?: number
+  bufferTime?: number
+  startOfWeek?: number
+}
+
+export interface BusinessSettings {
+  businessId: string
+  bookingPolicies: BookingPolicies
+  paymentSettings: PaymentSettings
+  notificationSettings: NotificationSettings
+  schedulingSettings: SchedulingSettings
+  customerSettings: any
 }

@@ -6,8 +6,8 @@ import { AuthService } from '@/lib/api'
 import type { LoginRequest, RegisterUserRequest, VerifyAccountRequest } from '@/lib/api'
 
 // Mock authentication flag - set to true to use mock auth for customers
-// This allows testing customer flows without backend connection
-const USE_MOCK_CUSTOMER_AUTH = process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true' || true // Default to true until backend is ready
+// Set to false to use real backend API
+const USE_MOCK_CUSTOMER_AUTH = process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true' || false
 
 // Mock customer data for testing
 const MOCK_CUSTOMERS: Record<string, { password: string; name: string; avatar?: string }> = {
@@ -23,6 +23,7 @@ export interface AuthUser {
   email: string
   name?: string
   avatar?: string
+  phone?: string
   role?: string
   isOwner?: boolean
   business?: {
@@ -67,7 +68,7 @@ interface AuthState {
   checkAndCleanupExpiredSession: () => void
 
   // Bookly
-  loginCustomer: (payload: LoginRequest) => Promise<void>
+  loginCustomer: (payload: LoginRequest) => Promise<any>
   registerCustomer: (payload: RegisterUserRequest) => Promise<void>
   verifyCustomer: (payload: VerifyAccountRequest) => Promise<void>
   logoutCustomer: () => void
@@ -123,7 +124,7 @@ export const useAuthStore = create<AuthState>()(
         if (state.materializeUser || state.booklyUser) {
           set({
             lastActivity: now,
-            sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours from now
+            sessionExpiry: now + 24 * 60 * 60 * 1000 // 24 hours from now
           })
         }
       },
@@ -168,7 +169,7 @@ export const useAuthStore = create<AuthState>()(
             loading: false,
             error: null,
             lastActivity: now,
-            sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours
+            sessionExpiry: now + 24 * 60 * 60 * 1000 // 24 hours
           })
           console.log('🎭 Mock customer login successful for:', email)
         }
@@ -191,7 +192,10 @@ export const useAuthStore = create<AuthState>()(
             // For any other email, accept any password (for testing convenience)
             // In production, this would fail without a valid account
             const userName = payload.email.split('@')[0].replace(/[._]/g, ' ')
-            const capitalizedName = userName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+            const capitalizedName = userName
+              .split(' ')
+              .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+              .join(' ')
             setMockSession(payload.email, capitalizedName)
             return
           }
@@ -199,29 +203,69 @@ export const useAuthStore = create<AuthState>()(
 
         // Real API authentication
         try {
+          console.log('🔑 Attempting customer login for:', payload.email)
           const response = await AuthService.loginUser(payload)
+          console.log('📊 Login API Response:', response)
+
           if (response.error) {
             throw new Error(response.error)
           }
 
-          if (response.data?.access_token) {
-            AuthService.setAuthToken(response.data.access_token)
+          // Handle both camelCase (accessToken) and snake_case (access_token) from API
+          const accessToken = response.data?.accessToken || response.data?.access_token
+          if (accessToken) {
+            console.log('✅ Login successful, setting auth token', accessToken.substring(0, 10) + '...')
+            AuthService.setAuthToken(accessToken)
             const now = Date.now()
-            set({
-              userType: 'customer',
+            const user = response.data?.user
+
+            const newState = {
+              userType: 'customer' as UserType,
               booklyUser: {
-                id: 'user_' + payload.email,
-                email: payload.email,
-                name: payload.email.split('@')[0]
+                id: user?.id || 'user_' + payload.email,
+                email: user?.email || payload.email,
+                name: user ? `${user.firstName} ${user.lastName}`.trim() : payload.email.split('@')[0],
+                avatar: user?.profilePhoto || user?.profilePhotoUrl || undefined,
+                phone: user?.mobile || undefined
               },
-              token: response.data.access_token,
+              token: accessToken,
               loading: false,
               error: null,
               lastActivity: now,
-              sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours
-            })
+              sessionExpiry: now + 24 * 60 * 60 * 1000 // 24 hours
+            }
+
+            console.log('💾 Setting auth state:', newState)
+            set(newState)
+
+            // Allow state to update and persist
+            await new Promise(resolve => setTimeout(resolve, 100))
+
+            // Fallback: Manually persist to localStorage if middleware fails
+            if (typeof window !== 'undefined') {
+              try {
+                const persistedState = {
+                  state: {
+                    booklyUser: newState.booklyUser,
+                    materializeUser: get().materializeUser,
+                    userType: newState.userType,
+                    token: newState.token,
+                    lastActivity: newState.lastActivity,
+                    sessionExpiry: newState.sessionExpiry
+                  },
+                  version: 0
+                }
+                localStorage.setItem('bookly-auth-store', JSON.stringify(persistedState))
+                console.log('💾 Manually persisted auth state to localStorage')
+              } catch (err) {
+                console.error('Failed to manually persist auth state:', err)
+              }
+            }
           }
+
+          return response
         } catch (e: any) {
+          console.error('❌ Customer login failed:', e)
           set({ loading: false, error: e?.message ?? 'Login failed' })
           throw e
         }
@@ -326,25 +370,28 @@ export const useAuthStore = create<AuthState>()(
             throw new Error(response.error)
           }
 
-          if (response.data?.access_token && response.data?.user) {
+          // Handle both camelCase (accessToken) and snake_case (access_token) from API
+          const adminToken = response.data?.accessToken || response.data?.access_token
+          const adminUser = response.data?.user || response.data?.admin
+          if (adminToken && adminUser) {
             console.log('✅ Login successful, setting auth token')
-            AuthService.setAuthToken(response.data.access_token)
+            AuthService.setAuthToken(adminToken)
             const now = Date.now()
             set({
               userType: 'business',
               materializeUser: {
-                id: response.data.user.id,
-                email: response.data.user.email,
-                name: response.data.user.name,
+                id: adminUser.id,
+                email: adminUser.email,
+                name: adminUser.name,
                 role: 'admin',
-                isOwner: response.data.user.isOwner,
-                business: response.data.user.business
+                isOwner: adminUser.isOwner,
+                business: adminUser.business
               },
-              token: response.data.access_token,
+              token: adminToken,
               loading: false,
               error: null,
               lastActivity: now,
-              sessionExpiry: now + (24 * 60 * 60 * 1000) // 24 hours
+              sessionExpiry: now + 24 * 60 * 60 * 1000 // 24 hours
             })
           } else {
             console.error('❌ No access token in response:', response)
@@ -405,7 +452,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'bookly-auth-store',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
+      partialize: state => ({
         booklyUser: state.booklyUser,
         materializeUser: state.materializeUser,
         userType: state.userType,
@@ -413,7 +460,7 @@ export const useAuthStore = create<AuthState>()(
         lastActivity: state.lastActivity,
         sessionExpiry: state.sessionExpiry
       }),
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => state => {
         // Restore token to API client after rehydration
         if (state?.token && (state?.booklyUser || state?.materializeUser)) {
           console.log('🔄 Restoring token to API client after store rehydration')

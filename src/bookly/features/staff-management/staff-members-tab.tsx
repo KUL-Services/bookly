@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box,
   Paper,
@@ -31,6 +31,7 @@ import {
   Menu,
   ListItemIcon
 } from '@mui/material'
+import { CircularProgress } from '@mui/material'
 import { BrandedEmptyState } from '@/bookly/components/molecules/branded-empty-state'
 import { mockStaff, mockServices, mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
@@ -74,7 +75,7 @@ export function StaffMembersTab() {
   const [branchFilter, setBranchFilter] = useState<string>('all')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [staffToDelete, setStaffToDelete] = useState<{ id: string; name: string } | null>(null)
-  const [editingStaff, setEditingStaff] = useState<(typeof mockStaff)[0] | null>(null)
+  const [editingStaff, setEditingStaff] = useState<any>(null)
 
   // Action Menu State
   const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null)
@@ -90,22 +91,39 @@ export function StaffMembersTab() {
     isTimeReservationOpen,
     toggleTimeOff,
     toggleTimeReservation,
-    deleteStaffMember
+    deleteStaffMember,
+    staffMembers,
+    apiServices,
+    apiBranches,
+    isStaffLoading,
+    fetchStaffFromApi,
+    fetchServicesFromApi,
+    fetchBranchesFromApi
   } = useStaffManagementStore()
 
   const { setStaffFilters } = useCalendarStore()
 
-  // Get selected staff
-  const selectedStaff = mockStaff.find(s => s.id === selectedStaffId)
+  // Fetch data from API on mount
+  useEffect(() => {
+    fetchStaffFromApi()
+    fetchServicesFromApi()
+    fetchBranchesFromApi()
+  }, [])
 
-  // Filter staff by search - only show base staff members (IDs 1-7) matching other tabs
-  const filteredStaff = mockStaff
-    .filter(s => ['1', '2', '3', '4', '5', '6', '7'].includes(s.id))
-    .filter(
-      staff =>
-        staff.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        staff.title.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  // Use API data with mock fallback
+  const allStaff = staffMembers.length > 0 ? staffMembers : mockStaff
+  const allServices = apiServices.length > 0 ? apiServices : mockServices
+  const allBranches = apiBranches.length > 0 ? apiBranches : mockBranches
+
+  // Get selected staff
+  const selectedStaff = allStaff.find(s => s.id === selectedStaffId)
+
+  // Filter staff by search
+  const filteredStaff = allStaff.filter(
+    staff =>
+      (staff.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (staff.title || '').toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   // Filter by branch if selected
   const filteredByBranch =
@@ -121,11 +139,11 @@ export function StaffMembersTab() {
       : filteredByBranch
 
   // Always group by branch
-  const groupedStaff: Record<string, { name: string; staff: typeof mockStaff }> = {}
+  const groupedStaff: Record<string, { name: string; staff: any[] }> = {}
 
   filteredByService.forEach(staff => {
     const branchId = staff.branchId
-    const branch = mockBranches.find(b => b.id === branchId)
+    const branch = allBranches.find((b: any) => b.id === branchId)
 
     if (!groupedStaff[branchId]) {
       groupedStaff[branchId] = { name: branch?.name || branchId, staff: [] }
@@ -138,13 +156,13 @@ export function StaffMembersTab() {
     .map(([id, group]) => ({
       id,
       name: group.name,
-      staff: group.staff.sort((a, b) => a.name.localeCompare(b.name))
+      staff: group.staff.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
     }))
     .sort((a, b) => a.name.localeCompare(b.name))
 
   // Get assigned services for selected staff
   const assignedServiceIds = selectedStaffId ? getStaffServices(selectedStaffId) : []
-  const assignedServices = mockServices.filter(s => assignedServiceIds.includes(s.id))
+  const assignedServices = allServices.filter((s: any) => assignedServiceIds.includes(s.id))
 
   const handleShowCalendar = () => {
     if (!selectedStaffId) return
@@ -272,7 +290,7 @@ export function StaffMembersTab() {
               <InputLabel>Location</InputLabel>
               <Select value={branchFilter} onChange={e => setBranchFilter(e.target.value)} label='Location'>
                 <MenuItem value='all'>All Locations</MenuItem>
-                {mockBranches.map(branch => (
+                {allBranches.map((branch: any) => (
                   <MenuItem key={branch.id} value={branch.id}>
                     {branch.name}
                   </MenuItem>
@@ -284,7 +302,7 @@ export function StaffMembersTab() {
               <InputLabel>Service</InputLabel>
               <Select value={serviceFilter} onChange={e => setServiceFilter(e.target.value)} label='Service'>
                 <MenuItem value='all'>All Services</MenuItem>
-                {mockServices.map(service => (
+                {allServices.map((service: any) => (
                   <MenuItem key={service.id} value={service.id}>
                     {service.name}
                   </MenuItem>

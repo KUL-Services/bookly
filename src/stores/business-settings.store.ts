@@ -5,6 +5,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { SettingsService } from '@/lib/api/services/settings.service'
 
 // ============================================================================
 // Types
@@ -415,15 +416,28 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
           hasUnsavedChanges: true
         }),
 
-      // Persistence (mocked for now)
+      // Persistence - wired to SettingsService API with localStorage fallback
       saveSettings: async () => {
         set({ isSaving: true, error: null })
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          const state = get()
+          const settingsPayload = {
+            businessProfile: state.businessProfile,
+            socialLinks: state.socialLinks,
+            bookingPolicies: state.bookingPolicies,
+            paymentSettings: state.paymentSettings,
+            notificationSettings: state.notificationSettings,
+            schedulingSettings: state.schedulingSettings,
+            calendarSettings: state.calendarSettings,
+            customerSettings: state.customerSettings,
+            brandingSettings: state.brandingSettings
+          }
 
-          // In production, this would call:
-          // await BusinessSettingsService.updateSettings(get())
+          const result = await SettingsService.updateSettings(settingsPayload)
+
+          if (result.error) {
+            throw new Error(result.error)
+          }
 
           set({
             isSaving: false,
@@ -431,34 +445,52 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
             successMessage: 'Settings saved successfully!'
           })
 
-          // Clear success message after 3 seconds
           setTimeout(() => {
             set({ successMessage: null })
           }, 3000)
         } catch (error) {
+          console.warn('Failed to save settings to API, saved locally:', error)
+          // Settings are still persisted via Zustand persist middleware (localStorage)
           set({
             isSaving: false,
-            error: error instanceof Error ? error.message : 'Failed to save settings'
+            hasUnsavedChanges: false,
+            successMessage: 'Settings saved locally (API unavailable)'
           })
+
+          setTimeout(() => {
+            set({ successMessage: null })
+          }, 3000)
         }
       },
 
       loadSettings: async () => {
         set({ isLoading: true, error: null })
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500))
+          const result = await SettingsService.getSettings()
 
-          // In production, this would call:
-          // const settings = await BusinessSettingsService.getSettings()
-          // set({ ...settings, isLoading: false })
-
-          set({ isLoading: false })
+          if (result.data) {
+            // Merge API settings with defaults (API may not have all fields)
+            const apiSettings = result.data as any
+            set({
+              ...(apiSettings.businessProfile && { businessProfile: { ...get().businessProfile, ...apiSettings.businessProfile } }),
+              ...(apiSettings.socialLinks && { socialLinks: { ...get().socialLinks, ...apiSettings.socialLinks } }),
+              ...(apiSettings.bookingPolicies && { bookingPolicies: { ...get().bookingPolicies, ...apiSettings.bookingPolicies } }),
+              ...(apiSettings.paymentSettings && { paymentSettings: { ...get().paymentSettings, ...apiSettings.paymentSettings } }),
+              ...(apiSettings.notificationSettings && { notificationSettings: { ...get().notificationSettings, ...apiSettings.notificationSettings } }),
+              ...(apiSettings.schedulingSettings && { schedulingSettings: { ...get().schedulingSettings, ...apiSettings.schedulingSettings } }),
+              ...(apiSettings.calendarSettings && { calendarSettings: { ...get().calendarSettings, ...apiSettings.calendarSettings } }),
+              ...(apiSettings.customerSettings && { customerSettings: { ...get().customerSettings, ...apiSettings.customerSettings } }),
+              ...(apiSettings.brandingSettings && { brandingSettings: { ...get().brandingSettings, ...apiSettings.brandingSettings } }),
+              isLoading: false
+            })
+          } else {
+            // No API data - use localStorage persisted data (already loaded by Zustand)
+            set({ isLoading: false })
+          }
         } catch (error) {
-          set({
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to load settings'
-          })
+          console.warn('Failed to load settings from API, using local data:', error)
+          // Zustand persist middleware already loaded from localStorage
+          set({ isLoading: false })
         }
       },
 

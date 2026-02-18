@@ -22,8 +22,8 @@ import {
 } from 'lucide-react'
 
 import { PageLoader } from '@/components/LoadingStates'
-import { MOCK_USER } from '@/mocks/user'
 import { useAuthStore } from '@/stores/auth.store'
+import { AuthService } from '@/lib/api/services/auth.service'
 
 const menuItems = [
   {
@@ -65,6 +65,7 @@ function ProfilePage() {
   const lang = params?.lang || 'en'
 
   const logoutCustomer = useAuthStore(s => s.logoutCustomer)
+  const booklyUser = useAuthStore(s => s.booklyUser)
   const [hydrated, setHydrated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [userDetails, setUserDetails] = useState<any>(null)
@@ -74,23 +75,49 @@ function ProfilePage() {
   useEffect(() => {
     if (!hydrated) return
 
-    const timer = setTimeout(() => {
-      setUserDetails({
-        ...MOCK_USER,
-        createdAt: '2023-05-15T10:00:00Z'
-      })
-      setLoading(false)
-    }, 300)
+    // If not authenticated, redirect to login
+    if (!booklyUser) {
+      router.push(`/${lang}/customer/login`)
+      return
+    }
 
-    return () => clearTimeout(timer)
-  }, [hydrated])
+    // Fetch user details from API
+    AuthService.getUserDetails()
+      .then(res => {
+        if (res.data) {
+          setUserDetails(res.data)
+        } else {
+          // Fall back to auth store data
+          setUserDetails({
+            firstName: booklyUser.name?.split(' ')[0] || '',
+            lastName: booklyUser.name?.split(' ').slice(1).join(' ') || '',
+            email: booklyUser.email,
+            profilePhotoUrl: booklyUser.avatar
+          })
+        }
+      })
+      .catch(() => {
+        // Fall back to auth store data on error
+        setUserDetails({
+          firstName: booklyUser.name?.split(' ')[0] || '',
+          lastName: booklyUser.name?.split(' ').slice(1).join(' ') || '',
+          email: booklyUser.email,
+          profilePhotoUrl: booklyUser.avatar
+        })
+      })
+      .finally(() => setLoading(false))
+  }, [hydrated, booklyUser, lang, router])
 
   const handleLogout = () => {
     logoutCustomer()
     router.push(`/${lang}/landpage`)
   }
 
-  const user = userDetails || MOCK_USER
+  const user = userDetails || {
+    firstName: booklyUser?.name?.split(' ')[0] || 'User',
+    lastName: booklyUser?.name?.split(' ').slice(1).join(' ') || '',
+    email: booklyUser?.email || ''
+  }
 
   const memberSince = user.createdAt
     ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })

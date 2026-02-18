@@ -297,38 +297,6 @@ function businessDetailsPage() {
   const staffScrollRef = useRef<HTMLDivElement>(null) // Fix for Safari iOS touch issues - use standard click with touch-action CSS
   // The key fix is using touch-action: manipulation on interactive elements
   // and ensuring onClick works properly on iOS Safari
-  const handleButtonClick = useCallback((callback: () => void) => {
-    return (e: MouseEvent<HTMLButtonElement | HTMLDivElement>) => {
-      e.stopPropagation()
-      callback()
-    }
-  }, [])
-
-  const handleTap = useCallback((callback: () => void) => {
-    let touchMoved = false
-    let touchStartTime = 0
-    return {
-      onTouchStart: () => {
-        touchMoved = false
-        touchStartTime = Date.now()
-      },
-      onTouchMove: () => {
-        touchMoved = true
-      },
-      onTouchEnd: (e: TouchEvent) => {
-        const touchDuration = Date.now() - touchStartTime
-        // Only trigger if it was a quick tap without movement
-        if (!touchMoved && touchDuration < 500) {
-          e.preventDefault()
-          callback()
-        }
-      },
-      onClick: (e: MouseEvent) => {
-        e.stopPropagation()
-        callback()
-      }
-    }
-  }, [])
 
   const scrollStaff = (direction: 'left' | 'right') => {
     if (staffScrollRef.current) {
@@ -358,7 +326,7 @@ function businessDetailsPage() {
   const handleLoginRedirect = () => {
     // Redirect to login with return url
     const returnUrl = encodeURIComponent(`/business/${params.slug}`)
-    router.push(`/${params.lang}/login?redirect=${returnUrl}`)
+    router.push(`/${params.lang}/customer/login?redirect=${returnUrl}`)
     setShowLoginGuestModal(false)
   }
 
@@ -658,13 +626,13 @@ function businessDetailsPage() {
                         <span>Meet the Team</span>
                         <div className='flex gap-2'>
                           <button
-                            {...handleTap(() => scrollStaff('left'))}
+                            onClick={() => scrollStaff('left')}
                             className='p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
                           >
                             <ChevronLeft className='w-4 h-4 text-gray-600 dark:text-gray-300' />
                           </button>
                           <button
-                            {...handleTap(() => scrollStaff('right'))}
+                            onClick={() => scrollStaff('right')}
                             className='p-2 rounded-full border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
                           >
                             <ChevronRight className='w-4 h-4 text-gray-600 dark:text-gray-300' />
@@ -741,10 +709,10 @@ function businessDetailsPage() {
                             key={index}
                             role='button'
                             tabIndex={0}
-                            {...handleTap(() => {
+                            onClick={() => {
                               setSelectedBranch(branch)
                               setBranchModalOpen(true)
-                            })}
+                            }}
                             className='group bg-white dark:bg-[#202c39] p-4 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer flex gap-4 items-center border border-gray-100 dark:border-white/5'
                           >
                             <div className='w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 relative'>
@@ -1003,7 +971,7 @@ function businessDetailsPage() {
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
         initialService={selectedService || undefined}
-        branchId={selectedBranch?.id}
+        branchId={selectedBranch?.id || branches[0]?.id}
         businessId={params.slug}
         availableServices={services}
         availableStaff={staff}

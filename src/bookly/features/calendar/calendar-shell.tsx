@@ -4,7 +4,8 @@ import { useState, useRef, useMemo, useEffect } from 'react'
 import { Box, useTheme, useMediaQuery, Snackbar, Alert } from '@mui/material'
 import FullCalendar from '@fullcalendar/react'
 import { useCalendarStore } from './state'
-import { mockStaff } from '@/bookly/data/mock-data'
+import { useStaffManagementStore } from '../staff-management/staff-store'
+import { mockStaff as fallbackMockStaff } from '@/bookly/data/mock-data'
 import { addDays, addWeeks, addMonths } from './utils'
 import CalendarHeader from './calendar-header'
 import CalendarSidebar from './calendar-sidebar'
@@ -61,6 +62,37 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const goBackToAllStaff = useCalendarStore(state => state.goBackToAllStaff)
   const openAppointmentDrawer = useCalendarStore(state => state.openAppointmentDrawer)
   const clearError = useCalendarStore(state => state.clearError)
+  const fetchEvents = useCalendarStore(state => state.fetchEvents)
+  const fetchStaff = useCalendarStore(state => state.fetchStaff)
+  const fetchResources = useCalendarStore(state => state.fetchResources)
+  const fetchSchedules = useCalendarStore(state => state.fetchSchedules)
+  const fetchAssignments = useCalendarStore(state => state.fetchAssignments)
+  const deleteEvent = useCalendarStore(state => state.deleteEvent)
+
+  // Staff Management Store actions
+  const fetchBranchesFromApi = useStaffManagementStore(state => state.fetchBranchesFromApi)
+  const fetchServicesFromApi = useStaffManagementStore(state => state.fetchServicesFromApi)
+  const fetchStaffResourcesFromApi = useStaffManagementStore(state => state.fetchResourcesFromApi)
+  const fetchSchedulesFromApi = useStaffManagementStore(state => state.fetchSchedulesFromApi)
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchStaff()
+    fetchResources()
+    fetchSchedules()
+    fetchAssignments()
+    fetchBranchesFromApi()
+    fetchServicesFromApi()
+    fetchStaffResourcesFromApi()
+    fetchSchedulesFromApi()
+  }, [])
+
+  // Fetch events when date range changes
+  useEffect(() => {
+    if (visibleDateRange) {
+      fetchEvents(visibleDateRange)
+    }
+  }, [visibleDateRange, fetchEvents])
 
   // Local state
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -95,6 +127,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
   // Get filtered events
   const events = getFilteredEvents()
+  const allStaff = useCalendarStore(state => state.staff)
 
   // Determine which staff are being shown (dynamic mode)
   const activeStaffIds = useMemo(() => {
@@ -104,10 +137,12 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
       return ['1'] // Current user ID
     }
 
+    // Use allStaff from store, fallback to empty array if not loaded
+    // DO NOT fallback to mockStaff to avoid confusion
     const staffInScope =
       branchFilters.allBranches || branchFilters.branchIds.length === 0
-        ? mockStaff
-        : mockStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
+        ? allStaff
+        : allStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
     const staffIdsInScope = staffInScope.map(staff => staff.id)
 
     if (staffFilters.staffIds.length > 0) {
@@ -115,28 +150,32 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     }
 
     return staffIdsInScope
-  }, [staffFilters, schedulingMode, branchFilters])
+  }, [staffFilters, schedulingMode, branchFilters, allStaff])
 
   const activeStaffMembers = useMemo(() => {
-    return mockStaff.filter(staff => activeStaffIds.includes(staff.id))
-  }, [activeStaffIds])
+    return allStaff.filter(staff => activeStaffIds.includes(staff.id))
+  }, [activeStaffIds, allStaff])
 
   // Get all available staff for dropdown (filtered by branch if applicable)
   const availableStaffForDropdown = useMemo(() => {
-    if (branchFilters.allBranches || branchFilters.branchIds.length === 0) {
-      return mockStaff
-    }
-    return mockStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
-  }, [branchFilters])
+    return branchFilters.allBranches
+      ? allStaff
+      : allStaff.filter(staff => branchFilters.branchIds.includes(staff.branchId))
+  }, [branchFilters, allStaff])
+
+  const allRooms = useCalendarStore(state => state.rooms)
 
   // Determine which rooms are being shown (static mode)
   const activeRooms = useMemo(() => {
     if (schedulingMode === 'dynamic') return []
 
     // Get first branch ID from branch filters, or default to '1-1'
-    const branchId = branchFilters.allBranches ? '1-1' : branchFilters.branchIds[0] || '1-1'
+    const targetBranchId =
+      branchFilters.allBranches || branchFilters.branchIds.length === 0
+        ? '1-1' // Default branch
+        : branchFilters.branchIds[0]
 
-    const branchRooms = getRoomsByBranch(branchId)
+    const branchRooms = allRooms.filter(room => room.branchId === targetBranchId)
 
     // If specific rooms are selected, filter to those
     if (!roomFilters.allRooms && roomFilters.roomIds.length > 0) {
@@ -329,7 +368,9 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
   const getTimeReservationBranchId = (staffId?: string) => {
     if (staffId) {
-      const staff = mockStaff.find(member => member.id === staffId)
+      // Use API data from store first, fallback to mock
+      const staff =
+        allStaff.find((member: any) => member.id === staffId) || fallbackMockStaff.find(member => member.id === staffId)
       if (staff?.branchId) return staff.branchId
     }
     if (branchFilters.allBranches || branchFilters.branchIds.length === 0) return 'all'
@@ -557,8 +598,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
           setBookingDrawerInitialServiceId(null)
         }}
         onDelete={bookingId => {
-          // Handle delete
-          console.log('Delete booking:', bookingId)
+          deleteEvent(bookingId)
         }}
       />
 

@@ -20,7 +20,12 @@ import {
   Stack,
   Paper
 } from '@mui/material'
-import { mockStaff, mockServices, mockBookings, mockRooms } from '@/bookly/data/mock-data'
+import {
+  mockStaff as fallbackMockStaff,
+  mockServices as fallbackMockServices,
+  mockBookings,
+  mockRooms as fallbackMockRooms
+} from '@/bookly/data/mock-data'
 import type { AppointmentStatus, DateRange, CalendarEvent, DayOfWeek, WeeklyStaffHours, TimeOffRequest } from './types'
 import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
@@ -271,7 +276,21 @@ export default function UnifiedBookingDrawer({
   const updateEvent = useCalendarStore(state => state.updateEvent)
   const deleteEvent = useCalendarStore(state => state.deleteEvent)
   const staticSlots = useCalendarStore(state => state.staticSlots)
-  const { staffWorkingHours, timeOffRequests } = useStaffManagementStore()
+  const {
+    staffWorkingHours,
+    timeOffRequests,
+    apiServices: storeServices,
+    staffMembers: storeStaffMembers
+  } = useStaffManagementStore()
+  const calendarStaff = useCalendarStore(state => state.staff)
+  const calendarRooms = useCalendarStore(state => state.rooms)
+
+  // Use API data with mock fallback
+  const allStaff: any[] = (
+    calendarStaff?.length ? calendarStaff : storeStaffMembers?.length ? storeStaffMembers : fallbackMockStaff
+  ) as any[]
+  const allServices: any[] = (storeServices?.length ? storeServices : fallbackMockServices) as any[]
+  const allRooms: any[] = (calendarRooms?.length ? calendarRooms : fallbackMockRooms) as any[]
 
   // Dynamic mode form state
   const [bookingReference, setBookingReference] = useState('')
@@ -322,7 +341,7 @@ export default function UnifiedBookingDrawer({
   const [showAvailableSlots, setShowAvailableSlots] = useState(true)
 
   // Get only dynamic staff for selection
-  const dynamicStaff = mockStaff.filter(s => s.staffType === 'dynamic')
+  const dynamicStaff = allStaff.filter((s: any) => s.staffType === 'dynamic')
 
   // Determine if this event is from a static slot (overrides global schedulingMode)
   // Check by:
@@ -332,7 +351,7 @@ export default function UnifiedBookingDrawer({
   const isStaticSlotEvent = (() => {
     if (mode === 'edit' && existingEvent && existingEvent.extendedProps) {
       const props = existingEvent.extendedProps as any
-      const eventStaff = mockStaff.find(s => s.id === props.staffId)
+      const eventStaff = allStaff.find((s: any) => s.id === props.staffId)
 
       // Dynamic staff should always open as dynamic, even if slot data exists.
       if (eventStaff?.staffType === 'dynamic') {
@@ -350,7 +369,7 @@ export default function UnifiedBookingDrawer({
       }
 
       // Check if the room is static/fixed type
-      const eventRoom = mockRooms.find(r => r.id === props.roomId)
+      const eventRoom = allRooms.find((r: any) => r.id === props.roomId)
       if (eventRoom?.roomType === 'static' || eventRoom?.roomType === 'fixed') {
         return true
       }
@@ -453,7 +472,7 @@ export default function UnifiedBookingDrawer({
       const existingServiceId = props.serviceId
       if (existingServiceId) {
         setServiceId(existingServiceId)
-        const svc = mockServices.find(s => s.id === existingServiceId)
+        const svc = allServices.find((s: any) => s.id === existingServiceId)
         if (svc) setServiceDuration(svc.duration)
       }
 
@@ -601,9 +620,9 @@ export default function UnifiedBookingDrawer({
 
   const getSlotCapacity = () => {
     const fallbackSlot = selectedSlotId ? staticSlots.find(s => s.id === selectedSlotId) : null
-    const staffCapacity = staffId ? mockStaff.find(s => s.id === staffId)?.maxConcurrentBookings : null
+    const staffCapacity = staffId ? allStaff.find((s: any) => s.id === staffId)?.maxConcurrentBookings : null
     const roomId = existingEvent?.extendedProps?.roomId
-    const roomCapacity = roomId ? mockRooms.find(r => r.id === roomId)?.capacity : null
+    const roomCapacity = roomId ? allRooms.find((r: any) => r.id === roomId)?.capacity : null
     return realSlotData?.capacity ?? fallbackSlot?.capacity ?? roomCapacity ?? staffCapacity ?? 10
   }
 
@@ -660,8 +679,8 @@ export default function UnifiedBookingDrawer({
       return directSlotId ? { slotId: directSlotId, slot: directSlot } : null
     }
 
-    const staff = staffId ? mockStaff.find(s => s.id === staffId) : null
-    const room = roomId ? mockRooms.find(r => r.id === roomId) : null
+    const staff = staffId ? allStaff.find((s: any) => s.id === staffId) : null
+    const room = roomId ? allRooms.find((r: any) => r.id === roomId) : null
     const startTime = getTimeKey(eventStart)
     const endTime = getTimeKey(eventEnd)
     const fallbackSlotId =
@@ -686,7 +705,7 @@ export default function UnifiedBookingDrawer({
   }
 
   const handleServiceChange = (newServiceId: string) => {
-    const selectedService = mockServices.find(s => s.id === newServiceId)
+    const selectedService = allServices.find((s: any) => s.id === newServiceId)
     if (selectedService) {
       setServiceId(newServiceId)
       setServiceName(selectedService.name)
@@ -896,7 +915,7 @@ export default function UnifiedBookingDrawer({
             status,
             paymentStatus,
             staffId,
-            staffName: mockStaff.find(s => s.id === staffId)?.name || '',
+            staffName: allStaff.find((s: any) => s.id === staffId)?.name || '',
             selectionMethod: requestedByClient ? 'by_client' : 'automatically',
             starred,
             serviceName,
@@ -1065,7 +1084,7 @@ export default function UnifiedBookingDrawer({
               paymentStatus: client.paymentStatus,
               paymentMethod: client.paymentMethod,
               staffId: slotDataForSave.instructorStaffId || '',
-              staffName: mockStaff.find(s => s.id === slotDataForSave.instructorStaffId)?.name || '',
+              staffName: allStaff.find((s: any) => s.id === slotDataForSave.instructorStaffId)?.name || '',
               selectionMethod: 'automatically',
               starred: false,
               serviceName: slotDataForSave.serviceName,
@@ -1380,7 +1399,7 @@ export default function UnifiedBookingDrawer({
                         }}
                       >
                         <MenuItem value=''>Select service</MenuItem>
-                        {mockServices.map(svc => (
+                        {allServices.map((svc: any) => (
                           <MenuItem key={svc.id} value={svc.id}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                               <span>{svc.name}</span>
@@ -1658,7 +1677,7 @@ export default function UnifiedBookingDrawer({
                       {formatShortDate(date)} • {formatTime12h(startTime)} - {formatTime12h(endTime)}
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
-                      with {mockStaff.find(s => s.id === staffId)?.name || 'Staff'} • {serviceDuration} min
+                      with {allStaff.find((s: any) => s.id === staffId)?.name || 'Staff'} • {serviceDuration} min
                     </Typography>
                   </Box>
 

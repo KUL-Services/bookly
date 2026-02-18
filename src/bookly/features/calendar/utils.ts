@@ -1,6 +1,11 @@
-import { mockStaff, mockBusinesses, mockServices } from '@/bookly/data/mock-data'
+import {
+  mockStaff as fallbackMockStaff,
+  mockBusinesses as fallbackMockBusinesses,
+  mockServices as fallbackMockServices
+} from '@/bookly/data/mock-data'
 import { mockTimeOffRequests } from '@/bookly/data/staff-management-mock-data'
 import type { Booking } from '@/bookly/data/types'
+import type { Booking as ApiBooking } from '@/lib/api/types'
 import type {
   CalendarEvent,
   ColorScheme,
@@ -14,6 +19,34 @@ import type {
   SelectionMethod,
   SchedulingMode
 } from './types'
+
+// Store accessor helpers — these read from stores at call time, falling back to mocks
+function getStaffFromStore(): any[] {
+  try {
+    const { useCalendarStore } = require('./state')
+    const calendarStaff = useCalendarStore.getState().staff
+    if (calendarStaff?.length) return calendarStaff
+  } catch {}
+  return fallbackMockStaff as any[]
+}
+
+function getBranchesFromStore(): any[] {
+  try {
+    const { useStaffManagementStore } = require('../staff-management/staff-store')
+    const branches = useStaffManagementStore.getState().apiBranches
+    if (branches?.length) return branches
+  } catch {}
+  return fallbackMockBusinesses.flatMap((b: any) => b.branches || []) as any[]
+}
+
+function getServicesFromStore(): any[] {
+  try {
+    const { useStaffManagementStore } = require('../staff-management/staff-store')
+    const services = useStaffManagementStore.getState().apiServices
+    if (services?.length) return services
+  } catch {}
+  return fallbackMockServices as any[]
+}
 
 const getDateKey = (date: Date): string => {
   const year = date.getFullYear()
@@ -97,6 +130,26 @@ export function isBookingInPast(endTime: Date): boolean {
   return new Date(endTime) < new Date()
 }
 
+// Generate a consistent color based on name string
+export function generateColorFromName(name: string): string {
+  if (!name) return '#6366f1' // Default indigo-500
+
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash)
+  }
+
+  // Use HSL for better/more pleasing colors (Pastel/Vibrant)
+  // Hue: 0-360 based on hash
+  const h = Math.abs(hash % 360)
+  // Saturation: 65-80%
+  const s = 65 + (Math.abs(hash) % 15)
+  // Lightness: 45-60% (Dark mode compatible)
+  const l = 45 + (Math.abs(hash >> 8) % 15)
+
+  return `hsl(${h}, ${s}%, ${l}%)`
+}
+
 /**
  * Get past booking status options (attended or no-show)
  */
@@ -116,10 +169,26 @@ export function formatAttendanceCount(attended: number, total: number): string {
 
 // Demo customer names for when real customer name is not provided
 const demoCustomerNames = [
-  'Emma Wilson', 'Olivia Brown', 'Sophia Davis', 'Isabella Martinez', 'Ava Anderson',
-  'Mia Thompson', 'Charlotte Garcia', 'Amelia Robinson', 'Harper White', 'Evelyn Harris',
-  'James Smith', 'Michael Johnson', 'William Jones', 'Benjamin Lee', 'Lucas Wilson',
-  'Henry Taylor', 'Alexander Moore', 'Daniel Clark', 'Matthew Lewis', 'Joseph Walker'
+  'Emma Wilson',
+  'Olivia Brown',
+  'Sophia Davis',
+  'Isabella Martinez',
+  'Ava Anderson',
+  'Mia Thompson',
+  'Charlotte Garcia',
+  'Amelia Robinson',
+  'Harper White',
+  'Evelyn Harris',
+  'James Smith',
+  'Michael Johnson',
+  'William Jones',
+  'Benjamin Lee',
+  'Lucas Wilson',
+  'Henry Taylor',
+  'Alexander Moore',
+  'Daniel Clark',
+  'Matthew Lewis',
+  'Joseph Walker'
 ]
 
 /**
@@ -130,7 +199,7 @@ function getDemoCustomerName(bookingId: string): string {
   // Use a simple hash of the booking ID to get a consistent index
   let hash = 0
   for (let i = 0; i < bookingId.length; i++) {
-    hash = ((hash << 5) - hash) + bookingId.charCodeAt(i)
+    hash = (hash << 5) - hash + bookingId.charCodeAt(i)
     hash = hash & hash // Convert to 32bit integer
   }
   const index = Math.abs(hash) % demoCustomerNames.length
@@ -168,7 +237,11 @@ function generateExtendedProps(booking: Booking, staffId: string) {
 /**
  * Map a booking to a calendar event
  */
-export function mapBookingToEvent(booking: Booking, staffId: string = '1', starredIds: Set<string> = new Set()): CalendarEvent {
+export function mapBookingToEvent(
+  booking: Booking,
+  staffId: string = '1',
+  starredIds: Set<string> = new Set()
+): CalendarEvent {
   const date = new Date(booking.date)
   const { hours, minutes } = parseTime12h(booking.time)
   date.setHours(hours, minutes, 0, 0)
@@ -187,6 +260,51 @@ export function mapBookingToEvent(booking: Booking, staffId: string = '1', starr
     title: `${booking.serviceName}`,
     start: date,
     end: endDate,
+    extendedProps
+  }
+}
+
+/**
+ * Map API booking to a calendar event
+ */
+export function mapApiBookingToEvent(booking: ApiBooking, starredIds: Set<string> = new Set()): CalendarEvent {
+  const start = new Date(booking.startTime)
+  const end = new Date(booking.endTime)
+
+  // Map API status to AppointmentStatus
+  const statusMap: Record<string, AppointmentStatus> = {
+    CONFIRMED: 'confirmed',
+    PENDING: 'pending',
+    CANCELLED: 'cancelled',
+    COMPLETED: 'attended',
+    NO_SHOW: 'no_show'
+  }
+
+  const status = statusMap[booking.status] || 'pending'
+
+  // Generate extended props
+  const extendedProps = {
+    status,
+    paymentStatus: 'paid' as PaymentStatus, // Default to paid for now, or derive if API has it
+    staffId: booking.resourceId && booking.resource?.type === 'STAFF' ? booking.resourceId : booking.resourceId || '1',
+    staffName: booking.resource?.name || 'Staff Member',
+    selectionMethod: 'by_client' as SelectionMethod,
+    starred: starredIds.has(booking.id),
+    serviceId: booking.serviceId,
+    serviceName: booking.service?.name || 'Service',
+    customerName: booking.user ? `${booking.user.firstName} ${booking.user.lastName}` : 'Guest',
+    customerEmail: booking.user?.email,
+    price: booking.service?.price || 0,
+    notes: booking.notes,
+    bookingId: booking.id,
+    bookedBy: 'client' as import('./types').BookedBy
+  }
+
+  return {
+    id: booking.id,
+    title: booking.service?.name || 'Service',
+    start,
+    end,
     extendedProps
   }
 }
@@ -290,9 +408,9 @@ export function filterEvents(
   let validStaffIds: string[] | null = null
   if (filters.branchFilters && !filters.branchFilters.allBranches && filters.branchFilters.branchIds.length > 0) {
     // Get staff IDs from selected branches
-    validStaffIds = mockStaff
-      .filter(staff => filters.branchFilters!.branchIds.includes(staff.branchId))
-      .map(staff => staff.id)
+    validStaffIds = getStaffFromStore()
+      .filter((staff: any) => filters.branchFilters!.branchIds.includes(staff.branchId))
+      .map((staff: any) => staff.id)
 
     // Filter events to only include staff from selected branches
     filtered = filtered.filter(event => {
@@ -325,9 +443,7 @@ export function filterEvents(
     const { allRooms, roomIds } = filters.roomFilters
 
     if (!allRooms && roomIds.length > 0) {
-      filtered = filtered.filter(event =>
-        event.extendedProps.roomId && roomIds.includes(event.extendedProps.roomId)
-      )
+      filtered = filtered.filter(event => event.extendedProps.roomId && roomIds.includes(event.extendedProps.roomId))
     }
   }
 
@@ -427,8 +543,8 @@ export function addMonths(date: Date, months: number): Date {
  * Get branch name by branch ID
  */
 export function getBranchName(branchId: string): string {
-  const allBranches = mockBusinesses.flatMap(business => business.branches)
-  const branch = allBranches.find(b => b.id === branchId)
+  const allBranches = getBranchesFromStore()
+  const branch = allBranches.find((b: any) => b.id === branchId)
   return branch?.name || 'Unknown Branch'
 }
 
@@ -436,8 +552,8 @@ export function getBranchName(branchId: string): string {
  * Get branch by ID
  */
 export function getBranch(branchId: string) {
-  const allBranches = mockBusinesses.flatMap(business => business.branches)
-  return allBranches.find(b => b.id === branchId)
+  const allBranches = getBranchesFromStore()
+  return allBranches.find((b: any) => b.id === branchId)
 }
 
 /**
@@ -495,13 +611,13 @@ export function isStaffAvailable(
   startTime: string,
   endTime: string
 ): { available: boolean; reason?: string } {
-  const staff = mockStaff.find(s => s.id === staffId)
+  const staff = getStaffFromStore().find((s: any) => s.id === staffId)
   if (!staff) {
     return { available: false, reason: 'Staff member not found' }
   }
 
   const dayOfWeek = getDayOfWeek(date)
-  const schedule = staff.schedule?.find(s => s.dayOfWeek === dayOfWeek)
+  const schedule = staff.schedule?.find((s: any) => s.dayOfWeek === dayOfWeek)
 
   if (!schedule) {
     return { available: false, reason: 'No schedule found for this day' }
@@ -581,11 +697,11 @@ export function getAvailableTimeSlots(
   date: Date,
   slotDuration: number = 30 // in minutes
 ): string[] {
-  const staff = mockStaff.find(s => s.id === staffId)
+  const staff = getStaffFromStore().find((s: any) => s.id === staffId)
   if (!staff) return []
 
   const dayOfWeek = getDayOfWeek(date)
-  const schedule = staff.schedule?.find(s => s.dayOfWeek === dayOfWeek)
+  const schedule = staff.schedule?.find((s: any) => s.dayOfWeek === dayOfWeek)
 
   if (!schedule || !schedule.isAvailable) return []
 
@@ -637,7 +753,7 @@ export function getAvailableTimeSlots(
  * @returns Duration in minutes, or null if not found
  */
 export function getServiceDuration(serviceId: string): number | null {
-  const service = mockServices.find(s => s.id === serviceId)
+  const service = getServicesFromStore().find((s: any) => s.id === serviceId)
   return service?.duration ?? null
 }
 
@@ -647,7 +763,7 @@ export function getServiceDuration(serviceId: string): number | null {
  * @returns Service object or null if not found
  */
 export function getService(serviceId: string) {
-  return mockServices.find(s => s.id === serviceId) || null
+  return getServicesFromStore().find((s: any) => s.id === serviceId) || null
 }
 
 /**
@@ -688,16 +804,16 @@ export function getSlotsForDate(
         // Check if Time Off covers this date
         const reqStart = new Date(req.range.start)
         const reqEnd = new Date(req.range.end)
-        
+
         const currentRefDate = new Date(date) // Use the passed date
-        currentRefDate.setHours(0,0,0,0) // Normalize to start of day for date comparison
-        
+        currentRefDate.setHours(0, 0, 0, 0) // Normalize to start of day for date comparison
+
         const reqStartDay = new Date(reqStart)
-        reqStartDay.setHours(0,0,0,0)
-        
+        reqStartDay.setHours(0, 0, 0, 0)
+
         const reqEndDay = new Date(reqEnd)
-        reqEndDay.setHours(0,0,0,0)
-        
+        reqEndDay.setHours(0, 0, 0, 0)
+
         // If the date is outside the broad range, no conflict
         if (currentRefDate < reqStartDay || currentRefDate > reqEndDay) return false
 
@@ -706,16 +822,16 @@ export function getSlotsForDate(
 
         // If partial day, strict time check required
         // Note: Time Off Requests in mock data use Date objects which include time
-        // We need to check if the specific day aligns, which we did. 
+        // We need to check if the specific day aligns, which we did.
         // Now check if the *time* on this specific day overlaps.
         // Simplified: assuming multi-day partial time off isn't the main case or handled as allDay.
         // Handling single-day partial time off:
         if (reqStartDay.getTime() === reqEndDay.getTime()) {
-           const reqStartMins = reqStart.getHours() * 60 + reqStart.getMinutes()
-           const reqEndMins = reqEnd.getHours() * 60 + reqEnd.getMinutes()
-           return (slotStartMins < reqEndMins && slotEndMins > reqStartMins)
+          const reqStartMins = reqStart.getHours() * 60 + reqStart.getMinutes()
+          const reqEndMins = reqEnd.getHours() * 60 + reqEnd.getMinutes()
+          return slotStartMins < reqEndMins && slotEndMins > reqStartMins
         }
-        
+
         // Multi-day partial is ambiguous in this simple scan, default to blocking if dates overlap
         return true
       })
@@ -745,19 +861,13 @@ export function getSlotCapacity(slots: import('./types').StaticServiceSlot[], sl
  * @param date - Date to check
  * @returns Number of occupied spots
  */
-export function countSlotOccupancy(
-  events: import('./types').CalendarEvent[],
-  slotId: string,
-  date: Date
-): number {
+export function countSlotOccupancy(events: import('./types').CalendarEvent[], slotId: string, date: Date): number {
   const dateStr = getDateKey(date)
 
   const bookings = events.filter(event => {
     const eventDateStr = getDateKey(new Date(event.start))
     return (
-      event.extendedProps.slotId === slotId &&
-      eventDateStr === dateStr &&
-      event.extendedProps.status !== 'cancelled'
+      event.extendedProps.slotId === slotId && eventDateStr === dateStr && event.extendedProps.status !== 'cancelled'
     )
   })
 
@@ -798,7 +908,7 @@ export function getSlotRemaining(
  * - static: All static staff with room assignments
  * - staticByRoom: Static staff grouped by assigned room name
  */
-export function groupStaffByType(staff: typeof mockStaff) {
+export function groupStaffByType(staff: any[]) {
   const dynamic = staff.filter(s => s.staffType !== 'static' || !s.roomAssignments?.length)
   const staticStaff = staff.filter(s => s.staffType === 'static' && s.roomAssignments?.length)
 
@@ -829,7 +939,7 @@ export function groupStaffByType(staff: typeof mockStaff) {
  * 3. Static Unassigned - fixed slot scheduling, no room assignment (pool/flexible location)
  * 4. Static Assigned - fixed slot scheduling, assigned to specific room(s)
  */
-export function groupStaffByTypeAndAssignment(staff: typeof mockStaff) {
+export function groupStaffByTypeAndAssignment(staff: any[]) {
   // Category 1: Dynamic unassigned (flexible booking, no room assignment)
   const dynamicUnassigned = staff.filter(
     s => s.staffType !== 'static' && (!s.roomAssignments || s.roomAssignments.length === 0)
@@ -862,10 +972,10 @@ export function groupStaffByTypeAndAssignment(staff: typeof mockStaff) {
 
   return {
     // 4 Primary Categories
-    dynamicUnassigned,  // Flexible staff without room assignments
-    dynamicAssigned,    // Flexible staff with room assignments
-    staticUnassigned,   // Fixed slot staff without room assignments
-    staticAssigned,     // Fixed slot staff with room assignments
+    dynamicUnassigned, // Flexible staff without room assignments
+    dynamicAssigned, // Flexible staff with room assignments
+    staticUnassigned, // Fixed slot staff without room assignments
+    staticAssigned, // Fixed slot staff with room assignments
 
     // Secondary grouping for assigned staff
     staticAssignedByRoom, // Static assigned staff grouped by room
@@ -882,12 +992,12 @@ export function groupStaffByTypeAndAssignment(staff: typeof mockStaff) {
 /**
  * Group static staff assignments by room
  */
-export function groupStaticStaffByRoom(staff: typeof mockStaff) {
-  const staffByRoom: Record<string, typeof staff> = {}
+export function groupStaticStaffByRoom(staff: any[]) {
+  const staffByRoom: Record<string, any[]> = {}
 
   staff.forEach(s => {
     if (s.staffType === 'static' && s.roomAssignments?.length) {
-      s.roomAssignments.forEach(assignment => {
+      s.roomAssignments.forEach((assignment: any) => {
         const key = assignment.roomName
         if (!staffByRoom[key]) {
           staffByRoom[key] = []
@@ -903,11 +1013,8 @@ export function groupStaticStaffByRoom(staff: typeof mockStaff) {
 /**
  * Get staff capacity (max concurrent bookings) for a specific shift
  */
-export function getStaffShiftCapacity(
-  staffId: string,
-  workingHours: Record<string, any>
-): number {
-  const staff = mockStaff.find(s => s.id === staffId)
+export function getStaffShiftCapacity(staffId: string, workingHours: Record<string, any>): number {
+  const staff = getStaffFromStore().find((s: any) => s.id === staffId)
   if (!staff) return 1
 
   return staff.maxConcurrentBookings || 1
@@ -960,7 +1067,7 @@ export function categorizeRooms(rooms: any[]) {
  * @returns Available capacity (remaining slots) or null if not dynamic staff
  */
 export function getStaffAvailableCapacity(staffId: string, time: Date, bookings: Booking[]): number | null {
-  const staff = mockStaff.find(s => s.id === staffId)
+  const staff = getStaffFromStore().find((s: any) => s.id === staffId)
   if (!staff || staff.staffType !== 'dynamic') return null
 
   const maxCapacity = staff.maxConcurrentBookings || 1
@@ -1062,13 +1169,13 @@ export function getDynamicRoomAvailability(
  * @returns true if staff is assigned to work in room on that date
  */
 export function isStaffWorkingInRoom(staffId: string, roomId: string, date: Date): boolean {
-  const staff = mockStaff.find(s => s.id === staffId)
+  const staff = getStaffFromStore().find((s: any) => s.id === staffId)
   if (!staff || !staff.roomAssignments) return false
 
   const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
 
-  return staff.roomAssignments.some(assignment =>
-    assignment.roomId === roomId && assignment.dayOfWeek === dayName
+  return staff.roomAssignments.some(
+    (assignment: any) => assignment.roomId === roomId && assignment.dayOfWeek === dayName
   )
 }
 
@@ -1080,12 +1187,12 @@ export function isStaffWorkingInRoom(staffId: string, roomId: string, date: Date
  * @returns First matching room assignment or null
  */
 export function getStaffRoomAssignment(staffId: string, date: Date, timeStr?: string): any | null {
-  const staff = mockStaff.find(s => s.id === staffId)
+  const staff = getStaffFromStore().find((s: any) => s.id === staffId)
   if (!staff || !staff.roomAssignments) return null
 
   const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
 
-  return staff.roomAssignments.find(assignment => {
+  return staff.roomAssignments.find((assignment: any) => {
     if (assignment.dayOfWeek !== dayName) return false
 
     // If time provided, check if it falls within assignment hours
@@ -1113,10 +1220,8 @@ export function getStaffRoomAssignment(staffId: string, date: Date, timeStr?: st
 export function getStaffAssignedToRoom(roomId: string, date: Date): any[] {
   const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
 
-  return mockStaff.filter(staff =>
-    staff.roomAssignments?.some(
-      assignment => assignment.roomId === roomId && assignment.dayOfWeek === dayName
-    )
+  return getStaffFromStore().filter((staff: any) =>
+    staff.roomAssignments?.some((assignment: any) => assignment.roomId === roomId && assignment.dayOfWeek === dayName)
   )
 }
 
@@ -1127,10 +1232,10 @@ export function getStaffAssignedToRoom(roomId: string, date: Date): any[] {
  * @returns Array of room assignments
  */
 export function getStaffRoomsForDate(staffId: string, date: Date): any[] {
-  const staff = mockStaff.find(s => s.id === staffId)
+  const staff = getStaffFromStore().find((s: any) => s.id === staffId)
   if (!staff || !staff.roomAssignments) return []
 
   const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
 
-  return staff.roomAssignments.filter(assignment => assignment.dayOfWeek === dayName)
+  return staff.roomAssignments.filter((assignment: any) => assignment.dayOfWeek === dayName)
 }

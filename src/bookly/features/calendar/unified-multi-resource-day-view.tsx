@@ -4,7 +4,7 @@ import { Box, Typography, Avatar, Chip, Divider, Tooltip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, addMinutes, isSameDay, isToday } from 'date-fns'
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
+import { mockStaff as fallbackMockStaff, mockServices as fallbackMockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
 import { BrandWatermark } from '@/bookly/components/atoms/brand-watermark'
@@ -247,6 +247,12 @@ export default function UnifiedMultiResourceDayView({
   const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const { rooms, staffWorkingHours } = useStaffManagementStore()
 
+  // Use API-loaded data from stores, fallback to mocks
+  const calendarStaff = useCalendarStore(state => state.staff)
+  const { apiServices: storeServices } = useStaffManagementStore()
+  const allStaff: any[] = calendarStaff?.length ? calendarStaff : (fallbackMockStaff as any[])
+  const allServices: any[] = storeServices?.length ? storeServices : (fallbackMockServices as any[])
+
   // Refs for scroll synchronization
   const headerScrollRef = useRef<HTMLDivElement>(null)
   const timeGridScrollRef = useRef<HTMLDivElement>(null)
@@ -294,7 +300,9 @@ export default function UnifiedMultiResourceDayView({
     // Determine which branches to show
     const selectedBranchIds =
       branchFilters.allBranches || branchFilters.branchIds.length === 0
-        ? Array.from(new Set([...mockStaff.map(s => s.branchId || '1-1'), ...rooms.map(r => r.branchId || '1-1')]))
+        ? Array.from(
+            new Set([...allStaff.map((s: any) => s.branchId || '1-1'), ...rooms.map(r => r.branchId || '1-1')])
+          )
         : branchFilters.branchIds
 
     // Sort branches for consistent ordering
@@ -302,7 +310,7 @@ export default function UnifiedMultiResourceDayView({
 
     sortedBranches.forEach(branchId => {
       // Layer 2: STAFF (within branch) - filter based on staff filters
-      let filteredStaff = mockStaff.filter(staff => (staff.branchId || '1-1') === branchId)
+      let filteredStaff = allStaff.filter((staff: any) => (staff.branchId || '1-1') === branchId)
 
       // Apply staff filters
       if (staffFilters.onlyMe) {
@@ -356,7 +364,7 @@ export default function UnifiedMultiResourceDayView({
     })
 
     return resources
-  }, [rooms, branchFilters, staffFilters, roomFilters, currentDate, staffWorkingHours])
+  }, [rooms, branchFilters, staffFilters, roomFilters, currentDate, staffWorkingHours, allStaff])
 
   // Filter events for current date
   const todayEvents = events.filter(event => isSameDay(new Date(event.start), currentDate))
@@ -415,7 +423,7 @@ export default function UnifiedMultiResourceDayView({
 
   // Helper to check if a time is within working hours for a staff member
   const getStaffNonWorkingBlocks = (staffId: string) => {
-    const staff = mockStaff.find(s => s.id === staffId)
+    const staff = allStaff.find((s: any) => s.id === staffId)
     if (!staff) return []
 
     const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -526,7 +534,7 @@ export default function UnifiedMultiResourceDayView({
 
   // Get room assignment blocks for static staff
   const getStaffRoomBlocks = (staffId: string) => {
-    const staff = mockStaff.find(s => s.id === staffId)
+    const staff = allStaff.find((s: any) => s.id === staffId)
     if (!staff || staff.staffType !== 'static' || !staff.roomAssignments) {
       return []
     }
@@ -1080,7 +1088,7 @@ export default function UnifiedMultiResourceDayView({
                   {/* Service with color dot */}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     {(() => {
-                      const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                      const service = allServices.find((s: any) => s.name === event.extendedProps?.serviceName)
                       return service?.color ? (
                         <Box
                           sx={{

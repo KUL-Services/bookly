@@ -71,36 +71,36 @@ export class BusinessService {
 
   // Admin only - Update business profile (business ID identified from authenticated user)
   static async updateBusiness(data: Omit<UpdateBusinessRequest, 'id'>) {
-    return apiClient.patch<BusinessChangeRequest>('/business', data)
+    return apiClient.patch<BusinessChangeRequest>('/admin/business', data)
   }
 
   // Super Admin only - Get pending businesses
   static async getPendingBusinesses() {
-    return apiClient.get<Business[]>('/business/pending')
+    return apiClient.get<Business[]>('/superadmin/business/pending')
   }
 
   // Super Admin only - Get pending change requests
   static async getPendingChangeRequests() {
-    return apiClient.get<BusinessChangeRequest[]>('/business/pending-requests')
+    return apiClient.get<BusinessChangeRequest[]>('/superadmin/business/pending-requests')
   }
 
   // Super Admin only - Approve business
   static async approveBusiness(data: ApproveBusinessRequest) {
-    return apiClient.post<{ message: string }>('/business/approve', data)
+    return apiClient.post<{ message: string }>('/superadmin/business/approve', data)
   }
 
   // Super Admin only - Reject business
   static async rejectBusiness(data: RejectBusinessRequest) {
-    return apiClient.post<{ message: string }>('/business/reject', data)
+    return apiClient.post<{ message: string }>('/superadmin/business/reject', data)
   }
 
   // Super Admin only - Approve business change request
   static async approveChangeRequest(data: { id: string }) {
-    return apiClient.post<{ message: string }>('/business/approve-request', data)
+    return apiClient.post<{ message: string }>('/superadmin/business/approve-request', data)
   }
 
   // Super Admin only - Reject business change request
   static async rejectChangeRequest(data: { id: string }) {
-    return apiClient.post<{ message: string }>('/business/reject-request', data)
+    return apiClient.post<{ message: string }>('/superadmin/business/reject-request', data)
   }
 }

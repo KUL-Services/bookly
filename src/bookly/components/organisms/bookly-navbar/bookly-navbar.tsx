@@ -20,11 +20,22 @@ const BooklyNavbar = () => {
   const booklyUser = useAuthStore(s => s.booklyUser)
   const materializeUser = useAuthStore(s => s.materializeUser)
   const userType = useAuthStore(s => s.userType)
+  const token = useAuthStore(s => s.token)
   const logoutCustomer = useAuthStore(s => s.logoutCustomer)
 
   const [hydrated, setHydrated] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
+
+  useEffect(() => {
+    if (hydrated) {
+      console.log('Navbar Auth State Debug:', {
+        booklyUser: booklyUser ? { id: booklyUser.id, email: booklyUser.email } : null,
+        token: token ? token.substring(0, 10) + '...' : null,
+        userType
+      })
+    }
+  }, [hydrated, booklyUser, token, userType])
 
   useEffect(() => {
     // Wait for Zustand store to rehydrate from localStorage

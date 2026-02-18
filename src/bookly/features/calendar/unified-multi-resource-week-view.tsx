@@ -3,7 +3,7 @@
 import { Box, Typography, Avatar, Chip, Tooltip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isPast, startOfDay } from 'date-fns'
-import { mockStaff, mockServices, mockBookings } from '@/bookly/data/mock-data'
+import { mockStaff as fallbackMockStaff, mockServices as fallbackMockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
 import {
@@ -251,6 +251,12 @@ export default function UnifiedMultiResourceWeekView({
   const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const { rooms, staffWorkingHours } = useStaffManagementStore()
 
+  // Use API-loaded data from stores, fallback to mocks
+  const calendarStaff = useCalendarStore(state => state.staff)
+  const { apiServices: storeServices } = useStaffManagementStore()
+  const allStaff: any[] = calendarStaff?.length ? calendarStaff : (fallbackMockStaff as any[])
+  const allServices: any[] = storeServices?.length ? storeServices : (fallbackMockServices as any[])
+
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 })
@@ -263,12 +269,14 @@ export default function UnifiedMultiResourceWeekView({
     // Determine which branches to show
     const selectedBranchIds =
       branchFilters.allBranches || branchFilters.branchIds.length === 0
-        ? Array.from(new Set([...mockStaff.map(s => s.branchId || '1-1'), ...rooms.map(r => r.branchId || '1-1')]))
+        ? Array.from(
+            new Set([...allStaff.map((s: any) => s.branchId || '1-1'), ...rooms.map(r => r.branchId || '1-1')])
+          )
         : branchFilters.branchIds
 
     selectedBranchIds.forEach(branchId => {
       // Filter staff for this branch
-      let filteredStaff = mockStaff.filter(staff => (staff.branchId || '1-1') === branchId)
+      let filteredStaff = allStaff.filter((staff: any) => (staff.branchId || '1-1') === branchId)
 
       // Apply staff filters
       if (staffFilters.onlyMe) {
@@ -314,7 +322,7 @@ export default function UnifiedMultiResourceWeekView({
     })
 
     return grouped
-  }, [rooms, branchFilters, staffFilters, roomFilters, weekDays, staffWorkingHours])
+  }, [rooms, branchFilters, staffFilters, roomFilters, weekDays, staffWorkingHours, allStaff])
 
   // Get events for a specific resource and day
   const getResourceDayEvents = (resourceId: string, resourceType: 'staff' | 'room', day: Date) => {
@@ -415,7 +423,7 @@ export default function UnifiedMultiResourceWeekView({
 
   // Get room assignment for BOTH dynamic and static assigned staff on a specific day
   const getStaffRoomAssignment = (staffId: string, day: Date) => {
-    const staff = mockStaff.find(s => s.id === staffId)
+    const staff = allStaff.find((s: any) => s.id === staffId)
     if (!staff || !staff.roomAssignments || staff.roomAssignments.length === 0) {
       return null
     }
@@ -816,7 +824,7 @@ export default function UnifiedMultiResourceWeekView({
                       </Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         {(() => {
-                          const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                          const service = allServices.find((s: any) => s.name === event.extendedProps?.serviceName)
                           return service?.color ? (
                             <Box
                               sx={{

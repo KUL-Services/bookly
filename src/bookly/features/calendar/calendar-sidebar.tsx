@@ -22,8 +22,9 @@ import {
   Typography
 } from '@mui/material'
 
-import { mockBusinesses, mockStaff } from '@/bookly/data/mock-data'
+import { mockBusinesses as fallbackMockBusinesses, mockStaff as fallbackMockStaff } from '@/bookly/data/mock-data'
 import { useCalendarStore } from './state'
+import { useStaffManagementStore } from '../staff-management/staff-store'
 
 import type {
   AppointmentStatus,
@@ -64,6 +65,11 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   const getRoomsByBranch = useCalendarStore(state => state.getRoomsByBranch)
   const toggleSidebar = useCalendarStore(state => state.toggleSidebar)
 
+  // Use API-loaded data from stores, fallback to mocks
+  const calendarStaff = useCalendarStore(state => state.staff)
+  const { apiBranches: storeBranches } = useStaffManagementStore()
+  const allStaff: any[] = calendarStaff?.length ? calendarStaff : (fallbackMockStaff as any[])
+
   const [pendingBranches, setPendingBranches] = useState<BranchFilter>(branchFilters)
   const [pendingStaff, setPendingStaff] = useState<StaffFilter>(staffFilters)
   const [pendingRooms, setPendingRooms] = useState<RoomFilter>(roomFilters)
@@ -91,22 +97,22 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     })
   }, [branchFilters, staffFilters, roomFilters, highlights])
 
-  // Get branches from mock data with staff counts
+  // Get branches from API or mock data with staff counts
   const branches = useMemo(() => {
-    const businessBranches = mockBusinesses[0]?.branches || []
-    return businessBranches.map(branch => ({
+    const businessBranches = storeBranches?.length ? storeBranches : fallbackMockBusinesses[0]?.branches || []
+    return businessBranches.map((branch: any) => ({
       ...branch,
-      staffCount: mockStaff.filter(s => s.branchId === branch.id).length
+      staffCount: allStaff.filter((s: any) => s.branchId === branch.id).length
     }))
-  }, [])
+  }, [storeBranches, allStaff])
 
   // Filter staff by selected branches
   const availableStaff = useMemo(() => {
     if (pendingBranches.allBranches || pendingBranches.branchIds.length === 0) {
-      return mockStaff
+      return allStaff
     }
-    return mockStaff.filter(staff => pendingBranches.branchIds.includes(staff.branchId))
-  }, [pendingBranches])
+    return allStaff.filter((staff: any) => pendingBranches.branchIds.includes(staff.branchId))
+  }, [pendingBranches, allStaff])
 
   // Get available rooms based on selected branches
   const availableRooms = useMemo(() => {
@@ -248,7 +254,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   // Get staff available at current moment
   const getAvailableStaffNow = useCallback(() => {
     const now = new Date()
-    return mockStaff.filter(staff => {
+    return allStaff.filter((staff: any) => {
       // Check if staff is working right now
       const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][now.getDay()]
       const currentTime = format(now, 'HH:mm')
@@ -526,7 +532,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                 const branch = branches.find(b => b.id === staff.branchId)
                 const initials = staff.name
                   .split(' ')
-                  .map(n => n[0])
+                  .map((n: string) => n[0])
                   .join('')
                   .substring(0, 2)
                   .toUpperCase()

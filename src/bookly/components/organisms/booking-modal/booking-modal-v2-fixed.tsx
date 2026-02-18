@@ -18,8 +18,10 @@ import {
   GripVertical
 } from 'lucide-react'
 import { format, addDays, startOfDay, isSameDay, isBefore } from 'date-fns'
-import type { Service as ApiService, Staff } from '@/lib/api'
+import type { Service as ApiService, Staff, AvailableSlotFlat } from '@/lib/api'
+import { BookingService } from '@/lib/api/services/booking.service'
 import { useSettings } from '@/contexts/settings.context'
+import { useAuthStore } from '@/stores/auth.store'
 
 // dnd-kit imports
 import {
@@ -291,6 +293,7 @@ export function BookingModalV2Fixed({
 }: BookingModalV2FixedProps) {
   const { currency } = useSettings()
   const isMobile = useMediaQuery('(max-width: 1023px)')
+  const { isAuthenticated, booklyUser } = useAuthStore()
 
   // State
   const [step, setStep] = useState<BookingStep>('booking')
@@ -300,6 +303,12 @@ export function BookingModalV2Fixed({
   const [selectedTimeOfDay, setSelectedTimeOfDay] = useState<TimeOfDay>('afternoon')
   const [isClosing, setIsClosing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // API availability state
+  const [apiSlots, setApiSlots] = useState<AvailableSlotFlat[]>([])
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false)
+  const [slotsError, setSlotsError] = useState<string | null>(null)
+  const [bookingError, setBookingError] = useState<string | null>(null)
 
   // Modals & Pickers
   const [showServicePicker, setShowServicePicker] = useState(false)
@@ -349,6 +358,18 @@ export function BookingModalV2Fixed({
       setSelectedDate(new Date())
       setSelectedTime(null)
 
+      // Pre-fill customer details if logged in
+      if (isAuthenticated() && booklyUser) {
+        setCustomerDetails({
+          name: booklyUser.name || '',
+          email: booklyUser.email || '',
+          phone: booklyUser.phone || '',
+          notes: ''
+        })
+      } else {
+        setCustomerDetails({ name: '', email: '', phone: '', notes: '' })
+      }
+
       // Initial Service Population
       // We use a timestamp to ensure uniqueness if the ID is reused
       if (initialService) {
@@ -365,9 +386,48 @@ export function BookingModalV2Fixed({
     } else {
       setMounted(false)
     }
-  }, [isOpen])
-  // IMPORTANT: Removed initialService from dependency array to prevent reset loops.
-  // We ONLY want to set initial state when the modal triggers 'open'.
+  }, [isOpen, initialService])
+  // Updated dependency array to include initialService so it catches updates even if isOpen is already true
+
+  // Fetch real availability from API when date, services, or branch change
+  useEffect(() => {
+    if (!isOpen || selectedServices.length === 0 || !branchId) {
+      setApiSlots([])
+      return
+    }
+
+    const fetchAvailability = async () => {
+      setIsLoadingSlots(true)
+      setSlotsError(null)
+      try {
+        const dateStr = format(selectedDate, 'yyyy-MM-dd')
+        // Fetch availability for the first selected service (primary)
+        const primaryService = selectedServices[0]
+        const result = await BookingService.getAvailability({
+          serviceId: primaryService.service.id,
+          branchId,
+          date: dateStr,
+          resourceId: primaryService.staffId || undefined
+        })
+
+        if (result.data && Array.isArray(result.data)) {
+          setApiSlots(result.data)
+        } else {
+          // API returned no data or error — keep empty, fallback in availableSlots memo
+          setApiSlots([])
+          if (result.error) setSlotsError(result.error)
+        }
+      } catch (err) {
+        console.error('Failed to fetch availability:', err)
+        setSlotsError('Could not load availability')
+        setApiSlots([])
+      } finally {
+        setIsLoadingSlots(false)
+      }
+    }
+
+    fetchAvailability()
+  }, [isOpen, selectedDate, selectedServices.length > 0 ? selectedServices[0]?.service.id : null, branchId])
 
   // --- Computed Values ---
 
@@ -383,10 +443,36 @@ export function BookingModalV2Fixed({
 
   const timeSlots = useMemo(() => generateTimeSlots(selectedTimeOfDay), [selectedTimeOfDay])
 
-  // Logic could be expanded to fetch real slots
+  // Use real API slots when available, fall back to generated mock slots
   const availableSlots = useMemo(() => {
+    if (apiSlots.length > 0) {
+      // Convert ISO timestamps to HH:MM strings and filter by time of day
+      const slotTimes = apiSlots.map(slot => {
+        const d = new Date(slot.startTime)
+        const h = d.getHours()
+        const m = d.getMinutes()
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+      })
+
+      // Filter by selected time of day
+      const filtered = slotTimes.filter(time => {
+        const hour = parseInt(time.split(':')[0])
+        switch (selectedTimeOfDay) {
+          case 'morning':
+            return hour >= 9 && hour < 12
+          case 'afternoon':
+            return hour >= 12 && hour < 17
+          case 'evening':
+            return hour >= 17 && hour < 21
+        }
+      })
+
+      // Deduplicate and sort
+      return [...new Set(filtered)].sort()
+    }
+    // Fallback to generated slots if API returned nothing
     return timeSlots
-  }, [timeSlots])
+  }, [apiSlots, timeSlots, selectedTimeOfDay])
 
   const totals = useMemo(() => {
     const price = selectedServices.reduce((sum, s) => sum + (s.service.price || 0), 0)
@@ -506,17 +592,73 @@ export function BookingModalV2Fixed({
   const handleConfirmBooking = useCallback(async () => {
     if (!validateDetails()) return
     setIsSubmitting(true)
+    setBookingError(null)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      setBookingReference(`BK-${Date.now().toString(36).toUpperCase().slice(-6)}`)
-      setStep('confirm')
+      // Build ISO start time from selected date + time
+      const [hours, mins] = (selectedTime || '00:00').split(':').map(Number)
+      const startDate = new Date(selectedDate)
+      startDate.setHours(hours, mins, 0, 0)
+
+      const primaryService = selectedServices[0]
+      if (!primaryService || !branchId) {
+        throw new Error('Missing service or branch')
+      }
+
+      let result
+
+      console.log('Booking attempt - Auth State:', {
+        isAuthenticated: isAuthenticated(),
+        booklyUser,
+        token: useAuthStore.getState().token
+      })
+
+      if (isAuthenticated()) {
+        // Authenticated booking
+        console.log('Proceeding with AUTHENTICATED booking')
+        result = await BookingService.createBooking({
+          serviceId: primaryService.service.id,
+          branchId,
+          resourceId: primaryService.staffId || undefined,
+          startTime: startDate.toISOString(),
+          notes: customerDetails.notes || undefined
+        })
+      } else {
+        // Guest booking
+        console.log('Proceeding with GUEST booking')
+        result = await BookingService.createGuestBooking({
+          serviceId: primaryService.service.id,
+          branchId,
+          resourceId: primaryService.staffId || undefined,
+          startTime: startDate.toISOString(),
+          notes: customerDetails.notes || undefined,
+          customerName: customerDetails.name,
+          customerEmail: customerDetails.email,
+          customerPhone: customerDetails.phone
+        })
+      }
+
+      if (result.data) {
+        setBookingReference(result.data.id || `BK-${Date.now().toString(36).toUpperCase().slice(-6)}`)
+        setStep('confirm')
+      } else {
+        setBookingError(result.error || 'Booking failed. Please try again.')
+      }
     } catch (error) {
       console.error('Booking failed:', error)
+      setBookingError(error instanceof Error ? error.message : 'Booking failed')
     } finally {
       setIsSubmitting(false)
     }
-  }, [validateDetails])
+  }, [
+    validateDetails,
+    selectedDate,
+    selectedTime,
+    selectedServices,
+    branchId,
+    customerDetails,
+    isAuthenticated,
+    booklyUser
+  ])
 
   // --- Drag and Drop Handlers ---
 
@@ -744,8 +886,19 @@ export function BookingModalV2Fixed({
                 ))}
               </div>
 
+              {isLoadingSlots ? (
+                <div className='flex items-center justify-center py-8'>
+                  <div className='w-6 h-6 border-2 border-[#0a2c24] dark:border-[#77b6a3] border-t-transparent rounded-full animate-spin' />
+                  <span className='ml-2 text-sm text-gray-500'>Loading available slots...</span>
+                </div>
+              ) : slotsError ? (
+                <div className='text-center py-4'>
+                  <p className='text-sm text-amber-600 dark:text-amber-400'>Using default time slots</p>
+                </div>
+              ) : null}
+
               <div className='grid grid-cols-4 gap-2'>
-                {timeSlots.map(time => {
+                {availableSlots.map(time => {
                   const isSelected = selectedTime === time
                   return (
                     <button
@@ -762,6 +915,11 @@ export function BookingModalV2Fixed({
                   )
                 })}
               </div>
+              {availableSlots.length === 0 && !isLoadingSlots && (
+                <p className='text-center text-sm text-gray-500 dark:text-gray-400 py-2'>
+                  No available time slots for this period
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -949,7 +1107,7 @@ export function BookingModalV2Fixed({
   // Render based on platform (Mobile or Desktop)
 
   if (isMobile) {
-    return (
+    return createPortal(
       <div
         className={`fixed inset-0 z-[100] transition-opacity duration-300 ${isClosing ? 'opacity-0' : mounted ? 'opacity-100' : 'opacity-0'}`}
       >
@@ -960,12 +1118,14 @@ export function BookingModalV2Fixed({
           <div className='w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mt-3 mb-1 opacity-50' />
           {content}
         </div>
-      </div>
+      </div>,
+      document.body
     )
   }
 
   // Desktop Render (Modal Center)
-  return (
+  // Desktop Render (Modal Center)
+  return createPortal(
     <div
       className={`fixed inset-0 z-[100] flex items-center justify-center p-4 transition-opacity duration-300 ${isClosing ? 'opacity-0' : mounted ? 'opacity-100' : 'opacity-0'}`}
     >
@@ -975,7 +1135,8 @@ export function BookingModalV2Fixed({
       >
         {content}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

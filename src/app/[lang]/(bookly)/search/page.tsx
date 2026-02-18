@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { MOCK_BUSINESSES, BusinessLocation } from '@/mocks/businesses'
+import { BusinessService } from '@/lib/api/services/business.service'
+import { CategoriesService } from '@/lib/api/services/categories.service'
+import type { Business, Category } from '@/lib/api/types'
 import { BusinessCard } from '@/bookly/components/marketplace/business-card'
 import { SearchMap } from '@/bookly/components/marketplace/search-map'
 import { Button } from '@/bookly/components/ui/button'
@@ -58,62 +60,74 @@ export default function SearchPage() {
   })
 
   // Results State
-  const [results, setResults] = useState<BusinessLocation[]>([])
+  const [results, setResults] = useState<Business[]>([])
+  const [loading, setLoading] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
 
-  // Mock Licensing/Filtering Logic
+  // Fetch categories on mount
   useEffect(() => {
-    let filtered = MOCK_BUSINESSES
+    CategoriesService.getCategories()
+      .then(res => {
+        if (res.data) setCategories(res.data)
+      })
+      .catch(() => {})
+  }, [])
 
-    // Text Search
-    if (filters.q) {
-      const qLower = filters.q.toLowerCase()
-      filtered = filtered.filter(
-        b => b.name.toLowerCase().includes(qLower) || b.description.toLowerCase().includes(qLower)
-      )
-    }
+  // Update filter options with fetched categories
+  const dynamicFilterOptions = {
+    ...filterOptions,
+    categories:
+      categories.length > 0 ? categories.map(c => ({ id: c.id, name: c.name, count: 0 })) : filterOptions.categories
+  }
 
-    // Location Search
-    if (filters.location) {
-      const locLower = filters.location.toLowerCase()
-      filtered = filtered.filter(
-        b => b.city.toLowerCase().includes(locLower) || b.address.toLowerCase().includes(locLower)
-      )
-    }
+  // Fetch businesses from API
+  const fetchBusinesses = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await BusinessService.getApprovedBusinesses({
+        page: 1,
+        pageSize: 50,
+        search: filters.q || undefined,
+        categoryId: filters.category?.[0] || undefined,
+        priceFrom: filters.priceMin ?? 0,
+        priceTo: filters.priceMax ?? 999999
+      })
+      if (res.data) {
+        let businesses = Array.isArray(res.data) ? res.data : []
 
-    // Category Filter
-    if (filters.category.length > 0) {
-      filtered = filtered.filter(b =>
-        b.categories.some(
-          cat =>
-            filters.category.includes(cat.toLowerCase()) ||
-            filters.category.some(fc => cat.toLowerCase().includes(fc.toLowerCase()))
-        )
-      )
-    }
+        // Client-side rating filter
+        if (filters.rating > 0) {
+          businesses = businesses.filter(b => (b.rating ?? 0) >= filters.rating)
+        }
 
-    // Rating Filter
-    if (filters.rating > 0) {
-      filtered = filtered.filter(b => b.rating >= filters.rating)
-    }
+        // Client-side sort
+        businesses = [...businesses].sort((a, b) => {
+          switch (filters.sort) {
+            case 'rating_desc':
+              return (b.rating ?? 0) - (a.rating ?? 0)
+            default:
+              return 0
+          }
+        })
 
-    // Sorting
-    filtered = [...filtered].sort((a, b) => {
-      switch (filters.sort) {
-        case 'price_asc':
-          return (a.priceRange?.min || 0) - (b.priceRange?.min || 0)
-        case 'price_desc':
-          return (b.priceRange?.min || 0) - (a.priceRange?.min || 0)
-        case 'rating_desc':
-          return b.rating - a.rating
-        case 'most_reviewed':
-          return 124 - 124 // Mock review count is static currently
-        default:
-          return 0
+        setResults(businesses)
+      } else {
+        setResults([])
       }
-    })
+    } catch {
+      setResults([])
+    } finally {
+      setLoading(false)
+    }
+  }, [filters.q, filters.category, filters.priceMin, filters.priceMax, filters.rating, filters.sort])
 
-    setResults(filtered)
-  }, [filters])
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchBusinesses()
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [fetchBusinesses])
 
   const handleResetFilters = () => {
     setFilters({
@@ -190,7 +204,7 @@ export default function SearchPage() {
             <div className='h-full lg:h-auto overflow-y-auto lg:overflow-visible p-4 lg:p-0 pb-20 lg:pb-0 custom-scrollbar lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)]'>
               <SearchFilters
                 filters={filters}
-                options={filterOptions}
+                options={dynamicFilterOptions}
                 onFiltersChange={setFilters}
                 onApplyFilters={() => {
                   setIsFilterOpen(false) // Close mobile menu if open
@@ -238,10 +252,10 @@ export default function SearchPage() {
                       key={b.id}
                       id={b.id}
                       name={b.name}
-                      rating={b.rating}
-                      reviewCount={124}
-                      address={b.address}
-                      image={b.coverImageUrl || b.imageUrl || ''}
+                      rating={b.rating ?? 0}
+                      reviewCount={b.reviews?.length ?? 0}
+                      address={b.branches?.[0]?.address || b.description || ''}
+                      image={b.logoUrl || b.logo || ''}
                       isPromoted={Math.random() > 0.8}
                       mobile
                     />
@@ -267,10 +281,10 @@ export default function SearchPage() {
                       key={b.id}
                       id={b.id}
                       name={b.name}
-                      rating={b.rating}
-                      reviewCount={124}
-                      address={b.address}
-                      image={b.coverImageUrl || b.imageUrl || ''}
+                      rating={b.rating ?? 0}
+                      reviewCount={b.reviews?.length ?? 0}
+                      address={b.branches?.[0]?.address || b.description || ''}
+                      image={b.logoUrl || b.logo || ''}
                       isPromoted={Math.random() > 0.8}
                     />
                   ))}
@@ -290,7 +304,7 @@ export default function SearchPage() {
               </>
             ) : (
               <div className='h-[600px] rounded-lg overflow-hidden border border-gray-200'>
-                <SearchMap businesses={results} />
+                <SearchMap businesses={results as any} />
               </div>
             )}
           </div>

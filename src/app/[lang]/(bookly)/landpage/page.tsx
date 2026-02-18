@@ -182,9 +182,9 @@ function LandPage() {
         </ScrollReveal>
 
         {/* Business Growth Banner */}
-        <ScrollReveal animation='slide-in-left' delay={100}>
+        {/* <ScrollReveal animation='slide-in-left' delay={100}>
           <BusinessGrowthBanner />
-        </ScrollReveal>
+        </ScrollReveal> */}
 
         {/* Features Section */}
         <div className='relative bg-[#f7f8f9] dark:bg-[#0a2c24] py-12 sm:py-16'>

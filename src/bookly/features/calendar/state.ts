@@ -1,12 +1,15 @@
 import { create } from 'zustand'
-import { mockBookings, mockStaff, mockRooms, mockStaticServiceSlots, mockScheduleTemplates } from '@/bookly/data/mock-data'
-import { mapBookingToEvent, filterEvents } from './utils'
+import { mockStaff as fallbackMockStaff } from '@/bookly/data/mock-data'
+import { mapBookingToEvent, mapApiBookingToEvent, filterEvents, generateColorFromName } from './utils'
 import {
   timeOffToCalendarEvent,
   reservationToCalendarEvents,
   validateBookingTime
 } from './staff-management-integration'
-import { useStaffManagementStore } from '../staff-management/staff-store'
+// import { useStaffManagementStore } from '../staff-management/staff-store'
+import { BookingService, StaffService } from '@/lib/api'
+import { AssetsService } from '@/lib/api/services/assets.service'
+import { SchedulingService } from '@/lib/api/services/scheduling.service'
 import type {
   CalendarState,
   CalendarView,
@@ -22,7 +25,8 @@ import type {
   Room,
   StaticServiceSlot,
   ScheduleTemplate,
-  WeeklySlotPattern
+  WeeklySlotPattern,
+  Resource
 } from './types'
 
 // LocalStorage keys
@@ -63,10 +67,10 @@ function savePreference<T>(key: string, value: T): void {
 
 // Load schedule templates from localStorage with date parsing
 function loadTemplates(): ScheduleTemplate[] {
-  if (typeof window === 'undefined') return mockScheduleTemplates
+  if (typeof window === 'undefined') return []
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.scheduleTemplates)
-    if (!stored) return mockScheduleTemplates
+    if (!stored) return []
 
     const templates = JSON.parse(stored) as ScheduleTemplate[]
     // Parse date strings back to Date objects
@@ -78,18 +82,18 @@ function loadTemplates(): ScheduleTemplate[] {
       updatedAt: new Date(template.updatedAt)
     }))
   } catch {
-    return mockScheduleTemplates
+    return []
   }
 }
 
 // Load static slots from localStorage
 function loadStaticSlots(): StaticServiceSlot[] {
-  if (typeof window === 'undefined') return mockStaticServiceSlots
+  if (typeof window === 'undefined') return []
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.staticSlots)
-    return stored ? JSON.parse(stored) : mockStaticServiceSlots
+    return stored ? JSON.parse(stored) : []
   } catch {
-    return mockStaticServiceSlots
+    return []
   }
 }
 
@@ -146,51 +150,30 @@ const initialHighlights: HighlightFilters = {
 
 // Generate background events from staff management data
 function generateBackgroundEvents(): CalendarEvent[] {
-  const staffManagementState = useStaffManagementStore.getState()
-
-  // Time off background events
-  const timeOffEvents = staffManagementState.timeOffRequests.map(timeOff => {
-    const staff = mockStaff.find(s => s.id === timeOff.staffId)
-    return timeOffToCalendarEvent(timeOff, staff?.name || 'Staff Member')
-  })
-
-  const staffLookup = mockStaff.reduce<Record<string, { name: string; branchId?: string }>>((acc, staff) => {
-    acc[staff.id] = { name: staff.name, branchId: staff.branchId }
-    return acc
-  }, {})
-  const roomLookup = [...mockRooms, ...staffManagementState.rooms].reduce<
-    Record<string, { name: string; branchId?: string }>
-  >((acc, room) => {
-    acc[room.id] = { name: room.name, branchId: room.branchId }
-    return acc
-  }, {})
-
-  // Reservation background events (support multi-staff and rooms)
-  const reservationEvents = staffManagementState.timeReservations.flatMap(reservation =>
-    reservationToCalendarEvents(reservation, staffLookup, roomLookup)
-  )
-
-  return [...timeOffEvents, ...reservationEvents]
+  // TODO: Re-enable when Staff Management is fully integrated with backend
+  return []
 }
 
-// Generate initial events from mock bookings
+// Generate initial events
 function getInitialEvents(): CalendarEvent[] {
-  const starredIds = new Set(loadPreference<string[]>(STORAGE_KEYS.starred, []))
-
-  // Regular booking events
-  const bookingEvents = mockBookings.map(booking => {
-    // Find staff ID from booking
-    const staff = mockStaff.find(s => s.name === booking.staffMemberName)
-    return mapBookingToEvent(booking, staff?.id || '1', starredIds)
-  })
-
-  // Background events from staff management
-  const backgroundEvents = generateBackgroundEvents()
-
-  return [...bookingEvents, ...backgroundEvents]
+  // Initialize with empty events, waiting for fetchEvents
+  return []
 }
 
 interface CalendarStore extends CalendarState {
+  // Loading state
+  isLoading: boolean
+
+  // Search state (extended from base state)
+  searchMatchedFields: Map<string, string[]>
+
+  // Async Actions
+  fetchEvents: (range: DateRange) => Promise<void>
+  fetchStaff: (branchId?: string) => Promise<void>
+  fetchResources: (branchId?: string) => Promise<void>
+  fetchSchedules: () => Promise<void>
+  fetchAssignments: () => Promise<void>
+
   // Actions
   setView: (view: CalendarView) => void
   setDisplayMode: (mode: DisplayMode) => void
@@ -230,7 +213,12 @@ interface CalendarStore extends CalendarState {
   isSlotAvailable: (slotId: string, date: Date) => { available: boolean; remainingCapacity: number; total: number }
   // Staff concurrent booking checking (for dynamic mode)
   getConcurrentStaffBookings: (staffId: string, start: Date, end: Date) => CalendarEvent[]
-  isStaffAvailableForBooking: (staffId: string, start: Date, end: Date, excludeEventId?: string) => { available: boolean; currentCount: number; maxAllowed: number }
+  isStaffAvailableForBooking: (
+    staffId: string,
+    start: Date,
+    end: Date,
+    excludeEventId?: string
+  ) => { available: boolean; currentCount: number; maxAllowed: number }
   // Template management actions
   createTemplate: (template: Omit<ScheduleTemplate, 'id' | 'createdAt' | 'updatedAt'>) => string
   updateTemplate: (templateId: string, updates: Partial<ScheduleTemplate>) => void
@@ -246,6 +234,15 @@ interface CalendarStore extends CalendarState {
   clearSearch: () => void
   isEventMatchedBySearch: (eventId: string) => boolean
   getSearchMatchedFields: (eventId: string) => string[]
+
+  // Store-specific properties not in CalendarState or needing override
+  rooms: Room[]
+  staticSlots: StaticServiceSlot[]
+  scheduleTemplates: ScheduleTemplate[]
+  isTemplateManagementOpen: boolean
+  staff: any[] // TODO: Use proper Staff type from API
+  searchMatchedEventIds: Set<string>
+  isSearchActive: boolean
 }
 
 export const useCalendarStore = create<CalendarStore>((set, get) => ({
@@ -272,57 +269,144 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   lastActionError: null,
   // Static/Dynamic scheduling
   schedulingMode: loadPreference(STORAGE_KEYS.schedulingMode, 'dynamic' as SchedulingMode),
-  rooms: mockRooms,
+  rooms: [], // Initialized empty, populated by fetchResources()
   staticSlots: loadStaticSlots(),
   scheduleTemplates: loadTemplates(),
   isTemplateManagementOpen: false,
+
+  staff: [], // Initialize empty
+
   // Search state
   searchQuery: '',
   searchMatchedEventIds: new Set<string>(),
   searchMatchedFields: new Map<string, string[]>(), // Maps event ID to array of matched field names
   isSearchActive: false,
 
+  isLoading: false,
+
+  fetchEvents: async (range: DateRange) => {
+    set({ isLoading: true })
+    try {
+      // Use date strings YYYY-MM-DD
+      const fromDate = range.start.toISOString().split('T')[0]
+      const toDate = range.end.toISOString().split('T')[0]
+
+      const bookings = await BookingService.getBusinessBookings({
+        fromDate,
+        toDate,
+        pageSize: 1000 // Get enough for calendar
+      })
+
+      const starredIds = get().starredIds
+
+      const apiEvents = (bookings.data || []).map(b => mapApiBookingToEvent(b, starredIds))
+      const backgroundEvents = generateBackgroundEvents()
+
+      set({ events: [...apiEvents, ...backgroundEvents], isLoading: false })
+    } catch (error) {
+      console.error('Failed to fetch events:', error)
+      set({ isLoading: false, lastActionError: 'Failed to load bookings' })
+    }
+  },
+
+  fetchStaff: async () => {
+    try {
+      const response = await StaffService.getStaff()
+      if (response?.data) {
+        const mappedStaff = response.data.map((s: any) => ({
+          ...s,
+          staffType: s.staffType || 'dynamic',
+          color: s.color || generateColorFromName(s.name)
+        }))
+        set({ staff: mappedStaff })
+      }
+    } catch (error) {
+      console.error('Failed to fetch staff:', error)
+    }
+  },
+
+  fetchResources: async () => {
+    try {
+      const response = await AssetsService.getAssets()
+      if (response?.data) {
+        // Map API resources to Room type
+        const mappedRooms: Room[] = response.data.map(asset => ({
+          id: asset.id,
+          name: asset.name,
+          branchId: asset.branchId,
+          roomType: 'static' // Assuming assets are static resources for now
+        }))
+        set({ rooms: mappedRooms })
+      }
+    } catch (error) {
+      console.error('Failed to fetch resources:', error)
+    }
+  },
+
+  fetchSchedules: async () => {
+    try {
+      const response = await SchedulingService.getSchedules()
+      if (response?.data && Array.isArray(response.data)) {
+        // Schedules affect working hours display — store raw for now
+        console.log('Calendar: Fetched', response.data.length, 'schedules from API')
+      }
+    } catch (error) {
+      console.warn('Failed to fetch schedules:', error)
+    }
+  },
+
+  fetchAssignments: async () => {
+    try {
+      const response = await SchedulingService.getAssignments()
+      if (response?.data && Array.isArray(response.data)) {
+        console.log('Calendar: Fetched', response.data.length, 'assignments from API')
+      }
+    } catch (error) {
+      console.warn('Failed to fetch assignments:', error)
+    }
+  },
+
   // Actions
-  setView: (view) => {
+  setView: view => {
     savePreference(STORAGE_KEYS.view, view)
     set({ view })
   },
 
-  setDisplayMode: (mode) => {
+  setDisplayMode: mode => {
     savePreference(STORAGE_KEYS.displayMode, mode)
     set({ displayMode: mode })
   },
 
-  setColorScheme: (scheme) => {
+  setColorScheme: scheme => {
     savePreference(STORAGE_KEYS.colorScheme, scheme)
     set({ colorScheme: scheme })
   },
 
-  setVisibleDateRange: (range) => {
+  setVisibleDateRange: range => {
     set({ visibleDateRange: range })
   },
 
-  setBranchFilters: (filters) => {
+  setBranchFilters: filters => {
     savePreference(STORAGE_KEYS.branches, filters)
     set({ branchFilters: filters })
   },
 
-  setStaffFilters: (filters) => {
+  setStaffFilters: filters => {
     savePreference(STORAGE_KEYS.staff, filters)
     set({ staffFilters: filters })
   },
 
-  setRoomFilters: (filters) => {
+  setRoomFilters: filters => {
     savePreference(STORAGE_KEYS.rooms, filters)
     set({ roomFilters: filters })
   },
 
-  setHighlights: (highlights) => {
+  setHighlights: highlights => {
     savePreference(STORAGE_KEYS.highlights, highlights)
     set({ highlights })
   },
 
-  toggleStarred: (eventId) => {
+  toggleStarred: eventId => {
     const { starredIds, events } = get()
     const newStarredIds = new Set(starredIds)
 
@@ -343,10 +427,12 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     set({ starredIds: newStarredIds, events: updatedEvents })
   },
 
-  createEvent: (newEvent) => {
+  createEvent: newEvent => {
     const { events, schedulingMode } = get()
 
     // Validate time off and reservation conflicts
+    // TODO: Re-enable when Staff Management is fully integrated (Circular dependency fix)
+    /*
     if (newEvent.extendedProps.staffId || newEvent.extendedProps.roomId) {
       const staffManagementState = useStaffManagementStore.getState()
       const validation = validateBookingTime(
@@ -363,6 +449,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         return
       }
     }
+    */
 
     // Validate capacity for static scheduling
     if (schedulingMode === 'static' && newEvent.extendedProps.slotId) {
@@ -371,7 +458,9 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       const partySize = newEvent.extendedProps.partySize || 1
 
       if (!available || remainingCapacity < partySize) {
-        set({ lastActionError: `Cannot book: Only ${remainingCapacity} spot(s) remaining, but ${partySize} requested.` })
+        set({
+          lastActionError: `Cannot book: Only ${remainingCapacity} spot(s) remaining, but ${partySize} requested.`
+        })
         return
       }
     }
@@ -386,15 +475,49 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
       if (!available) {
         const staffName = newEvent.extendedProps.staffName || 'Staff member'
-        set({ lastActionError: `${staffName} is fully booked at this time (${currentCount}/${maxAllowed} concurrent appointments).` })
+        set({
+          lastActionError: `${staffName} is fully booked at this time (${currentCount}/${maxAllowed} concurrent appointments).`
+        })
         return
       }
     }
 
     set({ events: [...events, newEvent], lastActionError: null })
+
+    // Fire API call in background (optimistic)
+    const startDate = new Date(newEvent.start)
+    const props: any = newEvent.extendedProps || {}
+    const notesStr: string = props.notes || ''
+    const extractedEmail = notesStr.match?.(/Email:\s*([^,]+)/)?.[1]?.trim() || ''
+    const extractedPhone = notesStr.match?.(/Phone:\s*(.+)/)?.[1]?.trim() || ''
+    BookingService.createAdminBooking({
+      serviceId: props.serviceId || '',
+      branchId: props.branchId || '1-1',
+      staffId: props.staffId,
+      startTime: startDate.toISOString(),
+      customerName: props.customerName || '',
+      customerEmail: extractedEmail,
+      customerPhone: extractedPhone,
+      status: props.status || 'confirmed',
+      notes: props.notes
+    })
+      .then(result => {
+        if (result?.data) {
+          const apiId = (result.data as any).id
+          if (apiId && apiId !== newEvent.id) {
+            // Replace temp ID with real API ID
+            set(state => ({
+              events: state.events.map(e => (e.id === newEvent.id ? { ...e, id: apiId } : e))
+            }))
+          }
+        }
+      })
+      .catch(err => {
+        console.warn('API createAdminBooking failed, keeping local state:', err)
+      })
   },
 
-  updateEvent: (updatedEvent) => {
+  updateEvent: updatedEvent => {
     const { events, schedulingMode } = get()
     const oldEvent = events.find(e => e.id === updatedEvent.id)
 
@@ -407,6 +530,8 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         oldEvent?.end.toString() !== updatedEvent.end.toString()
 
       if (staffChanged || roomChanged || timeChanged) {
+        // TODO: Re-enable when Staff Management is fully integrated
+        /*
         const staffManagementState = useStaffManagementStore.getState()
         const validation = validateBookingTime(
           updatedEvent.extendedProps.staffId || null,
@@ -421,6 +546,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
           set({ lastActionError: validation.error })
           return
         }
+        */
       }
     }
 
@@ -445,7 +571,9 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
           const partySize = updatedEvent.extendedProps.partySize || 1
 
           if (remainingCapacity < partySize) {
-            set({ lastActionError: `Cannot update: Only ${remainingCapacity} spot(s) remaining, but ${partySize} requested.` })
+            set({
+              lastActionError: `Cannot update: Only ${remainingCapacity} spot(s) remaining, but ${partySize} requested.`
+            })
             return
           }
         }
@@ -470,7 +598,9 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
         if (!available) {
           const staffName = updatedEvent.extendedProps.staffName || 'Staff member'
-          set({ lastActionError: `${staffName} is fully booked at this time (${currentCount}/${maxAllowed} concurrent appointments).` })
+          set({
+            lastActionError: `${staffName} is fully booked at this time (${currentCount}/${maxAllowed} concurrent appointments).`
+          })
           return
         }
       }
@@ -478,9 +608,29 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
     const newEvents = events.map(event => (event.id === updatedEvent.id ? updatedEvent : event))
     set({ events: newEvents, lastActionError: null })
+
+    // Fire API calls in background (optimistic)
+    const props = updatedEvent.extendedProps || ({} as any)
+    const oldProps = oldEvent?.extendedProps || ({} as any)
+
+    // Update status if changed
+    if (oldProps.status !== props.status && props.status) {
+      BookingService.updateBookingStatus(updatedEvent.id, props.status).catch(err =>
+        console.warn('API updateBookingStatus failed:', err)
+      )
+    }
+
+    // Reschedule if time changed
+    const timeChanged = oldEvent?.start?.toString() !== updatedEvent.start?.toString()
+    if (timeChanged) {
+      BookingService.adminRescheduleBooking(updatedEvent.id, {
+        startTime: new Date(updatedEvent.start).toISOString(),
+        resourceId: props.staffId
+      }).catch(err => console.warn('API adminRescheduleBooking failed:', err))
+    }
   },
 
-  deleteEvent: (eventId) => {
+  deleteEvent: eventId => {
     const { events, starredIds, selectedEvent } = get()
     const newEvents = events.filter(event => event.id !== eventId)
     const newStarredIds = new Set(starredIds)
@@ -493,9 +643,14 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     const newSelectedEvent = selectedEvent?.id === eventId ? null : selectedEvent
 
     set({ events: newEvents, starredIds: newStarredIds, selectedEvent: newSelectedEvent })
+
+    // Fire API delete in background (optimistic)
+    BookingService.deleteBooking(eventId).catch(err => {
+      console.warn('API deleteBooking failed, local state already updated:', err)
+    })
   },
 
-  setSelectedEvent: (event) => {
+  setSelectedEvent: event => {
     set({ selectedEvent: event })
   },
 
@@ -519,7 +674,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     set({ isNewBookingOpen: false, selectedDate: null, selectedDateRange: null })
   },
 
-  openAppointmentDrawer: (event) => {
+  openAppointmentDrawer: event => {
     set({ isAppointmentDrawerOpen: true, selectedEvent: event })
   },
 
@@ -561,7 +716,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     })
   },
 
-  selectSingleStaff: (staffId) => {
+  selectSingleStaff: staffId => {
     const { staffFilters } = get()
     // Save current filters for back navigation
     set({
@@ -623,19 +778,27 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   },
 
   // Static/Dynamic scheduling actions
-  setSchedulingMode: (mode) => {
+  setSchedulingMode: mode => {
     savePreference(STORAGE_KEYS.schedulingMode, mode)
     set({ schedulingMode: mode })
   },
 
-  getRoomsByBranch: (branchId) => {
+  getRoomsByBranch: branchId => {
     const { rooms } = get()
     return rooms.filter(room => room.branchId === branchId)
   },
 
   getSlotsForDate: (date, branchId, roomId) => {
     const { staticSlots } = get()
-    const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = [
+      'Sun',
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat'
+    ]
     const dayOfWeek = dayNames[date.getDay()]
     const dateStr = getDateKey(date)
 
@@ -696,7 +859,15 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         // Try to find a slot that matches the event's time and location
         const eventStart = new Date(eventWithSlot.start)
         const eventTime = getTimeKey(eventStart)
-        const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = [
+          'Sun',
+          'Mon',
+          'Tue',
+          'Wed',
+          'Thu',
+          'Fri',
+          'Sat'
+        ]
         const dayOfWeek = dayNames[eventStart.getDay()]
         const dateStr = getDateKey(eventStart)
 
@@ -764,8 +935,8 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   },
 
   isStaffAvailableForBooking: (staffId, start, end, excludeEventId) => {
-    // Get the staff member from mock data
-    const staffMember = mockStaff.find(s => s.id === staffId)
+    // Get the staff member from store (API data) first, fallback to mock
+    const staffMember = get().staff.find((s: any) => s.id === staffId) || fallbackMockStaff.find(s => s.id === staffId)
     const maxAllowed = staffMember?.maxConcurrentBookings || 1 // Default to 1 if not specified
 
     // Get concurrent bookings
@@ -786,7 +957,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   },
 
   // Template management actions
-  createTemplate: (template) => {
+  createTemplate: template => {
     const { scheduleTemplates } = get()
     const newTemplate: ScheduleTemplate = {
       ...template,
@@ -804,15 +975,13 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   updateTemplate: (templateId, updates) => {
     const { scheduleTemplates } = get()
     const updatedTemplates = scheduleTemplates.map(template =>
-      template.id === templateId
-        ? { ...template, ...updates, updatedAt: new Date() }
-        : template
+      template.id === templateId ? { ...template, ...updates, updatedAt: new Date() } : template
     )
     set({ scheduleTemplates: updatedTemplates })
     savePreference(STORAGE_KEYS.scheduleTemplates, updatedTemplates)
   },
 
-  deleteTemplate: (templateId) => {
+  deleteTemplate: templateId => {
     const { scheduleTemplates, staticSlots } = get()
 
     // Remove template
@@ -829,7 +998,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
   },
 
-  toggleTemplateActive: (templateId) => {
+  toggleTemplateActive: templateId => {
     const { scheduleTemplates, staticSlots } = get()
     const template = scheduleTemplates.find(t => t.id === templateId)
 
@@ -839,9 +1008,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
     // Update template status
     const updatedTemplates = scheduleTemplates.map(t =>
-      t.id === templateId
-        ? { ...t, isActive: isBecomingActive, updatedAt: new Date() }
-        : t
+      t.id === templateId ? { ...t, isActive: isBecomingActive, updatedAt: new Date() } : t
     )
 
     if (isBecomingActive) {
@@ -880,8 +1047,15 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     if (!template) return []
 
     const generatedSlots: StaticServiceSlot[] = []
-    const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> =
-      ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = [
+      'Sun',
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Sat'
+    ]
 
     // Iterate through each day in the range
     let currentDate = new Date(startDate)
@@ -896,9 +1070,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       for (const pattern of patternsForDay) {
         // Check if there's already an override or cancellation for this date and pattern
         const hasOverride = staticSlots.some(
-          slot => slot.templateId === templateId &&
-                  slot.overrideDate === dateStr &&
-                  slot.id.includes(pattern.id)
+          slot => slot.templateId === templateId && slot.overrideDate === dateStr && slot.id.includes(pattern.id)
         )
 
         // Only generate if no override exists
@@ -954,16 +1126,21 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     if (existingSlot) {
       // Update existing slot with override
       const updatedSlots = staticSlots.map(slot =>
-        slot.id === existingSlotId
-          ? { ...slot, ...updates, isOverride: true, overrideDate: date }
-          : slot
+        slot.id === existingSlotId ? { ...slot, ...updates, isOverride: true, overrideDate: date } : slot
       )
       set({ staticSlots: updatedSlots })
       savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
     } else {
       // Create new override slot
-      const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> =
-        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = [
+        'Sun',
+        'Mon',
+        'Tue',
+        'Wed',
+        'Thu',
+        'Fri',
+        'Sat'
+      ]
       const dateObj = new Date(date)
       const dayOfWeek = dayNames[dateObj.getDay()]
 
@@ -1005,16 +1182,21 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     if (existingSlot) {
       // Mark existing slot as cancelled
       const updatedSlots = staticSlots.map(slot =>
-        slot.id === existingSlotId
-          ? { ...slot, isCancelled: true, overrideDate: date }
-          : slot
+        slot.id === existingSlotId ? { ...slot, isCancelled: true, overrideDate: date } : slot
       )
       set({ staticSlots: updatedSlots })
       savePreference(STORAGE_KEYS.staticSlots, updatedSlots)
     } else {
       // Create cancelled override slot
-      const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> =
-        ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      const dayNames: Array<'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'> = [
+        'Sun',
+        'Mon',
+        'Tue',
+        'Wed',
+        'Thu',
+        'Fri',
+        'Sat'
+      ]
       const dateObj = new Date(date)
       const dayOfWeek = dayNames[dateObj.getDay()]
 

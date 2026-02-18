@@ -1,36 +1,29 @@
 import { apiClient } from '../api-client'
 import type { Service, CreateServiceRequest, UpdateServiceRequest } from '../types'
 
-// Note: API spec currently doesn't expose query parameters for services
-// UI should handle filtering client-side as per api-flow-map.md
-interface ServiceQueryParams {
-  // Currently no query params supported by API spec
-  // Client-side filtering should be used instead
-}
-
 export class ServicesService {
-  // Public - Get all services (no query parameters supported by API)
+  // Public - Get all services
   static async getServices() {
-    return apiClient.get<Service[]>('/service')
+    return apiClient.get<Service[]>('/services')
   }
 
-  // Public - Get specific service by ID (includes categories, branches, business, and reviews)
+  // Public - Get specific service by ID (includes categories, branches, business)
   static async getService(id: string) {
-    return apiClient.get<Service>(`/service/${id}`)
+    return apiClient.get<Service>(`/services/${id}`)
   }
 
-  // Admin only - Create service (API spec requires name, location, price, duration)
+  // Admin only - Create service
   static async createService(data: CreateServiceRequest) {
-    return apiClient.post<Service>('/service', data)
+    return apiClient.post<Service>('/admin/services', data)
   }
 
-  // Admin only - Update service (API spec requires id and allows optional fields)
+  // Admin only - Update service
   static async updateService(data: UpdateServiceRequest) {
-    return apiClient.patch<Service>('/service', data)
+    return apiClient.patch<Service>('/admin/services', data)
   }
 
   // Admin only - Delete service
   static async deleteService(id: string) {
-    return apiClient.delete<Service>(`/service/${id}`)
+    return apiClient.delete<Service>(`/admin/services/${id}`)
   }
 }

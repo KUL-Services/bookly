@@ -2,13 +2,14 @@
 
 import { AuthForm } from '@/bookly/components/molecules'
 import { PageProps } from '@/bookly/types'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import initTranslations from '@/app/i18n/i18n'
 import { useState, useEffect } from 'react'
 
 export default function LoginPage({ params }: PageProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { lang: locale } = params
   const loginCustomer = useAuthStore(state => state.loginCustomer)
   const loading = useAuthStore(state => state.loading)
@@ -47,12 +48,17 @@ export default function LoginPage({ params }: PageProps) {
                 try {
                   const { email, password } = values
                   await loginCustomer({ email, password })
-                  router.push(`/${locale}/landpage`)
+
+                  // Redirect to the page user came from, or landpage
+                  const redirect = searchParams?.get('redirect')
+                  if (redirect) {
+                    router.push(`/${locale}${decodeURIComponent(redirect)}`)
+                  } else {
+                    router.push(`/${locale}/landpage`)
+                  }
                 } catch (err) {
-                  // Error handling is now managed by the AuthForm component
-                  // It will either show field-specific errors or let the general error through
                   console.error('Login failed:', err)
-                  throw err // Re-throw to let AuthForm handle it
+                  throw err
                 }
               }}
             />
@@ -75,22 +81,3 @@ export default function LoginPage({ params }: PageProps) {
     </div>
   )
 }
-
-// <main className='min-h-screen flex flex-col items-center justify-center p-4 relative'>
-//       <div className='absolute top-4 left-4'>
-//         <Link href='/demo' className='text-primary hover:underline'>
-//           ← Back to Demo
-//         </Link>
-//       </div>
-
-//       <AuthForm
-//         type='login'
-//         onSubmit={async values => {
-//           // 'use server'
-//           // Handle login submission here
-//           console.log('Login values:', values)
-//           // For demo purposes, redirect to demo page after login
-//           redirect('/demo')
-//         }}
-//       />
-//     </main>

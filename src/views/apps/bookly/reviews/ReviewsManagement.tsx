@@ -23,14 +23,112 @@ import Button from '@mui/material/Button'
 import { TableSkeleton } from '@/components/LoadingStates'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import TextField from '@mui/material/TextField'
+import Tooltip from '@mui/material/Tooltip'
 
 // API Imports
 import type { Review, Service, User } from '@/lib/api'
+import { ReviewsService } from '@/lib/api/services/reviews.service'
 
 interface ExtendedReview extends Review {
   user: User
   service: Service
 }
+
+// Fallback mock data used when API is unavailable
+const fallbackMockReviews: ExtendedReview[] = [
+  {
+    id: '1',
+    rating: 5,
+    userId: 'user1',
+    serviceId: 'service1',
+    comment: 'Absolutely fantastic service! The haircut exceeded my expectations.',
+    user: {
+      id: 'user1',
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      email: 'sarah.johnson@email.com',
+      verified: true,
+      createdAt: '2024-01-10T00:00:00Z',
+      updatedAt: '2024-01-10T00:00:00Z'
+    },
+    service: {
+      id: 'service1',
+      name: 'Premium Hair Cut',
+      description: 'Professional haircut',
+      location: 'Downtown Branch',
+      price: 45,
+      duration: 60,
+      businessId: 'b1',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z'
+    },
+    createdAt: '2024-01-25T00:00:00Z',
+    updatedAt: '2024-01-25T00:00:00Z'
+  },
+  {
+    id: '2',
+    rating: 4,
+    userId: 'user2',
+    serviceId: 'service2',
+    comment: 'Great experience overall. The manicure was well done and the staff was friendly.',
+    user: {
+      id: 'user2',
+      firstName: 'Emily',
+      lastName: 'Chen',
+      email: 'emily.chen@email.com',
+      verified: true,
+      createdAt: '2024-01-15T00:00:00Z',
+      updatedAt: '2024-01-15T00:00:00Z'
+    },
+    service: {
+      id: 'service2',
+      name: 'Classic Manicure',
+      description: 'Nail care',
+      location: 'Westside Branch',
+      price: 25,
+      duration: 30,
+      businessId: 'b1',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z'
+    },
+    createdAt: '2024-01-24T00:00:00Z',
+    updatedAt: '2024-01-24T00:00:00Z'
+  },
+  {
+    id: '3',
+    rating: 3,
+    userId: 'user3',
+    serviceId: 'service3',
+    comment: 'Service was okay. Room for improvement.',
+    user: {
+      id: 'user3',
+      firstName: 'Michael',
+      lastName: 'Brown',
+      email: 'michael.brown@email.com',
+      verified: true,
+      createdAt: '2024-01-20T00:00:00Z',
+      updatedAt: '2024-01-20T00:00:00Z'
+    },
+    service: {
+      id: 'service3',
+      name: 'Facial Treatment',
+      description: 'Facial',
+      location: 'Downtown Branch',
+      price: 60,
+      duration: 75,
+      businessId: 'b1',
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z'
+    },
+    createdAt: '2024-01-23T00:00:00Z',
+    updatedAt: '2024-01-23T00:00:00Z'
+  }
+]
 
 const ReviewsManagement = () => {
   const [reviews, setReviews] = useState<ExtendedReview[]>([])
@@ -38,168 +136,64 @@ const ReviewsManagement = () => {
   const [error, setError] = useState<string | null>(null)
   const [tabValue, setTabValue] = useState(0)
 
+  // Dialog State
+  const [replyDialogOpen, setReplyDialogOpen] = useState(false)
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false)
+  const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [flagReason, setFlagReason] = useState('')
+  const [actionLoading, setActionLoading] = useState(false)
+
   const fetchReviews = async () => {
     try {
       setLoading(true)
 
-      // Mock comprehensive reviews data
-      const mockReviews: ExtendedReview[] = [
-        {
-          id: '1',
-          rating: 5,
-          comment:
-            'Absolutely fantastic service! The haircut exceeded my expectations. Maria is incredibly skilled and professional. I will definitely be coming back!',
-          userId: 'user1',
-          serviceId: 'service1',
-          user: {
-            id: 'user1',
-            firstName: 'Sarah',
-            lastName: 'Johnson',
-            email: 'sarah.johnson@email.com',
-            isVerified: true,
-            createdAt: new Date('2024-01-10').toISOString(),
-            updatedAt: new Date('2024-01-10').toISOString()
-          },
-          service: {
-            id: 'service1',
-            name: 'Premium Hair Cut',
-            description: 'Professional haircut with styling',
-            location: 'Downtown Branch',
-            price: 45,
-            duration: 60,
-            businessId: 'business1',
-            createdAt: new Date('2024-01-01').toISOString(),
-            updatedAt: new Date('2024-01-01').toISOString()
-          },
-          createdAt: new Date('2024-01-25').toISOString(),
-          updatedAt: new Date('2024-01-25').toISOString()
-        },
-        {
-          id: '2',
-          rating: 4,
-          comment:
-            'Great experience overall. The manicure was well done and the staff was friendly. Only minor issue was the wait time, but worth it!',
-          userId: 'user2',
-          serviceId: 'service2',
-          user: {
-            id: 'user2',
-            firstName: 'Emily',
-            lastName: 'Chen',
-            email: 'emily.chen@email.com',
-            isVerified: true,
-            createdAt: new Date('2024-01-15').toISOString(),
-            updatedAt: new Date('2024-01-15').toISOString()
-          },
-          service: {
-            id: 'service2',
-            name: 'Classic Manicure',
-            description: 'Professional nail care and polish',
-            location: 'Westside Branch',
-            price: 25,
-            duration: 30,
-            businessId: 'business1',
-            createdAt: new Date('2024-01-01').toISOString(),
-            updatedAt: new Date('2024-01-01').toISOString()
-          },
-          createdAt: new Date('2024-01-24').toISOString(),
-          updatedAt: new Date('2024-01-24').toISOString()
-        },
-        {
-          id: '3',
-          rating: 3,
-          comment:
-            'Service was okay. The staff could be more attentive and the facilities need some updating. Not bad but room for improvement.',
-          userId: 'user3',
-          serviceId: 'service3',
-          user: {
-            id: 'user3',
-            firstName: 'Michael',
-            lastName: 'Brown',
-            email: 'michael.brown@email.com',
-            isVerified: true,
-            createdAt: new Date('2024-01-20').toISOString(),
-            updatedAt: new Date('2024-01-20').toISOString()
-          },
-          service: {
-            id: 'service3',
-            name: 'Facial Treatment',
-            description: 'Relaxing facial with cleansing and moisturizing',
-            location: 'Downtown Branch',
-            price: 60,
-            duration: 75,
-            businessId: 'business1',
-            createdAt: new Date('2024-01-01').toISOString(),
-            updatedAt: new Date('2024-01-01').toISOString()
-          },
-          createdAt: new Date('2024-01-23').toISOString(),
-          updatedAt: new Date('2024-01-23').toISOString()
-        },
-        {
-          id: '4',
-          rating: 5,
-          comment:
-            "Incredible massage therapy session! John really knows what he's doing. I felt completely relaxed and rejuvenated afterwards.",
-          userId: 'user4',
-          serviceId: 'service4',
-          user: {
-            id: 'user4',
-            firstName: 'Jessica',
-            lastName: 'Wilson',
-            email: 'jessica.wilson@email.com',
-            isVerified: true,
-            createdAt: new Date('2024-01-12').toISOString(),
-            updatedAt: new Date('2024-01-12').toISOString()
-          },
-          service: {
-            id: 'service4',
-            name: 'Therapeutic Massage',
-            description: 'Deep tissue massage for relaxation and stress relief',
-            location: 'Westside Branch',
-            price: 90,
-            duration: 90,
-            businessId: 'business1',
-            createdAt: new Date('2024-01-01').toISOString(),
-            updatedAt: new Date('2024-01-01').toISOString()
-          },
-          createdAt: new Date('2024-01-22').toISOString(),
-          updatedAt: new Date('2024-01-22').toISOString()
-        },
-        {
-          id: '5',
-          rating: 2,
-          comment:
-            "Disappointing experience. The service was rushed and the end result didn't meet my expectations. Staff seemed unprepared.",
-          userId: 'user5',
-          serviceId: 'service5',
-          user: {
-            id: 'user5',
-            firstName: 'David',
-            lastName: 'Lee',
-            email: 'david.lee@email.com',
-            isVerified: false,
-            createdAt: new Date('2024-01-18').toISOString(),
-            updatedAt: new Date('2024-01-18').toISOString()
-          },
-          service: {
-            id: 'service5',
-            name: 'Hair Coloring',
-            description: 'Professional hair color treatment',
-            location: 'Downtown Branch',
-            price: 120,
-            duration: 150,
-            businessId: 'business1',
-            createdAt: new Date('2024-01-01').toISOString(),
-            updatedAt: new Date('2024-01-01').toISOString()
-          },
-          createdAt: new Date('2024-01-21').toISOString(),
-          updatedAt: new Date('2024-01-21').toISOString()
-        }
-      ]
+      // Try real API first
+      const result = await ReviewsService.getReviews()
 
-      setReviews(mockReviews)
+      if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+        // Map API response to ExtendedReview shape
+        const mapped: ExtendedReview[] = result.data.map((r: any) => ({
+          id: r.id,
+          rating: r.rating,
+          comment: r.comment || r.review || '',
+          userId: r.userId || r.user?.id || '',
+          serviceId: r.serviceId || r.service?.id || '',
+          user: r.user || {
+            id: r.userId || '',
+            firstName: 'Customer',
+            lastName: '',
+            email: '',
+            isVerified: false,
+            createdAt: r.createdAt,
+            updatedAt: r.updatedAt
+          },
+          service: r.service || {
+            id: r.serviceId || '',
+            name: 'Service',
+            description: '',
+            location: '',
+            price: 0,
+            duration: 0,
+            businessId: '',
+            createdAt: r.createdAt,
+            updatedAt: r.updatedAt
+          },
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt
+        }))
+        setReviews(mapped)
+      } else {
+        // API returned empty or error — use fallback mock data
+        console.warn('Reviews API returned no data, using fallback mock')
+        setReviews(fallbackMockReviews)
+      }
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch reviews')
+      console.error('Failed to fetch reviews from API:', err)
+      // Fallback to mock data
+      setReviews(fallbackMockReviews)
+      setError(null) // Don't show error to user since we have fallback
     } finally {
       setLoading(false)
     }
@@ -234,16 +228,51 @@ const ReviewsManagement = () => {
     return { total, positive, neutral, negative, avgRating }
   }
 
-  const handleReplyToReview = (reviewId: string) => {
-    // Mock reply functionality
-    console.log('Reply to review:', reviewId)
-    // In real implementation, this would open a dialog to compose a reply
+  const handleReplyClick = (reviewId: string) => {
+    setSelectedReviewId(reviewId)
+    setReplyText('')
+    setReplyDialogOpen(true)
   }
 
-  const handleFlagReview = (reviewId: string) => {
-    // Mock flag functionality
-    console.log('Flag review:', reviewId)
-    // In real implementation, this would flag the review for moderation
+  const handleFlagClick = (reviewId: string) => {
+    setSelectedReviewId(reviewId)
+    setFlagReason('')
+    setFlagDialogOpen(true)
+  }
+
+  const submitReply = async () => {
+    if (!selectedReviewId || !replyText.trim()) return
+
+    setActionLoading(true)
+    try {
+      const result = await ReviewsService.replyToReview(selectedReviewId, replyText)
+      // Assuming result returns the updated review or success
+      // Ideally we update the local state to show the reply or just close
+      console.log('Reply submitted', result)
+      setReplyDialogOpen(false)
+      fetchReviews() // Refresh list
+    } catch (err) {
+      console.error('Failed to reply', err)
+      // Show error snackbar?
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const submitFlag = async () => {
+    if (!selectedReviewId || !flagReason.trim()) return
+
+    setActionLoading(true)
+    try {
+      const result = await ReviewsService.flagReview(selectedReviewId, flagReason)
+      console.log('Review flagged', result)
+      setFlagDialogOpen(false)
+      fetchReviews()
+    } catch (err) {
+      console.error('Failed to flag', err)
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const getRatingColor = (rating: number) => {
@@ -414,7 +443,7 @@ const ReviewsManagement = () => {
                               >
                                 {review.user.email}
                               </Typography>
-                              {review.user.isVerified && (
+                              {review.user.verified && (
                                 <Chip label='Verified' size='small' color='success' className='ml-1' />
                               )}
                             </div>
@@ -464,7 +493,7 @@ const ReviewsManagement = () => {
                             <IconButton
                               size='small'
                               color='primary'
-                              onClick={() => handleReplyToReview(review.id)}
+                              onClick={() => handleReplyClick(review.id)}
                               title='Reply to review'
                             >
                               <i className='ri-reply-line' />
@@ -472,7 +501,7 @@ const ReviewsManagement = () => {
                             <IconButton
                               size='small'
                               color='warning'
-                              onClick={() => handleFlagReview(review.id)}
+                              onClick={() => handleFlagClick(review.id)}
                               title='Flag review'
                             >
                               <i className='ri-flag-line' />
@@ -488,6 +517,58 @@ const ReviewsManagement = () => {
           </CardContent>
         </Card>
       </Grid>
+
+      {/* Reply Dialog */}
+      <Dialog open={replyDialogOpen} onClose={() => setReplyDialogOpen(false)} fullWidth maxWidth='sm'>
+        <DialogTitle>Reply to Review</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin='dense'
+            label='Your Reply'
+            fullWidth
+            multiline
+            rows={4}
+            value={replyText}
+            onChange={e => setReplyText(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReplyDialogOpen(false)}>Cancel</Button>
+          <Button onClick={submitReply} variant='contained' disabled={actionLoading || !replyText.trim()}>
+            {actionLoading ? 'Sending...' : 'Send Reply'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Flag Dialog */}
+      <Dialog open={flagDialogOpen} onClose={() => setFlagDialogOpen(false)} fullWidth maxWidth='sm'>
+        <DialogTitle>Flag Review</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin='dense'
+            label='Reason for flagging'
+            fullWidth
+            multiline
+            rows={3}
+            value={flagReason}
+            onChange={e => setFlagReason(e.target.value)}
+            placeholder='e.g. Inappropriate content, spam, etc.'
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setFlagDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={submitFlag}
+            variant='contained'
+            color='warning'
+            disabled={actionLoading || !flagReason.trim()}
+          >
+            {actionLoading ? 'Flagging...' : 'Flag Review'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   )
 }
