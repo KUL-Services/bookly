@@ -609,10 +609,20 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     try {
       const result = await CommissionsService.getCommissions()
       if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-        set({ commissionPolicies: result.data as any[] })
+        // Map API Commission[] { id, serviceId, resourceId, percentage } → CommissionPolicy[]
+        const mapped = result.data.map((c: any) => ({
+          id: c.id,
+          scope: 'service' as const,
+          scopeRefId: c.serviceId,
+          type: 'percent' as const,
+          value: c.percentage,
+          appliesTo: 'serviceProvider' as const,
+          staffScope: c.resourceId ? { staffIds: [c.resourceId] } : ('all' as const)
+        }))
+        set({ commissionPolicies: mapped })
       }
     } catch (err) {
-      console.warn('Failed to fetch commissions from API, using mock data:', err)
+      console.warn('Failed to fetch commissions from API:', err)
     }
   },
 

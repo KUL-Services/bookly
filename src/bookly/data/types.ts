@@ -68,7 +68,7 @@ export interface StaffAppointment {
   endTime: string
   serviceName: string
   customerName: string
-  status: 'confirmed' | 'pending' | 'completed' | 'cancelled'
+  status: 'confirmed' | 'pending' | 'completed' | 'cancelled' | 'no_show' | 'attended' | 'needs_confirmation'
 }
 
 export type StaffType = 'dynamic' | 'static'
@@ -149,7 +149,7 @@ export interface Booking {
   time: string
   duration: number // in minutes
   price: number
-  status: 'confirmed' | 'pending' | 'cancelled' | 'completed'
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed' | 'no_show' | 'attended' | 'needs_confirmation'
   notes?: string
   slotId?: string // For static scheduling - links to a StaticServiceSlot
   roomId?: string // For static scheduling - room assignment

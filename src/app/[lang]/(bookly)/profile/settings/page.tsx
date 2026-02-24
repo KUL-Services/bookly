@@ -14,10 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/bookly/components/ui
 import { Input } from '@/bookly/components/ui/input'
 import initTranslations from '@/app/i18n/i18n'
 import { PageLoader } from '@/components/LoadingStates'
-import { ImageUpload } from '@/components/media/ImageUpload'
-import { MOCK_USER } from '@/mocks/user'
 import { useAuthStore } from '@/stores/auth.store'
-import { MediaService } from '@/lib/api'
+import { AuthService } from '@/lib/api/services/auth.service'
 
 export default function ProfileSettingsPage() {
   const router = useRouter()
@@ -34,82 +32,58 @@ export default function ProfileSettingsPage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    mobile: '',
-    profilePhoto: null as string | null
+    mobile: ''
   })
-
-  const [userDetails, setUserDetails] = useState<any>(null)
 
   useEffect(() => setHydrated(true), [])
 
   useEffect(() => {
     const initializeTranslations = async () => {
       const { t: tFn } = await initTranslations((params?.lang || 'en') as 'en' | 'ar' | 'fr', ['common'])
-
       setT(() => tFn)
     }
-
     initializeTranslations()
   }, [params?.lang])
-
-  const fetchUserDetails = async () => {
-    try {
-      setFetchingDetails(true)
-      await new Promise(resolve => setTimeout(resolve, 600))
-
-      const details = MOCK_USER
-
-      setUserDetails(details)
-      setFormData({
-        firstName: details.firstName || '',
-        lastName: details.lastName || '',
-        mobile: details.mobile || '',
-        profilePhoto: details.profilePhotoUrl || null
-      })
-    } catch (err) {
-      console.error('Failed to load user details:', err)
-      setError('Failed to load user details')
-    } finally {
-      setFetchingDetails(false)
-    }
-  }
 
   useEffect(() => {
     if (!hydrated) return
 
     if (!booklyUser) {
       router.replace(`/${params?.lang}/customer/login`)
-
       return
     }
 
-    const timer = setTimeout(() => {
-      fetchUserDetails()
-    }, 100)
-
-    return () => clearTimeout(timer)
+    AuthService.getUserDetails()
+      .then(res => {
+        const details = res.data as any
+        if (details) {
+          setFormData({
+            firstName: details.firstName || booklyUser.name?.split(' ')[0] || '',
+            lastName: details.lastName || booklyUser.name?.split(' ').slice(1).join(' ') || '',
+            mobile: details.mobile || ''
+          })
+        } else {
+          setFormData({
+            firstName: booklyUser.name?.split(' ')[0] || '',
+            lastName: booklyUser.name?.split(' ').slice(1).join(' ') || '',
+            mobile: ''
+          })
+        }
+      })
+      .catch(() => {
+        setFormData({
+          firstName: booklyUser.name?.split(' ')[0] || '',
+          lastName: booklyUser.name?.split(' ').slice(1).join(' ') || '',
+          mobile: ''
+        })
+      })
+      .finally(() => setFetchingDetails(false))
   }, [hydrated, booklyUser, params?.lang, router])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     setError(null)
     setSuccess(null)
-  }
-
-  const handleProfilePhotoUploaded = (imageId: string) => {
-    setFormData(prev => ({ ...prev, profilePhoto: imageId }))
-  }
-
-  const handleProfilePhotoDeleted = async () => {
-    if (formData.profilePhoto) {
-      try {
-        await MediaService.deleteAsset(formData.profilePhoto)
-      } catch (deleteError) {
-        console.warn('Failed to delete profile photo:', deleteError)
-      }
-    }
-
-    setFormData(prev => ({ ...prev, profilePhoto: null }))
   }
 
   const validateForm = () => {
@@ -140,10 +114,8 @@ export default function ProfileSettingsPage() {
     e.preventDefault()
 
     const validationErrors = validateForm()
-
     if (validationErrors.length > 0) {
       setError(validationErrors.join(', '))
-
       return
     }
 
@@ -152,9 +124,17 @@ export default function ProfileSettingsPage() {
     setSuccess(null)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 800))
-      setSuccess('Profile updated successfully!')
-      await fetchUserDetails()
+      const res = await AuthService.updateUser({
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        mobile: formData.mobile.trim()
+      })
+
+      if (res.error) {
+        setError(res.error)
+      } else {
+        setSuccess('Profile updated successfully!')
+      }
     } catch (submitError) {
       console.error('Update failed:', submitError)
       setError('Failed to update profile')
@@ -178,7 +158,7 @@ export default function ProfileSettingsPage() {
       <div className='pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-[#0a2c24]/8 to-transparent dark:from-[#77b6a3]/10' />
 
       <main className='relative z-10 mx-auto w-full max-w-2xl px-0 sm:px-6 pt-0 sm:pt-8 pb-[calc(var(--mobile-bottom-nav-offset)+94px)] lg:pb-10'>
-        {/* Mobile Header - Simplified */}
+        {/* Mobile Header */}
         <div className='lg:hidden sticky top-0 z-30 bg-[#f7f8f9]/90 dark:bg-[#0a2c24]/90 backdrop-blur-md px-4 py-3 border-b border-gray-200/50 dark:border-white/5'>
           <div className='flex items-center gap-3'>
             <button
@@ -239,27 +219,6 @@ export default function ProfileSettingsPage() {
             )}
 
             <form id='profile-settings-form' onSubmit={handleSubmit} className='space-y-6 lg:space-y-6'>
-              <div className='rounded-3xl border border-[#0a2c24]/5 dark:border-white/5 bg-white dark:bg-[#202c39] p-6 shadow-sm'>
-                <div className='flex flex-col items-center gap-6'>
-                  <ImageUpload
-                    currentImageUrl={formData.profilePhoto ? userDetails?.profilePhotoUrl : null}
-                    onImageUploaded={handleProfilePhotoUploaded}
-                    onImageDeleted={handleProfilePhotoDeleted}
-                    label='Upload Profile Photo'
-                    description='Click to upload your profile picture'
-                    maxSizeMB={3}
-                    width={120}
-                    height={120}
-                  />
-                  <div className='text-center'>
-                    <h3 className='font-semibold text-gray-900 dark:text-white'>
-                      {t('profile.settings.profilePhoto')}
-                    </h3>
-                    <p className='text-xs text-gray-500 mt-1'>Type: JPG, PNG • Max: 3MB</p>
-                  </div>
-                </div>
-              </div>
-
               <div className='rounded-2xl border border-[#0a2c24]/10 dark:border-white/10 bg-white dark:bg-[#202c39]/80 p-4 lg:p-5 space-y-4'>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                   <div className='space-y-2'>

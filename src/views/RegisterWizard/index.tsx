@@ -22,13 +22,8 @@ import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
 import { getLocalizedUrl } from '@/utils/i18n'
 import { getInitialFormData, saveDraft, loadDraft } from './utils'
-import { syncRegistrationDataToStores } from './registration-sync'
 
 import { BusinessService } from '@/lib/api/services/business.service'
-import { AuthService } from '@/lib/api/services/auth.service'
-import { BranchesService } from '@/lib/api/services/branches.service'
-import { ServicesService } from '@/lib/api/services/services.service'
-import { StaffService } from '@/lib/api/services/staff.service'
 
 // Step Components
 import AccountStep from './steps/AccountStep'
@@ -38,7 +33,6 @@ import BusinessProfileStep from './steps/BusinessProfileStep'
 import StaffManagementStep from './steps/StaffManagementStep'
 import ServicesSetupStep from './steps/ServicesSetupStep'
 import LegalStep from './steps/LegalStep'
-import RegistrationSuccess from './RegistrationSuccess'
 
 // Registration steps - scheduling mode is per staff/room, not global
 const registrationSteps: StepConfig[] = [
@@ -146,7 +140,6 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
   const [formData, setFormData] = useState<BusinessRegistrationData>(getInitialFormData())
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [draftLoaded, setDraftLoaded] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { settings } = useSettings()
@@ -193,10 +186,8 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
   const handleSubmitRegistration = async () => {
     setIsSubmitting(true)
     try {
-      console.log('📤 Submitting registration data:', formData)
-
-      // 1. Register the business
-      await BusinessService.registerBusiness({
+      // 1. Register the business (owner account is created server-side)
+      const res = await BusinessService.registerBusiness({
         name: formData.businessName,
         email: formData.email,
         description: formData.businessType,
@@ -207,91 +198,25 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
         }
       })
 
-      // 2. Automatically log in to get the admin token
-      const loginResponse = await AuthService.loginAdmin({
-        email: formData.email,
-        password: formData.password
-      })
-      if (loginResponse.data?.accessToken || loginResponse.data?.access_token) {
-        AuthService.setAuthToken(loginResponse.data.accessToken || loginResponse.data.access_token || '')
+      if (res.error) {
+        throw new Error(res.error)
       }
 
-      // 3. Create Branches
-      const createdBranches = []
-      if (formData.branches && formData.branches.length > 0) {
-        for (const branch of formData.branches) {
-          const res = await BranchesService.createBranch({
-            name: branch.name,
-            address: branch.addressLine1 || branch.formattedAddress,
-            latitude: branch.latitude,
-            longitude: branch.longitude,
-            mobile: formData.phone // use basic business phone for now
-          })
-          if (res.data) {
-            createdBranches.push({ localId: branch.id, apiId: res.data.id })
-          }
-        }
-      }
-
-      // 4. Create Services
-      const createdServices: { localId: string; apiId: string }[] = []
-      if (formData.services && formData.services.length > 0) {
-        for (const service of formData.services) {
-          const res = await ServicesService.createService({
-            name: service.name,
-            description: service.description,
-            price: service.price,
-            duration: service.duration,
-            location: 'Branch',
-            categoryIds: service.categoryId ? [service.categoryId] : undefined
-          })
-          if (res.data) {
-            createdServices.push({ localId: service.id, apiId: res.data.id })
-          }
-        }
-      }
-
-      // 5. Create Staff and Assignments
-      if (formData.staff && formData.staff.length > 0) {
-        for (const staff of formData.staff) {
-          const res = await StaffService.createStaff({
-            name: staff.name,
-            bookingMode: formData.schedulingMode === 'static' ? 'STATIC' : 'DYNAMIC',
-            branchId: createdBranches[0]?.apiId || '' // associate with first branch for now
-          })
-
-          if (!res.data) continue
-
-          // Assign services to staff
-          if (staff.serviceIds && staff.serviceIds.length > 0) {
-            const apiServiceIds = staff.serviceIds
-              .map(localId => createdServices.find(s => s.localId === localId)?.apiId)
-              .filter(Boolean) as string[]
-
-            if (apiServiceIds.length > 0) {
-              await StaffService.updateStaff({
-                id: res.data.id,
-                serviceIds: apiServiceIds
-              })
-            }
-          }
-        }
-      }
-
-      // Sync local UI stores
-      syncRegistrationDataToStores(formData)
-
-      // Clear draft after successful submission
+      // Clear draft — registration submitted successfully
       if (typeof window !== 'undefined') {
         localStorage.removeItem(`business-register-draft:v1:${locale}`)
       }
 
-      // Show success page
-      setShowSuccess(true)
-      console.log('✅ Registration completed successfully!')
-    } catch (error) {
+      // 2. Redirect to verify page — the account must be verified before login
+      //    Branches/services/staff are created after first verified login via the dashboard
+      const verifyUrl = getLocalizedUrl(
+        `/verify?email=${encodeURIComponent(formData.email)}`,
+        locale as Locale
+      )
+      window.location.href = verifyUrl
+    } catch (error: any) {
       console.error('❌ Registration failed:', error)
-      setValidationErrors({ submit: 'Registration failed. Please try again.' })
+      setValidationErrors({ submit: error?.message || 'Registration failed. Please try again.' })
     } finally {
       setIsSubmitting(false)
     }
@@ -314,19 +239,6 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
   const handleSaveForLater = () => {
     saveDraft(formData, locale as string)
     alert('Your progress has been saved! You can continue later from where you left off.')
-  }
-
-  // Show success page if registration is complete
-  if (showSuccess) {
-    const profileUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://bookly.com'}/${formData.publicUrlSlug || 'business'}`
-    return (
-      <RegistrationSuccess
-        businessName={formData.businessName}
-        ownerName={formData.ownerName}
-        profileUrl={profileUrl}
-        mode={mode}
-      />
-    )
   }
 
   return (

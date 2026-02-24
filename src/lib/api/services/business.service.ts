@@ -1,6 +1,7 @@
 import { apiClient } from '../api-client'
 import type {
   Business,
+  BusinessBookingSettings,
   BusinessChangeRequest,
   RegisterBusinessRequest,
   UpdateBusinessRequest,
@@ -62,6 +63,16 @@ export class BusinessService {
   // Public - Get specific business by ID
   static async getBusiness(id: string) {
     return apiClient.get<Business>(`/business/${id}`)
+  }
+
+  // Public - Get business by slug
+  static async getBusinessBySlug(slug: string) {
+    return apiClient.get<Business>(`/business/by-slug/${slug}`)
+  }
+
+  // Public - Get booking settings enforced by the business (for booking page pre-flight)
+  static async getBookingSettings(businessId: string) {
+    return apiClient.get<BusinessBookingSettings>(`/business/${businessId}/booking-settings`)
   }
 
   // Public - Register new business

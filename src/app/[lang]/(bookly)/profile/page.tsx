@@ -38,25 +38,25 @@ const menuItems = [
     icon: Star,
     href: '/profile/reviews',
     badge: '3'
-  },
-  {
-    id: 'payment',
-    label: 'Payment Methods',
-    icon: CreditCard,
-    href: '/profile/payment'
-  },
-  {
-    id: 'privacy',
-    label: 'Privacy & Security',
-    icon: Shield,
-    href: '/profile/privacy'
-  },
-  {
-    id: 'help',
-    label: 'Help & Support',
-    icon: HelpCircle,
-    href: '/profile/help'
   }
+  // {
+  //   id: 'payment',
+  //   label: 'Payment Methods',
+  //   icon: CreditCard,
+  //   href: '/profile/payment'
+  // },
+  // {
+  //   id: 'privacy',
+  //   label: 'Privacy & Security',
+  //   icon: Shield,
+  //   href: '/profile/privacy'
+  // },
+  // {
+  //   id: 'help',
+  //   label: 'Help & Support',
+  //   icon: HelpCircle,
+  //   href: '/profile/help'
+  // }
 ]
 
 function ProfilePage() {

@@ -10,7 +10,6 @@ import {
   Heart,
   MapPin,
   Star,
-  CalendarClock,
   CircleX,
   RotateCcw,
   ArrowUpRight,
@@ -18,7 +17,9 @@ import {
   CalendarDays,
   History,
   Sparkles,
-  Loader2
+  Loader2,
+  PhoneCall,
+  Info
 } from 'lucide-react'
 
 import { BookingService } from '@/lib/api/services/booking.service'
@@ -70,6 +71,9 @@ export default function AppointmentsPage() {
   const router = useRouter()
   const params = useParams<{ lang: string }>()
   const lang = params?.lang || 'en'
+
+  // Cancel Confirmation Modal State
+  const [cancelConfirmBooking, setCancelConfirmBooking] = useState<Booking | null>(null)
 
   // Review Modal State
   const [isReviewOpen, setIsReviewOpen] = useState(false)
@@ -129,8 +133,10 @@ export default function AppointmentsPage() {
     return { upcomingBookings: upcoming, pastBookings: past }
   }, [bookings])
 
-  const handleCancelBooking = async (bookingId: string) => {
-    if (cancellingId) return
+  const handleConfirmCancel = async () => {
+    if (!cancelConfirmBooking || cancellingId) return
+    const bookingId = cancelConfirmBooking.id
+    setCancelConfirmBooking(null)
     setCancellingId(bookingId)
     try {
       const result = await BookingService.cancelBooking(bookingId)
@@ -286,34 +292,60 @@ export default function AppointmentsPage() {
       </div>
 
       {type === 'upcoming' && booking.status !== 'CANCELLED' ? (
-        <div className='grid grid-cols-3 gap-2 border-t border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/5 p-3'>
-          <button
-            onClick={() => router.push(`/${lang}/search`)}
-            className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[#0a2c24]/20 dark:border-white/20 bg-white dark:bg-white/10 text-xs sm:text-sm font-medium text-[#0a2c24] dark:text-[#77b6a3]'
-          >
-            <ArrowUpRight className='h-4 w-4' />
-            View
-          </button>
-          <button
-            type='button'
-            className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/10 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200'
-          >
-            <CalendarClock className='h-4 w-4' />
-            Reschedule
-          </button>
-          <button
-            type='button'
-            onClick={() => handleCancelBooking(booking.id)}
-            disabled={cancellingId === booking.id}
-            className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-red-200 dark:border-red-900/35 bg-white dark:bg-white/10 text-xs sm:text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50'
-          >
-            {cancellingId === booking.id ? (
-              <Loader2 className='h-4 w-4 animate-spin' />
-            ) : (
-              <CircleX className='h-4 w-4' />
-            )}
-            Cancel
-          </button>
+        <div className='border-t border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/5 p-3 space-y-2'>
+          {/* Cancel deadline hint */}
+          {booking.cancelDeadlineHours != null && booking.cancelCutoffTime && (
+            <div className='flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400'>
+              <Info className='h-3.5 w-3.5 shrink-0' />
+              <span>
+                Must cancel {booking.cancelDeadlineHours}h before &mdash; cancellable until{' '}
+                {format(parseISO(booking.cancelCutoffTime), 'MMM d \'at\' h:mm a')}
+              </span>
+            </div>
+          )}
+
+          <div className='grid grid-cols-2 gap-2'>
+            <button
+              onClick={() => {
+                const businessId = booking.branch?.businessId || booking.service?.businessId
+                if (businessId) {
+                  router.push(`/${lang}/business/${businessId}`)
+                }
+              }}
+              className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[#0a2c24]/20 dark:border-white/20 bg-white dark:bg-white/10 text-xs sm:text-sm font-medium text-[#0a2c24] dark:text-[#77b6a3]'
+            >
+              <ArrowUpRight className='h-4 w-4' />
+              View
+            </button>
+            {/* Reschedule button commented out until feature is ready */}
+            {/* <button
+              type='button'
+              className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/10 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200'
+            >
+              <CalendarClock className='h-4 w-4' />
+              Reschedule
+            </button> */}
+            {booking.cancellationDisabled ? (
+              <div className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400'>
+                <PhoneCall className='h-4 w-4' />
+                Call to Cancel
+              </div>
+            ) : booking.canCancel !== false ? (
+              <button
+                type='button'
+                onClick={() => setCancelConfirmBooking(booking)}
+                disabled={cancellingId === booking.id}
+                className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-red-200 dark:border-red-900/35 bg-white dark:bg-white/10 text-xs sm:text-sm font-medium text-red-600 dark:text-red-400 disabled:opacity-50'
+              >
+                {cancellingId === booking.id ? (
+                  <Loader2 className='h-4 w-4 animate-spin' />
+                ) : (
+                  <CircleX className='h-4 w-4' />
+                )}
+                Cancel
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : type === 'past' ? (
         <div className='grid grid-cols-2 gap-2 border-t border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/5 p-3'>
@@ -525,6 +557,47 @@ export default function AppointmentsPage() {
           </div>
         )}
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {cancelConfirmBooking && (
+        <div className='fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm'>
+          <div className='w-full max-w-sm bg-white dark:bg-[#122823] rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-white/10'>
+            <div className='p-6'>
+              <div className='flex flex-col items-center text-center mb-5'>
+                <div className='mb-3 inline-flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30'>
+                  <CircleX className='h-7 w-7 text-red-600 dark:text-red-400' />
+                </div>
+                <h3 className='text-lg font-bold text-gray-900 dark:text-white'>Cancel Appointment?</h3>
+                <p className='mt-1.5 text-sm text-gray-500 dark:text-gray-400'>
+                  Are you sure you want to cancel{' '}
+                  <span className='font-semibold text-gray-700 dark:text-gray-200'>
+                    {cancelConfirmBooking.service?.name}
+                  </span>{' '}
+                  on{' '}
+                  <span className='font-semibold text-gray-700 dark:text-gray-200'>
+                    {format(parseISO(cancelConfirmBooking.startTime), 'MMM d \'at\' h:mm a')}
+                  </span>
+                  ? This cannot be undone.
+                </p>
+              </div>
+              <div className='grid grid-cols-2 gap-3'>
+                <button
+                  onClick={() => setCancelConfirmBooking(null)}
+                  className='h-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/10 text-sm font-medium text-gray-700 dark:text-gray-200'
+                >
+                  Keep It
+                </button>
+                <button
+                  onClick={handleConfirmCancel}
+                  className='h-11 rounded-xl bg-red-600 dark:bg-red-500 text-sm font-semibold text-white'
+                >
+                  Yes, Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Review Modal */}
       {isReviewOpen && selectedBooking && (

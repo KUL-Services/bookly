@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 
 // MUI Imports
 import Typography from '@mui/material/Typography'
@@ -50,7 +50,16 @@ const BusinessAdminVerify = ({ mode }: { mode: Mode }) => {
   const { settings } = useSettings()
   const { lang: locale } = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const authBackground = useImageVariant(mode, lightImg, darkImg)
+
+  // Pre-fill email from URL params
+  useEffect(() => {
+    const emailFromUrl = searchParams.get('email')
+    if (emailFromUrl) {
+      setFormData(prev => ({ ...prev, email: emailFromUrl }))
+    }
+  }, [searchParams])
 
   const characterIllustration = useImageVariant(
     mode,
@@ -84,7 +93,7 @@ const BusinessAdminVerify = ({ mode }: { mode: Mode }) => {
       setSuccess(true)
       // Redirect to login after successful verification
       setTimeout(() => {
-        router.push(getLocalizedUrl('/login', locale as Locale))
+        router.push(getLocalizedUrl('/login?verified=1', locale as Locale))
       }, 2000)
 
     } catch (err) {

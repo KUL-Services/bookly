@@ -165,11 +165,19 @@ export interface Review {
   id: string
   rating: number
   comment?: string
+  reply?: string | null
+  flagged?: boolean
+  flagReason?: string | null
   userId: string
   serviceId?: string
   businessId?: string
   user?: User
   service?: Service
+  business?: {
+    id: string
+    name: string
+    logo?: string | null
+  }
   createdAt: string
   updatedAt: string
 }
@@ -352,8 +360,14 @@ export interface UpdateBusinessRequest {
   name?: string
   email?: string
   description?: string
+  phone?: string
+  website?: string
+  language?: string
+  timezone?: string
+  slug?: string
   socialLinks?: SocialLink[]
   logo?: string | null
+  coverImage?: string | null
 }
 
 export interface ApproveBusinessRequest {
@@ -417,6 +431,14 @@ export interface Booking {
   }
   createdAt: string
   updatedAt: string
+  // Policy fields returned per booking
+  canCancel?: boolean
+  cancellationDisabled?: boolean
+  cancelDeadlineHours?: number
+  cancelCutoffTime?: string
+  canReschedule?: boolean
+  rescheduleDeadlineHours?: number
+  rescheduleCutoffTime?: string
 }
 
 export interface CreateBookingRequest {
@@ -649,39 +671,72 @@ export interface AdminBookingsParams {
   sortOrder?: 'asc' | 'desc'
 }
 
-// Business Settings
-export interface BookingPolicies {
-  advanceBookingDays?: number
-  cancellationHours?: number
-  allowGuestBooking?: boolean
+// Business Settings — matches PATCH/GET /admin/settings backend shape exactly
+export interface ApiBookingPolicies {
+  bookingLeadTime?: number             // min hours before booking can be made
+  maxAdvanceBooking?: number           // max days in advance
+  autoConfirmation?: boolean
+  allowCancellation?: boolean
+  cancellationDeadlineHours?: number   // hours before appointment cancellation is allowed
+  allowReschedule?: boolean
+  rescheduleDeadlineHours?: number     // hours before appointment reschedule is allowed
+  noShowPolicy?: 'NONE' | 'CHARGE_FEE' | 'RESTRICT'
+}
+
+export interface ApiSchedulingSettings {
+  defaultSlotDuration?: number          // minutes
+  bufferTimeBetweenAppointments?: number // minutes between appointments
+  allowWalkIns?: boolean
+  allowOverbooking?: boolean
+  overbookingPercentage?: number
+}
+
+export interface ApiCustomerSettings {
+  guestCheckout?: boolean
+  requireEmail?: boolean
   requirePhone?: boolean
+  showCustomerNotesToStaff?: boolean
 }
 
-export interface PaymentSettings {
-  requirePayment?: boolean
-  depositAmount?: number
-  currency?: string
+export interface ApiCalendarSettings {
+  defaultView?: 'week' | 'day' | 'month'
+  timeSlotDuration?: number            // 15 | 30 | 60
+  startOfWeek?: 'monday' | 'sunday'
+  timeFormat?: '12h' | '24h'
+  colorScheme?: 'vivid' | 'pastel'
+  showWeekends?: boolean
+  workingHoursStart?: string           // "HH:MM"
+  workingHoursEnd?: string             // "HH:MM"
 }
 
-export interface NotificationSettings {
-  emailEnabled?: boolean
-  smsEnabled?: boolean
-  pushEnabled?: boolean
-}
-
-export interface SchedulingSettings {
-  defaultSlotDuration?: number
-  bufferTime?: number
-  startOfWeek?: number
+export interface ApiBrandingSettings {
+  primaryColor?: string
+  welcomeMessage?: string
+  confirmationMessage?: string
+  bookingPageTheme?: 'light' | 'dark' | 'auto'
 }
 
 export interface BusinessSettings {
-  businessId: string
-  bookingPolicies: BookingPolicies
-  paymentSettings: PaymentSettings
-  notificationSettings: NotificationSettings
-  schedulingSettings: SchedulingSettings
-  customerSettings: any
+  bookingPolicies?: ApiBookingPolicies
+  schedulingSettings?: ApiSchedulingSettings
+  customerSettings?: ApiCustomerSettings
+  calendarSettings?: ApiCalendarSettings
+  brandingSettings?: ApiBrandingSettings
+}
+
+// Public booking settings (GET /business/:id/booking-settings)
+export interface BusinessBookingSettings {
+  autoConfirmation: boolean
+  allowCancellation: boolean
+  cancellationDeadlineHours: number
+  allowReschedule: boolean
+  rescheduleDeadlineHours: number
+  bookingLeadTime: number
+  maxAdvanceBooking: number
+  guestCheckout: boolean
+  requireEmail: boolean
+  requirePhone: boolean
+  bufferTimeBetweenAppointments: number
 }
 
 // ============================================================================

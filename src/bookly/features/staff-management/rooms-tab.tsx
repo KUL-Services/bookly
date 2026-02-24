@@ -533,7 +533,24 @@ export function RoomsTab() {
   const renderRoomRow = (room: any) => {
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as DayOfWeek
     const schedule = getRoomSchedule(room.id, dayOfWeek)
-    const isFlexible = room.roomType !== 'static'
+
+    // Compute the effective room type for the selected date:
+    // If there's a pending mode change and the selected date is on/after the effective date,
+    // treat the room as already in the new mode for display purposes.
+    const effectiveRoomType = (() => {
+      if (room.pendingBookingMode && room.bookingModeEffectiveDate) {
+        const effectiveDate = new Date(room.bookingModeEffectiveDate)
+        effectiveDate.setHours(0, 0, 0, 0)
+        const viewDate = new Date(selectedDate)
+        viewDate.setHours(0, 0, 0, 0)
+        if (viewDate >= effectiveDate) {
+          return room.pendingBookingMode === 'STATIC' ? 'static' : 'dynamic'
+        }
+      }
+      return room.roomType || 'dynamic'
+    })()
+
+    const isFlexible = effectiveRoomType !== 'static'
 
     // For flexible rooms, get business hours instead of room schedule
     const businessHours = isFlexible ? getBusinessHours(room.branchId, dayOfWeek) : null
@@ -570,8 +587,19 @@ export function RoomsTab() {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {(() => {
-                const isFixed = room.roomType === 'static'
+                // Use effective room type that accounts for pending changes and selected date
+                const isFixed = effectiveRoomType === 'static'
                 const hasPendingChange = !!(room as any).pendingBookingMode
+
+                // Check if we're viewing a date where the pending change has taken effect
+                const isPendingEffective = (() => {
+                  if (!room.pendingBookingMode || !room.bookingModeEffectiveDate) return false
+                  const effectiveDate = new Date(room.bookingModeEffectiveDate)
+                  effectiveDate.setHours(0, 0, 0, 0)
+                  const viewDate = new Date(selectedDate)
+                  viewDate.setHours(0, 0, 0, 0)
+                  return viewDate >= effectiveDate
+                })()
 
                 return (
                   <>
@@ -585,7 +613,7 @@ export function RoomsTab() {
                             handleRoomTypeToggle(room, e.target.checked)
                           }}
                           size='small'
-                          color={hasPendingChange ? 'warning' : 'primary'}
+                          color={hasPendingChange && !isPendingEffective ? 'warning' : 'primary'}
                         />
                       }
                       label={
@@ -666,22 +694,34 @@ export function RoomsTab() {
               </Box>
             </Box>
 
-            {/* Pending Mode Change Indicator */}
-            {(room as any).pendingBookingMode && (
-              <Chip
-                label={`→ ${(room as any).pendingBookingMode === 'STATIC' ? 'Fixed' : 'Flex'} on ${(room as any).bookingModeEffectiveDate ? format(new Date((room as any).bookingModeEffectiveDate), 'MMM d') : '...'}`}
-                size='small'
-                color='warning'
-                variant='filled'
-                icon={<i className='ri-time-line' style={{ fontSize: 10, marginLeft: 4 }} />}
-                sx={{
-                  height: 18,
-                  fontSize: '0.55rem',
-                  fontWeight: 600,
-                  '& .MuiChip-label': { px: 0.5 }
-                }}
-              />
-            )}
+            {/* Pending Mode Change Indicator - only show if viewing a date before the effective date */}
+            {(room as any).pendingBookingMode &&
+              (() => {
+                const effectiveDate = new Date((room as any).bookingModeEffectiveDate)
+                effectiveDate.setHours(0, 0, 0, 0)
+                const viewDate = new Date(selectedDate)
+                viewDate.setHours(0, 0, 0, 0)
+                const isPendingEffective = viewDate >= effectiveDate
+
+                // Don't show the chip if viewing a date where change has taken effect
+                if (isPendingEffective) return null
+
+                return (
+                  <Chip
+                    label={`→ ${(room as any).pendingBookingMode === 'STATIC' ? 'Fixed' : 'Flex'} on ${(room as any).bookingModeEffectiveDate ? format(new Date((room as any).bookingModeEffectiveDate), 'MMM d') : '...'}`}
+                    size='small'
+                    color='warning'
+                    variant='filled'
+                    icon={<i className='ri-time-line' style={{ fontSize: 10, marginLeft: 4 }} />}
+                    sx={{
+                      height: 18,
+                      fontSize: '0.55rem',
+                      fontWeight: 600,
+                      '& .MuiChip-label': { px: 0.5 }
+                    }}
+                  />
+                )
+              })()}
           </Box>
         </Box>
 

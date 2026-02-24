@@ -65,6 +65,8 @@ const Login = ({ mode }: { mode: Mode }) => {
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
+  const [isUnverifiedError, setIsUnverifiedError] = useState(false)
+  const [unverifiedEmail, setUnverifiedEmail] = useState('')
 
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-1-dark.png'
@@ -107,6 +109,8 @@ const Login = ({ mode }: { mode: Mode }) => {
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
     setLoading(true)
     setErrorState(null)
+    setIsUnverifiedError(false)
+    setUnverifiedEmail('')
 
     try {
       // Try our API login first
@@ -118,6 +122,22 @@ const Login = ({ mode }: { mode: Mode }) => {
       router.replace(getLocalizedUrl(redirectURL, locale as Locale))
     } catch (apiError: any) {
       console.log('API login failed:', apiError)
+
+      // Check for account not verified error
+      const errorMessage = apiError?.message || ''
+      const isNotVerified = errorMessage.toLowerCase().includes('not verified') || 
+                            errorMessage.toLowerCase().includes('verify your email') ||
+                            errorMessage.toLowerCase().includes('email not verified')
+
+      if (isNotVerified) {
+        setIsUnverifiedError(true)
+        setUnverifiedEmail(data.email)
+        setErrorState({
+          message: ['Your account is not verified. Please verify your email to continue.']
+        })
+        setLoading(false)
+        return
+      }
 
       // Only fallback to NextAuth for the demo credentials
       if (data.email === 'admin@materialize.com' && data.password === 'admin') {
@@ -182,6 +202,33 @@ const Login = ({ mode }: { mode: Mode }) => {
               Please sign-in to your account and start the adventure
             </Typography>
           </div>
+
+          {/* Success banner when coming from verification */}
+          {searchParams.get('verified') === '1' && (
+            <Alert severity='success' className='mb-2'>
+              <Typography variant='body2'>
+                Your email has been verified successfully! You can now log in.
+              </Typography>
+            </Alert>
+          )}
+
+          {/* Unverified account error with link to verify page */}
+          {isUnverifiedError && (
+            <Alert severity='warning' className='mb-2'>
+              <Typography variant='body2' className='mb-2'>
+                Your account is not verified yet.
+              </Typography>
+              <Typography
+                component={Link}
+                href={getLocalizedUrl(`/verify?email=${encodeURIComponent(unverifiedEmail)}`, locale as Locale)}
+                color='primary'
+                className='font-medium underline'
+              >
+                Go to verification page →
+              </Typography>
+            </Alert>
+          )}
+
           <Alert icon={false} className='bg-[var(--mui-palette-primary-lightOpacity)]'>
             <Typography variant='body2' color='primary' className='text-sm'>
               Use your business account credentials to access the dashboard

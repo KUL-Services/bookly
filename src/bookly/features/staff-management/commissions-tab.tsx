@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box,
   Paper,
@@ -46,7 +46,12 @@ export function CommissionsTab() {
   const [tutorialStep, setTutorialStep] = useState(0)
   const [tutorialAnchor, setTutorialAnchor] = useState<HTMLElement | null>(null)
 
-  const { commissionPolicies, getCommissionPolicies, deleteCommissionPolicy, staffMembers } = useStaffManagementStore()
+  const { commissionPolicies, getCommissionPolicies, deleteCommissionPolicy, staffMembers, fetchCommissionsFromApi, fetchStaffFromApi } = useStaffManagementStore()
+
+  useEffect(() => {
+    fetchStaffFromApi()
+    fetchCommissionsFromApi()
+  }, [])
 
   // Filter policies by selected staff
   const filteredPolicies = commissionPolicies.filter(policy => {

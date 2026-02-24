@@ -6,6 +6,18 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { SettingsService } from '@/lib/api/services/settings.service'
+import { BusinessService } from '@/lib/api/services/business.service'
+import type { BusinessSettings as ApiBusinessSettings } from '@/lib/api/types'
+
+// Lazy import to avoid circular deps — accessed via .getState() outside React
+let _getAuthState: (() => { materializeUser: any }) | null = null
+const getAuthState = () => {
+  if (!_getAuthState) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _getAuthState = require('@/stores/auth.store').useAuthStore.getState
+  }
+  return _getAuthState!()
+}
 
 // ============================================================================
 // Types
@@ -416,27 +428,78 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
           hasUnsavedChanges: true
         }),
 
-      // Persistence - wired to SettingsService API with localStorage fallback
+      // Maps store shape → API shapes for PATCH /admin/business + PATCH /admin/settings
       saveSettings: async () => {
         set({ isSaving: true, error: null })
         try {
           const state = get()
-          const settingsPayload = {
-            businessProfile: state.businessProfile,
-            socialLinks: state.socialLinks,
-            bookingPolicies: state.bookingPolicies,
-            paymentSettings: state.paymentSettings,
-            notificationSettings: state.notificationSettings,
-            schedulingSettings: state.schedulingSettings,
-            calendarSettings: state.calendarSettings,
+          const { bookingPolicies: bp, schedulingSettings: ss, businessProfile: profile, socialLinks } = state
+
+          // --- PATCH /admin/business (profile data) ---
+          const businessPayload = {
+            name: profile.name,
+            email: profile.email,
+            description: profile.description,
+            phone: profile.phone,
+            website: profile.website,
+            language: profile.language,
+            timezone: profile.timezone,
+            slug: profile.publicUrlSlug,
+            logo: profile.logo,
+            coverImage: profile.coverImage,
+            socialLinks: [
+              ...(socialLinks.facebook ? [{ platform: 'facebook', url: socialLinks.facebook }] : []),
+              ...(socialLinks.instagram ? [{ platform: 'instagram', url: socialLinks.instagram }] : []),
+              ...(socialLinks.twitter ? [{ platform: 'twitter', url: socialLinks.twitter }] : []),
+              ...(socialLinks.linkedin ? [{ platform: 'linkedin', url: socialLinks.linkedin }] : []),
+              ...(socialLinks.tiktok ? [{ platform: 'tiktok', url: socialLinks.tiktok }] : []),
+              ...(socialLinks.youtube ? [{ platform: 'youtube', url: socialLinks.youtube }] : [])
+            ]
+          }
+
+          const businessResult = await BusinessService.updateBusiness(businessPayload)
+          if (businessResult.error) {
+            throw new Error(businessResult.error)
+          }
+
+          // --- PATCH /admin/settings (booking/scheduling/calendar/customer/branding) ---
+          const noShowPolicyEnum: 'NONE' | 'CHARGE_FEE' | 'RESTRICT' = bp.noShowPolicy.chargeFee ? 'CHARGE_FEE' : 'NONE'
+
+          const settingsPayload: ApiBusinessSettings = {
+            bookingPolicies: {
+              bookingLeadTime: bp.bookingLeadTime,
+              maxAdvanceBooking: bp.maxAdvanceBooking,
+              autoConfirmation: bp.autoConfirmation,
+              allowCancellation: bp.cancellationPolicy.enabled,
+              cancellationDeadlineHours: bp.cancellationPolicy.hoursBeforeAppointment,
+              allowReschedule: bp.reschedulePolicy.enabled,
+              rescheduleDeadlineHours: bp.reschedulePolicy.hoursBeforeAppointment,
+              noShowPolicy: noShowPolicyEnum
+            },
+            schedulingSettings: {
+              defaultSlotDuration: ss.defaultBookingDuration,
+              bufferTimeBetweenAppointments: ss.bufferTimeBetweenBookings,
+              allowWalkIns: ss.allowWalkIns,
+              allowOverbooking: ss.allowOverbooking,
+              overbookingPercentage: ss.overbookingPercentage
+            },
             customerSettings: state.customerSettings,
+            calendarSettings: {
+              defaultView: state.calendarSettings.defaultView,
+              timeSlotDuration: state.calendarSettings.timeSlotDuration,
+              startOfWeek: state.calendarSettings.startOfWeek,
+              timeFormat: state.calendarSettings.timeFormat,
+              colorScheme: state.calendarSettings.colorScheme,
+              showWeekends: state.calendarSettings.showWeekends,
+              workingHoursStart: state.calendarSettings.workingHoursStart,
+              workingHoursEnd: state.calendarSettings.workingHoursEnd
+            },
             brandingSettings: state.brandingSettings
           }
 
-          const result = await SettingsService.updateSettings(settingsPayload)
-
-          if (result.error) {
-            throw new Error(result.error)
+          const settingsResult = await SettingsService.updateSettings(settingsPayload)
+          if (settingsResult.error) {
+            throw new Error(settingsResult.error)
           }
 
           set({
@@ -449,47 +512,109 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
             set({ successMessage: null })
           }, 3000)
         } catch (error) {
-          console.warn('Failed to save settings to API, saved locally:', error)
-          // Settings are still persisted via Zustand persist middleware (localStorage)
           set({
             isSaving: false,
-            hasUnsavedChanges: false,
-            successMessage: 'Settings saved locally (API unavailable)'
+            error: error instanceof Error ? error.message : 'Failed to save settings'
           })
-
-          setTimeout(() => {
-            set({ successMessage: null })
-          }, 3000)
         }
       },
 
+      // Maps API shape → store shape for GET /admin/settings + GET /business/:id
       loadSettings: async () => {
         set({ isLoading: true, error: null })
         try {
+          // Hydrate business profile from auth state + business API
+          const authState = getAuthState()
+          const businessId = authState.materializeUser?.business?.id
+          if (businessId) {
+            const bizResult = await BusinessService.getBusiness(businessId)
+            if (bizResult.data) {
+              const biz = bizResult.data
+              const socialMap: Record<string, string> = {}
+              biz.socialLinks?.forEach(l => { socialMap[l.platform] = l.url })
+              set(state => ({
+                businessProfile: {
+                  ...state.businessProfile,
+                  name: biz.name ?? state.businessProfile.name,
+                  email: biz.email ?? state.businessProfile.email,
+                  description: biz.description ?? state.businessProfile.description,
+                  logo: biz.logoUrl ?? biz.logo ?? state.businessProfile.logo,
+                  coverImage: biz.coverImageUrl ?? state.businessProfile.coverImage
+                },
+                socialLinks: {
+                  facebook: socialMap['facebook'] ?? state.socialLinks.facebook,
+                  instagram: socialMap['instagram'] ?? state.socialLinks.instagram,
+                  twitter: socialMap['twitter'] ?? state.socialLinks.twitter,
+                  linkedin: socialMap['linkedin'] ?? state.socialLinks.linkedin,
+                  tiktok: socialMap['tiktok'] ?? state.socialLinks.tiktok,
+                  youtube: socialMap['youtube'] ?? state.socialLinks.youtube
+                }
+              }))
+            }
+          }
+
           const result = await SettingsService.getSettings()
 
           if (result.data) {
-            // Merge API settings with defaults (API may not have all fields)
-            const apiSettings = result.data as any
-            set({
-              ...(apiSettings.businessProfile && { businessProfile: { ...get().businessProfile, ...apiSettings.businessProfile } }),
-              ...(apiSettings.socialLinks && { socialLinks: { ...get().socialLinks, ...apiSettings.socialLinks } }),
-              ...(apiSettings.bookingPolicies && { bookingPolicies: { ...get().bookingPolicies, ...apiSettings.bookingPolicies } }),
-              ...(apiSettings.paymentSettings && { paymentSettings: { ...get().paymentSettings, ...apiSettings.paymentSettings } }),
-              ...(apiSettings.notificationSettings && { notificationSettings: { ...get().notificationSettings, ...apiSettings.notificationSettings } }),
-              ...(apiSettings.schedulingSettings && { schedulingSettings: { ...get().schedulingSettings, ...apiSettings.schedulingSettings } }),
-              ...(apiSettings.calendarSettings && { calendarSettings: { ...get().calendarSettings, ...apiSettings.calendarSettings } }),
-              ...(apiSettings.customerSettings && { customerSettings: { ...get().customerSettings, ...apiSettings.customerSettings } }),
-              ...(apiSettings.brandingSettings && { brandingSettings: { ...get().brandingSettings, ...apiSettings.brandingSettings } }),
-              isLoading: false
-            })
+            const api = result.data as ApiBusinessSettings
+            const current = get()
+
+            const updates: Partial<BusinessSettingsState> = {}
+
+            if (api.bookingPolicies) {
+              const apiBp = api.bookingPolicies
+              updates.bookingPolicies = {
+                ...current.bookingPolicies,
+                ...(apiBp.autoConfirmation !== undefined && { autoConfirmation: apiBp.autoConfirmation }),
+                ...(apiBp.bookingLeadTime !== undefined && { bookingLeadTime: apiBp.bookingLeadTime }),
+                ...(apiBp.maxAdvanceBooking !== undefined && { maxAdvanceBooking: apiBp.maxAdvanceBooking }),
+                cancellationPolicy: {
+                  ...current.bookingPolicies.cancellationPolicy,
+                  ...(apiBp.allowCancellation !== undefined && { enabled: apiBp.allowCancellation }),
+                  ...(apiBp.cancellationDeadlineHours !== undefined && { hoursBeforeAppointment: apiBp.cancellationDeadlineHours })
+                },
+                reschedulePolicy: {
+                  ...current.bookingPolicies.reschedulePolicy,
+                  ...(apiBp.allowReschedule !== undefined && { enabled: apiBp.allowReschedule }),
+                  ...(apiBp.rescheduleDeadlineHours !== undefined && { hoursBeforeAppointment: apiBp.rescheduleDeadlineHours })
+                },
+                noShowPolicy: {
+                  ...current.bookingPolicies.noShowPolicy,
+                  ...(apiBp.noShowPolicy !== undefined && { chargeFee: apiBp.noShowPolicy === 'CHARGE_FEE' })
+                }
+              }
+            }
+
+            if (api.schedulingSettings) {
+              const apiSs = api.schedulingSettings
+              updates.schedulingSettings = {
+                ...current.schedulingSettings,
+                ...(apiSs.defaultSlotDuration !== undefined && { defaultBookingDuration: apiSs.defaultSlotDuration }),
+                ...(apiSs.bufferTimeBetweenAppointments !== undefined && { bufferTimeBetweenBookings: apiSs.bufferTimeBetweenAppointments }),
+                ...(apiSs.allowWalkIns !== undefined && { allowWalkIns: apiSs.allowWalkIns }),
+                ...(apiSs.allowOverbooking !== undefined && { allowOverbooking: apiSs.allowOverbooking }),
+                ...(apiSs.overbookingPercentage !== undefined && { overbookingPercentage: apiSs.overbookingPercentage })
+              }
+            }
+
+            if (api.customerSettings) {
+              updates.customerSettings = { ...current.customerSettings, ...api.customerSettings }
+            }
+
+            if (api.calendarSettings) {
+              updates.calendarSettings = { ...current.calendarSettings, ...api.calendarSettings } as CalendarDisplaySettings
+            }
+
+            if (api.brandingSettings) {
+              updates.brandingSettings = { ...current.brandingSettings, ...api.brandingSettings }
+            }
+
+            set({ ...updates, isLoading: false })
           } else {
-            // No API data - use localStorage persisted data (already loaded by Zustand)
             set({ isLoading: false })
           }
         } catch (error) {
-          console.warn('Failed to load settings from API, using local data:', error)
-          // Zustand persist middleware already loaded from localStorage
+          console.warn('Failed to load settings from API, using persisted local data:', error)
           set({ isLoading: false })
         }
       },

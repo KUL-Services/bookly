@@ -31,96 +31,207 @@
       "User": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "verified": { "type": "boolean" },
-          "profilePhoto": { "type": "string", "format": "uuid", "nullable": true },
-          "profileComplete": { "type": "boolean", "default": false },
-          "createdAt": { "type": "string", "format": "date-time" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "verified": {
+            "type": "boolean"
+          },
+          "profilePhoto": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "profileComplete": {
+            "type": "boolean",
+            "default": false
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "Admin": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string" },
-          "email": { "type": "string", "format": "email" },
-          "isOwner": { "type": "boolean" },
-          "business": { "$ref": "#/components/schemas/Business" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "isOwner": {
+            "type": "boolean"
+          },
+          "business": {
+            "$ref": "#/components/schemas/Business"
+          }
         }
       },
       "Business": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string" },
-          "email": { "type": "string", "format": "email", "nullable": true },
-          "description": { "type": "string", "nullable": true },
-          "approved": { "type": "boolean" },
-          "logo": { "type": "string", "format": "uuid", "nullable": true },
-          "rating": { "type": "number", "format": "float", "minimum": 0, "maximum": 5, "default": 0 },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "approved": {
+            "type": "boolean"
+          },
+          "logo": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "rating": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "maximum": 5,
+            "default": 0
+          },
           "socialLinks": {
             "type": "array",
             "maxItems": 10,
-            "items": { "$ref": "#/components/schemas/SocialLink" }
+            "items": {
+              "$ref": "#/components/schemas/SocialLink"
+            }
           }
         }
       },
       "SocialLink": {
         "type": "object",
         "properties": {
-          "platform": { "type": "string" },
-          "url": { "type": "string", "format": "uri" }
+          "platform": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
         }
       },
       "Category": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
         }
       },
       "Service": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string" },
-          "description": { "type": "string", "nullable": true },
-          "location": { "type": "string" },
-          "price": { "type": "number", "minimum": 0 },
-          "duration": { "type": "number", "minimum": 1 },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "location": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 1
+          },
           "gallery": {
             "type": "array",
-            "items": { "type": "string", "format": "uuid" },
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
             "description": "Array of asset UUIDs for service images"
           },
-          "business": { "$ref": "#/components/schemas/Business" },
+          "business": {
+            "$ref": "#/components/schemas/Business"
+          },
           "categories": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/Category" }
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            }
           },
           "branches": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/Branch" }
+            "items": {
+              "$ref": "#/components/schemas/Branch"
+            }
           },
           "staff": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/Staff" }
+            "items": {
+              "$ref": "#/components/schemas/Staff"
+            }
           }
         }
       },
       "Branch": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string" },
-          "address": { "type": "string", "nullable": true },
-          "mobile": { "type": "string", "nullable": true },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "mobile": {
+            "type": "string",
+            "nullable": true
+          },
           "gallery": {
             "type": "array",
-            "items": { "type": "string", "format": "uuid" },
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
             "description": "Array of asset UUIDs for branch images"
           }
         }
@@ -128,14 +239,32 @@
       "Staff": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "name": { "type": "string" },
-          "mobile": { "type": "string", "nullable": true },
-          "branchId": { "type": "string", "format": "uuid" },
-          "profilePhoto": { "type": "string", "format": "uuid", "nullable": true },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mobile": {
+            "type": "string",
+            "nullable": true
+          },
+          "branchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "profilePhoto": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
           "serviceIds": {
             "type": "array",
-            "items": { "type": "string", "format": "uuid" },
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
             "description": "Array of service UUIDs that staff can provide"
           }
         }
@@ -143,42 +272,64 @@
       "AssetFile": {
         "type": "object",
         "properties": {
-          "assetFileId": { "type": "string", "format": "uuid" },
-          "uploadUrl": { "type": "string", "format": "uri" }
+          "assetFileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uploadUrl": {
+            "type": "string",
+            "format": "uri"
+          }
         }
       },
       "Error": {
         "type": "object",
         "properties": {
-          "message": { "type": "string" },
-          "error": { "type": "string" },
-          "statusCode": { "type": "integer" }
+          "message": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "statusCode": {
+            "type": "integer"
+          }
         }
       },
       "AuthResponse": {
         "type": "object",
         "properties": {
-          "access_token": { "type": "string" }
+          "access_token": {
+            "type": "string"
+          }
         }
       },
       "UserAuthResponse": {
         "allOf": [
-          { "$ref": "#/components/schemas/AuthResponse" },
+          {
+            "$ref": "#/components/schemas/AuthResponse"
+          },
           {
             "type": "object",
             "properties": {
-              "user": { "$ref": "#/components/schemas/User" }
+              "user": {
+                "$ref": "#/components/schemas/User"
+              }
             }
           }
         ]
       },
       "AdminAuthResponse": {
         "allOf": [
-          { "$ref": "#/components/schemas/AuthResponse" },
+          {
+            "$ref": "#/components/schemas/AuthResponse"
+          },
           {
             "type": "object",
             "properties": {
-              "user": { "$ref": "#/components/schemas/Admin" }
+              "user": {
+                "$ref": "#/components/schemas/Admin"
+              }
             }
           }
         ]
@@ -186,26 +337,73 @@
       "Review": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "rating": { "type": "number", "minimum": 1, "maximum": 5 },
-          "comment": { "type": "string", "nullable": true },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "userId": { "type": "string", "format": "uuid" },
-          "businessId": { "type": "string", "format": "uuid" },
-          "user": { "$ref": "#/components/schemas/User" },
-          "business": { "$ref": "#/components/schemas/Business" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "businessId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "business": {
+            "$ref": "#/components/schemas/Business"
+          }
         }
       },
       "Appointment": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "date": { "type": "string", "format": "date-time" },
-          "status": { "type": "string", "enum": ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"] },
-          "userId": { "type": "string", "format": "uuid" },
-          "serviceId": { "type": "string", "format": "uuid" },
-          "user": { "$ref": "#/components/schemas/User" },
-          "service": { "$ref": "#/components/schemas/Service" }
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "CANCELLED",
+              "COMPLETED"
+            ]
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "serviceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "service": {
+            "$ref": "#/components/schemas/Service"
+          }
         }
       }
     }
@@ -213,17 +411,27 @@
   "paths": {
     "/media-lib": {
       "post": {
-        "tags": ["Media Library"],
+        "tags": [
+          "Media Library"
+        ],
         "summary": "Create asset placeholder",
         "description": "Creates an asset record and returns a signed S3 URL for uploading media",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["fileName", "mimeType", "size"],
+                "required": [
+                  "fileName",
+                  "mimeType",
+                  "size"
+                ],
                 "properties": {
                   "fileName": {
                     "type": "string",
@@ -250,7 +458,9 @@
             "description": "Signed upload URL for the asset file",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AssetFile" }
+                "schema": {
+                  "$ref": "#/components/schemas/AssetFile"
+                }
               }
             }
           },
@@ -258,7 +468,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -267,16 +479,24 @@
     },
     "/media-lib/{id}": {
       "patch": {
-        "tags": ["Media Library"],
+        "tags": [
+          "Media Library"
+        ],
         "summary": "Update asset placeholder",
         "description": "Updates metadata for an existing asset and returns a refreshed signed upload URL",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Asset file ID"
           }
         ],
@@ -309,7 +529,9 @@
             "description": "Signed upload URL for the updated asset",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AssetFile" }
+                "schema": {
+                  "$ref": "#/components/schemas/AssetFile"
+                }
               }
             }
           },
@@ -317,23 +539,33 @@
             "description": "Asset not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
         }
       },
       "delete": {
-        "tags": ["Media Library"],
+        "tags": [
+          "Media Library"
+        ],
         "summary": "Delete asset",
         "description": "Deletes an asset file and removes it from S3",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Asset file ID"
           }
         ],
@@ -345,7 +577,9 @@
             "description": "Asset not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -354,17 +588,25 @@
     },
     "/categories": {
       "post": {
-        "tags": ["Categories"],
+        "tags": [
+          "Categories"
+        ],
         "summary": "Create category",
         "description": "Creates a service category (Super Admin only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name"],
+                "required": [
+                  "name"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -381,7 +623,9 @@
             "description": "Created category record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Category" }
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
               }
             }
           },
@@ -389,14 +633,18 @@
             "description": "Forbidden - Super Admin role required",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
         }
       },
       "get": {
-        "tags": ["Categories"],
+        "tags": [
+          "Categories"
+        ],
         "summary": "List categories",
         "description": "Returns all categories (public endpoint)",
         "responses": {
@@ -406,7 +654,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Category" }
+                  "items": {
+                    "$ref": "#/components/schemas/Category"
+                  }
                 }
               }
             }
@@ -416,16 +666,24 @@
     },
     "/categories/{id}": {
       "patch": {
-        "tags": ["Categories"],
+        "tags": [
+          "Categories"
+        ],
         "summary": "Update category",
         "description": "Updates category properties (Super Admin only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Category ID"
           }
         ],
@@ -435,7 +693,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id"],
+                "required": [
+                  "id"
+                ],
                 "properties": {
                   "id": {
                     "type": "string",
@@ -455,7 +715,9 @@
             "description": "Updated category record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Category" }
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
               }
             }
           },
@@ -463,23 +725,33 @@
             "description": "Category not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
         }
       },
       "delete": {
-        "tags": ["Categories"],
+        "tags": [
+          "Categories"
+        ],
         "summary": "Delete category",
         "description": "Deletes a category (Super Admin only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Category ID"
           }
         ],
@@ -488,7 +760,9 @@
             "description": "Deleted category record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Category" }
+                "schema": {
+                  "$ref": "#/components/schemas/Category"
+                }
               }
             }
           },
@@ -496,7 +770,9 @@
             "description": "Category not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -505,17 +781,26 @@
     },
     "/staff": {
       "post": {
-        "tags": ["Staff"],
+        "tags": [
+          "Staff"
+        ],
         "summary": "Create staff",
         "description": "Creates a new staff member for the admin's business",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "branchId"],
+                "required": [
+                  "name",
+                  "branchId"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -541,7 +826,10 @@
                   },
                   "serviceIds": {
                     "type": "array",
-                    "items": { "type": "string", "format": "uuid" },
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "description": "Array of service UUIDs that staff can provide",
                     "nullable": true
                   }
@@ -555,33 +843,8 @@
             "description": "Created staff record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Staff" }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - Admin role required",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": ["Staff"],
-        "summary": "List staff",
-        "description": "Returns staff members belonging to the admin's business",
-        "security": [{ "bearerAuth": [] }],
-        "responses": {
-          "200": {
-            "description": "Array of staff records",
-            "content": {
-              "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/Staff" }
+                  "$ref": "#/components/schemas/Staff"
                 }
               }
             }
@@ -590,24 +853,73 @@
             "description": "Forbidden - Admin role required",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Staff"
+        ],
+        "summary": "List staff",
+        "description": "Returns staff members belonging to the admin's business",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of staff records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Staff"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Admin role required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
         }
       },
       "patch": {
-        "tags": ["Staff"],
+        "tags": [
+          "Staff"
+        ],
         "summary": "Update staff",
         "description": "Updates staff details",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id", "name", "branchId"],
+                "required": [
+                  "id",
+                  "name",
+                  "branchId"
+                ],
                 "properties": {
                   "id": {
                     "type": "string",
@@ -636,7 +948,10 @@
                   },
                   "serviceIds": {
                     "type": "array",
-                    "items": { "type": "string", "format": "uuid" },
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "description": "Array of service UUIDs that staff can provide",
                     "nullable": true
                   }
@@ -650,7 +965,9 @@
             "description": "Updated staff record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Staff" }
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
               }
             }
           },
@@ -658,7 +975,9 @@
             "description": "Staff not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -667,16 +986,24 @@
     },
     "/staff/{id}": {
       "delete": {
-        "tags": ["Staff"],
+        "tags": [
+          "Staff"
+        ],
         "summary": "Delete staff",
         "description": "Deletes a staff member",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Staff ID"
           }
         ],
@@ -701,7 +1028,9 @@
             "description": "Staff not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -710,7 +1039,9 @@
     },
     "/business/register": {
       "post": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "Register business",
         "description": "Registers a new business and its owner admin",
         "requestBody": {
@@ -719,7 +1050,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "owner"],
+                "required": [
+                  "name",
+                  "owner"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -746,20 +1080,45 @@
                     "maxItems": 10,
                     "items": {
                       "type": "object",
-                      "required": ["platform", "url"],
+                      "required": [
+                        "platform",
+                        "url"
+                      ],
                       "properties": {
-                        "platform": { "type": "string", "example": "facebook" },
-                        "url": { "type": "string", "format": "uri", "example": "https://facebook.com/booklysalon" }
+                        "platform": {
+                          "type": "string",
+                          "example": "facebook"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri",
+                          "example": "https://facebook.com/booklysalon"
+                        }
                       }
                     }
                   },
                   "owner": {
                     "type": "object",
-                    "required": ["name", "email", "password"],
+                    "required": [
+                      "name",
+                      "email",
+                      "password"
+                    ],
                     "properties": {
-                      "name": { "type": "string", "example": "John Doe" },
-                      "email": { "type": "string", "format": "email", "example": "john@booklysalon.com" },
-                      "password": { "type": "string", "minLength": 8, "example": "securePass123" }
+                      "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                      },
+                      "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john@booklysalon.com"
+                      },
+                      "password": {
+                        "type": "string",
+                        "minLength": 8,
+                        "example": "securePass123"
+                      }
                     }
                   }
                 }
@@ -775,17 +1134,33 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": { "type": "string", "format": "uuid" },
-                    "name": { "type": "string" },
-                    "email": { "type": "string", "nullable": true },
-                    "description": { "type": "string", "nullable": true },
-                    "approved": { "type": "boolean" },
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "approved": {
+                      "type": "boolean"
+                    },
                     "admins": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "verificationToken": { "type": "string", "nullable": true }
+                          "verificationToken": {
+                            "type": "string",
+                            "nullable": true
+                          }
                         }
                       }
                     }
@@ -798,7 +1173,9 @@
             "description": "Bad request - validation error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -807,17 +1184,25 @@
     },
     "/business/approve": {
       "post": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "Approve business",
         "description": "Marks a business as approved (Super Admin only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id"],
+                "required": [
+                  "id"
+                ],
                 "properties": {
                   "id": {
                     "type": "string",
@@ -850,7 +1235,9 @@
             "description": "Business not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -859,17 +1246,25 @@
     },
     "/business/approve-request": {
       "post": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "Approve business change request",
         "description": "Applies a pending business change request (Super Admin only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id"],
+                "required": [
+                  "id"
+                ],
                 "properties": {
                   "id": {
                     "type": "string",
@@ -903,17 +1298,25 @@
     },
     "/business/reject": {
       "post": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "Reject business",
         "description": "Rejects and deletes a business registration (Super Admin only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id"],
+                "required": [
+                  "id"
+                ],
                 "properties": {
                   "id": {
                     "type": "string",
@@ -947,17 +1350,25 @@
     },
     "/business/reject-request": {
       "post": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "Reject business change request",
         "description": "Rejects and removes a pending business change request (Super Admin only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id"],
+                "required": [
+                  "id"
+                ],
                 "properties": {
                   "id": {
                     "type": "string",
@@ -991,10 +1402,16 @@
     },
     "/business/pending": {
       "get": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "List pending businesses",
         "description": "Returns businesses awaiting approval (Super Admin only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Array of pending businesses with owner info and social links",
@@ -1002,7 +1419,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Business" }
+                  "items": {
+                    "$ref": "#/components/schemas/Business"
+                  }
                 }
               }
             }
@@ -1012,10 +1431,16 @@
     },
     "/business/pending-requests": {
       "get": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "List pending change requests",
         "description": "Returns pending change requests for businesses (Super Admin only)",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Array of business change requests",
@@ -1023,7 +1448,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "type": "object" }
+                  "items": {
+                    "type": "object"
+                  }
                 }
               }
             }
@@ -1033,7 +1460,9 @@
     },
     "/business": {
       "get": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "List approved businesses",
         "description": "Returns approved businesses with their social links (public endpoint)",
         "parameters": [
@@ -1041,49 +1470,71 @@
             "name": "name",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Filter businesses by name"
           },
           {
             "name": "page",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "minimum": 1 },
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
             "description": "Page number for pagination"
           },
           {
             "name": "pageSize",
             "in": "query",
             "required": false,
-            "schema": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
             "description": "Items per page"
           },
           {
             "name": "categoryId",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "format": "uuid" },
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
             "description": "Filter by category UUID"
           },
           {
             "name": "priceFrom",
             "in": "query",
             "required": false,
-            "schema": { "type": "number", "minimum": 0, "default": 0 },
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "default": 0
+            },
             "description": "Minimum price filter"
           },
           {
             "name": "priceTo",
             "in": "query",
             "required": false,
-            "schema": { "type": "number", "minimum": 0, "default": 999999 },
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "default": 999999
+            },
             "description": "Maximum price filter"
           },
           {
             "name": "search",
             "in": "query",
             "required": false,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Search term for business name or service name"
           }
         ],
@@ -1094,7 +1545,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Business" }
+                  "items": {
+                    "$ref": "#/components/schemas/Business"
+                  }
                 }
               }
             }
@@ -1102,17 +1555,25 @@
         }
       },
       "patch": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "Submit business update request",
         "description": "Creates or updates a pending business change request for the admin's business",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id"],
+                "required": [
+                  "id"
+                ],
                 "properties": {
                   "id": {
                     "type": "string",
@@ -1142,10 +1603,18 @@
                     "maxItems": 10,
                     "items": {
                       "type": "object",
-                      "required": ["platform", "url"],
+                      "required": [
+                        "platform",
+                        "url"
+                      ],
                       "properties": {
-                        "platform": { "type": "string" },
-                        "url": { "type": "string", "format": "uri" }
+                        "platform": {
+                          "type": "string"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
                       }
                     }
                   },
@@ -1165,7 +1634,9 @@
             "description": "Business change request record (created or updated)",
             "content": {
               "application/json": {
-                "schema": { "type": "object" }
+                "schema": {
+                  "type": "object"
+                }
               }
             }
           }
@@ -1174,7 +1645,9 @@
     },
     "/business/{id}": {
       "get": {
-        "tags": ["Business"],
+        "tags": [
+          "Business"
+        ],
         "summary": "Get business details",
         "description": "Returns detailed information about a specific business (public endpoint)",
         "parameters": [
@@ -1182,7 +1655,9 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Business ID"
           }
         ],
@@ -1191,7 +1666,9 @@
             "description": "Business details",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Business" }
+                "schema": {
+                  "$ref": "#/components/schemas/Business"
+                }
               }
             }
           },
@@ -1199,7 +1676,9 @@
             "description": "Business not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1208,10 +1687,16 @@
     },
     "/auth/user": {
       "patch": {
-        "tags": ["User Authentication"],
+        "tags": [
+          "User Authentication"
+        ],
         "summary": "Update user profile",
         "description": "Updates user profile information for the authenticated user",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1243,7 +1728,9 @@
             "description": "Updated user profile",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/User" }
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
               }
             }
           },
@@ -1251,7 +1738,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1260,17 +1749,26 @@
     },
     "/auth/user/password": {
       "patch": {
-        "tags": ["User Authentication"],
+        "tags": [
+          "User Authentication"
+        ],
         "summary": "Change user password",
         "description": "Changes the password for the authenticated user",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["currentPassword", "newPassword"],
+                "required": [
+                  "currentPassword",
+                  "newPassword"
+                ],
                 "properties": {
                   "currentPassword": {
                     "type": "string",
@@ -1307,7 +1805,9 @@
             "description": "Invalid current password or validation error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           },
@@ -1315,7 +1815,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1324,16 +1826,24 @@
     },
     "/auth/user/details": {
       "get": {
-        "tags": ["User Authentication"],
+        "tags": [
+          "User Authentication"
+        ],
         "summary": "Get user details",
         "description": "Returns the authenticated user's profile information",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "User profile information",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/User" }
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
               }
             }
           },
@@ -1341,7 +1851,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1350,16 +1862,24 @@
     },
     "/auth/admin/details": {
       "get": {
-        "tags": ["Admin Authentication"],
+        "tags": [
+          "Admin Authentication"
+        ],
         "summary": "Get admin details",
         "description": "Returns the authenticated admin's profile information",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Admin profile information",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Admin" }
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
               }
             }
           },
@@ -1367,7 +1887,9 @@
             "description": "Unauthorized",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1376,17 +1898,28 @@
     },
     "/service": {
       "post": {
-        "tags": ["Services"],
+        "tags": [
+          "Services"
+        ],
         "summary": "Create service",
         "description": "Creates a service for the admin's business",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "location", "price", "duration"],
+                "required": [
+                  "name",
+                  "location",
+                  "price",
+                  "duration"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -1413,19 +1946,26 @@
                   },
                   "categoryIds": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "nullable": true,
                     "description": "IDs of categories to link"
                   },
                   "branchIds": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "nullable": true,
                     "description": "IDs of branches to connect"
                   },
                   "gallery": {
                     "type": "array",
-                    "items": { "type": "string", "format": "uuid" },
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "nullable": true,
                     "description": "Array of asset UUIDs for service images"
                   }
@@ -1439,14 +1979,18 @@
             "description": "Created service record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Service" }
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
               }
             }
           }
         }
       },
       "get": {
-        "tags": ["Services"],
+        "tags": [
+          "Services"
+        ],
         "summary": "List services",
         "description": "Returns services with categories and branches (public endpoint)",
         "responses": {
@@ -1456,7 +2000,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Service" }
+                  "items": {
+                    "$ref": "#/components/schemas/Service"
+                  }
                 }
               }
             }
@@ -1464,37 +2010,72 @@
         }
       },
       "patch": {
-        "tags": ["Services"],
+        "tags": [
+          "Services"
+        ],
         "summary": "Update service",
         "description": "Updates service details for the admin's business",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id"],
+                "required": [
+                  "id"
+                ],
                 "properties": {
-                  "id": { "type": "string", "format": "uuid" },
-                  "name": { "type": "string", "nullable": true },
-                  "description": { "type": "string", "nullable": true },
-                  "location": { "type": "string", "nullable": true },
-                  "price": { "type": "number", "minimum": 0, "nullable": true },
-                  "duration": { "type": "number", "minimum": 1, "nullable": true },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "location": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "price": {
+                    "type": "number",
+                    "minimum": 0,
+                    "nullable": true
+                  },
+                  "duration": {
+                    "type": "number",
+                    "minimum": 1,
+                    "nullable": true
+                  },
                   "categoryIds": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "nullable": true
                   },
                   "branchIds": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "nullable": true
                   },
                   "gallery": {
                     "type": "array",
-                    "items": { "type": "string", "format": "uuid" },
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "nullable": true,
                     "description": "Array of asset UUIDs for service images"
                   }
@@ -1508,7 +2089,9 @@
             "description": "Updated service record with relations",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Service" }
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
               }
             }
           }
@@ -1517,7 +2100,9 @@
     },
     "/service/{id}": {
       "get": {
-        "tags": ["Services"],
+        "tags": [
+          "Services"
+        ],
         "summary": "Get service",
         "description": "Returns a specific service including categories, branches, business, and reviews",
         "parameters": [
@@ -1525,7 +2110,9 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Service ID"
           }
         ],
@@ -1534,7 +2121,9 @@
             "description": "Service record with relations",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Service" }
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
               }
             }
           },
@@ -1542,23 +2131,33 @@
             "description": "Service not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
         }
       },
       "delete": {
-        "tags": ["Services"],
+        "tags": [
+          "Services"
+        ],
         "summary": "Delete service",
         "description": "Deletes a service belonging to the admin's business",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Service ID"
           }
         ],
@@ -1567,7 +2166,9 @@
             "description": "Deleted service record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Service" }
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
               }
             }
           },
@@ -1575,7 +2176,9 @@
             "description": "Service not found",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1584,17 +2187,25 @@
     },
     "/branches": {
       "post": {
-        "tags": ["Branches"],
+        "tags": [
+          "Branches"
+        ],
         "summary": "Create branch",
         "description": "Creates a branch for the admin's business",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name"],
+                "required": [
+                  "name"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -1612,13 +2223,18 @@
                   },
                   "serviceIds": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "nullable": true,
                     "description": "Service IDs to link to the branch"
                   },
                   "gallery": {
                     "type": "array",
-                    "items": { "type": "string", "format": "uuid" },
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "nullable": true,
                     "description": "Array of asset UUIDs for branch images"
                   }
@@ -1632,17 +2248,25 @@
             "description": "Created branch record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Branch" }
+                "schema": {
+                  "$ref": "#/components/schemas/Branch"
+                }
               }
             }
           }
         }
       },
       "get": {
-        "tags": ["Branches"],
+        "tags": [
+          "Branches"
+        ],
         "summary": "List branches",
         "description": "Returns branches for the admin's business",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Array of branch records",
@@ -1650,7 +2274,9 @@
               "application/json": {
                 "schema": {
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/Branch" }
+                  "items": {
+                    "$ref": "#/components/schemas/Branch"
+                  }
                 }
               }
             }
@@ -1658,30 +2284,55 @@
         }
       },
       "patch": {
-        "tags": ["Branches"],
+        "tags": [
+          "Branches"
+        ],
         "summary": "Update branch",
         "description": "Updates a branch linked to the admin's business",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["id", "name"],
+                "required": [
+                  "id",
+                  "name"
+                ],
                 "properties": {
-                  "id": { "type": "string", "format": "uuid" },
-                  "name": { "type": "string" },
-                  "address": { "type": "string", "nullable": true },
-                  "mobile": { "type": "string", "nullable": true },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "mobile": {
+                    "type": "string",
+                    "nullable": true
+                  },
                   "serviceIds": {
                     "type": "array",
-                    "items": { "type": "string" },
+                    "items": {
+                      "type": "string"
+                    },
                     "nullable": true
                   },
                   "gallery": {
                     "type": "array",
-                    "items": { "type": "string", "format": "uuid" },
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
                     "nullable": true,
                     "description": "Array of asset UUIDs for branch images"
                   }
@@ -1695,7 +2346,9 @@
             "description": "Updated branch record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Branch" }
+                "schema": {
+                  "$ref": "#/components/schemas/Branch"
+                }
               }
             }
           }
@@ -1704,16 +2357,24 @@
     },
     "/branches/{id}": {
       "delete": {
-        "tags": ["Branches"],
+        "tags": [
+          "Branches"
+        ],
         "summary": "Delete branch",
         "description": "Deletes a branch linked to the admin's business",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": { "type": "string" },
+            "schema": {
+              "type": "string"
+            },
             "description": "Branch ID"
           }
         ],
@@ -1722,7 +2383,9 @@
             "description": "Deleted branch record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Branch" }
+                "schema": {
+                  "$ref": "#/components/schemas/Branch"
+                }
               }
             }
           }
@@ -1731,7 +2394,9 @@
     },
     "/auth/user/register": {
       "post": {
-        "tags": ["User Authentication"],
+        "tags": [
+          "User Authentication"
+        ],
         "summary": "Register user",
         "description": "Registers an end user account and returns a verification code",
         "requestBody": {
@@ -1740,7 +2405,12 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["firstName", "lastName", "email", "password"],
+                "required": [
+                  "firstName",
+                  "lastName",
+                  "email",
+                  "password"
+                ],
                 "properties": {
                   "firstName": {
                     "type": "string",
@@ -1773,7 +2443,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "verificationToken": { "type": "string" }
+                    "verificationToken": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1783,7 +2455,9 @@
             "description": "Bad request - validation error",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1792,7 +2466,9 @@
     },
     "/auth/user/verify": {
       "post": {
-        "tags": ["User Authentication"],
+        "tags": [
+          "User Authentication"
+        ],
         "summary": "Verify user account",
         "description": "Verifies a user account using the emailed code",
         "requestBody": {
@@ -1801,7 +2477,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email", "code"],
+                "required": [
+                  "email",
+                  "code"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -1838,7 +2517,9 @@
             "description": "Invalid verification code",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1847,7 +2528,9 @@
     },
     "/auth/user/forget-password": {
       "post": {
-        "tags": ["User Authentication"],
+        "tags": [
+          "User Authentication"
+        ],
         "summary": "Send user reset code",
         "description": "Generates and emails a user password reset code",
         "requestBody": {
@@ -1856,7 +2539,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email"],
+                "required": [
+                  "email"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -1876,7 +2561,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "verificationToken": { "type": "string" }
+                    "verificationToken": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -1887,7 +2574,9 @@
     },
     "/auth/user/reset-password": {
       "post": {
-        "tags": ["User Authentication"],
+        "tags": [
+          "User Authentication"
+        ],
         "summary": "Reset user password",
         "description": "Validates the reset code and updates the user password",
         "requestBody": {
@@ -1896,7 +2585,11 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email", "code", "password"],
+                "required": [
+                  "email",
+                  "code",
+                  "password"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -1939,7 +2632,9 @@
     },
     "/auth/user/login": {
       "post": {
-        "tags": ["User Authentication"],
+        "tags": [
+          "User Authentication"
+        ],
         "summary": "User login",
         "description": "Authenticates a user and returns profile plus JWT",
         "requestBody": {
@@ -1948,7 +2643,10 @@
             "application/x-www-form-urlencoded": {
               "schema": {
                 "type": "object",
-                "required": ["email", "password"],
+                "required": [
+                  "email",
+                  "password"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -1969,7 +2667,9 @@
             "description": "Authenticated user profile and JWT",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/UserAuthResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/UserAuthResponse"
+                }
               }
             }
           },
@@ -1977,7 +2677,9 @@
             "description": "Invalid credentials",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1986,17 +2688,27 @@
     },
     "/auth/admin/register": {
       "post": {
-        "tags": ["Admin Authentication"],
+        "tags": [
+          "Admin Authentication"
+        ],
         "summary": "Register admin",
         "description": "Registers a new admin under the current owner",
-        "security": [{ "bearerAuth": [] }],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["name", "email", "password"],
+                "required": [
+                  "name",
+                  "email",
+                  "password"
+                ],
                 "properties": {
                   "name": {
                     "type": "string",
@@ -2022,7 +2734,9 @@
             "description": "Created admin record",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Admin" }
+                "schema": {
+                  "$ref": "#/components/schemas/Admin"
+                }
               }
             }
           }
@@ -2031,7 +2745,9 @@
     },
     "/auth/admin/verify": {
       "post": {
-        "tags": ["Admin Authentication"],
+        "tags": [
+          "Admin Authentication"
+        ],
         "summary": "Verify admin account",
         "description": "Verifies an admin account using the emailed code",
         "requestBody": {
@@ -2040,7 +2756,10 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email", "code"],
+                "required": [
+                  "email",
+                  "code"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -2064,7 +2783,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "message": { "type": "string" }
+                    "message": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -2075,7 +2796,9 @@
     },
     "/auth/admin/forget-password": {
       "post": {
-        "tags": ["Admin Authentication"],
+        "tags": [
+          "Admin Authentication"
+        ],
         "summary": "Send admin reset code",
         "description": "Generates and emails an admin password reset code",
         "requestBody": {
@@ -2084,7 +2807,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email"],
+                "required": [
+                  "email"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -2104,7 +2829,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "verificationToken": { "type": "string" }
+                    "verificationToken": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -2115,7 +2842,9 @@
     },
     "/auth/admin/reset-password": {
       "post": {
-        "tags": ["Admin Authentication"],
+        "tags": [
+          "Admin Authentication"
+        ],
         "summary": "Reset admin password",
         "description": "Validates the reset code and updates the admin password",
         "requestBody": {
@@ -2124,7 +2853,11 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["email", "code", "password"],
+                "required": [
+                  "email",
+                  "code",
+                  "password"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -2167,7 +2900,9 @@
     },
     "/auth/admin/login": {
       "post": {
-        "tags": ["Admin Authentication"],
+        "tags": [
+          "Admin Authentication"
+        ],
         "summary": "Admin login",
         "description": "Authenticates an admin and returns profile plus JWT",
         "requestBody": {
@@ -2176,7 +2911,10 @@
             "application/x-www-form-urlencoded": {
               "schema": {
                 "type": "object",
-                "required": ["email", "password"],
+                "required": [
+                  "email",
+                  "password"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -2197,7 +2935,9 @@
             "description": "Authenticated admin profile and JWT",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdminAuthResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAuthResponse"
+                }
               }
             }
           },
@@ -2205,7 +2945,9 @@
             "description": "Invalid credentials",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -2214,7 +2956,9 @@
     },
     "/auth/super-admin/login": {
       "post": {
-        "tags": ["SuperAdmin Authentication"],
+        "tags": [
+          "SuperAdmin Authentication"
+        ],
         "summary": "Super admin login",
         "description": "Authenticates the super admin and issues a JWT",
         "requestBody": {
@@ -2223,7 +2967,10 @@
             "application/x-www-form-urlencoded": {
               "schema": {
                 "type": "object",
-                "required": ["email", "password"],
+                "required": [
+                  "email",
+                  "password"
+                ],
                 "properties": {
                   "email": {
                     "type": "string",
@@ -2244,7 +2991,9 @@
             "description": "JWT access token for the super admin",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
               }
             }
           },
@@ -2252,7 +3001,9 @@
             "description": "Invalid credentials",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }

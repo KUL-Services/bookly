@@ -7,6 +7,11 @@ export class ReviewsService {
     return apiClient.get<AdminReview[]>('/admin/reviews')
   }
 
+  // User - Get the authenticated user's own reviews
+  static async getUserReviews() {
+    return apiClient.get<Review[]>('/reviews/my')
+  }
+
   // Create a review (User)
   static async createReview(data: CreateReviewRequest) {
     return apiClient.post<Review>('/reviews', data)
