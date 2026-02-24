@@ -125,9 +125,10 @@ const Login = ({ mode }: { mode: Mode }) => {
 
       // Check for account not verified error
       const errorMessage = apiError?.message || ''
-      const isNotVerified = errorMessage.toLowerCase().includes('not verified') || 
-                            errorMessage.toLowerCase().includes('verify your email') ||
-                            errorMessage.toLowerCase().includes('email not verified')
+      const isNotVerified =
+        errorMessage.toLowerCase().includes('not verified') ||
+        errorMessage.toLowerCase().includes('verify your email') ||
+        errorMessage.toLowerCase().includes('email not verified')
 
       if (isNotVerified) {
         setIsUnverifiedError(true)
@@ -206,9 +207,7 @@ const Login = ({ mode }: { mode: Mode }) => {
           {/* Success banner when coming from verification */}
           {searchParams.get('verified') === '1' && (
             <Alert severity='success' className='mb-2'>
-              <Typography variant='body2'>
-                Your email has been verified successfully! You can now log in.
-              </Typography>
+              <Typography variant='body2'>Your email has been verified successfully! You can now log in.</Typography>
             </Alert>
           )}
 

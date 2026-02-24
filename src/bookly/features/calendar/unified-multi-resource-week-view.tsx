@@ -1,6 +1,6 @@
 'use client'
 
-import { Box, Typography, Avatar, Chip, Tooltip } from '@mui/material'
+import { Box, Typography, Avatar, Chip, Tooltip, Popover, List, ListItemButton } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isPast, startOfDay } from 'date-fns'
 import { mockStaff as fallbackMockStaff, mockServices as fallbackMockServices } from '@/bookly/data/mock-data'
@@ -18,7 +18,7 @@ import {
   getDynamicRoomAvailability
 } from './utils'
 import type { CalendarEvent, DayOfWeek, WeeklyStaffHours } from './types'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { BrandWatermark } from '@/bookly/components/atoms/brand-watermark'
 
@@ -227,6 +227,14 @@ interface UnifiedMultiResourceWeekViewProps {
   onCellClick?: (resourceId: string, resourceType: 'staff' | 'room', date: Date) => void
 }
 
+interface OverflowItem {
+  event: CalendarEvent
+  isConsolidated: boolean
+  bookingCount: number
+  totalCapacity: number
+  allEvents: CalendarEvent[]
+}
+
 export default function UnifiedMultiResourceWeekView({
   events,
   currentDate,
@@ -256,6 +264,15 @@ export default function UnifiedMultiResourceWeekView({
   const { apiServices: storeServices } = useStaffManagementStore()
   const allStaff: any[] = calendarStaff?.length ? calendarStaff : (fallbackMockStaff as any[])
   const allServices: any[] = storeServices?.length ? storeServices : (fallbackMockServices as any[])
+  const [overflowAnchorEl, setOverflowAnchorEl] = useState<HTMLElement | null>(null)
+  const [overflowItems, setOverflowItems] = useState<OverflowItem[]>([])
+  const [overflowDay, setOverflowDay] = useState<Date | null>(null)
+
+  const handleOverflowClose = () => {
+    setOverflowAnchorEl(null)
+    setOverflowItems([])
+    setOverflowDay(null)
+  }
 
   // Get week days
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 })
@@ -911,61 +928,37 @@ export default function UnifiedMultiResourceWeekView({
 
               {/* Overflow indicator - shows "+X more" when there are more than 2 events */}
               {overflowCount > 0 && (
-                <Tooltip
-                  title={
-                    <Box sx={{ p: 0.5 }}>
-                      <Typography variant='caption' sx={{ fontWeight: 600, color: '#fff' }}>
-                        {overflowCount} more {isStaticType ? 'slot' : 'booking'}
-                        {overflowCount > 1 ? 's' : ''}
-                      </Typography>
-                      <Box sx={{ mt: 0.5 }}>
-                        {consolidatedEvents.slice(maxVisibleEvents).map((item, idx) => (
-                          <Typography
-                            key={idx}
-                            variant='caption'
-                            sx={{ display: 'block', color: 'rgba(255,255,255,0.8)', fontSize: '0.65rem' }}
-                          >
-                            • {format(item.event.start, 'h:mm a')} -{' '}
-                            {item.event.extendedProps?.serviceName || item.event.title}
-                            {item.isConsolidated && ` (${item.bookingCount}/${item.totalCapacity})`}
-                          </Typography>
-                        ))}
-                      </Box>
-                    </Box>
-                  }
-                  arrow
-                  placement='top'
+                <Box
+                  onClick={e => {
+                    e.stopPropagation()
+                    setOverflowAnchorEl(e.currentTarget)
+                    setOverflowItems(consolidatedEvents.slice(maxVisibleEvents) as OverflowItem[])
+                    setOverflowDay(day)
+                  }}
+                  sx={{
+                    mt: 0.5,
+                    p: 0.5,
+                    bgcolor: isDark ? 'rgba(10, 44, 36, 0.15)' : 'rgba(10, 44, 36, 0.1)',
+                    borderRadius: 1,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                    '&:hover': {
+                      bgcolor: isDark ? 'rgba(10, 44, 36, 0.25)' : 'rgba(10, 44, 36, 0.15)'
+                    }
+                  }}
                 >
-                  <Box
-                    onClick={e => {
-                      e.stopPropagation()
-                      onDateClick?.(day)
-                    }}
+                  <Typography
+                    variant='caption'
                     sx={{
-                      mt: 0.5,
-                      p: 0.5,
-                      bgcolor: isDark ? 'rgba(10, 44, 36, 0.15)' : 'rgba(10, 44, 36, 0.1)',
-                      borderRadius: 1,
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s',
-                      '&:hover': {
-                        bgcolor: isDark ? 'rgba(10, 44, 36, 0.25)' : 'rgba(10, 44, 36, 0.15)'
-                      }
+                      fontSize: '0.65rem',
+                      fontWeight: 600,
+                      color: 'primary.main'
                     }}
                   >
-                    <Typography
-                      variant='caption'
-                      sx={{
-                        fontSize: '0.65rem',
-                        fontWeight: 600,
-                        color: 'primary.main'
-                      }}
-                    >
-                      +{overflowCount} more
-                    </Typography>
-                  </Box>
-                </Tooltip>
+                    +{overflowCount} more
+                  </Typography>
+                </Box>
               )}
 
               {/* Empty state */}
@@ -1206,6 +1199,56 @@ export default function UnifiedMultiResourceWeekView({
           })}
         </Box>
       </Box>
+
+      <Popover
+        open={Boolean(overflowAnchorEl)}
+        anchorEl={overflowAnchorEl}
+        onClose={handleOverflowClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Box sx={{ minWidth: 280, maxWidth: 360, p: 1 }}>
+          <Typography variant='subtitle2' fontWeight={700} sx={{ px: 1, pb: 0.5 }}>
+            {overflowDay ? format(overflowDay, 'EEE, MMM d') : 'More bookings'}
+          </Typography>
+          <List dense disablePadding>
+            {overflowItems.map((item, idx) => {
+              const visibleClients = item.allEvents
+                .filter(e => e.extendedProps?.status !== 'cancelled')
+                .map(e => e.extendedProps?.customerName || 'Client')
+              const firstClient = visibleClients[0] || item.event.extendedProps?.customerName || 'Client'
+              const clientSummary =
+                item.isConsolidated && visibleClients.length > 1
+                  ? `${firstClient} +${visibleClients.length - 1} more`
+                  : firstClient
+
+              return (
+                <ListItemButton
+                  key={`${item.event.id}-${idx}`}
+                  onClick={() => {
+                    onEventClick?.(item.event)
+                    handleOverflowClose()
+                  }}
+                  sx={{ borderRadius: 1, alignItems: 'flex-start', mb: 0.25 }}
+                >
+                  <Box sx={{ width: '100%' }}>
+                    <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+                      {format(item.event.start, 'h:mm a')}
+                    </Typography>
+                    <Typography variant='body2' fontWeight={600} sx={{ lineHeight: 1.3 }}>
+                      {item.event.extendedProps?.serviceName || item.event.title}
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      {clientSummary}
+                      {item.isConsolidated && ` • ${item.bookingCount}/${item.totalCapacity}`}
+                    </Typography>
+                  </Box>
+                </ListItemButton>
+              )
+            })}
+          </List>
+        </Box>
+      </Popover>
     </Box>
   )
 }

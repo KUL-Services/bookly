@@ -124,6 +124,22 @@ export function getRecommendedStatusFromPayment(
 }
 
 /**
+ * Format duration in minutes to a human-friendly string
+ * @example formatDuration(60) => "1h"
+ * @example formatDuration(90) => "1h 30min"
+ * @example formatDuration(120) => "2h"
+ * @example formatDuration(30) => "30min"
+ */
+export function formatDuration(minutes: number): string {
+  if (!minutes || minutes <= 0) return '0min'
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours === 0) return `${mins}min`
+  if (mins === 0) return `${hours}h`
+  return `${hours}h ${mins}min`
+}
+
+/**
  * Check if a booking is in the past (for determining if attended/no-show options should show)
  */
 export function isBookingInPast(endTime: Date): boolean {

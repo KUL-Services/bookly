@@ -476,7 +476,8 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
               </Typography>
               <Box>
                 <Typography variant='body2'>
-                  Scheduled to change to: <strong>{(editingStaff as any).pendingBookingMode}</strong>
+                  Scheduled to change to:{' '}
+                  <strong>{(editingStaff as any).pendingBookingMode === 'STATIC' ? 'Fixed' : 'Flex'}</strong>
                 </Typography>
                 {(editingStaff as any).bookingModeEffectiveDate && (
                   <Typography variant='body2'>
@@ -540,7 +541,7 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
                     className={value === 'STATIC' ? 'ri-calendar-check-line' : 'ri-time-line'}
                     style={{ color: 'var(--mui-palette-primary-main)' }}
                   />
-                  {value === 'STATIC' ? 'Static (Pre-defined Sessions)' : 'Dynamic (Flexible Time Slots)'}
+                  {value === 'STATIC' ? 'Fixed (Pre-defined Sessions)' : 'Flex (Flexible Appointments)'}
                 </Box>
               )}
             >
@@ -549,10 +550,10 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
                   <i className='ri-time-line' style={{ marginTop: 2, color: 'var(--mui-palette-primary-main)' }} />
                   <Box>
                     <Typography variant='body2' fontWeight={500}>
-                      Dynamic (Flexible Time Slots)
+                      Flex (Flexible Appointments)
                     </Typography>
                     <Typography variant='caption' color='text.secondary'>
-                      Clients can book any available time slot within working hours
+                      Staff takes individual appointments throughout their working hours (e.g., haircuts, consultations)
                     </Typography>
                   </Box>
                 </Box>
@@ -565,10 +566,10 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
                   />
                   <Box>
                     <Typography variant='body2' fontWeight={500}>
-                      Static (Pre-defined Sessions)
+                      Fixed (Pre-defined Sessions)
                     </Typography>
                     <Typography variant='caption' color='text.secondary'>
-                      Clients join pre-defined sessions with fixed times and capacity
+                      Staff works in scheduled sessions with set times and capacity (e.g., yoga classes, group workshops)
                     </Typography>
                   </Box>
                 </Box>

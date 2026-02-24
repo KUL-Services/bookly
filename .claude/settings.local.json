@@ -14,7 +14,8 @@
       "Bash(cat:*)",
       "Bash(npm install:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

@@ -78,7 +78,7 @@ export function StaffTypeChangeDialog({
                   style={{ fontSize: '1rem', color: 'var(--mui-palette-text-secondary)' }}
                 />
                 <Typography variant='body2' fontWeight={500} color='text.secondary'>
-                  {currentType === 'static' || currentType === 'STATIC' ? 'Fixed (Static)' : 'Flex (Dynamic)'}
+                  {currentType === 'static' || currentType === 'STATIC' ? 'Fixed' : 'Flex'}
                 </Typography>
               </Box>
 
@@ -97,7 +97,7 @@ export function StaffTypeChangeDialog({
                   style={{ fontSize: '1rem', color: 'var(--mui-palette-primary-main)' }}
                 />
                 <Typography variant='body2' fontWeight={600} color='primary'>
-                  {targetType === 'static' || targetType === 'STATIC' ? 'Fixed (Static)' : 'Flex (Dynamic)'}
+                  {targetType === 'static' || targetType === 'STATIC' ? 'Fixed' : 'Flex'}
                 </Typography>
               </Box>
             </Box>

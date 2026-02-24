@@ -95,7 +95,6 @@ const BusinessAdminVerify = ({ mode }: { mode: Mode }) => {
       setTimeout(() => {
         router.push(getLocalizedUrl('/login?verified=1', locale as Locale))
       }, 2000)
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed')
     } finally {
@@ -134,7 +133,8 @@ const BusinessAdminVerify = ({ mode }: { mode: Mode }) => {
           <div>
             <Typography variant='h4'>Verify Your Business Email 📧</Typography>
             <Typography className='mbs-1'>
-              We sent a verification code to your email address. Please enter it below to activate your business account.
+              We sent a verification code to your email address. Please enter it below to activate your business
+              account.
             </Typography>
           </div>
 
@@ -143,9 +143,7 @@ const BusinessAdminVerify = ({ mode }: { mode: Mode }) => {
               <Typography variant='h6' color='success.main' className='mb-2'>
                 Email Verified Successfully! ✅
               </Typography>
-              <Typography>
-                Your business account has been verified. You'll be redirected to login...
-              </Typography>
+              <Typography>Your business account has been verified. You'll be redirected to login...</Typography>
             </div>
           ) : (
             <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>
@@ -168,11 +166,7 @@ const BusinessAdminVerify = ({ mode }: { mode: Mode }) => {
                 placeholder='Enter the 6-digit code'
               />
 
-              {error && (
-                <Alert severity='error'>
-                  {error}
-                </Alert>
-              )}
+              {error && <Alert severity='error'>{error}</Alert>}
 
               <Button fullWidth variant='contained' type='submit' disabled={loading}>
                 {loading ? 'Verifying...' : 'Verify Email'}
@@ -180,10 +174,14 @@ const BusinessAdminVerify = ({ mode }: { mode: Mode }) => {
 
               <div className='flex justify-center items-center flex-wrap gap-2'>
                 <Typography>Didn't receive the code?</Typography>
-                <Typography component='button' color='primary' onClick={() => {
-                  // Resend verification code logic would go here
-                  console.log('Resend verification code')
-                }}>
+                <Typography
+                  component='button'
+                  color='primary'
+                  onClick={() => {
+                    // Resend verification code logic would go here
+                    console.log('Resend verification code')
+                  }}
+                >
                   Resend Code
                 </Typography>
               </div>

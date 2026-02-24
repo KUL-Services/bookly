@@ -64,6 +64,7 @@ export function RoomScheduleEditor({
   >([])
   const isFlexibleCapacity = roomType === 'dynamic'
   const isStaticCapacity = roomType === 'static'
+  const slotLabel = isStaticCapacity ? 'Session' : 'Shift'
 
   useEffect(() => {
     if (open && roomId && dayOfWeek) {
@@ -77,7 +78,7 @@ export function RoomScheduleEditor({
             start: s.start,
             end: s.end,
             serviceIds: s.serviceIds || [],
-            capacity: s.capacity
+            capacity: isStaticCapacity ? (s.capacity ?? defaultCapacity) : s.capacity
           }))
         )
       } else if (initialShift) {
@@ -88,7 +89,7 @@ export function RoomScheduleEditor({
             start: initialShift.start || '09:00',
             end: initialShift.end || '17:00',
             serviceIds: initialShift.serviceIds || [],
-            capacity: undefined
+            capacity: isStaticCapacity ? defaultCapacity : undefined
           }
         ])
         setIsAvailable(true)
@@ -96,7 +97,7 @@ export function RoomScheduleEditor({
         setShifts([])
       }
     }
-  }, [open, roomId, dayOfWeek, getRoomSchedule, initialShift])
+  }, [open, roomId, dayOfWeek, getRoomSchedule, initialShift, isStaticCapacity, defaultCapacity])
 
   const handleAddShift = () => {
     setShifts([
@@ -106,7 +107,7 @@ export function RoomScheduleEditor({
         start: '09:00',
         end: '17:00',
         serviceIds: [],
-        capacity: undefined,
+        capacity: isStaticCapacity ? defaultCapacity : undefined,
         staffIds: []
       }
     ])
@@ -165,7 +166,7 @@ export function RoomScheduleEditor({
     if (!roomId || !dayOfWeek) return
 
     if (isAvailable && shifts.length === 0) {
-      alert('Please add at least one shift or mark the day as unavailable')
+      alert(`Please add at least one ${slotLabel.toLowerCase()} or mark the day as unavailable`)
       return
     }
 
@@ -181,7 +182,7 @@ export function RoomScheduleEditor({
 
         // Validate end time is after start time
         if (end1 <= start1) {
-          alert(`Shift ${i + 1}: End time must be after start time`)
+          alert(`${slotLabel} ${i + 1}: End time must be after start time`)
           return
         }
 
@@ -195,7 +196,7 @@ export function RoomScheduleEditor({
           // Check for overlap
           if (start1 < end2 && end1 > start2) {
             alert(
-              `Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`
+              `${slotLabel} ${i + 1} and ${slotLabel} ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`
             )
             return
           }
@@ -210,9 +211,24 @@ export function RoomScheduleEditor({
       }
     }
 
+    if (isStaticCapacity) {
+      for (let i = 0; i < shifts.length; i++) {
+        const sessionCapacity = shifts[i].capacity
+        if (!sessionCapacity || sessionCapacity < 1) {
+          alert(`Session ${i + 1}: Capacity is required`)
+          return
+        }
+      }
+    }
+
     updateRoomSchedule(roomId, dayOfWeek, {
       isAvailable,
-      shifts: isAvailable ? shifts : []
+      shifts: isAvailable
+        ? shifts.map(shift => ({
+            ...shift,
+            capacity: isStaticCapacity ? (shift.capacity ?? defaultCapacity) : shift.capacity
+          }))
+        : []
     })
 
     onClose()
@@ -224,10 +240,10 @@ export function RoomScheduleEditor({
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box>
             <Typography variant='h6' fontWeight={600}>
-              Edit Room Schedule
+              Edit Room Availability
             </Typography>
             <Typography variant='caption' color='text.secondary'>
-              {roomName} - {dayOfWeek}
+              {roomName} - <strong>{dayOfWeek}</strong>
             </Typography>
           </Box>
           <IconButton onClick={onClose} size='small'>
@@ -241,10 +257,10 @@ export function RoomScheduleEditor({
           {/* Capacity Mode Info */}
           <Alert severity='info' sx={{ py: 0.5 }}>
             <Typography variant='caption'>
-              <strong>{isFlexibleCapacity ? 'Flexible Capacity' : 'Fixed Capacity'}</strong>
+              <strong>{isFlexibleCapacity ? 'Flex Mode' : 'Fixed Mode'}</strong>
               {isFlexibleCapacity
-                ? ` — Each time slot can have a different capacity. Default: ${defaultCapacity} people.`
-                : ` — All slots use the room's fixed capacity of ${defaultCapacity} people.`}
+                ? ' — Capacity is managed at room level; this schedule controls availability and services.'
+                : ` — Sessions default to ${defaultCapacity} people and can be overridden per session.`}
             </Typography>
           </Alert>
 
@@ -282,10 +298,10 @@ export function RoomScheduleEditor({
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                   <Typography variant='subtitle1' fontWeight={600}>
-                    Shifts ({shifts.length})
+                    {isStaticCapacity ? 'Sessions' : 'Shifts'} ({shifts.length})
                   </Typography>
                   <Button size='small' startIcon={<i className='ri-add-line' />} onClick={handleAddShift}>
-                    Add Shift
+                    Add {isStaticCapacity ? 'Session' : 'Shift'}
                   </Button>
                 </Box>
 
@@ -301,10 +317,10 @@ export function RoomScheduleEditor({
                   >
                     <i className='ri-time-line' style={{ fontSize: 48, opacity: 0.3 }} />
                     <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
-                      No shifts added yet
+                      No {isStaticCapacity ? 'sessions' : 'shifts'} added yet
                     </Typography>
                     <Typography variant='caption' color='text.secondary'>
-                      Click "Add Shift" to create a time slot
+                      Click &quot;Add {isStaticCapacity ? 'Session' : 'Shift'}&quot; to create a time slot
                     </Typography>
                   </Box>
                 ) : (
@@ -322,7 +338,7 @@ export function RoomScheduleEditor({
                       >
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                           <Typography variant='subtitle2' fontWeight={600}>
-                            Shift {idx + 1}
+                            {slotLabel} {idx + 1}
                           </Typography>
                           <IconButton size='small' color='error' onClick={() => handleRemoveShift(shift.id)}>
                             <i className='ri-delete-bin-line' />
@@ -363,7 +379,7 @@ export function RoomScheduleEditor({
                               </MenuItem>
                               {availableServices.map(service => (
                                 <MenuItem key={service.id} value={service.id}>
-                                  {service.name} ({service.duration} min)
+                                  {service.name}
                                 </MenuItem>
                               ))}
                             </Select>
@@ -406,32 +422,6 @@ export function RoomScheduleEditor({
                             </Typography>
                           ) : null}
                         </FormControl>
-
-                        {/* Per-slot capacity for flexible rooms */}
-                        {isFlexibleCapacity && (
-                          <Box sx={{ mt: 2 }}>
-                            <TextField
-                              type='number'
-                              label='Capacity for this slot'
-                              value={shift.capacity ?? ''}
-                              onChange={e => {
-                                const val = e.target.value ? Number(e.target.value) : undefined
-                                handleUpdateShift(shift.id, 'capacity', val)
-                              }}
-                              placeholder={`Default: ${defaultCapacity}`}
-                              size='small'
-                              fullWidth
-                              helperText={
-                                shift.capacity
-                                  ? `Override: ${shift.capacity} people`
-                                  : `Uses room default: ${defaultCapacity} people`
-                              }
-                              InputProps={{
-                                startAdornment: <i className='ri-group-line' style={{ marginRight: 8, opacity: 0.5 }} />
-                              }}
-                            />
-                          </Box>
-                        )}
 
                         {/* Capacity and Staff Assignment for static rooms */}
                         {isStaticCapacity && (
@@ -484,7 +474,7 @@ export function RoomScheduleEditor({
                                 ))}
                               </Select>
                               <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
-                                Assign staff members to this shift
+                                Assign staff members to this session
                               </Typography>
                             </FormControl>
                           </>
@@ -515,13 +505,13 @@ export function RoomScheduleEditor({
                   />
                   <Box sx={{ flex: 1 }}>
                     <Typography variant='body2' fontWeight={600} color='error.main'>
-                      Overlapping Shifts Detected
+                      Overlapping {slotLabel}s Detected
                     </Typography>
                     {shiftOverlaps.map((overlap, idx) => (
                       <Typography key={idx} variant='caption' color='error.dark' display='block'>
                         {overlap.shift1 === overlap.shift2
-                          ? `Shift ${overlap.shift1 + 1}: End time must be after start time`
-                          : `Shift ${overlap.shift1 + 1} and Shift ${overlap.shift2 + 1} have overlapping times`}
+                          ? `${slotLabel} ${overlap.shift1 + 1}: End time must be after start time`
+                          : `${slotLabel} ${overlap.shift1 + 1} and ${slotLabel} ${overlap.shift2 + 1} have overlapping times`}
                       </Typography>
                     ))}
                   </Box>
@@ -538,8 +528,8 @@ export function RoomScheduleEditor({
                 }}
               >
                 <Typography variant='caption' color='info.dark'>
-                  <strong>Tip:</strong> You can add multiple shifts per day. Assign specific services to each shift to
-                  control which services are available during different time periods.
+                  <strong>Tip:</strong> You can add multiple {slotLabel.toLowerCase()}s per day and assign services
+                  per {slotLabel.toLowerCase()}.
                 </Typography>
               </Box>
             </>

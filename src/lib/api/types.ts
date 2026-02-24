@@ -673,18 +673,18 @@ export interface AdminBookingsParams {
 
 // Business Settings — matches PATCH/GET /admin/settings backend shape exactly
 export interface ApiBookingPolicies {
-  bookingLeadTime?: number             // min hours before booking can be made
-  maxAdvanceBooking?: number           // max days in advance
+  bookingLeadTime?: number // min hours before booking can be made
+  maxAdvanceBooking?: number // max days in advance
   autoConfirmation?: boolean
   allowCancellation?: boolean
-  cancellationDeadlineHours?: number   // hours before appointment cancellation is allowed
+  cancellationDeadlineHours?: number // hours before appointment cancellation is allowed
   allowReschedule?: boolean
-  rescheduleDeadlineHours?: number     // hours before appointment reschedule is allowed
+  rescheduleDeadlineHours?: number // hours before appointment reschedule is allowed
   noShowPolicy?: 'NONE' | 'CHARGE_FEE' | 'RESTRICT'
 }
 
 export interface ApiSchedulingSettings {
-  defaultSlotDuration?: number          // minutes
+  defaultSlotDuration?: number // minutes
   bufferTimeBetweenAppointments?: number // minutes between appointments
   allowWalkIns?: boolean
   allowOverbooking?: boolean
@@ -700,13 +700,13 @@ export interface ApiCustomerSettings {
 
 export interface ApiCalendarSettings {
   defaultView?: 'week' | 'day' | 'month'
-  timeSlotDuration?: number            // 15 | 30 | 60
+  timeSlotDuration?: number // 15 | 30 | 60
   startOfWeek?: 'monday' | 'sunday'
   timeFormat?: '12h' | '24h'
   colorScheme?: 'vivid' | 'pastel'
   showWeekends?: boolean
-  workingHoursStart?: string           // "HH:MM"
-  workingHoursEnd?: string             // "HH:MM"
+  workingHoursStart?: string // "HH:MM"
+  workingHoursEnd?: string // "HH:MM"
 }
 
 export interface ApiBrandingSettings {

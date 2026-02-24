@@ -57,7 +57,8 @@ const AMENITIES_OPTIONS = [
   'Privacy Curtains',
   'Massage Tables',
   'Salon Chairs',
-  'Styling Stations'
+  'Styling Stations',
+  'Others'
 ]
 
 const COLOR_OPTIONS = [
@@ -121,6 +122,11 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
   const handleSave = () => {
     if (!name || !branchId) {
       alert('Please fill in all required fields (Name and Branch)')
+      return
+    }
+
+    if (bookingMode === 'STATIC' && (!capacity || capacity < 1)) {
+      alert('Default Capacity is required for Fixed rooms')
       return
     }
 
@@ -278,7 +284,8 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
               </Typography>
               <Box>
                 <Typography variant='body2'>
-                  Scheduled to change to: <strong>{(room as any).pendingBookingMode}</strong>
+                  Scheduled to change to:{' '}
+                  <strong>{(room as any).pendingBookingMode === 'STATIC' ? 'Fixed' : 'Flex'}</strong>
                 </Typography>
                 {(room as any).bookingModeEffectiveDate && (
                   <Typography variant='body2'>
@@ -344,7 +351,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                   <i className='ri-time-line' style={{ fontSize: 20 }} />
                   <Typography variant='body2' fontWeight={600}>
-                    Dynamic
+                    Flex
                   </Typography>
                 </Box>
               </ToggleButton>
@@ -352,7 +359,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                   <i className='ri-calendar-check-line' style={{ fontSize: 20 }} />
                   <Typography variant='body2' fontWeight={600}>
-                    Static
+                    Fixed
                   </Typography>
                 </Box>
               </ToggleButton>
@@ -360,8 +367,8 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
             <Alert severity='info' sx={{ py: 0.5 }}>
               <Typography variant='caption'>
                 {bookingMode === 'DYNAMIC'
-                  ? 'Clients can book any available time slot within room availability. Ideal for flexible scheduling.'
-                  : 'Clients join pre-defined sessions with fixed times and capacity. Ideal for classes, workshops, and group activities.'}
+                  ? 'Flex rooms accept individual appointments during available hours.'
+                  : 'Fixed rooms run scheduled sessions with default capacity.'}
               </Typography>
             </Alert>
           </Box>
@@ -371,7 +378,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
             {bookingMode === 'STATIC' && (
               <TextField
                 type='number'
-                label='Fixed Capacity'
+                label='Default Capacity'
                 value={capacity}
                 onChange={e => setCapacity(Number(e.target.value))}
                 InputProps={{
@@ -381,7 +388,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
                     </InputAdornment>
                   )
                 }}
-                helperText='This capacity applies to all bookings'
+                helperText='Default capacity for all sessions. Can be overridden per-session.'
                 required
                 fullWidth
               />
@@ -538,36 +545,38 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
           </FormControl>
 
           {/* Add Custom Amenity */}
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-            <TextField
-              label='Add Other Amenity'
-              value={customAmenity}
-              onChange={e => setCustomAmenity(e.target.value)}
-              placeholder='e.g., Coffee Machine'
-              size='small'
-              fullWidth
-              onKeyPress={e => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  handleAddCustomAmenity()
-                }
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <IconButton
-                      onClick={handleAddCustomAmenity}
-                      edge='end'
-                      size='small'
-                      disabled={!customAmenity.trim()}
-                    >
-                      <i className='ri-add-line' />
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
-            />
-          </Box>
+          {amenities.includes('Others') && (
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+              <TextField
+                label='Add Other Amenity'
+                value={customAmenity}
+                onChange={e => setCustomAmenity(e.target.value)}
+                placeholder='e.g., Coffee Machine'
+                size='small'
+                fullWidth
+                onKeyPress={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleAddCustomAmenity()
+                  }
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton
+                        onClick={handleAddCustomAmenity}
+                        edge='end'
+                        size='small'
+                        disabled={!customAmenity.trim()}
+                      >
+                        <i className='ri-add-line' />
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+              />
+            </Box>
+          )}
 
           {/* Info Box */}
           <Box

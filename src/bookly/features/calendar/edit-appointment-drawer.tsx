@@ -21,6 +21,7 @@ import {
 import { useCalendarStore } from './state'
 import type { CalendarEvent, AppointmentStatus } from './types'
 import { mockStaff } from '@/bookly/data/mock-data'
+import { formatDuration } from './utils'
 import { useMediaQuery, useTheme } from '@mui/material'
 
 interface EditAppointmentDrawerProps {
@@ -327,7 +328,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                   {extendedProps.serviceName}
                 </Typography>
                 <Typography variant='body2' color='text.secondary'>
-                  {duration} min
+                  {formatDuration(duration)}
                 </Typography>
                 <Typography variant='h6' className='font-semibold' sx={{ mt: 1 }}>
                   EGP {extendedProps.price}
@@ -558,7 +559,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 Duration
               </Typography>
               <Typography variant='h6' className='font-bold' sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-                {duration} min
+                {formatDuration(duration)}
               </Typography>
             </Box>
           </Box>

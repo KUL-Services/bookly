@@ -144,9 +144,7 @@ export default function ProfileReviewsPage() {
         {filteredReviews.length > 0 ? (
           <div className='space-y-3'>
             {filteredReviews.map(review => {
-              const authorName = review.user
-                ? `${review.user.firstName} ${review.user.lastName}`.trim()
-                : 'You'
+              const authorName = review.user ? `${review.user.firstName} ${review.user.lastName}`.trim() : 'You'
               const authorInitial = authorName.charAt(0).toUpperCase()
               const reviewDate = new Date(review.createdAt)
 

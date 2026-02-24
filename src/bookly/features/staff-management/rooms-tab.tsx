@@ -640,14 +640,14 @@ export function RoomsTab() {
                               gutterBottom
                               sx={{ fontSize: '0.75rem', color: 'common.white' }}
                             >
-                              Fixed Capacity
+                              Default Capacity
                             </Typography>
                             <Typography
                               variant='caption'
                               display='block'
                               sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
                             >
-                              Room uses pre-defined sessions with set capacity.
+                              Fixed rooms run scheduled sessions with default capacity.
                             </Typography>
                           </Box>
                         ) : (
@@ -659,14 +659,14 @@ export function RoomsTab() {
                               gutterBottom
                               sx={{ fontSize: '0.75rem', color: 'common.white' }}
                             >
-                              Flexible Capacity
+                              Flex Availability
                             </Typography>
                             <Typography
                               variant='caption'
                               display='block'
                               sx={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.9)' }}
                             >
-                              Room available during business hours via individual appointments.
+                              Room accepts individual appointments during business hours.
                             </Typography>
                           </Box>
                         )
@@ -690,7 +690,7 @@ export function RoomsTab() {
                   ml: 'auto'
                 }}
               >
-                <Typography variant='caption'>Cap: {room.capacity}</Typography>
+                {effectiveRoomType === 'static' && <Typography variant='caption'>Cap: {room.capacity}</Typography>}
               </Box>
             </Box>
 
@@ -827,6 +827,13 @@ export function RoomsTab() {
                     sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
                   >
                     {shiftStart.toLowerCase()} - {shiftEnd.toLowerCase()}
+                  </Typography>
+                  <Typography
+                    variant='caption'
+                    color='text.secondary'
+                    sx={{ fontSize: '0.6rem', lineHeight: 1.1, display: 'block' }}
+                  >
+                    Cap: {shift.capacity ?? room.capacity}
                   </Typography>
                   {shiftServices.length > 0 && (
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>

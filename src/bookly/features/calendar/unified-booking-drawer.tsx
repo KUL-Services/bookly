@@ -37,7 +37,7 @@ import type {
 } from './types'
 import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
-import { isStaffAvailable, hasConflict, getStaffAvailableCapacity, getStaffRoomAssignment } from './utils'
+import { isStaffAvailable, hasConflict, getStaffAvailableCapacity, getStaffRoomAssignment, formatDuration } from './utils'
 import { hasTimeOffConflict } from './staff-management-integration'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import ClientPickerDialog from './client-picker-dialog'
@@ -299,6 +299,7 @@ export default function UnifiedBookingDrawer({
   ) as any[]
   const allServices: any[] = (storeServices?.length ? storeServices : fallbackMockServices) as any[]
   const allRooms: any[] = (calendarRooms?.length ? calendarRooms : fallbackMockRooms) as any[]
+  const AUTO_STAFF_ID = 'no-preference'
 
   // Dynamic mode form state
   const [bookingReference, setBookingReference] = useState('')
@@ -354,10 +355,11 @@ export default function UnifiedBookingDrawer({
 
   // Get only dynamic staff for selection, filtered by branch
   const dynamicStaff = allStaff.filter((s: any) => s.staffType === 'dynamic' && (!branchId || s.branchId === branchId))
+  const isAutoStaffSelection = staffId === AUTO_STAFF_ID
 
   // Check if selected staff has STATIC booking mode (for session-based booking)
-  const selectedStaffData = allStaff.find((s: any) => s.id === staffId)
-  const isStaffStaticBookingMode = selectedStaffData?.bookingMode === 'STATIC'
+  const selectedStaffData = isAutoStaffSelection ? null : allStaff.find((s: any) => s.id === staffId)
+  const isStaffStaticBookingMode = !isAutoStaffSelection && selectedStaffData?.bookingMode === 'STATIC'
 
   // Get branches for dropdown
   const { apiBranches } = useStaffManagementStore()
@@ -617,6 +619,10 @@ export default function UnifiedBookingDrawer({
   // Check availability for dynamic mode
   useEffect(() => {
     if (effectiveSchedulingMode !== 'dynamic' || mode === 'edit') return
+    if (staffId === AUTO_STAFF_ID) {
+      setAvailabilityWarning(null)
+      return
+    }
     if (!staffId || !startTime || !endTime) {
       setAvailabilityWarning(null)
       return
@@ -642,7 +648,7 @@ export default function UnifiedBookingDrawer({
 
   const getSlotCapacity = () => {
     const fallbackSlot = selectedSlotId ? staticSlots.find(s => s.id === selectedSlotId) : null
-    const staffCapacity = staffId ? allStaff.find((s: any) => s.id === staffId)?.maxConcurrentBookings : null
+    const staffCapacity = staffId && staffId !== AUTO_STAFF_ID ? allStaff.find((s: any) => s.id === staffId)?.maxConcurrentBookings : null
     const roomId = existingEvent?.extendedProps?.roomId
     const roomCapacity = roomId ? allRooms.find((r: any) => r.id === roomId)?.capacity : null
     return realSlotData?.capacity ?? fallbackSlot?.capacity ?? roomCapacity ?? staffCapacity ?? 10
@@ -933,6 +939,7 @@ export default function UnifiedBookingDrawer({
         const [endHours, endMinutes] = endTime.split(':').map(Number)
         const endDate = new Date(date)
         endDate.setHours(endHours, endMinutes, 0, 0)
+        const selectedStaff = allStaff.find((s: any) => s.id === staffId)
 
         const newEvent: CalendarEvent = {
           id: bookingReference,
@@ -943,8 +950,8 @@ export default function UnifiedBookingDrawer({
             status,
             paymentStatus,
             staffId,
-            staffName: allStaff.find((s: any) => s.id === staffId)?.name || '',
-            branchId: branchId || allStaff.find((s: any) => s.id === staffId)?.branchId || '',
+            staffName: isAutoStaffSelection ? 'Automatic Assignment' : selectedStaff?.name || '',
+            branchId: branchId || selectedStaff?.branchId || '',
             selectionMethod: requestedByClient ? 'by_client' : 'automatically',
             bookedBy: 'business', // Created by business admin
             starred,
@@ -996,6 +1003,7 @@ export default function UnifiedBookingDrawer({
         console.error('Session ID not found')
         return
       }
+      const resolvedSlotId = slotIdForSave
 
       // If no slot data, try to get it from the calendar state
       let slotDataForSave = realSlotData
@@ -1090,7 +1098,7 @@ export default function UnifiedBookingDrawer({
               ...existingBooking,
               extendedProps: {
                 ...existingBooking.extendedProps,
-                slotId: slotIdForSave, // Ensure slotId is consistent
+                slotId: resolvedSlotId, // Ensure slotId is consistent
                 status: client.status,
                 customerName: client.name,
                 arrivalTime: client.arrivalTime,
@@ -1119,13 +1127,14 @@ export default function UnifiedBookingDrawer({
               staffId: slotDataForSave.instructorStaffId || '',
               staffName: allStaff.find((s: any) => s.id === slotDataForSave.instructorStaffId)?.name || '',
               selectionMethod: 'automatically',
+              bookedBy: 'business',
               starred: false,
               serviceName: slotDataForSave.serviceName,
               customerName: client.name,
               price: slotDataForSave.price,
               bookingId: client.bookingRef,
               serviceId: slotDataForSave.serviceId,
-              slotId: slotIdForSave,
+              slotId: resolvedSlotId,
               isStaticSlot: true, // Mark as static slot for future detection
               roomId: slotDataForSave.roomId,
               partySize: 1,
@@ -1422,6 +1431,14 @@ export default function UnifiedBookingDrawer({
                         }}
                       >
                         <MenuItem value=''>Select staff</MenuItem>
+                        <MenuItem value={AUTO_STAFF_ID}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: 'primary.light' }}>
+                              <i className='ri-magic-line' style={{ fontSize: '0.8rem' }} />
+                            </Avatar>
+                            Automatic (No Preference)
+                          </Box>
+                        </MenuItem>
                         {dynamicStaff.map(staff => (
                           <MenuItem key={staff.id} value={staff.id}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -1469,7 +1486,7 @@ export default function UnifiedBookingDrawer({
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                               <span>{svc.name}</span>
                               <Typography variant='caption' color='text.secondary'>
-                                {svc.duration}min • EGP {svc.price}
+                                {formatDuration(svc.duration)} • EGP {svc.price}
                               </Typography>
                             </Box>
                           </MenuItem>
@@ -1529,14 +1546,36 @@ export default function UnifiedBookingDrawer({
                         ) : (
                           // DYNAMIC BOOKING MODE - Show time slots
                           (() => {
-                            const availableSlots = generateAvailableSlots(
-                              staffId,
-                              date,
-                              serviceDuration,
-                              events,
-                              staffWorkingHours,
-                              timeOffRequests
-                            )
+                            const availableSlots =
+                              staffId === AUTO_STAFF_ID
+                                ? (() => {
+                                    const slotsByTime = new Map<string, { time: string; available: boolean }>()
+                                    dynamicStaff.forEach(staff => {
+                                      const staffSlots = generateAvailableSlots(
+                                        staff.id,
+                                        date,
+                                        serviceDuration,
+                                        events,
+                                        staffWorkingHours,
+                                        timeOffRequests
+                                      )
+                                      staffSlots.forEach(slot => {
+                                        const existing = slotsByTime.get(slot.time)
+                                        if (!existing || (!existing.available && slot.available)) {
+                                          slotsByTime.set(slot.time, { time: slot.time, available: slot.available })
+                                        }
+                                      })
+                                    })
+                                    return Array.from(slotsByTime.values()).sort((a, b) => a.time.localeCompare(b.time))
+                                  })()
+                                : generateAvailableSlots(
+                                    staffId,
+                                    date,
+                                    serviceDuration,
+                                    events,
+                                    staffWorkingHours,
+                                    timeOffRequests
+                                  )
                             const freeSlots = availableSlots.filter(s => s.available)
 
                             if (availableSlots.length === 0) {
@@ -1546,7 +1585,9 @@ export default function UnifiedBookingDrawer({
                                 >
                                   <Typography variant='body2' color='warning.dark'>
                                     <i className='ri-calendar-close-line' style={{ marginRight: 8 }} />
-                                    Staff member is not working on this date
+                                    {staffId === AUTO_STAFF_ID
+                                      ? 'No available staff on this date'
+                                      : 'Staff member is not working on this date'}
                                   </Typography>
                                 </Paper>
                               )
@@ -1557,6 +1598,11 @@ export default function UnifiedBookingDrawer({
                                 <Typography variant='caption' color='text.secondary' sx={{ mb: 1, display: 'block' }}>
                                   {freeSlots.length} available slots
                                 </Typography>
+                                {staffId === AUTO_STAFF_ID && (
+                                  <Typography variant='caption' color='text.secondary' sx={{ mb: 1, display: 'block' }}>
+                                    Staff will be assigned automatically based on availability.
+                                  </Typography>
+                                )}
                                 <Box
                                   sx={{
                                     display: 'grid',
@@ -1634,7 +1680,7 @@ export default function UnifiedBookingDrawer({
                                       {formatTime12h(startTime)} - {formatTime12h(endTime)}
                                     </Typography>
                                     <Typography variant='caption' color='success.dark'>
-                                      {serviceDuration} minute {serviceName || 'service'}
+                                      {formatDuration(serviceDuration)} {serviceName || 'service'}
                                     </Typography>
                                   </Paper>
                                 )}
@@ -1766,7 +1812,11 @@ export default function UnifiedBookingDrawer({
                       {formatShortDate(date)} • {formatTime12h(startTime)} - {formatTime12h(endTime)}
                     </Typography>
                     <Typography variant='body2' color='text.secondary'>
-                      with {allStaff.find((s: any) => s.id === staffId)?.name || 'Staff'} • {serviceDuration} min
+                      with{' '}
+                      {staffId === AUTO_STAFF_ID
+                        ? 'Automatic Assignment'
+                        : allStaff.find((s: any) => s.id === staffId)?.name || 'Staff'}{' '}
+                      • {formatDuration(serviceDuration)}
                     </Typography>
                   </Box>
 
