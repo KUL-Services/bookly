@@ -26,7 +26,7 @@ import {
 } from '@mui/material'
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns'
 import { useStaffManagementStore } from './staff-store'
-import { mockServices, mockStaff } from '@/bookly/data/mock-data'
+
 import type { DayOfWeek } from '../calendar/types'
 import { TimeSelectField } from './time-select-field'
 
@@ -75,17 +75,26 @@ export function StaffEditWorkingHoursModal({
   referenceDate,
   bulkStaffIds
 }: StaffEditWorkingHoursModalProps) {
-  const { getStaffWorkingHours, updateStaffWorkingHours, updateShiftsForDate } = useStaffManagementStore()
+  const {
+    getStaffWorkingHours,
+    updateStaffWorkingHours,
+    updateShiftsForDate,
+    staffMembers,
+    apiServices,
+    saveStaffWorkingHours,
+    saveShiftsExceptions
+  } = useStaffManagementStore()
   const [effectiveDate, setEffectiveDate] = useState('immediately')
   // Dynamic staff: Default ON (apply to all future weeks)
   // Static staff: Default OFF (this week only)
   const [applyToAllWeeks, setApplyToAllWeeks] = useState(staffType === 'dynamic')
+  const [isSaving, setIsSaving] = useState(false)
 
   // Determine if this is bulk mode
   const isBulkMode = bulkStaffIds && bulkStaffIds.length > 0
 
   // Get all staff details for bulk mode
-  const bulkStaffDetails = isBulkMode ? bulkStaffIds.map(id => mockStaff.find(s => s.id === id)).filter(Boolean) : []
+  const bulkStaffDetails = isBulkMode ? bulkStaffIds.map(id => staffMembers.find(s => s.id === id)).filter(Boolean) : []
 
   // Helper function to get initials
   const getInitials = (name: string): string => {
@@ -104,7 +113,7 @@ export function StaffEditWorkingHoursModal({
       })
     : []
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Determine which staff to update
     const staffIdsToUpdate = isBulkMode ? bulkStaffIds : [staffId]
 
@@ -148,54 +157,68 @@ export function StaffEditWorkingHoursModal({
       }
     }
 
-    if (applyToAllWeeks) {
-      // Save to recurring weekly template - no additional action needed
-      // Changes are already applied via updateStaffWorkingHours in the day handlers
-      onClose()
-    } else {
-      // Create shift instances for this week only
-      if (!referenceDate) {
-        console.warn('Cannot save for this week only without a reference date')
+    setIsSaving(true)
+    try {
+      if (applyToAllWeeks) {
+        // Save recurring templates to backend for all staff
+        for (const currentStaffId of staffIdsToUpdate) {
+          await saveStaffWorkingHours(currentStaffId)
+        }
         onClose()
-        return
-      }
+      } else {
+        // Create shift instances for this week only
+        if (!referenceDate) {
+          console.warn('Cannot save for this week only without a reference date')
+          onClose()
+          return
+        }
 
-      // Apply to all staff (bulk mode) or just the single staff
-      staffIdsToUpdate.forEach(currentStaffId => {
-        // Create shift instances for each day of the week
-        weekDates.forEach((date, index) => {
-          const dayOfWeek = DAYS_OF_WEEK[index]
-          const dayHours = getStaffWorkingHours(currentStaffId, dayOfWeek)
-          const dateStr = date.toISOString().split('T')[0]
+        // Apply to all staff (bulk mode) or just the single staff
+        for (const currentStaffId of staffIdsToUpdate) {
+          // Create shift instances for each day of the week
+          for (let index = 0; index < weekDates.length; index++) {
+            const date = weekDates[index]
+            const dayOfWeek = DAYS_OF_WEEK[index]
+            const dayHours = getStaffWorkingHours(currentStaffId, dayOfWeek)
+            const dateStr = date.toISOString().split('T')[0]
 
-          if (dayHours.isWorking && dayHours.shifts.length > 0) {
-            // Create shift instances for all shifts on this day
-            const shiftInstances = dayHours.shifts.map(shift => ({
-              id: shift.id,
-              date: dateStr,
-              start: shift.start,
-              end: shift.end,
-              breaks: shift.breaks && shift.breaks.length > 0 ? shift.breaks : undefined,
-              reason: 'manual' as const
-            }))
-            updateShiftsForDate(currentStaffId, dateStr, shiftInstances)
-          } else {
-            // Create no-shift instance for this specific date
-            updateShiftsForDate(currentStaffId, dateStr, [
-              {
-                id: crypto.randomUUID(),
+            if (dayHours.isWorking && dayHours.shifts.length > 0) {
+              // Create shift instances for all shifts on this day
+              const shiftInstances = dayHours.shifts.map(shift => ({
+                id: shift.id,
                 date: dateStr,
-                start: '00:00',
-                end: '00:00',
-                breaks: undefined,
-                reason: 'manual'
-              }
-            ])
+                start: shift.start,
+                end: shift.end,
+                breaks: shift.breaks && shift.breaks.length > 0 ? shift.breaks : undefined,
+                reason: 'manual' as const
+              }))
+              updateShiftsForDate(currentStaffId, dateStr, shiftInstances)
+              await saveShiftsExceptions(currentStaffId, dateStr, shiftInstances)
+            } else {
+              // Create no-shift instance for this specific date
+              const shiftInstances = [
+                {
+                  id: crypto.randomUUID(),
+                  date: dateStr,
+                  start: '00:00',
+                  end: '00:00',
+                  breaks: undefined,
+                  reason: 'manual' as const
+                }
+              ]
+              updateShiftsForDate(currentStaffId, dateStr, shiftInstances)
+              await saveShiftsExceptions(currentStaffId, dateStr, shiftInstances)
+            }
           }
-        })
-      })
+        }
 
-      onClose()
+        onClose()
+      }
+    } catch (err) {
+      console.error('Failed to save staff hours:', err)
+      alert('Failed to save working hours. Please try again.')
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -561,11 +584,11 @@ export function StaffEditWorkingHoursModal({
                                   input={<OutlinedInput label='Services' />}
                                   renderValue={selected => {
                                     if (selected.length === 0) return 'All Services'
-                                    if (selected.length === mockServices.length) return 'All Services'
+                                    if (selected.length === apiServices.length) return 'All Services'
                                     return `${selected.length} selected`
                                   }}
                                 >
-                                  {mockServices.map(service => (
+                                  {apiServices.map(service => (
                                     <MenuItem key={service.id} value={service.id}>
                                       <Checkbox checked={(shift.serviceIds || []).includes(service.id)} />
                                       <ListItemText primary={service.name} />
@@ -655,7 +678,10 @@ export function StaffEditWorkingHoursModal({
                           gap: 1
                         }}
                       >
-                        <i className='ri-error-warning-line' style={{ color: 'var(--mui-palette-error-main)', fontSize: 18 }} />
+                        <i
+                          className='ri-error-warning-line'
+                          style={{ color: 'var(--mui-palette-error-main)', fontSize: 18 }}
+                        />
                         <Box sx={{ flex: 1 }}>
                           <Typography variant='body2' fontWeight={600} color='error.main'>
                             Overlapping Shifts Detected
@@ -741,7 +767,7 @@ export function StaffEditWorkingHoursModal({
             return false
           })}
         >
-          SAVE
+          {isSaving ? 'SAVING...' : 'SAVE'}
         </Button>
       </DialogActions>
     </Dialog>

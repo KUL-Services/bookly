@@ -1,743 +1,1781 @@
-# Backend Gap Analysis & Requirements
+# Backend–Frontend Contract & Gap Analysis
 
-> Comprehensive analysis of what backend endpoints/fields exist, what's missing, and what's needed for full frontend integration.
-> **Last Updated:** 2026-02-18
+> **Purpose:** Single source of truth for every API endpoint the frontend uses — with exact request/response field shapes, frontend type mappings, and known gaps.
+>
+> **Last Updated:** 2026-02-19
+
+---
+
+## How to Read This Document
+
+- **`ApiResponse<T>`** — Every service wrapper returns `{ data?: T, error?: string }` (see `src/lib/api/api-client.ts`)
+- **Frontend Type** = TypeScript interface in `src/lib/api/types.ts` (API types) or `src/bookly/data/types.ts` (UI types)
+- **Backend Response** = Verified JSON from the actual API (tested via curl/Postman)
+- **Status icons:** ✅ Aligned | ⚠️ Partial mismatch | ❌ Missing/Broken | 🔲 Not yet tested
 
 ---
 
 ## Table of Contents
 
-1. [Customer Booking Flow — Full Analysis](#1-customer-booking-flow--full-analysis)
-2. [Business Dashboard — Full Analysis](#2-business-dashboard--full-analysis)
-3. [Unified Resource Model](#3-unified-resource-model)
-4. [Missing Backend Endpoints](#4-missing-backend-endpoints)
-5. [Missing Data Fields (Schema Gaps)](#5-missing-data-fields-schema-gaps)
-6. [Service Wrappers Status](#6-service-wrappers-status)
-7. [Frontend-to-Backend Alignment Summary](#7-frontend-to-backend-alignment-summary)
+1. [Authentication](#1-authentication)
+2. [Business (Public)](#2-business-public)
+3. [Categories (Public)](#3-categories-public)
+4. [Services (Public)](#4-services-public)
+5. [Bookings (Customer)](#5-bookings-customer)
+6. [Reviews (Customer)](#6-reviews-customer)
+7. [Admin — Business](#7-admin--business)
+8. [Admin — Branches](#8-admin--branches)
+9. [Admin — Services](#9-admin--services)
+10. [Admin — Staff](#10-admin--staff)
+11. [Admin — Assets (Rooms/Equipment)](#11-admin--assets-roomsequipment)
+12. [Admin — Scheduling](#12-admin--scheduling)
+13. [Admin — Bookings](#13-admin--bookings)
+14. [Admin — Reviews](#14-admin--reviews)
+15. [Admin — Commissions](#15-admin--commissions)
+16. [Admin — Settings](#16-admin--settings)
+17. [Admin — Notifications](#17-admin--notifications)
+18. [Media Library](#18-media-library)
+19. [SuperAdmin](#19-superadmin)
+20. [Frontend Type Mismatches (API vs UI)](#20-frontend-type-mismatches-api-vs-ui)
+21. [Missing Endpoints Summary](#21-missing-endpoints-summary)
+22. [Missing Fields Summary](#22-missing-fields-summary)
+23. [Integration Status per Page](#23-integration-status-per-page)
 
 ---
 
-## 1. Customer Booking Flow — Full Analysis
+## 1. Authentication
 
-This section analyzes the complete customer booking journey from landing page to booking confirmation.
+### Customer Auth
 
-### 1.1 Flow Overview
+| Endpoint                | Method | Service Wrapper                    | Auth | Status |
+| ----------------------- | ------ | ---------------------------------- | ---- | ------ |
+| `/auth/register`        | POST   | `AuthService.registerUser()`       | No   | ✅     |
+| `/auth/verify`          | POST   | `AuthService.verifyUser()`         | No   | ✅     |
+| `/auth/login`           | POST   | `AuthService.loginUser()`          | No   | ✅     |
+| `/auth/forget-password` | POST   | `AuthService.forgotPasswordUser()` | No   | ✅     |
+| `/auth/reset-password`  | POST   | `AuthService.resetPasswordUser()`  | No   | ✅     |
+| `/auth`                 | PATCH  | `AuthService.updateUser()`         | 🔒   | ✅     |
+| `/auth/password`        | PATCH  | `AuthService.changePassword()`     | 🔒   | ✅     |
+| `/auth/details`         | GET    | `AuthService.getUserDetails()`     | 🔒   | ✅     |
 
-```
-Landing Page → Search / Browse → Business Detail → Select Service → Book Now
-                                                                        ↓
-                                                              Login / Guest Modal
-                                                                        ↓
-                                                              Booking Modal Opens
-                                                                        ↓
-                                                    Step 1: Select Services + Staff + Date + Time
-                                                                        ↓
-                                                    Step 2: Enter Customer Details (name, email, phone)
-                                                                        ↓
-                                                    Step 3: Confirmation (reference ID shown)
-```
+#### `POST /auth/register`
 
-### 1.2 Booking Modal — What Exists (Frontend)
-
-**Component:** `BookingModalV2Fixed` (`src/bookly/components/organisms/booking-modal/booking-modal-v2-fixed.tsx`)
-
-| Feature                  | Implementation                      | API Wired                          | Status     |
-| ------------------------ | ----------------------------------- | ---------------------------------- | ---------- |
-| Select initial service   | Passed as `initialService` prop     | N/A                                | ✅ Working |
-| Add additional services  | Service picker overlay              | N/A (local state)                  | ✅ Working |
-| Drag-to-reorder services | dnd-kit sortable                    | N/A (local state)                  | ✅ Working |
-| Select staff per service | Staff picker dropdown               | N/A (local state)                  | ✅ Working |
-| Date selection (30 days) | Horizontal date scroller            | N/A (local state)                  | ✅ Working |
-| Time-of-day filter       | Morning/Afternoon/Evening pills     | N/A (local state)                  | ✅ Working |
-| Time slot selection      | Grid of available times             | `BookingService.getAvailability()` | ✅ Wired   |
-| Loading state for slots  | Spinner + "Loading available slots" | Yes                                | ✅ Working |
-| Fallback to mock slots   | `generateTimeSlots()` if API empty  | Yes                                | ✅ Working |
-| Customer details form    | Name, email, phone, notes           | N/A (local state)                  | ✅ Working |
-| Submit booking           | Sends to API                        | `BookingService.createBooking()`   | ✅ Wired   |
-| Confirmation screen      | Shows reference ID                  | Uses API response `id`             | ✅ Working |
-| Error handling           | Shows booking errors                | Yes                                | ✅ Working |
-
-### 1.3 Booking Modal — Backend Endpoints Used
-
-| Endpoint                                                        | Method  | Service Wrapper                    | Request Format                                            | Response Format       | Status    |
-| --------------------------------------------------------------- | ------- | ---------------------------------- | --------------------------------------------------------- | --------------------- | --------- |
-| `/bookings/availability?serviceId=&branchId=&date=&resourceId=` | GET     | `BookingService.getAvailability()` | Query params                                              | `AvailableSlotFlat[]` | ✅ Exists |
-| `/bookings`                                                     | POST 🔒 | `BookingService.createBooking()`   | `{ serviceId, branchId, resourceId?, startTime, notes? }` | `Booking`             | ✅ Exists |
-
-### 1.4 Availability API — Verified Response Format
-
-**IMPORTANT:** The availability endpoint returns a **flat array** (verified from actual API testing):
-
-```json
-[
-  { "startTime": "2026-02-18T00:00:00.000Z", "endTime": "2026-02-18T01:00:00.000Z", "resourceId": "staff-uuid" },
-  { "startTime": "2026-02-18T01:00:00.000Z", "endTime": "2026-02-18T02:00:00.000Z", "resourceId": "staff-uuid" }
-]
-```
-
-> The `bookly_api_documentation.md` also documents a **nested format** (`{ resourceId, resourceName, resourceType, availableSlots: [] }`). This appears to be an older/expected format. **The actual verified response is the flat format above.** The backend team should confirm which format is the canonical one, or if the response varies by configuration.
-
-**Frontend Type Used:**
+**Request:**
 
 ```typescript
-interface AvailableSlotFlat {
-  startTime: string // ISO-8601
-  endTime: string // ISO-8601
-  resourceId: string
+// Frontend Type: RegisterUserRequest
+{
+  firstName: string    // required
+  lastName: string     // required
+  email: string        // required
+  password: string     // required, min 8 chars
+  mobile?: string      // optional
 }
 ```
 
-### 1.5 Critical Gaps in Customer Booking Flow
+**Response (201):**
 
-#### 🔴 GAP 1: `branchId` Not Reliably Passed to Booking Modal
-
-**Problem:** The business detail page passes `branchId={selectedBranch?.id}` to the modal. But `selectedBranch` is ONLY set when the user clicks a branch in the Details tab. If they click "Book" from the Services tab or sidebar "Book Appointment Now" button, `selectedBranch` is `null` → `branchId` is `undefined` → availability API is not called.
-
-**Where:** `src/app/[lang]/(bookly-clean)/business/[slug]/page.tsx` line 974
-
-**Impact:** User sees mock fallback time slots instead of real availability when booking from Services tab.
-
-**Frontend Fix Needed:** Auto-select the first branch as default when business data loads. Example:
-
-```typescript
-const defaultBranch = branches[0]
-// Pass branchId={selectedBranch?.id || defaultBranch?.id}
+```json
+{ "verificationToken": "806043" }
 ```
 
-**Backend: No change needed** — the API works correctly when branchId is provided.
+#### `POST /auth/login`
 
-#### ✅ RESOLVED (Frontend Wired): Guest Booking
+**Request:** `application/x-www-form-urlencoded`
 
-**Status:** `POST /bookings/guest` is now available (or `POST /bookings` handles it).
-**Action:** `BookingModalV2Fixed` now supports `BookingService.createGuestBooking()`.
-**Problem:** Previously, guest booking required auth. Now wired to guest endpoint.
-
-**Additionally:** The customer details form collects `name`, `email`, `phone`, `notes` — but the `CreateBookingRequest` only sends `{ serviceId, branchId, resourceId?, startTime, notes? }`. The name, email, and phone are **never sent to the API**.
-
-**Backend Needed:** One of:
-
-- **Option B:** Extend `POST /bookings` to accept optional `customer: { name, email, phone }` and allow unauthenticated access when customer details are provided
-
-**Priority:** HIGH — This is a core customer flow shown in the screenshots.
-
-#### 🔴 GAP 3: Staff Not Filtered by Service or Branch
-
-**Problem:** The booking modal receives `availableStaff` which is ALL staff across ALL branches (calculated as `branches.flatMap(branch => branch.staff || [])`). The staff picker shows everyone regardless of:
-
-- Whether they can perform the selected service
-- Whether they belong to the selected branch
-
-**Where:** Business detail page line 78: `const staff = branches.flatMap(branch => branch.staff || [])`
-
-**Impact:** User might select a staff member who can't perform the service or isn't at the branch.
-
-**Frontend Fix Needed:** Filter staff by:
-
-1. Only staff from the current/selected branch
-2. Only staff whose `services[]` includes the selected service
-
-**Backend:** The `GET /business/{id}` response already includes `resources[].services[]` per branch. Each resource has a `services` array showing which services they can perform. The frontend just needs to use this data for filtering.
-
-**Additional Backend Note:** The availability API already supports `resourceId` param to filter slots by specific staff. This works correctly.
-
-#### 🟡 GAP 4: Multi-Service Booking Creates Only One Booking
-
-**Problem:** The modal allows adding multiple services (with drag-to-reorder), but `handleConfirmBooking()` only sends the FIRST service to the API:
-
-```typescript
-const primaryService = selectedServices[0]
-await BookingService.createBooking({ serviceId: primaryService.service.id, ... })
+```
+email=john@example.com&password=strongPass123
 ```
 
-**Backend:** `POST /bookings` accepts a single `serviceId`. No multi-service booking concept exists.
-
-**Options:**
-
-- **Option A (Simple):** Create sequential bookings — one per service, with calculated start times based on cumulative duration. Frontend does this automatically.
-- **Option B (Backend):** Add `POST /bookings/multi` accepting `services: [{ serviceId, resourceId? }]` and an overall `startTime`. Backend creates linked bookings.
-
-**Recommendation:** Option A for now (frontend fix only). The modal already calculates `serviceTimeRanges` with per-service start/end times.
-
-#### ✅ RESOLVED (Frontend Wired): Customer Review Creation
-
-**Status:** `POST /reviews` is now available.
-**Action:** Added "Leave Review" button to "My Appointments" page. Opens modal wired to `ReviewsService.createReview`.
-
-**Backend Needed:** `POST /reviews` (authenticated user):
+**Response (201):**
 
 ```json
 {
-  "businessId": "uuid",
-  "serviceId": "uuid",
-  "rating": 5,
-  "comment": "Great service!"
+  "accessToken": "eyJhbG...",
+  "user": {
+    "id": "cuid-string",
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "mobile": "+201220293563",
+    "profilePhoto": null,
+    "createdAt": "2026-02-12T05:47:42.678Z"
+  }
 }
 ```
 
-**Priority:** MEDIUM — not blocking core booking flow.
-
-#### 🟡 GAP 6: No Payment Flow
-
-**Problem:** The booking modal button says "Confirm & Pay" but there's no payment processing. The deleted proxy routes (`payments/mock/route.ts`) confirm this was planned but not implemented.
-
-**Backend Needed:**
-
-- Payment intent creation endpoint
-- Payment confirmation/webhook handling
-- Booking status update after payment
-
-**Priority:** MEDIUM — can operate as "pay at venue" initially.
-
-#### ✅ RESOLVED (Endpoint Available): No Reschedule Endpoint
-
-**Status:** `PATCH /bookings/{id}/reschedule` is now available.
-**Action:** Add "Reschedule" button to "My Appointments" page. Wire it to `BookingService.rescheduleBooking()`.
-**Problem:** Customers can cancel bookings (`PATCH /bookings/{id}/cancel`) but cannot reschedule. No reschedule endpoint exists.
-
-**Backend Needed:** `PATCH /bookings/{id}/reschedule`:
-
-```json
-{
-  "startTime": "2026-02-20T14:00:00.000Z",
-  "resourceId": "uuid"
-}
-```
-
-**Priority:** LOW — can cancel + rebook as workaround.
-
-#### 🟢 GAP 8: Coupons / Add-ons (Future)
-
-**Problem:** The `NewBookingModal` (extended version) references coupons and add-ons, but proxy routes were deleted and no backend endpoints exist.
-
-**Backend Needed (when ready):**
-
-- `GET/POST/PATCH/DELETE /admin/coupons`
-- `POST /coupons/validate` (public)
-- `GET/POST/PATCH/DELETE /admin/services/{id}/addons`
-- `GET /services/{id}/addons` (public)
-
-**Priority:** LOW — future enhancement.
-
-### 1.6 Appointments Page (Customer Bookings History)
-
-**Component:** `src/app/[lang]/(bookly)/appointments/page.tsx`
-
-| Feature                    | Backend Endpoint                    | Service Method                     | Status                           |
-| -------------------------- | ----------------------------------- | ---------------------------------- | -------------------------------- |
-| List upcoming bookings     | `GET /bookings` 🔒                  | `BookingService.getUserBookings()` | ✅ Endpoint exists, UI uses mock |
-| List past bookings         | `GET /bookings` 🔒 (filter by date) | `BookingService.getUserBookings()` | ✅ Endpoint exists, UI uses mock |
-| Cancel booking             | `PATCH /bookings/{id}/cancel` 🔒    | `BookingService.cancelBooking()`   | ✅ Endpoint exists, UI uses mock |
-| Reschedule booking         | N/A                                 | N/A                                | 🔴 No endpoint                   |
-| Write review after booking | `POST /reviews`                     | `ReviewsService.createReview()`    | ✅ Wired                         |
-
-**Backend Needs:**
-
-- `GET /bookings` should support filtering: `?status=PENDING,CONFIRMED` (upcoming) vs `?status=COMPLETED,CANCELLED` (past)
-- Currently no filter params documented for user bookings endpoint
-
----
-
-## 2. Business Dashboard — Full Analysis
-
-This section analyzes every tab/page in the business dashboard sidebar.
-
-### 2.1 Dashboard Sidebar Structure
-
-Based on the screenshot and codebase:
-
-```
-Dashboard (sidebar)
-├── Dashboard          → Stats overview
-├── Calendar           → FullCalendar multi-resource views
-├── Categories         → Read-only category listing
-├── Bookings           → Admin booking table
-├── Management         → Staff page with 5 tabs
-│   ├── Staff Members
-│   ├── Shifts
-│   ├── Resources
-│   ├── Rooms
-│   └── Commissions
-├── Reviews            → Review management
-├── Settings           → 9-tab business configuration
-└── Media              → File upload/management
-```
-
-### 2.2 Page-by-Page Analysis
-
-#### Dashboard (`/dashboard`)
-
-| Feature                  | API Endpoint          | Service                                | Status                                          |
-| ------------------------ | --------------------- | -------------------------------------- | ----------------------------------------------- |
-| Business info            | `GET /business/{id}`  | `BusinessService`                      | ✅ Wired                                        |
-| Services count           | `GET /admin/services` | `ServicesService`                      | ✅ Wired                                        |
-| Branches count           | `GET /admin/branches` | `BranchesService`                      | ✅ Wired                                        |
-| Staff count              | `GET /admin/staff`    | `StaffService`                         | ✅ Wired                                        |
-| Upcoming bookings count  | `GET /admin/bookings` | `BookingService.getBusinessBookings()` | ✅ Wired (with mock fallback)                   |
-| Completed bookings count | `GET /admin/bookings` | `BookingService.getBusinessBookings()` | ✅ Wired (with mock fallback)                   |
-| Revenue chart            | Mock data             | —                                      | 🔴 No revenue/analytics endpoint (still mocked) |
-| Recent reviews           | `GET /admin/reviews`  | `ReviewsService.getReviews()`          | ✅ Wired (with mock fallback)                   |
-
-**What's left:**
-
-- Revenue chart widget still uses mock data — no analytics endpoint exists.
-- `GET /admin/dashboard/stats` returning `{ upcomingBookings, completedBookings, revenue, averageRating }` would be ideal.
-- Dashboard hardcodes `businessId = '1'` — should read from auth store's `materializeUser.businessId`.
-
----
-
-#### Calendar (`/calendar`)
-
-| Feature                      | API Endpoint                                 | Service                                   | Status                                               |
-| ---------------------------- | -------------------------------------------- | ----------------------------------------- | ---------------------------------------------------- |
-| Bookings as events (fetch)   | `GET /admin/bookings?fromDate=&toDate=`      | `BookingService.getBusinessBookings()`    | ✅ Wired (store `fetchEvents`)                       |
-| Create booking from calendar | `POST /admin/bookings`                       | `BookingService.createAdminBooking()`     | ✅ Wired (optimistic + API)                          |
-| Update booking status        | `PATCH /admin/bookings/{id}/status`          | `BookingService.updateBookingStatus()`    | ✅ Wired (optimistic + API)                          |
-| Reschedule booking           | `PATCH /admin/bookings/{id}/reschedule`      | `BookingService.adminRescheduleBooking()` | ✅ Wired (optimistic + API)                          |
-| Delete booking               | `DELETE /admin/bookings/{id}`                | `BookingService.deleteBooking()`          | ✅ Wired (optimistic + API)                          |
-| Staff list (columns)         | `GET /admin/staff`                           | `StaffService.getStaff()`                 | ✅ Wired (store `fetchStaff`)                        |
-| Rooms/Assets list            | `GET /admin/assets`                          | `AssetsService.getAssets()`               | ✅ Wired (store `fetchResources`)                    |
-| Staff schedules (background) | `GET /admin/scheduling/schedules`            | `SchedulingService.getSchedules()`        | ✅ Wired (store `fetchSchedules`, called on mount)   |
-| Room assignments             | `GET /admin/scheduling/assignments`          | `SchedulingService.getAssignments()`      | ✅ Wired (store `fetchAssignments`, called on mount) |
-| Breaks (background)          | `GET /admin/scheduling/breaks?resourceId=`   | `SchedulingService.getBreaks()`           | ⚠️ Service exists, not fetched on mount yet          |
-| Exceptions (holidays)        | `GET /admin/scheduling/exceptions`           | `SchedulingService.getExceptions()`       | ⚠️ Service exists, not fetched on mount yet          |
-| Branch filter                | N/A (client-side from branches list)         | —                                         | ✅ Frontend ready (wired to store)                   |
-| Staff filter                 | N/A (client-side from staff list)            | —                                         | ✅ Frontend ready (wired to store)                   |
-| Booking drawer mock data     | N/A                                          | —                                         | ✅ Replaced with store data (fallback to mock)       |
-| Service/Branch hydration     | `GET /admin/branches`, `GET /admin/services` | `BranchesService`, `ServicesService`      | ✅ Wired (fetch on mount in shell)                   |
-
-**Remaining Calendar Gaps:**
-
-1. **Resource `color` field** — Calendar needs color per resource. Currently not in the `Resource` model (Frontend auto-generates).
-2. **Breaks & Exceptions** — `SchedulingService.getBreaks()` / `.getExceptions()` exist but aren't fetched on calendar mount yet.
-
-**Priority:** HIGH — Calendar is the primary business dashboard view (as shown in screenshot).
-
----
-
-#### Bookings (`/bookings`)
-
-| Feature           | API Endpoint                            | Service                                | Status                                            |
-| ----------------- | --------------------------------------- | -------------------------------------- | ------------------------------------------------- |
-| List all bookings | `GET /admin/bookings`                   | `BookingService.getBusinessBookings()` | ✅ Wired to API with mock fallback                |
-| Filter by date    | `GET /admin/bookings?fromDate=&toDate=` | Yes                                    | ✅ Wired                                          |
-| Filter by staff   | `GET /admin/bookings?staffId=`          | Yes                                    | ✅ Wired                                          |
-| Filter by status  | `GET /admin/bookings?status=`           | Yes                                    | ✅ Wired                                          |
-| Update status     | `PATCH /admin/bookings/{id}/status`     | `BookingService.updateBookingStatus()` | ✅ Wired (Confirm/Cancel/Complete/NoShow actions) |
-| Pagination        | `GET /admin/bookings?page=`             | Yes                                    | ✅ Wired                                          |
-
-**Remaining:** Frontend pagination UI not yet implemented (API supports it).
-
----
-
-#### Staff Management — Staff Members Tab
-
-| Feature      | API Endpoint               | Service                      | Status     |
-| ------------ | -------------------------- | ---------------------------- | ---------- |
-| List staff   | `GET /admin/staff`         | `StaffService.getStaff()`    | ✅ Working |
-| Create staff | `POST /admin/staff`        | `StaffService.createStaff()` | ✅ Working |
-| Update staff | `PATCH /admin/staff`       | `StaffService.updateStaff()` | ✅ Working |
-| Delete staff | `DELETE /admin/staff/{id}` | `StaffService.deleteStaff()` | ✅ Working |
-
-**Request body includes:** `{ name, email, mobile, branchId, serviceIds[], profilePhoto, slotInterval, slotDuration }`
-
-**Backend: Fully covered.** ✅
-
----
-
-#### Staff Management — Shifts Tab
-
-| Feature           | API Endpoint                                  | Service                               | Status                            |
-| ----------------- | --------------------------------------------- | ------------------------------------- | --------------------------------- |
-| List schedules    | `GET /admin/scheduling/schedules?resourceId=` | `SchedulingService.getSchedules()`    | ✅ Endpoint exists, UI uses mock  |
-| Create schedule   | `POST /admin/scheduling/schedules`            | `SchedulingService.createSchedule()`  | ✅ Endpoint exists, UI uses mock  |
-| Delete schedule   | `DELETE /admin/scheduling/schedules/{id}`     | `SchedulingService.deleteSchedule()`  | ✅ Endpoint exists, UI uses mock  |
-| List breaks       | `GET /admin/scheduling/breaks?resourceId=`    | `SchedulingService.getBreaks()`       | ✅ Endpoint exists, UI uses mock  |
-| Create break      | `POST /admin/scheduling/breaks`               | `SchedulingService.createBreak()`     | ✅ Endpoint exists, UI uses mock  |
-| Delete break      | `DELETE /admin/scheduling/breaks/{id}`        | `SchedulingService.deleteBreak()`     | ✅ Endpoint exists, UI uses mock  |
-| List exceptions   | `GET /admin/scheduling/exceptions`            | `SchedulingService.getExceptions()`   | ✅ Endpoint exists, UI uses mock  |
-| Create exception  | `POST /admin/scheduling/exceptions`           | `SchedulingService.createException()` | ✅ Endpoint exists, UI uses mock  |
-| Delete exception  | `DELETE /admin/scheduling/exceptions/{id}`    | `SchedulingService.deleteException()` | ✅ Endpoint exists, UI uses mock  |
-| Time off requests | N/A                                           | N/A                                   | 🔴 No dedicated endpoint (Mocked) |
-| Time reservations | N/A                                           | N/A                                   | 🔴 No dedicated endpoint (Mocked) |
-
-**Backend Needs:**
-
-1. **Split shifts support** — Can a resource have multiple schedule entries for the same `dayOfWeek`? (e.g., 9:00-12:00 AND 13:00-17:00 on Monday). The current API accepts one schedule per POST — need to confirm multiple entries per day are allowed.
-2. **Update schedule** — No `PATCH /admin/scheduling/schedules` endpoint. To modify, must delete + recreate.
-3. **Time off vs exceptions** — The frontend distinguishes "time off" (staff request) from "exceptions" (business decision). Backend only has `exceptions`. Either:
-   - Frontend maps time-off to exceptions with a naming convention (e.g., `reason: "TIME_OFF: Vacation"`)
-   - Backend adds `POST /admin/scheduling/time-off` with approval workflow
-4. **Time reservations** — The frontend has "time reservations" (blocked slots for admin use, not bookings). These could map to exceptions with `isAvailable: false`.
-5. **Mock Data in Store** — `StaffManagementStore` currently initializes with `mockTimeOffRequests` and `mockTimeReservations`. Wiring needed.
-
----
-
-#### Staff Management — Resources Tab
-
-| Feature      | API Endpoint                | Service                       | Status                           |
-| ------------ | --------------------------- | ----------------------------- | -------------------------------- |
-| List assets  | `GET /admin/assets`         | `AssetsService.getAssets()`   | ✅ Endpoint exists, UI uses mock |
-| Create asset | `POST /admin/assets`        | `AssetsService.createAsset()` | ✅ Endpoint exists, UI uses mock |
-| Update asset | `PATCH /admin/assets`       | `AssetsService.updateAsset()` | ✅ Endpoint exists, UI uses mock |
-| Delete asset | `DELETE /admin/assets/{id}` | `AssetsService.deleteAsset()` | ✅ Endpoint exists, UI uses mock |
-
-**Backend: Fully covered for basic CRUD.** ✅
-
-**Missing Fields on Asset:**
-
-- `color` (string) — Hex color for calendar display
-- `status` ('active' | 'inactive') — Enable/disable without deleting
-- `concurrencyPolicy` ('shared' | 'exclusive') — How capacity is filled
-
----
-
-#### Staff Management — Rooms Tab
-
-| Feature              | API Endpoint                            | Service                                | Status                               |
-| -------------------- | --------------------------------------- | -------------------------------------- | ------------------------------------ |
-| List rooms           | `GET /admin/assets` (filter type=ASSET) | `AssetsService.getAssets()`            | ✅ Same endpoint, filter client-side |
-| Create room          | `POST /admin/assets`                    | `AssetsService.createAsset()`          | ✅ Same endpoint                     |
-| Update room          | `PATCH /admin/assets`                   | `AssetsService.updateAsset()`          | ✅ Same endpoint                     |
-| Delete room          | `DELETE /admin/assets/{id}`             | `AssetsService.deleteAsset()`          | ✅ Same endpoint                     |
-| Assign staff to room | `POST /admin/scheduling/assignments`    | `SchedulingService.createAssignment()` | ✅ Endpoint exists                   |
-| Room schedule        | `POST /admin/scheduling/schedules`      | `SchedulingService.createSchedule()`   | ✅ Endpoint exists                   |
-
-**Backend: Fully covered.** ✅ Rooms are just Assets with type='ASSET'. Staff ↔ Room assignments use scheduling assignments.
-
----
-
-#### Staff Management — Commissions Tab
-
-| Feature           | API Endpoint                     | Service                                 | Status                           |
-| ----------------- | -------------------------------- | --------------------------------------- | -------------------------------- |
-| List commissions  | `GET /admin/commissions`         | `CommissionsService.getCommissions()`   | ✅ Endpoint exists, UI uses mock |
-| Create commission | `POST /admin/commissions`        | `CommissionsService.createCommission()` | ✅ Endpoint exists, UI uses mock |
-| Delete commission | `DELETE /admin/commissions/{id}` | `CommissionsService.deleteCommission()` | ✅ Endpoint exists, UI uses mock |
-
-**Backend Limitations:**
-
-- Backend `POST /admin/commissions` accepts `{ serviceId, resourceId, percentage }` — simple per-service-per-staff percentage.
-- Frontend `CommissionsTab` supports advanced scopes: `serviceCategory | service | product | giftCard | membership | package`, plus staff targeting (all | specific).
-- **Gap:** Backend commission model is simpler than frontend UI. Frontend will need to simplify to match, OR backend needs to extend the commission model.
-
-**Backend Needs (if matching full frontend):**
-
-- `scope` field on commission: `'service' | 'category' | 'product'`
-- `staffScope` field: `'all' | 'specific'` + `staffIds[]`
-- `type` field: `'percentage' | 'fixed'` + `value`
-- `PATCH /admin/commissions/{id}` for updates (currently only create/delete)
-
----
-
-#### Reviews (`/reviews`)
-
-| Feature                           | API Endpoint                           | Service                          | Status                                 |
-| --------------------------------- | -------------------------------------- | -------------------------------- | -------------------------------------- |
-| List reviews                      | `GET /admin/reviews`                   | `ReviewsService.getReviews()`    | ✅ Endpoint exists, UI partially wired |
-| Reply to review                   | `POST /admin/reviews/{id}/reply`       | `ReviewsService.replyToReview()` | ✅ Wired (Modal)                       |
-| Flag review                       | `POST /admin/reviews/{id}/flag`        | `ReviewsService.flagReview()`    | ✅ Wired (Modal)                       |
-| Filter by rating                  | N/A (client-side)                      | —                                | ✅ Wired                               |
-| Review stats (avg rating, counts) | N/A (calculated client-side from list) | —                                | ✅ Wired                               |
-
-**Backend: Fully covered for admin side.** ✅
-
----
-
-#### Settings (`/settings`)
-
-| Tab                 | API Endpoint                 | Status                                                |
-| ------------------- | ---------------------------- | ----------------------------------------------------- |
-| 1. Business Profile | `PATCH /admin/business`      | ✅ Wired to `SettingsService`                         |
-| 2. Services         | `/admin/services` CRUD       | ✅ Wired (displays from API, shown in screenshot)     |
-| 3. Branches         | `/admin/branches` CRUD       | ✅ Wired                                              |
-| 4. Booking Policies | `PATCH /admin/settings`      | ✅ Wired to `SettingsService` (localStorage fallback) |
-| 5. Payment Settings | `PATCH /admin/settings`      | ✅ Wired to `SettingsService` (localStorage fallback) |
-| 6. Notifications    | `PATCH /admin/settings`      | ✅ Wired to `SettingsService` (localStorage fallback) |
-| 7. Scheduling       | `PATCH /admin/settings`      | ✅ Wired to `SettingsService` (localStorage fallback) |
-| 8. Calendar Display | N/A (client-side preference) | ✅ localStorage only (by design, per-user preference) |
-| 9. Customer Options | `PATCH /admin/settings`      | ✅ Wired to `SettingsService` (localStorage fallback) |
-
-> **Note:** All 9 tabs are now wired. Tabs 4-9 use `SettingsService` with `localStorage` fallback if the API call fails. Backend `GET/PATCH /admin/settings` endpoint availability determines whether settings persist server-side.
-
----
-
-#### Categories (`/categories`)
-
-| Feature              | API Endpoint             | Status                       |
-| -------------------- | ------------------------ | ---------------------------- |
-| List categories      | `GET /categories`        | ✅ Working                   |
-| Create/Update/Delete | `/superadmin/categories` | ✅ SuperAdmin only (correct) |
-
-**Backend: Fully covered.** ✅ Categories are managed by SuperAdmin. Business admin sees read-only list.
-
----
-
-#### Media (`/media`)
-
-| Feature | API Endpoint               | Status     |
-| ------- | -------------------------- | ---------- |
-| Upload  | `POST /media-lib` → S3 PUT | ✅ Working |
-| List    | `GET /media-lib`           | ✅ Working |
-| Delete  | `DELETE /media-lib/{id}`   | ✅ Working |
-
-**Backend: Fully covered.** ✅
-
----
-
-## 3. Unified Resource Model
-
-### Current Backend Model
-
-The backend uses a **unified Resource** model for both staff and assets/rooms:
+**Frontend Type: `LoginResponse`**
 
 ```typescript
-interface Resource {
+interface LoginResponse {
+  accessToken?: string; // ✅ Matches
+  access_token?: string; // ⚠️ Some responses use snake_case — frontend handles both
+  user?: any; // ✅ Matches
+  admin?: any; // Only present on admin login
+}
+```
+
+> **Known Issue (RESOLVED):** API sometimes returns `access_token` (snake_case) instead of `accessToken`. The auth store now checks both.
+
+#### `PATCH /auth` (Update Profile)
+
+**Request:**
+
+```typescript
+// Frontend Type: UpdateUserRequest
+{
+  firstName: string          // required
+  lastName: string           // required
+  mobile: string             // required
+  profilePhoto?: string | null  // asset file ID (not URL)
+}
+```
+
+**Response (200):** Full `User` object with updated fields.
+
+#### `GET /auth/details`
+
+**Response (200):**
+
+```typescript
+// Frontend Type: User
+{
   id: string
-  name: string
-  type: 'STAFF' | 'ASSET' // ← Distinguishes staff from rooms/equipment
-  maxConcurrent: number // 1 for staff, N for rooms (e.g., 20 for yoga class)
-  slotInterval: number // Minutes between available slots (default: 30)
-  slotDuration: number | null // null = use service duration (dynamic), number = fixed slots (static)
-  mobile: string | null // Staff only
-  email: string | null // Staff only
-  profilePhoto: string | null // Staff only
-  description: string | null // Rooms/assets
-  image: string | null // Rooms/assets
+  firstName: string
+  lastName: string
+  email: string
+  mobile?: string
+  verified?: boolean
+  profilePhoto?: string | null      // asset file ID
+  profilePhotoUrl?: string | null   // resolved URL
+  profileComplete?: boolean
+  createdAt: string
+  updatedAt?: string
+}
+```
+
+> **Note:** Backend returns `profilePhoto` as asset ID. `profilePhotoUrl` is the resolved S3 URL. Frontend `User` type has both fields.
+
+---
+
+### Admin Auth
+
+| Endpoint                      | Method | Service Wrapper                     | Auth | Status |
+| ----------------------------- | ------ | ----------------------------------- | ---- | ------ |
+| `/admin/auth/register`        | POST   | `AuthService.registerAdmin()`       | No   | ✅     |
+| `/admin/auth/verify`          | POST   | `AuthService.verifyAdmin()`         | No   | ✅     |
+| `/admin/auth/login`           | POST   | `AuthService.loginAdmin()`          | No   | ✅     |
+| `/admin/auth/forget-password` | POST   | `AuthService.forgotPasswordAdmin()` | No   | ✅     |
+| `/admin/auth/reset-password`  | POST   | `AuthService.resetPasswordAdmin()`  | No   | ✅     |
+| `/admin/auth/details`         | GET    | `AuthService.getAdminDetails()`     | 🔒   | ✅     |
+
+#### `POST /admin/auth/login`
+
+**Request:** `application/x-www-form-urlencoded`
+
+```
+email=spa-admin@bookly.com&password=password123
+```
+
+**Response (201):**
+
+```json
+{
+  "accessToken": "eyJhbG...",
+  "admin": {
+    "id": "admin-uuid",
+    "name": "Owner Name",
+    "email": "spa-admin@bookly.com",
+    "businessId": "business-uuid",
+    "isVerified": true,
+    "isOwner": true,
+    "createdAt": "2026-01-13T01:47:17.368Z",
+    "updatedAt": "2026-01-13T01:47:17.368Z"
+  }
+}
+```
+
+**Frontend Type: `Admin`**
+
+```typescript
+interface Admin {
+  id: string;
+  name: string; // ✅ Matches
+  email: string; // ✅ Matches
+  isVerified?: boolean; // ✅ Matches
+  isOwner?: boolean; // ✅ Matches
+  businessId: string; // ✅ Matches
+  createdAt: string;
+  updatedAt: string;
+  business?: Business; // ⚠️ Not always included in login response
+}
+```
+
+---
+
+### SuperAdmin Auth
+
+| Endpoint                 | Method | Service Wrapper                 | Auth | Status |
+| ------------------------ | ------ | ------------------------------- | ---- | ------ |
+| `/superadmin/auth/login` | POST   | `AuthService.loginSuperAdmin()` | No   | ✅     |
+
+**Request:** `application/x-www-form-urlencoded`
+
+```
+email=superadmin@bookly.com&password=password
+```
+
+---
+
+## 2. Business (Public)
+
+### `GET /business`
+
+**Service:** `BusinessService.getApprovedBusinesses(params)`
+
+**Query Params:**
+
+```typescript
+interface BusinessQueryParams {
+  page?: number; // required by API (500 error if missing)
+  pageSize?: number; // required by API
+  name?: string;
+  search?: string; // searches business name AND service names
+  categoryId?: string;
+  priceFrom?: number;
+  priceTo?: number;
+}
+```
+
+**Response (200):** `Business[]`
+
+```typescript
+// Frontend Type: Business (src/lib/api/types.ts)
+interface Business {
+  id: string;
+  name: string;
+  email?: string;
+  description?: string;
+  approved?: boolean;
+  logo?: string | null; // asset file ID
+  logoUrl?: string | null; // resolved S3 URL
+  coverImageUrl?: string | null; // resolved S3 URL
+  rating?: number; // average rating (0 if no reviews)
+  socialLinks?: SocialLink[];
+  services?: Service[]; // nested when fetching by ID
+  branches?: Branch[]; // nested when fetching by ID
+  reviews?: Review[]; // nested when fetching by ID
+  owner?: { name: string; email: string };
+  createdAt?: string;
+  updatedAt?: string;
+}
+```
+
+> **⚠️ UI Type Mismatch:** `src/bookly/data/types.ts` has a separate `Business` interface with extra fields (`coverImage`, `galleryImages`, `city`, `location`, `averageRating`, `totalRatings`, `openingHours`). These fields do NOT exist on the API response. See [Section 20](#20-frontend-type-mismatches-api-vs-ui).
+
+---
+
+### `GET /business/{id}`
+
+**Service:** `BusinessService.getBusiness(id)`
+
+**Response (200):** Full business with nested branches, resources, services, socialLinks, reviews.
+
+**Key nested structure:**
+
+```json
+{
+  "id": "...",
+  "name": "...",
+  "branches": [
+    {
+      "id": "...",
+      "name": "...",
+      "address": "...",
+      "mobile": "...",
+      "gallery": [],
+      "resources": [
+        {
+          "id": "...",
+          "name": "Ahmed Hassan",
+          "type": "STAFF",
+          "maxConcurrent": 1,
+          "slotInterval": 30,
+          "slotDuration": null,
+          "mobile": "+201111111111",
+          "email": "ahmed@testspa.com",
+          "profilePhoto": null,
+          "description": null,
+          "image": null,
+          "branchId": "...",
+          "services": [
+            { "id": "...", "name": "...", "price": 100, "duration": 60 }
+          ]
+        }
+      ],
+      "services": [{ "id": "...", "name": "...", "price": 100, "duration": 60 }]
+    }
+  ],
+  "socialLinks": [{ "id": "...", "platform": "facebook", "url": "..." }],
+  "reviews": []
+}
+```
+
+**Important:** Resources are nested under `branches[].resources[]`, not at the top level. Each resource has `type: "STAFF" | "ASSET"` and includes their assigned `services[]`.
+
+**Gaps resolved (2026-02-19):**
+
+- ✅ `coverImage` — added to Business schema (`coverImage String?`), resolved as `coverImageUrl` in API response
+- ✅ `latitude` / `longitude` — added to Branch schema, exposed in create/update DTOs
+- ✅ `timezone` — added to Business schema (default: `Africa/Cairo`)
+- ⚠️ `openingHours` — not on business or branch objects (use Scheduling API)
+- ⚠️ `galleryImages` — not on Business directly; branches have `gallery[]`
+
+---
+
+## 3. Categories (Public)
+
+### `GET /categories`
+
+**Service:** `CategoriesService.getCategories()`
+
+**Response (200):**
+
+```typescript
+// Frontend Type: Category (API)
+interface Category {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+> **✅ RESOLVED (2026-02-19):** `icon` and `slug` fields added to Category schema and exposed in create/update DTOs. `slug` is auto-generated from name if not provided.
+
+---
+
+## 4. Services (Public)
+
+### `GET /services`
+
+**Service:** `ServicesService.getServices()`
+
+**Response (200):**
+
+```typescript
+// Frontend Type: Service (API)
+interface Service {
+  id: string;
+  name: string;
+  description?: string;
+  location?: string; // text description, NOT coordinates
+  price: number; // numeric (e.g. 100)
+  duration: number; // minutes (e.g. 60)
+  maxConcurrent?: number | null;
+  businessId: string;
+  gallery?: string[]; // asset file IDs
+  galleryUrls?: string[]; // resolved S3 URLs
+  categories?: Category[]; // nested
+  branches?: Branch[]; // nested
+  business?: Business; // nested (on GET /services/{id})
+  reviews?: Review[];
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+> **⚠️ UI Type Mismatch:** `src/bookly/data/types.ts` `Service` has `category: string` (single string, not array of Category objects). ✅ `color` field has been added to Service create/update DTOs and schema (2026-02-19).
+
+### `GET /services/{id}`
+
+**Service:** `ServicesService.getService(id)`
+
+Same as above but includes `business` and full `branches[]` nesting.
+
+---
+
+## 5. Bookings (Customer)
+
+### `GET /bookings/availability`
+
+**Service:** `BookingService.getAvailability(params)`
+
+**Query Params:**
+
+```typescript
+{
+  serviceId: string    // required
+  branchId: string     // required
+  date: string         // required, YYYY-MM-DD
+  resourceId?: string  // optional — filter to specific staff/asset
+}
+```
+
+**Response (200):** Two possible formats observed:
+
+**Format A — Flat array (verified from testing):**
+
+```typescript
+// Frontend Type: AvailableSlotFlat
+interface AvailableSlotFlat {
+  startTime: string; // ISO-8601 "2026-02-18T09:00:00.000Z"
+  endTime: string; // ISO-8601 "2026-02-18T10:00:00.000Z"
+  resourceId: string; // which staff/asset
+}
+```
+
+**Format B — Nested (documented but unverified):**
+
+```typescript
+// Frontend Type: AvailabilityResponse
+interface AvailabilityResponse {
+  resourceId: string;
+  resourceName: string;
+  resourceType: 'STAFF' | 'ASSET';
+  availableSlots: { startTime: string; endTime: string }[];
+}
+```
+
+> **⚠️ Action needed:** Backend team to confirm which format is canonical. Frontend currently handles flat format (Format A).
+
+---
+
+### `POST /bookings` 🔒
+
+**Service:** `BookingService.createBooking(data)`
+
+**Request:**
+
+```typescript
+// Frontend Type: CreateBookingRequest
+{
+  serviceId: string      // required
+  branchId: string       // required
+  resourceId?: string    // optional — auto-assigns if omitted
+  startTime: string      // required, ISO-8601
+  notes?: string
+}
+```
+
+**Response (201):**
+
+```typescript
+// Frontend Type: Booking (API)
+{
+  id: string
+  userId: string
+  serviceId: string
   branchId: string
-  services: Service[] // Which services this resource can perform/host
+  resourceId?: string
+  startTime: string      // ISO-8601
+  endTime: string        // ISO-8601 (computed from service duration)
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
+  notes?: string
   createdAt: string
   updatedAt: string
 }
 ```
 
-### Dynamic vs Static Scheduling (via Resource fields)
-
-| Frontend Concept                      | `slotDuration` | `slotInterval` | Behavior                                                                                      |
-| ------------------------------------- | -------------- | -------------- | --------------------------------------------------------------------------------------------- |
-| **Dynamic Staff** (appointment-based) | `null`         | `15` or `30`   | Slots calculated from service duration. E.g., service is 45min → slots at 9:00, 9:15, 9:30... |
-| **Static Staff/Room** (fixed slots)   | `60`           | `60`           | Fixed time blocks. E.g., 9:00-10:00, 10:00-11:00. Service duration is ignored.                |
-
-### Missing Fields Needed on Resource
-
-| Field               | Type                      | Purpose                                         | Priority |
-| ------------------- | ------------------------- | ----------------------------------------------- | -------- |
-| `color`             | `string`                  | Hex code for calendar display (e.g., `#FF5733`) | HIGH     |
-| `status`            | `'active' \| 'inactive'`  | Enable/disable resource without deleting        | MEDIUM   |
-| `concurrencyPolicy` | `'shared' \| 'exclusive'` | How capacity is filled for rooms                | LOW      |
-
-### Separate API Paths
-
-Despite the unified model, the backend exposes **separate CRUD paths**:
-
-| Resource Type                  | CRUD Endpoints  | Frontend Service |
-| ------------------------------ | --------------- | ---------------- |
-| Staff (`type: 'STAFF'`)        | `/admin/staff`  | `StaffService`   |
-| Assets/Rooms (`type: 'ASSET'`) | `/admin/assets` | `AssetsService`  |
-
-Both types appear in `GET /business/{id}` response under `branches[].resources[]` with the `type` field distinguishing them.
+> **❌ Gap:** Customer details form collects `name`, `email`, `phone`, `notes` — but `CreateBookingRequest` only sends `serviceId, branchId, resourceId?, startTime, notes?`. Customer name/email/phone are NOT sent. This is only a problem for guest checkout.
 
 ---
 
-## 4. Missing Backend Endpoints
+### `POST /bookings/guest`
 
-### 🔴 Must Have (Blocking Core Flows)
+**Service:** `BookingService.createGuestBooking(data)`
 
-| Endpoint                                          | Purpose                                          | Needed By                               | Priority |
-| ------------------------------------------------- | ------------------------------------------------ | --------------------------------------- | -------- |
-| `POST /bookings/guest` or extend `POST /bookings` | Guest booking without auth                       | Customer booking flow                   | HIGH     |
-| `PATCH /admin/bookings/{id}`                      | Reschedule booking (update startTime/resourceId) | Calendar drag-drop, customer reschedule | HIGH     |
-| `GET /admin/bookings?fromDate=&toDate=`           | Date range filter for bookings                   | Calendar week/month views               | HIGH     |
+**Request:**
 
-### 🟡 Should Have (Completing Features)
+```typescript
+// Frontend Type: GuestBookingRequest
+{
+  serviceId: string
+  branchId: string
+  resourceId?: string
+  startTime: string
+  notes?: string
+  customerName: string       // required for guest
+  customerEmail: string      // required for guest
+  customerPhone: string      // required for guest
+}
+```
 
-| Endpoint                                 | Purpose                                    | Needed By                            | Priority |
-| ---------------------------------------- | ------------------------------------------ | ------------------------------------ | -------- |
-| `POST /reviews` 🔒                       | Customer creates a review                  | Business detail page Reviews tab     | MEDIUM   |
-| `GET/PATCH /admin/settings`              | Business configuration persistence         | Settings page tabs 4-9               | MEDIUM   |
-| `GET /admin/dashboard/stats`             | Quick summary counts                       | Dashboard overview                   | MEDIUM   |
-| `PATCH /admin/scheduling/schedules/{id}` | Update schedule (not just delete+recreate) | Shifts tab                           | MEDIUM   |
-| `GET /bookings?status=`                  | Filter user bookings by status             | Appointments page (upcoming vs past) | MEDIUM   |
-| `GET /admin/bookings?page=&pageSize=`    | Pagination for admin bookings              | Bookings page                        | MEDIUM   |
+**Response (201):** Same `Booking` object.
 
-### 🟢 Nice to Have (Future Enhancements)
-
-| Endpoint                                      | Purpose                         | Needed By               | Priority |
-| --------------------------------------------- | ------------------------------- | ----------------------- | -------- |
-| `GET/POST/PATCH/DELETE /admin/coupons`        | Discount codes                  | Extended booking modal  | LOW      |
-| `POST /coupons/validate`                      | Validate coupon at checkout     | Extended booking modal  | LOW      |
-| `GET/POST/DELETE /admin/services/{id}/addons` | Service add-ons                 | Extended booking modal  | LOW      |
-| Payment endpoints                             | Payment processing              | Booking confirmation    | LOW      |
-| `POST /admin/scheduling/time-off`             | Staff time-off with approval    | Shifts tab              | LOW      |
-| WebSocket / SSE                               | Real-time booking notifications | Calendar, notifications | LOW      |
+> **🔲 Status:** Endpoint documented but not fully tested. Frontend has `createGuestBooking()` wired.
 
 ---
 
-## 5. Missing Data Fields (Schema Gaps)
+### `GET /bookings` 🔒
 
-### On Booking Object
+**Service:** `BookingService.getUserBookings()`
 
-| Field           | Type                              | Description             | Needed By                              |
-| --------------- | --------------------------------- | ----------------------- | -------------------------------------- |
-| `paymentStatus` | `'paid' \| 'unpaid' \| 'partial'` | Payment tracking        | Calendar event display, bookings table |
-| `paymentMethod` | `'card' \| 'cash' \| 'online'`    | How customer paid       | Calendar highlights                    |
-| `bookedBy`      | `'client' \| 'business'`          | Who created the booking | Booking source tracking                |
-| `partySize`     | `number`                          | Group booking size      | Room capacity management               |
-| `customer`      | `{ name, email, phone }`          | Guest booking details   | Guest checkout flow                    |
+**Response (200):** `Booking[]` with nested `service`, `branch`, `resource`:
 
-### On Resource (Staff/Asset)
+```json
+[
+  {
+    "id": "...",
+    "userId": "...",
+    "serviceId": "...",
+    "branchId": "...",
+    "resourceId": "...",
+    "startTime": "2026-02-15T10:00:00.000Z",
+    "endTime": "2026-02-15T11:00:00.000Z",
+    "status": "CONFIRMED",
+    "notes": "...",
+    "service": { "name": "Full Body Massage", "duration": 60, "price": 100 },
+    "branch": {
+      "name": "Downtown Branch",
+      "address": "123 Main Street, Cairo"
+    },
+    "resource": { "name": "Ahmed Hassan", "type": "STAFF" },
+    "user": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john@example.com"
+    },
+    "createdAt": "...",
+    "updatedAt": "..."
+  }
+]
+```
 
-| Field               | Type                      | Description         | Needed By                 |
-| ------------------- | ------------------------- | ------------------- | ------------------------- |
-| `color`             | `string`                  | Hex color code      | Calendar color coding     |
-| `status`            | `'active' \| 'inactive'`  | Availability toggle | Staff/resource management |
-| `concurrencyPolicy` | `'shared' \| 'exclusive'` | Room fill strategy  | Room booking logic        |
+**Frontend Type: `Booking` (API — `src/lib/api/types.ts`)**
 
-### On Service
+```typescript
+interface Booking {
+  id: string;
+  userId: string;
+  serviceId: string;
+  branchId: string;
+  resourceId?: string;
+  startTime: string;
+  endTime: string;
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
+  notes?: string;
+  service?: {
+    name: string;
+    duration: number;
+    price: number;
+    businessId: string;
+  };
+  branch?: { name: string; address: string; businessId: string };
+  resource?: { name: string; type: 'STAFF' | 'ASSET' };
+  user?: { firstName: string; lastName: string; email: string };
+  createdAt: string;
+  updatedAt: string;
+}
+```
 
-| Field   | Type     | Description    | Needed By             |
-| ------- | -------- | -------------- | --------------------- |
-| `color` | `string` | Hex color code | Calendar event colors |
-
-### On Business
-
-| Field          | Type                                                   | Description           | Needed By                                            |
-| -------------- | ------------------------------------------------------ | --------------------- | ---------------------------------------------------- |
-| `openingHours` | `{ dayOfWeek: number, open: string, close: string }[]` | Operating hours       | Business detail page "Open Now" badge, hours display |
-| `location`     | `{ lat: number, lng: number }`                         | Top-level coordinates | Business detail page map (currently on Branch only)  |
-| `timezone`     | `string`                                               | IANA timezone         | Correct time display for multi-region                |
-
----
-
-## 6. Service Wrappers Status
-
-All service wrappers are located in `src/lib/api/services/`.
-
-| Service                | File                       | Endpoints                                                               | Status                                                 |
-| ---------------------- | -------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ |
-| `AuthService`          | `auth.service.ts`          | `/auth/*`, `/admin/auth/*`, `/superadmin/auth/login`                    | ✅ Working (paths fixed)                               |
-| `BusinessService`      | `business.service.ts`      | `/business/*`, `/admin/business`, `/superadmin/business/*`              | ✅ Working (paths fixed)                               |
-| `BookingService`       | `booking.service.ts`       | `/bookings/*`, `/admin/bookings`, admin create/delete/status/reschedule | ✅ Working (all CRUD + admin methods)                  |
-| `ServicesService`      | `services.service.ts`      | `/services`, `/admin/services`                                          | ✅ Working                                             |
-| `BranchesService`      | `branches.service.ts`      | `/admin/branches`                                                       | ✅ Working                                             |
-| `StaffService`         | `staff.service.ts`         | `/admin/staff`                                                          | ✅ Working + CRUD wired in staff-store                 |
-| `CategoriesService`    | `categories.service.ts`    | `/categories`, `/superadmin/categories`                                 | ✅ Working (paths fixed)                               |
-| `MediaService`         | `media.service.ts`         | `/media-lib`                                                            | ✅ Working                                             |
-| `AssetsService`        | `assets.service.ts`        | `/admin/assets`                                                         | ✅ Working + wired in calendar (`fetchResources`)      |
-| `SchedulingService`    | `scheduling.service.ts`    | `/admin/scheduling/*`                                                   | ✅ Working + wired in calendar (schedules/assignments) |
-| `CommissionsService`   | `commissions.service.ts`   | `/admin/commissions`                                                    | ✅ Created (needs full UI wiring)                      |
-| `ReviewsService`       | `reviews.service.ts`       | `/admin/reviews`                                                        | ✅ Working + wired (reply/flag/list)                   |
-| `NotificationsService` | `notifications.service.ts` | `/notifications`                                                        | ✅ Created (needs UI wiring)                           |
-
----
-
-## 7. Frontend-to-Backend Alignment Summary
-
-### ✅ Fully Aligned (Working End-to-End)
-
-| Area                        | Frontend                                  | Backend                                  | Notes                                   |
-| --------------------------- | ----------------------------------------- | ---------------------------------------- | --------------------------------------- |
-| Customer Auth               | `AuthService` full flow                   | `/auth/*`                                | Login, register, verify, password flows |
-| Admin Auth                  | `AuthService` full flow                   | `/admin/auth/*`                          | Login, register, verify, password flows |
-| SuperAdmin Auth             | `AuthService.loginSuperAdmin()`           | `/superadmin/auth/login`                 | Path corrected                          |
-| Public Business Search      | `BusinessService.getApprovedBusinesses()` | `GET /business?page=&pageSize=`          | With filters                            |
-| Business Detail             | `BusinessService.getBusiness(id)`         | `GET /business/{id}`                     | Returns nested data                     |
-| Services CRUD               | `ServicesService`                         | `/admin/services`                        | Full CRUD                               |
-| Branches CRUD               | `BranchesService`                         | `/admin/branches`                        | Full CRUD                               |
-| Staff CRUD                  | `StaffService`                            | `/admin/staff`                           | Full CRUD + optimistic updates in store |
-| Media Library               | `MediaService`                            | `/media-lib`                             | Upload, list, delete                    |
-| Categories Read             | `CategoriesService.getCategories()`       | `GET /categories`                        | Public read                             |
-| Availability Check          | `BookingService.getAvailability()`        | `GET /bookings/availability`             | Flat array response                     |
-| Create Booking (customer)   | `BookingService.createBooking()`          | `POST /bookings`                         | Auth required                           |
-| Cancel Booking              | `BookingService.cancelBooking()`          | `PATCH /bookings/{id}/cancel`            | Auth required                           |
-| Admin Create Booking        | `BookingService.createAdminBooking()`     | `POST /admin/bookings`                   | Calendar-initiated bookings             |
-| Admin Delete Booking        | `BookingService.deleteBooking()`          | `DELETE /admin/bookings/{id}`            | Calendar delete action                  |
-| Admin Booking Status        | `BookingService.updateBookingStatus()`    | `PATCH /admin/bookings/{id}/status`      | Confirm/Cancel/Complete/NoShow          |
-| Admin Reschedule            | `BookingService.adminRescheduleBooking()` | `PATCH /admin/bookings/{id}/reschedule`  | Calendar drag/time change               |
-| Admin Bookings List         | `BookingService.getBusinessBookings()`    | `GET /admin/bookings`                    | With date/staff/status filters          |
-| Business Update             | `BusinessService.updateBusiness()`        | `PATCH /admin/business`                  | Path corrected                          |
-| SuperAdmin Business         | `BusinessService.*`                       | `/superadmin/business/*`                 | Paths corrected                         |
-| Categories CUD              | `CategoriesService.*`                     | `/superadmin/categories/*`               | Paths corrected                         |
-| Landing Page Categories     | `CategoriesService`                       | `GET /categories`                        | Wired                                   |
-| Landing Page Businesses     | `BusinessService`                         | `GET /business`                          | Wired                                   |
-| Booking Modal Availability  | `BookingService`                          | `GET /bookings/availability`             | Wired                                   |
-| Booking Modal Submit        | `BookingService`                          | `POST /bookings`                         | Wired                                   |
-| Dashboard Overview          | `BookingService` + `ReviewsService`       | `GET /admin/bookings` + `/admin/reviews` | Wired (mock fallback)                   |
-| Settings (all 9 tabs)       | `SettingsService`                         | `GET/PATCH /admin/settings`              | Wired (localStorage fallback)           |
-| Reviews (list/reply/flag)   | `ReviewsService`                          | `/admin/reviews`                         | Wired                                   |
-| Calendar Events (full CRUD) | Calendar store                            | `BookingService` all endpoints           | Wired (optimistic + API)                |
-| Calendar Staff/Resources    | Calendar store                            | `StaffService` + `AssetsService`         | Wired (fetchStaff/fetchResources)       |
-| Calendar Schedules          | Calendar store                            | `SchedulingService`                      | Wired (fetchSchedules/fetchAssignments) |
-
-### ⚠️ Backend Ready, Frontend Integration Still Uses Mock Data
-
-| Area                   | Backend Endpoint      | Service Wrapper                    | Frontend Component                      | Status                                            |
-| ---------------------- | --------------------- | ---------------------------------- | --------------------------------------- | ------------------------------------------------- |
-| Assets CRUD            | `/admin/assets`       | `AssetsService`                    | Resources/Rooms tabs (staff-management) | Service exists, store uses mock data for CRUD     |
-| Scheduling CRUD        | `/admin/scheduling/*` | `SchedulingService`                | Shifts tab (staff-management)           | Service exists, store uses mock for shifts/breaks |
-| Commissions CRUD       | `/admin/commissions`  | `CommissionsService`               | Commissions tab (staff-management)      | Service exists, store uses mock data              |
-| Notifications          | `/notifications`      | `NotificationsService`             | Calendar notifications drawer           | Service exists, UI not wired                      |
-| Appointments page      | `GET /bookings`       | `BookingService.getUserBookings()` | Customer appointments page              | Endpoint exists, UI hardcodes mock                |
-| Dashboard widgets      | N/A                   | N/A                                | Revenue chart, StaffPerformance, etc.   | 4-5 dashboard widget files still use mock data    |
-| Staff-management files | N/A                   | N/A                                | ~20 staff-management component files    | Still import mock-data for dropdowns/lookups      |
-
-### 🔴 Backend Endpoints Missing
-
-| Feature                     | Frontend UI                       | Backend Status                               | Priority |
-| --------------------------- | --------------------------------- | -------------------------------------------- | -------- |
-| Guest booking               | Login/Guest modal + booking modal | No unauthenticated booking endpoint          | HIGH     |
-| Customer review creation    | Business detail Reviews tab       | No customer review endpoint                  | MEDIUM   |
-| Dashboard stats/analytics   | Revenue chart widget              | No analytics/revenue endpoint                | MEDIUM   |
-| User bookings status filter | Appointments page                 | No status filter on user bookings            | MEDIUM   |
-| Schedule update (PATCH)     | Shifts tab                        | Only create/delete, no update                | MEDIUM   |
-| Coupons/Discounts           | Extended booking modal            | No endpoints                                 | LOW      |
-| Service add-ons             | Extended booking modal            | No endpoints                                 | LOW      |
-| Payment processing          | Booking confirmation              | No endpoints                                 | LOW      |
-| Time-off management         | Shifts tab                        | No dedicated endpoint (mapped to exceptions) | LOW      |
-| Real-time updates           | Calendar, notifications           | No WebSocket/SSE                             | LOW      |
+> **⚠️ UI Type Mismatch:** `src/bookly/data/types.ts` `Booking` has completely different shape — `businessName`, `businessImage`, `serviceName`, `staffMemberName`, `date: Date`, `time: string`, `price`, `duration`, `customerName`, `slotId`, `roomId`, `partySize`. Dashboard components use `mapApiBookingToLocal()` to convert. See [Section 20](#20-frontend-type-mismatches-api-vs-ui).
 
 ---
 
-## 8. Remaining Mock Data Audit (50+ files)
+### `PATCH /bookings/{id}/cancel` 🔒
 
-Files still importing from `@/bookly/data/mock-data`:
+**Service:** `BookingService.cancelBooking(bookingId)`
 
-### Calendar (15 files) — ✅ Fully Migrated (Store Integration)
+**Response (200):**
 
-| File                         | What it imports                                          | Migration Status                                  |
-| ---------------------------- | -------------------------------------------------------- | ------------------------------------------------- |
-| `state.ts`                   | mockStaff, mockStaticServiceSlots, mockScheduleTemplates | ✅ Empty defaults, hydated from API               |
-| `unified-booking-drawer.tsx` | mockStaff, mockServices, mockRooms                       | ✅ Replaced with store data (mock as fallback)    |
-| `calendar-shell.tsx`         | mockStaff                                                | ✅ Store data hydrated on mount                   |
-| `utils.ts`                   | mockStaff, mockBusinesses, mockServices                  | ✅ 21 refs replaced with store accessor functions |
-| `calendar-sidebar.tsx`       | mockBusinesses, mockStaff                                | ✅ Replaced with store data                       |
-| 10 view/drawer files         | mockStaff, mockServices, mockRooms, mockBookings         | ✅ Replaced with store data                       |
+```json
+{ "id": "...", "status": "CANCELLED", "updatedAt": "..." }
+```
 
-### Staff Management (20 files) — Not yet migrated
+---
 
-| Files                                                | What they import                      | Notes                                     |
-| ---------------------------------------------------- | ------------------------------------- | ----------------------------------------- |
-| `staff-store.ts`                                     | Heavy mock usage for initial state    | Store initializes from mock, API hydrates |
-| `shifts-tab.tsx`, `shifts-timeline.tsx`              | mockStaff, mockBranches               | Shift display/editing                     |
-| `rooms-tab.tsx`, `room-editor-drawer.tsx`            | mockRooms, mockStaff                  | Room management                           |
-| `resources-tab.tsx`, `resource-editor-drawer.tsx`    | mockStaff, mockServices               | Resource management                       |
-| `commissions-tab.tsx`, `commission-editor-modal.tsx` | mockStaff, mockServices               | Commission config                         |
-| Various modals (8 files)                             | mockStaff, mockServices, mockBranches | Dropdowns and lookups                     |
+### `PATCH /bookings/{id}/reschedule` 🔒
 
-### Dashboard Widgets (6 files) — Partially migrated
+**Service:** `BookingService.rescheduleBooking(bookingId, data)`
 
-| File                   | Notes                                                                |
-| ---------------------- | -------------------------------------------------------------------- |
-| `DashboardBookly.tsx`  | Overview — partially wired (bookings/reviews from API, revenue mock) |
-| `TopServices.tsx`      | Mock data only — no analytics endpoint                               |
-| `StaffPerformance.tsx` | Mock data only — no analytics endpoint                               |
-| `ClientsActivity.tsx`  | Mock data only — no analytics endpoint                               |
-| `RevenueOverview.tsx`  | Mock data only — no analytics endpoint                               |
+**Request:**
 
-### Customer Pages (4 files)
+```typescript
+// Frontend Type: RescheduleBookingRequest
+{
+  startTime: string        // required, ISO-8601
+  resourceId?: string      // optional — keeps current if omitted
+}
+```
 
-| File                            | Notes                                        |
-| ------------------------------- | -------------------------------------------- |
-| `business/[slug]/page.tsx`      | Mock branches/staff for display              |
-| `bookings-tabs.tsx`             | Mock bookings for appointments page          |
-| `profile-info.tsx`              | Mock user profile data                       |
-| `explore-section.component.tsx` | Mock categories (wired but fallback present) |
+**Response (200):** Updated `Booking` object.
+
+---
+
+## 6. Reviews (Customer)
+
+### `POST /reviews` 🔒
+
+**Service:** `ReviewsService.createReview(data)`
+
+**Request:**
+
+```typescript
+// Frontend Type: CreateReviewRequest
+{
+  businessId: string       // required
+  rating: number           // required, 1-5
+  comment: string          // required
+  serviceId?: string       // optional
+  bookingId?: string       // optional
+}
+```
+
+**Response (201):**
+
+```typescript
+// Frontend Type: Review (API)
+{
+  id: string
+  rating: number
+  comment?: string
+  userId: string
+  serviceId?: string
+  businessId?: string
+  user?: User              // nested author
+  service?: Service
+  createdAt: string
+  updatedAt: string
+}
+```
+
+### `GET /reviews?businessId=`
+
+Public endpoint for fetching reviews by business.
+
+---
+
+## 7. Admin — Business
+
+### `PATCH /admin/business` 🔒
+
+**Service:** `BusinessService.updateBusiness(data)`
+
+**Request:**
+
+```typescript
+// Frontend Type: Omit<UpdateBusinessRequest, 'id'>
+{
+  name?: string
+  email?: string
+  description?: string
+  socialLinks?: SocialLink[]
+  logo?: string | null     // asset file ID
+}
+```
+
+**Where `SocialLink` is:**
+
+```typescript
+interface SocialLink {
+  id?: string; // include when updating existing
+  platform: string; // "facebook" | "instagram" | "twitter" etc.
+  url: string;
+  businessId?: string; // auto-set by backend
+}
+```
+
+**Response (200):** Returns `BusinessChangeRequest` (not the Business directly — requires SuperAdmin approval).
+
+```typescript
+interface BusinessChangeRequest {
+  id: string;
+  businessId: string;
+  name?: string;
+  email?: string;
+  description?: string;
+  socialLinks?: SocialLink[];
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+> **⚠️ Note:** Business profile changes go through an approval workflow. The update creates a change request, not an immediate change.
+
+---
+
+## 8. Admin — Branches
+
+| Endpoint               | Method | Service                              | Status |
+| ---------------------- | ------ | ------------------------------------ | ------ |
+| `/admin/branches`      | GET    | `BranchesService.getBranches()`      | ✅     |
+| `/admin/branches`      | POST   | `BranchesService.createBranch(data)` | ✅     |
+| `/admin/branches`      | PATCH  | `BranchesService.updateBranch(data)` | ✅     |
+| `/admin/branches/{id}` | DELETE | `BranchesService.deleteBranch(id)`   | ✅     |
+
+#### `POST /admin/branches`
+
+**Request:**
+
+```typescript
+// Frontend Type: CreateBranchRequest
+{
+  name: string             // required
+  address?: string
+  mobile?: string
+  serviceIds?: string[]    // link services to branch
+  gallery?: string[]       // asset file IDs
+}
+```
+
+**Response (201):**
+
+```typescript
+// Frontend Type: Branch (API)
+{
+  id: string
+  name: string
+  address?: string
+  mobile?: string
+  businessId: string
+  latitude?: number
+  longitude?: number
+  gallery?: string[]
+  galleryUrls?: string[]
+  services?: Service[]
+  staff?: Staff[]
+  resources?: Resource[]
+  createdAt: string
+  updatedAt: string
+}
+```
+
+#### `PATCH /admin/branches`
+
+**Request:**
+
+```typescript
+// Frontend Type: UpdateBranchRequest
+{
+  id: string               // required
+  name: string             // required
+  address?: string
+  mobile?: string
+  serviceIds?: string[]
+  gallery?: string[]
+}
+```
+
+> **✅ RESOLVED (2026-02-19):** `latitude` and `longitude` added to Branch schema and exposed in both create/update DTOs.
+
+---
+
+## 9. Admin — Services
+
+| Endpoint               | Method | Service                               | Status |
+| ---------------------- | ------ | ------------------------------------- | ------ |
+| `/admin/services`      | POST   | `ServicesService.createService(data)` | ✅     |
+| `/admin/services`      | PATCH  | `ServicesService.updateService(data)` | ✅     |
+| `/admin/services/{id}` | DELETE | `ServicesService.deleteService(id)`   | ✅     |
+
+#### `POST /admin/services`
+
+**Request:**
+
+```typescript
+// Frontend Type: CreateServiceRequest
+{
+  name: string             // required
+  description?: string
+  location: string         // required — text location
+  price: number            // required
+  duration: number         // required — minutes
+  categoryIds?: string[]   // link to categories
+  branchIds?: string[]     // link to branches
+  gallery?: string[]       // asset file IDs
+}
+```
+
+#### `PATCH /admin/services`
+
+**Request:**
+
+```typescript
+// Frontend Type: UpdateServiceRequest
+{
+  id: string               // required
+  name?: string
+  description?: string
+  location?: string
+  price?: number
+  duration?: number
+  categoryIds?: string[]
+  branchIds?: string[]
+  gallery?: string[]
+}
+```
+
+**Response:** Full `Service` object with nested `categories[]`, `branches[]`.
+
+---
+
+## 10. Admin — Staff
+
+| Endpoint            | Method | Service                          | Status |
+| ------------------- | ------ | -------------------------------- | ------ |
+| `/admin/staff`      | GET    | `StaffService.getStaff()`        | ✅     |
+| `/admin/staff`      | POST   | `StaffService.createStaff(data)` | ✅     |
+| `/admin/staff`      | PATCH  | `StaffService.updateStaff(data)` | ✅     |
+| `/admin/staff/{id}` | DELETE | `StaffService.deleteStaff(id)`   | ✅     |
+
+#### `GET /admin/staff`
+
+**Response (200):** `Staff[]`
+
+```typescript
+// Frontend Type: Staff (API)
+{
+  id: string
+  name: string
+  mobile?: string
+  businessId?: string
+  branchId: string
+  profilePhoto?: string | null
+  profilePhotoUrl?: string | null
+  services?: Service[]         // nested — which services this staff can perform
+  createdAt: string
+  updatedAt: string
+}
+```
+
+> **⚠️ Note:** The API `Staff` type does NOT include: `email`, `slotInterval`, `slotDuration`, `maxConcurrent`, `type`. Those fields are on the `Resource` model (returned from `GET /business/{id}` under `branches[].resources[]`). The `/admin/staff` endpoints operate on the Resource model under the hood but the response may be a simplified `Staff` shape.
+
+#### `POST /admin/staff`
+
+**Request:**
+
+```typescript
+// Frontend Type: CreateStaffRequest
+{
+  name: string             // required
+  mobile?: string
+  email?: string
+  branchId: string         // required
+  serviceIds?: string[]    // services this staff can perform
+  profilePhoto?: string | null  // asset file ID
+  slotInterval?: number    // minutes between slots (default 30)
+  slotDuration?: number | null  // null = use service duration (dynamic)
+}
+```
+
+#### `PATCH /admin/staff`
+
+**Request:**
+
+```typescript
+// Frontend Type: UpdateStaffRequest
+{
+  id: string               // required
+  name?: string
+  mobile?: string
+  email?: string
+  branchId?: string
+  serviceIds?: string[]
+  profilePhoto?: string | null
+  slotInterval?: number
+  slotDuration?: number | null
+}
+```
+
+> **⚠️ UI Type Mismatch:** `src/bookly/data/types.ts` `StaffMember` has many extra fields: `title`, `photo`, `branchIds[]`, `mainBranchId`, `staffType`, `schedule[]`, `workingHours`, `appointments[]`, `maxConcurrentBookings`, `color`, `roomAssignments[]`, `isActive`. The staff-store maps API data to this shape using defaults. See [Section 20](#20-frontend-type-mismatches-api-vs-ui).
+
+**✅ RESOLVED (2026-02-19) — Fields added to API Staff/Resource model:**
+| Field | UI Type | Purpose | Status |
+|---|---|---|---|
+| `color` | `string` | Hex code for calendar column coloring | ✅ Added to schema + create/update DTOs |
+| `title` | `string` | Job title display (e.g. "Senior Therapist") | ✅ Added to schema + create/update DTOs |
+| `isActive` | `boolean` | Enable/disable without deleting | ✅ Added to schema (default: true) + update DTO |
+
+---
+
+## 11. Admin — Assets (Rooms/Equipment)
+
+| Endpoint             | Method | Service                           | Status |
+| -------------------- | ------ | --------------------------------- | ------ |
+| `/admin/assets`      | GET    | `AssetsService.getAssets()`       | ✅     |
+| `/admin/assets/{id}` | GET    | `AssetsService.getAsset(id)`      | ✅     |
+| `/admin/assets`      | POST   | `AssetsService.createAsset(data)` | ✅     |
+| `/admin/assets`      | PATCH  | `AssetsService.updateAsset(data)` | ✅     |
+| `/admin/assets/{id}` | DELETE | `AssetsService.deleteAsset(id)`   | ✅     |
+
+#### `POST /admin/assets`
+
+**Request:**
+
+```typescript
+// Frontend Type: CreateAssetResourceRequest
+{
+  name: string               // required
+  description?: string
+  branchId: string           // required
+  maxConcurrent?: number     // e.g. 4 for tennis court
+  serviceIds?: string[]
+  image?: string             // asset file ID
+  slotInterval?: number      // minutes
+  slotDuration?: number | null  // null = use service duration
+}
+```
+
+#### `PATCH /admin/assets`
+
+**Request:**
+
+```typescript
+// Frontend Type: UpdateAssetResourceRequest
+{
+  id: string                 // required
+  name?: string
+  description?: string
+  branchId?: string
+  maxConcurrent?: number
+  serviceIds?: string[]
+  image?: string
+  slotInterval?: number
+  slotDuration?: number | null
+}
+```
+
+**Response:** `Asset` object.
+
+```typescript
+// Frontend Type: Asset
+{
+  id: string
+  name: string
+  type: 'ASSET'
+  description?: string | null
+  branchId: string
+  maxConcurrent: number
+  slotInterval: number
+  slotDuration?: number | null
+  image?: string | null
+  mobile?: string | null
+  email?: string | null
+  serviceIds?: string[]
+  services?: Service[]
+  createdAt: string
+  updatedAt: string
+}
+```
+
+**✅ RESOLVED (2026-02-19) — Fields added to API Asset model:**
+| Field | Purpose | Status |
+|---|---|---|
+| `color` | Hex code for calendar display | ✅ Added to schema + create/update DTOs |
+| `isActive` | Toggle availability (on Resource) | ✅ Added to schema (default: true) |
+
+---
+
+## 12. Admin — Scheduling
+
+### Schedules (Weekly Recurring Hours)
+
+| Endpoint                           | Method | Service                                   | Status                            |
+| ---------------------------------- | ------ | ----------------------------------------- | --------------------------------- |
+| `/admin/scheduling/schedules`      | GET    | `SchedulingService.getSchedules(params?)` | ✅                                |
+| `/admin/scheduling/schedules`      | POST   | `SchedulingService.createSchedule(data)`  | ✅                                |
+| `/admin/scheduling/schedules/{id}` | PATCH  | —                                         | 🔲 Documented, no service wrapper |
+| `/admin/scheduling/schedules/{id}` | DELETE | `SchedulingService.deleteSchedule(id)`    | ✅                                |
+
+**GET Query Params:** `?resourceId=` or `?branchId=`
+
+**POST Request:**
+
+```typescript
+// Frontend Type: CreateScheduleRequest
+{
+  dayOfWeek: number       // 0=Sunday ... 6=Saturday
+  startTime: string       // "HH:mm" (e.g. "09:00")
+  endTime: string         // "HH:mm" (e.g. "17:00")
+  resourceId?: string     // staff or asset ID
+  branchId?: string       // for branch-level defaults
+}
+```
+
+**Response:**
+
+```typescript
+// Frontend Type: Schedule
+{
+  id: string
+  dayOfWeek: number
+  startTime: string       // "HH:mm"
+  endTime: string         // "HH:mm"
+  resourceId?: string
+  branchId?: string
+  createdAt: string
+  updatedAt: string
+}
+```
+
+> **⚠️ Gap:** `PATCH /admin/scheduling/schedules/{id}` is documented in the API docs but **no service wrapper method** exists in `scheduling.service.ts`. Frontend currently uses delete + recreate.
+
+---
+
+### Breaks (Recurring Breaks)
+
+| Endpoint                        | Method | Service                                | Status |
+| ------------------------------- | ------ | -------------------------------------- | ------ |
+| `/admin/scheduling/breaks`      | GET    | `SchedulingService.getBreaks(params?)` | ✅     |
+| `/admin/scheduling/breaks`      | POST   | `SchedulingService.createBreak(data)`  | ✅     |
+| `/admin/scheduling/breaks/{id}` | DELETE | `SchedulingService.deleteBreak(id)`    | ✅     |
+
+**POST Request:**
+
+```typescript
+// Frontend Type: CreateBreakRequest
+{
+  name: string            // e.g. "Lunch Break"
+  dayOfWeek: number       // 0-6
+  startTime: string       // "HH:mm"
+  endTime: string         // "HH:mm"
+  resourceId?: string
+  branchId?: string
+}
+```
+
+**Response:**
+
+```typescript
+// Frontend Type: ScheduleBreak
+{
+  id: string
+  name: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  resourceId?: string
+  branchId?: string
+  createdAt: string
+  updatedAt: string
+}
+```
+
+---
+
+### Exceptions (Holidays, Special Hours)
+
+| Endpoint                            | Method | Service                                    | Status |
+| ----------------------------------- | ------ | ------------------------------------------ | ------ |
+| `/admin/scheduling/exceptions`      | GET    | `SchedulingService.getExceptions(params?)` | ✅     |
+| `/admin/scheduling/exceptions`      | POST   | `SchedulingService.createException(data)`  | ✅     |
+| `/admin/scheduling/exceptions/{id}` | DELETE | `SchedulingService.deleteException(id)`    | ✅     |
+
+**POST Request:**
+
+```typescript
+// Frontend Type: CreateExceptionRequest
+{
+  date: string               // "YYYY-MM-DD"
+  startTime?: string | null  // "HH:mm" or null for whole day
+  endTime?: string | null    // "HH:mm" or null for whole day
+  reason?: string
+  isAvailable: boolean       // false = blocked, true = extra availability
+  resourceId?: string
+  branchId?: string
+}
+```
+
+**Response:**
+
+```typescript
+// Frontend Type: ScheduleException
+{
+  id: string
+  date: string
+  startTime?: string | null
+  endTime?: string | null
+  reason?: string
+  isAvailable: boolean
+  resourceId?: string
+  branchId?: string
+  createdAt: string
+  updatedAt: string
+}
+```
+
+---
+
+### Assignments (Staff ↔ Room)
+
+| Endpoint                             | Method | Service                                     | Status |
+| ------------------------------------ | ------ | ------------------------------------------- | ------ |
+| `/admin/scheduling/assignments`      | GET    | `SchedulingService.getAssignments(params?)` | ✅     |
+| `/admin/scheduling/assignments`      | POST   | `SchedulingService.createAssignment(data)`  | ✅     |
+| `/admin/scheduling/assignments/{id}` | DELETE | `SchedulingService.deleteAssignment(id)`    | ✅     |
+
+**GET Query Params:** `?date=YYYY-MM-DD`
+
+**POST Request:**
+
+```typescript
+// Frontend Type: CreateAssignmentRequest
+{
+  staffId: string; // required
+  assetId: string; // required — room/asset ID
+  dayOfWeek: number; // 0-6
+  startTime: string; // "HH:mm"
+  endTime: string; // "HH:mm"
+}
+```
+
+**Response:**
+
+```typescript
+// Frontend Type: ResourceAssignment
+{
+  id: string;
+  staffId: string;
+  assetId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+---
+
+## 13. Admin — Bookings
+
+| Endpoint                          | Method | Service                                           | Status |
+| --------------------------------- | ------ | ------------------------------------------------- | ------ |
+| `/admin/bookings`                 | GET    | `BookingService.getBusinessBookings(params?)`     | ✅     |
+| `/admin/bookings`                 | POST   | `BookingService.createAdminBooking(data)`         | ✅     |
+| `/admin/bookings/{id}/status`     | PATCH  | `BookingService.updateBookingStatus(id, status)`  | ✅     |
+| `/admin/bookings/{id}/reschedule` | PATCH  | `BookingService.adminRescheduleBooking(id, data)` | ⚠️     |
+| `/admin/bookings/{id}`            | DELETE | `BookingService.deleteBooking(id)`                | ✅     |
+
+#### `GET /admin/bookings`
+
+**Query Params:**
+
+```typescript
+// Frontend Type: AdminBookingsParams
+{
+  date?: string            // "YYYY-MM-DD" single day
+  fromDate?: string        // "YYYY-MM-DD" range start
+  toDate?: string          // "YYYY-MM-DD" range end
+  staffId?: string         // filter by staff
+  status?: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
+  page?: number            // default 1
+  pageSize?: number        // default 50
+  sortBy?: string          // default "startTime"
+  sortOrder?: 'asc' | 'desc'  // default "desc"
+}
+```
+
+**Response (200):** `Booking[]` with nested `service`, `branch`, `resource`, `user`.
+
+#### `POST /admin/bookings`
+
+**Request:**
+
+```typescript
+// Frontend Type: AdminCreateBookingRequest
+{
+  serviceId: string          // required
+  branchId: string           // required
+  resourceId?: string        // optional
+  staffId?: string           // optional (alias for resourceId)
+  startTime: string          // required, ISO-8601
+  customerName: string       // required
+  customerEmail?: string
+  customerPhone?: string
+  status?: string            // e.g. "CONFIRMED"
+  notes?: string
+}
+```
+
+#### `PATCH /admin/bookings/{id}/status`
+
+**Request:**
+
+```json
+{ "status": "CONFIRMED" }
+```
+
+**Valid values:** `PENDING`, `CONFIRMED`, `CANCELLED`, `COMPLETED`, `NO_SHOW`
+
+#### `PATCH /admin/bookings/{id}/reschedule`
+
+**Request:**
+
+```typescript
+{ startTime: string; resourceId?: string }
+```
+
+> **⚠️ Note:** The service wrapper currently hits `/bookings/{id}/reschedule` (user endpoint) instead of `/admin/bookings/{id}/reschedule`. Verify admin-specific endpoint exists.
+
+#### `DELETE /admin/bookings/{id}`
+
+> **✅ RESOLVED (2026-02-19):** Admin-specific delete endpoint implemented. Verifies admin ownership of the booking's business before deletion.
+
+---
+
+## 14. Admin — Reviews
+
+| Endpoint                    | Method | Service                                   | Status |
+| --------------------------- | ------ | ----------------------------------------- | ------ |
+| `/admin/reviews`            | GET    | `ReviewsService.getReviews()`             | ✅     |
+| `/admin/reviews/{id}/reply` | POST   | `ReviewsService.replyToReview(id, reply)` | ✅     |
+| `/admin/reviews/{id}/flag`  | POST   | `ReviewsService.flagReview(id, reason)`   | ✅     |
+
+#### `GET /admin/reviews`
+
+**Response (200):** `AdminReview[]`
+
+```typescript
+// Frontend Type: AdminReview
+interface AdminReview extends Review {
+  reply?: string | null;
+  flagged?: boolean;
+  flagReason?: string | null;
+}
+
+// Where Review is:
+interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  userId: string;
+  serviceId?: string;
+  businessId?: string;
+  user?: User; // { firstName, lastName, email, profilePhoto }
+  service?: Service;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+#### `POST /admin/reviews/{id}/reply`
+
+**Request:**
+
+```json
+{ "reply": "Thank you for your feedback!" }
+```
+
+#### `POST /admin/reviews/{id}/flag`
+
+**Request:**
+
+```json
+{ "reason": "Inappropriate content" }
+```
+
+---
+
+## 15. Admin — Commissions
+
+| Endpoint                  | Method | Service                                     | Status |
+| ------------------------- | ------ | ------------------------------------------- | ------ |
+| `/admin/commissions`      | GET    | `CommissionsService.getCommissions()`       | ✅     |
+| `/admin/commissions`      | POST   | `CommissionsService.createCommission(data)` | ✅     |
+| `/admin/commissions/{id}` | PATCH  | `CommissionsService.update(id, data)`       | ✅     |
+| `/admin/commissions/{id}` | DELETE | `CommissionsService.deleteCommission(id)`   | ✅     |
+
+#### `POST /admin/commissions`
+
+**Request:**
+
+```typescript
+// Frontend Type: CreateCommissionRequest
+{
+  serviceId: string; // required
+  resourceId: string; // required — staff ID
+  percentage: number; // required — e.g. 10 for 10%
+}
+```
+
+**Response:**
+
+```typescript
+// Frontend Type: Commission
+{
+  id: string;
+  serviceId: string;
+  resourceId: string;
+  percentage: number;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+> **⚠️ Frontend UI Mismatch:** The `CommissionsTab` component supports advanced features (scope: serviceCategory/product/giftCard/membership, staff targeting: all/specific, type: percentage/fixed). The API only supports simple `serviceId + resourceId + percentage`. Frontend needs to simplify OR backend needs to expand.
+
+**❌ Missing API fields for full CommissionsTab support:**
+| Field | Type | Purpose |
+|---|---|---|
+| `scope` | `'service' \| 'category' \| 'product'` | What the commission applies to |
+| `staffScope` | `'all' \| 'specific'` | Target all or specific staff |
+| `staffIds` | `string[]` | When `staffScope = 'specific'` |
+| `type` | `'percentage' \| 'fixed'` | Commission type |
+| `value` | `number` | Amount (% or fixed) |
+| ~~`PATCH` endpoint~~ | — | ✅ **RESOLVED** — `PATCH /admin/commissions/{id}` now implemented |
+
+---
+
+## 16. Admin — Settings
+
+| Endpoint          | Method | Service                                | Status |
+| ----------------- | ------ | -------------------------------------- | ------ |
+| `/admin/settings` | GET    | `SettingsService.getSettings()`        | ✅     |
+| `/admin/settings` | PATCH  | `SettingsService.updateSettings(data)` | ✅     |
+
+#### `PATCH /admin/settings`
+
+**Request (API Type — what backend currently accepts):**
+
+```typescript
+// Frontend Type: BusinessSettings (src/lib/api/types.ts)
+{
+  businessId: string
+  bookingPolicies: {
+    advanceBookingDays?: number
+    cancellationHours?: number
+    allowGuestBooking?: boolean
+    requirePhone?: boolean
+  }
+  paymentSettings: {
+    requirePayment?: boolean
+    depositAmount?: number
+    currency?: string
+  }
+  notificationSettings: {
+    emailEnabled?: boolean
+    smsEnabled?: boolean
+    pushEnabled?: boolean
+  }
+  schedulingSettings: {
+    defaultSlotDuration?: number
+    bufferTime?: number
+    startOfWeek?: number
+  }
+  customerSettings: any
+}
+```
+
+> **⚠️ Major Mismatch:** The frontend `business-settings.store.ts` sends a much richer payload with 9 sub-objects. The API type definitions are much simpler. The store falls back to localStorage when the API returns 404.
+
+**Frontend Store Payload (what `business-settings.store.ts` actually sends):**
+
+```typescript
+{
+  businessProfile: {
+    name: string, description: string, logo: string | null, coverImage: string | null,
+    email: string, phone: string, website: string, publicUrlSlug: string,
+    timezone: string, language: string
+  },
+  socialLinks: {
+    facebook: string, instagram: string, twitter: string,
+    linkedin: string, tiktok: string, youtube: string
+  },
+  bookingPolicies: {
+    autoConfirmation: boolean,
+    cancellationPolicy: { enabled: boolean, hoursBeforeAppointment: number, refundPercentage: number },
+    reschedulePolicy: { enabled: boolean, hoursBeforeAppointment: number },
+    noShowPolicy: { chargeFee: boolean, feePercentage: number, restrictFutureBookings: boolean, restrictionDays: number },
+    bookingLeadTime: number,  // minimum hours before booking
+    maxAdvanceBooking: number  // maximum days ahead
+  },
+  paymentSettings: {
+    acceptedMethods: ('pay_on_arrival' | 'card' | 'instapay' | 'fawry')[],
+    depositRequired: boolean, depositPercentage: number,
+    currency: string, taxEnabled: boolean, taxPercentage: number, taxInclusive: boolean
+  },
+  notificationSettings: {
+    newBookingAlert: { email: boolean, sms: boolean, push: boolean },
+    cancellationAlert: { email: boolean, sms: boolean },
+    customerReminders: { enabled: boolean, beforeHours: number[] },
+    staffNotifications: boolean,
+    dailyDigest: { enabled: boolean, time: string, recipients: string[] }
+  },
+  schedulingSettings: {
+    bufferTimeBetweenBookings: number, allowOverbooking: boolean, overbookingPercentage: number,
+    defaultBookingDuration: number, allowWalkIns: boolean
+  },
+  calendarSettings: {
+    defaultView: 'month' | 'week' | 'day', timeSlotDuration: 15 | 30 | 60,
+    startOfWeek: 'sunday' | 'monday', timeFormat: '12h' | '24h',
+    colorScheme: 'vivid' | 'pastel', showWeekends: boolean,
+    workingHoursStart: string, workingHoursEnd: string
+  },
+  customerSettings: {
+    guestCheckout: boolean, requireEmail: boolean,
+    requirePhone: boolean, showCustomerNotesToStaff: boolean
+  },
+  brandingSettings: {
+    primaryColor: string, welcomeMessage: string,
+    confirmationMessage: string, bookingPageTheme: 'light' | 'dark' | 'auto'
+  }
+}
+```
+
+**✅ PARTIALLY RESOLVED (2026-02-19):** `calendarSettings` and `brandingSettings` JSON fields added to `BusinessSettings` schema. Backend uses upsert with `...data` spread, so it accepts and persists whatever structure the frontend sends. The `getSettings()` endpoint now returns defaults for all 7 sub-objects including the new ones.
+
+---
+
+## 17. Admin — Notifications
+
+| Endpoint                   | Method | Service                                   | Status |
+| -------------------------- | ------ | ----------------------------------------- | ------ |
+| `/notifications`           | GET    | `NotificationsService.getNotifications()` | 🔲     |
+| `/notifications/{id}/read` | PATCH  | `NotificationsService.markAsRead(id)`     | 🔲     |
+
+**Response:**
+
+```typescript
+// Frontend Type: Notification
+{
+  id: string;
+  type: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+> **🔲 Status:** Service wrapper exists but UI is not wired. Calendar sidebar has a notifications drawer that uses mock data.
+
+---
+
+## 18. Media Library
+
+| Endpoint          | Method | Service                              | Status                |
+| ----------------- | ------ | ------------------------------------ | --------------------- |
+| `/media-lib`      | GET    | `MediaService.getMediaFiles()`       | ✅ (Added 2026-02-19) |
+| `/media-lib`      | POST   | `MediaService.createAsset(data)`     | ✅                    |
+| `/media-lib/{id}` | PATCH  | `MediaService.updateAsset(id, data)` | ✅                    |
+| `/media-lib/{id}` | DELETE | `MediaService.deleteAsset(id)`       | ✅                    |
+
+#### `POST /media-lib`
+
+**Request:**
+
+```typescript
+// Frontend Type: CreateAssetRequest
+{
+  fileName: string; // e.g. "photo.png"
+  mimeType: string; // e.g. "image/png"
+  size: number; // bytes
+}
+```
+
+**Response (201):**
+
+```typescript
+// Frontend Type: CreateAssetResponse
+{
+  assetFileId: string; // use this ID in other entities (logo, gallery, profilePhoto)
+  uploadUrl: string; // pre-signed S3 URL for direct upload
+}
+```
+
+**Upload Flow:**
+
+1. `POST /media-lib` → get `assetFileId` + `uploadUrl`
+2. `PUT {uploadUrl}` with file body → upload to S3
+3. Use `assetFileId` in other API calls (e.g., `logo: "assetFileId"`)
+
+**Response Type for list:**
+
+```typescript
+// Frontend Type: AssetFile
+{
+  id: string;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  uploadUrl: string; // public S3 URL
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+---
+
+## 19. SuperAdmin
+
+| Endpoint                                | Method | Service                                      | Status |
+| --------------------------------------- | ------ | -------------------------------------------- | ------ |
+| `/superadmin/auth/login`                | POST   | `AuthService.loginSuperAdmin()`              | ✅     |
+| `/superadmin/business/pending`          | GET    | `BusinessService.getPendingBusinesses()`     | ✅     |
+| `/superadmin/business/pending-requests` | GET    | `BusinessService.getPendingChangeRequests()` | ✅     |
+| `/superadmin/business/approve`          | POST   | `BusinessService.approveBusiness(data)`      | ✅     |
+| `/superadmin/business/reject`           | POST   | `BusinessService.rejectBusiness(data)`       | ✅     |
+| `/superadmin/business/approve-request`  | POST   | `BusinessService.approveChangeRequest(data)` | ✅     |
+| `/superadmin/business/reject-request`   | POST   | `BusinessService.rejectChangeRequest(data)`  | ✅     |
+| `/superadmin/categories`                | POST   | `CategoriesService.createCategory(data)`     | ✅     |
+| `/superadmin/categories/{id}`           | PATCH  | `CategoriesService.updateCategory(id, data)` | ✅     |
+| `/superadmin/categories/{id}`           | DELETE | `CategoriesService.deleteCategory(id)`       | ✅     |
+
+All endpoints fully aligned. No gaps.
+
+---
+
+## 20. Frontend Type Mismatches (API vs UI)
+
+The frontend has **two separate type systems** that don't match:
+
+| File                       | Purpose             | Example Types                                   |
+| -------------------------- | ------------------- | ----------------------------------------------- |
+| `src/lib/api/types.ts`     | API response shapes | `Booking`, `Staff`, `Service`, `Business`       |
+| `src/bookly/data/types.ts` | UI component shapes | `Booking`, `StaffMember`, `Service`, `Business` |
+
+### Booking: API vs UI
+
+| Field                   | API Type (`lib/api/types.ts`)                                         | UI Type (`bookly/data/types.ts`)                         | Notes                                                |
+| ----------------------- | --------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------- |
+| `id`                    | `string`                                                              | `string`                                                 | ✅ Same                                              |
+| `status`                | `'PENDING' \| 'CONFIRMED' \| 'CANCELLED' \| 'COMPLETED' \| 'NO_SHOW'` | `'confirmed' \| 'pending' \| 'cancelled' \| 'completed'` | ⚠️ API=UPPERCASE, UI=lowercase; UI missing `NO_SHOW` |
+| `startTime` / `endTime` | `string` (ISO-8601)                                                   | —                                                        | ❌ UI uses `date: Date` + `time: string` instead     |
+| `service`               | nested `{ name, duration, price }`                                    | —                                                        | ❌ UI has flat `serviceName`, `duration`, `price`    |
+| `resource`              | nested `{ name, type }`                                               | —                                                        | ❌ UI has flat `staffMemberName`                     |
+| `branch`                | nested `{ name, address }`                                            | —                                                        | ❌ UI has flat `branchName`, `branchId`              |
+| `user`                  | nested `{ firstName, lastName }`                                      | —                                                        | ❌ UI has flat `customerName`                        |
+| —                       | —                                                                     | `businessName`                                           | ❌ Not in API                                        |
+| —                       | —                                                                     | `businessImage`                                          | ❌ Not in API                                        |
+| —                       | —                                                                     | `slotId`, `roomId`, `partySize`                          | ❌ Not in API                                        |
+
+**Mapping function:** `mapApiBookingToLocal()` in `DashboardBookly.tsx` converts between these.
+
+### Staff: API vs UI
+
+| Field        | API Type (`Staff`)  | UI Type (`StaffMember`) | Notes                                                  |
+| ------------ | ------------------- | ----------------------- | ------------------------------------------------------ |
+| `id`         | `string`            | `string`                | ✅ Same                                                |
+| `name`       | `string`            | `string`                | ✅ Same                                                |
+| `mobile`     | `string`            | —                       | UI uses `phone` instead                                |
+| `branchId`   | `string`            | `string`                | ✅ Same                                                |
+| —            | —                   | `title`                 | ❌ Not in API                                          |
+| —            | —                   | `photo`                 | ❌ API has `profilePhoto`                              |
+| —            | —                   | `branchIds[]`           | ❌ API only supports single `branchId`                 |
+| —            | —                   | `staffType`             | ❌ API uses `slotDuration` to determine (null=dynamic) |
+| —            | —                   | `color`                 | ✅ Added to API (2026-02-19)                           |
+| —            | —                   | `schedule[]`            | ❌ Not in API Staff; use Scheduling API instead        |
+| —            | —                   | `isActive`              | ✅ Added to API (2026-02-19)                           |
+| —            | —                   | `roomAssignments[]`     | ❌ Not in API Staff; use Assignments API instead       |
+| `services[]` | `Service[]` objects | —                       | UI uses `serviceIds: string[]`                         |
+
+### Business: API vs UI
+
+| Field         | API Type          | UI Type                          | Notes                                                                |
+| ------------- | ----------------- | -------------------------------- | -------------------------------------------------------------------- |
+| `id`, `name`  | ✅                | ✅                               | Same                                                                 |
+| `description` | `string`          | `about`                          | ⚠️ Different name                                                    |
+| `logo`        | `string \| null`  | —                                | UI uses `coverImage`                                                 |
+| `rating`      | `number`          | `averageRating` + `totalRatings` | ⚠️ API has single `rating`                                           |
+| —             | —                 | `categories: string[]`           | ❌ Not in API                                                        |
+| —             | —                 | `city`, `location { lat, lng }`  | ✅ **Resolved** — `location` JSON on Business, `lat`/`lng` on Branch |
+| —             | —                 | `galleryImages: string[]`        | ❌ Not on Business; `gallery` on Branch                              |
+| —             | —                 | `openingHours`                   | ✅ **Resolved** — `openingHours` JSON on Business                    |
+| `socialLinks` | `SocialLink[]`    | —                                | ✅ **Resolved** — `socialLinks` relation on Business                 |
+| `branches`    | `Branch[]` nested | `branches: Branch[]`             | ✅ **Resolved** — Queries include branches                           |
+
+### Service: API vs UI
+
+| Field                             | API Type             | UI Type                     | Notes                        |
+| --------------------------------- | -------------------- | --------------------------- | ---------------------------- |
+| `id`, `name`, `price`, `duration` | ✅                   | ✅                          | Same                         |
+| `description`                     | `string`             | `string`                    | ✅ Same                      |
+| `categories`                      | `Category[]` objects | `category: string` (single) | ⚠️ Different structure       |
+| `businessId`                      | `string`             | `string`                    | ✅ Same                      |
+| —                                 | —                    | `color`                     | ✅ Added to API (2026-02-19) |
+| `location`                        | `string` (text)      | —                           | Not in UI type               |
+
+### Category: API vs UI
+
+| Field        | API Type | UI Type | Notes                                                  |
+| ------------ | -------- | ------- | ------------------------------------------------------ |
+| `id`, `name` | ✅       | ✅      | Same                                                   |
+| —            | —        | `icon`  | ✅ Added to API (2026-02-19)                           |
+| —            | —        | `slug`  | ✅ Added to API (2026-02-19, auto-generated from name) |
+
+---
+
+## 21. Missing Endpoints Summary
+
+### 🔴 HIGH Priority
+
+| Endpoint                                           | Purpose                 | Needed By          | Current Workaround                                      |
+| -------------------------------------------------- | ----------------------- | ------------------ | ------------------------------------------------------- |
+| `GET /admin/dashboard/stats`                       | Quick dashboard summary | Dashboard overview | Fetches all bookings + reviews and computes client-side |
+| `PATCH /admin/scheduling/schedules/{id}` (wrapper) | Update schedule         | Shifts tab         | Delete + recreate                                       |
+
+### 🟡 MEDIUM Priority
+
+| Endpoint                            | Purpose               | Needed By           | Current Workaround           |
+| ----------------------------------- | --------------------- | ------------------- | ---------------------------- |
+| ~~`PATCH /admin/commissions/{id}`~~ | ~~Update commission~~ | ~~Commissions tab~~ | ✅ **RESOLVED (2026-02-19)** |
+| `GET /bookings?status=`             | Filter user bookings  | Appointments page   | Client-side filter           |
+| Revenue / analytics endpoint        | Revenue charts        | Dashboard widgets   | Mock data                    |
+
+### 🟢 LOW Priority
+
+| Endpoint                                      | Purpose            | Needed By               |
+| --------------------------------------------- | ------------------ | ----------------------- |
+| `GET/POST/PATCH/DELETE /admin/coupons`        | Discount codes     | Extended booking modal  |
+| `POST /coupons/validate`                      | Validate coupon    | Extended booking modal  |
+| `GET/POST/DELETE /admin/services/{id}/addons` | Service add-ons    | Extended booking modal  |
+| Payment intent / webhook endpoints            | Payment processing | Booking confirmation    |
+| WebSocket / SSE                               | Real-time updates  | Calendar, notifications |
+
+---
+
+## 22. Missing Fields Summary
+
+### On Resource (Staff/Asset) — Backend Schema
+
+| Field      | Type      | Purpose                      | Priority | Status                                                         |
+| ---------- | --------- | ---------------------------- | -------- | -------------------------------------------------------------- |
+| `color`    | `string`  | Hex code for calendar column | **HIGH** | ✅ **RESOLVED** — Added to schema + DTOs                       |
+| `title`    | `string`  | Display title                | MEDIUM   | ✅ **RESOLVED** — Added to schema + DTOs                       |
+| `isActive` | `boolean` | Toggle availability          | MEDIUM   | ✅ **RESOLVED** — Added to schema (default: true) + update DTO |
+
+### On Booking — Backend Schema
+
+| Field           | Type                              | Purpose                        | Priority | Currently                      |
+| --------------- | --------------------------------- | ------------------------------ | -------- | ------------------------------ |
+| `customerName`  | `string`                          | Guest name (non-user bookings) | **HIGH** | Only on admin-created bookings |
+| `customerEmail` | `string`                          | Guest email                    | **HIGH** | Only on admin-created bookings |
+| `customerPhone` | `string`                          | Guest phone                    | MEDIUM   | Only on admin-created bookings |
+| `paymentStatus` | `'paid' \| 'unpaid' \| 'partial'` | Payment tracking               | LOW      | No payment system              |
+| `bookedBy`      | `'client' \| 'business'`          | Who created                    | LOW      | Can infer from context         |
+| `partySize`     | `number`                          | Group size                     | LOW      | Not supported                  |
+
+### On Service — Backend Schema
+
+| Field   | Type     | Purpose              | Priority | Currently                                |
+| ------- | -------- | -------------------- | -------- | ---------------------------------------- |
+| `color` | `string` | Calendar event color | MEDIUM   | ✅ **RESOLVED** — Added to schema + DTOs |
+
+### On Business — Backend Schema
+
+| Field          | Type                           | Purpose                 | Priority | Currently                                                       |
+| -------------- | ------------------------------ | ----------------------- | -------- | --------------------------------------------------------------- |
+| `coverImage`   | `string`                       | Banner image            | MEDIUM   | ✅ **RESOLVED** — Added to schema + DTO                         |
+| `openingHours` | `{ dayOfWeek, open, close }[]` | Operating hours display | MEDIUM   | Not available (use Scheduling API)                              |
+| `timezone`     | `string`                       | IANA timezone           | LOW      | ✅ **RESOLVED** — Added to schema (default: Africa/Cairo) + DTO |
+
+### On Branch — Backend Schema
+
+| Field       | Type     | Purpose                         | Priority | Currently                                              |
+| ----------- | -------- | ------------------------------- | -------- | ------------------------------------------------------ |
+| `latitude`  | `number` | Map coordinates (create/update) | MEDIUM   | ✅ **RESOLVED** — Added to schema + create/update DTOs |
+| `longitude` | `number` | Map coordinates (create/update) | MEDIUM   | ✅ **RESOLVED** — Added to schema + create/update DTOs |
+
+### On Category — Backend Schema
+
+| Field  | Type     | Purpose           | Priority | Currently                                                     |
+| ------ | -------- | ----------------- | -------- | ------------------------------------------------------------- |
+| `icon` | `string` | Display icon name | LOW      | ✅ **RESOLVED** — Added to schema + DTOs                      |
+| `slug` | `string` | URL-friendly name | LOW      | ✅ **RESOLVED** — Added to schema (auto-gen from name) + DTOs |
+
+---
+
+## 23. Integration Status per Page
+
+### Customer-Facing Pages
+
+| Page              | Route                                | API Status | Mock Fallback                     | Notes                                                   |
+| ----------------- | ------------------------------------ | ---------- | --------------------------------- | ------------------------------------------------------- |
+| Landing page      | `/(bookly)/landpage`                 | ✅ Wired   | Categories + businesses from mock | `BusinessService` + `CategoriesService`                 |
+| Search            | `/(bookly)/search`                   | ✅ Wired   | —                                 | `BusinessService.getApprovedBusinesses()`               |
+| Business detail   | `/(bookly-clean)/business/[slug]`    | ✅ Wired   | Staff/branches from mock          | `BusinessService.getBusiness()`                         |
+| Booking modal     | Component                            | ✅ Wired   | Time slots from mock              | `BookingService.getAvailability()` + `createBooking()`  |
+| Customer login    | `/(bookly)/(auth)/customer/login`    | ✅ Wired   | —                                 | `AuthService.loginUser()`                               |
+| Customer register | `/(bookly)/(auth)/customer/register` | ✅ Wired   | —                                 | `AuthService.registerUser()`                            |
+| Profile           | `/(bookly)/profile`                  | ⚠️ Partial | Mock user data                    | `AuthService.getUserDetails()` wired; edit not wired    |
+| Appointments      | `/(bookly)/appointments`             | ⚠️ Partial | Mock bookings                     | `BookingService.getUserBookings()` exists; UI uses mock |
+
+### Dashboard Pages
+
+| Page               | Route                           | API Status | Mock Fallback               | Notes                                                                 |
+| ------------------ | ------------------------------- | ---------- | --------------------------- | --------------------------------------------------------------------- |
+| Dashboard overview | `/apps/bookly`                  | ⚠️ Partial | Revenue/performance widgets | Bookings + reviews from API; 4 widgets still mock                     |
+| Calendar           | `/apps/bookly/calendar`         | ✅ Wired   | Staff colors auto-generated | Full CRUD via `BookingService` + `StaffService` + `SchedulingService` |
+| Bookings table     | `/apps/bookly/bookings`         | ✅ Wired   | —                           | Filters + status actions all wired                                    |
+| Staff Management   | `/apps/bookly/staff-management` | ⚠️ Partial | Most tabs use mock          | Staff Members tab wired; Shifts/Resources/Rooms/Commissions use mock  |
+| Reviews            | `/apps/bookly/reviews`          | ✅ Wired   | —                           | List + reply + flag all wired                                         |
+| Settings           | `/apps/bookly/settings`         | ⚠️ Partial | localStorage fallback       | API may 404; store falls back to local persistence                    |
+| Categories         | `/apps/bookly/categories`       | ✅ Wired   | —                           | Read-only from `CategoriesService`                                    |
+| Media              | `/apps/bookly/media`            | ✅ Wired   | —                           | Upload + list + delete via `MediaService`                             |
+
+### Staff Management Sub-Tabs
+
+| Tab           | API Wired    | Service Used                                             | Notes                                |
+| ------------- | ------------ | -------------------------------------------------------- | ------------------------------------ |
+| Staff Members | ✅ Yes       | `StaffService`                                           | CRUD wired to API with mock fallback |
+| Shifts        | ❌ Mock only | `SchedulingService` (exists, not wired)                  | Service exists, UI uses mock data    |
+| Resources     | ❌ Mock only | `AssetsService` (exists, not wired)                      | Service exists, UI uses mock data    |
+| Rooms         | ❌ Mock only | `AssetsService` + `SchedulingService` (exist, not wired) | Service exists, UI uses mock data    |
+| Commissions   | ❌ Mock only | `CommissionsService` (exists, not wired)                 | Service exists, UI uses mock data    |
+
+### Dashboard Widgets
+
+| Widget             | Data Source                       | Notes                                          |
+| ------------------ | --------------------------------- | ---------------------------------------------- |
+| `BooklyStats`      | ✅ API (counts from fetched data) | Computed from bookings/services/branches/staff |
+| `UpcomingBookings` | ✅ API                            | From `BookingService.getBusinessBookings()`    |
+| `RecentReviews`    | ✅ API                            | From `ReviewsService.getReviews()`             |
+| `RevenueOverview`  | ❌ Mock                           | No analytics endpoint                          |
+| `TopServices`      | ❌ Mock                           | No analytics endpoint                          |
+| `StaffPerformance` | ❌ Mock                           | No analytics endpoint                          |
+| `ClientsActivity`  | ❌ Mock                           | No analytics endpoint                          |
+
+---
+
+## API Client Architecture
+
+```
+Frontend Component
+    ↓ calls
+Service Wrapper (src/lib/api/services/*.service.ts)
+    ↓ calls
+apiClient (src/lib/api/api-client.ts)
+    ↓ fetch()
+Next.js Proxy Route (/api/proxy/*)
+    ↓ proxies to
+Backend API (http://46.101.97.43 or localhost:5051)
+```
+
+**Response wrapper:** All service methods return `ApiResponse<T>`:
+
+```typescript
+interface ApiResponse<T = any> {
+  data?: T; // success — parsed JSON
+  error?: string; // failure — error message
+}
+```
+
+**Auth:** JWT token stored in `localStorage('auth_token')` and set via `apiClient.setAuthToken(token)`. Automatically attached as `Authorization: Bearer {token}` header.
+
+**401 handling:** On 401 response, `api-client.ts` auto-logs out the current user (customer or business admin) and redirects to login page.
+
+---
+
+## Error Response Format
+
+All backend errors follow this structure:
+
+```json
+{
+  "statusCode": 401,
+  "path": "/auth/login",
+  "timestamp": "2026-02-12T05:47:44.066Z",
+  "message": "Invalid email or password"
+}
+```
+
+Common status codes:
+
+- `400` — Invalid request body / missing fields
+- `401` — Invalid credentials / expired token
+- `403` — Insufficient permissions
+- `404` — Resource not found
+- `500` — Server error (often missing required query params like `page`/`pageSize`)

@@ -81,10 +81,14 @@ export interface Service {
   updatedAt: string
 }
 
+// Booking mode for resources (staff/assets)
+export type BookingMode = 'STATIC' | 'DYNAMIC'
+
 export interface Resource {
   id: string
   name: string
   type: 'STAFF' | 'ASSET'
+  bookingMode?: BookingMode // NEW: Determines if resource uses sessions or flexible booking
   maxConcurrent: number
   slotInterval: number
   slotDuration?: number | null
@@ -95,8 +99,33 @@ export interface Resource {
   image?: string | null
   branchId: string
   services?: Service[]
+  pendingBookingMode?: BookingMode
+  bookingModeEffectiveDate?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface Session {
+  id: string
+  name: string
+  description?: string
+
+  // Recurrence (one OR the other, not both)
+  date?: string // ISO date for one-time sessions
+  dayOfWeek?: number // 0-6 for recurring sessions
+
+  startTime: string // "14:00"
+  endTime: string // "16:00"
+
+  maxParticipants: number // Session capacity (e.g., 25 people for a class)
+  resourceId: string // The venue/host (not consumed, just a reference)
+  serviceId?: string
+  price?: number
+  isActive: boolean
+
+  // Computed in responses
+  currentParticipants?: number
+  availableSpots?: number
 }
 
 export interface Staff {
@@ -105,6 +134,9 @@ export interface Staff {
   mobile?: string
   businessId?: string
   branchId: string
+  bookingMode?: BookingMode // NEW: STATIC or DYNAMIC booking mode
+  pendingBookingMode?: BookingMode
+  bookingModeEffectiveDate?: string
   profilePhoto?: string | null
   profilePhotoUrl?: string | null
   services?: Service[]
@@ -278,6 +310,7 @@ export interface CreateStaffRequest {
   profilePhoto?: string | null
   slotInterval?: number
   slotDuration?: number | null
+  bookingMode?: BookingMode // NEW: STATIC or DYNAMIC
 }
 
 export interface UpdateStaffRequest {
@@ -290,6 +323,7 @@ export interface UpdateStaffRequest {
   profilePhoto?: string | null
   slotInterval?: number
   slotDuration?: number | null
+  bookingMode?: BookingMode // NEW: STATIC or DYNAMIC
 }
 
 export interface CreateBranchRequest {
@@ -298,6 +332,8 @@ export interface CreateBranchRequest {
   mobile?: string
   serviceIds?: string[]
   gallery?: string[]
+  latitude?: number
+  longitude?: number
 }
 
 export interface UpdateBranchRequest {
@@ -307,6 +343,8 @@ export interface UpdateBranchRequest {
   mobile?: string
   serviceIds?: string[]
   gallery?: string[]
+  latitude?: number
+  longitude?: number
 }
 
 export interface UpdateBusinessRequest {
@@ -385,6 +423,7 @@ export interface CreateBookingRequest {
   serviceId: string
   branchId: string
   resourceId?: string
+  sessionId?: string // NEW: Required for STATIC mode bookings
   startTime: string
   notes?: string
 }
@@ -400,6 +439,7 @@ export interface AdminCreateBookingRequest {
   branchId: string
   resourceId?: string
   staffId?: string
+  sessionId?: string // NEW: Required for STATIC mode bookings
   startTime: string
   customerName: string
   customerEmail?: string
@@ -421,10 +461,16 @@ export interface AvailableSlotFlat {
 }
 
 // Asset (Room/Equipment) types
+export type AssetSubType = 'ROOM' | 'EQUIPMENT'
+
 export interface Asset {
   id: string
   name: string
   type: 'ASSET'
+  subType?: AssetSubType // Distinguishes between ROOM and EQUIPMENT
+  bookingMode?: BookingMode // NEW: STATIC or DYNAMIC booking mode
+  pendingBookingMode?: BookingMode // Scheduled mode change
+  bookingModeEffectiveDate?: string // When the mode change takes effect
   description?: string | null
   branchId: string
   maxConcurrent: number
@@ -443,6 +489,8 @@ export interface CreateAssetResourceRequest {
   name: string
   description?: string
   branchId: string
+  subType?: AssetSubType // 'ROOM' or 'EQUIPMENT'
+  bookingMode?: BookingMode // NEW: STATIC or DYNAMIC
   maxConcurrent?: number
   serviceIds?: string[]
   image?: string
@@ -455,6 +503,8 @@ export interface UpdateAssetResourceRequest {
   name?: string
   description?: string
   branchId?: string
+  subType?: AssetSubType
+  bookingMode?: BookingMode // NEW: STATIC or DYNAMIC
   maxConcurrent?: number
   serviceIds?: string[]
   image?: string
@@ -632,4 +682,95 @@ export interface BusinessSettings {
   notificationSettings: NotificationSettings
   schedulingSettings: SchedulingSettings
   customerSettings: any
+}
+
+// ============================================================================
+// Session Types (for STATIC booking mode)
+// ============================================================================
+
+export interface Session {
+  id: string
+  name: string
+  description?: string
+
+  // Recurrence - one OR the other, not both
+  date?: string // ISO date for one-time sessions (e.g., "2026-03-15")
+  dayOfWeek?: number // 0-6 for recurring sessions (0 = Sunday)
+
+  startTime: string // "HH:MM" format (e.g., "14:00")
+  endTime: string // "HH:MM" format (e.g., "16:00")
+
+  maxParticipants: number
+  resourceId: string
+  serviceId?: string
+  price?: number
+  isActive: boolean
+
+  // Computed in responses
+  currentParticipants?: number
+  availableSpots?: number
+
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateSessionRequest {
+  name: string
+  description?: string
+  date?: string // For one-time sessions
+  dayOfWeek?: number // For recurring sessions (0-6)
+  startTime: string // "HH:MM"
+  endTime: string // "HH:MM"
+  maxParticipants: number
+  resourceId: string
+  serviceId?: string
+  price?: number
+}
+
+export interface UpdateSessionRequest {
+  id: string
+  name?: string
+  description?: string
+  date?: string
+  dayOfWeek?: number
+  startTime?: string
+  endTime?: string
+  maxParticipants?: number
+  serviceId?: string
+  price?: number
+  isActive?: boolean
+}
+
+// Enhanced availability slot - includes session info for STATIC mode
+export interface AvailabilitySlot {
+  startTime: string // ISO datetime
+  endTime: string // ISO datetime
+  resourceId: string
+  resourceName: string
+  resourceType: 'STAFF' | 'ASSET'
+
+  // STATIC mode only (present when booking a session)
+  sessionId?: string
+  sessionName?: string
+  maxParticipants?: number
+  currentParticipants?: number
+  availableSpots?: number
+  price?: number
+}
+
+// Staff/Asset request types with bookingMode
+export interface CreateStaffWithModeRequest extends CreateStaffRequest {
+  bookingMode?: BookingMode
+}
+
+export interface UpdateStaffWithModeRequest extends UpdateStaffRequest {
+  bookingMode?: BookingMode
+}
+
+export interface CreateAssetWithModeRequest extends CreateAssetResourceRequest {
+  bookingMode?: BookingMode
+}
+
+export interface UpdateAssetWithModeRequest extends UpdateAssetResourceRequest {
+  bookingMode?: BookingMode
 }

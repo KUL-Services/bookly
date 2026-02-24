@@ -24,7 +24,7 @@ import {
   Checkbox,
   ListItemText
 } from '@mui/material'
-import { mockServices, mockStaff } from '@/bookly/data/mock-data'
+
 import { useStaffManagementStore } from './staff-store'
 import { TimeSelectField } from './time-select-field'
 import type { DayOfWeek } from '../calendar/types'
@@ -52,11 +52,11 @@ export function RoomScheduleEditor({
   defaultCapacity = 10,
   roomServiceIds = []
 }: RoomScheduleEditorProps) {
-  const { updateRoomSchedule, getRoomSchedule } = useStaffManagementStore()
+  const { updateRoomSchedule, getRoomSchedule, apiServices, staffMembers } = useStaffManagementStore()
 
   // Filter available services to only those assigned to this room
   const availableServices =
-    roomServiceIds.length > 0 ? mockServices.filter(s => roomServiceIds.includes(s.id)) : mockServices
+    roomServiceIds.length > 0 ? apiServices.filter(s => roomServiceIds.includes(s.id)) : apiServices
 
   const [isAvailable, setIsAvailable] = useState(false)
   const [shifts, setShifts] = useState<
@@ -345,7 +345,9 @@ export function RoomScheduleEditor({
                         </Box>
 
                         <FormControl fullWidth>
-                          <InputLabel>{isStaticCapacity ? 'Service for this session' : 'Services for this shift'}</InputLabel>
+                          <InputLabel>
+                            {isStaticCapacity ? 'Service for this session' : 'Services for this shift'}
+                          </InputLabel>
                           {isStaticCapacity ? (
                             // Static rooms: Single service selection only
                             <Select
@@ -395,7 +397,8 @@ export function RoomScheduleEditor({
                           )}
                           {isStaticCapacity ? (
                             <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
-                              Each fixed session can have one service. Create additional sessions for different services.
+                              Each fixed session can have one service. Create additional sessions for different
+                              services.
                             </Typography>
                           ) : roomServiceIds.length > 0 ? (
                             <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
@@ -467,20 +470,18 @@ export function RoomScheduleEditor({
                                 renderValue={selected => (
                                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                                     {selected.map(value => {
-                                      const staff = mockStaff.find(s => s.id === value)
+                                      const staff = staffMembers.find(s => s.id === value)
                                       return <Chip key={value} label={staff?.name || value} size='small' />
                                     })}
                                   </Box>
                                 )}
                               >
-                                {mockStaff
-                                  .filter(s => ['1', '2', '3', '4', '5', '6', '7'].includes(s.id))
-                                  .map(staff => (
-                                    <MenuItem key={staff.id} value={staff.id}>
-                                      <Checkbox checked={(shift.staffIds || []).includes(staff.id)} />
-                                      <ListItemText primary={staff.name} secondary={staff.title} />
-                                    </MenuItem>
-                                  ))}
+                                {staffMembers.map(staff => (
+                                  <MenuItem key={staff.id} value={staff.id}>
+                                    <Checkbox checked={(shift.staffIds || []).includes(staff.id)} />
+                                    <ListItemText primary={staff.name} secondary={staff.title} />
+                                  </MenuItem>
+                                ))}
                               </Select>
                               <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
                                 Assign staff members to this shift
@@ -508,7 +509,10 @@ export function RoomScheduleEditor({
                     gap: 1
                   }}
                 >
-                  <i className='ri-error-warning-line' style={{ color: 'var(--mui-palette-error-main)', fontSize: 20 }} />
+                  <i
+                    className='ri-error-warning-line'
+                    style={{ color: 'var(--mui-palette-error-main)', fontSize: 20 }}
+                  />
                   <Box sx={{ flex: 1 }}>
                     <Typography variant='body2' fontWeight={600} color='error.main'>
                       Overlapping Shifts Detected

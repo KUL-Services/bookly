@@ -105,7 +105,7 @@ const renderEventTooltip = (event: CalendarEvent) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.75 }}>
           <i className='ri-price-tag-3-line' style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }} />
           <Typography variant='caption' sx={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 600 }}>
-            ${extendedProps.price.toFixed(2)}
+            EGP {extendedProps.price.toFixed(2)}
           </Typography>
         </Box>
       )}

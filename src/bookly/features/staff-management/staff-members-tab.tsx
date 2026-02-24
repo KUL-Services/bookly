@@ -33,7 +33,6 @@ import {
 } from '@mui/material'
 import { CircularProgress } from '@mui/material'
 import { BrandedEmptyState } from '@/bookly/components/molecules/branded-empty-state'
-import { mockStaff, mockServices, mockBranches } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { EditServicesModal } from './edit-services-modal'
 import { WorkingHoursEditor } from './working-hours-editor'
@@ -110,10 +109,10 @@ export function StaffMembersTab() {
     fetchBranchesFromApi()
   }, [])
 
-  // Use API data with mock fallback
-  const allStaff = staffMembers.length > 0 ? staffMembers : mockStaff
-  const allServices = apiServices.length > 0 ? apiServices : mockServices
-  const allBranches = apiBranches.length > 0 ? apiBranches : mockBranches
+  // Use API data
+  const allStaff = staffMembers
+  const allServices = apiServices
+  const allBranches = apiBranches
 
   // Get selected staff
   const selectedStaff = allStaff.find(s => s.id === selectedStaffId)
@@ -620,7 +619,7 @@ export function StaffMembersTab() {
                           </Typography>
                         </Box>
                         <Typography variant='h6' color='primary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
-                          ${service.price}
+                          EGP {service.price}
                         </Typography>
                       </Paper>
                     ))}

@@ -88,10 +88,10 @@ const TopServices = () => {
                   {r.bookings}
                 </TableCell>
                 <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
-                  ${r.avgPrice.toFixed(2)}
+                  EGP {r.avgPrice.toFixed(2)}
                 </TableCell>
                 <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
-                  ${r.revenue.toFixed(2)}
+                  EGP {r.revenue.toFixed(2)}
                 </TableCell>
               </TableRow>
             ))}

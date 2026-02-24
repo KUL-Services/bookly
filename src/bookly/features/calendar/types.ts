@@ -34,6 +34,7 @@ export interface CalendarResource {
   // For staff resources
   staffType?: 'dynamic' | 'static'
   roomAssignments?: Array<{
+    id?: string
     roomId: string
     roomName: string
     dayOfWeek: DayOfWeek
@@ -134,6 +135,8 @@ export interface CalendarEvent extends EventInput {
     roomId?: string // For static scheduling mode - indicates which room
     roomName?: string // Room name for display
     isStaticSlot?: boolean // Flag indicating this event belongs to a static slot
+    sessionId?: string // For STATIC booking mode - links booking to a pre-defined session
+    sessionName?: string // Session name for display
     partySize?: number // For group bookings (default 1)
     branchId?: string // Branch where this appointment takes place
     branchName?: string // Branch name for display
@@ -145,6 +148,8 @@ export interface CalendarEvent extends EventInput {
     allDay?: boolean // For all-day time off
     note?: string // Additional notes
     arrivalTime?: string // Actual customer arrival/walk-in time (HH:MM format)
+    instapayReference?: string // Specific reference for Instapay
+    businessNotes?: string // Admin-only notes
     createdAt?: string // When the booking was created
     updatedAt?: string // When the booking was last updated
   }
@@ -243,6 +248,7 @@ export interface StaffShift {
   end: string // "HH:MM"
   breaks?: BreakRange[]
   capacity?: number // For static staff - max number of concurrent bookings for this shift
+  serviceIds?: string[] // Services available during this shift (for static mode)
 }
 
 export interface StaffShiftInstance extends StaffShift {
@@ -291,7 +297,13 @@ export interface Resource {
   id: string
   branchId: string
   name: string
+  type?: 'staff' | 'equipment' | 'room' | string
+  subType?: 'ROOM' | 'EQUIPMENT' // Backend discriminator for asset type
+  bookingMode?: 'STATIC' | 'DYNAMIC' // NEW: Determines if resource uses sessions or flexible booking
+  pendingBookingMode?: 'STATIC' | 'DYNAMIC' // Scheduled mode change
+  bookingModeEffectiveDate?: string // When the mode change takes effect
   capacity: number
+  description?: string
   serviceIds?: string[] // Services assigned to this resource
 }
 
@@ -349,6 +361,8 @@ export interface ManagedRoom extends Resource {
   color?: string
   description?: string
   roomType?: RoomType
+  pendingBookingMode?: 'STATIC' | 'DYNAMIC' // Scheduled mode change
+  bookingModeEffectiveDate?: string // When the mode change takes effect
   weeklySchedule: WeeklyRoomSchedule
   shiftOverrides: RoomShiftInstance[]
 }

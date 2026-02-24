@@ -1,6 +1,6 @@
 # New API Endpoints
 
-This document lists the newly implemented API endpoints for the Bookly platform, covering Guest Bookings, Rescheduling, Customer Reviews, Business Settings, Enhanced Admin Bookings, Commissions, Admin Reviews, Asset Assignments, Notifications, and Schedule Management.
+This document lists the newly implemented API endpoints for the Bookly platform, covering Guest Bookings, Rescheduling, Customer Reviews, Business Settings, Enhanced Admin Bookings, Commissions, Admin Reviews, Asset Assignments, Notifications, Schedule Management, and Media Library.
 
 **Base URL:** `http://localhost:5051`
 
@@ -183,6 +183,38 @@ Get business bookings with advanced filtering and pagination.
 - `fromDate`/`toDate` takes priority over `date` when both are provided
 - Response includes pagination metadata
 
+### POST /admin/bookings 🔒 (ADMIN)
+
+Create a booking with admin privileges (can force status, set customer details).
+
+**Request Body:**
+
+```json
+{
+  "serviceId": "...",
+  "branchId": "...",
+  "startTime": "...",
+  "customerEmail": "...",
+  "status": "CONFIRMED"
+}
+```
+
+### DELETE `/admin/bookings/{id}` 🔒 (ADMIN)
+
+Delete a booking from the business.
+
+**Response:** `200 OK`
+
+```json
+{
+  "message": "Booking deleted successfully"
+}
+```
+
+**Notes:**
+
+- Verifies admin owns the business before deletion
+
 ---
 
 ## Schedule Update
@@ -219,11 +251,31 @@ Get business settings. Returns defaults if none saved yet.
 ```json
 {
   "businessId": "business-uuid",
-  "bookingPolicies": {},
-  "paymentSettings": {},
-  "notificationSettings": {},
-  "schedulingSettings": {},
-  "customerSettings": {}
+  "bookingPolicies": {
+    "advanceBookingDays": 30,
+    "cancellationHours": 24,
+    "autoConfirmation": true
+  },
+  "paymentSettings": {
+    "requirePayment": false,
+    "acceptedMethods": ["cash", "card"]
+  },
+  "notificationSettings": {
+    "emailEnabled": true
+  },
+  "schedulingSettings": {
+    "bufferTime": 15
+  },
+  "customerSettings": {
+    "allowGuestBooking": true
+  },
+  "calendarSettings": {
+    "view": "week",
+    "start": "09:00"
+  },
+  "brandingSettings": {
+    "primaryColor": "#4A90D9"
+  }
 }
 ```
 
@@ -237,7 +289,9 @@ Create or update business settings. Uses upsert — creates on first call, updat
 {
   "bookingPolicies": { "advanceBookingDays": 30, "cancellationHours": 24 },
   "paymentSettings": { "requirePayment": false },
-  "notificationSettings": { "emailEnabled": true, "smsEnabled": false }
+  "notificationSettings": { "emailEnabled": true },
+  "brandingSettings": { "primaryColor": "#4A90D9" },
+  "calendarSettings": { "view": "day" }
 }
 ```
 
@@ -286,6 +340,24 @@ Create a new commission.
 ### DELETE `/admin/commissions/{id}` 🔒
 
 Delete a commission.
+
+### PATCH `/admin/commissions/{id}` 🔒
+
+Update a commission.
+
+**Request Body:**
+
+```json
+{
+  "staffId": "staff-uuid",
+  "type": "percentage",
+  "value": 15,
+  "scope": "service",
+  "scopeId": "service-uuid"
+}
+```
+
+**Response:** `200 OK` — Updated commission with nested `staff` relation.
 
 ---
 
@@ -359,3 +431,34 @@ Get all notifications for the authenticated user (or business if admin).
 ### PATCH `/notifications/{id}/read` 🔒
 
 Mark a notification as read.
+
+---
+
+## Media Library
+
+### GET `/media-lib` 🔒
+
+List all media files for the authenticated user.
+
+**Response:** `200 OK`
+
+```json
+[
+  {
+    "id": "asset-uuid",
+    "fileName": "photo.png",
+    "mimeType": "image/png",
+    "size": 204800,
+    "fileExtension": ".png",
+    "uploadUrl": "https://s3.amazonaws.com/...",
+    "createdAt": "2026-02-12T05:47:42.678Z",
+    "updatedAt": "2026-02-12T05:47:42.678Z"
+  }
+]
+```
+
+**Notes:**
+
+- Returns files owned by the authenticated user
+- `uploadUrl` is a pre-signed S3 URL valid for 1 hour
+- `size` is in bytes

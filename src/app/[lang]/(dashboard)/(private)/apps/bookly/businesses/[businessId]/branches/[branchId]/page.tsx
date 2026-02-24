@@ -49,7 +49,7 @@ const BranchDetailsPage = ({ params }: PageProps) => {
             <div className='mt-4 flex flex-wrap gap-2'>
               <Chip label={`Upcoming: ${upcoming.length}`} color='info' variant='tonal' />
               <Chip label={`Completed: ${completed.length}`} color='success' variant='tonal' />
-              <Chip label={`Revenue: $${revenue.toFixed(2)}`} color='primary' variant='tonal' />
+              <Chip label={`Revenue: EGP ${revenue.toFixed(2)}`} color='primary' variant='tonal' />
             </div>
           </CardContent>
         </Card>
@@ -60,7 +60,9 @@ const BranchDetailsPage = ({ params }: PageProps) => {
           <CardHeader title='Staff at this branch' />
           <CardContent>
             {staff.length === 0 ? (
-              <Typography variant='body2' color='text.secondary'>No staff assigned</Typography>
+              <Typography variant='body2' color='text.secondary'>
+                No staff assigned
+              </Typography>
             ) : (
               <List>
                 {staff.map(s => (
@@ -79,12 +81,17 @@ const BranchDetailsPage = ({ params }: PageProps) => {
           <CardHeader title='Services offered' />
           <CardContent>
             {services.length === 0 ? (
-              <Typography variant='body2' color='text.secondary'>No services configured</Typography>
+              <Typography variant='body2' color='text.secondary'>
+                No services configured
+              </Typography>
             ) : (
               <List>
                 {services.map(s => (
                   <ListItem key={s.id}>
-                    <ListItemText primary={`${s.name} — $${s.price}`} secondary={`${s.duration} min • ${s.category}`} />
+                    <ListItemText
+                      primary={`${s.name} — EGP ${s.price}`}
+                      secondary={`${s.duration} min • ${s.category}`}
+                    />
                   </ListItem>
                 ))}
               </List>
@@ -98,16 +105,23 @@ const BranchDetailsPage = ({ params }: PageProps) => {
           <CardHeader title='Upcoming bookings' subheader='Next few appointments at this branch' />
           <CardContent>
             {upcoming.length === 0 ? (
-              <Typography variant='body2' color='text.secondary'>No upcoming bookings</Typography>
+              <Typography variant='body2' color='text.secondary'>
+                No upcoming bookings
+              </Typography>
             ) : (
               <List>
                 {upcoming.map(b => (
                   <ListItem key={b.id}>
                     <ListItemText
                       primary={`${b.serviceName} with ${b.staffMemberName} — ${new Date(b.date).toLocaleDateString()} at ${b.time}`}
-                      secondary={`Duration: ${b.duration} min • Price: $${b.price}`}
+                      secondary={`Duration: ${b.duration} min • Price: EGP ${b.price}`}
                     />
-                    <Chip size='small' label={b.status} variant='tonal' color={b.status === 'confirmed' ? 'info' : b.status === 'pending' ? 'warning' : 'default'} />
+                    <Chip
+                      size='small'
+                      label={b.status}
+                      variant='tonal'
+                      color={b.status === 'confirmed' ? 'info' : b.status === 'pending' ? 'warning' : 'default'}
+                    />
                   </ListItem>
                 ))}
               </List>
@@ -154,4 +168,3 @@ const BranchDetailsPage = ({ params }: PageProps) => {
 }
 
 export default BranchDetailsPage
-

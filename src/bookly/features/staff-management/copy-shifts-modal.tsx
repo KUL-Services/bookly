@@ -18,7 +18,7 @@ import {
 } from '@mui/material'
 import { format } from 'date-fns'
 import { DatePickerField } from './date-picker-field'
-import { mockStaff } from '@/bookly/data/mock-data'
+
 import { useStaffManagementStore } from './staff-store'
 
 interface CopyShiftsModalProps {
@@ -28,7 +28,7 @@ interface CopyShiftsModalProps {
 }
 
 export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalProps) {
-  const { duplicateShifts } = useStaffManagementStore()
+  const { duplicateShifts, staffMembers } = useStaffManagementStore()
 
   const [staffId, setStaffId] = useState('')
   const [startDate, setStartDate] = useState('')
@@ -74,17 +74,12 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
   const daysCount = calculateDays()
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleCancel}
-      maxWidth="sm"
-      fullWidth
-    >
+    <Dialog open={open} onClose={handleCancel} maxWidth='sm' fullWidth>
       <DialogTitle>
-        <Typography variant="h5" fontWeight={600}>
+        <Typography variant='h5' fontWeight={600}>
           Copy Shifts
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant='body2' color='text.secondary'>
           Duplicate shift from {sourceDateStr} to multiple days
         </Typography>
       </DialogTitle>
@@ -92,20 +87,16 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Info Alert */}
-          <Alert severity="info">
-            This will copy the shift configuration from <strong>{sourceDateStr}</strong> to all selected days,
-            including breaks and working hours.
+          <Alert severity='info'>
+            This will copy the shift configuration from <strong>{sourceDateStr}</strong> to all selected days, including
+            breaks and working hours.
           </Alert>
 
           {/* Staff Selection */}
           <FormControl fullWidth>
             <InputLabel>Staff Member *</InputLabel>
-            <Select
-              value={staffId}
-              onChange={(e) => setStaffId(e.target.value)}
-              label="Staff Member *"
-            >
-              {mockStaff.map((staff) => (
+            <Select value={staffId} onChange={e => setStaffId(e.target.value)} label='Staff Member *'>
+              {staffMembers.map(staff => (
                 <MenuItem key={staff.id} value={staff.id}>
                   {staff.name}
                 </MenuItem>
@@ -116,16 +107,16 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
           {/* Date Range */}
           <Box sx={{ display: 'flex', gap: 2 }}>
             <DatePickerField
-              label="Start Date"
+              label='Start Date'
               value={startDate ? new Date(startDate) : new Date()}
-              onChange={(date) => setStartDate(format(date, 'yyyy-MM-dd'))}
+              onChange={date => setStartDate(format(date, 'yyyy-MM-dd'))}
               required
               fullWidth
             />
             <DatePickerField
-              label="End Date"
+              label='End Date'
               value={endDate ? new Date(endDate) : new Date()}
-              onChange={(date) => setEndDate(format(date, 'yyyy-MM-dd'))}
+              onChange={date => setEndDate(format(date, 'yyyy-MM-dd'))}
               required
               fullWidth
             />
@@ -142,7 +133,7 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
                 borderColor: 'success.main'
               }}
             >
-              <Typography variant="body2" color="success.dark">
+              <Typography variant='body2' color='success.dark'>
                 <strong>Summary:</strong> This will create {daysCount} shift {daysCount === 1 ? 'copy' : 'copies'}.
               </Typography>
             </Box>
@@ -151,10 +142,10 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleCancel} variant="outlined">
+        <Button onClick={handleCancel} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleCopy} variant="contained">
+        <Button onClick={handleCopy} variant='contained'>
           Copy Shifts
         </Button>
       </DialogActions>

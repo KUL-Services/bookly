@@ -240,21 +240,16 @@ export default function SingleStaffDayView({
       >
         <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
           {onBack && (
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<i className="ri-arrow-left-line" />}
-              onClick={onBack}
-            >
+            <Button variant='outlined' size='small' startIcon={<i className='ri-arrow-left-line' />} onClick={onBack}>
               All Staff
             </Button>
           )}
 
           {staffOptions.length > 0 && onStaffChange && onBack && (
-            <FormControl size="small" sx={{ minWidth: 180 }}>
+            <FormControl size='small' sx={{ minWidth: 180 }}>
               <Select
                 value={staff.id}
-                onChange={(e) => {
+                onChange={e => {
                   const value = e.target.value
                   if (value === 'all-staff') {
                     onBack()
@@ -265,22 +260,24 @@ export default function SingleStaffDayView({
                 displayEmpty
                 sx={{ fontSize: '0.875rem' }}
               >
-                <MenuItem value="all-staff">
+                <MenuItem value='all-staff'>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <i className="ri-group-line" style={{ fontSize: '1.25rem' }} />
-                    <Typography variant="body2" fontWeight={600}>All Staff</Typography>
+                    <i className='ri-group-line' style={{ fontSize: '1.25rem' }} />
+                    <Typography variant='body2' fontWeight={600}>
+                      All Staff
+                    </Typography>
                   </Box>
                 </MenuItem>
-                {staffOptions.map((option) => (
+                {staffOptions.map(option => (
                   <MenuItem key={option.id} value={option.id}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar
-                        src={option.photo}
-                        sx={{ width: 24, height: 24, fontSize: '0.75rem' }}
-                      >
-                        {option.name.split(' ').map(n => n[0]).join('')}
+                      <Avatar src={option.photo} sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                        {option.name
+                          .split(' ')
+                          .map(n => n[0])
+                          .join('')}
                       </Avatar>
-                      <Typography variant="body2">{option.name}</Typography>
+                      <Typography variant='body2'>{option.name}</Typography>
                     </Box>
                   </MenuItem>
                 ))}
@@ -300,29 +297,33 @@ export default function SingleStaffDayView({
               fontWeight: 600
             }}
           >
-            {staff.name.split(' ').map(n => n[0]).join('')}
+            {staff.name
+              .split(' ')
+              .map(n => n[0])
+              .join('')}
           </Avatar>
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <Typography variant="h6" fontWeight={600}>
+              <Typography variant='h6' fontWeight={600}>
                 {staff.name}
               </Typography>
               {staff.branchId && (
                 <Chip
                   icon={<i className='ri-map-pin-line' style={{ fontSize: '0.75rem' }} />}
                   label={getBranchName(staff.branchId)}
-                  size="small"
+                  size='small'
                   sx={{
                     height: 20,
                     fontSize: '0.7rem',
                     '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 },
-                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
-                    color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
+                    bgcolor: theme =>
+                      theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.08)',
+                    color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
                   }}
                 />
               )}
             </Box>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant='caption' color='text.secondary'>
               {staff.workingHours || '10:00 AM-7:00 PM'} • {todayEvents.length} appointments
             </Typography>
           </Box>
@@ -340,7 +341,13 @@ export default function SingleStaffDayView({
           }}
         >
           {/* Time slots column */}
-          <Box sx={{ borderRight: 1, borderColor: 'divider', bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
+          <Box
+            sx={{
+              borderRight: 1,
+              borderColor: 'divider',
+              bgcolor: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'
+            }}
+          >
             {timeSlots.map((slot, index) => {
               const minutes = slot.getMinutes()
               const showDashedLine = minutes === 15 || minutes === 30 || minutes === 45
@@ -357,23 +364,30 @@ export default function SingleStaffDayView({
                     justifyContent: 'center',
                     pt: minutes === 0 ? 0 : 0.5,
                     position: 'relative',
-                    '&::after': showDashedLine ? {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '1px',
-                      backgroundImage: isDark
-                        ? 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.12) 100%)'
-                        : 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.12) 100%)',
-                      backgroundSize: '8px 1px',
-                      backgroundRepeat: 'repeat-x'
-                    } : {}
+                    '&::after': showDashedLine
+                      ? {
+                          content: '""',
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: '1px',
+                          backgroundImage: isDark
+                            ? 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.12) 100%)'
+                            : 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.12) 100%)',
+                          backgroundSize: '8px 1px',
+                          backgroundRepeat: 'repeat-x'
+                        }
+                      : {}
                   }}
                 >
                   {minutes === 0 && (
-                    <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.7rem', mt: -0.5 }}>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      fontWeight={500}
+                      sx={{ fontSize: '0.7rem', mt: -0.5 }}
+                    >
                       {format(slot, 'h a')}
                     </Typography>
                   )}
@@ -408,19 +422,21 @@ export default function SingleStaffDayView({
                     borderBottom: minutes === 0 ? 1 : 0,
                     borderColor: 'divider',
                     position: 'relative',
-                    '&::after': showDashedLine ? {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '1px',
-                      backgroundImage: isDark
-                        ? 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.12) 100%)'
-                        : 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.12) 100%)',
-                      backgroundSize: '8px 1px',
-                      backgroundRepeat: 'repeat-x'
-                    } : {}
+                    '&::after': showDashedLine
+                      ? {
+                          content: '""',
+                          position: 'absolute',
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          height: '1px',
+                          backgroundImage: isDark
+                            ? 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.12) 100%)'
+                            : 'linear-gradient(to right, transparent 0%, transparent 50%, rgba(0,0,0,0.12) 50%, rgba(0,0,0,0.12) 100%)',
+                          backgroundSize: '8px 1px',
+                          backgroundRepeat: 'repeat-x'
+                        }
+                      : {}
                   }}
                 />
               )
@@ -521,7 +537,7 @@ export default function SingleStaffDayView({
                     {/* Duration indicator (only if selection is tall enough) */}
                     {dragStyle.height > 120 && (
                       <Typography
-                        variant="caption"
+                        variant='caption'
                         sx={{
                           bgcolor: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.9)',
                           color: 'primary.main',
@@ -532,7 +548,7 @@ export default function SingleStaffDayView({
                           fontSize: '0.7rem'
                         }}
                       >
-                        {Math.round((endMinutes - startMinutes) / 60 * 10) / 10}h
+                        {Math.round(((endMinutes - startMinutes) / 60) * 10) / 10}h
                       </Typography>
                     )}
 
@@ -579,7 +595,7 @@ export default function SingleStaffDayView({
               return (
                 <Box
                   key={event.id}
-                  data-event="true"
+                  data-event='true'
                   onClick={() => onEventClick?.(event)}
                   sx={{
                     position: 'absolute',
@@ -615,7 +631,7 @@ export default function SingleStaffDayView({
                   }}
                 >
                   <Typography
-                    variant="caption"
+                    variant='caption'
                     sx={{
                       display: 'block',
                       fontWeight: 700,
@@ -631,7 +647,7 @@ export default function SingleStaffDayView({
                     {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
                   </Typography>
                   <Typography
-                    variant="body1"
+                    variant='body1'
                     sx={{
                       fontWeight: 700,
                       color: effectiveTextColor,
@@ -666,7 +682,7 @@ export default function SingleStaffDayView({
                       ) : null
                     })()}
                     <Typography
-                      variant="body2"
+                      variant='body2'
                       sx={{
                         color: effectiveTextColor,
                         fontSize: '0.8rem',
@@ -682,7 +698,7 @@ export default function SingleStaffDayView({
                   </Box>
                   {height > 100 && (
                     <Typography
-                      variant="caption"
+                      variant='caption'
                       sx={{
                         display: 'block',
                         color: effectiveTextColor,
@@ -691,7 +707,7 @@ export default function SingleStaffDayView({
                         flexShrink: 0
                       }}
                     >
-                      ${event.extendedProps.price}
+                      EGP {event.extendedProps.price}
                     </Typography>
                   )}
                 </Box>

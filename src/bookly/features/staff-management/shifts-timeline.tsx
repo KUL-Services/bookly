@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { Box, Typography, Avatar, Chip, IconButton, Tooltip, Paper } from '@mui/material'
-import { mockStaff } from '@/bookly/data/mock-data'
+
 import { useStaffManagementStore } from './staff-store'
 import type { DayOfWeek } from '../calendar/types'
 
@@ -49,10 +49,10 @@ export function ShiftsTimeline({
   onEditBusinessHours,
   onEditStaffShift
 }: ShiftsTimelineProps) {
-  const { getBusinessHours, getStaffWorkingHours, getTimeReservationsForStaff, getTimeOffForStaff } =
+  const { getBusinessHours, getStaffWorkingHours, getTimeReservationsForStaff, getTimeOffForStaff, staffMembers } =
     useStaffManagementStore()
 
-  const filteredStaff = mockStaff.filter(s => selectedStaffIds.includes(s.id))
+  const filteredStaff = staffMembers.filter(s => selectedStaffIds.includes(s.id))
 
   // Get current day
   const currentDay = DAY_NAMES[selectedDate.getDay()]

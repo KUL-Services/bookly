@@ -100,7 +100,7 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
           p: 4
         }}
       >
-        <Typography variant="body1" color="text.secondary">
+        <Typography variant='body1' color='text.secondary'>
           No appointments found
         </Typography>
       </Box>
@@ -131,7 +131,7 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                 borderColor: 'divider'
               }}
             >
-              <Typography variant="h6" fontWeight={700}>
+              <Typography variant='h6' fontWeight={700}>
                 {format(date, 'EEEE, MMMM d, yyyy')}
               </Typography>
             </Box>
@@ -156,18 +156,19 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                       borderRadius: 2
                     }}
                   >
-                    <i className="ri-map-pin-line" style={{ fontSize: '1rem' }} />
-                    <Typography variant="subtitle2" fontWeight={600}>
+                    <i className='ri-map-pin-line' style={{ fontSize: '1rem' }} />
+                    <Typography variant='subtitle2' fontWeight={600}>
                       {branchGroup.branchName}
                     </Typography>
                     <Chip
                       label={`${eventCount} appointment${eventCount !== 1 ? 's' : ''}`}
-                      size="small"
+                      size='small'
                       sx={{
                         height: 20,
                         fontSize: '0.7rem',
-                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.15)',
-                        color: theme => theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)'
+                        bgcolor: theme =>
+                          theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.15)',
+                        color: theme => (theme.palette.mode === 'dark' ? 'rgb(94, 234, 212)' : 'rgb(20, 184, 166)')
                       }}
                     />
                   </Box>
@@ -225,10 +226,10 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                               alignItems: 'flex-start'
                             }}
                           >
-                            <Typography variant="body2" fontWeight={700} color="text.primary">
+                            <Typography variant='body2' fontWeight={700} color='text.primary'>
                               {format(new Date(event.start), 'h:mm a')}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography variant='caption' color='text.secondary'>
                               {format(new Date(event.end), 'h:mm a')}
                             </Typography>
                           </Box>
@@ -247,15 +248,15 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                           {/* Details */}
                           <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                              <Typography variant="body1" fontWeight={600} noWrap>
+                              <Typography variant='body1' fontWeight={600} noWrap>
                                 {event.extendedProps.starred && '⭐ '}
                                 {event.extendedProps.customerName}
                               </Typography>
                             </Box>
-                            <Typography variant="body2" color="text.secondary" noWrap sx={{ mb: 0.25 }}>
+                            <Typography variant='body2' color='text.secondary' noWrap sx={{ mb: 0.25 }}>
                               {event.extendedProps.serviceName}
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography variant='caption' color='text.secondary'>
                               with {event.extendedProps.staffName}
                             </Typography>
                           </Box>
@@ -270,12 +271,12 @@ export default function AppointmentListView({ events, onEventClick }: Appointmen
                               flexShrink: 0
                             }}
                           >
-                            <Typography variant="body2" fontWeight={700} color="primary.main">
-                              ${event.extendedProps.price}
+                            <Typography variant='body2' fontWeight={700} color='primary.main'>
+                              EGP {event.extendedProps.price}
                             </Typography>
                             <Chip
                               label={event.extendedProps.status.replace('_', ' ')}
-                              size="small"
+                              size='small'
                               sx={{
                                 height: 20,
                                 fontSize: '0.65rem',

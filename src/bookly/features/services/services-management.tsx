@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import {
   Box,
   Paper,
@@ -21,7 +21,9 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  Button
+  Button,
+  CircularProgress,
+  Alert
 } from '@mui/material'
 import { useServicesStore } from './services-store'
 import { ServicesFAB } from './services-fab'
@@ -46,9 +48,13 @@ export function ServicesManagement() {
   const {
     categories,
     services,
+    isLoading,
+    error,
     selectedCategoryId,
     searchQuery,
     selectedServiceId,
+    fetchServices,
+    fetchCategories,
     getFilteredServices,
     setSelectedCategory,
     setSearchQuery,
@@ -65,6 +71,11 @@ export function ServicesManagement() {
     closeServiceDialog,
     closeCategoryDialog
   } = useServicesStore()
+
+  useEffect(() => {
+    fetchServices()
+    fetchCategories()
+  }, [])
 
   // Context menu for categories
   const [categoryMenuAnchor, setCategoryMenuAnchor] = useState<null | HTMLElement>(null)
@@ -104,7 +115,11 @@ export function ServicesManagement() {
 
   const handleDragEnd = () => {
     // Perform reorder if we have valid indices
-    if (draggedIndexRef.current !== null && dragOverIndexRef.current !== null && draggedIndexRef.current !== dragOverIndexRef.current) {
+    if (
+      draggedIndexRef.current !== null &&
+      dragOverIndexRef.current !== null &&
+      draggedIndexRef.current !== dragOverIndexRef.current
+    ) {
       reorderCategories(draggedIndexRef.current, dragOverIndexRef.current)
     }
 
@@ -179,7 +194,9 @@ export function ServicesManagement() {
 
   // Get the category being deleted for the dialog message
   const categoryBeingDeleted = categoryToDelete ? categories.find(c => c.id === categoryToDelete) : null
-  const servicesInCategoryToDelete = categoryToDelete ? services.filter(s => s.categoryId === categoryToDelete).length : 0
+  const servicesInCategoryToDelete = categoryToDelete
+    ? services.filter(s => s.categoryId === categoryToDelete).length
+    : 0
 
   const handleEditService = () => {
     if (selectedServiceForMenu) {
@@ -361,7 +378,10 @@ export function ServicesManagement() {
                           '&:hover': { bgcolor: 'action.hover' }
                         }}
                       >
-                        <i className='ri-edit-line' style={{ fontSize: 16, color: 'var(--mui-palette-text-secondary)' }} />
+                        <i
+                          className='ri-edit-line'
+                          style={{ fontSize: 16, color: 'var(--mui-palette-text-secondary)' }}
+                        />
                       </IconButton>
                       <IconButton
                         size='small'
@@ -388,7 +408,28 @@ export function ServicesManagement() {
 
         {/* Services list */}
         <Box sx={{ flexGrow: 1, overflow: 'auto', p: 2 }}>
-          {filteredServices.length === 0 ? (
+          {error && (
+            <Alert severity='error' sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          {isLoading ? (
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                color: 'text.secondary'
+              }}
+            >
+              <CircularProgress size={36} />
+              <Typography variant='body2' sx={{ mt: 2 }}>
+                Loading services...
+              </Typography>
+            </Box>
+          ) : filteredServices.length === 0 ? (
             <Box
               sx={{
                 display: 'flex',
@@ -450,7 +491,7 @@ export function ServicesManagement() {
 
                     {/* Price */}
                     <Typography variant='body2' fontWeight={500} sx={{ minWidth: 70, textAlign: 'right', ml: 2 }}>
-                      ${service.price.toFixed(2)}
+                      EGP {service.price.toFixed(2)}
                     </Typography>
 
                     {/* Arrow */}
@@ -529,17 +570,17 @@ export function ServicesManagement() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 2 } }}
       >
-        <DialogTitle sx={{ pb: 1 }}>
-          Delete Category
-        </DialogTitle>
+        <DialogTitle sx={{ pb: 1 }}>Delete Category</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Are you sure you want to delete <strong>"{categoryBeingDeleted?.name}"</strong>?
             {servicesInCategoryToDelete > 0 && (
               <>
-                <br /><br />
+                <br />
+                <br />
                 <Typography component='span' color='warning.main' sx={{ fontWeight: 500 }}>
-                  {servicesInCategoryToDelete} service{servicesInCategoryToDelete > 1 ? 's' : ''} will be moved to "Not categorized".
+                  {servicesInCategoryToDelete} service{servicesInCategoryToDelete > 1 ? 's' : ''} will be moved to "Not
+                  categorized".
                 </Typography>
               </>
             )}

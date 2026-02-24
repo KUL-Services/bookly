@@ -79,8 +79,8 @@ const PaymentSettingsTab = () => {
                   }
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <i className={paymentMethodLabels[method].icon} />
-                      <Typography>{paymentMethodLabels[method].label}</Typography>
+                      <i className={paymentMethodLabels[method]?.icon || 'ri-question-line'} />
+                      <Typography>{paymentMethodLabels[method]?.label || method}</Typography>
                     </Box>
                   }
                 />
@@ -102,8 +102,8 @@ const PaymentSettingsTab = () => {
               {paymentSettings.acceptedMethods.map(method => (
                 <Chip
                   key={method}
-                  icon={<i className={paymentMethodLabels[method].icon} />}
-                  label={paymentMethodLabels[method].label}
+                  icon={<i className={paymentMethodLabels[method]?.icon || 'ri-question-line'} />}
+                  label={paymentMethodLabels[method]?.label || method}
                   color='primary'
                   variant='outlined'
                   size='small'

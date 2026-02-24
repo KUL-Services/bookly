@@ -5,6 +5,8 @@ import { CommissionsService } from '@/lib/api/services/commissions.service'
 import { StaffService } from '@/lib/api/services/staff.service'
 import { ServicesService } from '@/lib/api/services/services.service'
 import { BranchesService } from '@/lib/api/services/branches.service'
+import { SessionsService } from '@/lib/api/services/sessions.service'
+import type { Session, CreateSessionRequest } from '@/lib/api/types'
 // Mock data imports kept as fallbacks only\nimport {} from '@/bookly/data/staff-management-mock-data'
 import { mockStaff } from '@/bookly/data/mock-data'
 import type {
@@ -76,8 +78,9 @@ export interface StaffTypeTransition {
 export interface StaffManagementState {
   // API-loaded data
   staffMembers: any[] // Staff from API
-  apiServices: any[] // Services from API
   apiBranches: any[] // Branches from API
+  apiServices: any[] // Services from API
+  sessions: Session[] // Sessions from API for STATIC resources
   isStaffLoading: boolean
 
   // Business hours (branch-specific)
@@ -134,13 +137,15 @@ export interface StaffManagementState {
   getStaffShiftsForDate: (staffId: string, date: string) => StaffShiftInstance[]
   updateShiftInstance: (staffId: string, shift: StaffShiftInstance) => void
   updateShiftsForDate: (staffId: string, date: string, shifts: StaffShiftInstance[]) => void
+  saveStaffWorkingHours: (staffId: string) => Promise<void>
+  saveShiftsExceptions: (staffId: string, date: string, shifts: StaffShiftInstance[]) => Promise<void>
   deleteShiftInstance: (staffId: string, date: string, shiftId: string) => void
   duplicateShifts: (staffId: string, fromDate: string, toRange: { start: string; end: string }) => void
   addBreak: (staffId: string, shiftId: string, breakRange: { start: string; end: string }) => void
   removeBreak: (staffId: string, shiftId: string, breakId: string) => void
 
   // Actions - Service Assignments
-  assignServicesToStaff: (staffId: string, serviceIds: string[]) => void
+  assignServicesToStaff: (staffId: string, serviceIds: string[]) => Promise<void>
   getStaffServices: (staffId: string) => string[]
 
   // Actions - Time Reservations
@@ -157,22 +162,25 @@ export interface StaffManagementState {
   getTimeOffForStaff: (staffId: string) => TimeOffRequest[]
 
   // Actions - Resources
-  createResource: (resource: Omit<Resource, 'id'>) => void
-  updateResource: (id: string, updates: Partial<Resource>) => void
-  deleteResource: (id: string) => void
+  createResource: (resource: Omit<Resource, 'id'>) => Promise<void>
+  updateResource: (id: string, updates: Partial<Resource>) => Promise<void>
+  deleteResource: (id: string) => Promise<void>
   getResourcesForBranch: (branchId: string) => Resource[]
 
   // Actions - Resource Service Assignments
-  assignServicesToResource: (resourceId: string, serviceIds: string[]) => { success: boolean; conflicts?: string[] }
+  assignServicesToResource: (
+    resourceId: string,
+    serviceIds: string[]
+  ) => Promise<{ success: boolean; conflicts?: string[] }>
   getResourceServices: (resourceId: string) => string[]
   getServiceResourceAssignments: () => Record<string, string> // serviceId -> resourceId
   isServiceAssigned: (serviceId: string) => boolean
   getResourceForService: (serviceId: string) => string | null
 
   // Actions - Rooms
-  createRoom: (room: Omit<ManagedRoom, 'id' | 'weeklySchedule' | 'shiftOverrides'>) => void
-  updateRoom: (id: string, updates: Partial<ManagedRoom>) => void
-  deleteRoom: (id: string) => void
+  createRoom: (room: Omit<ManagedRoom, 'id' | 'weeklySchedule' | 'shiftOverrides'>) => Promise<void>
+  updateRoom: (id: string, updates: Partial<ManagedRoom>) => Promise<void>
+  deleteRoom: (id: string) => Promise<void>
   getRoomsForBranch: (branchId: string) => ManagedRoom[]
   updateRoomSchedule: (roomId: string, day: DayOfWeek, schedule: RoomDaySchedule) => void
   getRoomSchedule: (roomId: string, day: DayOfWeek) => RoomDaySchedule
@@ -192,18 +200,19 @@ export interface StaffManagementState {
   scheduleStaffTypeChange: (staffId: string, targetType: StaffType, effectiveDate: Date) => void
   getPendingStaffTypeChange: (staffId: string) => StaffTypeTransition | null
   cancelStaffTypeChange: (staffId: string) => void
-  updateStaffType: (staffId: string, staffType: StaffType) => void
-  updateRoomType: (roomId: string, roomType: 'dynamic' | 'static') => void
+  updateStaffType: (staffId: string, staffType: StaffType) => Promise<void>
+  updateRoomType: (roomId: string, roomType: 'dynamic' | 'static') => Promise<void>
+  cancelRoomBookingModeTransition: (roomId: string) => Promise<void>
   assignStaffToRoom: (staffId: string, roomAssignment: RoomAssignment) => void
   removeStaffRoomAssignment: (staffId: string, assignmentIndex: number) => void
   updateStaffRoomAssignment: (staffId: string, assignmentIndex: number, updates: Partial<RoomAssignment>) => void
   getStaffRoomAssignments: (staffId: string) => RoomAssignment[]
   isStaffBusyInRoom: (staffId: string, date: Date, time: string) => { busy: boolean; assignment?: RoomAssignment }
 
-  // Actions - Staff Management
-  createStaffMember: (staffData: any) => void
-  updateStaffMember: (staffId: string, staffData: any) => void
-  deleteStaffMember: (staffId: string) => void
+  createStaffMember: (staffData: any) => Promise<void>
+  updateStaffMember: (staffId: string, staffData: any) => Promise<void>
+  deleteStaffMember: (staffId: string) => Promise<void>
+  cancelStaffBookingModeTransition: (staffId: string) => Promise<void>
 
   // Actions - UI
   selectStaff: (staffId: string | null) => void
@@ -242,8 +251,9 @@ export interface StaffManagementState {
 export const useStaffManagementStore = create<StaffManagementState>((set, get) => ({
   // Initial State
   staffMembers: [],
-  apiServices: [],
   apiBranches: [],
+  apiServices: [],
+  sessions: [],
   isStaffLoading: false,
 
   // Initialize business hours for all branches - starts empty, populated by fetchSchedulesFromApi
@@ -295,11 +305,23 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
           branchId: s.branchId || '1-1',
           businessId: s.businessId || '',
           isActive: s.isActive !== false,
-          staffType: s.staffType || 'dynamic',
+          staffType: s.bookingMode === 'STATIC' ? 'static' : 'dynamic',
+          bookingMode: s.bookingMode || 'DYNAMIC',
           maxConcurrentBookings: s.maxConcurrentBookings || 1,
           roomAssignments: s.roomAssignments || []
         }))
-        set({ staffMembers: apiStaff, isStaffLoading: false })
+
+        // Populate service assignments
+        const serviceAssignments: Record<string, string[]> = {}
+        result.data.forEach((s: any) => {
+          if (s.serviceIds) {
+            serviceAssignments[s.id] = s.serviceIds
+          } else if (s.services) {
+            serviceAssignments[s.id] = s.services.map((srv: any) => srv.id)
+          }
+        })
+
+        set({ staffMembers: apiStaff, staffServiceAssignments: serviceAssignments, isStaffLoading: false })
         syncWithCalendar()
       } else {
         // Fallback to mockStaff
@@ -337,35 +359,47 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     try {
       const result = await AssetsService.getAssets()
       if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-        // Map API assets to Resource shape
-        const apiResources = result.data.map((asset: any) => ({
-          id: asset.id,
-          name: asset.name,
-          type: asset.type || 'equipment',
-          branchId: asset.branchId || '',
-          capacity: asset.maxConcurrent || asset.capacity || 1,
-          description: asset.description || ''
-        }))
-        set({ resources: apiResources })
-
-        // Also populate rooms from ASSET-type resources
+        // Separate assets by subType: EQUIPMENT goes to resources, ROOM goes to rooms
+        // If subType is not set, use legacy behavior (treat as both for backward compatibility)
         const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         const defaultDaySchedule = { isOpen: false, shifts: [] as any[] }
         const defaultWeeklySchedule = Object.fromEntries(dayNames.map(d => [d, { ...defaultDaySchedule }]))
 
-        const apiRooms: ManagedRoom[] = result.data
-          .filter((asset: any) => asset.type === 'ASSET' || !asset.type)
-          .map((asset: any) => ({
-            id: asset.id,
-            name: asset.name,
-            branchId: asset.branchId || '',
-            capacity: asset.maxConcurrent || asset.capacity || 1,
-            color: generateColorFromName(asset.name),
-            description: asset.description || '',
-            roomType: 'dynamic' as const,
-            weeklySchedule: defaultWeeklySchedule as any,
-            shiftOverrides: []
-          }))
+        // Filter equipment resources (subType === 'EQUIPMENT' or no subType for backward compatibility)
+        const equipmentAssets = result.data.filter(
+          (asset: any) => asset.subType === 'EQUIPMENT' || (!asset.subType && asset.type !== 'ROOM')
+        )
+        const apiResources = equipmentAssets.map((asset: any) => ({
+          id: asset.id,
+          name: asset.name,
+          type: 'equipment',
+          subType: 'EQUIPMENT' as const,
+          branchId: asset.branchId || '',
+          capacity: asset.maxConcurrent || asset.capacity || 1,
+          description: asset.description || '',
+          serviceIds: asset.serviceIds || (asset.services ? asset.services.map((s: any) => s.id) : [])
+        }))
+        set({ resources: apiResources })
+
+        // Filter room assets (subType === 'ROOM')
+        const roomAssets = result.data.filter(
+          (asset: any) => asset.subType === 'ROOM' || (!asset.subType && asset.type === 'ROOM')
+        )
+        const apiRooms: ManagedRoom[] = roomAssets.map((asset: any) => ({
+          id: asset.id,
+          name: asset.name,
+          branchId: asset.branchId || '',
+          capacity: asset.maxConcurrent || asset.capacity || 1,
+          color: generateColorFromName(asset.name),
+          description: asset.description || '',
+          roomType: (asset.bookingMode === 'STATIC' ? 'static' : 'dynamic') as 'dynamic' | 'static',
+          bookingMode: asset.bookingMode || 'DYNAMIC',
+          pendingBookingMode: asset.pendingBookingMode || undefined,
+          bookingModeEffectiveDate: asset.bookingModeEffectiveDate || undefined,
+          weeklySchedule: defaultWeeklySchedule as any,
+          shiftOverrides: [],
+          serviceIds: asset.serviceIds || (asset.services ? asset.services.map((s: any) => s.id) : [])
+        }))
         if (apiRooms.length > 0) {
           set({ rooms: apiRooms })
         }
@@ -379,16 +413,21 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
   fetchSchedulesFromApi: async () => {
     try {
-      const result = await SchedulingService.getSchedules()
-      if (result.data && Array.isArray(result.data) && result.data.length > 0) {
+      const [schedulesRes, assignmentsRes, exceptionsRes, breaksRes, sessionsRes] = await Promise.all([
+        SchedulingService.getSchedules(),
+        SchedulingService.getAssignments().catch(() => ({ data: [] })),
+        SchedulingService.getExceptions().catch(() => ({ data: [] })),
+        SchedulingService.getBreaks().catch(() => ({ data: [] })),
+        SessionsService.getSessions().catch(() => ({ data: [] }))
+      ])
+
+      if (schedulesRes.data && Array.isArray(schedulesRes.data) && schedulesRes.data.length > 0) {
         // Map API Schedule[] to WeeklyStaffHours format
-        // API returns: { dayOfWeek: 0-6, startTime: 'HH:MM', endTime: 'HH:MM', resourceId, branchId }
-        // Frontend needs: { [resourceId]: { Mon: { isWorking: true, shifts: [{ start, end }] }, ... } }
         const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
         const workingHours: Record<string, any> = {}
         const branchHours: Record<string, any> = {}
 
-        result.data.forEach((schedule: any) => {
+        schedulesRes.data.forEach((schedule: any) => {
           const dayKey = dayNames[schedule.dayOfWeek] || dayNames[0]
           const shift = { start: schedule.startTime, end: schedule.endTime }
 
@@ -402,7 +441,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
             }
             workingHours[schedule.resourceId][dayKey] = {
               isWorking: true,
-              shifts: [...(workingHours[schedule.resourceId][dayKey]?.shifts || []), shift]
+              shifts: [...(workingHours[schedule.resourceId][dayKey]?.shifts || []), { ...shift, breaks: [] }]
             }
           }
 
@@ -411,27 +450,156 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
             if (!branchHours[schedule.branchId]) {
               branchHours[schedule.branchId] = {}
               dayNames.forEach(d => {
-                branchHours[schedule.branchId][d] = { isOpen: false, open: '', close: '' }
+                branchHours[schedule.branchId][d] = { isOpen: false, shifts: [] }
               })
             }
             // Use earliest start and latest end for branch hours
             const existing = branchHours[schedule.branchId][dayKey]
-            if (!existing.isOpen || schedule.startTime < existing.open || !existing.open) {
-              branchHours[schedule.branchId][dayKey] = {
-                isOpen: true,
-                open: !existing.open || schedule.startTime < existing.open ? schedule.startTime : existing.open,
-                close: !existing.close || schedule.endTime > existing.close ? schedule.endTime : existing.close
-              }
+            const existingStart = existing.shifts?.[0]?.start
+            const existingEnd = existing.shifts?.[0]?.end
+
+            branchHours[schedule.branchId][dayKey] = {
+              isOpen: true,
+              shifts: [
+                {
+                  start: !existingStart || schedule.startTime < existingStart ? schedule.startTime : existingStart,
+                  end: !existingEnd || schedule.endTime > existingEnd ? schedule.endTime : existingEnd
+                }
+              ]
             }
           }
         })
 
+        // Pre-fill fallback business hours for ALL branches
+        // Since backend might not return explicit branch schedules if they use defaults
+        let apiBranches = get().apiBranches || []
+        if (apiBranches.length === 0) {
+          try {
+            const branchesRes = await import('../../../lib/api/services/branches.service').then(m =>
+              m.BranchesService.getBranches()
+            )
+            if (branchesRes.data) apiBranches = branchesRes.data as any[]
+          } catch (e) {
+            console.warn('Could not fetch branches for schedule fallback')
+          }
+        }
+
+        apiBranches.forEach(branch => {
+          if (!branchHours[branch.id]) {
+            branchHours[branch.id] = {}
+            dayNames.forEach(d => {
+              // Default to 9am - 5pm if no DB schedule exists for this branch
+              branchHours[branch.id][d] = {
+                isOpen: true,
+                shifts: [{ start: '09:00', end: '17:00' }]
+              }
+            })
+          }
+        })
+
+        // 1.5. Process Breaks for Recurring Schedules
+        if (breaksRes.data && Array.isArray(breaksRes.data)) {
+          breaksRes.data.forEach((br: any) => {
+            const dayKey = dayNames[br.dayOfWeek] || dayNames[0]
+            if (br.resourceId && workingHours[br.resourceId]?.[dayKey]) {
+              // Find the shift this break belongs to (optional, but good for frontend structure)
+              // For simplicity, we can just add it to the first shift that contains it,
+              // or just keep them as orphans if needed.
+              // The frontend types expect breaks to be inside a StaffShift.
+              const breakRange = { id: br.id, start: br.startTime, end: br.endTime }
+              const shifts = workingHours[br.resourceId][dayKey].shifts
+              const targetShift = shifts.find((s: any) => br.startTime >= s.start && br.endTime <= s.end)
+              if (targetShift) {
+                if (!targetShift.breaks) targetShift.breaks = []
+                targetShift.breaks.push(breakRange)
+              }
+            }
+          })
+        }
+
         set({
           staffWorkingHours: workingHours,
-          ...(Object.keys(branchHours).length > 0 ? { businessHours: branchHours } : {})
+          businessHours: branchHours
         })
-        syncWithCalendar()
+      } else {
+        // If API completely empty, fall back to default hours for all known branches
+        let apiBranches = get().apiBranches || []
+        if (apiBranches.length === 0) {
+          try {
+            const branchesRes = await import('../../../lib/api/services/branches.service').then(m =>
+              m.BranchesService.getBranches()
+            )
+            if (branchesRes.data) apiBranches = branchesRes.data as any[]
+          } catch (e) {
+            console.warn('Could not fetch branches for empty schedule fallback')
+          }
+        }
+
+        const branchHours: Record<string, any> = {}
+        const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+        apiBranches.forEach(branch => {
+          branchHours[branch.id] = {}
+          dayNames.forEach(d => {
+            branchHours[branch.id][d] = {
+              isOpen: true,
+              shifts: [{ start: '09:00', end: '17:00' }]
+            }
+          })
+        })
+
+        set({ businessHours: branchHours })
       }
+
+      // 2. Process Staff Room Assignments
+      if (assignmentsRes.data && Array.isArray(assignmentsRes.data)) {
+        const staffMembers = get().staffMembers
+        const rooms = get().rooms
+        const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+        const assignmentsData = assignmentsRes.data || []
+        const updatedStaff = staffMembers.map(staff => {
+          const myAssignments = assignmentsData
+            .filter((a: any) => a.staffId === staff.id)
+            .map((a: any) => ({
+              id: a.id,
+              roomId: a.assetId,
+              roomName: rooms.find(r => r.id === a.assetId)?.name || 'Unknown Room',
+              dayOfWeek: dayNames[a.dayOfWeek] || dayNames[0],
+              startTime: a.startTime,
+              endTime: a.endTime,
+              serviceIds: []
+            }))
+          return { ...staff, roomAssignments: myAssignments }
+        })
+        set({ staffMembers: updatedStaff })
+      }
+
+      // 3. Process Schedule Exceptions
+      if (exceptionsRes.data && Array.isArray(exceptionsRes.data)) {
+        const overrides: Record<string, any[]> = {}
+        exceptionsRes.data.forEach((ex: any) => {
+          if (ex.resourceId) {
+            if (!overrides[ex.resourceId]) overrides[ex.resourceId] = []
+
+            overrides[ex.resourceId].push({
+              id: ex.id,
+              date: ex.date,
+              start: ex.isAvailable ? ex.startTime || '09:00' : '00:00',
+              end: ex.isAvailable ? ex.endTime || '17:00' : '00:00',
+              reason: ex.reason || 'manual'
+            })
+          }
+        })
+        set({ shiftOverrides: overrides })
+      }
+
+      // 4. Process Sessions
+      if (sessionsRes.data && Array.isArray(sessionsRes.data)) {
+        set({ sessions: sessionsRes.data })
+      }
+
+      syncWithCalendar()
     } catch (err) {
       console.warn('Failed to fetch schedules from API:', err)
     }
@@ -448,14 +616,15 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     }
   },
 
-  addSpecialRule: rule =>
+  addSpecialRule: (rule: Omit<SpecialRule, 'id'>) =>
     set(state => ({ specialRules: [...state.specialRules, { ...rule, id: `rule-${Date.now()}` }] })),
   updateSpecialRule: (id, updates) =>
     set(state => ({ specialRules: state.specialRules.map(r => (r.id === id ? { ...r, ...updates } : r)) })),
   deleteSpecialRule: id => set(state => ({ specialRules: state.specialRules.filter(r => r.id !== id) })),
 
   // Business Hours Actions
-  updateBusinessHours: (branchId, day, hours) => {
+  updateBusinessHours: async (branchId, day, hours) => {
+    // 1. Optimistic UI update
     set(state => ({
       businessHours: {
         ...state.businessHours,
@@ -465,6 +634,75 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
         }
       }
     }))
+
+    // 2. Persist to API
+    try {
+      const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+      const dayIndex = dayNames.indexOf(day)
+
+      // Fetch existing schedules for this branch
+      const existingSchedules = await import('../../../lib/api/services/scheduling.service').then(m =>
+        m.SchedulingService.getSchedules({ branchId })
+      )
+
+      // Filter schedules specifically for this dayOfWeek
+      const schedulesToDelete = (existingSchedules.data || []).filter(s => s.dayOfWeek === dayIndex)
+
+      // Delete old schedules
+      await Promise.all(
+        schedulesToDelete.map(s =>
+          import('../../../lib/api/services/scheduling.service').then(m => m.SchedulingService.deleteSchedule(s.id))
+        )
+      )
+
+      // Get existing breaks for this branch
+      const existingBreaks = await import('../../../lib/api/services/scheduling.service').then(m =>
+        m.SchedulingService.getBreaks({ branchId })
+      )
+      const breaksToDelete = (existingBreaks.data || []).filter(b => b.dayOfWeek === dayIndex)
+
+      // Delete old breaks
+      await Promise.all(
+        breaksToDelete.map(b =>
+          import('../../../lib/api/services/scheduling.service').then(m => m.SchedulingService.deleteBreak(b.id))
+        )
+      )
+
+      // If open, add the new ones
+      if (hours.isOpen) {
+        for (const shift of hours.shifts) {
+          // Create schedule
+          const createData = {
+            branchId,
+            dayOfWeek: dayIndex,
+            startTime: shift.start,
+            endTime: shift.end
+          }
+          await import('../../../lib/api/services/scheduling.service').then(m =>
+            m.SchedulingService.createSchedule(createData)
+          )
+
+          // Create breaks associated with this shift
+          if ((shift as any).breaks && (shift as any).breaks.length > 0) {
+            for (const b of (shift as any).breaks) {
+              const breakData = {
+                branchId,
+                name: 'Break',
+                dayOfWeek: dayIndex,
+                startTime: b.start,
+                endTime: b.end
+              }
+              await import('../../../lib/api/services/scheduling.service').then(m =>
+                m.SchedulingService.createBreak(breakData)
+              )
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Failed to update branch business hours on server:', e)
+      // We could optionally revert the optimistic UI update here if necessary
+    }
   },
 
   getBusinessHours: (branchId, day) => {
@@ -593,6 +831,138 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     })
   },
 
+  saveStaffWorkingHours: async staffId => {
+    try {
+      const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+      // 1. Fetch current schedules and breaks for this staff from backend to know what to delete
+      const [currentSchedulesResp, currentBreaksResp] = await Promise.all([
+        SchedulingService.getSchedules({ resourceId: staffId }),
+        SchedulingService.getBreaks({ resourceId: staffId })
+      ])
+
+      const currentSchedules = currentSchedulesResp.data || []
+      const currentBreaks = currentBreaksResp.data || []
+
+      // 2. Delete ALL existing real schedules and breaks for this staff
+      for (const old of currentSchedules) {
+        await SchedulingService.deleteSchedule(old.id)
+      }
+      for (const old of currentBreaks) {
+        await SchedulingService.deleteBreak(old.id)
+      }
+
+      // 3. Create new schedules and breaks from current state
+      for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+        const day = dayNames[dayIndex]
+        const hours = get().staffWorkingHours[staffId]?.[day]
+
+        if (hours && hours.isWorking && hours.shifts) {
+          for (const shift of hours.shifts) {
+            await SchedulingService.createSchedule({
+              dayOfWeek: dayIndex,
+              startTime: shift.start,
+              endTime: shift.end,
+              resourceId: staffId
+            })
+
+            // Also create breaks for this shift
+            if (shift.breaks && Array.isArray(shift.breaks)) {
+              for (const br of shift.breaks) {
+                await SchedulingService.createBreak({
+                  name: 'Break',
+                  dayOfWeek: dayIndex,
+                  startTime: br.start,
+                  endTime: br.end,
+                  resourceId: staffId
+                })
+              }
+            }
+          }
+        }
+      }
+      await get().fetchSchedulesFromApi()
+    } catch (err) {
+      console.error('Failed to save staff working hours:', err)
+    }
+  },
+
+  saveShiftsExceptions: async (staffId, date, shifts) => {
+    try {
+      // 1. Fetch current exceptions for this staff from backend to know what to delete
+      const currentExceptionsResp = await SchedulingService.getExceptions({ resourceId: staffId })
+      const currentExceptions = currentExceptionsResp.data || []
+
+      // 2. Filter by date to find which to delete
+      const exceptionsForDate = currentExceptions.filter(e => e.date === date)
+      for (const old of exceptionsForDate) {
+        await SchedulingService.deleteException(old.id)
+      }
+
+      // 3. Create new exceptions
+      if (shifts.length === 0 || (shifts.length === 1 && shifts[0].start === '00:00' && shifts[0].end === '00:00')) {
+        // Special case: Not working at all this day
+        await SchedulingService.createException({
+          date,
+          isAvailable: false,
+          reason: shifts[0]?.reason || 'manual',
+          resourceId: staffId
+        })
+      } else {
+        for (const shift of shifts) {
+          // If shift has breaks, we need to split it into multiple AVAILABLE exceptions
+          if (shift.breaks && shift.breaks.length > 0) {
+            // Sort breaks by start time
+            const sortedBreaks = [...shift.breaks].sort((a, b) => a.start.localeCompare(b.start))
+
+            let currentTime = shift.start
+
+            for (const br of sortedBreaks) {
+              // Create segment before break if there's space
+              if (br.start > currentTime) {
+                await SchedulingService.createException({
+                  date,
+                  startTime: currentTime,
+                  endTime: br.start,
+                  isAvailable: true,
+                  reason: shift.reason || 'manual',
+                  resourceId: staffId
+                })
+              }
+              currentTime = br.end
+            }
+
+            // Create segment after the last break if there's space
+            if (shift.end > currentTime) {
+              await SchedulingService.createException({
+                date,
+                startTime: currentTime,
+                endTime: shift.end,
+                isAvailable: true,
+                reason: shift.reason || 'manual',
+                resourceId: staffId
+              })
+            }
+          } else {
+            // Regular shift without breaks
+            await SchedulingService.createException({
+              date,
+              startTime: shift.start,
+              endTime: shift.end,
+              isAvailable: true,
+              reason: shift.reason || 'manual',
+              resourceId: staffId
+            })
+          }
+        }
+      }
+
+      await get().fetchSchedulesFromApi()
+    } catch (err) {
+      console.error('Failed to save shift exceptions:', err)
+    }
+  },
+
   deleteShiftInstance: (staffId, date, shiftId) => {
     // Delete a specific shift instance
     set(state => {
@@ -652,13 +1022,19 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   // Service Assignment Actions
-  assignServicesToStaff: (staffId, serviceIds) => {
-    set(state => ({
-      staffServiceAssignments: {
-        ...state.staffServiceAssignments,
-        [staffId]: serviceIds
-      }
-    }))
+  assignServicesToStaff: async (staffId, serviceIds) => {
+    try {
+      set(state => ({
+        staffServiceAssignments: {
+          ...state.staffServiceAssignments,
+          [staffId]: serviceIds
+        }
+      }))
+      await StaffService.updateStaff({ id: staffId, serviceIds })
+      await get().fetchStaffFromApi()
+    } catch (err) {
+      console.error('Failed to assign services to staff:', err)
+    }
   },
 
   getStaffServices: staffId => {
@@ -754,44 +1130,136 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     return get().timeOffRequests.filter(req => req.staffId === staffId)
   },
 
+  // Staff Management Actions
+  createStaffMember: async staffData => {
+    try {
+      set({ isStaffLoading: true })
+      await StaffService.createStaff(staffData)
+      await get().fetchStaffFromApi()
+    } catch (err) {
+      console.error('Failed to create staff member:', err)
+      set({ isStaffLoading: false })
+    }
+  },
+
+  updateStaffMember: async (staffId, staffData) => {
+    try {
+      set({ isStaffLoading: true })
+      await StaffService.updateStaff({ id: staffId, ...staffData })
+      await get().fetchStaffFromApi()
+    } catch (err) {
+      console.error('Failed to update staff member:', err)
+      set({ isStaffLoading: false })
+    }
+  },
+
+  deleteStaffMember: async staffId => {
+    try {
+      set({ isStaffLoading: true })
+      await StaffService.deleteStaff(staffId)
+      await get().fetchStaffFromApi()
+    } catch (err) {
+      console.error('Failed to delete staff member:', err)
+      set({ isStaffLoading: false })
+    }
+  },
+
   // Resource Actions
-  createResource: resource => {
-    const newId = `room-${Date.now()}`
-    set(state => ({
-      resources: [...state.resources, { ...resource, id: newId }],
-      // Also sync resourceServiceAssignments if serviceIds are provided
-      resourceServiceAssignments:
-        resource.serviceIds && resource.serviceIds.length > 0
-          ? { ...state.resourceServiceAssignments, [newId]: resource.serviceIds }
-          : state.resourceServiceAssignments
-    }))
+  createResource: async resource => {
+    try {
+      // Map frontend Resource to API Asset with subType: EQUIPMENT
+      const assetData = {
+        name: resource.name,
+        subType: 'EQUIPMENT' as const, // Always EQUIPMENT for resources
+        branchId: resource.branchId,
+        maxConcurrent: resource.capacity,
+        description: resource.description,
+        serviceIds: resource.serviceIds || [],
+        bookingMode: (resource as any).bookingMode || 'DYNAMIC' // STATIC or DYNAMIC booking mode
+      }
+      await AssetsService.createAsset(assetData)
+      await get().fetchResourcesFromApi()
+    } catch (err) {
+      console.error('Failed to create resource:', err)
+    }
   },
 
-  updateResource: (id, updates) => {
-    set(state => {
-      const updatedResources = state.resources.map(res => (res.id === id ? { ...res, ...updates } : res))
-
-      // Also sync resourceServiceAssignments if serviceIds are being updated
-      const updatedResource = updatedResources.find(r => r.id === id)
-      const newAssignments = updatedResource?.serviceIds
-        ? { ...state.resourceServiceAssignments, [id]: updatedResource.serviceIds }
-        : state.resourceServiceAssignments
-
-      return {
-        resources: updatedResources,
-        resourceServiceAssignments: newAssignments
+  updateResource: async (id, updates) => {
+    try {
+      const assetData = {
+        id,
+        subType: 'EQUIPMENT' as const,
+        ...(updates.name && { name: updates.name }),
+        ...(updates.branchId && { branchId: updates.branchId }),
+        ...(updates.capacity !== undefined && { maxConcurrent: updates.capacity }),
+        ...(updates.description && { description: updates.description }),
+        ...(updates.serviceIds && { serviceIds: updates.serviceIds }),
+        ...((updates as any).bookingMode && { bookingMode: (updates as any).bookingMode })
       }
-    })
+      await AssetsService.updateAsset(assetData)
+      await get().fetchResourcesFromApi()
+    } catch (err) {
+      console.error('Failed to update resource:', err)
+    }
   },
 
-  deleteResource: id => {
-    set(state => {
-      const { [id]: removed, ...remainingAssignments } = state.resourceServiceAssignments
-      return {
-        resources: state.resources.filter(res => res.id !== id),
-        resourceServiceAssignments: remainingAssignments
+  deleteResource: async id => {
+    try {
+      await AssetsService.deleteAsset(id)
+      await get().fetchResourcesFromApi()
+    } catch (err) {
+      console.error('Failed to delete resource:', err)
+    }
+  },
+
+  // Room Actions
+  createRoom: async room => {
+    try {
+      const assetData = {
+        name: room.name,
+        subType: 'ROOM' as const, // Always ROOM for rooms
+        branchId: room.branchId,
+        maxConcurrent: room.capacity,
+        description: room.description,
+        serviceIds: room.serviceIds || [],
+        bookingMode: (room as any).bookingMode || 'DYNAMIC', // STATIC or DYNAMIC booking mode
+        roomType: room.roomType || 'dynamic' // dynamic/flexible vs static/fixed
       }
-    })
+      await AssetsService.createAsset(assetData)
+      await get().fetchResourcesFromApi() // Rooms are fetched via resources/assets endpoint
+    } catch (err) {
+      console.error('Failed to create room:', err)
+    }
+  },
+
+  updateRoom: async (id, updates) => {
+    try {
+      console.log('updateRoom called with updates:', updates)
+      const assetData = {
+        id,
+        subType: 'ROOM' as const,
+        ...(updates.name && { name: updates.name }),
+        ...(updates.branchId && { branchId: updates.branchId }),
+        ...(updates.capacity !== undefined && { maxConcurrent: updates.capacity }),
+        ...(updates.description && { description: updates.description }),
+        ...(updates.serviceIds && { serviceIds: updates.serviceIds }),
+        ...((updates as any).bookingMode && { bookingMode: (updates as any).bookingMode })
+      }
+      console.log('updateRoom payload assetData:', assetData)
+      await AssetsService.updateAsset(assetData)
+      await get().fetchResourcesFromApi()
+    } catch (err) {
+      console.error('Failed to update room:', err)
+    }
+  },
+
+  deleteRoom: async id => {
+    try {
+      await AssetsService.deleteAsset(id)
+      await get().fetchResourcesFromApi()
+    } catch (err) {
+      console.error('Failed to delete room:', err)
+    }
   },
 
   getResourcesForBranch: branchId => {
@@ -832,7 +1300,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     return assignments[serviceId] || null
   },
 
-  assignServicesToResource: (resourceId, serviceIds) => {
+  assignServicesToResource: async (resourceId, serviceIds) => {
     const currentAssignments = get().getServiceResourceAssignments()
     const conflicts: string[] = []
 
@@ -847,16 +1315,21 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       return { success: false, conflicts }
     }
 
-    set(state => ({
-      resourceServiceAssignments: {
-        ...state.resourceServiceAssignments,
-        [resourceId]: serviceIds
-      },
-      // Also update the resource's serviceIds field
-      resources: state.resources.map(r => (r.id === resourceId ? { ...r, serviceIds } : r))
-    }))
+    try {
+      // 1. Send update to API
+      await AssetsService.updateAsset({
+        id: resourceId,
+        serviceIds: serviceIds
+      })
 
-    return { success: true }
+      // 2. Fetch fresh data from API to ensure state matches backend
+      await get().fetchResourcesFromApi()
+
+      return { success: true }
+    } catch (err) {
+      console.error('Failed to assign services to resource:', err)
+      return { success: false, conflicts: ['API_ERROR'] }
+    }
   },
 
   getResourceServices: resourceId => {
@@ -866,45 +1339,6 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   // Room Management Actions
-  createRoom: room => {
-    const defaultSchedule: WeeklyRoomSchedule = {
-      Sun: { isAvailable: false, shifts: [] },
-      Mon: { isAvailable: false, shifts: [] },
-      Tue: { isAvailable: false, shifts: [] },
-      Wed: { isAvailable: false, shifts: [] },
-      Thu: { isAvailable: false, shifts: [] },
-      Fri: { isAvailable: false, shifts: [] },
-      Sat: { isAvailable: false, shifts: [] }
-    }
-
-    set(state => ({
-      rooms: [
-        ...state.rooms,
-        {
-          ...room,
-          id: `room-${Date.now()}`,
-          serviceIds: room.serviceIds || [],
-          weeklySchedule: defaultSchedule,
-          shiftOverrides: []
-        }
-      ]
-    }))
-  },
-
-  updateRoom: (id, updates) => {
-    set(state => ({
-      rooms: state.rooms.map(room => (room.id === id ? { ...room, ...updates } : room))
-    }))
-  },
-
-  deleteRoom: id => {
-    set(state => ({
-      rooms: state.rooms.filter(room => room.id !== id),
-      roomShiftOverrides: Object.fromEntries(
-        Object.entries(state.roomShiftOverrides).filter(([roomId]) => roomId !== id)
-      )
-    }))
-  },
 
   getRoomsForBranch: branchId => {
     return get().rooms.filter(room => room.branchId === branchId)
@@ -927,11 +1361,12 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   getRoomSchedule: (roomId, day) => {
-    const room = get().rooms.find(r => r.id === roomId)
-    if (!room || !room.weeklySchedule[day]) {
-      return { isAvailable: false, shifts: [] }
+    // Rooms share the same schedule storage as staff (staffWorkingHours)
+    const schedule = get().getStaffWorkingHours(roomId, day)
+    return {
+      isAvailable: schedule.isWorking,
+      shifts: schedule.shifts as unknown as RoomShift[]
     }
-    return room.weeklySchedule[day]
   },
 
   getRoomShiftForDate: (roomId, date) => {
@@ -1094,15 +1529,24 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     syncWithCalendar()
   },
 
-  updateStaffType: (staffId, staffType) => {
-    const staff = mockStaff.find(s => s.id === staffId)
-    if (staff) {
-      staff.staffType = staffType
-      // If changing to dynamic, clear room assignments
-      if (staffType === 'dynamic') {
-        staff.roomAssignments = []
-      }
-      // Update state to trigger re-render
+  cancelStaffBookingModeTransition: async staffId => {
+    try {
+      await import('../../../lib/api/services/staff.service').then(m =>
+        m.StaffService.cancelBookingModeTransition(staffId)
+      )
+      await get().fetchStaffFromApi()
+      syncWithCalendar()
+    } catch (e: any) {
+      console.error('Failed to cancel staff booking mode transition:', e)
+      // Re-throw with error message for UI to handle
+      const errorMessage =
+        e?.response?.data?.message || e?.message || 'Cannot cancel. There may be bookings after the effective date.'
+      throw new Error(errorMessage)
+    }
+  },
+
+  updateStaffType: async (staffId, staffType) => {
+    try {
       set(state => ({
         staffTypeUpdates: {
           ...state.staffTypeUpdates,
@@ -1110,15 +1554,59 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
         },
         updateCounter: state.updateCounter + 1
       }))
+
+      await StaffService.updateStaff({
+        id: staffId,
+        bookingMode: staffType === 'static' ? 'STATIC' : 'DYNAMIC'
+      })
+      await get().fetchStaffFromApi()
       syncWithCalendar()
+    } catch (err: any) {
+      console.error('Failed to update staff type:', err)
+      // Revert optimistic update
+      set(state => {
+        const newUpdates = { ...state.staffTypeUpdates }
+        delete newUpdates[staffId]
+        return { staffTypeUpdates: newUpdates, updateCounter: state.updateCounter + 1 }
+      })
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to update staff type'
+      throw new Error(errorMessage)
     }
   },
 
-  updateRoomType: (roomId, roomType) => {
-    set(state => ({
-      rooms: state.rooms.map(room => (room.id === roomId ? { ...room, roomType } : room))
-    }))
-    syncWithCalendar()
+  updateRoomType: async (roomId, roomType) => {
+    const previousRooms = get().rooms
+    try {
+      set(state => ({
+        rooms: state.rooms.map(room => (room.id === roomId ? { ...room, roomType } : room))
+      }))
+      await AssetsService.updateAsset({
+        id: roomId,
+        subType: 'ROOM' as const,
+        bookingMode: roomType === 'static' ? 'STATIC' : 'DYNAMIC'
+      })
+      await get().fetchResourcesFromApi()
+      syncWithCalendar()
+    } catch (err: any) {
+      console.error('Failed to update room type:', err)
+      // Revert optimistic update
+      set({ rooms: previousRooms })
+      const errorMessage = err?.response?.data?.message || err?.message || 'Failed to update room type'
+      throw new Error(errorMessage)
+    }
+  },
+
+  cancelRoomBookingModeTransition: async roomId => {
+    try {
+      await AssetsService.cancelBookingModeTransition(roomId)
+      await get().fetchResourcesFromApi()
+      syncWithCalendar()
+    } catch (err: any) {
+      console.error('Failed to cancel room booking mode transition:', err)
+      const errorMessage =
+        err?.response?.data?.message || err?.message || 'Cannot cancel. There may be bookings after the effective date.'
+      throw new Error(errorMessage)
+    }
   },
 
   assignStaffToRoom: (staffId, roomAssignment) => {
@@ -1189,155 +1677,6 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     }
 
     return { busy: false }
-  },
-
-  // Staff Management Actions
-  createStaffMember: staffData => {
-    const localId = `staff-${Date.now()}`
-
-    // Initialize staff working hours (all days off by default)
-    const defaultWorkingHours: WeeklyStaffHours = {
-      Sun: { isWorking: false, shifts: [] },
-      Mon: { isWorking: false, shifts: [] },
-      Tue: { isWorking: false, shifts: [] },
-      Wed: { isWorking: false, shifts: [] },
-      Thu: { isWorking: false, shifts: [] },
-      Fri: { isWorking: false, shifts: [] },
-      Sat: { isWorking: false, shifts: [] }
-    }
-
-    // Build local staff object
-    const newLocal = {
-      id: localId,
-      name: staffData.name,
-      title: staffData.title || '',
-      email: staffData.email || '',
-      phone: staffData.phone || '',
-      photo: staffData.photo || '',
-      color: staffData.color || '#0a2c24',
-      branchId: staffData.branchId || '1-1',
-      businessId: '1',
-      isActive: staffData.isActive !== false,
-      staffType: staffData.staffType || 'dynamic',
-      maxConcurrentBookings: staffData.maxConcurrentBookings || 1,
-      roomAssignments: staffData.roomAssignments || []
-    }
-
-    // Optimistically add to local state
-    set(state => ({
-      staffMembers: [...state.staffMembers, newLocal],
-      staffWorkingHours: {
-        ...state.staffWorkingHours,
-        [localId]: defaultWorkingHours
-      }
-    }))
-
-    // Call API in background
-    StaffService.createStaff({
-      name: staffData.name,
-      email: staffData.email,
-      mobile: staffData.phone,
-      branchId: staffData.branchId || '1-1',
-      profilePhoto: staffData.photo || null
-    })
-      .then(result => {
-        if (result.data) {
-          // Replace local temp id with real API id
-          const apiId = (result.data as any).id || localId
-          set(state => ({
-            staffMembers: state.staffMembers.map(s => (s.id === localId ? { ...s, id: apiId } : s))
-          }))
-        }
-      })
-      .catch(err => {
-        console.warn('API createStaff failed, keeping local state:', err)
-      })
-
-    syncWithCalendar()
-  },
-
-  updateStaffMember: (staffId, staffData) => {
-    // Optimistically update local state
-    set(state => ({
-      staffMembers: state.staffMembers.map(s =>
-        s.id === staffId
-          ? {
-              ...s,
-              name: staffData.name ?? s.name,
-              title: staffData.title ?? s.title,
-              email: staffData.email ?? s.email,
-              phone: staffData.phone ?? s.phone,
-              photo: staffData.photo ?? s.photo,
-              color: staffData.color ?? s.color,
-              branchId: staffData.branchId ?? s.branchId,
-              isActive: staffData.isActive ?? s.isActive
-            }
-          : s
-      )
-    }))
-
-    // Also update mockStaff for backward-compat consumers
-    const staffIndex = mockStaff.findIndex(s => s.id === staffId)
-    if (staffIndex !== -1) {
-      mockStaff[staffIndex] = {
-        ...mockStaff[staffIndex],
-        name: staffData.name,
-        title: staffData.title || '',
-        email: staffData.email,
-        phone: staffData.phone,
-        photo: staffData.photo,
-        color: staffData.color,
-        branchId: staffData.branchId,
-        isActive: staffData.isActive
-      }
-    }
-
-    // Call API in background
-    StaffService.updateStaff({
-      id: staffId,
-      name: staffData.name,
-      email: staffData.email,
-      mobile: staffData.phone,
-      branchId: staffData.branchId,
-      profilePhoto: staffData.photo || null
-    }).catch(err => {
-      console.warn('API updateStaff failed, local state preserved:', err)
-    })
-
-    syncWithCalendar()
-  },
-
-  deleteStaffMember: staffId => {
-    // Optimistically remove from local state
-    set(state => ({
-      staffMembers: state.staffMembers.filter(s => s.id !== staffId),
-      staffWorkingHours: Object.fromEntries(Object.entries(state.staffWorkingHours).filter(([id]) => id !== staffId)),
-      staffServiceAssignments: Object.fromEntries(
-        Object.entries(state.staffServiceAssignments).filter(([id]) => id !== staffId)
-      ),
-      shiftOverrides: Object.fromEntries(Object.entries(state.shiftOverrides).filter(([id]) => id !== staffId)),
-      timeReservations: state.timeReservations
-        .map(reservation => ({
-          ...reservation,
-          staffIds: reservation.staffIds.filter(id => id !== staffId)
-        }))
-        .filter(reservation => reservation.staffIds.length > 0 || reservation.roomIds.length > 0),
-      timeOffRequests: state.timeOffRequests.filter(req => req.staffId !== staffId),
-      selectedStaffId: state.selectedStaffId === staffId ? null : state.selectedStaffId
-    }))
-
-    // Also remove from mockStaff for backward-compat consumers
-    const staffIndex = mockStaff.findIndex(s => s.id === staffId)
-    if (staffIndex !== -1) {
-      mockStaff.splice(staffIndex, 1)
-    }
-
-    // Call API in background
-    StaffService.deleteStaff(staffId).catch(err => {
-      console.warn('API deleteStaff failed, local state already updated:', err)
-    })
-
-    syncWithCalendar()
   },
 
   // UI Actions

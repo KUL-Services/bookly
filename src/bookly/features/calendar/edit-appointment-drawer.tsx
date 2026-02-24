@@ -330,7 +330,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                   {duration} min
                 </Typography>
                 <Typography variant='h6' className='font-semibold' sx={{ mt: 1 }}>
-                  ${extendedProps.price}
+                  EGP {extendedProps.price}
                 </Typography>
               </Box>
 
@@ -481,7 +481,10 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                     onChange={e => setRequestedByClient(e.target.checked)}
                     icon={<i className='ri-heart-line' style={{ fontSize: '1.5rem' }} />}
                     checkedIcon={
-                      <i className='ri-heart-fill' style={{ fontSize: '1.5rem', color: 'var(--mui-palette-customColors-coral)' }} />
+                      <i
+                        className='ri-heart-fill'
+                        style={{ fontSize: '1.5rem', color: 'var(--mui-palette-customColors-coral)' }}
+                      />
                     }
                   />
                 }
@@ -547,7 +550,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 className='font-bold'
                 sx={{ fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' } }}
               >
-                ${extendedProps.price}
+                EGP {extendedProps.price}
               </Typography>
             </Box>
             <Box>

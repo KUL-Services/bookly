@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Drawer,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Box,
   Typography,
   IconButton,
@@ -14,19 +17,88 @@ import {
   Checkbox,
   Paper,
   Avatar,
-  Chip
+  Chip,
+  CircularProgress,
+  Alert
 } from '@mui/material'
 import { useBranchesStore } from './branches-store'
-import { availableServices, availableStaff } from './mock-data'
+import { useStaffManagementStore } from '@/bookly/features/staff-management/staff-store'
 import type { BranchFormData, BranchWorkingHours } from './types'
 import { DEFAULT_BRANCH_FORM_DATA } from './types'
 import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
+import GooglePlacesAutocomplete from '@/views/RegisterWizard/components/GooglePlacesAutocomplete'
+import GoogleMapPicker from '@/views/RegisterWizard/components/GoogleMapPicker'
 
 export function BranchEditorDrawer() {
-  const { isBranchEditorOpen, editingBranch, closeBranchEditor, createBranch, updateBranch } = useBranchesStore()
+  const {
+    isBranchEditorOpen,
+    editingBranch,
+    closeBranchEditor,
+    createBranch,
+    updateBranch,
+    availableServices,
+    fetchServices,
+    fetchBranches
+  } = useBranchesStore()
+  const { staffMembers, fetchStaffFromApi, updateStaffMember } = useStaffManagementStore()
 
   const [formData, setFormData] = useState<BranchFormData>(DEFAULT_BRANCH_FORM_DATA)
   const [currentSection, setCurrentSection] = useState<'info' | 'services' | 'staff' | 'hours'>('info')
+  const [isLoadingServices, setIsLoadingServices] = useState(false)
+  const [isLoadingStaff, setIsLoadingStaff] = useState(false)
+  const [isAssigningStaff, setIsAssigningStaff] = useState<string | null>(null) // Track which staff is being assigned
+
+  // Fetch real services and staff when drawer opens
+  useEffect(() => {
+    if (isBranchEditorOpen) {
+      if (availableServices.length === 0) {
+        setIsLoadingServices(true)
+        fetchServices().finally(() => setIsLoadingServices(false))
+      }
+      if (staffMembers.length === 0) {
+        setIsLoadingStaff(true)
+        fetchStaffFromApi().finally(() => setIsLoadingStaff(false))
+      }
+    }
+  }, [isBranchEditorOpen, availableServices.length, staffMembers.length, fetchServices, fetchStaffFromApi])
+
+  // Use real staff from API with their branch info
+  const availableStaff = staffMembers.map(s => ({
+    id: s.id,
+    name: s.name,
+    title: s.title || s.role || '',
+    color: s.color || '#0a2c24',
+    branchId: s.branchId || ''
+  }))
+
+  // Check if a staff member is assigned to this branch
+  const isStaffAssignedToThisBranch = (staffBranchId: string) => {
+    return editingBranch ? staffBranchId === editingBranch.id : false
+  }
+
+  // Handle staff assignment to this branch
+  const handleToggleStaffAssignment = async (staffId: string, currentBranchId: string) => {
+    if (!editingBranch) return
+
+    setIsAssigningStaff(staffId)
+    try {
+      if (currentBranchId === editingBranch.id) {
+        // Staff is already assigned to this branch - we can't unassign without selecting another branch
+        // For now, show a message or do nothing
+        console.log('Staff is already assigned to this branch')
+      } else {
+        // Assign staff to this branch
+        await updateStaffMember(staffId, { branchId: editingBranch.id })
+        // Refresh staff and branches data
+        await fetchStaffFromApi()
+        await fetchBranches()
+      }
+    } catch (err) {
+      console.error('Failed to assign staff to branch:', err)
+    } finally {
+      setIsAssigningStaff(null)
+    }
+  }
 
   // Reset form when drawer opens/closes or editing branch changes
   useEffect(() => {
@@ -43,7 +115,11 @@ export function BranchEditorDrawer() {
           staffIds: editingBranch.staff.map(s => s.id),
           galleryUrls: editingBranch.galleryUrls,
           workingHours: editingBranch.workingHours,
-          isActive: editingBranch.isActive
+          isActive: editingBranch.isActive,
+          latitude: editingBranch.latitude,
+          longitude: editingBranch.longitude,
+          formattedAddress: editingBranch.formattedAddress,
+          placeId: editingBranch.placeId
         })
       } else {
         setFormData(DEFAULT_BRANCH_FORM_DATA)
@@ -101,23 +177,28 @@ export function BranchEditorDrawer() {
   ]
 
   return (
-    <Drawer
-      anchor='right'
+    <Dialog
       open={isBranchEditorOpen}
       onClose={handleClose}
+      maxWidth='md'
+      fullWidth
       PaperProps={{
-        sx: { width: { xs: '100%', sm: 600 } }
+        sx: {
+          height: 'min(90vh, 800px)',
+          display: 'flex',
+          flexDirection: 'column'
+        }
       }}
     >
-      {/* Header */}
-      <Box
+      <DialogTitle
         sx={{
           p: 3,
           borderBottom: '1px solid',
           borderColor: 'divider',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          pb: 2
         }}
       >
         <Box>
@@ -128,10 +209,10 @@ export function BranchEditorDrawer() {
             {editingBranch ? 'Update branch information' : 'Add a new branch location'}
           </Typography>
         </Box>
-        <IconButton onClick={handleClose}>
+        <IconButton onClick={handleClose} size='small'>
           <i className='ri-close-line' />
         </IconButton>
-      </Box>
+      </DialogTitle>
 
       {/* Section Tabs */}
       <Box
@@ -181,13 +262,78 @@ export function BranchEditorDrawer() {
               required
             />
 
+            <GooglePlacesAutocomplete
+              value={formData.formattedAddress || formData.address || ''}
+              onChange={value => setFormData(prev => ({ ...prev, address: value, formattedAddress: '' }))}
+              onPlaceSelected={place => {
+                const lat = place.geometry?.location?.lat()
+                const lng = place.geometry?.location?.lng()
+                const formattedAddress = place.formatted_address || ''
+                const addressComponents = place.address_components || []
+
+                const extractComponent = (type: string) => {
+                  const component = addressComponents.find(comp => comp.types.includes(type))
+                  return component?.long_name || ''
+                }
+
+                const city =
+                  extractComponent('locality') ||
+                  extractComponent('administrative_area_level_2') ||
+                  extractComponent('sublocality')
+                const country = extractComponent('country') || 'EG'
+                const placeId = place.place_id || ''
+
+                const streetNumber = extractComponent('street_number')
+                const route = extractComponent('route')
+                const premise = extractComponent('premise')
+
+                let addressLine1 = ''
+                if (streetNumber && route) {
+                  addressLine1 = `${streetNumber} ${route}`.trim()
+                } else if (route) {
+                  addressLine1 = route
+                } else if (premise) {
+                  addressLine1 = premise
+                } else {
+                  addressLine1 = formattedAddress.split(',')[0] || ''
+                }
+
+                setFormData(prev => ({
+                  ...prev,
+                  address: addressLine1,
+                  city,
+                  country,
+                  latitude: lat,
+                  longitude: lng,
+                  formattedAddress,
+                  placeId
+                }))
+              }}
+              label='Search Branch Address'
+              error={false}
+              helperText='Start typing to search for your address'
+            />
+
+            <GoogleMapPicker
+              latitude={formData.latitude}
+              longitude={formData.longitude}
+              onLocationChange={(lat, lng, address) => {
+                setFormData(prev => ({
+                  ...prev,
+                  latitude: lat,
+                  longitude: lng,
+                  formattedAddress: address,
+                  address: address.split(',')[0] || address
+                }))
+              }}
+              height='min(300px, 40vh)'
+            />
+
             <TextField
               fullWidth
-              label='Address'
+              label='Street Address'
               value={formData.address}
               onChange={e => setFormData(prev => ({ ...prev, address: e.target.value }))}
-              multiline
-              rows={2}
             />
 
             <Box sx={{ display: 'flex', gap: 2 }}>
@@ -249,38 +395,48 @@ export function BranchEditorDrawer() {
               Select services available at this branch
             </Typography>
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {availableServices.map(service => (
-                <Paper
-                  key={service.id}
-                  variant='outlined'
-                  onClick={() => toggleService(service.id)}
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    bgcolor: formData.serviceIds.includes(service.id) ? 'action.selected' : 'transparent',
-                    borderColor: formData.serviceIds.includes(service.id) ? 'primary.main' : 'divider',
-                    transition: 'all 0.2s',
-                    '&:hover': { borderColor: 'primary.main' }
-                  }}
-                >
-                  <Checkbox checked={formData.serviceIds.includes(service.id)} sx={{ mr: 1 }} />
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant='body1' fontWeight={500}>
-                      {service.name}
+            {isLoadingServices ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : availableServices.length === 0 ? (
+              <Alert severity='info' sx={{ mb: 2 }}>
+                No services found. Please create services first before assigning them to branches.
+              </Alert>
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {availableServices.map(service => (
+                  <Paper
+                    key={service.id}
+                    variant='outlined'
+                    onClick={() => toggleService(service.id)}
+                    sx={{
+                      p: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      bgcolor: formData.serviceIds.includes(service.id) ? 'action.selected' : 'transparent',
+                      borderColor: formData.serviceIds.includes(service.id) ? 'primary.main' : 'divider',
+                      transition: 'all 0.2s',
+                      '&:hover': { borderColor: 'primary.main' }
+                    }}
+                  >
+                    <Checkbox checked={formData.serviceIds.includes(service.id)} sx={{ mr: 1 }} />
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant='body1' fontWeight={500}>
+                        {service.name}
+                      </Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        {service.duration} min
+                      </Typography>
+                    </Box>
+                    <Typography variant='body1' fontWeight={500} color='primary'>
+                      EGP {service.price}
                     </Typography>
-                    <Typography variant='body2' color='text.secondary'>
-                      {service.duration} min
-                    </Typography>
-                  </Box>
-                  <Typography variant='body1' fontWeight={500} color='primary'>
-                    ${service.price}
-                  </Typography>
-                </Paper>
-              ))}
-            </Box>
+                  </Paper>
+                ))}
+              </Box>
+            )}
 
             <Box sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
               <Typography variant='body2'>
@@ -293,55 +449,105 @@ export function BranchEditorDrawer() {
         {/* Staff Section */}
         {currentSection === 'staff' && (
           <Box>
-            <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-              Select staff members assigned to this branch
-            </Typography>
+            {editingBranch ? (
+              <>
+                <Alert severity='info' sx={{ mb: 2 }}>
+                  <Typography variant='body2'>
+                    Click on a staff member to assign them to <strong>{editingBranch.name}</strong>. Staff can only be
+                    assigned to one branch at a time.
+                  </Typography>
+                </Alert>
 
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-              {availableStaff.map(staff => (
-                <Paper
-                  key={staff.id}
-                  variant='outlined'
-                  onClick={() => toggleStaff(staff.id)}
-                  sx={{
-                    p: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    cursor: 'pointer',
-                    minWidth: 200,
-                    bgcolor: formData.staffIds.includes(staff.id) ? 'action.selected' : 'transparent',
-                    borderColor: formData.staffIds.includes(staff.id) ? 'primary.main' : 'divider',
-                    transition: 'all 0.2s',
-                    '&:hover': { borderColor: 'primary.main' }
-                  }}
-                >
-                  <Checkbox checked={formData.staffIds.includes(staff.id)} size='small' />
-                  <Avatar sx={{ bgcolor: staff.color || 'primary.main', width: 36, height: 36, fontSize: '0.9rem' }}>
-                    {staff.name
-                      .split(' ')
-                      .map(n => n[0])
-                      .join('')
-                      .toUpperCase()
-                      .slice(0, 2)}
-                  </Avatar>
-                  <Box>
-                    <Typography variant='body2' fontWeight={500}>
-                      {staff.name}
-                    </Typography>
-                    {staff.title && (
-                      <Typography variant='caption' color='text.secondary'>
-                        {staff.title}
-                      </Typography>
-                    )}
-                  </Box>
-                </Paper>
-              ))}
-            </Box>
+                <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                  Select staff members to assign to this branch:
+                </Typography>
+              </>
+            ) : (
+              <Alert severity='warning' sx={{ mb: 2 }}>
+                <Typography variant='body2'>
+                  Staff assignment is only available when editing an existing branch. Please save the branch first, then
+                  edit it to assign staff.
+                </Typography>
+              </Alert>
+            )}
+
+            {isLoadingStaff ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress size={32} />
+              </Box>
+            ) : availableStaff.length === 0 ? (
+              <Alert severity='warning'>No staff members found. Add staff in the Staff Management section first.</Alert>
+            ) : (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                {availableStaff.map(staff => {
+                  const isAssigned = isStaffAssignedToThisBranch(staff.branchId)
+                  const isLoading = isAssigningStaff === staff.id
+
+                  return (
+                    <Paper
+                      key={staff.id}
+                      variant='outlined'
+                      onClick={() =>
+                        editingBranch && !isLoading && handleToggleStaffAssignment(staff.id, staff.branchId)
+                      }
+                      sx={{
+                        p: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        minWidth: 200,
+                        cursor: editingBranch ? 'pointer' : 'default',
+                        bgcolor: isAssigned ? 'action.selected' : 'transparent',
+                        borderColor: isAssigned ? 'primary.main' : 'divider',
+                        borderWidth: isAssigned ? 2 : 1,
+                        transition: 'all 0.2s',
+                        opacity: isLoading ? 0.6 : 1,
+                        '&:hover': editingBranch
+                          ? {
+                              borderColor: 'primary.main',
+                              bgcolor: isAssigned ? 'action.selected' : 'action.hover'
+                            }
+                          : {}
+                      }}
+                    >
+                      {isLoading ? (
+                        <CircularProgress size={20} sx={{ mr: 0.5 }} />
+                      ) : (
+                        <Checkbox checked={isAssigned} size='small' disabled={!editingBranch} sx={{ p: 0, mr: 0.5 }} />
+                      )}
+                      <Avatar
+                        sx={{ bgcolor: staff.color || 'primary.main', width: 36, height: 36, fontSize: '0.9rem' }}
+                      >
+                        {staff.name
+                          .split(' ')
+                          .map((n: string) => n[0])
+                          .join('')
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </Avatar>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant='body2' fontWeight={500}>
+                          {staff.name}
+                        </Typography>
+                        {staff.title && (
+                          <Typography variant='caption' color='text.secondary'>
+                            {staff.title}
+                          </Typography>
+                        )}
+                      </Box>
+                      {isAssigned && (
+                        <Chip label='Assigned' size='small' color='primary' sx={{ fontSize: '0.7rem', height: 20 }} />
+                      )}
+                    </Paper>
+                  )
+                })}
+              </Box>
+            )}
 
             <Box sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
               <Typography variant='body2'>
-                <strong>{formData.staffIds.length}</strong> staff members selected
+                <strong>{availableStaff.filter(s => isStaffAssignedToThisBranch(s.branchId)).length}</strong> staff
+                members assigned to this branch
               </Typography>
             </Box>
           </Box>
@@ -419,6 +625,6 @@ export function BranchEditorDrawer() {
           {editingBranch ? 'Save Changes' : 'Create Branch'}
         </Button>
       </Box>
-    </Drawer>
+    </Dialog>
   )
 }

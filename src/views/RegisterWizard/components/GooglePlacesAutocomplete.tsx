@@ -144,6 +144,7 @@ const GooglePlacesAutocomplete = ({
         label={label}
         placeholder={value ? '' : placeholder}
         defaultValue={value}
+        InputLabelProps={{ shrink: true }}
         onChange={handleInputChange}
         onKeyDown={e => {
           // Prevent form submission on Enter when selecting from dropdown

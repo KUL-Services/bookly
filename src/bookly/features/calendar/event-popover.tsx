@@ -169,7 +169,13 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
             />
             <Chip
               label={getPaymentStatusLabel(extendedProps.paymentStatus)}
-              color={extendedProps.paymentStatus === 'paid' ? 'success' : extendedProps.paymentStatus === 'need_confirm' ? 'warning' : 'default'}
+              color={
+                extendedProps.paymentStatus === 'paid'
+                  ? 'success'
+                  : extendedProps.paymentStatus === 'need_confirm'
+                    ? 'warning'
+                    : 'default'
+              }
               size='medium'
               variant='outlined'
             />
@@ -189,14 +195,22 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
             <Box sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
               {extendedProps.bookingReference && (
                 <div className='flex items-center gap-2 mb-1'>
-                  <Typography variant='caption' color='text.secondary'>Booking Ref:</Typography>
-                  <Typography variant='body2' fontWeight={600}>{extendedProps.bookingReference}</Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    Booking Ref:
+                  </Typography>
+                  <Typography variant='body2' fontWeight={600}>
+                    {extendedProps.bookingReference}
+                  </Typography>
                 </div>
               )}
               {extendedProps.paymentReference && (
                 <div className='flex items-center gap-2'>
-                  <Typography variant='caption' color='text.secondary'>Payment Ref:</Typography>
-                  <Typography variant='body2' fontWeight={600}>{extendedProps.paymentReference}</Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    Payment Ref:
+                  </Typography>
+                  <Typography variant='body2' fontWeight={600}>
+                    {extendedProps.paymentReference}
+                  </Typography>
                 </div>
               )}
             </Box>
@@ -246,7 +260,7 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
             <div className='flex items-center gap-3'>
               <i className='ri-money-dollar-circle-line text-xl' />
               <Box>
-                <Typography variant='body1'>${extendedProps.price}</Typography>
+                <Typography variant='body1'>EGP {extendedProps.price}</Typography>
                 {getPaymentMethodLabel(extendedProps.paymentMethod) && (
                   <Typography variant='caption' color='text.secondary'>
                     {getPaymentMethodLabel(extendedProps.paymentMethod)}
@@ -288,7 +302,9 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
               <div className='flex items-start gap-3'>
                 <i className='ri-file-text-line text-xl mt-0.5' />
                 <Box>
-                  <Typography variant='caption' color='text.secondary'>Business Notes</Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    Business Notes
+                  </Typography>
                   <Typography variant='body2'>{extendedProps.notes}</Typography>
                 </Box>
               </div>
@@ -299,7 +315,9 @@ export default function EventPopover({ anchorEl, event, onClose, onEdit }: Event
               <div className='flex items-start gap-3'>
                 <i className='ri-chat-3-line text-xl mt-0.5' />
                 <Box>
-                  <Typography variant='caption' color='text.secondary'>Client Notes</Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    Client Notes
+                  </Typography>
                   <Typography variant='body2'>{extendedProps.clientNotes}</Typography>
                 </Box>
               </div>

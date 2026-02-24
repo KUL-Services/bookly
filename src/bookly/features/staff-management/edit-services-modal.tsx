@@ -19,7 +19,7 @@ import {
   Chip,
   Divider
 } from '@mui/material'
-import { mockServices, categories } from '@/bookly/data/mock-data'
+
 import { useStaffManagementStore } from './staff-store'
 
 interface EditServicesModalProps {
@@ -29,49 +29,39 @@ interface EditServicesModalProps {
   staffName: string
 }
 
-export function EditServicesModal({
-  open,
-  onClose,
-  staffId,
-  staffName
-}: EditServicesModalProps) {
-  const { getStaffServices, assignServicesToStaff } = useStaffManagementStore()
+export function EditServicesModal({ open, onClose, staffId, staffName }: EditServicesModalProps) {
+  const { getStaffServices, assignServicesToStaff, apiServices } = useStaffManagementStore()
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedServices, setSelectedServices] = useState<string[]>(() =>
-    getStaffServices(staffId)
-  )
+  const [selectedServices, setSelectedServices] = useState<string[]>(() => getStaffServices(staffId))
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
   // Filter services by search
   const filteredServices = useMemo(() => {
-    return mockServices.filter(service =>
-      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.category.toLowerCase().includes(searchQuery.toLowerCase())
+    return apiServices.filter(
+      service =>
+        service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (service.description || '').toLowerCase().includes(searchQuery.toLowerCase())
     )
-  }, [searchQuery])
+  }, [searchQuery, apiServices])
 
   // Group services by category
   const servicesByCategory = useMemo(() => {
-    const grouped: Record<string, typeof mockServices> = {}
+    const grouped: Record<string, typeof apiServices> = {}
 
     filteredServices.forEach(service => {
-      if (!grouped[service.category]) {
-        grouped[service.category] = []
+      const categoryName = service.categories?.[0]?.name || 'Uncategorized'
+      if (!grouped[categoryName]) {
+        grouped[categoryName] = []
       }
-      grouped[service.category].push(service)
+      grouped[categoryName].push(service)
     })
 
     return grouped
   }, [filteredServices])
 
   const handleToggleService = (serviceId: string) => {
-    setSelectedServices(prev =>
-      prev.includes(serviceId)
-        ? prev.filter(id => id !== serviceId)
-        : [...prev, serviceId]
-    )
+    setSelectedServices(prev => (prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]))
   }
 
   const handleSelectAll = () => {
@@ -97,7 +87,7 @@ export function EditServicesModal({
     <Dialog
       open={open}
       onClose={handleCancel}
-      maxWidth="md"
+      maxWidth='md'
       fullWidth
       PaperProps={{
         sx: { height: '80vh', display: 'flex', flexDirection: 'column' }
@@ -105,10 +95,10 @@ export function EditServicesModal({
     >
       <DialogTitle>
         <Box>
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant='h5' fontWeight={600}>
             Edit Services
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant='body2' color='text.secondary'>
             Assign services for {staffName}
           </Typography>
         </Box>
@@ -119,14 +109,14 @@ export function EditServicesModal({
         <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.default' }}>
           <TextField
             fullWidth
-            size="small"
-            placeholder="Search services..."
+            size='small'
+            placeholder='Search services...'
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
-                  <i className="ri-search-line" />
+                <InputAdornment position='start'>
+                  <i className='ri-search-line' />
                 </InputAdornment>
               )
             }}
@@ -135,27 +125,23 @@ export function EditServicesModal({
 
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <Button
-              size="small"
-              variant="outlined"
+              size='small'
+              variant='outlined'
               onClick={handleSelectAll}
-              startIcon={<i className="ri-check-double-line" />}
+              startIcon={<i className='ri-check-double-line' />}
             >
               Select All
             </Button>
             <Button
-              size="small"
-              variant="outlined"
+              size='small'
+              variant='outlined'
               onClick={handleClearSelection}
-              startIcon={<i className="ri-close-line" />}
+              startIcon={<i className='ri-close-line' />}
             >
               Clear Selection
             </Button>
             <Box sx={{ flexGrow: 1 }} />
-            <Chip
-              label={`${selectedServices.length} selected`}
-              color="primary"
-              size="small"
-            />
+            <Chip label={`${selectedServices.length} selected`} color='primary' size='small' />
           </Box>
         </Box>
 
@@ -163,17 +149,14 @@ export function EditServicesModal({
         <Box sx={{ flexGrow: 1, overflow: 'auto', p: 2 }}>
           {Object.keys(servicesByCategory).length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 8, color: 'text.secondary' }}>
-              <i className="ri-search-line" style={{ fontSize: 48, opacity: 0.3 }} />
-              <Typography variant="body1" sx={{ mt: 2 }}>
+              <i className='ri-search-line' style={{ fontSize: 48, opacity: 0.3 }} />
+              <Typography variant='body1' sx={{ mt: 2 }}>
                 No services found
               </Typography>
-              <Typography variant="body2">
-                Try a different search term
-              </Typography>
+              <Typography variant='body2'>Try a different search term</Typography>
             </Box>
           ) : (
             Object.entries(servicesByCategory).map(([categoryName, services]) => {
-              const categoryInfo = categories.find(c => c.name === categoryName)
               const allSelected = services.every(s => selectedServices.includes(s.id))
               const someSelected = services.some(s => selectedServices.includes(s.id))
 
@@ -194,17 +177,15 @@ export function EditServicesModal({
                   }}
                   sx={{ mb: 1, '&:before': { display: 'none' } }}
                 >
-                  <AccordionSummary expandIcon={<i className="ri-arrow-down-s-line" />}>
+                  <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
                       <Checkbox
                         checked={allSelected}
                         indeterminate={someSelected && !allSelected}
-                        onChange={(e) => {
+                        onChange={e => {
                           e.stopPropagation()
                           if (allSelected) {
-                            setSelectedServices(prev =>
-                              prev.filter(id => !services.map(s => s.id).includes(id))
-                            )
+                            setSelectedServices(prev => prev.filter(id => !services.map(s => s.id).includes(id)))
                           } else {
                             setSelectedServices(prev => [
                               ...prev.filter(id => !services.map(s => s.id).includes(id)),
@@ -212,21 +193,17 @@ export function EditServicesModal({
                             ])
                           }
                         }}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={e => e.stopPropagation()}
                       />
-                      <Typography variant="subtitle1" fontWeight={600}>
-                        {categoryInfo?.icon} {categoryName}
+                      <Typography variant='subtitle1' fontWeight={600}>
+                        {categoryName}
                       </Typography>
-                      <Chip
-                        size="small"
-                        label={services.length}
-                        sx={{ ml: 'auto', mr: 2 }}
-                      />
+                      <Chip size='small' label={services.length} sx={{ ml: 'auto', mr: 2 }} />
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails sx={{ pt: 0 }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      {services.map((service) => (
+                      {services.map(service => (
                         <FormControlLabel
                           key={service.id}
                           control={
@@ -238,11 +215,11 @@ export function EditServicesModal({
                           label={
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', pr: 2 }}>
                               <Box>
-                                <Typography variant="body2" fontWeight={500}>
+                                <Typography variant='body2' fontWeight={500}>
                                   {service.name}
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {service.duration} min • ${service.price}
+                                <Typography variant='caption' color='text.secondary'>
+                                  {service.duration} min • EGP {service.price}
                                 </Typography>
                               </Box>
                             </Box>
@@ -269,10 +246,10 @@ export function EditServicesModal({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleCancel} variant="outlined">
+        <Button onClick={handleCancel} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained" autoFocus>
+        <Button onClick={handleSave} variant='contained' autoFocus>
           Save Changes
         </Button>
       </DialogActions>

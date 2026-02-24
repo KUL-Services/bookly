@@ -285,6 +285,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   isLoading: false,
 
   fetchEvents: async (range: DateRange) => {
+    console.log('⚡ State: fetchEvents called with range:', range)
     set({ isLoading: true })
     try {
       // Use date strings YYYY-MM-DD
@@ -299,7 +300,11 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
       const starredIds = get().starredIds
 
-      const apiEvents = (bookings.data || []).map(b => mapApiBookingToEvent(b, starredIds))
+      // Handle paginated response structure: { data: { data: [], total: ... } } OR direct array
+      const bookingsData = bookings.data
+      const bookingsArray = Array.isArray(bookingsData) ? bookingsData : (bookingsData as any)?.data || []
+
+      const apiEvents = bookingsArray.map((b: any) => mapApiBookingToEvent(b, starredIds))
       const backgroundEvents = generateBackgroundEvents()
 
       set({ events: [...apiEvents, ...backgroundEvents], isLoading: false })
@@ -329,8 +334,10 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     try {
       const response = await AssetsService.getAssets()
       if (response?.data) {
+        // Filter to only include ROOM assets, not EQUIPMENT
+        const roomAssets = response.data.filter(asset => asset.subType === 'ROOM')
         // Map API resources to Room type
-        const mappedRooms: Room[] = response.data.map(asset => ({
+        const mappedRooms: Room[] = roomAssets.map(asset => ({
           id: asset.id,
           name: asset.name,
           branchId: asset.branchId,
@@ -493,12 +500,13 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     BookingService.createAdminBooking({
       serviceId: props.serviceId || '',
       branchId: props.branchId || '1-1',
+      resourceId: props.staffId, // Map staffId to resourceId as per successful curl
       staffId: props.staffId,
-      startTime: startDate.toISOString(),
+      startTime: new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000).toISOString(),
       customerName: props.customerName || '',
       customerEmail: extractedEmail,
       customerPhone: extractedPhone,
-      status: props.status || 'confirmed',
+      status: (props.status || 'confirmed').toUpperCase(),
       notes: props.notes
     })
       .then(result => {
@@ -513,7 +521,13 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         }
       })
       .catch(err => {
-        console.warn('API createAdminBooking failed, keeping local state:', err)
+        console.warn('API createAdminBooking failed, rolling back:', err)
+        // Rollback optimistic update
+        set(state => ({
+          events: state.events.filter(e => e.id !== newEvent.id),
+          lastActionError: err.message || 'Failed to create booking'
+        }))
+        // Ideally show a toast here, but for now we set error state
       })
   },
 
@@ -615,7 +629,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
     // Update status if changed
     if (oldProps.status !== props.status && props.status) {
-      BookingService.updateBookingStatus(updatedEvent.id, props.status).catch(err =>
+      BookingService.updateBookingStatus(updatedEvent.id, props.status.toUpperCase()).catch(err =>
         console.warn('API updateBookingStatus failed:', err)
       )
     }
@@ -624,7 +638,9 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     const timeChanged = oldEvent?.start?.toString() !== updatedEvent.start?.toString()
     if (timeChanged) {
       BookingService.adminRescheduleBooking(updatedEvent.id, {
-        startTime: new Date(updatedEvent.start).toISOString(),
+        startTime: new Date(
+          new Date(updatedEvent.start).getTime() - new Date(updatedEvent.start).getTimezoneOffset() * 60000
+        ).toISOString(),
         resourceId: props.staffId
       }).catch(err => console.warn('API adminRescheduleBooking failed:', err))
     }

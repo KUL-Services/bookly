@@ -282,12 +282,22 @@ export function mapApiBookingToEvent(booking: ApiBooking, starredIds: Set<string
 
   const status = statusMap[booking.status] || 'pending'
 
+  // Look up staff in store to find branchId
+  const allStaff = getStaffFromStore()
+  const staffId =
+    booking.resourceId && booking.resource?.type === 'STAFF' ? booking.resourceId : booking.resourceId || '1'
+  const staff = allStaff.find((s: any) => s.id === staffId)
+  const branchId = staff?.branchId || ''
+
+  const staffName = booking.resource?.name || staff?.name || 'Staff Member'
+
   // Generate extended props
   const extendedProps = {
     status,
     paymentStatus: 'paid' as PaymentStatus, // Default to paid for now, or derive if API has it
-    staffId: booking.resourceId && booking.resource?.type === 'STAFF' ? booking.resourceId : booking.resourceId || '1',
-    staffName: booking.resource?.name || 'Staff Member',
+    staffId,
+    staffName,
+    branchId, // Used for filtering
     selectionMethod: 'by_client' as SelectionMethod,
     starred: starredIds.has(booking.id),
     serviceId: booking.serviceId,
@@ -415,8 +425,19 @@ export function filterEvents(
     // Filter events to only include staff from selected branches
     filtered = filtered.filter(event => {
       const eventBranchId = event.extendedProps.branchId
+      // Check exact branch match
       if (eventBranchId && filters.branchFilters!.branchIds.includes(eventBranchId)) return true
-      return validStaffIds!.includes(event.extendedProps.staffId)
+
+      // Fallback: Check if staff belongs to branch
+      const matchesStaff = validStaffIds!.includes(event.extendedProps.staffId)
+
+      if (!matchesStaff && !eventBranchId) {
+        console.debug(
+          `🔍 Filter: Excluding event ${event.id} - No branchId and staff ${event.extendedProps.staffId} not in valid list`
+        )
+      }
+
+      return matchesStaff
     })
   }
 

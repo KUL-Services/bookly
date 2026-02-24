@@ -71,7 +71,7 @@ const UpcomingBookings = ({ rows, lang }: { rows: Booking[]; lang?: string }) =>
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>{new Date(row.date).toLocaleDateString()}</TableCell>
                   <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.time}</TableCell>
                   <TableCell align='right' sx={{ whiteSpace: 'nowrap' }}>
-                    ${row.price}
+                    EGP {row.price}
                   </TableCell>
                   <TableCell>
                     <Chip size='small' variant='tonal' label={row.status} color={statusColor[row.status]} />

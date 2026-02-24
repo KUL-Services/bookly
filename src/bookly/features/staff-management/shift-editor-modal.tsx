@@ -22,7 +22,6 @@ import {
 import type { BreakRange, DayOfWeek } from '../calendar/types'
 import { TimeSelectField } from './time-select-field'
 import { useStaffManagementStore } from './staff-store'
-import { mockStaff, mockBranches } from '@/bookly/data/mock-data'
 
 // Stable empty array to avoid infinite re-renders
 const EMPTY_BREAKS: BreakRange[] = []
@@ -92,12 +91,14 @@ export function ShiftEditorModal({
   const businessHoursValidation = useMemo(() => {
     if (!date || !isWorking || !staffId || shifts.length === 0) return { isOutside: false, message: '' }
 
-    // Get staff's branch
-    const staff = mockStaff.find(s => s.id === staffId)
-    if (!staff) return { isOutside: false, message: '' }
+    // Get staff's branch (check API staff first, then rooms if it's a room being edited)
+    const storeState = useStaffManagementStore.getState()
+    const staffRef =
+      storeState.staffMembers.find((s: any) => s.id === staffId) || storeState.rooms.find(r => r.id === staffId)
+    if (!staffRef) return { isOutside: false, message: '' }
 
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()] as DayOfWeek
-    const businessHours = getBusinessHours(staff.branchId, dayOfWeek)
+    const businessHours = getBusinessHours(staffRef.branchId, dayOfWeek)
 
     // If branch is closed on this day
     if (!businessHours.isOpen || businessHours.shifts.length === 0) {

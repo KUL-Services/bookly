@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box,
   Paper,
@@ -28,7 +28,9 @@ import {
   FormControl,
   InputLabel,
   Select,
-  Fab
+  Fab,
+  CircularProgress,
+  Alert
 } from '@mui/material'
 import { useBranchesStore } from './branches-store'
 import { BranchEditorDrawer } from './branch-editor-drawer'
@@ -69,11 +71,14 @@ export function BranchesTab() {
 
   const {
     branches,
+    isLoading,
+    error,
     selectedBranchId,
     searchQuery,
     statusFilter,
     isDeleteDialogOpen,
     branchToDelete,
+    fetchBranches,
     getFilteredBranches,
     setSelectedBranch,
     setSearchQuery,
@@ -85,6 +90,10 @@ export function BranchesTab() {
     toggleBranchStatus,
     setPrimaryBranch
   } = useBranchesStore()
+
+  useEffect(() => {
+    fetchBranches()
+  }, [])
 
   const filteredBranches = getFilteredBranches()
   const selectedBranch = branches.find(b => b.id === selectedBranchId)
@@ -181,7 +190,19 @@ export function BranchesTab() {
 
         {/* Branches List */}
         <List sx={{ flexGrow: 1, overflow: 'auto', py: 0 }}>
-          {filteredBranches.length === 0 ? (
+          {error && (
+            <Alert severity='error' sx={{ m: 1 }}>
+              {error}
+            </Alert>
+          )}
+          {isLoading ? (
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+              <CircularProgress size={32} />
+              <Typography variant='body2' sx={{ mt: 1, color: 'text.secondary' }}>
+                Loading branches...
+              </Typography>
+            </Box>
+          ) : filteredBranches.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
               <i className='ri-building-line' style={{ fontSize: 40, opacity: 0.3 }} />
               <Typography variant='body2' sx={{ mt: 1 }}>
@@ -353,7 +374,10 @@ export function BranchesTab() {
                 {!selectedBranch.isPrimary && (
                   <MenuItem onClick={() => handleMenuAction('delete')} sx={{ color: 'error.main' }}>
                     <ListItemIcon>
-                      <i className='ri-delete-bin-line' style={{ fontSize: 18, color: 'var(--mui-palette-error-main)' }} />
+                      <i
+                        className='ri-delete-bin-line'
+                        style={{ fontSize: 18, color: 'var(--mui-palette-error-main)' }}
+                      />
                     </ListItemIcon>
                     <ListItemText>Delete Branch</ListItemText>
                   </MenuItem>
@@ -411,17 +435,13 @@ export function BranchesTab() {
                       <Typography variant='caption' color='text.secondary'>
                         Created
                       </Typography>
-                      <Typography variant='body2'>
-                        {new Date(selectedBranch.createdAt).toLocaleDateString()}
-                      </Typography>
+                      <Typography variant='body2'>{new Date(selectedBranch.createdAt).toLocaleDateString()}</Typography>
                     </Box>
                     <Box>
                       <Typography variant='caption' color='text.secondary'>
                         Last Updated
                       </Typography>
-                      <Typography variant='body2'>
-                        {new Date(selectedBranch.updatedAt).toLocaleDateString()}
-                      </Typography>
+                      <Typography variant='body2'>{new Date(selectedBranch.updatedAt).toLocaleDateString()}</Typography>
                     </Box>
                   </Box>
                 </Paper>
@@ -466,7 +486,7 @@ export function BranchesTab() {
                           </Typography>
                         </Box>
                         <Typography variant='h6' color='primary'>
-                          ${service.price}
+                          EGP {service.price}
                         </Typography>
                       </Paper>
                     ))}

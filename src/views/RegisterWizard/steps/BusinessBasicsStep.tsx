@@ -118,7 +118,7 @@ const BusinessBasicsStep = ({
         )}
       </FormControl>
 
-      <FormControl fullWidth error={!!validationErrors.servicesOffered} required>
+      {/* <FormControl fullWidth error={!!validationErrors.servicesOffered} required>
         <InputLabel>Services Offered</InputLabel>
         <Select
           multiple
@@ -155,7 +155,7 @@ const BusinessBasicsStep = ({
             Select all that apply
           </Typography>
         )}
-      </FormControl>
+      </FormControl> */}
 
       <Box className='flex gap-3 justify-between mt-4'>
         <Button variant='outlined' onClick={handlePrev}>

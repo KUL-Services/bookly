@@ -21,7 +21,7 @@ import {
   ListItemText,
   Chip
 } from '@mui/material'
-import { mockStaff, mockBranches, mockRooms } from '@/bookly/data/mock-data'
+
 import { useStaffManagementStore } from './staff-store'
 import { TimeSelectField } from './time-select-field'
 import { DatePickerField } from './date-picker-field'
@@ -85,7 +85,9 @@ export function TimeReservationModal({
     timeOffRequests,
     selectedStaffId,
     getBusinessHours,
-    getStaffShiftsForDate
+    getStaffShiftsForDate,
+    staffMembers,
+    apiBranches
   } = useStaffManagementStore()
   const calendarRooms = useCalendarStore(state => state.rooms)
 
@@ -99,12 +101,12 @@ export function TimeReservationModal({
   const [validationError, setValidationError] = useState<string | null>(null)
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
 
-  const hasKnownBranch = !!branchId && branchId !== 'all' && mockBranches.some(branch => branch.id === branchId)
-  const allRooms = calendarRooms.length > 0 ? calendarRooms : mockRooms
-  const staffByBranch = hasKnownBranch ? mockStaff.filter(staff => staff.branchId === branchId) : mockStaff
+  const hasKnownBranch = !!branchId && branchId !== 'all' && apiBranches.some(branch => branch.id === branchId)
+  const allRooms = calendarRooms
+  const staffByBranch = hasKnownBranch ? staffMembers.filter(staff => staff.branchId === branchId) : staffMembers
   const roomsByBranch = hasKnownBranch ? allRooms.filter(room => room.branchId === branchId) : allRooms
-  const availableStaff = staffByBranch.length > 0 ? staffByBranch : mockStaff
-  const availableRooms = roomsByBranch.length > 0 ? roomsByBranch : allRooms
+  const availableStaff = staffMembers // use all if no branch, handled by filtering below
+  const availableRooms = allRooms
 
   const getSuggestedTimes = (targetStaffId: string, targetDate: Date) => {
     if (!targetStaffId) return null
@@ -181,7 +183,7 @@ export function TimeReservationModal({
     }
 
     for (const staffId of staffIds) {
-      const staff = mockStaff.find(s => s.id === staffId)
+      const staff = staffMembers.find(s => s.id === staffId)
       const conflictingReservation = timeReservations.find(reservation => {
         if (!reservation.staffIds.includes(staffId)) return false
         return startDateTime < reservation.end && endDateTime > reservation.start
@@ -216,8 +218,8 @@ export function TimeReservationModal({
     const warnings: string[] = []
     const dayName = dayNames[date.getDay()]
     staffIds.forEach(staffId => {
-      const staff = mockStaff.find(s => s.id === staffId)
-      const branch = staff ? mockBranches.find(b => b.id === staff.branchId) : null
+      const staff = staffMembers.find(s => s.id === staffId)
+      const branch = staff ? apiBranches.find(b => b.id === staff.branchId) : null
 
       if (branch) {
         const businessHours = getBusinessHours(branch.id, dayName)
@@ -240,7 +242,7 @@ export function TimeReservationModal({
 
     roomIds.forEach(roomId => {
       const room = calendarRooms.find(r => r.id === roomId)
-      const branch = room ? mockBranches.find(b => b.id === room.branchId) : null
+      const branch = room ? apiBranches.find(b => b.id === room.branchId) : null
       if (!branch) return
       const businessHours = getBusinessHours(branch.id, dayName)
       if (!businessHours.isOpen || businessHours.shifts.length === 0) {
@@ -308,7 +310,7 @@ export function TimeReservationModal({
 
   const selectedBranch =
     staffIds.length === 1
-      ? mockBranches.find(branch => branch.id === mockStaff.find(staff => staff.id === staffIds[0])?.branchId)
+      ? apiBranches.find(branch => branch.id === staffMembers.find(staff => staff.id === staffIds[0])?.branchId)
       : null
   const hasTargets = staffIds.length > 0 || roomIds.length > 0
 

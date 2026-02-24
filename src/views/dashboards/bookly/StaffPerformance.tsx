@@ -83,7 +83,7 @@ const StaffPerformance = () => {
                   {r.completed}
                 </TableCell>
                 <TableCell align='right' sx={{ fontFamily: 'var(--font-fira-code)' }}>
-                  ${r.revenue.toFixed(2)}
+                  EGP {r.revenue.toFixed(2)}
                 </TableCell>
               </TableRow>
             ))}

@@ -53,7 +53,6 @@ const statusColor = {
   PENDING: 'warning',
   CANCELLED: 'error',
   COMPLETED: 'default',
-  COMPLETED: 'default',
   NO_SHOW: 'warning'
 } as const
 
@@ -391,7 +390,7 @@ const BooklyBookingsPage = () => {
                                   </Typography>
                                 </Box>
                               </TableCell>
-                              <TableCell align='right'>{price ? `$${price}` : '-'}</TableCell>
+                              <TableCell align='right'>{price ? `EGP ${price}` : '-'}</TableCell>
                               <TableCell>
                                 <Chip
                                   size='small'

@@ -21,4 +21,9 @@ export class StaffService {
   static async deleteStaff(id: string) {
     return apiClient.delete<{ message: string }>(`/admin/staff/${id}`)
   }
+
+  // Admin only - Cancel pending booking mode transition
+  static async cancelBookingModeTransition(id: string) {
+    return apiClient.delete<Staff>(`/admin/staff/${id}/booking-mode-transition`)
+  }
 }

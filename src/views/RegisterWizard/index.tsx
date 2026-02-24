@@ -24,6 +24,12 @@ import { getLocalizedUrl } from '@/utils/i18n'
 import { getInitialFormData, saveDraft, loadDraft } from './utils'
 import { syncRegistrationDataToStores } from './registration-sync'
 
+import { BusinessService } from '@/lib/api/services/business.service'
+import { AuthService } from '@/lib/api/services/auth.service'
+import { BranchesService } from '@/lib/api/services/branches.service'
+import { ServicesService } from '@/lib/api/services/services.service'
+import { StaffService } from '@/lib/api/services/staff.service'
+
 // Step Components
 import AccountStep from './steps/AccountStep'
 import BusinessBasicsStep from './steps/BusinessBasicsStep'
@@ -187,13 +193,92 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
   const handleSubmitRegistration = async () => {
     setIsSubmitting(true)
     try {
-      // TODO: Replace with actual API call
       console.log('📤 Submitting registration data:', formData)
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // 1. Register the business
+      await BusinessService.registerBusiness({
+        name: formData.businessName,
+        email: formData.email,
+        description: formData.businessType,
+        owner: {
+          name: formData.ownerName,
+          email: formData.email,
+          password: formData.password
+        }
+      })
 
-      // Sync registration data to application stores
+      // 2. Automatically log in to get the admin token
+      const loginResponse = await AuthService.loginAdmin({
+        email: formData.email,
+        password: formData.password
+      })
+      if (loginResponse.data?.accessToken || loginResponse.data?.access_token) {
+        AuthService.setAuthToken(loginResponse.data.accessToken || loginResponse.data.access_token || '')
+      }
+
+      // 3. Create Branches
+      const createdBranches = []
+      if (formData.branches && formData.branches.length > 0) {
+        for (const branch of formData.branches) {
+          const res = await BranchesService.createBranch({
+            name: branch.name,
+            address: branch.addressLine1 || branch.formattedAddress,
+            latitude: branch.latitude,
+            longitude: branch.longitude,
+            mobile: formData.phone // use basic business phone for now
+          })
+          if (res.data) {
+            createdBranches.push({ localId: branch.id, apiId: res.data.id })
+          }
+        }
+      }
+
+      // 4. Create Services
+      const createdServices: { localId: string; apiId: string }[] = []
+      if (formData.services && formData.services.length > 0) {
+        for (const service of formData.services) {
+          const res = await ServicesService.createService({
+            name: service.name,
+            description: service.description,
+            price: service.price,
+            duration: service.duration,
+            location: 'Branch',
+            categoryIds: service.categoryId ? [service.categoryId] : undefined
+          })
+          if (res.data) {
+            createdServices.push({ localId: service.id, apiId: res.data.id })
+          }
+        }
+      }
+
+      // 5. Create Staff and Assignments
+      if (formData.staff && formData.staff.length > 0) {
+        for (const staff of formData.staff) {
+          const res = await StaffService.createStaff({
+            name: staff.name,
+            bookingMode: formData.schedulingMode === 'static' ? 'STATIC' : 'DYNAMIC',
+            branchId: createdBranches[0]?.apiId || '' // associate with first branch for now
+          })
+
+          if (!res.data) continue
+
+          // Assign services to staff
+          if (staff.serviceIds && staff.serviceIds.length > 0) {
+            const apiServiceIds = staff.serviceIds
+              .map(localId => createdServices.find(s => s.localId === localId)?.apiId)
+              .filter(Boolean) as string[]
+
+            if (apiServiceIds.length > 0) {
+              await StaffService.updateStaff({
+                id: res.data.id,
+                serviceIds: apiServiceIds
+              })
+            }
+          }
+        }
+      }
+
+      // Sync local UI stores
       syncRegistrationDataToStores(formData)
 
       // Clear draft after successful submission
@@ -203,7 +288,6 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
 
       // Show success page
       setShowSuccess(true)
-
       console.log('✅ Registration completed successfully!')
     } catch (error) {
       console.error('❌ Registration failed:', error)

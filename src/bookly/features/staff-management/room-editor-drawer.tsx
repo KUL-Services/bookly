@@ -27,7 +27,7 @@ import {
   useTheme,
   Avatar
 } from '@mui/material'
-import { mockBranches, mockServices } from '@/bookly/data/mock-data'
+import { format } from 'date-fns'
 import { useStaffManagementStore } from './staff-store'
 import type { ManagedRoom } from '../calendar/types'
 
@@ -76,7 +76,8 @@ const COLOR_OPTIONS = [
 export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: RoomEditorDrawerProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
-  const { createRoom, updateRoom, rooms } = useStaffManagementStore()
+  const { createRoom, updateRoom, rooms, apiBranches, apiServices, cancelRoomBookingModeTransition } =
+    useStaffManagementStore()
 
   const [name, setName] = useState('')
   const [branchId, setBranchId] = useState('')
@@ -87,7 +88,9 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
   const [serviceIds, setServiceIds] = useState<string[]>([])
   const [description, setDescription] = useState('')
   const [customAmenity, setCustomAmenity] = useState('')
-  const [roomType, setRoomType] = useState<'dynamic' | 'static'>('dynamic')
+  const [bookingMode, setBookingMode] = useState<'STATIC' | 'DYNAMIC'>('DYNAMIC')
+  const [cancelError, setCancelError] = useState<string | null>(null)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   // Load room data if editing
   useEffect(() => {
@@ -100,20 +103,20 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       setColor(room.color || '#0a2c24')
       setServiceIds(room.serviceIds || [])
       setDescription(room.description || '')
-      setRoomType(room.roomType || 'dynamic')
+      setBookingMode((room as any).bookingMode || 'DYNAMIC')
     } else {
       // Reset for new room - use selectedBranchId if available
       setName('')
-      setBranchId(selectedBranchId || mockBranches[0]?.id || '')
+      setBranchId(selectedBranchId || apiBranches[0]?.id || '')
       setCapacity(10)
       setFloor('')
       setAmenities([])
       setColor('#0a2c24')
       setServiceIds([])
       setDescription('')
-      setRoomType('dynamic')
+      setBookingMode('DYNAMIC')
     }
-  }, [room, open, selectedBranchId])
+  }, [room, open, selectedBranchId, apiBranches])
 
   const handleSave = () => {
     if (!name || !branchId) {
@@ -130,7 +133,8 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       color,
       serviceIds,
       description: description || undefined,
-      roomType
+      roomType: (bookingMode === 'STATIC' ? 'static' : 'dynamic') as 'static' | 'dynamic',
+      bookingMode
     }
 
     if (room) {
@@ -176,14 +180,16 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       }}
     >
       {/* Header */}
-      <DialogTitle sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottom: 1,
-        borderColor: 'divider',
-        pb: 2
-      }}>
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: 1,
+          borderColor: 'divider',
+          pb: 2
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar
             sx={{
@@ -211,7 +217,6 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       </DialogTitle>
 
       <DialogContent sx={{ pt: 3 }}>
-
         {/* Form */}
         <Box sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Basic Information */}
@@ -238,7 +243,7 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
           <FormControl fullWidth required>
             <InputLabel>Branch</InputLabel>
             <Select value={branchId} onChange={e => setBranchId(e.target.value)} label='Branch' disabled={!!room}>
-              {mockBranches.map(branch => (
+              {apiBranches.map(branch => (
                 <MenuItem key={branch.id} value={branch.id}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <i className='ri-building-line' style={{ fontSize: 16 }} />
@@ -254,47 +259,116 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
             )}
           </FormControl>
 
-          {/* Scheduling Type */}
+          {/* Pending Booking Mode Change Banner */}
+          {room && (room as any).pendingBookingMode && (
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: 'warning.50',
+                borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'warning.main',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1
+              }}
+            >
+              <Typography variant='subtitle2' fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <i className='ri-error-warning-line' /> Pending Mode Change
+              </Typography>
+              <Box>
+                <Typography variant='body2'>
+                  Scheduled to change to: <strong>{(room as any).pendingBookingMode}</strong>
+                </Typography>
+                {(room as any).bookingModeEffectiveDate && (
+                  <Typography variant='body2'>
+                    Effective Date: <strong>{format(new Date((room as any).bookingModeEffectiveDate), 'PPP')}</strong>
+                  </Typography>
+                )}
+                <Typography variant='caption'>Reason: Existing bookings must complete first</Typography>
+              </Box>
+              {cancelError && (
+                <Box
+                  sx={{
+                    p: 1.5,
+                    bgcolor: 'error.light',
+                    color: 'error.dark',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'error.main'
+                  }}
+                >
+                  <Typography variant='caption' fontWeight={600}>
+                    <i className='ri-error-warning-fill' style={{ marginRight: 4 }} />
+                    {cancelError}
+                  </Typography>
+                </Box>
+              )}
+              <Button
+                variant='outlined'
+                color='warning'
+                size='small'
+                disabled={isCancelling}
+                sx={{ alignSelf: 'flex-start', mt: 1 }}
+                onClick={async () => {
+                  setCancelError(null)
+                  setIsCancelling(true)
+                  try {
+                    await cancelRoomBookingModeTransition(room.id)
+                    onClose()
+                  } catch (err: any) {
+                    setCancelError(err.message || 'Cannot cancel. There may be bookings after the effective date.')
+                  } finally {
+                    setIsCancelling(false)
+                  }
+                }}
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel Scheduled Change'}
+              </Button>
+            </Box>
+          )}
+
+          {/* Booking Mode */}
           <Box>
             <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 1 }}>
-              Capacity Mode
+              Booking Mode
             </Typography>
             <ToggleButtonGroup
-              value={roomType}
+              value={bookingMode}
               exclusive
-              onChange={(_, value) => value && setRoomType(value)}
+              onChange={(_, value) => value && setBookingMode(value)}
               fullWidth
               sx={{ mb: 1 }}
             >
-              <ToggleButton value='dynamic' sx={{ textTransform: 'none', py: 1.5 }}>
+              <ToggleButton value='DYNAMIC' sx={{ textTransform: 'none', py: 1.5 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
-                  <i className='ri-equalizer-line' style={{ fontSize: 20 }} />
+                  <i className='ri-time-line' style={{ fontSize: 20 }} />
                   <Typography variant='body2' fontWeight={600}>
-                    Flexible
+                    Dynamic
                   </Typography>
                 </Box>
               </ToggleButton>
-              <ToggleButton value='static' sx={{ textTransform: 'none', py: 1.5 }}>
+              <ToggleButton value='STATIC' sx={{ textTransform: 'none', py: 1.5 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
-                  <i className='ri-lock-line' style={{ fontSize: 20 }} />
+                  <i className='ri-calendar-check-line' style={{ fontSize: 20 }} />
                   <Typography variant='body2' fontWeight={600}>
-                    Fixed
+                    Static
                   </Typography>
                 </Box>
               </ToggleButton>
             </ToggleButtonGroup>
             <Alert severity='info' sx={{ py: 0.5 }}>
               <Typography variant='caption'>
-                {roomType === 'dynamic'
-                  ? 'Capacity can vary per time slot or service. Ideal for rooms with different configurations.'
-                  : 'Single fixed capacity for all bookings. The room always has the same capacity.'}
+                {bookingMode === 'DYNAMIC'
+                  ? 'Clients can book any available time slot within room availability. Ideal for flexible scheduling.'
+                  : 'Clients join pre-defined sessions with fixed times and capacity. Ideal for classes, workshops, and group activities.'}
               </Typography>
             </Alert>
           </Box>
 
           <Box sx={{ display: 'flex', gap: 2 }}>
             {/* Capacity field only for static rooms */}
-            {roomType === 'static' && (
+            {bookingMode === 'STATIC' && (
               <TextField
                 type='number'
                 label='Fixed Capacity'
@@ -401,13 +475,13 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
               renderValue={selected => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map(value => {
-                    const service = mockServices.find(s => s.id === value)
+                    const service = apiServices.find(s => s.id === value)
                     return <Chip key={value} label={service?.name || value} size='small' />
                   })}
                 </Box>
               )}
             >
-              {mockServices.map(service => {
+              {apiServices.map(service => {
                 const roomsWithService = getRoomsWithService(service.id)
                 const isSelected = serviceIds.includes(service.id)
                 return (
@@ -508,8 +582,8 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
               <i className='ri-information-line' style={{ color: 'var(--mui-palette-primary-main)', marginTop: 2 }} />
               <Typography variant='caption' color='text.secondary'>
-                Rooms are physical spaces where services are performed. Assign services to rooms to
-                enable room-based scheduling. You can configure the room's weekly availability schedule after creation.
+                Rooms are physical spaces where services are performed. Assign services to rooms to enable room-based
+                scheduling. You can configure the room's weekly availability schedule after creation.
               </Typography>
             </Box>
           </Box>

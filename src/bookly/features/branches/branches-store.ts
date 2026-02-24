@@ -1,6 +1,66 @@
 import { create } from 'zustand'
 import type { Branch, BranchFormData, BranchService, BranchStaffMember } from './types'
-import { mockBranchesData, availableServices, availableStaff } from './mock-data'
+import { DEFAULT_WORKING_HOURS } from './types'
+import { BranchesService } from '@/lib/api/services/branches.service'
+import { ServicesService } from '@/lib/api/services/services.service'
+import type { Branch as ApiBranch, Service as ApiService } from '@/lib/api/types'
+
+// ============================================================================
+// Helper: Map API Branch → Frontend Branch
+// ============================================================================
+
+function mapApiBranch(api: ApiBranch): Branch {
+  // Extract staff from resources array (staff are resources with type: 'STAFF')
+  const staffFromResources = (api.resources || [])
+    .filter((r: any) => r.type === 'STAFF')
+    .map((r: any) => ({
+      id: r.id,
+      name: r.name,
+      title: r.title || undefined,
+      color: r.color || undefined
+    }))
+
+  // Also check api.staff for backwards compatibility
+  const staffFromStaffArray = (api.staff || []).map(s => ({
+    id: s.id,
+    name: s.name,
+    title: undefined,
+    color: undefined
+  }))
+
+  // Merge both sources, preferring resources (which is the current backend response)
+  const allStaff = staffFromResources.length > 0 ? staffFromResources : staffFromStaffArray
+
+  return {
+    id: api.id,
+    name: api.name,
+    address: api.address || '',
+    city: '', // Not in API
+    country: '', // Not in API
+    mobile: api.mobile || '',
+    email: '', // Not in API
+    businessId: api.businessId,
+    latitude: api.latitude,
+    longitude: api.longitude,
+
+    // Map nested services from API if present
+    services: (api.services || []).map(s => ({
+      id: s.id,
+      name: s.name,
+      price: s.price,
+      duration: s.duration
+    })),
+    // Use merged staff from resources and/or staff array
+    staff: allStaff,
+    galleryUrls: api.galleryUrls || api.gallery || [],
+    workingHours: DEFAULT_WORKING_HOURS,
+
+    isActive: true,
+    isPrimary: false,
+    createdAt: api.createdAt,
+    updatedAt: api.updatedAt
+  }
+}
 
 // ============================================================================
 // Branches Store State
@@ -9,6 +69,9 @@ import { mockBranchesData, availableServices, availableStaff } from './mock-data
 export interface BranchesState {
   // Data
   branches: Branch[]
+  availableServices: ApiService[] // Real services from API
+  isLoading: boolean
+  error: string | null
 
   // UI State
   selectedBranchId: string | null
@@ -21,6 +84,10 @@ export interface BranchesState {
   isDeleteDialogOpen: boolean
   branchToDelete: Branch | null
 
+  // API Actions
+  fetchBranches: () => Promise<void>
+  fetchServices: () => Promise<void>
+
   // Getters
   getFilteredBranches: () => Branch[]
   getBranchById: (id: string) => Branch | undefined
@@ -30,9 +97,9 @@ export interface BranchesState {
   getBranchStaff: (branchId: string) => BranchStaffMember[]
 
   // Branch Actions
-  createBranch: (data: BranchFormData) => void
-  updateBranch: (id: string, data: Partial<BranchFormData>) => void
-  deleteBranch: (id: string) => void
+  createBranch: (data: BranchFormData) => Promise<void>
+  updateBranch: (id: string, data: Partial<BranchFormData>) => Promise<void>
+  deleteBranch: (id: string) => Promise<void>
   toggleBranchStatus: (id: string) => void
   setPrimaryBranch: (id: string) => void
 
@@ -57,8 +124,11 @@ export interface BranchesState {
 // ============================================================================
 
 export const useBranchesStore = create<BranchesState>((set, get) => ({
-  // Initial State
-  branches: mockBranchesData,
+  // Initial State — empty, populated by fetchBranches()
+  branches: [],
+  availableServices: [], // Real services from API
+  isLoading: false,
+  error: null,
   selectedBranchId: null,
   searchQuery: '',
   statusFilter: 'all',
@@ -66,6 +136,48 @@ export const useBranchesStore = create<BranchesState>((set, get) => ({
   editingBranch: null,
   isDeleteDialogOpen: false,
   branchToDelete: null,
+
+  // API Actions
+  fetchBranches: async () => {
+    set({ isLoading: true, error: null })
+    try {
+      const result = await BranchesService.getBranches()
+      const rawData = result.data
+
+      const dataArray = Array.isArray(rawData)
+        ? rawData
+        : (rawData as any)?.data && Array.isArray((rawData as any).data)
+          ? (rawData as any).data
+          : []
+
+      const branches = dataArray.map(mapApiBranch)
+
+      // Mark the first branch as primary if none set
+      if (branches.length > 0) {
+        branches[0].isPrimary = true
+      }
+      set({ branches, isLoading: false })
+    } catch (err: any) {
+      console.warn('Failed to fetch branches from API:', err)
+      set({ error: err?.message || 'Failed to fetch branches', isLoading: false })
+    }
+  },
+
+  // Fetch real services from API for branch assignment
+  fetchServices: async () => {
+    try {
+      const result = await ServicesService.getServices()
+      const rawData = result.data
+      const dataArray = Array.isArray(rawData)
+        ? rawData
+        : (rawData as any)?.data && Array.isArray((rawData as any).data)
+          ? (rawData as any).data
+          : []
+      set({ availableServices: dataArray })
+    } catch (err: any) {
+      console.warn('Failed to fetch services from API:', err)
+    }
+  },
 
   // Getters
   getFilteredBranches: () => {
@@ -116,100 +228,70 @@ export const useBranchesStore = create<BranchesState>((set, get) => ({
     return branch?.staff || []
   },
 
-  // Branch Actions
-  createBranch: (data: BranchFormData) => {
-    const newBranch: Branch = {
-      id: `branch-${Date.now()}`,
-      name: data.name,
-      address: data.address,
-      city: data.city,
-      country: data.country,
-      mobile: data.mobile,
-      email: data.email || undefined,
-      businessId: 'business-1',
-      services: data.serviceIds.map(id => {
-        const service = availableServices.find(s => s.id === id)
-        return service || { id, name: 'Unknown', price: 0, duration: 0 }
-      }),
-      staff: data.staffIds.map(id => {
-        const staff = availableStaff.find(s => s.id === id)
-        return staff || { id, name: 'Unknown' }
-      }),
-      galleryUrls: data.galleryUrls,
-      workingHours: data.workingHours,
-      isActive: data.isActive,
-      isPrimary: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-
-    set(state => ({
-      branches: [...state.branches, newBranch]
-    }))
-  },
-
-  updateBranch: (id: string, data: Partial<BranchFormData>) => {
-    set(state => ({
-      branches: state.branches.map(branch => {
-        if (branch.id !== id) return branch
-
-        const updates: Partial<Branch> = {
-          updatedAt: new Date().toISOString()
-        }
-
-        if (data.name !== undefined) updates.name = data.name
-        if (data.address !== undefined) updates.address = data.address
-        if (data.city !== undefined) updates.city = data.city
-        if (data.country !== undefined) updates.country = data.country
-        if (data.mobile !== undefined) updates.mobile = data.mobile
-        if (data.email !== undefined) updates.email = data.email || undefined
-        if (data.galleryUrls !== undefined) updates.galleryUrls = data.galleryUrls
-        if (data.workingHours !== undefined) updates.workingHours = data.workingHours
-        if (data.isActive !== undefined) updates.isActive = data.isActive
-
-        if (data.serviceIds !== undefined) {
-          updates.services = data.serviceIds.map(serviceId => {
-            const service = availableServices.find(s => s.id === serviceId)
-            return service || { id: serviceId, name: 'Unknown', price: 0, duration: 0 }
-          })
-        }
-
-        if (data.staffIds !== undefined) {
-          updates.staff = data.staffIds.map(staffId => {
-            const staff = availableStaff.find(s => s.id === staffId)
-            return staff || { id: staffId, name: 'Unknown' }
-          })
-        }
-
-        return { ...branch, ...updates }
+  // Branch Actions — wired to API
+  createBranch: async (data: BranchFormData) => {
+    try {
+      await BranchesService.createBranch({
+        name: data.name,
+        address: data.address,
+        mobile: data.mobile,
+        serviceIds: data.serviceIds,
+        latitude: data.latitude,
+        longitude: data.longitude
       })
-    }))
+      // Refetch to get server-generated ID and all nested data
+      await get().fetchBranches()
+    } catch (err: any) {
+      console.error('Failed to create branch:', err)
+      set({ error: err?.message || 'Failed to create branch' })
+    }
   },
 
-  deleteBranch: (id: string) => {
+  updateBranch: async (id: string, data: Partial<BranchFormData>) => {
+    try {
+      await BranchesService.updateBranch({
+        id,
+        name: data.name || get().getBranchById(id)?.name || '',
+        address: data.address,
+        mobile: data.mobile,
+        serviceIds: data.serviceIds,
+        latitude: data.latitude,
+        longitude: data.longitude
+      })
+      await get().fetchBranches()
+    } catch (err: any) {
+      console.error('Failed to update branch:', err)
+      set({ error: err?.message || 'Failed to update branch' })
+    }
+  },
+
+  deleteBranch: async (id: string) => {
     const branch = get().getBranchById(id)
     if (branch?.isPrimary) {
       console.warn('Cannot delete primary branch')
       return
     }
 
-    set(state => ({
-      branches: state.branches.filter(branch => branch.id !== id),
-      selectedBranchId: state.selectedBranchId === id ? null : state.selectedBranchId
-    }))
+    try {
+      await BranchesService.deleteBranch(id)
+      await get().fetchBranches()
+    } catch (err: any) {
+      console.error('Failed to delete branch:', err)
+      set({ error: err?.message || 'Failed to delete branch' })
+    }
   },
 
   toggleBranchStatus: (id: string) => {
+    // Local-only: API doesn't support isActive toggle
     set(state => ({
       branches: state.branches.map(branch =>
-        branch.id === id
-          ? { ...branch, isActive: !branch.isActive, updatedAt: new Date().toISOString() }
-          : branch
+        branch.id === id ? { ...branch, isActive: !branch.isActive, updatedAt: new Date().toISOString() } : branch
       )
     }))
   },
 
   setPrimaryBranch: (id: string) => {
+    // Local-only: API doesn't support isPrimary
     set(state => ({
       branches: state.branches.map(branch => ({
         ...branch,
@@ -219,66 +301,76 @@ export const useBranchesStore = create<BranchesState>((set, get) => ({
     }))
   },
 
-  // Service & Staff Assignment
+  // Service & Staff Assignment — local-only (update API via updateBranch for serviceIds)
   assignServicesToBranch: (branchId: string, serviceIds: string[]) => {
+    // Optimistic local update, then sync to API
+    const branch = get().getBranchById(branchId)
+    if (!branch) return
+
+    const newServices = serviceIds.map(id => {
+      const existing = branch.services.find(s => s.id === id)
+      return existing || { id, name: 'Service', price: 0, duration: 0 }
+    })
+
     set(state => ({
-      branches: state.branches.map(branch => {
-        if (branch.id !== branchId) return branch
-
-        const newServices = serviceIds.map(id => {
-          const existing = branch.services.find(s => s.id === id)
-          if (existing) return existing
-
-          const service = availableServices.find(s => s.id === id)
-          return service || { id, name: 'Unknown', price: 0, duration: 0 }
-        })
-
-        return {
-          ...branch,
-          services: newServices,
-          updatedAt: new Date().toISOString()
-        }
-      })
+      branches: state.branches.map(b =>
+        b.id === branchId ? { ...b, services: newServices, updatedAt: new Date().toISOString() } : b
+      )
     }))
+
+    // Fire API update in background
+    BranchesService.updateBranch({
+      id: branchId,
+      name: branch.name,
+      serviceIds
+    }).catch(err => console.warn('Failed to sync services to API:', err))
   },
 
   assignStaffToBranch: (branchId: string, staffIds: string[]) => {
+    // Local-only: API doesn't support staff assignment via branch endpoint
+    const branch = get().getBranchById(branchId)
+    if (!branch) return
+
+    const newStaff = staffIds.map(id => {
+      const existing = branch.staff.find(s => s.id === id)
+      return existing || { id, name: 'Staff' }
+    })
+
     set(state => ({
-      branches: state.branches.map(branch => {
-        if (branch.id !== branchId) return branch
-
-        const newStaff = staffIds.map(id => {
-          const existing = branch.staff.find(s => s.id === id)
-          if (existing) return existing
-
-          const staff = availableStaff.find(s => s.id === id)
-          return staff || { id, name: 'Unknown' }
-        })
-
-        return {
-          ...branch,
-          staff: newStaff,
-          updatedAt: new Date().toISOString()
-        }
-      })
-    }))
-  },
-
-  removeServiceFromBranch: (branchId: string, serviceId: string) => {
-    set(state => ({
-      branches: state.branches.map(branch =>
-        branch.id === branchId
-          ? {
-              ...branch,
-              services: branch.services.filter(s => s.id !== serviceId),
-              updatedAt: new Date().toISOString()
-            }
-          : branch
+      branches: state.branches.map(b =>
+        b.id === branchId ? { ...b, staff: newStaff, updatedAt: new Date().toISOString() } : b
       )
     }))
   },
 
+  removeServiceFromBranch: (branchId: string, serviceId: string) => {
+    const branch = get().getBranchById(branchId)
+    if (!branch) return
+
+    const remainingIds = branch.services.filter(s => s.id !== serviceId).map(s => s.id)
+
+    set(state => ({
+      branches: state.branches.map(b =>
+        b.id === branchId
+          ? {
+              ...b,
+              services: b.services.filter(s => s.id !== serviceId),
+              updatedAt: new Date().toISOString()
+            }
+          : b
+      )
+    }))
+
+    // Sync to API
+    BranchesService.updateBranch({
+      id: branchId,
+      name: branch.name,
+      serviceIds: remainingIds
+    }).catch(err => console.warn('Failed to sync service removal to API:', err))
+  },
+
   removeStaffFromBranch: (branchId: string, staffId: string) => {
+    // Local-only
     set(state => ({
       branches: state.branches.map(branch =>
         branch.id === branchId

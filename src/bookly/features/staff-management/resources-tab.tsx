@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   Box,
   Paper,
@@ -28,7 +28,7 @@ import {
   DialogActions,
   DialogContentText
 } from '@mui/material'
-import { mockBranches } from '@/bookly/data/mock-data'
+
 import { useStaffManagementStore } from './staff-store'
 import { ResourceEditorDrawer } from './resource-editor-drawer'
 import { ResourceAssignServicesModal } from './resource-assign-services-modal'
@@ -59,7 +59,24 @@ export function ResourcesTab() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [resourceToDelete, setResourceToDelete] = useState<{ id: string; name: string } | null>(null)
 
-  const { resources, deleteResource, getResourceServices } = useStaffManagementStore()
+  const {
+    resources,
+    createResource,
+    updateResource,
+    deleteResource,
+    getResourceServices,
+    fetchResourcesFromApi,
+    fetchServicesFromApi,
+    fetchBranchesFromApi,
+    apiBranches
+  } = useStaffManagementStore()
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchResourcesFromApi()
+    fetchServicesFromApi()
+    fetchBranchesFromApi()
+  }, [])
 
   // Filter resources for selected branch (excluding resources with capacity 0)
   const filteredResources = useMemo(() => {
@@ -77,11 +94,11 @@ export function ResourcesTab() {
   // Get resource counts per branch (excluding resources with capacity 0)
   const branchResourceCounts = useMemo(() => {
     const counts: Record<string, number> = {}
-    mockBranches.forEach(branch => {
+    apiBranches.forEach(branch => {
       counts[branch.id] = resources.filter(r => r.branchId === branch.id && (r.capacity ?? 1) >= 1).length
     })
     return counts
-  }, [resources])
+  }, [resources, apiBranches])
 
   const handleViewChange = (_: React.MouseEvent<HTMLElement>, newView: ViewMode | null) => {
     if (newView !== null) {
@@ -145,11 +162,11 @@ export function ResourcesTab() {
   }
 
   const getBranchName = (branchId: string) => {
-    const branch = mockBranches.find(b => b.id === branchId)
+    const branch = apiBranches.find(b => b.id === branchId)
     return branch?.name || 'Unknown Branch'
   }
 
-  const selectedBranch = selectedBranchId ? mockBranches.find(b => b.id === selectedBranchId) : null
+  const selectedBranch = selectedBranchId ? apiBranches.find(b => b.id === selectedBranchId) : null
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -187,7 +204,7 @@ export function ResourcesTab() {
             }}
           >
             <Grid container spacing={3}>
-              {mockBranches.map(branch => (
+              {apiBranches.map(branch => (
                 <Grid item xs={12} sm={6} md={4} key={branch.id}>
                   <Card
                     variant='outlined'

@@ -7,6 +7,7 @@ import { useCalendarStore } from './state'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { mockStaff as fallbackMockStaff } from '@/bookly/data/mock-data'
 import { addDays, addWeeks, addMonths } from './utils'
+import { startOfWeek, endOfWeek, startOfDay, endOfDay } from 'date-fns'
 import CalendarHeader from './calendar-header'
 import CalendarSidebar from './calendar-sidebar'
 import FullCalendarView from './fullcalendar-view'
@@ -87,13 +88,6 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     fetchSchedulesFromApi()
   }, [])
 
-  // Fetch events when date range changes
-  useEffect(() => {
-    if (visibleDateRange) {
-      fetchEvents(visibleDateRange)
-    }
-  }, [visibleDateRange, fetchEvents])
-
   // Local state
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isQuickActionMenuOpen, setIsQuickActionMenuOpen] = useState(false)
@@ -113,6 +107,40 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const [timeReservationInitialDate, setTimeReservationInitialDate] = useState<Date | undefined>(undefined)
   const [timeReservationInitialStaffId, setTimeReservationInitialStaffId] = useState<string | undefined>(undefined)
   const [timeReservationBranchId, setTimeReservationBranchId] = useState<string | undefined>(undefined)
+
+  // Fetch events when date range changes
+  useEffect(() => {
+    if (visibleDateRange) {
+      fetchEvents(visibleDateRange)
+    }
+  }, [visibleDateRange, fetchEvents])
+
+  // Sync visibleDateRange with currentDate for custom views (Week/Day)
+  // FullCalendar handles this internally via onDateRangeChange, but custom views don't.
+  useEffect(() => {
+    if (view === 'timeGridWeek') {
+      const start = startOfWeek(currentDate, { weekStartsOn: 0 })
+      const end = endOfWeek(currentDate, { weekStartsOn: 0 })
+      // Only update if range is different to avoid infinite loops
+      if (
+        !visibleDateRange ||
+        visibleDateRange.start.getTime() !== start.getTime() ||
+        visibleDateRange.end.getTime() !== end.getTime()
+      ) {
+        setVisibleDateRange({ start, end })
+      }
+    } else if (view === 'timeGridDay') {
+      const start = startOfDay(currentDate)
+      const end = endOfDay(currentDate)
+      if (
+        !visibleDateRange ||
+        visibleDateRange.start.getTime() !== start.getTime() ||
+        visibleDateRange.end.getTime() !== end.getTime()
+      ) {
+        setVisibleDateRange({ start, end })
+      }
+    }
+  }, [currentDate, view, setVisibleDateRange, visibleDateRange])
 
   // Track mouse position for popover
   const mousePositionRef = useRef({ x: 0, y: 0 })

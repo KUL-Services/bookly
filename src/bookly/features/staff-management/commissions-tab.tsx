@@ -22,7 +22,6 @@ import {
   Alert,
   Popover
 } from '@mui/material'
-import { mockStaff } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import { CommissionEditorModal } from './commission-editor-modal'
 import type { CommissionPolicy } from '../calendar/types'
@@ -47,20 +46,18 @@ export function CommissionsTab() {
   const [tutorialStep, setTutorialStep] = useState(0)
   const [tutorialAnchor, setTutorialAnchor] = useState<HTMLElement | null>(null)
 
-  const {
-    commissionPolicies,
-    getCommissionPolicies,
-    deleteCommissionPolicy
-  } = useStaffManagementStore()
+  const { commissionPolicies, getCommissionPolicies, deleteCommissionPolicy, staffMembers } = useStaffManagementStore()
 
   // Filter policies by selected staff
   const filteredPolicies = commissionPolicies.filter(policy => {
     if (selectedStaffId === 'all') {
       return policy.staffScope === 'all'
     } else {
-      return policy.staffScope !== 'all' &&
-             'staffIds' in policy.staffScope &&
-             policy.staffScope.staffIds.includes(selectedStaffId)
+      return (
+        policy.staffScope !== 'all' &&
+        'staffIds' in policy.staffScope &&
+        policy.staffScope.staffIds.includes(selectedStaffId)
+      )
     }
   })
 
@@ -105,7 +102,7 @@ export function CommissionsTab() {
   }
 
   const formatPolicyDisplay = (policy: CommissionPolicy) => {
-    const typeLabel = policy.type === 'percent' ? `${policy.value}%` : `$${policy.value}`
+    const typeLabel = policy.type === 'percent' ? `${policy.value}%` : `EGP ${policy.value}`
     const appliesTo = policy.appliesTo === 'serviceProvider' ? 'Service Provider' : 'Seller'
     return `${typeLabel} - ${appliesTo}`
   }
@@ -118,26 +115,29 @@ export function CommissionsTab() {
       {showTutorial && (
         <Popover
           open={true}
-          anchorReference="anchorPosition"
+          anchorReference='anchorPosition'
           anchorPosition={{ top: 100, left: window.innerWidth / 2 }}
           onClose={handleTutorialSkip}
         >
           <Box sx={{ p: 3, maxWidth: 400 }}>
-            <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            <Typography variant='subtitle1' fontWeight={600} gutterBottom>
               {tutorialStep === 0 && 'Set Commission Rates'}
               {tutorialStep === 1 && 'Choose Scope'}
               {tutorialStep === 2 && 'Apply to Staff'}
             </Typography>
-            <Typography variant="body2" paragraph>
-              {tutorialStep === 0 && 'Create commission policies for different categories. Set percentage or fixed amounts for each type of sale.'}
-              {tutorialStep === 1 && 'Commissions can apply to services, products, gift cards, memberships, or packages. Each category can have different rates.'}
-              {tutorialStep === 2 && 'Apply policies globally to all staff, or create custom rates for specific team members.'}
+            <Typography variant='body2' paragraph>
+              {tutorialStep === 0 &&
+                'Create commission policies for different categories. Set percentage or fixed amounts for each type of sale.'}
+              {tutorialStep === 1 &&
+                'Commissions can apply to services, products, gift cards, memberships, or packages. Each category can have different rates.'}
+              {tutorialStep === 2 &&
+                'Apply policies globally to all staff, or create custom rates for specific team members.'}
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-              <Button size="small" onClick={handleTutorialSkip}>
+              <Button size='small' onClick={handleTutorialSkip}>
                 Skip
               </Button>
-              <Button size="small" variant="contained" onClick={handleTutorialNext}>
+              <Button size='small' variant='contained' onClick={handleTutorialNext}>
                 {tutorialStep === 2 ? 'Got it' : 'Next'}
               </Button>
             </Box>
@@ -158,22 +158,18 @@ export function CommissionsTab() {
           gap: 2
         }}
       >
-        <Typography variant="h6" fontWeight={600}>
+        <Typography variant='h6' fontWeight={600}>
           Commission Policies
         </Typography>
 
         <Box sx={{ flexGrow: 1 }} />
 
         {/* Staff Selector */}
-        <FormControl size="small" sx={{ minWidth: 200 }}>
+        <FormControl size='small' sx={{ minWidth: 200 }}>
           <InputLabel>Apply to</InputLabel>
-          <Select
-            value={selectedStaffId}
-            onChange={(e) => setSelectedStaffId(e.target.value)}
-            label="Apply to"
-          >
-            <MenuItem value="all">All Staff (Default)</MenuItem>
-            {mockStaff.map((staff) => (
+          <Select value={selectedStaffId} onChange={e => setSelectedStaffId(e.target.value)} label='Apply to'>
+            <MenuItem value='all'>All Staff (Default)</MenuItem>
+            {staffMembers.map(staff => (
               <MenuItem key={staff.id} value={staff.id}>
                 {staff.name}
               </MenuItem>
@@ -194,12 +190,12 @@ export function CommissionsTab() {
           p: 2
         }}
       >
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
+        <Typography variant='subtitle2' color='text.secondary' sx={{ mb: 2 }}>
           Default Commissions
         </Typography>
 
         {/* Commission Accordions */}
-        {scopes.map((scope) => {
+        {scopes.map(scope => {
           const policies = getPoliciesByScope(scope)
 
           return (
@@ -208,13 +204,13 @@ export function CommissionsTab() {
               defaultExpanded={scope === 'serviceCategory'}
               sx={{ mb: 1, '&:before': { display: 'none' } }}
             >
-              <AccordionSummary expandIcon={<i className="ri-arrow-down-s-line" />}>
+              <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', pr: 2 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
+                  <Typography variant='subtitle1' fontWeight={600}>
                     {SCOPE_LABELS[scope]}
                   </Typography>
                   <Chip
-                    size="small"
+                    size='small'
                     label={`${policies.length} ${policies.length === 1 ? 'policy' : 'policies'}`}
                     sx={{ ml: 'auto' }}
                   />
@@ -229,13 +225,13 @@ export function CommissionsTab() {
                       color: 'text.secondary'
                     }}
                   >
-                    <Typography variant="body2" gutterBottom>
+                    <Typography variant='body2' gutterBottom>
                       No commission policies for {SCOPE_LABELS[scope].toLowerCase()}
                     </Typography>
                     <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<i className="ri-add-line" />}
+                      size='small'
+                      variant='outlined'
+                      startIcon={<i className='ri-add-line' />}
                       onClick={() => handleAddPolicy(scope)}
                       sx={{ mt: 1 }}
                     >
@@ -245,7 +241,7 @@ export function CommissionsTab() {
                 ) : (
                   <>
                     <List sx={{ py: 0 }}>
-                      {policies.map((policy) => (
+                      {policies.map(policy => (
                         <ListItem
                           key={policy.id}
                           sx={{
@@ -265,30 +261,25 @@ export function CommissionsTab() {
                             }
                           />
                           <ListItemSecondaryAction>
-                            <IconButton
-                              edge="end"
-                              size="small"
-                              onClick={() => handleEditPolicy(policy)}
-                              sx={{ mr: 1 }}
-                            >
-                              <i className="ri-edit-line" />
+                            <IconButton edge='end' size='small' onClick={() => handleEditPolicy(policy)} sx={{ mr: 1 }}>
+                              <i className='ri-edit-line' />
                             </IconButton>
                             <IconButton
-                              edge="end"
-                              size="small"
-                              color="error"
+                              edge='end'
+                              size='small'
+                              color='error'
                               onClick={() => handleDeletePolicy(policy.id)}
                             >
-                              <i className="ri-delete-bin-line" />
+                              <i className='ri-delete-bin-line' />
                             </IconButton>
                           </ListItemSecondaryAction>
                         </ListItem>
                       ))}
                     </List>
                     <Button
-                      size="small"
-                      variant="text"
-                      startIcon={<i className="ri-add-line" />}
+                      size='small'
+                      variant='text'
+                      startIcon={<i className='ri-add-line' />}
                       onClick={() => handleAddPolicy(scope)}
                     >
                       Add Another Policy
@@ -302,17 +293,13 @@ export function CommissionsTab() {
       </Paper>
 
       {/* Banner */}
-      <Alert
-        severity="success"
-        icon={<i className="ri-trophy-line" />}
-        sx={{ borderRadius: 2 }}
-      >
-        <Typography variant="subtitle2" fontWeight={600}>
+      <Alert severity='success' icon={<i className='ri-trophy-line' />} sx={{ borderRadius: 2 }}>
+        <Typography variant='subtitle2' fontWeight={600}>
           Flexible Commissions
         </Typography>
-        <Typography variant="caption">
-          Set different commission rates for services, products, and sales. Track earnings by staff member
-          and automatically calculate payouts.
+        <Typography variant='caption'>
+          Set different commission rates for services, products, and sales. Track earnings by staff member and
+          automatically calculate payouts.
         </Typography>
       </Alert>
 

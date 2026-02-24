@@ -24,6 +24,7 @@ import SessionToStoreBridge from '@/components/SessionToStoreBridge'
 import { ApprovalBanner } from '@/components/ApprovalBanner'
 import AggressiveLanguageGuard from '@/components/AggressiveLanguageGuard'
 import UltimateLanguageProtector from '@/components/UltimateLanguageProtector'
+import { GoogleMapsScript } from '@/components/GoogleMapsScript'
 
 // Config Imports
 import { i18n } from '@configs/i18n'
@@ -41,6 +42,7 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
 
   return (
     <Providers direction={direction}>
+      <GoogleMapsScript />
       <UltimateLanguageProtector />
       <SessionToStoreBridge />
       <AggressiveLanguageGuard />

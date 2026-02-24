@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Box,
   Paper,
@@ -26,7 +26,9 @@ import {
   InputLabel,
   Select,
   Fab,
-  Chip
+  Chip,
+  CircularProgress,
+  Alert
 } from '@mui/material'
 import { useServicesStore } from '@/bookly/features/services/services-store'
 import { ServiceEditorDrawer } from '@/bookly/features/services/service-editor-drawer'
@@ -78,8 +80,12 @@ export function ServicesTab() {
   const {
     categories,
     services,
+    isLoading,
+    error,
     selectedCategoryId,
     searchQuery,
+    fetchServices,
+    fetchCategories,
     getFilteredServices,
     setSelectedCategory,
     setSearchQuery,
@@ -90,6 +96,11 @@ export function ServicesTab() {
     isServiceDialogOpen,
     isCategoryDialogOpen
   } = useServicesStore()
+
+  useEffect(() => {
+    fetchServices()
+    fetchCategories()
+  }, [])
 
   const filteredServices = getFilteredServices()
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
@@ -182,7 +193,9 @@ export function ServicesTab() {
 
   // Get info for category being deleted
   const categoryBeingDeleted = categoryToDelete ? categories.find(c => c.id === categoryToDelete) : null
-  const servicesInCategoryToDelete = categoryToDelete ? services.filter(s => s.categoryId === categoryToDelete).length : 0
+  const servicesInCategoryToDelete = categoryToDelete
+    ? services.filter(s => s.categoryId === categoryToDelete).length
+    : 0
 
   return (
     <Box sx={{ display: 'flex', height: '100%', gap: 2 }}>
@@ -261,7 +274,9 @@ export function ServicesTab() {
                   variant={isSelected ? 'filled' : 'outlined'}
                   label={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <span>{category.name} ({count})</span>
+                      <span>
+                        {category.name} ({count})
+                      </span>
                       <Box
                         sx={{
                           display: 'flex',
@@ -332,7 +347,19 @@ export function ServicesTab() {
 
         {/* Services List */}
         <List sx={{ flexGrow: 1, overflow: 'auto', py: 0 }}>
-          {filteredServices.length === 0 ? (
+          {error && (
+            <Alert severity='error' sx={{ m: 1 }}>
+              {error}
+            </Alert>
+          )}
+          {isLoading ? (
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+              <CircularProgress size={28} />
+              <Typography variant='body2' sx={{ mt: 1, color: 'text.secondary' }}>
+                Loading services...
+              </Typography>
+            </Box>
+          ) : filteredServices.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
               <i className='ri-service-line' style={{ fontSize: 40, opacity: 0.3 }} />
               <Typography variant='body2' sx={{ mt: 1 }}>
@@ -371,7 +398,7 @@ export function ServicesTab() {
                       <Typography variant='caption'>{formatDuration(service.duration)}</Typography>
                       <Typography variant='caption'>•</Typography>
                       <Typography variant='caption' fontWeight={500}>
-                        ${service.price}
+                        EGP {service.price}
                       </Typography>
                     </Box>
                   }
@@ -439,7 +466,7 @@ export function ServicesTab() {
                       Price
                     </Typography>
                     <Typography variant='body1' fontWeight={500} color='primary'>
-                      ${selectedService.price.toFixed(2)}
+                      EGP {selectedService.price.toFixed(2)}
                     </Typography>
                   </Box>
                   {selectedService.taxRate && selectedService.taxRate !== 'tax_free' && (
@@ -557,9 +584,11 @@ export function ServicesTab() {
                         Processing Time
                       </Typography>
                       <Typography variant='body1'>
-                        {(selectedService.processingTime.during.hours > 0 || selectedService.processingTime.during.minutes > 0)
+                        {selectedService.processingTime.during.hours > 0 ||
+                        selectedService.processingTime.during.minutes > 0
                           ? `During: ${selectedService.processingTime.during.hours}h ${selectedService.processingTime.during.minutes}min`
-                          : (selectedService.processingTime.after.hours > 0 || selectedService.processingTime.after.minutes > 0)
+                          : selectedService.processingTime.after.hours > 0 ||
+                              selectedService.processingTime.after.minutes > 0
                             ? `After: ${selectedService.processingTime.after.hours}h ${selectedService.processingTime.after.minutes}min`
                             : 'Not set'}
                       </Typography>
@@ -590,16 +619,17 @@ export function ServicesTab() {
                         <Typography variant='body2'>{selectedService.clientSettings.message}</Typography>
                       </Paper>
                     )}
-                    {selectedService.clientSettings.questions && selectedService.clientSettings.questions.length > 0 && (
-                      <Paper variant='outlined' sx={{ p: 2 }}>
-                        <Typography variant='caption' color='text.secondary'>
-                          Client Questions
-                        </Typography>
-                        <Typography variant='body1'>
-                          {selectedService.clientSettings.questions.length} question(s)
-                        </Typography>
-                      </Paper>
-                    )}
+                    {selectedService.clientSettings.questions &&
+                      selectedService.clientSettings.questions.length > 0 && (
+                        <Paper variant='outlined' sx={{ p: 2 }}>
+                          <Typography variant='caption' color='text.secondary'>
+                            Client Questions
+                          </Typography>
+                          <Typography variant='body1'>
+                            {selectedService.clientSettings.questions.length} question(s)
+                          </Typography>
+                        </Paper>
+                      )}
                   </Box>
                 )}
               </Box>
@@ -687,9 +717,11 @@ export function ServicesTab() {
             Are you sure you want to delete <strong>"{categoryBeingDeleted?.name}"</strong>?
             {servicesInCategoryToDelete > 0 && (
               <>
-                <br /><br />
+                <br />
+                <br />
                 <Typography component='span' color='warning.main' sx={{ fontWeight: 500 }}>
-                  {servicesInCategoryToDelete} service{servicesInCategoryToDelete > 1 ? 's' : ''} will be moved to "Uncategorized".
+                  {servicesInCategoryToDelete} service{servicesInCategoryToDelete > 1 ? 's' : ''} will be moved to
+                  "Uncategorized".
                 </Typography>
               </>
             )}

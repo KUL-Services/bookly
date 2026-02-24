@@ -1,7 +1,69 @@
 import { create } from 'zustand'
-import type { ServiceCategory, ExtendedService, ServiceFormData } from './types'
-import { mockCategories, mockExtendedServices, SERVICE_COLORS } from './mock-data'
-import { DEFAULT_SERVICE_FORM_DATA } from './types'
+import type { ServiceCategory, ExtendedService } from './types'
+import { ServicesService } from '@/lib/api/services/services.service'
+import { CategoriesService } from '@/lib/api/services/categories.service'
+import type { Service as ApiService, Category as ApiCategory } from '@/lib/api/types'
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const SERVICE_COLORS = [
+  '#0a2c24',
+  '#202c39',
+  '#51b4b7',
+  '#e74c3c',
+  '#3498db',
+  '#9b59b6',
+  '#f39c12',
+  '#27ae60',
+  '#1abc9c',
+  '#e91e63',
+  '#795548',
+  '#607d8b'
+]
+
+// ============================================================================
+// Helpers: Map API types → Frontend types
+// ============================================================================
+
+function mapApiCategory(api: ApiCategory, index: number): ServiceCategory {
+  return {
+    id: api.id,
+    name: api.name,
+    color: SERVICE_COLORS[index % SERVICE_COLORS.length],
+    order: index + 1,
+    createdAt: api.createdAt,
+    updatedAt: api.updatedAt
+  }
+}
+
+function mapApiService(api: ApiService, index: number): ExtendedService {
+  // If the API returns categories, use the first one as categoryId
+  const categoryId = api.categories && api.categories.length > 0 ? api.categories[0].id : undefined
+
+  return {
+    id: api.id,
+    name: api.name,
+    description: api.description || '',
+    price: api.price,
+    duration: api.duration,
+    categoryId,
+    color: SERVICE_COLORS[index % SERVICE_COLORS.length],
+    businessId: api.businessId,
+    // Frontend-only defaults
+    bookingInterval: { hours: 0, minutes: 15 },
+    paddingTime: { rule: 'none', minutes: 0 },
+    processingTime: {
+      during: { hours: 0, minutes: 0 },
+      after: { hours: 0, minutes: 0 }
+    },
+    taxRate: 'tax_free',
+    parallelClients: api.maxConcurrent || 1,
+    createdAt: api.createdAt,
+    updatedAt: api.updatedAt
+  }
+}
 
 // ============================================================================
 // Services Management State
@@ -11,6 +73,8 @@ export interface ServicesState {
   // Data
   categories: ServiceCategory[]
   services: ExtendedService[]
+  isLoading: boolean
+  error: string | null
 
   // UI State
   selectedCategoryId: string | null // null = All Categories, 'uncategorized' = Not categorized
@@ -23,6 +87,10 @@ export interface ServicesState {
   isComboServiceDialogOpen: boolean
   editingService: ExtendedService | null
   editingCategory: ServiceCategory | null
+
+  // API Actions
+  fetchServices: () => Promise<void>
+  fetchCategories: () => Promise<void>
 
   // Filtered data getters
   getFilteredServices: () => ExtendedService[]
@@ -37,9 +105,9 @@ export interface ServicesState {
   reorderCategories: (startIndex: number, endIndex: number) => void
 
   // Service actions
-  createService: (service: Omit<ExtendedService, 'id'>) => void
-  updateService: (id: string, updates: Partial<ExtendedService>) => void
-  deleteService: (id: string) => void
+  createService: (service: Omit<ExtendedService, 'id'>) => Promise<void>
+  updateService: (id: string, updates: Partial<ExtendedService>) => Promise<void>
+  deleteService: (id: string) => Promise<void>
 
   // UI actions
   setSelectedCategory: (categoryId: string | null) => void
@@ -60,9 +128,11 @@ export interface ServicesState {
 // ============================================================================
 
 export const useServicesStore = create<ServicesState>((set, get) => ({
-  // Initial State
-  categories: mockCategories,
-  services: mockExtendedServices,
+  // Initial State — empty, populated by fetch
+  categories: [],
+  services: [],
+  isLoading: false,
+  error: null,
   selectedCategoryId: null,
   searchQuery: '',
   selectedServiceId: null,
@@ -71,6 +141,44 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   isComboServiceDialogOpen: false,
   editingService: null,
   editingCategory: null,
+
+  // API Actions
+  fetchServices: async () => {
+    set({ isLoading: true, error: null })
+    try {
+      const result = await ServicesService.getServices()
+      const rawData = result.data
+      const dataArray = Array.isArray(rawData)
+        ? rawData
+        : (rawData as any)?.data && Array.isArray((rawData as any).data)
+          ? (rawData as any).data
+          : []
+
+      const services = dataArray.map((s: ApiService, i: number) => mapApiService(s, i))
+      set({ services, isLoading: false })
+    } catch (err: any) {
+      console.warn('Failed to fetch services from API:', err)
+      set({ error: err?.message || 'Failed to fetch services', isLoading: false })
+    }
+  },
+
+  fetchCategories: async () => {
+    try {
+      const result = await CategoriesService.getCategories()
+      const rawData = result.data
+      const dataArray = Array.isArray(rawData)
+        ? rawData
+        : (rawData as any)?.data && Array.isArray((rawData as any).data)
+          ? (rawData as any).data
+          : []
+
+      const categories = dataArray.map((c: ApiCategory, i: number) => mapApiCategory(c, i))
+      set({ categories })
+    } catch (err: any) {
+      console.warn('Failed to fetch categories from API:', err)
+      // Non-critical — categories may not exist yet
+    }
+  },
 
   // Getters
   getFilteredServices: () => {
@@ -89,9 +197,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
-        s =>
-          s.name.toLowerCase().includes(query) ||
-          s.description?.toLowerCase().includes(query)
+        s => s.name.toLowerCase().includes(query) || s.description?.toLowerCase().includes(query)
       )
     }
 
@@ -114,7 +220,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
     return services.filter(s => s.categoryId === categoryId)
   },
 
-  // Category Actions
+  // Category Actions — local-only (CategoriesService CRUD is super admin only)
   createCategory: (name: string) => {
     const newCategory: ServiceCategory = {
       id: `cat-${Date.now()}`,
@@ -142,9 +248,7 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
     // Move services from deleted category to uncategorized
     set(state => ({
       categories: state.categories.filter(c => c.id !== id),
-      services: state.services.map(s =>
-        s.categoryId === id ? { ...s, categoryId: undefined } : s
-      )
+      services: state.services.map(s => (s.categoryId === id ? { ...s, categoryId: undefined } : s))
     }))
   },
 
@@ -164,34 +268,50 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
     })
   },
 
-  // Service Actions
-  createService: (service: Omit<ExtendedService, 'id'>) => {
-    const newService: ExtendedService = {
-      ...service,
-      id: `svc-${Date.now()}`,
-      color: service.color || SERVICE_COLORS[get().services.length % SERVICE_COLORS.length],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+  // Service Actions — wired to API
+  createService: async (service: Omit<ExtendedService, 'id'>) => {
+    try {
+      await ServicesService.createService({
+        name: service.name,
+        description: service.description,
+        location: 'on-site',
+        price: service.price,
+        duration: service.duration,
+        categoryIds: service.categoryId ? [service.categoryId] : undefined
+      })
+      // Refetch to get server-generated ID
+      await get().fetchServices()
+    } catch (err: any) {
+      console.error('Failed to create service:', err)
+      set({ error: err?.message || 'Failed to create service' })
     }
-
-    set(state => ({
-      services: [...state.services, newService]
-    }))
   },
 
-  updateService: (id: string, updates: Partial<ExtendedService>) => {
-    set(state => ({
-      services: state.services.map(s =>
-        s.id === id ? { ...s, ...updates, updatedAt: new Date().toISOString() } : s
-      )
-    }))
+  updateService: async (id: string, updates: Partial<ExtendedService>) => {
+    try {
+      await ServicesService.updateService({
+        id,
+        name: updates.name,
+        description: updates.description,
+        price: updates.price,
+        duration: updates.duration,
+        categoryIds: updates.categoryId ? [updates.categoryId] : undefined
+      })
+      await get().fetchServices()
+    } catch (err: any) {
+      console.error('Failed to update service:', err)
+      set({ error: err?.message || 'Failed to update service' })
+    }
   },
 
-  deleteService: (id: string) => {
-    set(state => ({
-      services: state.services.filter(s => s.id !== id),
-      selectedServiceId: state.selectedServiceId === id ? null : state.selectedServiceId
-    }))
+  deleteService: async (id: string) => {
+    try {
+      await ServicesService.deleteService(id)
+      await get().fetchServices()
+    } catch (err: any) {
+      console.error('Failed to delete service:', err)
+      set({ error: err?.message || 'Failed to delete service' })
+    }
   },
 
   // UI Actions

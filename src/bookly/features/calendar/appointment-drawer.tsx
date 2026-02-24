@@ -548,7 +548,7 @@ export default function AppointmentDrawer() {
                   PRICE
                 </Typography>
                 <Typography variant='body1' fontWeight={600} color='primary.main'>
-                  ${extendedProps.price}
+                  EGP {extendedProps.price}
                 </Typography>
               </Box>
 

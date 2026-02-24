@@ -23,7 +23,7 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { mockStaff } from '@/bookly/data/mock-data'
+
 import { useStaffManagementStore } from './staff-store'
 import type { TimeOffReasonGroup } from '../calendar/types'
 import { DatePickerField } from './date-picker-field'
@@ -122,7 +122,7 @@ export function TimeOffModal({
   initialStaffName,
   initialDate
 }: TimeOffModalProps) {
-  const { createTimeOff, timeOffRequests, updateTimeOff, deleteTimeOff } = useStaffManagementStore()
+  const { createTimeOff, timeOffRequests, updateTimeOff, deleteTimeOff, staffMembers } = useStaffManagementStore()
 
   const {
     control,
@@ -273,7 +273,7 @@ export function TimeOffModal({
                       <MenuItem value=''>
                         <em>Select a staff member</em>
                       </MenuItem>
-                      {mockStaff.map(staff => (
+                      {staffMembers.map(staff => (
                         <MenuItem key={staff.id} value={staff.id}>
                           {staff.name}
                         </MenuItem>

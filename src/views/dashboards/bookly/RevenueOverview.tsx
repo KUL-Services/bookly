@@ -72,7 +72,7 @@ const RevenueOverview = () => {
     },
     yaxis: {
       labels: {
-        formatter: val => `$${val.toFixed(0)}`,
+        formatter: val => `EGP ${val.toFixed(0)}`,
         style: {
           fontFamily: 'var(--font-fira-code)'
         }
@@ -112,13 +112,13 @@ const RevenueOverview = () => {
       <CardContent>
         <Box className='mb-4 flex flex-wrap gap-2'>
           <Chip
-            label={`Last 30d: $${total30.toFixed(0)}`}
+            label={`Last 30d: EGP ${total30.toFixed(0)}`}
             color='primary'
             variant='tonal'
             sx={{ '& .MuiChip-label': { fontFamily: 'var(--font-fira-code)' } }}
           />
           <Chip
-            label={`AOV: $${aov.toFixed(0)}`}
+            label={`AOV: EGP ${aov.toFixed(0)}`}
             color='success'
             variant='tonal'
             sx={{ '& .MuiChip-label': { fontFamily: 'var(--font-fira-code)' } }}

@@ -26,7 +26,15 @@ import {
   mockBookings,
   mockRooms as fallbackMockRooms
 } from '@/bookly/data/mock-data'
-import type { AppointmentStatus, DateRange, CalendarEvent, DayOfWeek, WeeklyStaffHours, TimeOffRequest } from './types'
+import type {
+  AppointmentStatus,
+  DateRange,
+  CalendarEvent,
+  DayOfWeek,
+  WeeklyStaffHours,
+  TimeOffRequest,
+  PaymentMethod
+} from './types'
 import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
 import { isStaffAvailable, hasConflict, getStaffAvailableCapacity, getStaffRoomAssignment } from './utils'
@@ -35,6 +43,8 @@ import { useStaffManagementStore } from '../staff-management/staff-store'
 import ClientPickerDialog from './client-picker-dialog'
 import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 import { DatePickerField } from '@/bookly/features/staff-management/date-picker-field'
+import { SessionSelector } from './session-selector'
+import type { Session } from '@/lib/api/types'
 
 // Helper function to get 2 initials from a name
 const getInitials = (name: string): string => {
@@ -95,8 +105,6 @@ const isValidPhone = (phone: string): boolean => {
   const digitsOnly = phone.replace(/\D/g, '')
   return phoneRegex.test(phone.trim()) && digitsOnly.length >= 7 && digitsOnly.length <= 15
 }
-
-type PaymentMethod = 'pay_on_arrival' | 'mock_card'
 
 // Helper to generate available time slots for a staff member on a given date
 interface AvailableSlot {
@@ -237,7 +245,7 @@ interface SlotClient {
   arrivalTime?: string
   paymentStatus: 'paid' | 'unpaid'
   paymentMethod: PaymentMethod
-  paymentReference: string
+  paymentReference?: string
   businessNotes?: string // Notes from business about this client/booking
 }
 
@@ -295,6 +303,7 @@ export default function UnifiedBookingDrawer({
   // Dynamic mode form state
   const [bookingReference, setBookingReference] = useState('')
   const [date, setDate] = useState(initialDate || new Date())
+  const [branchId, setBranchId] = useState('') // Branch selection state
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('09:30')
   const [staffId, setStaffId] = useState(initialStaffId || '')
@@ -335,13 +344,24 @@ export default function UnifiedBookingDrawer({
   const [capacityError, setCapacityError] = useState<string | null>(null)
   const [isSessionClientsOpen, setIsSessionClientsOpen] = useState(false)
 
+  // Session booking state (for STATIC booking mode resources)
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
+
   // UI state
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
   const [showAvailableSlots, setShowAvailableSlots] = useState(true)
 
-  // Get only dynamic staff for selection
-  const dynamicStaff = allStaff.filter((s: any) => s.staffType === 'dynamic')
+  // Get only dynamic staff for selection, filtered by branch
+  const dynamicStaff = allStaff.filter((s: any) => s.staffType === 'dynamic' && (!branchId || s.branchId === branchId))
+
+  // Check if selected staff has STATIC booking mode (for session-based booking)
+  const selectedStaffData = allStaff.find((s: any) => s.id === staffId)
+  const isStaffStaticBookingMode = selectedStaffData?.bookingMode === 'STATIC'
+
+  // Get branches for dropdown
+  const { apiBranches } = useStaffManagementStore()
+  const availableBranches = apiBranches || []
 
   // Determine if this event is from a static slot (overrides global schedulingMode)
   // Check by:
@@ -388,6 +408,7 @@ export default function UnifiedBookingDrawer({
       setStartTime('09:00')
       setEndTime('09:30')
       setStaffId(initialStaffId || '')
+      setBranchId('') // Reset branch on open
       setSelectedClient(null)
       setClientName('')
       setClientEmail('')
@@ -412,6 +433,7 @@ export default function UnifiedBookingDrawer({
       setSlotClients([])
       setIsSessionClientsOpen(false)
       setAvailabilityWarning(null)
+      setSelectedSession(null) // Reset session selection
     }
   }, [open, mode, initialDate, initialStaffId])
 
@@ -569,7 +591,7 @@ export default function UnifiedBookingDrawer({
               : 'confirmed',
             arrivalTime: booking.extendedProps.arrivalTime || '',
             paymentStatus: booking.extendedProps.paymentStatus === 'paid' ? 'paid' : 'unpaid',
-            paymentMethod: booking.extendedProps.paymentMethod || 'pay_on_arrival',
+            paymentMethod: booking.extendedProps.paymentMethod || 'cash_on_arrival',
             paymentReference: booking.extendedProps.instapayReference || '',
             businessNotes: booking.extendedProps.businessNotes || ''
           }
@@ -734,7 +756,7 @@ export default function UnifiedBookingDrawer({
           bookedAt: new Date().toISOString(),
           status: 'confirmed',
           paymentStatus: 'unpaid',
-          paymentMethod: 'pay_on_arrival',
+          paymentMethod: 'cash_on_arrival',
           paymentReference: ''
         }
         setSlotClients([...slotClients, newClient])
@@ -802,7 +824,7 @@ export default function UnifiedBookingDrawer({
       bookedAt: new Date().toISOString(),
       status: 'confirmed',
       paymentStatus: 'unpaid',
-      paymentMethod: 'pay_on_arrival',
+      paymentMethod: 'cash_on_arrival',
       paymentReference: '',
       businessNotes: newClientBusinessNotes.trim() || undefined
     }
@@ -896,6 +918,12 @@ export default function UnifiedBookingDrawer({
         return
       }
 
+      // Validate session selection for STATIC booking mode
+      if (isStaffStaticBookingMode && !selectedSession) {
+        alert('Please select a session for this staff member')
+        return
+      }
+
       // Create or update dynamic booking
       if (mode === 'create') {
         const [hours, minutes] = startTime.split(':').map(Number)
@@ -916,7 +944,9 @@ export default function UnifiedBookingDrawer({
             paymentStatus,
             staffId,
             staffName: allStaff.find((s: any) => s.id === staffId)?.name || '',
+            branchId: branchId || allStaff.find((s: any) => s.id === staffId)?.branchId || '',
             selectionMethod: requestedByClient ? 'by_client' : 'automatically',
+            bookedBy: 'business', // Created by business admin
             starred,
             serviceName,
             customerName: clientName,
@@ -925,7 +955,10 @@ export default function UnifiedBookingDrawer({
             serviceId,
             notes: `Email: ${clientEmail}, Phone: ${clientPhone}`,
             businessNotes: businessNotes.trim() || undefined,
-            instapayReference: instapayReference || undefined
+            instapayReference: instapayReference || undefined,
+            // Session info for STATIC booking mode
+            sessionId: selectedSession?.id || undefined,
+            sessionName: selectedSession?.name || undefined
           }
         }
         createEvent(newEvent)
@@ -1250,6 +1283,38 @@ export default function UnifiedBookingDrawer({
 
                   <Divider />
 
+                  {/* Branch Selection */}
+                  <Box>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      fontWeight={600}
+                      sx={{ mb: 1, display: 'block' }}
+                    >
+                      SELECT BRANCH
+                    </Typography>
+                    <FormControl fullWidth size='small'>
+                      <InputLabel>Branch</InputLabel>
+                      <Select
+                        value={branchId}
+                        label='Branch'
+                        onChange={e => {
+                          setBranchId(e.target.value)
+                          setStaffId('') // Reset staff when branch changes
+                        }}
+                      >
+                        <MenuItem value=''>All Branches</MenuItem>
+                        {availableBranches.map((branch: any) => (
+                          <MenuItem key={branch.id} value={branch.id}>
+                            {branch.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+
+                  <Divider />
+
                   {/* Client Selection */}
                   <Box>
                     <Typography
@@ -1404,7 +1469,7 @@ export default function UnifiedBookingDrawer({
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                               <span>{svc.name}</span>
                               <Typography variant='caption' color='text.secondary'>
-                                {svc.duration}min • ${svc.price}
+                                {svc.duration}min • EGP {svc.price}
                               </Typography>
                             </Box>
                           </MenuItem>
@@ -1439,120 +1504,144 @@ export default function UnifiedBookingDrawer({
                       fullWidth
                     />
 
-                    {/* Available Time Slots */}
+                    {/* Available Time Slots OR Session Selector */}
                     {staffId && serviceId ? (
                       <Box sx={{ mt: 2 }}>
-                        {(() => {
-                          const availableSlots = generateAvailableSlots(
-                            staffId,
-                            date,
-                            serviceDuration,
-                            events,
-                            staffWorkingHours,
-                            timeOffRequests
-                          )
-                          const freeSlots = availableSlots.filter(s => s.available)
-
-                          if (availableSlots.length === 0) {
-                            return (
-                              <Paper sx={{ p: 2, bgcolor: 'warning.lighter', border: 1, borderColor: 'warning.main' }}>
-                                <Typography variant='body2' color='warning.dark'>
-                                  <i className='ri-calendar-close-line' style={{ marginRight: 8 }} />
-                                  Staff member is not working on this date
-                                </Typography>
-                              </Paper>
+                        {isStaffStaticBookingMode ? (
+                          // STATIC BOOKING MODE - Show session selector
+                          <SessionSelector
+                            resourceId={staffId}
+                            date={date}
+                            selectedSessionId={selectedSession?.id || null}
+                            onSelectSession={session => {
+                              setSelectedSession(session)
+                              if (session) {
+                                // Auto-fill time from session
+                                setStartTime(session.startTime)
+                                setEndTime(session.endTime)
+                                // Set price if session has one
+                                if (session.price !== undefined) {
+                                  setServicePrice(session.price)
+                                }
+                              }
+                            }}
+                          />
+                        ) : (
+                          // DYNAMIC BOOKING MODE - Show time slots
+                          (() => {
+                            const availableSlots = generateAvailableSlots(
+                              staffId,
+                              date,
+                              serviceDuration,
+                              events,
+                              staffWorkingHours,
+                              timeOffRequests
                             )
-                          }
+                            const freeSlots = availableSlots.filter(s => s.available)
 
-                          return (
-                            <Box>
-                              <Typography variant='caption' color='text.secondary' sx={{ mb: 1, display: 'block' }}>
-                                {freeSlots.length} available slots
-                              </Typography>
-                              <Box
-                                sx={{
-                                  display: 'grid',
-                                  gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
-                                  gap: 1,
-                                  maxHeight: 200,
-                                  overflowY: 'auto',
-                                  p: 1,
-                                  border: 1,
-                                  borderColor: 'divider',
-                                  borderRadius: 1,
-                                  bgcolor: 'background.paper'
-                                }}
-                              >
-                                {availableSlots.map((slot, idx) => (
-                                  <Box
-                                    key={idx}
-                                    onClick={() => slot.available && setStartTime(slot.time)}
-                                    sx={{
-                                      p: 1,
-                                      textAlign: 'center',
-                                      borderRadius: 1,
-                                      border: 1,
-                                      borderColor:
-                                        startTime === slot.time
-                                          ? 'primary.main'
-                                          : slot.available
-                                            ? 'divider'
-                                            : 'action.disabled',
-                                      bgcolor:
-                                        startTime === slot.time
-                                          ? 'primary.main'
-                                          : slot.available
-                                            ? 'background.paper'
-                                            : 'action.disabledBackground',
-                                      color:
-                                        startTime === slot.time
-                                          ? 'primary.contrastText'
-                                          : slot.available
-                                            ? 'text.primary'
-                                            : 'text.disabled',
-                                      cursor: slot.available ? 'pointer' : 'not-allowed',
-                                      opacity: slot.available ? 1 : 0.5,
-                                      transition: 'all 0.2s',
-                                      '&:hover': slot.available
-                                        ? {
-                                            borderColor: 'primary.main',
-                                            bgcolor: startTime === slot.time ? 'primary.dark' : 'primary.lighter'
-                                          }
-                                        : {}
-                                    }}
-                                  >
-                                    <Typography
-                                      variant='body2'
-                                      fontWeight={startTime === slot.time ? 600 : 400}
-                                      fontSize='0.75rem'
-                                    >
-                                      {formatTime12h(slot.time)}
-                                    </Typography>
-                                  </Box>
-                                ))}
-                              </Box>
-                              {startTime && (
+                            if (availableSlots.length === 0) {
+                              return (
                                 <Paper
-                                  sx={{
-                                    p: 1.5,
-                                    mt: 1.5,
-                                    bgcolor: 'success.lighter',
-                                    border: 1,
-                                    borderColor: 'success.main'
-                                  }}
+                                  sx={{ p: 2, bgcolor: 'warning.lighter', border: 1, borderColor: 'warning.main' }}
                                 >
-                                  <Typography variant='body2' color='success.dark' fontWeight={500}>
-                                    <i className='ri-check-line' style={{ marginRight: 8 }} />
-                                    {formatTime12h(startTime)} - {formatTime12h(endTime)}
-                                  </Typography>
-                                  <Typography variant='caption' color='success.dark'>
-                                    {serviceDuration} minute {serviceName || 'service'}
+                                  <Typography variant='body2' color='warning.dark'>
+                                    <i className='ri-calendar-close-line' style={{ marginRight: 8 }} />
+                                    Staff member is not working on this date
                                   </Typography>
                                 </Paper>
-                              )}
-                            </Box>
-                          )
-                        })()}
+                              )
+                            }
+
+                            return (
+                              <Box>
+                                <Typography variant='caption' color='text.secondary' sx={{ mb: 1, display: 'block' }}>
+                                  {freeSlots.length} available slots
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))',
+                                    gap: 1,
+                                    maxHeight: 200,
+                                    overflowY: 'auto',
+                                    p: 1,
+                                    border: 1,
+                                    borderColor: 'divider',
+                                    borderRadius: 1,
+                                    bgcolor: 'background.paper'
+                                  }}
+                                >
+                                  {availableSlots.map((slot, idx) => (
+                                    <Box
+                                      key={idx}
+                                      onClick={() => slot.available && setStartTime(slot.time)}
+                                      sx={{
+                                        p: 1,
+                                        textAlign: 'center',
+                                        borderRadius: 1,
+                                        border: 1,
+                                        borderColor:
+                                          startTime === slot.time
+                                            ? 'primary.main'
+                                            : slot.available
+                                              ? 'divider'
+                                              : 'action.disabled',
+                                        bgcolor:
+                                          startTime === slot.time
+                                            ? 'primary.main'
+                                            : slot.available
+                                              ? 'background.paper'
+                                              : 'action.disabledBackground',
+                                        color:
+                                          startTime === slot.time
+                                            ? 'primary.contrastText'
+                                            : slot.available
+                                              ? 'text.primary'
+                                              : 'text.disabled',
+                                        cursor: slot.available ? 'pointer' : 'not-allowed',
+                                        opacity: slot.available ? 1 : 0.5,
+                                        transition: 'all 0.2s',
+                                        '&:hover': slot.available
+                                          ? {
+                                              borderColor: 'primary.main',
+                                              bgcolor: startTime === slot.time ? 'primary.dark' : 'primary.lighter'
+                                            }
+                                          : {}
+                                      }}
+                                    >
+                                      <Typography
+                                        variant='body2'
+                                        fontWeight={startTime === slot.time ? 600 : 400}
+                                        fontSize='0.75rem'
+                                      >
+                                        {formatTime12h(slot.time)}
+                                      </Typography>
+                                    </Box>
+                                  ))}
+                                </Box>
+                                {startTime && (
+                                  <Paper
+                                    sx={{
+                                      p: 1.5,
+                                      mt: 1.5,
+                                      bgcolor: 'success.lighter',
+                                      border: 1,
+                                      borderColor: 'success.main'
+                                    }}
+                                  >
+                                    <Typography variant='body2' color='success.dark' fontWeight={500}>
+                                      <i className='ri-check-line' style={{ marginRight: 8 }} />
+                                      {formatTime12h(startTime)} - {formatTime12h(endTime)}
+                                    </Typography>
+                                    <Typography variant='caption' color='success.dark'>
+                                      {serviceDuration} minute {serviceName || 'service'}
+                                    </Typography>
+                                  </Paper>
+                                )}
+                              </Box>
+                            )
+                          })()
+                        )}
                       </Box>
                     ) : (
                       <Paper sx={{ p: 1.5, mt: 1.5, bgcolor: 'info.lighter', border: 1, borderColor: 'info.main' }}>
@@ -1683,7 +1772,7 @@ export default function UnifiedBookingDrawer({
 
                   {/* Price */}
                   <Typography variant='h5' fontWeight={600} color='primary.main'>
-                    ${servicePrice.toFixed(2)}
+                    EGP {servicePrice.toFixed(2)}
                   </Typography>
 
                   {/* Status indicators - compact chips */}
@@ -2135,8 +2224,8 @@ export default function UnifiedBookingDrawer({
                                       handleClientPaymentMethodChange(client.id, e.target.value as PaymentMethod)
                                     }
                                   >
-                                    <MenuItem value='pay_on_arrival'>Pay on Arrival</MenuItem>
-                                    <MenuItem value='mock_card'>Card (Mock)</MenuItem>
+                                    <MenuItem value='cash_on_arrival'>Pay on Arrival</MenuItem>
+                                    <MenuItem value='card_on_arrival'>Card (Mock)</MenuItem>
                                   </Select>
                                 </FormControl>
                                 <TextField
@@ -2343,7 +2432,7 @@ export default function UnifiedBookingDrawer({
                 Total
               </Typography>
               <Typography variant='h6' fontWeight={700}>
-                ${servicePrice.toFixed(2)}
+                EGP {servicePrice.toFixed(2)}
               </Typography>
             </Box>
           )}

@@ -1,0 +1,191 @@
+src/@core/theme/colorSchemes.ts(12,10): error TS2352: Conversion of type '{ light: { palette: { primary: { main: string; light: string; dark: string; contrastText: string; lighterOpacity: string; lightOpacity: string; mainOpacity: string; darkOpacity: string; darkerOpacity: string; }; ... 19 more ...; customColors: { ...; }; }; }; dark: { ...; }; }' to type 'Record<SupportedColorScheme, ColorSystem>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Types of property 'light' are incompatible.
+    Type '{ palette: { primary: { main: string; light: string; dark: string; contrastText: string; lighterOpacity: string; lightOpacity: string; mainOpacity: string; darkOpacity: string; darkerOpacity: string; }; ... 19 more ...; customColors: { ...; }; }; }' is missing the following properties from type 'ColorSystem': opacity, overlays
+src/app/[lang]/(bookly)/(auth)/customer/verify/page.tsx(80,23): error TS2322: Type 'string | Element' is not assignable to type 'string'.
+  Type 'Element' is not assignable to type 'string'.
+src/app/[lang]/(bookly)/api-test/page.tsx(24,18): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/app/[lang]/(bookly)/api-test/page.tsx(27,18): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/app/[lang]/(bookly)/api-test/page.tsx(27,54): error TS18046: 'error' is of type 'unknown'.
+src/app/[lang]/(bookly)/api-test/page.tsx(41,18): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/app/[lang]/(bookly)/api-test/page.tsx(44,18): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/app/[lang]/(bookly)/api-test/page.tsx(44,59): error TS18046: 'error' is of type 'unknown'.
+src/app/[lang]/(bookly)/api-test/page.tsx(58,18): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/app/[lang]/(bookly)/api-test/page.tsx(61,18): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+src/app/[lang]/(bookly)/api-test/page.tsx(61,59): error TS18046: 'error' is of type 'unknown'.
+src/app/[lang]/(bookly)/demo/booking/page.tsx(55,44): error TS2339: Property 'coupons' does not exist on type '{ services: { id: string; name: string; description: string; price: number; duration: number; category: string; businessId: string; location: string; branchIds: string[]; }[]; staff: ({ id: string; name: string; ... 6 more ...; isStaff?: undefined; } | { ...; })[]; businesses: { ...; }[]; branches: { ...; }[]; addon...'.
+src/app/[lang]/(bookly)/demo/booking/page.tsx(56,25): error TS18046: 'coupon' is of type 'unknown'.
+src/app/[lang]/(bookly)/demo/booking/page.tsx(57,91): error TS18046: 'coupon' is of type 'unknown'.
+src/app/[lang]/(bookly)/demo/booking/page.tsx(58,81): error TS18046: 'coupon' is of type 'unknown'.
+src/app/[lang]/(bookly)/profile/[slug]/page.tsx(84,38): error TS2339: Property 'logout' does not exist on type 'AuthState'.
+src/app/[lang]/(dashboard)/(private)/apps/bookly/bookings/page.tsx(252,21): error TS2322: Type 'Date | null' is not assignable to type 'Date | undefined'.
+  Type 'null' is not assignable to type 'Date | undefined'.
+src/app/[lang]/(dashboard)/(private)/apps/bookly/bookings/page.tsx(253,21): error TS2322: Type 'Date | null' is not assignable to type 'Date | undefined'.
+src/bookly/components/business/features/FeaturesSection.tsx(5,24): error TS2307: Cannot find module 'framer-motion' or its corresponding type declarations.
+src/bookly/components/molecules/auth-form/auth-form.component.tsx(96,19): error TS7053: Element implicitly has an 'any' type because expression of type '"email" | "password" | "rememberMe" | "firstName" | "lastName" | "mobile" | "confirmPassword" | "terms"' can't be used to index type 'FieldErrors<{ email: string; password: string; rememberMe?: boolean | undefined; } | { email: string; password: string; firstName: string; lastName: string; mobile: string; confirmPassword: string; terms: boolean; }>'.
+  Property 'rememberMe' does not exist on type 'FieldErrors<{ email: string; password: string; rememberMe?: boolean | undefined; } | { email: string; password: string; firstName: string; lastName: string; mobile: string; confirmPassword: string; terms: boolean; }>'.
+src/bookly/components/molecules/auth-form/auth-form.component.tsx(134,25): error TS2345: Argument of type 'string | number | symbol' is not assignable to parameter of type '"email" | "password" | "rememberMe" | "firstName" | "lastName" | "mobile" | "confirmPassword" | "terms" | "root" | `root.${string}`'.
+  Type 'string' is not assignable to type '"email" | "password" | "rememberMe" | "firstName" | "lastName" | "mobile" | "confirmPassword" | "terms" | "root" | `root.${string}`'.
+src/bookly/components/molecules/bottom-nav/example.tsx(4,24): error TS2304: Cannot find name 't'.
+src/bookly/components/molecules/bottom-nav/example.tsx(4,64): error TS2304: Cannot find name 't'.
+src/bookly/components/molecules/bottom-nav/example.tsx(4,85): error TS2304: Cannot find name 'Heart'.
+src/bookly/components/molecules/bottom-nav/example.tsx(5,27): error TS2304: Cannot find name 't'.
+src/bookly/components/molecules/bottom-nav/example.tsx(5,76): error TS2304: Cannot find name 't'.
+src/bookly/components/molecules/bottom-nav/example.tsx(5,100): error TS2304: Cannot find name 'Search'.
+src/bookly/components/molecules/bottom-nav/example.tsx(8,12): error TS2304: Cannot find name 't'.
+src/bookly/components/molecules/bottom-nav/example.tsx(8,76): error TS2304: Cannot find name 't'.
+src/bookly/components/molecules/bottom-nav/example.tsx(9,11): error TS2304: Cannot find name 'Calendar'.
+src/bookly/components/molecules/bottom-nav/example.tsx(11,27): error TS2304: Cannot find name 't'.
+src/bookly/components/molecules/bottom-nav/example.tsx(11,76): error TS2304: Cannot find name 't'.
+src/bookly/components/molecules/bottom-nav/example.tsx(11,100): error TS2304: Cannot find name 'User'.
+src/bookly/components/molecules/bottom-nav/translation-helper.ts(5,22): error TS2304: Cannot find name 't'.
+src/bookly/components/organisms/booking-modal/booking-modal-v2.tsx(15,31): error TS2305: Module '"@/lib/api/types"' has no exported member 'Addon'.
+src/bookly/components/organisms/booking-modal/booking-modal-v2.tsx(37,12): error TS2339: Property 'email' does not exist on type 'typeof import("/Users/kareemgamal/Downloads/KUL/bookly/node_modules/zod/index")'.
+src/bookly/components/organisms/booking-modal/booking-modal-v2.tsx(95,26): error TS2345: Argument of type '{ id: any; name: any; description: any; price: any; duration: any; location: any; business: { name: any; }; }[]' is not assignable to parameter of type 'SetStateAction<Service[]>'.
+  Type '{ id: any; name: any; description: any; price: any; duration: any; location: any; business: { name: any; }; }[]' is not assignable to type 'Service[]'.
+    Type '{ id: any; name: any; description: any; price: any; duration: any; location: any; business: { name: any; }; }' is missing the following properties from type 'Service': businessId, createdAt, updatedAt
+src/bookly/components/organisms/booking-modal/booking-modal-v2.tsx(202,11): error TS2322: Type 'unknown' is not assignable to type 'string | undefined'.
+src/bookly/components/organisms/booking-modal/booking-modal.tsx(106,7): error TS2353: Object literal may only specify known properties, and 'error' does not exist in type '{ errorMap?: ZodErrorMap | undefined; invalid_type_error?: string | undefined; required_error?: string | undefined; message?: string | undefined; description?: string | undefined; } & { ...; }'.
+src/bookly/components/organisms/booking-modal/booking-modal.tsx(106,14): error TS7006: Parameter 'issue' implicitly has an 'any' type.
+src/bookly/components/organisms/booking-modal/booking-modal.tsx(113,14): error TS2339: Property 'email' does not exist on type 'typeof import("/Users/kareemgamal/Downloads/KUL/bookly/node_modules/zod/index")'.
+src/bookly/components/organisms/booking-modal/booking-modal.tsx(190,22): error TS2345: Argument of type '{ professional: Professional | null; date: Date | null; time: string | null; service: { name: string | undefined; price: string | undefined; duration: string | undefined; }; customer: { ...; }; }' is not assignable to parameter of type 'SetStateAction<BookingData | null>'.
+  Type '{ professional: Professional | null; date: Date | null; time: string | null; service: { name: string | undefined; price: string | undefined; duration: string | undefined; }; customer: { ...; }; }' is not assignable to type 'BookingData'.
+    The types of 'customer.name' are incompatible between these types.
+      Type 'unknown' is not assignable to type 'string'.
+src/bookly/components/organisms/booking-modal/new-booking-modal.tsx(19,31): error TS2305: Module '"@/lib/api/types"' has no exported member 'Addon'.
+src/bookly/components/organisms/booking-modal/new-booking-modal.tsx(39,12): error TS2339: Property 'email' does not exist on type 'typeof import("/Users/kareemgamal/Downloads/KUL/bookly/node_modules/zod/index")'.
+src/bookly/components/organisms/booking-modal/new-booking-modal.tsx(162,9): error TS2353: Object literal may only specify known properties, and 'providerId' does not exist in type '{ serviceId: string; branchId: string; date: string; resourceId?: string | undefined; }'.
+src/bookly/components/organisms/booking-modal/new-booking-modal.tsx(169,47): error TS2339: Property 'slots' does not exist on type 'AvailabilitySlot[]'.
+src/bookly/components/organisms/booking-modal/new-booking-modal.tsx(169,57): error TS7006: Parameter 'slot' implicitly has an 'any' type.
+src/bookly/components/organisms/booking-modal/new-booking-modal.tsx(197,43): error TS2339: Property 'getAddons' does not exist on type 'typeof BookingService'.
+src/bookly/components/organisms/booking-modal/new-booking-modal.tsx(211,43): error TS2339: Property 'validateCoupon' does not exist on type 'typeof BookingService'.
+src/bookly/components/organisms/booking-modal/new-booking-modal.tsx(279,57): error TS2345: Argument of type '{ serviceId: string; providerId: string; startsAtUtc: string; customer: { name: unknown; email: unknown; phone: unknown; }; addons: { id: string; quantity: number; }[]; notes: unknown; couponCode: unknown; }' is not assignable to parameter of type 'CreateBookingRequest'.
+  Type '{ serviceId: string; providerId: string; startsAtUtc: string; customer: { name: unknown; email: unknown; phone: unknown; }; addons: { id: string; quantity: number; }[]; notes: unknown; couponCode: unknown; }' is missing the following properties from type 'CreateBookingRequest': branchId, startTime
+src/bookly/components/organisms/booking-modal/new-booking-modal.tsx(284,32): error TS2339: Property 'mockPayment' does not exist on type 'typeof BookingService'.
+src/bookly/components/ui/pagination.tsx(172,17): error TS2323: Cannot redeclare exported variable 'PaginationInfo'.
+src/bookly/components/ui/pagination.tsx(203,32): error TS2323: Cannot redeclare exported variable 'PaginationInfo'.
+src/bookly/features/calendar/staff-management-integration.ts(27,5): error TS2741: Property 'bookedBy' is missing in type '{ type: "timeOff"; timeOffId: string; staffId: string; staffName: string; reason: TimeOffReasonGroup; approved: boolean; allDay: boolean; note: string | undefined; status: "confirmed"; ... 6 more ...; bookingId: string; }' but required in type '{ status: AppointmentStatus; paymentStatus: PaymentStatus; paymentMethod?: PaymentMethod | undefined; paymentReference?: string | undefined; ... 36 more ...; updatedAt?: string | undefined; }'.
+src/bookly/features/calendar/staff-management-integration.ts(71,7): error TS2741: Property 'bookedBy' is missing in type '{ type: "reservation"; reservationId: string; staffId: string; staffName: string; reason: string; note: string | undefined; branchId: string | undefined; status: "confirmed"; paymentStatus: "unpaid"; ... 5 more ...; bookingId: string; }' but required in type '{ status: AppointmentStatus; paymentStatus: PaymentStatus; paymentMethod?: PaymentMethod | undefined; paymentReference?: string | undefined; ... 36 more ...; updatedAt?: string | undefined; }'.
+src/bookly/features/calendar/staff-management-integration.ts(104,7): error TS2741: Property 'bookedBy' is missing in type '{ type: "reservation"; reservationId: string; staffId: string; staffName: string; roomId: string; reason: string; note: string | undefined; branchId: string | undefined; status: "confirmed"; ... 6 more ...; bookingId: string; }' but required in type '{ status: AppointmentStatus; paymentStatus: PaymentStatus; paymentMethod?: PaymentMethod | undefined; paymentReference?: string | undefined; ... 36 more ...; updatedAt?: string | undefined; }'.
+src/bookly/features/calendar/unified-booking-drawer.tsx(1093,17): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/bookly/features/calendar/unified-booking-drawer.tsx(1128,15): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+src/bookly/features/calendar/unified-multi-resource-day-view.tsx(545,41): error TS7006: Parameter 'assignment' implicitly has an 'any' type.
+src/bookly/features/calendar/unified-multi-resource-day-view.tsx(700,26): error TS7006: Parameter 'block' implicitly has an 'any' type.
+src/bookly/features/calendar/unified-multi-resource-day-view.tsx(700,33): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+src/bookly/features/calendar/unified-multi-resource-day-view.tsx(747,57): error TS2367: This comparison appears to be unintentional because the types '"dynamic" | undefined' and '"fixed"' have no overlap.
+src/bookly/features/calendar/unified-multi-resource-week-view.tsx(435,39): error TS7006: Parameter 'assignment' implicitly has an 'any' type.
+src/bookly/features/calendar/unified-multi-resource-week-view.tsx(542,57): error TS2367: This comparison appears to be unintentional because the types '"dynamic" | undefined' and '"fixed"' have no overlap.
+src/bookly/features/calendar/unified-multi-resource-week-view.tsx(1019,27): error TS2322: Type '{ position: string; size: number; offsetX: number; offsetY: number; rotate: number; }' is not assignable to type 'IntrinsicAttributes & BrandWatermarkProps'.
+  Property 'position' does not exist on type 'IntrinsicAttributes & BrandWatermarkProps'.
+src/bookly/features/staff-management/business-hours-day-editor-modal.tsx(136,17): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; } | { id: string; start: string; end: string; breaks: never[]; }'.
+  Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-day-editor-modal.tsx(137,39): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; } | { id: string; start: string; end: string; breaks: never[]; }'.
+  Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-day-editor-modal.tsx(206,9): error TS2322: Type 'any' is not assignable to type 'never'.
+src/bookly/features/staff-management/business-hours-day-editor-modal.tsx(206,19): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; } | { id: string; start: string; end: string; breaks: never[]; }'.
+  Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-day-editor-modal.tsx(207,9): error TS2322: Type '{ id: string; start: string; end: string; }' is not assignable to type 'never'.
+src/bookly/features/staff-management/business-hours-day-editor-modal.tsx(222,22): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; } | { id: string; start: string; end: string; breaks: never[]; }'.
+  Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-day-editor-modal.tsx(232,22): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; } | { id: string; start: string; end: string; breaks: never[]; }'.
+  Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(165,23): error TS2353: Object literal may only specify known properties, and 'id' does not exist in type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(192,17): error TS2353: Object literal may only specify known properties, and 'breaks' does not exist in type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(193,29): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(212,17): error TS2353: Object literal may only specify known properties, and 'breaks' does not exist in type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(212,32): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(212,53): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/bookly/features/staff-management/business-hours-modal.tsx(225,17): error TS2353: Object literal may only specify known properties, and 'breaks' does not exist in type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(225,32): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(225,50): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/bookly/features/staff-management/business-hours-modal.tsx(267,39): error TS2339: Property 'id' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(315,32): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(315,48): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(317,36): error TS2339: Property 'breaks' does not exist on type '{ start: string; end: string; }'.
+src/bookly/features/staff-management/business-hours-modal.tsx(317,47): error TS7006: Parameter 'breakRange' implicitly has an 'any' type.
+src/bookly/features/staff-management/commission-editor-modal.tsx(74,41): error TS2345: Argument of type '{ scope: "serviceCategory" | "service" | "product" | "giftCard" | "membership" | "package"; type: "percent" | "fixed"; value: number; appliesTo: "serviceProvider" | "seller"; staffScope: string | { ...; }; }' is not assignable to parameter of type 'Partial<CommissionPolicy>'.
+  Types of property 'staffScope' are incompatible.
+    Type 'string | { staffIds: string[]; }' is not assignable to type '{ staffIds: string[]; } | "all" | undefined'.
+      Type 'string' is not assignable to type '{ staffIds: string[]; } | "all" | undefined'.
+src/bookly/features/staff-management/staff-members-tab.tsx(169,21): error TS2345: Argument of type '{ onlyMe: false; staffIds: string[]; selectedStaffId: string; }' is not assignable to parameter of type 'StaffFilter'.
+  Property 'workingStaffOnly' is missing in type '{ onlyMe: false; staffIds: string[]; selectedStaffId: string; }' but required in type 'StaffFilter'.
+src/bookly/features/staff-management/staff-members-tab.tsx(637,37): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/components/media/ImageUpload.tsx(185,17): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/stores/business-settings.store.ts(436,63): error TS2345: Argument of type '{ businessProfile: BusinessProfile; socialLinks: SocialLinks; bookingPolicies: BookingPolicies; paymentSettings: PaymentSettings; ... 4 more ...; brandingSettings: BrandingSettings; }' is not assignable to parameter of type 'Partial<BusinessSettings>'.
+  Types of property 'bookingPolicies' are incompatible.
+    Type 'BookingPolicies' has no properties in common with type 'BookingPolicies'.
+src/views/apps/bookly/approvals/BusinessApprovals.tsx(50,11): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'Business'.
+src/views/apps/bookly/approvals/BusinessApprovals.tsx(64,11): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'Business'.
+src/views/apps/bookly/approvals/BusinessApprovals.tsx(179,56): error TS18048: 'business.owner' is possibly 'undefined'.
+src/views/apps/bookly/approvals/BusinessApprovals.tsx(181,30): error TS18048: 'business.owner' is possibly 'undefined'.
+src/views/apps/bookly/approvals/BusinessApprovals.tsx(211,44): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+      Type 'undefined' is not assignable to type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+      Type 'undefined' is not assignable to type 'string | number'.
+src/views/apps/bookly/branches/BranchesManagement.tsx(97,17): error TS2561: Object literal may only specify known properties, but 'branchIds' does not exist in type 'Staff'. Did you mean to write 'branchId'?
+src/views/apps/bookly/branches/BranchesManagement.tsx(106,17): error TS2561: Object literal may only specify known properties, but 'branchIds' does not exist in type 'Staff'. Did you mean to write 'branchId'?
+src/views/apps/bookly/branches/BranchesManagement.tsx(148,17): error TS2561: Object literal may only specify known properties, but 'branchIds' does not exist in type 'Staff'. Did you mean to write 'branchId'?
+src/views/apps/bookly/branches/BranchesManagement.tsx(157,17): error TS2561: Object literal may only specify known properties, but 'branchIds' does not exist in type 'Staff'. Did you mean to write 'branchId'?
+src/views/apps/bookly/branches/BranchesManagement.tsx(166,17): error TS2561: Object literal may only specify known properties, but 'branchIds' does not exist in type 'Staff'. Did you mean to write 'branchId'?
+src/views/apps/bookly/branches/BranchesManagement.tsx(178,11): error TS2739: Type '{ id: string; name: string; price: number; duration: number; }' is missing the following properties from type 'Service': businessId, createdAt, updatedAt
+src/views/apps/bookly/branches/BranchesManagement.tsx(179,11): error TS2739: Type '{ id: string; name: string; price: number; duration: number; }' is missing the following properties from type 'Service': businessId, createdAt, updatedAt
+src/views/apps/bookly/branches/BranchesManagement.tsx(180,11): error TS2739: Type '{ id: string; name: string; price: number; duration: number; }' is missing the following properties from type 'Service': businessId, createdAt, updatedAt
+src/views/apps/bookly/branches/BranchesManagement.tsx(181,11): error TS2739: Type '{ id: string; name: string; price: number; duration: number; }' is missing the following properties from type 'Service': businessId, createdAt, updatedAt
+src/views/apps/bookly/branches/BranchesManagement.tsx(182,11): error TS2739: Type '{ id: string; name: string; price: number; duration: number; }' is missing the following properties from type 'Service': businessId, createdAt, updatedAt
+src/views/apps/bookly/branches/BranchesManagement.tsx(183,11): error TS2739: Type '{ id: string; name: string; price: number; duration: number; }' is missing the following properties from type 'Service': businessId, createdAt, updatedAt
+src/views/apps/bookly/business/BusinessProfile.tsx(73,49): error TS2345: Argument of type 'string' is not assignable to parameter of type 'Locale'.
+src/views/apps/bookly/business/BusinessProfile.tsx(94,74): error TS2554: Expected 1 arguments, but got 2.
+src/views/apps/bookly/business/BusinessProfile.tsx(185,25): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & AvatarOwnProps & AvatarSlotsAndSlotProps & CommonProps & Omit<...>): Element | null', gave the following error.
+    Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<AvatarTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+src/views/apps/bookly/business/BusinessProfile.tsx(194,63): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+src/views/apps/bookly/businesses/BusinessManagement.tsx(113,57): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & AvatarOwnProps & AvatarSlotsAndSlotProps & CommonProps & Omit<...>): Element | null', gave the following error.
+    Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<AvatarTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+src/views/apps/bookly/businesses/BusinessManagement.tsx(141,45): error TS2551: Property 'isApproved' does not exist on type 'Business'. Did you mean 'approved'?
+src/views/apps/bookly/businesses/BusinessManagement.tsx(142,45): error TS2551: Property 'isApproved' does not exist on type 'Business'. Did you mean 'approved'?
+src/views/apps/bookly/businesses/BusinessManagement.tsx(147,37): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(value: string | number | Date): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number | Date'.
+  Overload 2 of 4, '(value: string | number): Date', gave the following error.
+    Argument of type 'string | undefined' is not assignable to parameter of type 'string | number'.
+src/views/apps/bookly/categories/CategoriesManagement.tsx(104,51): error TS2339: Property 'image' does not exist on type 'Category'.
+src/views/apps/bookly/categories/CategoriesManagement.tsx(105,41): error TS2339: Property 'icon' does not exist on type 'Category'.
+src/views/apps/bookly/categories/CategoriesManagement.tsx(120,39): error TS2339: Property 'slug' does not exist on type 'Category'.
+src/views/apps/bookly/dashboard/DashboardBookly.tsx(143,36): error TS2322: Type 'Service[] | Service[]' is not assignable to type 'Service[]'.
+  Type 'import("/Users/kareemgamal/Downloads/KUL/bookly/src/bookly/data/types").Service[]' is not assignable to type 'import("/Users/kareemgamal/Downloads/KUL/bookly/src/lib/api/types").Service[]'.
+    Type 'Service' is missing the following properties from type 'Service': createdAt, updatedAt
+src/views/apps/bookly/dashboard/DashboardBookly.tsx(149,9): error TS2322: Type 'import("/Users/kareemgamal/Downloads/KUL/bookly/src/bookly/data/types").Service[]' is not assignable to type 'import("/Users/kareemgamal/Downloads/KUL/bookly/src/lib/api/types").Service[]'.
+src/views/apps/bookly/services/CreateServiceDialog.tsx(159,44): error TS2345: Argument of type '(prev: CreateServiceRequest) => { price: string; name: string; description?: string | undefined; location: string; duration: number; categoryIds?: string[] | undefined; branchIds?: string[] | undefined; gallery?: string[] | undefined; }' is not assignable to parameter of type 'SetStateAction<CreateServiceRequest>'.
+  Type '(prev: CreateServiceRequest) => { price: string; name: string; description?: string | undefined; location: string; duration: number; categoryIds?: string[] | undefined; branchIds?: string[] | undefined; gallery?: string[] | undefined; }' is not assignable to type '(prevState: CreateServiceRequest) => CreateServiceRequest'.
+    Call signature return types '{ price: string; name: string; description?: string | undefined; location: string; duration: number; categoryIds?: string[] | undefined; branchIds?: string[] | undefined; gallery?: string[] | undefined; }' and 'CreateServiceRequest' are incompatible.
+      The types of 'price' are incompatible between these types.
+        Type 'string' is not assignable to type 'number'.
+src/views/apps/bookly/services/CreateServiceDialog.tsx(175,44): error TS2345: Argument of type '(prev: CreateServiceRequest) => { duration: string; name: string; description?: string | undefined; location: string; price: number; categoryIds?: string[] | undefined; branchIds?: string[] | undefined; gallery?: string[] | undefined; }' is not assignable to parameter of type 'SetStateAction<CreateServiceRequest>'.
+  Type '(prev: CreateServiceRequest) => { duration: string; name: string; description?: string | undefined; location: string; price: number; categoryIds?: string[] | undefined; branchIds?: string[] | undefined; gallery?: string[] | undefined; }' is not assignable to type '(prevState: CreateServiceRequest) => CreateServiceRequest'.
+    Call signature return types '{ duration: string; name: string; description?: string | undefined; location: string; price: number; categoryIds?: string[] | undefined; branchIds?: string[] | undefined; gallery?: string[] | undefined; }' and 'CreateServiceRequest' are incompatible.
+      The types of 'duration' are incompatible between these types.
+        Type 'string' is not assignable to type 'number'.
+src/views/apps/bookly/staff/EditStaffDialog.tsx(69,10): error TS18048: 'formData.name' is possibly 'undefined'.
+src/views/apps/ecommerce/settings/store-details/TimeZone.tsx(25,12): error TS2304: Cannot find name 'Typography'.
+src/views/apps/ecommerce/settings/store-details/TimeZone.tsx(27,13): error TS2304: Cannot find name 'Typography'.
+src/views/dashboards/bookly/TopBusinesses.tsx(43,45): error TS2551: Property 'coverImageUrl' does not exist on type 'Business'. Did you mean 'coverImage'?
+src/views/dashboards/bookly/TopBusinesses.tsx(43,64): error TS2339: Property 'logoUrl' does not exist on type 'Business'.
+src/views/pages/account-settings/business/BusinessProfileSettings.tsx(89,41): error TS2339: Property 'business' does not exist on type '{}'.
+src/views/pages/account-settings/business/BusinessProfileSettings.tsx(375,74): error TS2339: Property 'logoUrl' does not exist on type '{ id: string; name: string; email: string | null; description: string | null; logo: string | null; approved: boolean; createdAt: string; updatedAt: string; rating: number; socialLinks?: { platform: string; url: string; }[] | undefined; }'.
+src/views/RegisterWizard/registration-sync.ts(36,5): error TS2353: Object literal may only specify known properties, and 'bufferTime' does not exist in type 'ExtendedService'.
+src/views/RegisterWizard/registration-sync.ts(265,37): error TS2322: Type '{ id: string; start: string; end: string; }[]' is not assignable to type '{ start: string; end: string; }[]'.
+  Object literal may only specify known properties, and 'id' does not exist in type '{ start: string; end: string; }'.

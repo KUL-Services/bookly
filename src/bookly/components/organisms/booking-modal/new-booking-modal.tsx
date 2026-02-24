@@ -27,10 +27,10 @@ interface BookingModalProps {
 
 // Step definitions
 const STEPS = {
-  SELECTION: 1,    // Steps 1-4: Service, Provider, Date/Time, Extras (all in one screen)
-  DETAILS: 2,      // Step 5: Customer details & payment
-  REVIEW: 3,       // Step 6: Review & confirm
-  SUCCESS: 4       // Success screen
+  SELECTION: 1, // Steps 1-4: Service, Provider, Date/Time, Extras (all in one screen)
+  DETAILS: 2, // Step 5: Customer details & payment
+  REVIEW: 3, // Step 6: Review & confirm
+  SUCCESS: 4 // Success screen
 }
 
 // Form schemas
@@ -40,7 +40,7 @@ const detailsFormSchema = z.object({
   phone: z.string().optional(),
   notes: z.string().optional(),
   couponCode: z.string().optional(),
-  paymentMethod: z.enum(['pay_on_arrival', 'mock_card']),
+  paymentMethod: z.enum(['cash_on_arrival', 'card_on_arrival']),
   agreeToTerms: z.boolean().refine(val => val === true, {
     message: 'You must agree to the terms and conditions'
   })
@@ -78,7 +78,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
       phone: '',
       notes: '',
       couponCode: '',
-      paymentMethod: 'pay_on_arrival',
+      paymentMethod: 'cash_on_arrival',
       agreeToTerms: false
     }
   })
@@ -280,7 +280,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
 
       if (result.data) {
         // If mock card payment selected, process payment
-        if (formData.paymentMethod === 'mock_card') {
+        if (formData.paymentMethod === 'card_on_arrival') {
           await BookingService.mockPayment({
             bookingId: result.data.id,
             amount: calculateTotal()
@@ -329,7 +329,10 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
   if (!isOpen) return null
 
   return (
-    <div className='fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-[60] p-4' onClick={onClose}>
+    <div
+      className='fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-[60] p-4'
+      onClick={onClose}
+    >
       <div
         className='bg-white dark:bg-gray-900 rounded-2xl max-w-3xl w-full max-h-[95vh] overflow-y-auto shadow-2xl'
         onClick={e => e.stopPropagation()}
@@ -433,9 +436,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                         >
                           <span className='text-sm'>{weekdays[idx]}</span>
                           <span className='text-2xl font-bold mt-1'>{day}</span>
-                          {isSelected && (
-                            <div className='w-8 h-1 bg-yellow-400 rounded-full mt-2' />
-                          )}
+                          {isSelected && <div className='w-8 h-1 bg-yellow-400 rounded-full mt-2' />}
                         </button>
                       )
                     })}
@@ -516,7 +517,8 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
                         </span>
                       </div>
                       <div className='text-sm text-gray-500 dark:text-gray-400'>
-                        {selectedTime} - {selectedTime && service?.duration
+                        {selectedTime} -{' '}
+                        {selectedTime && service?.duration
                           ? format(addMinutes(new Date(`2000-01-01T${selectedTime}`), service.duration), 'HH:mm')
                           : ''}
                       </div>
@@ -559,18 +561,15 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
               {/* Booking Summary */}
               <div className='bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 space-y-3'>
                 <div className='text-center'>
-                  <div className='text-sm text-gray-600 dark:text-gray-400'>
-                    September, Monday 29 2025
-                  </div>
+                  <div className='text-sm text-gray-600 dark:text-gray-400'>September, Monday 29 2025</div>
                   <div className='text-3xl font-bold mt-1 text-gray-900 dark:text-white'>
-                    {selectedTime} - {selectedTime && service?.duration
+                    {selectedTime} -{' '}
+                    {selectedTime && service?.duration
                       ? format(addMinutes(new Date(`2000-01-01T${selectedTime}`), service.duration), 'HH:mm')
                       : ''}{' '}
                     ({service?.duration}min)
                   </div>
-                  <div className='text-sm text-gray-600 dark:text-gray-400 mt-1'>
-                    {service?.business?.name}
-                  </div>
+                  <div className='text-sm text-gray-600 dark:text-gray-400 mt-1'>{service?.business?.name}</div>
                 </div>
 
                 <div className='bg-white dark:bg-gray-900 rounded-lg p-4'>
@@ -663,9 +662,9 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
 
                   <div className='text-xs text-gray-500 dark:text-gray-400 text-center'>
                     Your personal data will be handled by the business. You can find more information{' '}
-                    <span className='text-primary-700 cursor-pointer'>here</span>. By clicking "Confirm & Book", you accept
-                    the <span className='text-primary-700 cursor-pointer'>Cancellation Policy</span> and agree that a
-                    Cancellation Fee or Deposit may be charged to your card if it's violated..
+                    <span className='text-primary-700 cursor-pointer'>here</span>. By clicking "Confirm & Book", you
+                    accept the <span className='text-primary-700 cursor-pointer'>Cancellation Policy</span> and agree
+                    that a Cancellation Fee or Deposit may be charged to your card if it's violated..
                   </div>
                 </form>
               </Form>
@@ -683,9 +682,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
 
               <div>
                 <H3 stringProps={{ plainText: 'Appointment Confirmed' }} className='text-3xl font-bold mb-2' />
-                <div className='text-xl text-gray-900 dark:text-white'>
-                  Sep 29, 2025, {selectedTime}
-                </div>
+                <div className='text-xl text-gray-900 dark:text-white'>Sep 29, 2025, {selectedTime}</div>
                 <div className='text-gray-600 dark:text-gray-400 mt-2'>
                   You're done! We'll send you a reminder before your appointment.
                 </div>

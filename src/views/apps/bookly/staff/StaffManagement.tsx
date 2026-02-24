@@ -84,6 +84,7 @@ const StaffManagement = () => {
           <Tab label='SHIFTS' sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit' }} />
           <Tab label='RESOURCES' sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit' }} />
           <Tab label='ROOMS' sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit' }} />
+          {/* <Tab label='COMMISSIONS' sx={{ textTransform: 'uppercase', fontWeight: 600, fontFamily: 'inherit' }} /> */}
         </Tabs>
       </Box>
 
@@ -101,9 +102,9 @@ const StaffManagement = () => {
         <TabPanel value={currentTab} index={3}>
           <RoomsTab />
         </TabPanel>
-        <TabPanel value={currentTab} index={4}>
+        {/* <TabPanel value={currentTab} index={4}>
           <CommissionsTab />
-        </TabPanel>
+        </TabPanel> */}
       </Box>
     </Box>
   )

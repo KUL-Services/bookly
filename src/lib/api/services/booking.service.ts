@@ -3,6 +3,7 @@ import type {
   Booking,
   CreateBookingRequest,
   AvailableSlotFlat,
+  AvailabilitySlot,
   AdminBookingsParams,
   AdminCreateBookingRequest,
   GuestBookingRequest,
@@ -11,16 +12,27 @@ import type {
 
 export class BookingService {
   // Get availability for a service at a branch on a given date
+  // Returns enhanced slots with session info for STATIC mode resources
   static async getAvailability(params: { serviceId: string; branchId: string; date: string; resourceId?: string }) {
     const { serviceId, branchId, date, resourceId } = params
     const queryParams = new URLSearchParams({ serviceId, branchId, date })
     if (resourceId) queryParams.append('resourceId', resourceId)
 
-    // API returns flat array of { startTime, endTime, resourceId }
+    // API returns enhanced slots that may include session info for STATIC mode
+    return apiClient.get<AvailabilitySlot[]>(`/bookings/availability?${queryParams.toString()}`)
+  }
+
+  // Legacy method for backward compatibility - returns flat format
+  static async getAvailabilityFlat(params: { serviceId: string; branchId: string; date: string; resourceId?: string }) {
+    const { serviceId, branchId, date, resourceId } = params
+    const queryParams = new URLSearchParams({ serviceId, branchId, date })
+    if (resourceId) queryParams.append('resourceId', resourceId)
+
     return apiClient.get<AvailableSlotFlat[]>(`/bookings/availability?${queryParams.toString()}`)
   }
 
   // Create a booking (requires auth)
+  // For STATIC mode, include sessionId in the request
   static async createBooking(data: CreateBookingRequest) {
     return apiClient.post<Booking>('/bookings', data)
   }
@@ -75,9 +87,7 @@ export class BookingService {
 
   // Admin - Create a booking on behalf of a customer
   static async createAdminBooking(data: AdminCreateBookingRequest) {
-    // Admin specific endpoint /admin/bookings returns 404
-    // Using standard /bookings endpoint which should accept admin requests with proper auth
-    return apiClient.post<Booking>('/bookings', data)
+    return apiClient.post<Booking>('/admin/bookings', data)
   }
 
   // Admin - Delete/cancel a booking

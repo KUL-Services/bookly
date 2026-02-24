@@ -32,6 +32,10 @@ export interface Branch {
   mobile: string
   email?: string
   businessId: string
+  latitude?: number
+  longitude?: number
+  formattedAddress?: string
+  placeId?: string
 
   // Associated data
   services: BranchService[]
@@ -55,6 +59,10 @@ export interface BranchFormData {
   country: string
   mobile: string
   email: string
+  latitude?: number
+  longitude?: number
+  formattedAddress?: string
+  placeId?: string
   serviceIds: string[]
   staffIds: string[]
   galleryUrls: string[]
@@ -79,6 +87,10 @@ export const DEFAULT_BRANCH_FORM_DATA: BranchFormData = {
   country: '',
   mobile: '',
   email: '',
+  latitude: undefined,
+  longitude: undefined,
+  formattedAddress: '',
+  placeId: '',
   serviceIds: [],
   staffIds: [],
   galleryUrls: [],

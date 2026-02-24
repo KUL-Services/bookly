@@ -20,7 +20,6 @@ import {
   Alert,
   Tooltip
 } from '@mui/material'
-import { mockServices, categories } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 
 interface ResourceAssignServicesModalProps {
@@ -36,56 +35,44 @@ export function ResourceAssignServicesModal({
   resourceId,
   resourceName
 }: ResourceAssignServicesModalProps) {
-  const {
-    getResourceServices,
-    assignServicesToResource,
-    isServiceAssigned,
-    getResourceForService,
-    resources,
-    rooms
-  } = useStaffManagementStore()
+  const { getResourceServices, assignServicesToResource, resources, rooms, apiServices } = useStaffManagementStore()
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedServices, setSelectedServices] = useState<string[]>(() =>
-    getResourceServices(resourceId)
-  )
+  const [selectedServices, setSelectedServices] = useState<string[]>(() => getResourceServices(resourceId))
   const [conflicts, setConflicts] = useState<string[]>([])
 
   // Filter services by search
   const filteredServices = useMemo(() => {
-    return mockServices.filter(service =>
-      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.category.toLowerCase().includes(searchQuery.toLowerCase())
+    return apiServices.filter(
+      service =>
+        service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (service.description || '').toLowerCase().includes(searchQuery.toLowerCase())
     )
-  }, [searchQuery])
+  }, [searchQuery, apiServices])
 
-  // Group services by category
+  // Group services by category (use 'Uncategorized' if no category)
   const servicesByCategory = useMemo(() => {
-    const grouped: Record<string, typeof mockServices> = {}
+    const grouped: Record<string, typeof apiServices> = {}
 
     filteredServices.forEach(service => {
-      if (!grouped[service.category]) {
-        grouped[service.category] = []
+      const categoryName = service.categories?.[0]?.name || 'Uncategorized'
+      if (!grouped[categoryName]) {
+        grouped[categoryName] = []
       }
-      grouped[service.category].push(service)
+      grouped[categoryName].push(service)
     })
 
     return grouped
   }, [filteredServices])
 
   const handleToggleService = (serviceId: string) => {
-    setSelectedServices(prev =>
-      prev.includes(serviceId)
-        ? prev.filter(id => id !== serviceId)
-        : [...prev, serviceId]
-    )
+    setSelectedServices(prev => (prev.includes(serviceId) ? prev.filter(id => id !== serviceId) : [...prev, serviceId]))
     // Clear conflicts when user changes selection
     setConflicts([])
   }
 
-  const handleSave = () => {
-    const result = assignServicesToResource(resourceId, selectedServices)
+  const handleSave = async () => {
+    const result = await assignServicesToResource(resourceId, selectedServices)
 
     if (!result.success && result.conflicts) {
       setConflicts(result.conflicts)
@@ -107,12 +94,8 @@ export function ResourceAssignServicesModal({
     if (!currentResource) return false
 
     // Only check for conflicts within the same branch
-    const resourcesInSameBranch = resources.filter(
-      r => r.branchId === currentResource.branchId && r.id !== resourceId
-    )
-    const roomsInSameBranch = rooms.filter(
-      r => r.branchId === currentResource.branchId && r.id !== resourceId
-    )
+    const resourcesInSameBranch = resources.filter(r => r.branchId === currentResource.branchId && r.id !== resourceId)
+    const roomsInSameBranch = rooms.filter(r => r.branchId === currentResource.branchId && r.id !== resourceId)
 
     return (
       resourcesInSameBranch.some(r => r.serviceIds?.includes(serviceId)) ||
@@ -126,12 +109,8 @@ export function ResourceAssignServicesModal({
     if (!currentResource) return ''
 
     // Only check for conflicts within the same branch
-    const resourcesInSameBranch = resources.filter(
-      r => r.branchId === currentResource.branchId && r.id !== resourceId
-    )
-    const roomsInSameBranch = rooms.filter(
-      r => r.branchId === currentResource.branchId && r.id !== resourceId
-    )
+    const resourcesInSameBranch = resources.filter(r => r.branchId === currentResource.branchId && r.id !== resourceId)
+    const roomsInSameBranch = rooms.filter(r => r.branchId === currentResource.branchId && r.id !== resourceId)
 
     const conflictResource = resourcesInSameBranch.find(r => r.serviceIds?.includes(serviceId))
     if (conflictResource) return conflictResource.name
@@ -146,7 +125,7 @@ export function ResourceAssignServicesModal({
     <Dialog
       open={open}
       onClose={handleCancel}
-      maxWidth="md"
+      maxWidth='md'
       fullWidth
       PaperProps={{
         sx: { height: '80vh', display: 'flex', flexDirection: 'column' }
@@ -154,10 +133,10 @@ export function ResourceAssignServicesModal({
     >
       <DialogTitle>
         <Box>
-          <Typography variant="h5" fontWeight={600}>
+          <Typography variant='h5' fontWeight={600}>
             Assign Services
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant='body2' color='text.secondary'>
             Assign services to {resourceName}
           </Typography>
         </Box>
@@ -166,16 +145,14 @@ export function ResourceAssignServicesModal({
       <DialogContent dividers sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
         {/* Conflict Alert */}
         {conflicts.length > 0 && (
-          <Alert severity="error" sx={{ m: 2 }}>
-            <Typography variant="body2" fontWeight={600} gutterBottom>
+          <Alert severity='error' sx={{ m: 2 }}>
+            <Typography variant='body2' fontWeight={600} gutterBottom>
               Service Assignment Conflict
             </Typography>
-            <Typography variant="body2">
-              The following services are already assigned to other resources:
-            </Typography>
-            <Box component="ul" sx={{ mt: 1, mb: 0 }}>
+            <Typography variant='body2'>The following services are already assigned to other resources:</Typography>
+            <Box component='ul' sx={{ mt: 1, mb: 0 }}>
               {conflicts.map(serviceId => {
-                const service = mockServices.find(s => s.id === serviceId)
+                const service = apiServices.find(s => s.id === serviceId)
                 return (
                   <li key={serviceId}>
                     {service?.name} (assigned to {getConflictResourceName(serviceId)})
@@ -190,14 +167,14 @@ export function ResourceAssignServicesModal({
         <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.default' }}>
           <TextField
             fullWidth
-            size="small"
-            placeholder="Search services..."
+            size='small'
+            placeholder='Search services...'
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
-                  <i className="ri-search-line" />
+                <InputAdornment position='start'>
+                  <i className='ri-search-line' />
                 </InputAdornment>
               )
             }}
@@ -205,42 +182,29 @@ export function ResourceAssignServicesModal({
           />
 
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <Chip
-              label={`${selectedServices.length} selected`}
-              color="primary"
-              size="small"
-            />
+            <Chip label={`${selectedServices.length} selected`} color='primary' size='small' />
           </Box>
         </Box>
 
         {/* Services by Category */}
         <Box sx={{ flexGrow: 1, overflow: 'auto', p: 2 }}>
           {Object.entries(servicesByCategory).map(([categoryName, services]) => {
-            const categoryInfo = categories.find(c => c.name === categoryName)
             const allSelected = services.every(s => selectedServices.includes(s.id))
             const someSelected = services.some(s => selectedServices.includes(s.id))
 
             return (
-              <Accordion
-                key={categoryName}
-                defaultExpanded
-                sx={{ mb: 1, '&:before': { display: 'none' } }}
-              >
-                <AccordionSummary expandIcon={<i className="ri-arrow-down-s-line" />}>
+              <Accordion key={categoryName} defaultExpanded sx={{ mb: 1, '&:before': { display: 'none' } }}>
+                <AccordionSummary expandIcon={<i className='ri-arrow-down-s-line' />}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {categoryInfo?.icon} {categoryName}
+                    <Typography variant='subtitle1' fontWeight={600}>
+                      {categoryName}
                     </Typography>
-                    <Chip
-                      size="small"
-                      label={services.length}
-                      sx={{ ml: 'auto', mr: 2 }}
-                    />
+                    <Chip size='small' label={services.length} sx={{ ml: 'auto', mr: 2 }} />
                   </Box>
                 </AccordionSummary>
                 <AccordionDetails sx={{ pt: 0 }}>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    {services.map((service) => {
+                    {services.map(service => {
                       const inConflict = isServiceInConflict(service.id)
                       const isDisabled = inConflict
 
@@ -248,7 +212,7 @@ export function ResourceAssignServicesModal({
                         <Tooltip
                           key={service.id}
                           title={inConflict ? `Already assigned to ${getConflictResourceName(service.id)}` : ''}
-                          placement="top"
+                          placement='top'
                         >
                           <FormControlLabel
                             disabled={isDisabled}
@@ -261,16 +225,16 @@ export function ResourceAssignServicesModal({
                             label={
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', pr: 2 }}>
                                 <Box>
-                                  <Typography variant="body2" fontWeight={500}>
+                                  <Typography variant='body2' fontWeight={500}>
                                     {service.name}
                                   </Typography>
-                                  <Typography variant="caption" color="text.secondary">
-                                    {service.duration} min • ${service.price}
+                                  <Typography variant='caption' color='text.secondary'>
+                                    {service.duration} min • EGP {service.price}
                                     {inConflict && (
                                       <Chip
-                                        size="small"
+                                        size='small'
                                         label={`Assigned to ${getConflictResourceName(service.id)}`}
-                                        color="error"
+                                        color='error'
                                         sx={{ ml: 1, height: 18, fontSize: '0.65rem' }}
                                       />
                                     )}
@@ -302,10 +266,10 @@ export function ResourceAssignServicesModal({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={handleCancel} variant="outlined">
+        <Button onClick={handleCancel} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained" autoFocus>
+        <Button onClick={handleSave} variant='contained' autoFocus>
           Save Changes
         </Button>
       </DialogActions>

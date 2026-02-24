@@ -321,6 +321,8 @@ Get all categories.
   {
     "id": "cat-uuid",
     "name": "Spa & Wellness",
+    "icon": null,
+    "slug": "spa-wellness",
     "createdAt": "2026-01-13T01:47:17.368Z",
     "updatedAt": "2026-01-13T01:47:17.368Z"
   }
@@ -912,7 +914,17 @@ password=strongPass123
     "name": "Owner Name",
     "email": "manager@example.com",
     "businessId": "business-uuid",
-    "createdAt": "2026-02-12T05:47:42.678Z"
+    "createdAt": "2026-02-12T05:47:42.678Z",
+    "business": {
+      "id": "business-uuid",
+      "name": "Luxe Spa & Wellness",
+      "openingHours": { "mon": { "start": "09:00", "end": "17:00" } },
+      "location": {
+        "address": "123 Main St",
+        "coordinates": { "lat": 30.0, "lng": 31.0 }
+      },
+      "socialLinks": [{ "platform": "facebook", "url": "https://fb.com/spa" }]
+    }
   }
 }
 ```
@@ -995,6 +1007,16 @@ Update business information.
   "name": "Updated Business Name",
   "email": "newmail@business.com",
   "description": "Updated description here",
+  "coverImage": "asset-uuid",
+  "openingHours": {
+    "mon": { "start": "09:00", "end": "17:00" },
+    "tue": { "start": "09:00", "end": "17:00" }
+  },
+  "location": {
+    "address": "123 Main St, KUL",
+    "coordinates": { "lat": 30.0444, "lng": 31.2357 }
+  },
+  "timezone": "Africa/Cairo",
   "socialLinks": [
     {
       "platform": "facebook",
@@ -1022,6 +1044,8 @@ Create a new branch for the business.
   "name": "Heliopolis Branch",
   "address": "20 Thawra Street, Heliopolis, Cairo",
   "mobile": "+201234567890",
+  "latitude": 30.0876,
+  "longitude": 31.3224,
   "serviceIds": ["service-uuid-1", "service-uuid-2"],
   "gallery": ["asset-uuid-1", "asset-uuid-2"]
 }
@@ -1051,6 +1075,8 @@ Update an existing branch.
   "name": "Heliopolis Branch",
   "address": "20 Thawra Street, Heliopolis, Cairo",
   "mobile": "+201234567890",
+  "latitude": 30.0876,
+  "longitude": 31.3224,
   "serviceIds": ["service-uuid-1", "service-uuid-2"],
   "gallery": ["asset-uuid-1", "asset-uuid-2"]
 }
@@ -1087,6 +1113,7 @@ Create a new service.
   "location": "Cairo, Egypt",
   "price": 100,
   "duration": 60,
+  "color": "#FF5733",
   "categoryIds": ["cat-uuid-1", "cat-uuid-2"],
   "branchIds": ["branch-uuid-1", "branch-uuid-2"],
   "gallery": ["asset-uuid-1", "asset-uuid-2"]
@@ -1111,6 +1138,7 @@ Update an existing service.
   "location": "Cairo, Egypt",
   "price": 120,
   "duration": 90,
+  "color": "#FF5733",
   "categoryIds": ["cat-uuid-1", "cat-uuid-2"],
   "branchIds": ["branch-uuid-1", "branch-uuid-2"],
   "gallery": ["asset-uuid-1", "asset-uuid-2"]
@@ -1146,6 +1174,9 @@ Add a new staff member.
   "name": "Kareem Gamal",
   "mobile": "+201234567890",
   "email": "staff@example.com",
+  "title": "Senior Therapist",
+  "color": "#4A90D9",
+  "description": "Specializes in deep tissue massage",
   "branchId": "branch-uuid-1",
   "serviceIds": ["service-uuid-1", "service-uuid-2"],
   "profilePhoto": "asset-uuid",
@@ -1158,6 +1189,9 @@ Add a new staff member.
 
 - `slotInterval`: Time between slots in minutes (default: 30)
 - `slotDuration`: Duration of each slot in minutes (null = use service duration)
+- `title`: Job title/role (optional)
+- `color`: Hex color code for calendar display (optional)
+- `description`: Staff bio/description (optional)
 
 **Response:** `201 Created`
 
@@ -1183,6 +1217,10 @@ Update a staff member.
   "name": "Kareem Gamal",
   "mobile": "+201234567890",
   "email": "staff@example.com",
+  "title": "Senior Therapist",
+  "color": "#4A90D9",
+  "description": "Specializes in deep tissue massage",
+  "isActive": true,
   "branchId": "branch-uuid-1",
   "serviceIds": ["service-uuid-1", "service-uuid-2"],
   "profilePhoto": "asset-uuid",
@@ -1221,6 +1259,7 @@ Create a new asset (e.g., tennis court, meeting room).
   "description": "Indoor tennis court with synthetic surface",
   "branchId": "branch-uuid-1",
   "maxConcurrent": 4,
+  "color": "#27AE60",
   "serviceIds": ["service-uuid-1", "service-uuid-2"],
   "image": "asset-file-uuid",
   "slotInterval": 60,
@@ -1269,6 +1308,7 @@ Update an asset.
   "description": "Indoor tennis court with synthetic surface",
   "branchId": "branch-uuid-1",
   "maxConcurrent": 4,
+  "color": "#27AE60",
   "serviceIds": ["service-uuid-1", "service-uuid-2"],
   "image": "asset-file-uuid",
   "slotInterval": 60,
@@ -1457,6 +1497,24 @@ Get all bookings for the business.
 
 ---
 
+### DELETE `/admin/bookings/{id}` 🔒
+
+Delete a booking (admin).
+
+**Path Parameters:**
+
+- `id` (required): Booking ID
+
+**Response:** `200 OK`
+
+```json
+{
+  "message": "Booking deleted successfully"
+}
+```
+
+---
+
 ### PATCH `/admin/bookings/{id}/status` 🔒
 
 Update booking status.
@@ -1486,6 +1544,35 @@ Update booking status.
 ---
 
 ## Media Library
+
+### GET `/media-lib` 🔒
+
+List all media files for the authenticated user.
+
+**Response:** `200 OK`
+
+```json
+[
+  {
+    "id": "asset-uuid",
+    "fileName": "photo.png",
+    "mimeType": "image/png",
+    "size": 204800,
+    "fileExtension": ".png",
+    "uploadUrl": "https://s3.amazonaws.com/...",
+    "createdAt": "2026-02-12T05:47:42.678Z",
+    "updatedAt": "2026-02-12T05:47:42.678Z"
+  }
+]
+```
+
+**Notes:**
+
+- Returns files owned by the authenticated user
+- `uploadUrl` is a pre-signed S3 URL valid for 1 hour
+- `size` is in bytes
+
+---
 
 ### POST `/media-lib` 🔒
 
@@ -1638,7 +1725,9 @@ Create a new category.
 
 ```json
 {
-  "name": "Spa & Wellness"
+  "name": "Spa & Wellness",
+  "icon": "spa-icon",
+  "slug": "spa-wellness"
 }
 ```
 
@@ -1655,7 +1744,9 @@ Update a category.
 ```json
 {
   "id": "xxxxxxxxxxxxxxxxxxxxxxxx",
-  "name": "Spa & Wellness"
+  "name": "Spa & Wellness",
+  "icon": "updated-icon",
+  "slug": "spa-wellness"
 }
 ```
 
@@ -1791,6 +1882,24 @@ Create a new commission.
 ### DELETE `/admin/commissions/{id}` 🔒
 
 Delete a commission.
+
+### PATCH `/admin/commissions/{id}` 🔒
+
+Update a commission.
+
+**Request Body:**
+
+```json
+{
+  "staffId": "staff-uuid",
+  "type": "percentage",
+  "value": 15,
+  "scope": "service",
+  "scopeId": "service-uuid"
+}
+```
+
+**Response:** `200 OK` — Updated commission with nested `staff` relation.
 
 ---
 
@@ -1936,7 +2045,13 @@ Create or update business settings.
   "paymentSettings": { "requirePayment": false },
   "notificationSettings": { "emailEnabled": true },
   "schedulingSettings": { "bufferTimeBetweenBookings": 0 },
-  "customerSettings": { "allowGuestCheckout": true }
+  "customerSettings": { "allowGuestCheckout": true },
+  "calendarSettings": {
+    "defaultView": "week",
+    "timeSlotDuration": 30,
+    "startOfWeek": "monday"
+  },
+  "brandingSettings": { "primaryColor": "#4A90D9", "bookingPageTheme": "light" }
 }
 ```
 

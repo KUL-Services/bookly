@@ -26,7 +26,7 @@ import {
 } from '@mui/material'
 import { format } from 'date-fns'
 import { DatePickerField } from './date-picker-field'
-import { mockBranches, mockStaff, mockServices } from '@/bookly/data/mock-data'
+
 import { useStaffManagementStore } from './staff-store'
 
 interface StaffMember {
@@ -62,7 +62,8 @@ const COLOR_OPTIONS = [
 export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMemberDrawerProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
-  const { createStaffMember, updateStaffMember } = useStaffManagementStore()
+  const { createStaffMember, updateStaffMember, apiBranches, cancelStaffBookingModeTransition } =
+    useStaffManagementStore()
   const isEditMode = !!editingStaff
 
   // Basic Information
@@ -80,9 +81,14 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
   const [startDate, setStartDate] = useState('')
   const [color, setColor] = useState('#0a2c24')
 
+  // Booking Mode - STATIC or DYNAMIC
+  const [bookingMode, setBookingMode] = useState<'STATIC' | 'DYNAMIC'>('DYNAMIC')
+
   // Contact & Emergency
   const [emergencyContact, setEmergencyContact] = useState('')
   const [emergencyPhone, setEmergencyPhone] = useState('')
+  const [cancelError, setCancelError] = useState<string | null>(null)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   // Reset form when modal opens
   useEffect(() => {
@@ -97,8 +103,8 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         setTitle(editingStaff.title || '')
 
         // Handle branch assignments - support both old (branchId) and new (mainBranchId + branchIds) formats
-        const staffMainBranch = (editingStaff as any).mainBranchId || editingStaff.branchId || mockBranches[0]?.id || ''
-        const staffBranchIds = (editingStaff as any).branchIds || [editingStaff.branchId] || [mockBranches[0]?.id || '']
+        const staffMainBranch = (editingStaff as any).mainBranchId || editingStaff.branchId || apiBranches[0]?.id || ''
+        const staffBranchIds = (editingStaff as any).branchIds || [editingStaff.branchId] || [apiBranches[0]?.id || '']
 
         // Ensure main branch is set
         if (staffMainBranch) {
@@ -109,6 +115,7 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         setBranchIds(staffBranchIds.filter((id: string) => id !== staffMainBranch))
 
         setColor(editingStaff.color || '#0a2c24')
+        setBookingMode((editingStaff as any).bookingMode || 'DYNAMIC')
         // Keep other fields at defaults for edit
         setEmployeeId('')
         setStartDate(new Date().toISOString().split('T')[0])
@@ -121,13 +128,14 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         setEmail('')
         setPhone('')
         setTitle('')
-        const defaultBranch = mockBranches[0]?.id || ''
+        const defaultBranch = apiBranches[0]?.id || ''
         setBranchId(defaultBranch)
         setBranchIds([defaultBranch])
         setMainBranchId(defaultBranch)
         setEmployeeId('')
         setStartDate(new Date().toISOString().split('T')[0])
         setColor('#0a2c24')
+        setBookingMode('DYNAMIC')
         setEmergencyContact('')
         setEmergencyPhone('')
       }
@@ -166,6 +174,7 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
       employeeId,
       startDate,
       color,
+      bookingMode, // STATIC or DYNAMIC booking mode
       emergencyContact,
       emergencyPhone
     }
@@ -201,14 +210,16 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
       }}
     >
       {/* Header */}
-      <DialogTitle sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottom: 1,
-        borderColor: 'divider',
-        pb: 2
-      }}>
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: 1,
+          borderColor: 'divider',
+          pb: 2
+        }}
+      >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar
             sx={{
@@ -237,7 +248,6 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
 
       <DialogContent sx={{ pt: 3 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-
           {/* Basic Information Section */}
           <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Basic Information
@@ -329,7 +339,7 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
               }}
               label='Main Branch'
             >
-              {mockBranches.map(branch => (
+              {apiBranches.map(branch => (
                 <MenuItem key={branch.id} value={branch.id}>
                   {branch.name}
                 </MenuItem>
@@ -360,14 +370,14 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
                     </Typography>
                   ) : (
                     selected.map(value => {
-                      const branch = mockBranches.find(b => b.id === value)
+                      const branch = apiBranches.find(b => b.id === value)
                       return <Chip key={value} label={branch?.name} size='small' />
                     })
                   )}
                 </Box>
               )}
             >
-              {mockBranches
+              {apiBranches
                 .filter(branch => branch.id !== mainBranchId) // Exclude main branch
                 .map(branch => (
                   <MenuItem key={branch.id} value={branch.id}>
@@ -445,6 +455,132 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
             </Select>
           </FormControl>
 
+          {/* Pending Booking Mode Warning */}
+          {editingStaff && (editingStaff as any).pendingBookingMode && (
+            <Box
+              sx={{
+                p: 2,
+                mb: 2,
+                bgcolor: 'warning.light',
+                color: 'warning.dark',
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: 'warning.main',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1
+              }}
+            >
+              <Typography variant='subtitle2' fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <i className='ri-error-warning-line' /> Pending Mode Change
+              </Typography>
+              <Box>
+                <Typography variant='body2'>
+                  Scheduled to change to: <strong>{(editingStaff as any).pendingBookingMode}</strong>
+                </Typography>
+                {(editingStaff as any).bookingModeEffectiveDate && (
+                  <Typography variant='body2'>
+                    Effective Date:{' '}
+                    <strong>{format(new Date((editingStaff as any).bookingModeEffectiveDate), 'PPP')}</strong>
+                  </Typography>
+                )}
+                <Typography variant='caption'>Reason: Existing bookings must complete first</Typography>
+              </Box>
+              {cancelError && (
+                <Box
+                  sx={{
+                    p: 1.5,
+                    bgcolor: 'error.light',
+                    color: 'error.dark',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'error.main'
+                  }}
+                >
+                  <Typography variant='caption' fontWeight={600}>
+                    <i className='ri-error-warning-fill' style={{ marginRight: 4 }} />
+                    {cancelError}
+                  </Typography>
+                </Box>
+              )}
+              <Button
+                variant='outlined'
+                color='warning'
+                size='small'
+                disabled={isCancelling}
+                sx={{ alignSelf: 'flex-start', mt: 1 }}
+                onClick={async () => {
+                  setCancelError(null)
+                  setIsCancelling(true)
+                  try {
+                    await cancelStaffBookingModeTransition(editingStaff.id)
+                    onClose()
+                  } catch (err: any) {
+                    setCancelError(err.message || 'Cannot cancel. There may be bookings after the effective date.')
+                  } finally {
+                    setIsCancelling(false)
+                  }
+                }}
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel Scheduled Change'}
+              </Button>
+            </Box>
+          )}
+
+          {/* Booking Mode Selection */}
+          <FormControl fullWidth>
+            <InputLabel>Booking Mode</InputLabel>
+            <Select
+              value={bookingMode}
+              onChange={e => setBookingMode(e.target.value as 'STATIC' | 'DYNAMIC')}
+              label='Booking Mode'
+              renderValue={value => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <i
+                    className={value === 'STATIC' ? 'ri-calendar-check-line' : 'ri-time-line'}
+                    style={{ color: 'var(--mui-palette-primary-main)' }}
+                  />
+                  {value === 'STATIC' ? 'Static (Pre-defined Sessions)' : 'Dynamic (Flexible Time Slots)'}
+                </Box>
+              )}
+            >
+              <MenuItem value='DYNAMIC'>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                  <i className='ri-time-line' style={{ marginTop: 2, color: 'var(--mui-palette-primary-main)' }} />
+                  <Box>
+                    <Typography variant='body2' fontWeight={500}>
+                      Dynamic (Flexible Time Slots)
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      Clients can book any available time slot within working hours
+                    </Typography>
+                  </Box>
+                </Box>
+              </MenuItem>
+              <MenuItem value='STATIC'>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                  <i
+                    className='ri-calendar-check-line'
+                    style={{ marginTop: 2, color: 'var(--mui-palette-primary-main)' }}
+                  />
+                  <Box>
+                    <Typography variant='body2' fontWeight={500}>
+                      Static (Pre-defined Sessions)
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      Clients join pre-defined sessions with fixed times and capacity
+                    </Typography>
+                  </Box>
+                </Box>
+              </MenuItem>
+            </Select>
+            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
+              {bookingMode === 'STATIC'
+                ? 'Sessions must be created after adding the staff member. Clients will see and join available sessions.'
+                : 'Clients can choose any time slot based on staff availability and working hours.'}
+            </Typography>
+          </FormControl>
+
           <Divider />
 
           {/* Emergency Contact Section */}
@@ -488,8 +624,8 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
               <i className='ri-information-line' style={{ color: 'var(--mui-palette-primary-main)', marginTop: 2 }} />
               <Typography variant='caption' color='text.secondary'>
-                After adding the staff member, you can configure their working hours, assign
-                services, and set up their schedule in the Staff Management section.
+                After adding the staff member, you can configure their working hours, assign services, and set up their
+                schedule in the Staff Management section.
               </Typography>
             </Box>
           </Box>

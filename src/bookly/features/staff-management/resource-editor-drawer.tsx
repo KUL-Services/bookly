@@ -16,9 +16,9 @@ import {
   Chip,
   OutlinedInput,
   Checkbox,
-  ListItemText
+  ListItemText,
+  Alert
 } from '@mui/material'
-import { mockBranches, mockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from './staff-store'
 import type { Resource } from '../calendar/types'
 
@@ -30,13 +30,13 @@ interface ResourceEditorDrawerProps {
 }
 
 export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId }: ResourceEditorDrawerProps) {
-  const { createResource, updateResource, resources, isServiceAssigned, getResourceForService } =
-    useStaffManagementStore()
+  const { createResource, updateResource, resources, apiBranches, apiServices } = useStaffManagementStore()
 
   const [name, setName] = useState('')
   const [branchId, setBranchId] = useState('')
   const [capacity, setCapacity] = useState(1)
   const [serviceIds, setServiceIds] = useState<string[]>([])
+  const [bookingMode, setBookingMode] = useState<'STATIC' | 'DYNAMIC'>('DYNAMIC')
 
   // Load resource data if editing
   useEffect(() => {
@@ -45,14 +45,16 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
       setBranchId(resource.branchId)
       setCapacity(resource.capacity)
       setServiceIds(resource.serviceIds || [])
+      setBookingMode((resource as any).bookingMode || 'DYNAMIC')
     } else {
       // Reset for new resource - use selectedBranchId if available
       setName('')
-      setBranchId(selectedBranchId || mockBranches[0]?.id || '')
+      setBranchId(selectedBranchId || apiBranches[0]?.id || '')
       setCapacity(1)
       setServiceIds([])
+      setBookingMode('DYNAMIC')
     }
-  }, [resource, open, selectedBranchId])
+  }, [resource, open, selectedBranchId, apiBranches])
 
   const handleSave = () => {
     if (!name || !branchId) {
@@ -66,7 +68,8 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
         name,
         branchId,
         capacity,
-        serviceIds
+        serviceIds,
+        bookingMode
       })
     } else {
       // Create new
@@ -74,7 +77,8 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
         name,
         branchId,
         capacity,
-        serviceIds
+        serviceIds,
+        bookingMode
       })
     }
 
@@ -146,7 +150,7 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
               label='Branch'
               disabled={!!resource || !!selectedBranchId}
             >
-              {mockBranches.map(branch => (
+              {apiBranches.map(branch => (
                 <MenuItem key={branch.id} value={branch.id}>
                   {branch.name}
                 </MenuItem>
@@ -170,6 +174,66 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
 
           <Divider />
 
+          {/* Booking Mode */}
+          <Typography variant='subtitle1' fontWeight={600} color='primary'>
+            Booking Mode
+          </Typography>
+
+          <FormControl fullWidth>
+            <InputLabel>Booking Mode</InputLabel>
+            <Select
+              value={bookingMode}
+              onChange={e => setBookingMode(e.target.value as 'STATIC' | 'DYNAMIC')}
+              label='Booking Mode'
+              renderValue={value => (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <i
+                    className={value === 'STATIC' ? 'ri-calendar-check-line' : 'ri-time-line'}
+                    style={{ opacity: 0.7 }}
+                  />
+                  {value === 'STATIC' ? 'Static (Pre-defined Sessions)' : 'Dynamic (Flexible Time Slots)'}
+                </Box>
+              )}
+            >
+              <MenuItem value='DYNAMIC'>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                  <i className='ri-time-line' style={{ marginTop: 2, opacity: 0.7 }} />
+                  <Box>
+                    <Typography variant='body2' fontWeight={500}>
+                      Dynamic (Flexible Time Slots)
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      Clients can book any available time slot
+                    </Typography>
+                  </Box>
+                </Box>
+              </MenuItem>
+              <MenuItem value='STATIC'>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                  <i className='ri-calendar-check-line' style={{ marginTop: 2, opacity: 0.7 }} />
+                  <Box>
+                    <Typography variant='body2' fontWeight={500}>
+                      Static (Pre-defined Sessions)
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      Clients join pre-defined sessions with fixed times
+                    </Typography>
+                  </Box>
+                </Box>
+              </MenuItem>
+            </Select>
+          </FormControl>
+
+          <Alert severity='info' sx={{ py: 0.5 }}>
+            <Typography variant='caption'>
+              {bookingMode === 'STATIC'
+                ? 'Sessions must be created after adding the resource. Clients will see and join available sessions.'
+                : 'Clients can choose any time slot based on resource availability.'}
+            </Typography>
+          </Alert>
+
+          <Divider />
+
           {/* Service Assignment */}
           <Typography variant='subtitle1' fontWeight={600} color='primary'>
             Service Assignment
@@ -187,7 +251,7 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
                 if (conflicts.length > 0) {
                   const conflictNames = conflicts
                     .map(id => {
-                      const service = mockServices.find(s => s.id === id)
+                      const service = apiServices.find(s => s.id === id)
                       const conflictResource = getServiceConflict(id)
                       return `${service?.name} (assigned to ${conflictResource})`
                     })
@@ -201,13 +265,13 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
               renderValue={selected => (
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {selected.map(value => {
-                    const service = mockServices.find(s => s.id === value)
+                    const service = apiServices.find(s => s.id === value)
                     return <Chip key={value} label={service?.name || value} size='small' />
                   })}
                 </Box>
               )}
             >
-              {mockServices.map(service => {
+              {apiServices.map(service => {
                 const assigned = isServiceAssignedToOther(service.id)
                 const conflictResource = getServiceConflict(service.id)
                 const isSelected = serviceIds.includes(service.id)
