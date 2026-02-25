@@ -533,10 +533,8 @@ export function RoomsTab() {
   const getEffectiveRoomType = (room: any) => {
     if (room.pendingBookingMode && room.bookingModeEffectiveDate) {
       const effectiveDate = new Date(room.bookingModeEffectiveDate)
-      effectiveDate.setHours(0, 0, 0, 0)
       const viewDate = new Date(selectedDate)
-      viewDate.setHours(0, 0, 0, 0)
-      if (viewDate >= effectiveDate) {
+      if (!Number.isNaN(effectiveDate.getTime()) && !Number.isNaN(viewDate.getTime()) && viewDate >= effectiveDate) {
         return room.pendingBookingMode === 'STATIC' ? 'static' : 'dynamic'
       }
     }
@@ -593,10 +591,8 @@ export function RoomsTab() {
                 const isPendingEffective = (() => {
                   if (!room.pendingBookingMode || !room.bookingModeEffectiveDate) return false
                   const effectiveDate = new Date(room.bookingModeEffectiveDate)
-                  effectiveDate.setHours(0, 0, 0, 0)
                   const viewDate = new Date(selectedDate)
-                  viewDate.setHours(0, 0, 0, 0)
-                  return viewDate >= effectiveDate
+                  return !Number.isNaN(effectiveDate.getTime()) && !Number.isNaN(viewDate.getTime()) && viewDate >= effectiveDate
                 })()
 
                 return (
@@ -696,17 +692,16 @@ export function RoomsTab() {
             {(room as any).pendingBookingMode &&
               (() => {
                 const effectiveDate = new Date((room as any).bookingModeEffectiveDate)
-                effectiveDate.setHours(0, 0, 0, 0)
                 const viewDate = new Date(selectedDate)
-                viewDate.setHours(0, 0, 0, 0)
-                const isPendingEffective = viewDate >= effectiveDate
+                const isPendingEffective =
+                  !Number.isNaN(effectiveDate.getTime()) && !Number.isNaN(viewDate.getTime()) && viewDate >= effectiveDate
 
                 // Don't show the chip if viewing a date where change has taken effect
                 if (isPendingEffective) return null
 
                 return (
                   <Chip
-                    label={`→ ${(room as any).pendingBookingMode === 'STATIC' ? 'Fixed' : 'Flex'} on ${(room as any).bookingModeEffectiveDate ? format(new Date((room as any).bookingModeEffectiveDate), 'MMM d') : '...'}`}
+                    label={`→ ${(room as any).pendingBookingMode === 'STATIC' ? 'Fixed' : 'Flex'} on ${(room as any).bookingModeEffectiveDate ? format(new Date((room as any).bookingModeEffectiveDate), "MMM d, h:mm a") : '...'}`}
                     size='small'
                     color='warning'
                     variant='filled'
@@ -1152,6 +1147,7 @@ export function RoomsTab() {
         targetType={roomTypeChangeContext?.targetType || 'static'}
         onConfirm={handleRoomTypeChangeConfirm}
         isChanging={isChangingMode}
+        resourceType='asset'
       />
 
       <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>

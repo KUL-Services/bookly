@@ -31,12 +31,19 @@ function mapApiBranch(api: ApiBranch): Branch {
   // Merge both sources, preferring resources (which is the current backend response)
   const allStaff = staffFromResources.length > 0 ? staffFromResources : staffFromStaffArray
 
+  const addressParts = (api.address || '')
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean)
+  const guessedCountry = addressParts.length > 0 ? addressParts[addressParts.length - 1] : ''
+  const guessedCity = addressParts.length > 1 ? addressParts[addressParts.length - 2] : ''
+
   return {
     id: api.id,
     name: api.name,
     address: api.address || '',
-    city: '', // Not in API
-    country: '', // Not in API
+    city: guessedCity,
+    country: guessedCountry,
     mobile: api.mobile || '',
     email: '', // Not in API
     businessId: api.businessId,

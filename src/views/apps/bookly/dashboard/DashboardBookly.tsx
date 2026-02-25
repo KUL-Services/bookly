@@ -1,17 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 // MUI Imports
 import Grid from '@mui/material/Grid'
 import Alert from '@mui/material/Alert'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
 
 // View Imports
 import BooklyStats from '@views/dashboards/bookly/BooklyStats'
 import UpcomingBookings from '@views/dashboards/bookly/UpcomingBookings'
-import TopBusinesses from '@views/dashboards/bookly/TopBusinesses'
 import RecentReviews from '@views/dashboards/bookly/RecentReviews'
 import RevenueOverview from '@views/dashboards/bookly/RevenueOverview'
 import StaffPerformance from '@views/dashboards/bookly/StaffPerformance'
@@ -25,14 +22,11 @@ import { ReviewsService } from '@/lib/api/services/reviews.service'
 import type { Business, Service, Branch, Staff } from '@/lib/api'
 import type { Booking } from '@/bookly/data/types'
 import type { Review } from '@/bookly/data/types'
+import { useAuthStore } from '@/stores/auth.store'
 
 // Component Imports
-import { PageLoader, CardSkeleton, StatsSkeleton } from '@/components/LoadingStates'
-import { BrandWatermark } from '@/bookly/components/atoms/brand-watermark'
+import { CardSkeleton, StatsSkeleton } from '@/components/LoadingStates'
 import { BrandedSectionDivider } from '@/bookly/components/atoms/branded-section-divider'
-
-// Fallback Imports
-import { mockServices, mockBookings, mockReviews } from '@/bookly/data/mock-data'
 
 // Helper: map API booking to the dashboard Booking shape
 function mapApiBookingToLocal(apiBooking: any): Booking {
@@ -58,6 +52,20 @@ function mapApiBookingToLocal(apiBooking: any): Booking {
     status: (apiBooking.status || 'pending').toLowerCase() as Booking['status'],
     notes: apiBooking.notes
   }
+}
+
+function extractArray<T>(payload: any): T[] {
+  if (Array.isArray(payload)) return payload as T[]
+  if (Array.isArray(payload?.data)) return payload.data as T[]
+  if (Array.isArray(payload?.items)) return payload.items as T[]
+  return []
+}
+
+function extractObject<T>(payload: any): T | null {
+  if (!payload) return null
+  if (Array.isArray(payload)) return (payload[0] as T) || null
+  if (payload?.data && !Array.isArray(payload.data)) return payload.data as T
+  return payload as T
 }
 
 // Helper: map API review to the dashboard Review shape
@@ -99,60 +107,50 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
+      const businessId = useAuthStore.getState().materializeUser?.business?.id
 
-      const [businessResponse, servicesResponse, branchesResponse, staffResponse, bookingsResponse, reviewsResponse] =
-        await Promise.allSettled([
-          BusinessService.getApprovedBusinesses({ pageSize: 1 }),
-          ServicesService.getServices(),
-          BranchesService.getBranches(),
-          StaffService.getStaff(),
-          BookingService.getBusinessBookings({ pageSize: 50, sortBy: 'startTime', sortOrder: 'desc' }),
-          ReviewsService.getReviews()
-        ])
+      const [businessResponse, branchesResponse, staffResponse, bookingsResponse, reviewsResponse] = await Promise.allSettled([
+        businessId ? BusinessService.getBusiness(businessId) : BusinessService.getApprovedBusinesses({ pageSize: 1 }),
+        BranchesService.getBranches(),
+        StaffService.getStaff(),
+        BookingService.getBusinessBookings({ pageSize: 50, sortBy: 'startTime', sortOrder: 'desc' }),
+        ReviewsService.getReviews()
+      ])
 
       // Extract data from settled promises
       const business =
         businessResponse.status === 'fulfilled' && businessResponse.value.data
-          ? Array.isArray(businessResponse.value.data)
-            ? businessResponse.value.data[0] || null
-            : businessResponse.value.data
+          ? extractObject<Business>(businessResponse.value.data)
           : null
 
-      const services =
-        servicesResponse.status === 'fulfilled' && servicesResponse.value.data
-          ? servicesResponse.value.data
-          : mockServices
+      let services: Service[] = Array.isArray(business?.services) ? business.services : []
+      if (services.length === 0) {
+        try {
+          const servicesResponse = await ServicesService.getServices()
+          services = extractArray<Service>(servicesResponse.data)
+          if (businessId) {
+            services = services.filter(service => service.businessId === businessId)
+          }
+        } catch (serviceErr) {
+          console.warn('Dashboard services fallback fetch failed:', serviceErr)
+          services = []
+        }
+      }
 
       const branches =
-        branchesResponse.status === 'fulfilled' && branchesResponse.value.data ? branchesResponse.value.data : []
-
-      const staff = staffResponse.status === 'fulfilled' && staffResponse.value.data ? staffResponse.value.data : []
-
-      // Map API bookings to local format, fallback to mock
-      let bookings: Booking[] = mockBookings
-      if (bookingsResponse.status === 'fulfilled' && bookingsResponse.value.data && Array.isArray(bookingsResponse.value.data) && bookingsResponse.value.data.length > 0) {
-        bookings = bookingsResponse.value.data.map(mapApiBookingToLocal)
-      }
-
-      // Map API reviews to local format, fallback to mock
-      let reviews: Review[] = mockReviews
-      if (reviewsResponse.status === 'fulfilled' && reviewsResponse.value.data && Array.isArray(reviewsResponse.value.data) && reviewsResponse.value.data.length > 0) {
-        reviews = reviewsResponse.value.data.map(mapApiReviewToLocal)
-      }
+        branchesResponse.status === 'fulfilled' ? extractArray<Branch>(branchesResponse.value.data) : []
+      const staff = staffResponse.status === 'fulfilled' ? extractArray<Staff>(staffResponse.value.data) : []
+      const bookingsRaw = bookingsResponse.status === 'fulfilled' ? extractArray<any>(bookingsResponse.value.data) : []
+      const bookings: Booking[] = bookingsRaw.map(mapApiBookingToLocal)
+      const reviewsRaw = reviewsResponse.status === 'fulfilled' ? extractArray<any>(reviewsResponse.value.data) : []
+      const reviews: Review[] = reviewsRaw.map(mapApiReviewToLocal)
 
       setDashboardData({ business, services, branches, staff, bookings, reviews })
       setError(null)
     } catch (err) {
-      console.warn('Dashboard API fetch failed, using fallback data:', err)
-      setDashboardData({
-        business: null,
-        services: mockServices,
-        branches: [],
-        staff: [],
-        bookings: mockBookings,
-        reviews: mockReviews
-      })
-      setError(null)
+      console.warn('Dashboard API fetch failed:', err)
+      setDashboardData(prev => ({ ...prev, services: [], branches: [], staff: [], bookings: [], reviews: [] }))
+      setError('Failed to load dashboard data')
     } finally {
       setLoading(false)
     }
@@ -161,6 +159,61 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
   useEffect(() => {
     fetchDashboardData()
   }, [])
+
+  // Calculate dashboard stats from fetched data
+  const now = new Date()
+  const upcoming = dashboardData.bookings
+    .filter(b => new Date(b.date) >= now && (b.status === 'confirmed' || b.status === 'pending'))
+    .slice(0, 6)
+  const completedCount = dashboardData.bookings.filter(b => b.status === 'completed' || b.status === 'attended').length
+
+  const recentReviews = [...dashboardData.reviews].sort((a, b) => +new Date(b.date) - +new Date(a.date)).slice(0, 6)
+  const staffPerformanceRows = useMemo(() => {
+    const branchNameById = new Map<string, string>(
+      dashboardData.branches.map((branch: any) => [branch.id, branch.name || branch.id])
+    )
+    const staffMetaByName = new Map<
+      string,
+      { id: string; title: string; branchId: string }
+    >()
+
+    dashboardData.staff.forEach((staff: any) => {
+      const name = staff?.name || `${staff?.firstName || ''} ${staff?.lastName || ''}`.trim() || 'Staff'
+      staffMetaByName.set(name, {
+        id: staff?.id || name,
+        title: staff?.title || staff?.role || '',
+        branchId: staff?.branchId || ''
+      })
+    })
+
+    const rowsByStaff = new Map<
+      string,
+      { id: string; name: string; title: string; business: string; branch: string; completed: number; revenue: number }
+    >()
+
+    dashboardData.bookings.forEach(booking => {
+      const staffName = booking.staffMemberName || 'Unassigned'
+      const meta = staffMetaByName.get(staffName)
+      const existing = rowsByStaff.get(staffName) || {
+        id: meta?.id || staffName,
+        name: staffName,
+        title: meta?.title || '',
+        business: dashboardData.business?.name || '—',
+        branch: meta?.branchId ? branchNameById.get(meta.branchId) || meta.branchId : '—',
+        completed: 0,
+        revenue: 0
+      }
+
+      if (booking.status === 'completed' || booking.status === 'attended') {
+        existing.completed += 1
+        existing.revenue += booking.price || 0
+      }
+
+      rowsByStaff.set(staffName, existing)
+    })
+
+    return Array.from(rowsByStaff.values()).sort((a, b) => b.revenue - a.revenue)
+  }, [dashboardData.bookings, dashboardData.staff, dashboardData.branches, dashboardData.business?.name])
 
   if (loading) {
     return (
@@ -190,15 +243,6 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
     )
   }
 
-  // Calculate stats from fetched data (API or fallback mock)
-  const now = new Date()
-  const upcoming = dashboardData.bookings
-    .filter(b => new Date(b.date) >= now && (b.status === 'confirmed' || b.status === 'pending'))
-    .slice(0, 6)
-  const completedCount = dashboardData.bookings.filter(b => b.status === 'completed').length
-
-  const recentReviews = [...dashboardData.reviews].sort((a, b) => +new Date(b.date) - +new Date(a.date)).slice(0, 6)
-
   return (
     <div className='relative min-h-full'>
       <Grid container spacing={6} className='relative z-10'>
@@ -223,21 +267,21 @@ const DashboardBookly = ({ lang }: { lang: string }) => {
         </Grid>
 
         <Grid item xs={12} md={8}>
-          <RevenueOverview />
+          <RevenueOverview bookings={dashboardData.bookings} />
         </Grid>
         <Grid item xs={12} md={4}>
-          <TopServices />
+          <TopServices bookings={dashboardData.bookings} />
         </Grid>
 
         <Grid item xs={12} md={8}>
           <UpcomingBookings rows={upcoming} lang={lang} />
         </Grid>
         <Grid item xs={12} md={4}>
-          <ClientsActivity />
+          <ClientsActivity bookings={dashboardData.bookings} />
         </Grid>
 
         <Grid item xs={12}>
-          <StaffPerformance />
+          <StaffPerformance rows={staffPerformanceRows} />
         </Grid>
 
         <Grid item xs={12}>

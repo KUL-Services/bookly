@@ -15,11 +15,13 @@ import {
   Mail,
   Phone,
   ArrowLeft,
-  GripVertical
+  GripVertical,
+  CheckCircle2
 } from 'lucide-react'
 import { format, addDays, startOfDay, isSameDay, isBefore } from 'date-fns'
 import type { Service as ApiService, Staff, AvailableSlotFlat } from '@/lib/api'
 import { BookingService } from '@/lib/api/services/booking.service'
+import { WaitlistService } from '@/lib/api/services/waitlist.service'
 import { useSettings } from '@/contexts/settings.context'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -68,6 +70,7 @@ interface BookingModalV2FixedProps {
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening'
 type BookingStep = 'booking' | 'details' | 'confirm'
+type SubmissionType = 'booking' | 'waitlist'
 
 interface SelectedService {
   id: string // Unique ID for this instance selected (e.g. serviceId + timestamp)
@@ -307,8 +310,12 @@ export function BookingModalV2Fixed({
   // API availability state
   const [apiSlots, setApiSlots] = useState<AvailableSlotFlat[]>([])
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
+  const [hasFetchedAvailability, setHasFetchedAvailability] = useState(false)
   const [slotsError, setSlotsError] = useState<string | null>(null)
   const [bookingError, setBookingError] = useState<string | null>(null)
+  const [waitlistEntryId, setWaitlistEntryId] = useState<string | null>(null)
+  const [isLeavingWaitlist, setIsLeavingWaitlist] = useState(false)
+  const [submissionType, setSubmissionType] = useState<SubmissionType | null>(null)
 
   // Modals & Pickers
   const [showServicePicker, setShowServicePicker] = useState(false)
@@ -355,6 +362,9 @@ export function BookingModalV2Fixed({
       setCustomerDetails({ name: '', email: '', phone: '', notes: '' })
       setErrors({})
       setBookingReference(null)
+      setWaitlistEntryId(null)
+      setSubmissionType(null)
+      setBookingError(null)
       setSelectedDate(new Date())
       setSelectedTime(null)
 
@@ -393,11 +403,13 @@ export function BookingModalV2Fixed({
   useEffect(() => {
     if (!isOpen || selectedServices.length === 0 || !branchId) {
       setApiSlots([])
+      setHasFetchedAvailability(false)
       return
     }
 
     const fetchAvailability = async () => {
       setIsLoadingSlots(true)
+      setHasFetchedAvailability(false)
       setSlotsError(null)
       try {
         const dateStr = format(selectedDate, 'yyyy-MM-dd')
@@ -423,6 +435,7 @@ export function BookingModalV2Fixed({
         setApiSlots([])
       } finally {
         setIsLoadingSlots(false)
+        setHasFetchedAvailability(true)
       }
     }
 
@@ -445,7 +458,11 @@ export function BookingModalV2Fixed({
 
   // Use real API slots when available, fall back to generated mock slots
   const availableSlots = useMemo(() => {
-    if (apiSlots.length > 0) {
+    if (isLoadingSlots && !hasFetchedAvailability) {
+      return []
+    }
+
+    if (hasFetchedAvailability && !slotsError) {
       // Convert ISO timestamps to HH:MM strings and filter by time of day
       const slotTimes = apiSlots.map(slot => {
         const d = new Date(slot.startTime)
@@ -470,9 +487,11 @@ export function BookingModalV2Fixed({
       // Deduplicate and sort
       return [...new Set(filtered)].sort()
     }
-    // Fallback to generated slots if API returned nothing
+    // Fallback during loading/errors
     return timeSlots
-  }, [apiSlots, timeSlots, selectedTimeOfDay])
+  }, [apiSlots, timeSlots, selectedTimeOfDay, hasFetchedAvailability, slotsError, isLoadingSlots])
+
+  const noAvailableSlots = hasFetchedAvailability && !slotsError && availableSlots.length === 0
 
   const totals = useMemo(() => {
     const price = selectedServices.reduce((sum, s) => sum + (s.service.price || 0), 0)
@@ -578,19 +597,32 @@ export function BookingModalV2Fixed({
     setActiveStaffPickerId(null)
   }, [])
 
-  const validateDetails = useCallback((): boolean => {
+  const validateDetails = useCallback((forWaitlist: boolean): boolean => {
     const newErrors: Partial<CustomerDetails> = {}
+    const hasEmail = !!customerDetails.email.trim()
+    const hasPhone = !!customerDetails.phone.trim()
+
     if (!customerDetails.name.trim()) newErrors.name = 'Name is required'
-    if (!customerDetails.email.trim()) newErrors.email = 'Email is required'
-    // Updated Zod-like check manually
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerDetails.email)) newErrors.email = 'Invalid email format'
-    if (!customerDetails.phone.trim()) newErrors.phone = 'Phone is required'
+
+    if (forWaitlist) {
+      if (!isAuthenticated() && !hasEmail && !hasPhone) {
+        newErrors.email = 'Provide email or phone for waitlist updates'
+      } else if (hasEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerDetails.email)) {
+        newErrors.email = 'Invalid email format'
+      }
+    } else {
+      if (!hasEmail) newErrors.email = 'Email is required'
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerDetails.email)) newErrors.email = 'Invalid email format'
+      if (!hasPhone) newErrors.phone = 'Phone is required'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }, [customerDetails])
+  }, [customerDetails, isAuthenticated])
 
   const handleConfirmBooking = useCallback(async () => {
-    if (!validateDetails()) return
+    const isWaitlistMode = noAvailableSlots
+    if (!validateDetails(isWaitlistMode)) return
     setIsSubmitting(true)
     setBookingError(null)
     try {
@@ -605,43 +637,74 @@ export function BookingModalV2Fixed({
       }
 
       let result
+      const selectedSlot =
+        apiSlots.find(slot => {
+          const d = new Date(slot.startTime)
+          const h = d.getHours().toString().padStart(2, '0')
+          const m = d.getMinutes().toString().padStart(2, '0')
+          return `${h}:${m}` === selectedTime
+        }) || null
 
-      console.log('Booking attempt - Auth State:', {
-        isAuthenticated: isAuthenticated(),
-        booklyUser,
-        token: useAuthStore.getState().token
-      })
+      if (isWaitlistMode) {
+        const durationMinutes = primaryService.service.duration || 60
+        const derivedEndDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000)
+        const isAuthed = isAuthenticated()
 
-      if (isAuthenticated()) {
-        // Authenticated booking
-        console.log('Proceeding with AUTHENTICATED booking')
-        result = await BookingService.createBooking({
+        result = await WaitlistService.join({
           serviceId: primaryService.service.id,
           branchId,
-          resourceId: primaryService.staffId || undefined,
-          startTime: startDate.toISOString(),
+          slotStart: startDate.toISOString(),
+          slotEnd: selectedSlot?.endTime || derivedEndDate.toISOString(),
+          resourceId: selectedSlot?.resourceId || primaryService.staffId || undefined,
+          sessionId: undefined,
+          userId: isAuthed ? booklyUser?.id : undefined,
+          partySize: 1,
+          customerName: customerDetails.name || undefined,
+          customerEmail: customerDetails.email || undefined,
+          customerPhone: customerDetails.phone || undefined,
           notes: customerDetails.notes || undefined
         })
-      } else {
-        // Guest booking
-        console.log('Proceeding with GUEST booking')
-        result = await BookingService.createGuestBooking({
-          serviceId: primaryService.service.id,
-          branchId,
-          resourceId: primaryService.staffId || undefined,
-          startTime: startDate.toISOString(),
-          notes: customerDetails.notes || undefined,
-          customerName: customerDetails.name,
-          customerEmail: customerDetails.email,
-          customerPhone: customerDetails.phone
-        })
-      }
 
-      if (result.data) {
-        setBookingReference(result.data.id || `BK-${Date.now().toString(36).toUpperCase().slice(-6)}`)
-        setStep('confirm')
+        if (result.data) {
+          const entry = (result.data as any)?.data ?? result.data
+          const entryId = entry?.id || `WL-${Date.now().toString(36).toUpperCase().slice(-6)}`
+          setWaitlistEntryId(entryId)
+          setBookingReference(entryId)
+          setSubmissionType('waitlist')
+          setStep('confirm')
+        } else {
+          setBookingError(result.error || 'Could not join waitlist. Please try again.')
+        }
       } else {
-        setBookingError(result.error || 'Booking failed. Please try again.')
+        if (isAuthenticated()) {
+          result = await BookingService.createBooking({
+            serviceId: primaryService.service.id,
+            branchId,
+            resourceId: primaryService.staffId || undefined,
+            startTime: startDate.toISOString(),
+            notes: customerDetails.notes || undefined
+          })
+        } else {
+          result = await BookingService.createGuestBooking({
+            serviceId: primaryService.service.id,
+            branchId,
+            resourceId: primaryService.staffId || undefined,
+            startTime: startDate.toISOString(),
+            notes: customerDetails.notes || undefined,
+            customerName: customerDetails.name,
+            customerEmail: customerDetails.email,
+            customerPhone: customerDetails.phone
+          })
+        }
+
+        if (result.data) {
+          const booking = (result.data as any)?.data ?? result.data
+          setBookingReference(booking?.id || `BK-${Date.now().toString(36).toUpperCase().slice(-6)}`)
+          setSubmissionType('booking')
+          setStep('confirm')
+        } else {
+          setBookingError(result.error || 'Booking failed. Please try again.')
+        }
       }
     } catch (error) {
       console.error('Booking failed:', error)
@@ -654,11 +717,48 @@ export function BookingModalV2Fixed({
     selectedDate,
     selectedTime,
     selectedServices,
+    apiSlots,
+    noAvailableSlots,
     branchId,
     customerDetails,
     isAuthenticated,
     booklyUser
   ])
+
+  const handleLeaveWaitlist = useCallback(async () => {
+    if (!waitlistEntryId) return
+
+    const email = customerDetails.email?.trim() || booklyUser?.email || undefined
+    const phone = customerDetails.phone?.trim() || booklyUser?.phone || undefined
+
+    if (!email && !phone) {
+      setBookingError('Email or phone is required to leave the waitlist')
+      return
+    }
+
+    setIsLeavingWaitlist(true)
+    setBookingError(null)
+    try {
+      const result = await WaitlistService.leave({
+        entryId: waitlistEntryId,
+        customerEmail: email,
+        customerPhone: phone,
+        reason: 'User requested removal from waitlist'
+      })
+
+      if (result.error) {
+        setBookingError(result.error || 'Could not leave waitlist')
+        return
+      }
+
+      handleClose()
+    } catch (error) {
+      console.error('Failed to leave waitlist:', error)
+      setBookingError(error instanceof Error ? error.message : 'Could not leave waitlist')
+    } finally {
+      setIsLeavingWaitlist(false)
+    }
+  }, [waitlistEntryId, customerDetails.email, customerDetails.phone, booklyUser?.email, booklyUser?.phone, handleClose])
 
   // --- Drag and Drop Handlers ---
 
@@ -915,10 +1015,33 @@ export function BookingModalV2Fixed({
                   )
                 })}
               </div>
-              {availableSlots.length === 0 && !isLoadingSlots && (
-                <p className='text-center text-sm text-gray-500 dark:text-gray-400 py-2'>
-                  No available time slots for this period
-                </p>
+              {noAvailableSlots && (
+                <div className='space-y-3 pt-2'>
+                  <p className='text-center text-sm text-amber-600 dark:text-amber-400 py-1'>
+                    No available time slots for this period. Choose a preferred time to join the waitlist.
+                  </p>
+                  <div className='grid grid-cols-4 gap-2'>
+                    {timeSlots.map(time => {
+                      const isSelected = selectedTime === time
+                      return (
+                        <button
+                          key={`wl-${time}`}
+                          onClick={() => setSelectedTime(time)}
+                          className={`py-3 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                            isSelected
+                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700'
+                              : 'bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-amber-400 dark:hover:border-amber-600'
+                          }`}
+                        >
+                          {time}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              {bookingError && step === 'booking' && (
+                <p className='text-sm text-red-500 dark:text-red-400 mt-2'>{bookingError}</p>
               )}
             </div>
           </div>
@@ -928,7 +1051,9 @@ export function BookingModalV2Fixed({
           <div className='p-5 space-y-5'>
             {/* Summary Card */}
             <div className='p-4 bg-[#0a2c24]/5 dark:bg-[#77b6a3]/10 rounded-2xl border border-[#0a2c24]/10 dark:border-[#77b6a3]/20'>
-              <h3 className='text-sm font-bold text-gray-900 dark:text-white mb-3'>Booking Summary</h3>
+              <h3 className='text-sm font-bold text-gray-900 dark:text-white mb-3'>
+                {noAvailableSlots ? 'Waitlist Request Summary' : 'Booking Summary'}
+              </h3>
               <div className='space-y-2 text-sm'>
                 <div className='flex items-start gap-3'>
                   <Calendar className='w-4 h-4 text-[#0a2c24] dark:text-[#77b6a3] mt-0.5' />
@@ -1011,6 +1136,7 @@ export function BookingModalV2Fixed({
 
             {/* Static Action Button for Details Step */}
             <div className='pt-4'>
+              {bookingError && <p className='text-sm text-red-500 dark:text-red-400 mb-3'>{bookingError}</p>}
               <button
                 onClick={handleConfirmBooking}
                 disabled={isSubmitting}
@@ -1020,7 +1146,7 @@ export function BookingModalV2Fixed({
                     : 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] hover:shadow-xl'
                 }`}
               >
-                {isSubmitting ? 'Processing...' : 'Confirm & Pay'}
+                {isSubmitting ? 'Processing...' : noAvailableSlots ? 'Join Waitlist' : 'Confirm & Pay'}
               </button>
             </div>
           </div>
@@ -1031,14 +1157,31 @@ export function BookingModalV2Fixed({
             <div className='w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6 animate-in zoom-in duration-500'>
               <CheckCircle2 className='w-12 h-12 text-green-600 dark:text-green-400' />
             </div>
-            <h2 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-2'>Booking Confirmed!</h2>
-            <p className='text-gray-500 dark:text-gray-400 mb-8'>Your appointment has been scheduled successfully.</p>
+            <h2 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-2'>
+              {submissionType === 'waitlist' ? 'Added to Waitlist!' : 'Booking Confirmed!'}
+            </h2>
+            <p className='text-gray-500 dark:text-gray-400 mb-8'>
+              {submissionType === 'waitlist'
+                ? 'We will notify you when this time becomes available.'
+                : 'Your appointment has been scheduled successfully.'}
+            </p>
             <div className='p-6 bg-white dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 w-full mb-8'>
-              <p className='text-xs text-gray-400 mb-1'>Reference ID</p>
+              <p className='text-xs text-gray-400 mb-1'>
+                {submissionType === 'waitlist' ? 'Waitlist Entry ID' : 'Reference ID'}
+              </p>
               <p className='text-xl font-mono font-bold text-[#0a2c24] dark:text-[#77b6a3] tracking-widest'>
                 {bookingReference}
               </p>
             </div>
+            {submissionType === 'waitlist' && waitlistEntryId && (
+              <button
+                onClick={handleLeaveWaitlist}
+                disabled={isLeavingWaitlist}
+                className='w-full mb-3 py-3 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-300 rounded-2xl font-semibold transition-all active:scale-95 disabled:opacity-50'
+              >
+                {isLeavingWaitlist ? 'Leaving Waitlist...' : 'Leave Waitlist'}
+              </button>
+            )}
             <button
               onClick={handleClose}
               className='w-full py-4 bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] text-lg font-bold rounded-2xl shadow-lg active:scale-95 transition-all'
@@ -1062,7 +1205,7 @@ export function BookingModalV2Fixed({
                 : 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] hover:shadow-xl'
             }`}
           >
-            Continue
+            {noAvailableSlots ? 'Continue to Waitlist' : 'Continue'}
           </button>
         </div>
       )}
@@ -1139,8 +1282,5 @@ export function BookingModalV2Fixed({
     document.body
   )
 }
-
-// Missing imports patch for check icon
-import { CheckCircle2 } from 'lucide-react'
 
 export default BookingModalV2Fixed

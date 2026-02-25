@@ -44,6 +44,7 @@ import { useSettings } from '@core/hooks/useSettings'
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
 import { useAuthStore } from '@/stores/auth.store'
+import { completePendingRegistrationOnLogin } from '@/views/RegisterWizard/onboarding-integration'
 
 type ErrorType = {
   message: string[]
@@ -116,6 +117,17 @@ const Login = ({ mode }: { mode: Mode }) => {
       // Try our API login first
       const authStore = useAuthStore.getState()
       await authStore.loginAdmin({ email: data.email, password: data.password })
+
+      // If a registration draft exists for this business user, complete onboarding now.
+      try {
+        await completePendingRegistrationOnLogin(locale as string, data.email)
+      } catch (onboardingError: any) {
+        setErrorState({
+          message: [onboardingError?.message || 'Login succeeded but onboarding completion failed. Please retry login.']
+        })
+        setLoading(false)
+        return
+      }
 
       // If we reach here, the API login was successful - redirect to bookly dashboard
       const redirectURL = searchParams.get('redirectTo') ?? '/apps/bookly/dashboard'

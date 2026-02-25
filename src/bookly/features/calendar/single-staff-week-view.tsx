@@ -4,8 +4,8 @@ import { Box, Typography, Avatar, Button, Select, MenuItem, FormControl, Popover
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday } from 'date-fns'
 import { useState, useEffect, useMemo } from 'react'
-import { mockServices } from '@/bookly/data/mock-data'
 import { useCalendarStore } from './state'
+import { useStaffManagementStore } from '../staff-management/staff-store'
 import { buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
 
@@ -64,6 +64,7 @@ export default function SingleStaffWeekView({
   const isSearchActive = useCalendarStore(state => state.isSearchActive)
   const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
   const staticSlots = useCalendarStore(state => state.staticSlots)
+  const storeServices = useStaffManagementStore(state => state.apiServices)
 
   // Current time tracking for live indicator
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -566,7 +567,7 @@ export default function SingleStaffWeekView({
                                 </Typography>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                   {(() => {
-                                    const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                                    const service = storeServices.find((s: any) => s.name === event.extendedProps?.serviceName)
                                     return service?.color ? (
                                       <Box
                                         sx={{

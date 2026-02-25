@@ -206,6 +206,7 @@ export function ShiftsTab() {
 
   const [isCancelChangeDialogOpen, setIsCancelChangeDialogOpen] = useState(false)
   const [cancelChangeStaffId, setCancelChangeStaffId] = useState<string | null>(null)
+  const [isCancellingMode, setIsCancellingMode] = useState(false)
 
   const [isBusinessHoursModalOpen, setIsBusinessHoursModalOpen] = useState(false)
   const [isBusinessHoursDayEditorOpen, setIsBusinessHoursDayEditorOpen] = useState(false)
@@ -271,9 +272,7 @@ export function ShiftsTab() {
     updateStaffType,
     getStaffType,
     getStaffTypeForDate,
-    scheduleStaffTypeChange,
-    getPendingStaffTypeChange,
-    cancelStaffTypeChange,
+    cancelStaffBookingModeTransition,
     updateCounter,
     isSpecialDaysModalOpen,
     openSpecialDays,
@@ -615,8 +614,8 @@ export function ShiftsTab() {
     const currentType = getStaffTypeForDate(staffId, selectedDate)
     const targetType = newTypeChecked ? 'static' : 'dynamic'
 
-    // Check if there's a pending change
-    const pendingChange = getPendingStaffTypeChange(staffId)
+    // Backend source of truth for pending booking mode transitions
+    const pendingChange = staffMembers.find(member => member.id === staffId)?.pendingBookingMode
 
     if (pendingChange) {
       // Ask for confirmation before cancelling
@@ -666,19 +665,25 @@ export function ShiftsTab() {
     setStaffTypeChangeContext(null)
   }
 
-  const handleConfirmCancelChange = () => {
-    if (cancelChangeStaffId) {
-      cancelStaffTypeChange(cancelChangeStaffId)
+  const handleConfirmCancelChange = async () => {
+    if (!cancelChangeStaffId) return
 
-      // Also revert optimistic state if any exists (though usually cleared on confirm)
+    setIsCancellingMode(true)
+    setModeChangeError(null)
+
+    try {
+      await cancelStaffBookingModeTransition(cancelChangeStaffId)
       setOptimisticStaffTypes(prev => {
         const newState = { ...prev }
         delete newState[cancelChangeStaffId]
         return newState
       })
-
       setCancelChangeStaffId(null)
       setIsCancelChangeDialogOpen(false)
+    } catch (error: any) {
+      setModeChangeError(error?.message || 'Failed to cancel scheduled booking mode change.')
+    } finally {
+      setIsCancellingMode(false)
     }
   }
 
@@ -2031,14 +2036,16 @@ export function ShiftsTab() {
             <DialogTitle>Cancel Pending Change?</DialogTitle>
             <DialogContent>
               <Typography variant='body2' color='text.secondary'>
-                Are you sure you want to cancel the pending staff type change? This will revert the staff member to
-                their previous type.
+                Are you sure you want to cancel the pending booking mode change? The resource will stay in its current
+                mode.
               </Typography>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setIsCancelChangeDialogOpen(false)}>Keep Change</Button>
-              <Button onClick={handleConfirmCancelChange} color='error' variant='contained'>
-                Yes, Cancel Change
+              <Button onClick={() => setIsCancelChangeDialogOpen(false)} disabled={isCancellingMode}>
+                Keep Change
+              </Button>
+              <Button onClick={handleConfirmCancelChange} color='error' variant='contained' disabled={isCancellingMode}>
+                {isCancellingMode ? 'Cancelling...' : 'Yes, Cancel Change'}
               </Button>
             </DialogActions>
           </Dialog>

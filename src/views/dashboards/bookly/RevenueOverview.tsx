@@ -12,8 +12,7 @@ import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 
-// Data Imports
-import { mockBookings } from '@/bookly/data/mock-data'
+import type { Booking } from '@/bookly/data/types'
 
 const AppReactApexCharts = dynamic(() => import('@/libs/styles/AppReactApexCharts'), { ssr: false })
 
@@ -23,7 +22,7 @@ function getMonthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
-const RevenueOverview = () => {
+const RevenueOverview = ({ bookings }: { bookings: Booking[] }) => {
   const now = new Date()
 
   // Build list of last N months
@@ -42,10 +41,12 @@ const RevenueOverview = () => {
     projectedByMonth.set(key, 0)
   }
 
-  mockBookings.forEach(b => {
+  bookings.forEach(b => {
     const key = getMonthKey(new Date(b.date))
     if (!revenueByMonth.has(key)) return
-    if (b.status === 'completed') revenueByMonth.set(key, (revenueByMonth.get(key) || 0) + b.price)
+    if (b.status === 'completed' || b.status === 'attended') {
+      revenueByMonth.set(key, (revenueByMonth.get(key) || 0) + b.price)
+    }
     if (b.status === 'confirmed') projectedByMonth.set(key, (projectedByMonth.get(key) || 0) + b.price)
   })
 
@@ -83,17 +84,17 @@ const RevenueOverview = () => {
   }
 
   // Summary KPIs
-  const last30 = mockBookings.filter(b => {
+  const last30 = bookings.filter(b => {
     const d = new Date(b.date)
-    return b.status === 'completed' && now.getTime() - d.getTime() <= 30 * 24 * 60 * 60 * 1000
+    return (b.status === 'completed' || b.status === 'attended') && now.getTime() - d.getTime() <= 30 * 24 * 60 * 60 * 1000
   })
   const total30 = last30.reduce((sum, b) => sum + b.price, 0)
   const aov = last30.length ? total30 / last30.length : 0
-  const cancelled30 = mockBookings.filter(b => {
+  const cancelled30 = bookings.filter(b => {
     const d = new Date(b.date)
     return b.status === 'cancelled' && now.getTime() - d.getTime() <= 30 * 24 * 60 * 60 * 1000
   }).length
-  const totalBookings30 = mockBookings.filter(b => {
+  const totalBookings30 = bookings.filter(b => {
     const d = new Date(b.date)
     return now.getTime() - d.getTime() <= 30 * 24 * 60 * 60 * 1000
   }).length

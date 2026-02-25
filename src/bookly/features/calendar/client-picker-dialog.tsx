@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -19,8 +19,8 @@ import {
   InputAdornment,
   Chip
 } from '@mui/material'
-import { mockCustomers } from '@/bookly/data/mock-data'
 import type { User } from '@/bookly/data/types'
+import { useCalendarStore } from './state'
 
 interface ClientPickerDialogProps {
   open: boolean
@@ -31,9 +31,43 @@ interface ClientPickerDialogProps {
 
 export default function ClientPickerDialog({ open, onClose, onSelect, selectedClientId }: ClientPickerDialogProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const events = useCalendarStore(state => state.events)
+
+  const knownClients = useMemo<User[]>(() => {
+    const unique = new Map<string, User>()
+
+    events.forEach(event => {
+      const fullName = (event.extendedProps.customerName || '').trim()
+      const email = (event.extendedProps.customerEmail || '').trim()
+      const phone = (event.extendedProps.customerPhone || '').trim()
+      if (!fullName && !email && !phone) return
+
+      const [firstName = 'Client', ...lastNameParts] = fullName.split(' ').filter(Boolean)
+      const lastName = lastNameParts.join(' ') || 'Unknown'
+      const clientKey = email || phone || `${firstName}-${lastName}`.toLowerCase()
+
+      if (!unique.has(clientKey)) {
+        unique.set(clientKey, {
+          id: clientKey,
+          firstName,
+          lastName,
+          email,
+          phone: phone || undefined,
+          memberSince: new Date(event.start),
+          totalBookings: 1,
+          favoriteBusinesses: []
+        })
+      } else {
+        const existing = unique.get(clientKey)!
+        existing.totalBookings += 1
+      }
+    })
+
+    return Array.from(unique.values()).sort((a, b) => b.totalBookings - a.totalBookings)
+  }, [events])
 
   // Filter clients based on search query
-  const filteredClients = mockCustomers.filter(client => {
+  const filteredClients = knownClients.filter(client => {
     const fullName = `${client.firstName} ${client.lastName}`.toLowerCase()
     const query = searchQuery.toLowerCase()
     return (

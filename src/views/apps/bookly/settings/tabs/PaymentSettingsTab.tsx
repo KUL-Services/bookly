@@ -19,9 +19,11 @@ import MenuItem from '@mui/material/MenuItem'
 import InputAdornment from '@mui/material/InputAdornment'
 import FormGroup from '@mui/material/FormGroup'
 import Chip from '@mui/material/Chip'
+import Button from '@mui/material/Button'
 
 // Store
 import { useBusinessSettingsStore, type PaymentMethod } from '@/stores/business-settings.store'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 
 const paymentMethodLabels: Record<PaymentMethod, { label: string; icon: string }> = {
   pay_on_arrival: { label: 'Pay on Arrival', icon: 'ri-store-2-line' },
@@ -40,7 +42,7 @@ const currencies = [
 ]
 
 const PaymentSettingsTab = () => {
-  const { paymentSettings, updatePaymentSettings } = useBusinessSettingsStore()
+  const { paymentSettings, updatePaymentSettings, savePaymentSettings, isSaving } = useBusinessSettingsStore()
 
   const handleMethodToggle = (method: PaymentMethod) => {
     const currentMethods = paymentSettings.acceptedMethods
@@ -59,6 +61,19 @@ const PaymentSettingsTab = () => {
 
   return (
     <Grid container spacing={6}>
+      <Grid item xs={12}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant='contained'
+            onClick={savePaymentSettings}
+            disabled={isSaving}
+            startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
+          >
+            {isSaving ? 'Saving...' : 'Save Payment Settings'}
+          </Button>
+        </Box>
+      </Grid>
+
       {/* Payment Methods */}
       <Grid item xs={12} md={6}>
         <Card>

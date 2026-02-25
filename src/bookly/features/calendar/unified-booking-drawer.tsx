@@ -20,12 +20,6 @@ import {
   Stack,
   Paper
 } from '@mui/material'
-import {
-  mockStaff as fallbackMockStaff,
-  mockServices as fallbackMockServices,
-  mockBookings,
-  mockRooms as fallbackMockRooms
-} from '@/bookly/data/mock-data'
 import type {
   AppointmentStatus,
   DateRange,
@@ -288,17 +282,16 @@ export default function UnifiedBookingDrawer({
     staffWorkingHours,
     timeOffRequests,
     apiServices: storeServices,
-    staffMembers: storeStaffMembers
+    staffMembers: storeStaffMembers,
+    rooms: storeRooms
   } = useStaffManagementStore()
   const calendarStaff = useCalendarStore(state => state.staff)
   const calendarRooms = useCalendarStore(state => state.rooms)
 
-  // Use API data with mock fallback
-  const allStaff: any[] = (
-    calendarStaff?.length ? calendarStaff : storeStaffMembers?.length ? storeStaffMembers : fallbackMockStaff
-  ) as any[]
-  const allServices: any[] = (storeServices?.length ? storeServices : fallbackMockServices) as any[]
-  const allRooms: any[] = (calendarRooms?.length ? calendarRooms : fallbackMockRooms) as any[]
+  // Use API/store data only
+  const allStaff: any[] = (calendarStaff?.length ? calendarStaff : storeStaffMembers?.length ? storeStaffMembers : []) as any[]
+  const allServices: any[] = (storeServices?.length ? storeServices : []) as any[]
+  const allRooms: any[] = (calendarRooms?.length ? calendarRooms : storeRooms?.length ? storeRooms : []) as any[]
   const AUTO_STAFF_ID = 'no-preference'
   const AUTO_ROOM_ID = 'no-preference-room'
 

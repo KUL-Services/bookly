@@ -11,7 +11,7 @@ export interface ServiceCategory {
 
 export type PaddingTimeRule = 'none' | 'after' | 'before' | 'before_and_after'
 
-export type TaxRate = 'tax_free' | '5' | '10' | '12' | '15' | '20'
+export type TaxRate = 'tax_free' | '5' | '10' | '12' | '15' | '20' | 'custom'
 
 export interface BookingInterval {
   hours: number
@@ -49,6 +49,12 @@ export interface ClientSettings {
   questions: ClientQuestion[]
 }
 
+export interface ServiceVariant {
+  name?: string
+  duration: number
+  price: number
+}
+
 export interface ExtendedService {
   id: string
   name: string
@@ -64,6 +70,9 @@ export interface ExtendedService {
   paddingTime?: PaddingTime
   processingTime?: ProcessingTime
   taxRate?: TaxRate
+  customTaxRate?: number
+  depositPercentage?: number
+  variants?: ServiceVariant[]
   parallelClients?: number
 
   // Client settings
@@ -86,6 +95,7 @@ export interface ServiceFormData {
   paddingTime: PaddingTime
   processingTime: ProcessingTime
   taxRate: TaxRate
+  customTaxRate: number
   parallelClients: number
   clientSettings: ClientSettings
 }
@@ -104,7 +114,8 @@ export const TAX_RATE_OPTIONS: { value: TaxRate; label: string }[] = [
   { value: '10', label: '10%' },
   { value: '12', label: '12%' },
   { value: '15', label: '15%' },
-  { value: '20', label: '20%' }
+  { value: '20', label: '20%' },
+  { value: 'custom', label: 'Custom' }
 ]
 
 export const MINUTES_OPTIONS = [
@@ -153,6 +164,7 @@ export const DEFAULT_SERVICE_FORM_DATA: ServiceFormData = {
     after: { hours: 0, minutes: 0 }
   },
   taxRate: 'tax_free',
+  customTaxRate: 0,
   parallelClients: 1,
   clientSettings: DEFAULT_CLIENT_SETTINGS
 }

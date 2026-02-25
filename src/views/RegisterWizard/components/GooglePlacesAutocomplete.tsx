@@ -6,6 +6,7 @@ import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import IconButton from '@mui/material/IconButton'
+import { ensureGoogleMapsLoaded } from './google-maps-loader'
 
 interface GooglePlacesAutocompleteProps {
   value: string
@@ -45,14 +46,31 @@ const GooglePlacesAutocomplete = ({
   }, [value])
 
   useEffect(() => {
-    const checkGoogleMaps = () => {
-      return typeof window !== 'undefined' && window.google && window.google.maps && window.google.maps.places
-    }
+    let isCancelled = false
 
-    const initAutocomplete = () => {
-      if (!inputRef.current) return
+    const initializeAutocomplete = async () => {
+      setIsLoading(true)
+      setApiError(null)
 
       try {
+        await ensureGoogleMapsLoaded({ libraries: ['places'] })
+
+        let tries = 0
+        while (!isCancelled && !inputRef.current && tries < 40) {
+          await new Promise(resolve => setTimeout(resolve, 50))
+          tries += 1
+        }
+
+        if (isCancelled) return
+        if (!inputRef.current) {
+          throw new Error('Address input is not ready yet.')
+        }
+
+        if (autocompleteRef.current && window.google?.maps?.event) {
+          window.google.maps.event.clearInstanceListeners(autocompleteRef.current)
+          autocompleteRef.current = null
+        }
+
         autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
           types: ['address'],
           fields: ['address_components', 'formatted_address', 'geometry', 'place_id', 'name']
@@ -63,14 +81,10 @@ const GooglePlacesAutocomplete = ({
           const place = autocompleteRef.current?.getPlace()
 
           if (place && place.formatted_address && inputRef.current) {
-            // Update input value
             inputRef.current.value = place.formatted_address
-
-            // Call callbacks
             onChange(place.formatted_address)
             onPlaceSelected(place)
 
-            // Reset flag after a short delay
             setTimeout(() => {
               isSelectingPlace.current = false
             }, 100)
@@ -80,40 +94,19 @@ const GooglePlacesAutocomplete = ({
         })
 
         setIsLoading(false)
-        setApiError(null)
       } catch (error) {
+        if (isCancelled) return
         console.error('Failed to initialize Google Places Autocomplete:', error)
         setApiError('Failed to load address autocomplete. Please enter manually.')
         setIsLoading(false)
       }
     }
 
-    if (checkGoogleMaps()) {
-      initAutocomplete()
-    } else {
-      const interval = setInterval(() => {
-        if (checkGoogleMaps()) {
-          clearInterval(interval)
-          initAutocomplete()
-        }
-      }, 100)
-
-      const timeout = setTimeout(() => {
-        clearInterval(interval)
-        if (!checkGoogleMaps()) {
-          setApiError('Google Maps API not loaded. Please check your internet connection or API key.')
-          setIsLoading(false)
-        }
-      }, 10000)
-
-      return () => {
-        clearInterval(interval)
-        clearTimeout(timeout)
-      }
-    }
+    initializeAutocomplete()
 
     return () => {
-      if (autocompleteRef.current) {
+      isCancelled = true
+      if (autocompleteRef.current && window.google?.maps?.event) {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current)
       }
     }

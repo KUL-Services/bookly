@@ -169,12 +169,37 @@ export function BranchEditorDrawer() {
     }))
   }
 
-  const sections = [
+  const steps = [
     { id: 'info', label: 'Information', icon: 'ri-information-line' },
     { id: 'services', label: 'Services', icon: 'ri-service-line' },
-    { id: 'staff', label: 'Staff', icon: 'ri-team-line' },
+    ...(editingBranch ? [{ id: 'staff', label: 'Staff', icon: 'ri-team-line' }] : []),
     { id: 'hours', label: 'Working Hours', icon: 'ri-time-line' }
   ]
+
+  const currentStepIndex = steps.findIndex(s => s.id === currentSection)
+  const isLastStep = currentStepIndex === steps.length - 1
+  const isFirstStep = currentStepIndex === 0
+
+  const handleNext = () => {
+    if (!isLastStep) {
+      setCurrentSection(steps[currentStepIndex + 1].id as typeof currentSection)
+    }
+  }
+
+  const handleBack = () => {
+    if (!isFirstStep) {
+      setCurrentSection(steps[currentStepIndex - 1].id as typeof currentSection)
+    }
+  }
+
+  const handleSelectAllServices = () => {
+    const allIds = availableServices.map(s => s.id)
+    const allSelected = allIds.every(id => formData.serviceIds.includes(id))
+    setFormData(prev => ({
+      ...prev,
+      serviceIds: allSelected ? [] : allIds
+    }))
+  }
 
   return (
     <Dialog
@@ -214,39 +239,69 @@ export function BranchEditorDrawer() {
         </IconButton>
       </DialogTitle>
 
-      {/* Section Tabs */}
+      {/* Step Progress Indicator */}
       <Box
         sx={{
           display: 'flex',
+          alignItems: 'center',
+          px: 3,
+          py: 1.5,
           borderBottom: '1px solid',
           borderColor: 'divider',
-          px: 2
+          gap: 1
         }}
       >
-        {sections.map(section => (
-          <Box
-            key={section.id}
-            onClick={() => setCurrentSection(section.id as typeof currentSection)}
-            sx={{
-              px: 2,
-              py: 1.5,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              borderBottom: 2,
-              borderColor: currentSection === section.id ? 'primary.main' : 'transparent',
-              color: currentSection === section.id ? 'primary.main' : 'text.secondary',
-              transition: 'all 0.2s',
-              '&:hover': { color: 'primary.main' }
-            }}
-          >
-            <i className={section.icon} style={{ fontSize: 18 }} />
-            <Typography variant='body2' fontWeight={currentSection === section.id ? 600 : 400}>
-              {section.label}
-            </Typography>
-          </Box>
-        ))}
+        {steps.map((step, index) => {
+          const isActive = currentSection === step.id
+          const isCompleted = index < currentStepIndex
+          return (
+            <Box key={step.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {index > 0 && (
+                <Box sx={{ width: 24, height: 1, bgcolor: isCompleted ? 'primary.main' : 'divider' }} />
+              )}
+              <Box
+                onClick={() => setCurrentSection(step.id as typeof currentSection)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  cursor: 'pointer',
+                  px: 1.5,
+                  py: 0.75,
+                  borderRadius: 2,
+                  bgcolor: isActive ? 'primary.main' : isCompleted ? 'primary.lighter' : 'transparent',
+                  color: isActive ? '#fff' : isCompleted ? 'primary.main' : 'text.secondary',
+                  transition: 'all 0.2s',
+                  '&:hover': { bgcolor: isActive ? 'primary.main' : 'action.hover' }
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    bgcolor: isActive ? 'rgba(255,255,255,0.2)' : isCompleted ? 'primary.main' : 'action.hover',
+                    color: isActive ? '#fff' : isCompleted ? 'primary.contrastText' : 'text.secondary'
+                  }}
+                >
+                  {isCompleted ? <i className='ri-check-line' style={{ fontSize: 14 }} /> : index + 1}
+                </Box>
+                <Typography
+                  variant='caption'
+                  fontWeight={isActive ? 600 : 400}
+                  sx={{ color: isActive ? '#fff' : isCompleted ? 'primary.main' : 'text.secondary' }}
+                >
+                  {step.label}
+                </Typography>
+              </Box>
+            </Box>
+          )
+        })}
       </Box>
 
       {/* Content */}
@@ -391,9 +446,16 @@ export function BranchEditorDrawer() {
         {/* Services Section */}
         {currentSection === 'services' && (
           <Box>
-            <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
-              Select services available at this branch
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant='body2' color='text.secondary'>
+                Select services available at this branch
+              </Typography>
+              {availableServices.length > 0 && (
+                <Button size='small' variant='text' onClick={handleSelectAllServices}>
+                  {availableServices.every(s => formData.serviceIds.includes(s.id)) ? 'Deselect All' : 'Select All'}
+                </Button>
+              )}
+            </Box>
 
             {isLoadingServices ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -556,9 +618,14 @@ export function BranchEditorDrawer() {
         {/* Working Hours Section */}
         {currentSection === 'hours' && (
           <Box>
-            <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+            <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
               Set working hours for each day of the week
             </Typography>
+            <Alert severity='info' sx={{ mb: 2 }} icon={<i className='ri-information-line' />}>
+              <Typography variant='caption'>
+                These working hours will be used as the default schedule. You can customize them later in Management &gt; Shifts.
+              </Typography>
+            </Alert>
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               {formData.workingHours.map(hours => (
@@ -607,23 +674,36 @@ export function BranchEditorDrawer() {
         )}
       </Box>
 
-      {/* Footer */}
+      {/* Footer - Step Navigation */}
       <Box
         sx={{
           p: 3,
           borderTop: '1px solid',
           borderColor: 'divider',
           display: 'flex',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           gap: 2
         }}
       >
-        <Button variant='outlined' onClick={handleClose}>
-          Cancel
+        <Button variant='outlined' onClick={isFirstStep ? handleClose : handleBack}>
+          {isFirstStep ? 'Cancel' : 'Back'}
         </Button>
-        <Button variant='contained' onClick={handleSubmit} disabled={!formData.name.trim()}>
-          {editingBranch ? 'Save Changes' : 'Create Branch'}
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {!isFirstStep && (
+            <Button variant='text' onClick={handleClose}>
+              Cancel
+            </Button>
+          )}
+          {isLastStep ? (
+            <Button variant='contained' onClick={handleSubmit} disabled={!formData.name.trim()}>
+              {editingBranch ? 'Save Changes' : 'Create Branch'}
+            </Button>
+          ) : (
+            <Button variant='contained' onClick={handleNext}>
+              Next
+            </Button>
+          )}
+        </Box>
       </Box>
     </Dialog>
   )

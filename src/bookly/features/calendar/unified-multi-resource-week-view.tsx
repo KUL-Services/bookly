@@ -3,7 +3,6 @@
 import { Box, Typography, Avatar, Chip, Tooltip, Popover, List, ListItemButton } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday, isPast, startOfDay } from 'date-fns'
-import { mockStaff as fallbackMockStaff, mockServices as fallbackMockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
 import {
@@ -258,13 +257,13 @@ export default function UnifiedMultiResourceWeekView({
   const branchFilters = useCalendarStore(state => state.branchFilters)
   const staffFilters = useCalendarStore(state => state.staffFilters)
   const roomFilters = useCalendarStore(state => state.roomFilters)
-  const { rooms, staffWorkingHours } = useStaffManagementStore()
+  const { rooms, staffWorkingHours, staffMembers: storeStaffMembers, apiServices: storeServices } =
+    useStaffManagementStore()
 
-  // Use API-loaded data from stores, fallback to mocks
+  // Use API-loaded data from stores
   const calendarStaff = useCalendarStore(state => state.staff)
-  const { apiServices: storeServices } = useStaffManagementStore()
-  const allStaff: any[] = calendarStaff?.length ? calendarStaff : (fallbackMockStaff as any[])
-  const allServices: any[] = storeServices?.length ? storeServices : (fallbackMockServices as any[])
+  const allStaff: any[] = calendarStaff?.length ? calendarStaff : storeStaffMembers?.length ? storeStaffMembers : []
+  const allServices: any[] = storeServices?.length ? storeServices : []
   const [overflowAnchorEl, setOverflowAnchorEl] = useState<HTMLElement | null>(null)
   const [overflowItems, setOverflowItems] = useState<OverflowItem[]>([])
   const [overflowDay, setOverflowDay] = useState<Date | null>(null)

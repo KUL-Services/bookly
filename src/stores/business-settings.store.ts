@@ -7,7 +7,13 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { SettingsService } from '@/lib/api/services/settings.service'
 import { BusinessService } from '@/lib/api/services/business.service'
-import type { BusinessSettings as ApiBusinessSettings } from '@/lib/api/types'
+import type {
+  ApiBookingPolicies,
+  ApiNotificationSettings,
+  ApiPaymentSettings,
+  ApiSchedulingSettings,
+  BusinessSettings as ApiBusinessSettings
+} from '@/lib/api/types'
 
 // Lazy import to avoid circular deps — accessed via .getState() outside React
 let _getAuthState: (() => { materializeUser: any }) | null = null
@@ -60,6 +66,7 @@ export interface NoShowPolicy {
   chargeFee: boolean
   feePercentage: number
   restrictFutureBookings: boolean
+  restrictAfterCount: number
   restrictionDays: number
 }
 
@@ -103,7 +110,7 @@ export interface DailyDigest {
 
 export interface BusinessNotificationSettings {
   newBookingAlert: NotificationChannel
-  cancellationAlert: Omit<NotificationChannel, 'push'>
+  cancellationAlert: NotificationChannel
   customerReminders: CustomerReminders
   staffNotifications: boolean
   dailyDigest: DailyDigest
@@ -114,8 +121,11 @@ export interface SchedulingSettings {
   bufferTimeBetweenBookings: number // minutes
   allowOverbooking: boolean
   overbookingPercentage: number
+  overbookingType?: 'percentage' | 'fixed'
+  overbookingFixedCount?: number
   defaultBookingDuration: number // minutes
   allowWalkIns: boolean
+  enableWaitlist?: boolean
 }
 
 export interface CalendarDisplaySettings {
@@ -184,6 +194,7 @@ const defaultBookingPolicies: BookingPolicies = {
     chargeFee: false,
     feePercentage: 0,
     restrictFutureBookings: false,
+    restrictAfterCount: 3,
     restrictionDays: 30
   },
   bookingLeadTime: 2, // 2 hours minimum
@@ -208,7 +219,8 @@ const defaultNotificationSettings: BusinessNotificationSettings = {
   },
   cancellationAlert: {
     email: true,
-    sms: false
+    sms: false,
+    push: false
   },
   customerReminders: {
     enabled: true,
@@ -226,8 +238,11 @@ const defaultSchedulingSettings: SchedulingSettings = {
   bufferTimeBetweenBookings: 0,
   allowOverbooking: false,
   overbookingPercentage: 0,
+  overbookingType: 'percentage',
+  overbookingFixedCount: 0,
   defaultBookingDuration: 60,
-  allowWalkIns: true
+  allowWalkIns: true,
+  enableWaitlist: false
 }
 
 const defaultCalendarSettings: CalendarDisplaySettings = {
@@ -253,6 +268,225 @@ const defaultBrandingSettings: BrandingSettings = {
   welcomeMessage: 'Welcome! Book your appointment with us.',
   confirmationMessage: 'Thank you for your booking! We look forward to seeing you.',
   bookingPageTheme: 'auto'
+}
+
+const paymentMethodToApiMap: Record<PaymentMethod, string> = {
+  pay_on_arrival: 'cash',
+  card: 'card',
+  instapay: 'digital_wallet',
+  fawry: 'bank_transfer'
+}
+
+const paymentMethodFromApiMap: Record<string, PaymentMethod> = {
+  cash: 'pay_on_arrival',
+  card: 'card',
+  bank_transfer: 'fawry',
+  digital_wallet: 'instapay',
+  pay_on_arrival: 'pay_on_arrival',
+  instapay: 'instapay',
+  fawry: 'fawry'
+}
+
+const toApiBookingPolicies = (policies: BookingPolicies): ApiBookingPolicies => ({
+  autoConfirmation: policies.autoConfirmation,
+  bookingLeadTime: policies.bookingLeadTime,
+  maxAdvanceBooking: policies.maxAdvanceBooking,
+  allowCancellation: policies.cancellationPolicy.enabled,
+  cancellationDeadlineHours: policies.cancellationPolicy.hoursBeforeAppointment,
+  allowReschedule: policies.reschedulePolicy.enabled,
+  rescheduleDeadlineHours: policies.reschedulePolicy.hoursBeforeAppointment,
+  noShowPolicy: {
+    chargeFee: policies.noShowPolicy.chargeFee,
+    feePercentage: policies.noShowPolicy.feePercentage,
+    restrictFutureBookings: policies.noShowPolicy.restrictFutureBookings,
+    restrictAfterCount: Math.max(1, policies.noShowPolicy.restrictAfterCount || 3),
+    restrictionDays: policies.noShowPolicy.restrictionDays
+  }
+})
+
+const toApiSchedulingSettings = (settings: SchedulingSettings): ApiSchedulingSettings => ({
+  defaultBookingDuration: settings.defaultBookingDuration,
+  bufferTimeBetweenBookings: settings.bufferTimeBetweenBookings,
+  allowWalkIns: settings.allowWalkIns,
+  allowOverbooking: settings.allowOverbooking,
+  overbookingPercentage: settings.overbookingPercentage,
+  overbookingType: settings.overbookingType || 'percentage',
+  overbookingFixedCount: settings.overbookingFixedCount || 0,
+  enableWaitlist: settings.enableWaitlist || false
+})
+
+const toApiNotificationSettings = (settings: BusinessNotificationSettings): ApiNotificationSettings => ({
+  newBookingAlert: {
+    email: !!settings.newBookingAlert.email,
+    sms: !!settings.newBookingAlert.sms,
+    push: !!settings.newBookingAlert.push
+  },
+  cancellationAlert: {
+    email: !!settings.cancellationAlert.email,
+    sms: !!settings.cancellationAlert.sms,
+    push: !!settings.cancellationAlert.push
+  },
+  customerReminders: {
+    enabled: !!settings.customerReminders.enabled,
+    beforeHours: settings.customerReminders.beforeHours
+  },
+  staffNotifications: !!settings.staffNotifications,
+  dailyDigest: {
+    enabled: !!settings.dailyDigest.enabled,
+    time: settings.dailyDigest.time,
+    recipients: settings.dailyDigest.recipients
+  }
+})
+
+const toApiPaymentSettings = (settings: PaymentSettings): ApiPaymentSettings => ({
+  requireDeposit: settings.depositRequired,
+  depositPercentage: settings.depositRequired ? settings.depositPercentage : 0,
+  acceptedPaymentMethods: settings.acceptedMethods.map(method => paymentMethodToApiMap[method] || method),
+  taxRate: settings.taxEnabled ? settings.taxPercentage : 0,
+  taxInclusive: settings.taxInclusive
+})
+
+const mapApiSettingsToStore = (
+  api: ApiBusinessSettings,
+  current: Pick<
+    BusinessSettingsState,
+    | 'bookingPolicies'
+    | 'schedulingSettings'
+    | 'notificationSettings'
+    | 'paymentSettings'
+    | 'customerSettings'
+    | 'calendarSettings'
+    | 'brandingSettings'
+  >
+): Partial<BusinessSettingsState> => {
+  const updates: Partial<BusinessSettingsState> = {}
+
+  if (api.bookingPolicies) {
+    const apiBp = api.bookingPolicies
+    const noShow = apiBp.noShowPolicy
+    const noShowSettings =
+      typeof noShow === 'string'
+        ? {
+            ...current.bookingPolicies.noShowPolicy,
+            chargeFee: noShow === 'CHARGE_FEE'
+          }
+        : {
+            ...current.bookingPolicies.noShowPolicy,
+            ...(noShow?.chargeFee !== undefined && { chargeFee: noShow.chargeFee }),
+            ...(noShow?.feePercentage !== undefined && { feePercentage: noShow.feePercentage }),
+            ...(noShow?.restrictFutureBookings !== undefined && {
+              restrictFutureBookings: noShow.restrictFutureBookings
+            }),
+            ...(noShow?.restrictAfterCount !== undefined && { restrictAfterCount: noShow.restrictAfterCount }),
+            ...(noShow?.restrictionDays !== undefined && { restrictionDays: noShow.restrictionDays })
+          }
+
+    updates.bookingPolicies = {
+      ...current.bookingPolicies,
+      ...(apiBp.autoConfirmation !== undefined && { autoConfirmation: apiBp.autoConfirmation }),
+      ...(apiBp.bookingLeadTime !== undefined && { bookingLeadTime: apiBp.bookingLeadTime }),
+      ...(apiBp.maxAdvanceBooking !== undefined && { maxAdvanceBooking: apiBp.maxAdvanceBooking }),
+      cancellationPolicy: {
+        ...current.bookingPolicies.cancellationPolicy,
+        ...(apiBp.allowCancellation !== undefined && { enabled: apiBp.allowCancellation }),
+        ...(apiBp.cancellationDeadlineHours !== undefined && {
+          hoursBeforeAppointment: apiBp.cancellationDeadlineHours
+        })
+      },
+      reschedulePolicy: {
+        ...current.bookingPolicies.reschedulePolicy,
+        ...(apiBp.allowReschedule !== undefined && { enabled: apiBp.allowReschedule }),
+        ...(apiBp.rescheduleDeadlineHours !== undefined && { hoursBeforeAppointment: apiBp.rescheduleDeadlineHours })
+      },
+      noShowPolicy: noShowSettings
+    }
+  }
+
+  if (api.schedulingSettings) {
+    const apiSs = api.schedulingSettings
+    updates.schedulingSettings = {
+      ...current.schedulingSettings,
+      ...(apiSs.defaultBookingDuration !== undefined && { defaultBookingDuration: apiSs.defaultBookingDuration }),
+      ...(apiSs.defaultSlotDuration !== undefined && { defaultBookingDuration: apiSs.defaultSlotDuration }),
+      ...(apiSs.bufferTimeBetweenBookings !== undefined && {
+        bufferTimeBetweenBookings: apiSs.bufferTimeBetweenBookings
+      }),
+      ...(apiSs.bufferTimeBetweenAppointments !== undefined && {
+        bufferTimeBetweenBookings: apiSs.bufferTimeBetweenAppointments
+      }),
+      ...(apiSs.allowWalkIns !== undefined && { allowWalkIns: apiSs.allowWalkIns }),
+      ...(apiSs.allowOverbooking !== undefined && { allowOverbooking: apiSs.allowOverbooking }),
+      ...(apiSs.overbookingPercentage !== undefined && { overbookingPercentage: apiSs.overbookingPercentage }),
+      ...(apiSs.overbookingType !== undefined && { overbookingType: apiSs.overbookingType }),
+      ...(apiSs.overbookingFixedCount !== undefined && { overbookingFixedCount: apiSs.overbookingFixedCount }),
+      ...(apiSs.enableWaitlist !== undefined && { enableWaitlist: apiSs.enableWaitlist })
+    }
+  }
+
+  if (api.notificationSettings) {
+    const apiNs = api.notificationSettings
+    updates.notificationSettings = {
+      ...current.notificationSettings,
+      newBookingAlert: {
+        ...current.notificationSettings.newBookingAlert,
+        ...(apiNs.newBookingAlert?.email !== undefined && { email: apiNs.newBookingAlert.email }),
+        ...(apiNs.newBookingAlert?.sms !== undefined && { sms: apiNs.newBookingAlert.sms }),
+        ...(apiNs.newBookingAlert?.push !== undefined && { push: apiNs.newBookingAlert.push })
+      },
+      cancellationAlert: {
+        ...current.notificationSettings.cancellationAlert,
+        ...(apiNs.cancellationAlert?.email !== undefined && { email: apiNs.cancellationAlert.email }),
+        ...(apiNs.cancellationAlert?.sms !== undefined && { sms: apiNs.cancellationAlert.sms }),
+        ...(apiNs.cancellationAlert?.push !== undefined && { push: apiNs.cancellationAlert.push })
+      },
+      customerReminders: {
+        ...current.notificationSettings.customerReminders,
+        ...(apiNs.customerReminders?.enabled !== undefined && { enabled: apiNs.customerReminders.enabled }),
+        ...(apiNs.customerReminders?.beforeHours !== undefined && { beforeHours: apiNs.customerReminders.beforeHours })
+      },
+      ...(apiNs.staffNotifications !== undefined && { staffNotifications: apiNs.staffNotifications }),
+      dailyDigest: {
+        ...current.notificationSettings.dailyDigest,
+        ...(apiNs.dailyDigest?.enabled !== undefined && { enabled: apiNs.dailyDigest.enabled }),
+        ...(apiNs.dailyDigest?.time !== undefined && { time: apiNs.dailyDigest.time }),
+        ...(apiNs.dailyDigest?.recipients !== undefined && { recipients: apiNs.dailyDigest.recipients })
+      }
+    }
+  }
+
+  if (api.paymentSettings) {
+    const apiPs = api.paymentSettings
+    const mappedMethods = (apiPs.acceptedPaymentMethods || apiPs.acceptedMethods || [])
+      .map(method => paymentMethodFromApiMap[method])
+      .filter(Boolean) as PaymentMethod[]
+    const taxRate = apiPs.taxRate ?? apiPs.taxPercentage
+
+    updates.paymentSettings = {
+      ...current.paymentSettings,
+      ...(apiPs.requireDeposit !== undefined && { depositRequired: apiPs.requireDeposit }),
+      ...(apiPs.depositRequired !== undefined && { depositRequired: apiPs.depositRequired }),
+      ...(apiPs.depositPercentage !== undefined && { depositPercentage: apiPs.depositPercentage }),
+      ...(mappedMethods.length > 0 && { acceptedMethods: mappedMethods }),
+      ...(taxRate !== undefined && { taxPercentage: taxRate }),
+      ...(apiPs.taxInclusive !== undefined && { taxInclusive: apiPs.taxInclusive }),
+      ...(apiPs.taxEnabled !== undefined && { taxEnabled: apiPs.taxEnabled }),
+      ...(taxRate !== undefined && apiPs.taxEnabled === undefined && { taxEnabled: taxRate > 0 })
+    }
+  }
+
+  if (api.customerSettings) {
+    updates.customerSettings = { ...current.customerSettings, ...api.customerSettings }
+  }
+
+  if (api.calendarSettings) {
+    updates.calendarSettings = { ...current.calendarSettings, ...api.calendarSettings } as CalendarDisplaySettings
+  }
+
+  if (api.brandingSettings) {
+    updates.brandingSettings = { ...current.brandingSettings, ...api.brandingSettings }
+  }
+
+  return updates
 }
 
 // ============================================================================
@@ -305,6 +539,10 @@ interface BusinessSettingsActions {
 
   // Persistence
   saveSettings: () => Promise<void>
+  saveBookingPoliciesSettings: () => Promise<void>
+  saveSchedulingSettings: () => Promise<void>
+  saveNotificationSettings: () => Promise<void>
+  savePaymentSettings: () => Promise<void>
   loadSettings: () => Promise<void>
 
   // UI actions
@@ -428,14 +666,14 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
           hasUnsavedChanges: true
         }),
 
-      // Maps store shape → API shapes for PATCH /admin/business + PATCH /admin/settings
+      // Save all settings
       saveSettings: async () => {
         set({ isSaving: true, error: null })
         try {
           const state = get()
-          const { bookingPolicies: bp, schedulingSettings: ss, businessProfile: profile, socialLinks } = state
+          const { businessProfile: profile, socialLinks } = state
 
-          // --- PATCH /admin/business (profile data) ---
+          // PATCH /admin/business (profile data)
           const businessPayload = {
             name: profile.name,
             email: profile.email,
@@ -462,27 +700,33 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
             throw new Error(businessResult.error)
           }
 
-          // --- PATCH /admin/settings (booking/scheduling/calendar/customer/branding) ---
-          const noShowPolicyEnum: 'NONE' | 'CHARGE_FEE' | 'RESTRICT' = bp.noShowPolicy.chargeFee ? 'CHARGE_FEE' : 'NONE'
+          // PATCH /business/settings/*
+          const bookingResult = await SettingsService.updateBookingPolicies(toApiBookingPolicies(state.bookingPolicies))
+          if (bookingResult.error) {
+            throw new Error(bookingResult.error)
+          }
 
+          const schedulingResult = await SettingsService.updateSchedulingSettings(
+            toApiSchedulingSettings(state.schedulingSettings)
+          )
+          if (schedulingResult.error) {
+            throw new Error(schedulingResult.error)
+          }
+
+          const notificationResult = await SettingsService.updateNotificationSettings(
+            toApiNotificationSettings(state.notificationSettings)
+          )
+          if (notificationResult.error) {
+            throw new Error(notificationResult.error)
+          }
+
+          const paymentResult = await SettingsService.updatePaymentSettings(toApiPaymentSettings(state.paymentSettings))
+          if (paymentResult.error) {
+            throw new Error(paymentResult.error)
+          }
+
+          // Keep legacy/global settings in sync for tabs that still use /admin/settings
           const settingsPayload: ApiBusinessSettings = {
-            bookingPolicies: {
-              bookingLeadTime: bp.bookingLeadTime,
-              maxAdvanceBooking: bp.maxAdvanceBooking,
-              autoConfirmation: bp.autoConfirmation,
-              allowCancellation: bp.cancellationPolicy.enabled,
-              cancellationDeadlineHours: bp.cancellationPolicy.hoursBeforeAppointment,
-              allowReschedule: bp.reschedulePolicy.enabled,
-              rescheduleDeadlineHours: bp.reschedulePolicy.hoursBeforeAppointment,
-              noShowPolicy: noShowPolicyEnum
-            },
-            schedulingSettings: {
-              defaultSlotDuration: ss.defaultBookingDuration,
-              bufferTimeBetweenAppointments: ss.bufferTimeBetweenBookings,
-              allowWalkIns: ss.allowWalkIns,
-              allowOverbooking: ss.allowOverbooking,
-              overbookingPercentage: ss.overbookingPercentage
-            },
             customerSettings: state.customerSettings,
             calendarSettings: {
               defaultView: state.calendarSettings.defaultView,
@@ -515,6 +759,130 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
           set({
             isSaving: false,
             error: error instanceof Error ? error.message : 'Failed to save settings'
+          })
+        }
+      },
+
+      saveBookingPoliciesSettings: async () => {
+        set({ isSaving: true, error: null })
+        try {
+          const payload = toApiBookingPolicies(get().bookingPolicies)
+          const result = await SettingsService.updateBookingPolicies(payload)
+          if (result.error) {
+            throw new Error(result.error)
+          }
+
+          if (result.data) {
+            const current = get()
+            const updates = mapApiSettingsToStore(result.data as ApiBusinessSettings, current)
+            set({ ...updates })
+          }
+
+          set({
+            isSaving: false,
+            hasUnsavedChanges: false,
+            successMessage: 'Booking policies saved successfully!'
+          })
+          setTimeout(() => {
+            set({ successMessage: null })
+          }, 3000)
+        } catch (error) {
+          set({
+            isSaving: false,
+            error: error instanceof Error ? error.message : 'Failed to save booking policies'
+          })
+        }
+      },
+
+      saveSchedulingSettings: async () => {
+        set({ isSaving: true, error: null })
+        try {
+          const payload = toApiSchedulingSettings(get().schedulingSettings)
+          const result = await SettingsService.updateSchedulingSettings(payload)
+          if (result.error) {
+            throw new Error(result.error)
+          }
+
+          if (result.data) {
+            const current = get()
+            const updates = mapApiSettingsToStore(result.data as ApiBusinessSettings, current)
+            set({ ...updates })
+          }
+
+          set({
+            isSaving: false,
+            hasUnsavedChanges: false,
+            successMessage: 'Scheduling settings saved successfully!'
+          })
+          setTimeout(() => {
+            set({ successMessage: null })
+          }, 3000)
+        } catch (error) {
+          set({
+            isSaving: false,
+            error: error instanceof Error ? error.message : 'Failed to save scheduling settings'
+          })
+        }
+      },
+
+      saveNotificationSettings: async () => {
+        set({ isSaving: true, error: null })
+        try {
+          const payload = toApiNotificationSettings(get().notificationSettings)
+          const result = await SettingsService.updateNotificationSettings(payload)
+          if (result.error) {
+            throw new Error(result.error)
+          }
+
+          if (result.data) {
+            const current = get()
+            const updates = mapApiSettingsToStore(result.data as ApiBusinessSettings, current)
+            set({ ...updates })
+          }
+
+          set({
+            isSaving: false,
+            hasUnsavedChanges: false,
+            successMessage: 'Notification settings saved successfully!'
+          })
+          setTimeout(() => {
+            set({ successMessage: null })
+          }, 3000)
+        } catch (error) {
+          set({
+            isSaving: false,
+            error: error instanceof Error ? error.message : 'Failed to save notification settings'
+          })
+        }
+      },
+
+      savePaymentSettings: async () => {
+        set({ isSaving: true, error: null })
+        try {
+          const payload = toApiPaymentSettings(get().paymentSettings)
+          const result = await SettingsService.updatePaymentSettings(payload)
+          if (result.error) {
+            throw new Error(result.error)
+          }
+
+          if (result.data) {
+            const current = get()
+            const updates = mapApiSettingsToStore(result.data as ApiBusinessSettings, current)
+            set({ ...updates })
+          }
+
+          set({
+            isSaving: false,
+            hasUnsavedChanges: false,
+            successMessage: 'Payment settings saved successfully!'
+          })
+          setTimeout(() => {
+            set({ successMessage: null })
+          }, 3000)
+        } catch (error) {
+          set({
+            isSaving: false,
+            error: error instanceof Error ? error.message : 'Failed to save payment settings'
           })
         }
       },
@@ -558,57 +926,7 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
           if (result.data) {
             const api = result.data as ApiBusinessSettings
             const current = get()
-
-            const updates: Partial<BusinessSettingsState> = {}
-
-            if (api.bookingPolicies) {
-              const apiBp = api.bookingPolicies
-              updates.bookingPolicies = {
-                ...current.bookingPolicies,
-                ...(apiBp.autoConfirmation !== undefined && { autoConfirmation: apiBp.autoConfirmation }),
-                ...(apiBp.bookingLeadTime !== undefined && { bookingLeadTime: apiBp.bookingLeadTime }),
-                ...(apiBp.maxAdvanceBooking !== undefined && { maxAdvanceBooking: apiBp.maxAdvanceBooking }),
-                cancellationPolicy: {
-                  ...current.bookingPolicies.cancellationPolicy,
-                  ...(apiBp.allowCancellation !== undefined && { enabled: apiBp.allowCancellation }),
-                  ...(apiBp.cancellationDeadlineHours !== undefined && { hoursBeforeAppointment: apiBp.cancellationDeadlineHours })
-                },
-                reschedulePolicy: {
-                  ...current.bookingPolicies.reschedulePolicy,
-                  ...(apiBp.allowReschedule !== undefined && { enabled: apiBp.allowReschedule }),
-                  ...(apiBp.rescheduleDeadlineHours !== undefined && { hoursBeforeAppointment: apiBp.rescheduleDeadlineHours })
-                },
-                noShowPolicy: {
-                  ...current.bookingPolicies.noShowPolicy,
-                  ...(apiBp.noShowPolicy !== undefined && { chargeFee: apiBp.noShowPolicy === 'CHARGE_FEE' })
-                }
-              }
-            }
-
-            if (api.schedulingSettings) {
-              const apiSs = api.schedulingSettings
-              updates.schedulingSettings = {
-                ...current.schedulingSettings,
-                ...(apiSs.defaultSlotDuration !== undefined && { defaultBookingDuration: apiSs.defaultSlotDuration }),
-                ...(apiSs.bufferTimeBetweenAppointments !== undefined && { bufferTimeBetweenBookings: apiSs.bufferTimeBetweenAppointments }),
-                ...(apiSs.allowWalkIns !== undefined && { allowWalkIns: apiSs.allowWalkIns }),
-                ...(apiSs.allowOverbooking !== undefined && { allowOverbooking: apiSs.allowOverbooking }),
-                ...(apiSs.overbookingPercentage !== undefined && { overbookingPercentage: apiSs.overbookingPercentage })
-              }
-            }
-
-            if (api.customerSettings) {
-              updates.customerSettings = { ...current.customerSettings, ...api.customerSettings }
-            }
-
-            if (api.calendarSettings) {
-              updates.calendarSettings = { ...current.calendarSettings, ...api.calendarSettings } as CalendarDisplaySettings
-            }
-
-            if (api.brandingSettings) {
-              updates.brandingSettings = { ...current.brandingSettings, ...api.brandingSettings }
-            }
-
+            const updates = mapApiSettingsToStore(api, current)
             set({ ...updates, isLoading: false })
           } else {
             set({ isLoading: false })

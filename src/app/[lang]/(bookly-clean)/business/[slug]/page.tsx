@@ -6,7 +6,6 @@ import { Avatar, Button } from '@/bookly/components/molecules'
 import { BranchDetailsModal } from '@/bookly/components/molecules/branch-details-modal/branch-details-modal.component'
 import BookingModalV2Fixed from '@/bookly/components/organisms/booking-modal/booking-modal-v2-fixed'
 import { Card, CardContent } from '@/bookly/components/ui/card'
-import { mockBusinesses, mockReviews, mockServices } from '@/bookly/data/mock-data'
 import { format } from 'date-fns'
 import {
   Facebook,
@@ -30,7 +29,6 @@ import { BusinessService, ServicesService, BranchesService, StaffService } from 
 import { GoogleMap, useJsApiLoader, OverlayView, Marker } from '@react-google-maps/api'
 import type { Business, Service as ApiService, Branch, Staff } from '@/lib/api'
 import initTranslations from '@/app/i18n/i18n'
-import { getBusinessWithDetails } from '@/mocks/businesses'
 import { useAuthStore } from '@/stores/auth.store'
 import { useSettings } from '@/contexts/settings.context'
 
@@ -50,7 +48,7 @@ interface Review {
   businessId?: string
 }
 
-function businessDetailsPage() {
+function BusinessDetailsPage() {
   const params = useParams<{ slug: string; lang: string }>()
   const [business, setBusiness] = useState<Business | null>(null)
   const [loading, setLoading] = useState(true)
@@ -103,33 +101,6 @@ function businessDetailsPage() {
         setLoading(true)
         console.log('🔍 Fetching business data for ID:', params.slug)
 
-        // Try to get business with full details from mock data first
-        const mockBusinessData = getBusinessWithDetails(params.slug)
-
-        if (mockBusinessData) {
-          console.log('✅ Using mock business data with full details')
-          // Convert BusinessLocation to Business type
-          const business: Business = {
-            id: mockBusinessData.id,
-            name: mockBusinessData.name,
-            email: mockBusinessData.email,
-            description: mockBusinessData.description,
-            approved: mockBusinessData.approved || true,
-            rating: mockBusinessData.rating,
-            socialLinks: mockBusinessData.socialLinks,
-            services: mockBusinessData.services,
-            branches: (mockBusinessData.fullBranches || mockBusinessData.branches) as any[],
-            reviews: mockBusinessData.reviews as any,
-            logoUrl: mockBusinessData.logoUrl,
-            coverImageUrl: mockBusinessData.coverImageUrl
-          } as any
-          setBusiness(business)
-          setError(null)
-          setLoading(false)
-          return
-        }
-
-        // Fall back to API call
         const businessResponse = await BusinessService.getBusiness(params.slug)
 
         if (businessResponse.error) {
@@ -143,72 +114,9 @@ function businessDetailsPage() {
           throw new Error('No business data received')
         }
       } catch (err) {
-        console.warn('Failed to fetch business data, using generic fallback:', err)
-
-        // Generic fallback for unknown businesses
-        const mockBusiness: Business = {
-          id: params.slug,
-          name: 'Demo Beauty Salon',
-          email: 'demo@bookly.com',
-          description: 'A modern beauty salon offering hair and spa services.',
-          approved: true,
-          rating: 4.8,
-          socialLinks: [
-            { platform: 'facebook', url: 'https://facebook.com/bookly' },
-            { platform: 'instagram', url: 'https://instagram.com/bookly' }
-          ],
-          services: [
-            {
-              id: 'service-1',
-              name: 'Massage',
-              description: 'Relaxing full body massage',
-              location: 'Main Location',
-              price: 20,
-              duration: 60,
-              businessId: params.slug,
-              createdAt: '',
-              updatedAt: ''
-            },
-            {
-              id: 'service-2',
-              name: 'Facial Treatment',
-              description: 'Facial Treatment and Facial Skin Care',
-              location: 'Main Location',
-              price: 33,
-              duration: 90,
-              businessId: params.slug,
-              createdAt: '',
-              updatedAt: ''
-            }
-          ],
-          branches: [
-            {
-              id: 'branch-1',
-              name: 'Main Branch',
-              address: 'Downtown Cairo, Egypt',
-              mobile: '0232323232',
-              businessId: params.slug,
-              latitude: 30.0444,
-              longitude: 31.2357,
-              staff: [
-                {
-                  id: 'staff-1',
-                  name: 'Staff Member 1',
-                  mobile: '01010012212',
-                  branchId: 'branch-1',
-                  businessId: params.slug,
-                  createdAt: '',
-                  updatedAt: ''
-                }
-              ],
-              createdAt: '',
-              updatedAt: ''
-            }
-          ]
-        }
-
-        setBusiness(mockBusiness)
-        setError(null)
+        console.error('Failed to fetch business data:', err)
+        setBusiness(null)
+        setError('Failed to load business details.')
       } finally {
         setLoading(false)
       }
@@ -1075,4 +983,4 @@ function businessDetailsPage() {
   )
 }
 
-export default businessDetailsPage
+export default BusinessDetailsPage

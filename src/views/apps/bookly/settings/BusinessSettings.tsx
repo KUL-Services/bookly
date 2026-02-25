@@ -18,6 +18,7 @@ import Alert from '@mui/material/Alert'
 import Snackbar from '@mui/material/Snackbar'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
+import Chip from '@mui/material/Chip'
 
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
@@ -224,7 +225,12 @@ const BusinessSettings = () => {
                 sx={{ fontFamily: 'inherit' }}
               />
               <Tab
-                label='Customer Options'
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    Customer Options
+                    <Chip label='Coming Soon' size='small' variant='outlined' color='info' sx={{ height: 18, fontSize: '0.6rem' }} />
+                  </Box>
+                }
                 icon={<i className='ri-user-settings-line' />}
                 iconPosition='start'
                 value='customer'

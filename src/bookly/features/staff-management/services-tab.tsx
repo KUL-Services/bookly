@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Box,
   Paper,
@@ -26,7 +26,6 @@ import {
   InputLabel,
   Select,
   Fab,
-  Chip,
   CircularProgress,
   Alert
 } from '@mui/material'
@@ -98,8 +97,11 @@ export function ServicesTab() {
   } = useServicesStore()
 
   useEffect(() => {
-    fetchServices()
-    fetchCategories()
+    const load = async () => {
+      await fetchServices()
+      await fetchCategories()
+    }
+    load()
   }, [])
 
   const filteredServices = getFilteredServices()
@@ -108,6 +110,14 @@ export function ServicesTab() {
 
   // Count uncategorized services
   const uncategorizedCount = services.filter(s => !s.categoryId).length
+  const categoryServiceCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    services.forEach(service => {
+      if (!service.categoryId) return
+      counts.set(service.categoryId, (counts.get(service.categoryId) || 0) + 1)
+    })
+    return counts
+  }, [services])
 
   const handleOpenActionMenu = (event: React.MouseEvent<HTMLElement>) => {
     setActionMenuAnchor(event.currentTarget)
@@ -143,10 +153,15 @@ export function ServicesTab() {
     setServiceToDelete(null)
   }
 
+  const getDisplayCategoryName = (name?: string) => {
+    if (!name) return 'Other'
+    return name.trim().toLowerCase() === 'uncategorized' ? 'Other' : name
+  }
+
   const getCategoryName = (categoryId?: string) => {
-    if (!categoryId) return 'Uncategorized'
+    if (!categoryId) return 'Other'
     const category = categories.find(c => c.id === categoryId)
-    return category?.name || 'Unknown'
+    return getDisplayCategoryName(category?.name || 'Unknown')
   }
 
   // Category context menu handlers
@@ -236,9 +251,9 @@ export function ServicesTab() {
           />
         </Box>
 
-        {/* Categories */}
-        <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+        {/* Categories - Stable vertical list */}
+        <Box sx={{ borderBottom: '1px solid', borderColor: 'divider', maxHeight: 260, overflow: 'auto', py: 1 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2, pt: 0.5, pb: 1 }}>
             <Typography variant='caption' fontWeight={600} color='text.secondary' sx={{ textTransform: 'uppercase' }}>
               Categories
             </Typography>
@@ -247,102 +262,188 @@ export function ServicesTab() {
             </IconButton>
           </Box>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            <Chip
-              label='All'
-              size='small'
+          <List disablePadding sx={{ px: 1 }}>
+            <ListItemButton
+              selected={selectedCategoryId === null}
               onClick={() => setSelectedCategory(null)}
-              color={selectedCategoryId === null ? 'primary' : 'default'}
-              variant={selectedCategoryId === null ? 'filled' : 'outlined'}
-            />
-            <Chip
-              label={`Uncategorized (${uncategorizedCount})`}
-              size='small'
+              sx={{
+                py: 1,
+                px: 1.5,
+                borderRadius: 1.5,
+                mb: 0.5,
+                '&.Mui-selected': {
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText'
+                },
+                '&.Mui-selected:hover': {
+                  bgcolor: 'primary.dark'
+                },
+                '&.Mui-selected .MuiTypography-root': {
+                  color: 'inherit'
+                }
+              }}
+            >
+              <ListItemText
+                primary='All Services'
+                secondary={`${services.length} services`}
+                primaryTypographyProps={{ variant: 'body2', fontWeight: selectedCategoryId === null ? 700 : 500 }}
+                secondaryTypographyProps={{ variant: 'caption' }}
+              />
+              <Box
+                className='category-count'
+                sx={{
+                  minWidth: 26,
+                  px: 0.75,
+                  py: 0.125,
+                  borderRadius: 10,
+                  textAlign: 'center',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  bgcolor: selectedCategoryId === null ? 'rgba(255,255,255,0.2)' : 'action.selected',
+                  color: selectedCategoryId === null ? '#fff' : 'text.secondary'
+                }}
+              >
+                {services.length}
+              </Box>
+            </ListItemButton>
+            <ListItemButton
+              selected={selectedCategoryId === 'uncategorized'}
               onClick={() => setSelectedCategory('uncategorized')}
-              color={selectedCategoryId === 'uncategorized' ? 'primary' : 'default'}
-              variant={selectedCategoryId === 'uncategorized' ? 'filled' : 'outlined'}
-            />
+              sx={{
+                py: 1,
+                px: 1.5,
+                borderRadius: 1.5,
+                mb: 0.5,
+                '&.Mui-selected': {
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText'
+                },
+                '&.Mui-selected:hover': {
+                  bgcolor: 'primary.dark'
+                },
+                '&.Mui-selected .MuiTypography-root': {
+                  color: 'inherit'
+                }
+              }}
+            >
+              <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'text.disabled', mr: 1.5, flexShrink: 0 }} />
+              <ListItemText
+                primary='Other'
+                secondary={`${uncategorizedCount} service${uncategorizedCount === 1 ? '' : 's'}`}
+                primaryTypographyProps={{ variant: 'body2', fontWeight: selectedCategoryId === 'uncategorized' ? 700 : 500 }}
+                secondaryTypographyProps={{ variant: 'caption' }}
+              />
+              <Box
+                className='category-count'
+                sx={{
+                  minWidth: 26,
+                  px: 0.75,
+                  py: 0.125,
+                  borderRadius: 10,
+                  textAlign: 'center',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  bgcolor: selectedCategoryId === 'uncategorized' ? 'rgba(255,255,255,0.2)' : 'action.selected',
+                  color: selectedCategoryId === 'uncategorized' ? '#fff' : 'text.secondary'
+                }}
+              >
+                {uncategorizedCount}
+              </Box>
+            </ListItemButton>
             {categories.map(category => {
-              const count = services.filter(s => s.categoryId === category.id).length
+              const count = categoryServiceCounts.get(category.id) || 0
               const isSelected = selectedCategoryId === category.id
               return (
-                <Chip
+                <ListItemButton
                   key={category.id}
-                  size='small'
+                  selected={isSelected}
                   onClick={() => setSelectedCategory(category.id)}
-                  color={isSelected ? 'primary' : 'default'}
-                  variant={isSelected ? 'filled' : 'outlined'}
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <span>
-                        {category.name} ({count})
-                      </span>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          ml: 0.5,
-                          gap: 0.25
-                        }}
-                      >
-                        <Box
-                          component='span'
-                          onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation()
-                            openCategoryDialog(category)
-                          }}
-                          sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: 18,
-                            height: 18,
-                            borderRadius: '50%',
-                            cursor: 'pointer',
-                            '&:hover': {
-                              bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'action.hover'
-                            }
-                          }}
-                        >
-                          <i className='ri-edit-line' style={{ fontSize: 11 }} />
-                        </Box>
-                        <Box
-                          component='span'
-                          onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation()
-                            setCategoryToDelete(category.id)
-                            setDeleteCategoryDialogOpen(true)
-                          }}
-                          sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: 18,
-                            height: 18,
-                            borderRadius: '50%',
-                            cursor: 'pointer',
-                            '&:hover': {
-                              bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'error.lighter',
-                              color: isSelected ? 'inherit' : 'error.main'
-                            }
-                          }}
-                        >
-                          <i className='ri-close-line' style={{ fontSize: 12 }} />
-                        </Box>
-                      </Box>
-                    </Box>
-                  }
                   sx={{
-                    cursor: 'pointer',
-                    '& .MuiChip-label': {
-                      pr: 0.75,
-                      pl: 1
+                    py: 1,
+                    px: 1.5,
+                    borderRadius: 1.5,
+                    mb: 0.5,
+                    '& .category-actions': { opacity: 0, transition: 'opacity 0.15s ease' },
+                    '&:hover .category-actions': { opacity: 1 },
+                    '&.Mui-selected .category-actions': { opacity: 1 },
+                    '&.Mui-selected': {
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText'
+                    },
+                    '&.Mui-selected:hover': {
+                      bgcolor: 'primary.dark'
+                    },
+                    '&.Mui-selected .MuiTypography-root': {
+                      color: 'inherit'
                     }
                   }}
-                />
+                >
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      bgcolor: category.color || 'primary.main',
+                      mr: 1.5,
+                      flexShrink: 0
+                    }}
+                  />
+                  <ListItemText
+                    primary={getDisplayCategoryName(category.name)}
+                    secondary={`${count} service${count === 1 ? '' : 's'}`}
+                    primaryTypographyProps={{ variant: 'body2', fontWeight: isSelected ? 700 : 500 }}
+                    secondaryTypographyProps={{ variant: 'caption' }}
+                  />
+                  <Box
+                    className='category-count'
+                    sx={{
+                      minWidth: 26,
+                      px: 0.75,
+                      py: 0.125,
+                      borderRadius: 10,
+                      textAlign: 'center',
+                      fontSize: 11,
+                      fontWeight: 600,
+                      bgcolor: isSelected ? 'rgba(255,255,255,0.2)' : 'action.selected',
+                      color: isSelected ? '#fff' : 'text.secondary'
+                    }}
+                  >
+                    {count}
+                  </Box>
+                  <Box className='category-actions' sx={{ display: 'flex', gap: 0.25, ml: 0.5 }}>
+                    <IconButton
+                      size='small'
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        openCategoryDialog(category)
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: isSelected ? 'rgba(255,255,255,0.92)' : 'text.secondary'
+                      }}
+                    >
+                      <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                    </IconButton>
+                    <IconButton
+                      size='small'
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation()
+                        setCategoryToDelete(category.id)
+                        setDeleteCategoryDialogOpen(true)
+                      }}
+                      sx={{
+                        p: 0.25,
+                        color: isSelected ? 'rgba(255,255,255,0.92)' : 'text.secondary',
+                        '&:hover': { color: 'error.main' }
+                      }}
+                    >
+                      <i className='ri-close-line' style={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Box>
+                </ListItemButton>
               )
             })}
-          </Box>
+          </List>
         </Box>
 
         {/* Services List */}
@@ -508,32 +609,28 @@ export function ServicesTab() {
 
             {/* Tabs */}
             <Tabs value={currentTab} onChange={(_, newValue) => setCurrentTab(newValue)} sx={{ mt: 3 }}>
-              <Tab label='Details' />
-              <Tab label='Settings' />
+              <Tab label='General Details' />
+              <Tab label='Staff & Rooms' />
+              <Tab label='Resources' />
             </Tabs>
           </Box>
 
           {/* Tab Panels */}
           <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
-            {/* Details Tab */}
+            {/* General Details Tab */}
             <TabPanel value={currentTab} index={0}>
               <Box sx={{ px: 3 }}>
-                {selectedService.description && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 1 }}>
-                      Description
-                    </Typography>
-                    <Typography variant='body2' color='text.secondary'>
-                      {selectedService.description}
-                    </Typography>
-                  </Box>
-                )}
-
+                {/* Main Details */}
                 <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 2 }}>
-                  Service Information
+                  Main Details
                 </Typography>
-
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
+                  <Paper variant='outlined' sx={{ p: 2 }}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Service Name
+                    </Typography>
+                    <Typography variant='body1' fontWeight={500}>{selectedService.name}</Typography>
+                  </Paper>
                   <Paper variant='outlined' sx={{ p: 2 }}>
                     <Typography variant='caption' color='text.secondary'>
                       Category
@@ -542,18 +639,27 @@ export function ServicesTab() {
                   </Paper>
                   <Paper variant='outlined' sx={{ p: 2 }}>
                     <Typography variant='caption' color='text.secondary'>
-                      Parallel Clients
+                      Price
                     </Typography>
-                    <Typography variant='body1'>{selectedService.parallelClients || 1}</Typography>
+                    <Typography variant='body1' fontWeight={500} color='primary'>
+                      EGP {selectedService.price.toFixed(2)}
+                    </Typography>
+                  </Paper>
+                  <Paper variant='outlined' sx={{ p: 2 }}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Duration
+                    </Typography>
+                    <Typography variant='body1' fontWeight={500}>
+                      {formatDuration(selectedService.duration)}
+                    </Typography>
                   </Paper>
                 </Box>
-              </Box>
-            </TabPanel>
 
-            {/* Settings Tab */}
-            <TabPanel value={currentTab} index={1}>
-              <Box sx={{ px: 3 }}>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                {/* Booking Settings */}
+                <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 2 }}>
+                  Booking Settings
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
                   {selectedService.bookingInterval && (
                     <Paper variant='outlined' sx={{ p: 2 }}>
                       <Typography variant='caption' color='text.secondary'>
@@ -578,36 +684,59 @@ export function ServicesTab() {
                       </Typography>
                     </Paper>
                   )}
-                  {selectedService.processingTime && (
-                    <Paper variant='outlined' sx={{ p: 2 }}>
-                      <Typography variant='caption' color='text.secondary'>
-                        Processing Time
-                      </Typography>
-                      <Typography variant='body1'>
-                        {selectedService.processingTime.during.hours > 0 ||
-                        selectedService.processingTime.during.minutes > 0
-                          ? `During: ${selectedService.processingTime.during.hours}h ${selectedService.processingTime.during.minutes}min`
-                          : selectedService.processingTime.after.hours > 0 ||
-                              selectedService.processingTime.after.minutes > 0
-                            ? `After: ${selectedService.processingTime.after.hours}h ${selectedService.processingTime.after.minutes}min`
-                            : 'Not set'}
-                      </Typography>
-                    </Paper>
-                  )}
                   {selectedService.taxRate && (
                     <Paper variant='outlined' sx={{ p: 2 }}>
                       <Typography variant='caption' color='text.secondary'>
                         Tax Rate
                       </Typography>
                       <Typography variant='body1'>
-                        {selectedService.taxRate !== 'tax_free' ? `${selectedService.taxRate}%` : 'Tax Free'}
+                        {selectedService.taxRate === 'custom'
+                          ? `${selectedService.customTaxRate || 0}%`
+                          : selectedService.taxRate !== 'tax_free'
+                            ? `${selectedService.taxRate}%`
+                            : 'Tax Free'}
                       </Typography>
                     </Paper>
                   )}
                 </Box>
 
+                {/* Additional Details */}
+                {(selectedService.description || selectedService.color) && (
+                  <>
+                    <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 2 }}>
+                      Additional Details
+                    </Typography>
+                    {selectedService.description && (
+                      <Paper variant='outlined' sx={{ p: 2, mb: 2 }}>
+                        <Typography variant='caption' color='text.secondary'>
+                          Description
+                        </Typography>
+                        <Typography variant='body2'>{selectedService.description}</Typography>
+                      </Paper>
+                    )}
+                    {selectedService.color && (
+                      <Paper variant='outlined' sx={{ p: 2, mb: 2 }}>
+                        <Typography variant='caption' color='text.secondary' sx={{ mb: 0.5, display: 'block' }}>
+                          Color
+                        </Typography>
+                        <Box
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: 1,
+                            bgcolor: selectedService.color,
+                            border: '1px solid',
+                            borderColor: 'divider'
+                          }}
+                        />
+                      </Paper>
+                    )}
+                  </>
+                )}
+
+                {/* Client Settings */}
                 {selectedService.clientSettings && (
-                  <Box sx={{ mt: 3 }}>
+                  <Box sx={{ mt: 1 }}>
                     <Typography variant='subtitle2' fontWeight={600} sx={{ mb: 2 }}>
                       Client Settings
                     </Typography>
@@ -632,6 +761,50 @@ export function ServicesTab() {
                       )}
                   </Box>
                 )}
+              </Box>
+            </TabPanel>
+
+            {/* Staff & Rooms Tab */}
+            <TabPanel value={currentTab} index={1}>
+              <Box sx={{ px: 3 }}>
+                <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                  <i className='ri-team-line' style={{ fontSize: 48, opacity: 0.3 }} />
+                  <Typography variant='body1' sx={{ mt: 2, mb: 1 }}>
+                    Staff & Room Assignments
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    Manage which staff members and rooms are assigned to this service.
+                  </Typography>
+                  <Button
+                    variant='outlined'
+                    startIcon={<i className='ri-settings-3-line' />}
+                    onClick={() => openServiceDialog(selectedService)}
+                  >
+                    Manage Assignments
+                  </Button>
+                </Box>
+              </Box>
+            </TabPanel>
+
+            {/* Resources Tab */}
+            <TabPanel value={currentTab} index={2}>
+              <Box sx={{ px: 3 }}>
+                <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                  <i className='ri-archive-line' style={{ fontSize: 48, opacity: 0.3 }} />
+                  <Typography variant='body1' sx={{ mt: 2, mb: 1 }}>
+                    Resource Assignments
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    Manage resources (equipment, tools, etc.) assigned to this service.
+                  </Typography>
+                  <Button
+                    variant='outlined'
+                    startIcon={<i className='ri-settings-3-line' />}
+                    onClick={() => openServiceDialog(selectedService)}
+                  >
+                    Manage Resources
+                  </Button>
+                </Box>
               </Box>
             </TabPanel>
           </Box>
@@ -714,14 +887,14 @@ export function ServicesTab() {
         <DialogTitle sx={{ pb: 1 }}>Delete Category</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete <strong>"{categoryBeingDeleted?.name}"</strong>?
+            Are you sure you want to delete <strong>&quot;{getDisplayCategoryName(categoryBeingDeleted?.name)}&quot;</strong>?
             {servicesInCategoryToDelete > 0 && (
               <>
                 <br />
                 <br />
                 <Typography component='span' color='warning.main' sx={{ fontWeight: 500 }}>
                   {servicesInCategoryToDelete} service{servicesInCategoryToDelete > 1 ? 's' : ''} will be moved to
-                  "Uncategorized".
+                  &quot;Other&quot;.
                 </Typography>
               </>
             )}

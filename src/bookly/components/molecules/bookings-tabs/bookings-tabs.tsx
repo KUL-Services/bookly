@@ -4,10 +4,7 @@ import { Card } from '../../ui/card'
 import Button from '../button/button.component'
 import { Badge } from '../../atoms/base-badge/badge'
 import { H3, H4, KulIcon, P } from '../../atoms'
-import { mockBusinesses } from '@/bookly/data/mock-data'
 import { useRouter } from 'next/navigation'
-
-const mockData = mockBusinesses[0]
 
 const upcomingBookings = [
   {
@@ -20,7 +17,7 @@ const upcomingBookings = [
     price: 'E£65',
     status: 'Confirmed',
     notes: 'Please trim split ends and add light layers',
-    image: `${mockData.galleryImages[1]}`
+    image: '/images/illustrations/characters/10.png'
   },
   {
     id: 2,
@@ -32,7 +29,7 @@ const upcomingBookings = [
     price: 'E£35',
     status: 'Confirmed',
     notes: '',
-    image: `${mockData.galleryImages[2]}`
+    image: '/images/illustrations/characters/11.png'
   }
 ]
 
@@ -47,7 +44,7 @@ const pastBookings = [
     price: 'E£85',
     status: 'Completed',
     notes: '',
-    image: `${mockBusinesses[2].galleryImages[1]}`
+    image: '/images/illustrations/characters/12.png'
   },
   {
     id: 4,
@@ -59,7 +56,7 @@ const pastBookings = [
     price: 'E£50',
     status: 'Completed',
     notes: '',
-    image: `${mockBusinesses[1].galleryImages[0]}`
+    image: '/images/illustrations/characters/13.png'
   }
 ]
 

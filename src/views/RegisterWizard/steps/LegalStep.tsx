@@ -84,7 +84,7 @@ const LegalStep = ({
           </Box>
           <Box className="flex justify-between">
             <Typography variant="body2" color="text.secondary">URL:</Typography>
-            <Typography variant="body2">bookly.com/{formData.publicUrlSlug}</Typography>
+            <Typography variant="body2">zerv.app/{formData.publicUrlSlug}</Typography>
           </Box>
         </div>
       </Paper>

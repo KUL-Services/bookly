@@ -53,10 +53,11 @@ export class SchedulingService {
 
   // --- Exceptions ---
 
-  static async getExceptions(params?: { resourceId?: string; branchId?: string }) {
+  static async getExceptions(params?: { resourceId?: string; branchId?: string; includeBusinessWide?: boolean }) {
     const queryParams = new URLSearchParams()
     if (params?.resourceId) queryParams.append('resourceId', params.resourceId)
     if (params?.branchId) queryParams.append('branchId', params.branchId)
+    if (params?.includeBusinessWide) queryParams.append('includeBusinessWide', 'true')
     const url = queryParams.toString()
       ? `/admin/scheduling/exceptions?${queryParams.toString()}`
       : '/admin/scheduling/exceptions'

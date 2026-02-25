@@ -20,7 +20,6 @@ import {
 } from '@mui/material'
 import { useCalendarStore } from './state'
 import type { CalendarEvent, AppointmentStatus } from './types'
-import { mockStaff } from '@/bookly/data/mock-data'
 import { formatDuration } from './utils'
 import { useMediaQuery, useTheme } from '@mui/material'
 
@@ -37,6 +36,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
   const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
   const getSlotsForDate = useCalendarStore(state => state.getSlotsForDate)
+  const allStaff = useCalendarStore(state => state.staff)
 
   // Local state for form
   const [activeTab, setActiveTab] = useState(0)
@@ -195,7 +195,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
 
   const handleStaffChange = (newStaffId: string) => {
     setStaffId(newStaffId)
-    const staff = mockStaff.find(s => s.id === newStaffId)
+    const staff = allStaff.find((s: any) => s.id === newStaffId)
     if (staff) {
       setStaffName(staff.name)
     }
@@ -462,7 +462,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 }}
                 helperText={extendedProps.slotId ? 'Instructor is assigned to the slot' : undefined}
               >
-                {mockStaff.map(staff => (
+                {allStaff.map((staff: any) => (
                   <option key={staff.id} value={staff.id}>
                     {staff.name}
                   </option>

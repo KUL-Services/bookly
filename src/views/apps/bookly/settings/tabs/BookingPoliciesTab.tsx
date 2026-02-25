@@ -14,15 +14,34 @@ import Divider from '@mui/material/Divider'
 import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
 import InputAdornment from '@mui/material/InputAdornment'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import Button from '@mui/material/Button'
 
 // Store
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 
 const BookingPoliciesTab = () => {
-  const { bookingPolicies, updateBookingPolicies } = useBusinessSettingsStore()
+  const { bookingPolicies, updateBookingPolicies, saveBookingPoliciesSettings, isSaving } = useBusinessSettingsStore()
 
   return (
     <Grid container spacing={6}>
+      <Grid item xs={12}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant='contained'
+            onClick={saveBookingPoliciesSettings}
+            disabled={isSaving}
+            startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
+          >
+            {isSaving ? 'Saving...' : 'Save Booking Policies'}
+          </Button>
+        </Box>
+      </Grid>
+
       {/* General Booking Settings */}
       <Grid item xs={12} md={6}>
         <Card>
@@ -58,29 +77,77 @@ const BookingPoliciesTab = () => {
 
               <Divider />
 
-              <TextField
-                label='Minimum Booking Lead Time'
-                type='number'
-                value={bookingPolicies.bookingLeadTime}
-                onChange={e => updateBookingPolicies({ bookingLeadTime: Math.max(0, parseInt(e.target.value) || 0) })}
-                InputProps={{
-                  endAdornment: <InputAdornment position='end'>hours</InputAdornment>
-                }}
-                helperText='How far in advance customers must book (0 = allow same-day bookings)'
-                size='small'
-              />
+              <Box>
+                <FormControl fullWidth size='small'>
+                  <InputLabel>Minimum Booking Lead Time</InputLabel>
+                  <Select
+                    value={[0, 1, 2, 4, 8, 12, 24].includes(bookingPolicies.bookingLeadTime) ? bookingPolicies.bookingLeadTime : 'custom'}
+                    label='Minimum Booking Lead Time'
+                    onChange={e => {
+                      const val = e.target.value
+                      if (val !== 'custom') updateBookingPolicies({ bookingLeadTime: val as number })
+                    }}
+                  >
+                    <MenuItem value={0}>No minimum</MenuItem>
+                    <MenuItem value={1}>1 hour</MenuItem>
+                    <MenuItem value={2}>2 hours</MenuItem>
+                    <MenuItem value={4}>4 hours</MenuItem>
+                    <MenuItem value={8}>8 hours</MenuItem>
+                    <MenuItem value={12}>12 hours</MenuItem>
+                    <MenuItem value={24}>24 hours</MenuItem>
+                    <MenuItem value='custom'>Custom</MenuItem>
+                  </Select>
+                </FormControl>
+                {![0, 1, 2, 4, 8, 12, 24].includes(bookingPolicies.bookingLeadTime) && (
+                  <TextField
+                    type='number'
+                    value={bookingPolicies.bookingLeadTime}
+                    onChange={e => updateBookingPolicies({ bookingLeadTime: Math.max(0, parseInt(e.target.value) || 0) })}
+                    InputProps={{ endAdornment: <InputAdornment position='end'>hours</InputAdornment> }}
+                    size='small'
+                    fullWidth
+                    sx={{ mt: 1 }}
+                  />
+                )}
+                <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
+                  How far in advance customers must book
+                </Typography>
+              </Box>
 
-              <TextField
-                label='Maximum Advance Booking'
-                type='number'
-                value={bookingPolicies.maxAdvanceBooking}
-                onChange={e => updateBookingPolicies({ maxAdvanceBooking: Math.max(1, parseInt(e.target.value) || 1) })}
-                InputProps={{
-                  endAdornment: <InputAdornment position='end'>days</InputAdornment>
-                }}
-                helperText='How far ahead customers can book'
-                size='small'
-              />
+              <Box>
+                <FormControl fullWidth size='small'>
+                  <InputLabel>Maximum Advance Booking</InputLabel>
+                  <Select
+                    value={[7, 14, 30, 60, 90].includes(bookingPolicies.maxAdvanceBooking) ? bookingPolicies.maxAdvanceBooking : 'custom'}
+                    label='Maximum Advance Booking'
+                    onChange={e => {
+                      const val = e.target.value
+                      if (val !== 'custom') updateBookingPolicies({ maxAdvanceBooking: val as number })
+                    }}
+                  >
+                    <MenuItem value={7}>7 days</MenuItem>
+                    <MenuItem value={14}>14 days</MenuItem>
+                    <MenuItem value={30}>30 days</MenuItem>
+                    <MenuItem value={60}>60 days</MenuItem>
+                    <MenuItem value={90}>90 days</MenuItem>
+                    <MenuItem value='custom'>Custom</MenuItem>
+                  </Select>
+                </FormControl>
+                {![7, 14, 30, 60, 90].includes(bookingPolicies.maxAdvanceBooking) && (
+                  <TextField
+                    type='number'
+                    value={bookingPolicies.maxAdvanceBooking}
+                    onChange={e => updateBookingPolicies({ maxAdvanceBooking: Math.max(1, parseInt(e.target.value) || 1) })}
+                    InputProps={{ endAdornment: <InputAdornment position='end'>days</InputAdornment> }}
+                    size='small'
+                    fullWidth
+                    sx={{ mt: 1 }}
+                  />
+                )}
+                <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
+                  How far ahead customers can book
+                </Typography>
+              </Box>
             </Box>
           </CardContent>
         </Card>
@@ -294,23 +361,43 @@ const BookingPoliciesTab = () => {
               />
 
               {bookingPolicies.noShowPolicy.restrictFutureBookings && (
-                <TextField
-                  label='Restriction Period'
-                  type='number'
-                  value={bookingPolicies.noShowPolicy.restrictionDays}
-                  onChange={e =>
-                    updateBookingPolicies({
-                      noShowPolicy: {
-                        ...bookingPolicies.noShowPolicy,
-                        restrictionDays: Math.max(1, parseInt(e.target.value) || 1)
-                      }
-                    })
-                  }
-                  InputProps={{
-                    endAdornment: <InputAdornment position='end'>days</InputAdornment>
-                  }}
-                  size='small'
-                />
+                <>
+                  <TextField
+                    label='After how many no-shows?'
+                    type='number'
+                    value={bookingPolicies.noShowPolicy.restrictAfterCount ?? 3}
+                    onChange={e =>
+                      updateBookingPolicies({
+                        noShowPolicy: {
+                          ...bookingPolicies.noShowPolicy,
+                          restrictAfterCount: Math.max(1, parseInt(e.target.value) || 1)
+                        }
+                      })
+                    }
+                    InputProps={{
+                      endAdornment: <InputAdornment position='end'>no-shows</InputAdornment>
+                    }}
+                    helperText='Number of no-shows before restrictions apply'
+                    size='small'
+                  />
+                  <TextField
+                    label='Restriction Period'
+                    type='number'
+                    value={bookingPolicies.noShowPolicy.restrictionDays}
+                    onChange={e =>
+                      updateBookingPolicies({
+                        noShowPolicy: {
+                          ...bookingPolicies.noShowPolicy,
+                          restrictionDays: Math.max(1, parseInt(e.target.value) || 1)
+                        }
+                      })
+                    }
+                    InputProps={{
+                      endAdornment: <InputAdornment position='end'>days</InputAdornment>
+                    }}
+                    size='small'
+                  />
+                </>
               )}
             </Box>
           </CardContent>

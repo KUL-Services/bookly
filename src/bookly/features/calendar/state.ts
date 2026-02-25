@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { mockStaff as fallbackMockStaff } from '@/bookly/data/mock-data'
 import { mapBookingToEvent, mapApiBookingToEvent, filterEvents, generateColorFromName } from './utils'
 import {
   timeOffToCalendarEvent,
@@ -285,29 +284,82 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   isLoading: false,
 
   fetchEvents: async (range: DateRange) => {
-    console.log('⚡ State: fetchEvents called with range:', range)
     set({ isLoading: true })
     try {
+      const { starredIds, searchQuery, branchFilters, staffFilters } = get()
+
       // Use date strings YYYY-MM-DD
       const fromDate = range.start.toISOString().split('T')[0]
       const toDate = range.end.toISOString().split('T')[0]
+      const trimmedSearch = searchQuery.trim()
+      const singleBranchId =
+        !branchFilters.allBranches && branchFilters.branchIds.length === 1 ? branchFilters.branchIds[0] : undefined
+      const singleStaffId =
+        !staffFilters.onlyMe && staffFilters.staffIds.length === 1 ? staffFilters.staffIds[0] : undefined
 
       const bookings = await BookingService.getBusinessBookings({
         fromDate,
         toDate,
+        branchId: singleBranchId,
+        staffId: singleStaffId,
+        search: trimmedSearch || undefined,
+        sortBy: 'startTime',
+        sortOrder: 'asc',
         pageSize: 1000 // Get enough for calendar
       })
-
-      const starredIds = get().starredIds
 
       // Handle paginated response structure: { data: { data: [], total: ... } } OR direct array
       const bookingsData = bookings.data
       const bookingsArray = Array.isArray(bookingsData) ? bookingsData : (bookingsData as any)?.data || []
 
       const apiEvents = bookingsArray.map((b: any) => mapApiBookingToEvent(b, starredIds))
+      const matchedIds = new Set<string>()
+      const matchedFields = new Map<string, string[]>()
+
+      if (trimmedSearch) {
+        bookingsArray.forEach((booking: any, index: number) => {
+          const event = apiEvents[index]
+          if (!event) return
+
+          const backendMatchedFields = Array.isArray(booking?.matchedFields)
+            ? booking.matchedFields.filter((field: unknown): field is string => typeof field === 'string')
+            : []
+
+          const eventMatchedFields =
+            backendMatchedFields.length > 0
+              ? backendMatchedFields
+              : (() => {
+                  const query = trimmedSearch.toLowerCase()
+                  const props = event.extendedProps
+                  const fieldsToSearch = [
+                    { name: 'Ref', value: props.bookingReference || props.bookingId || '' },
+                    { name: 'Name', value: props.customerName || '' },
+                    { name: 'Phone', value: props.customerPhone || '' },
+                    { name: 'Email', value: props.customerEmail || '' },
+                    { name: 'Staff', value: props.staffName || '' },
+                    { name: 'Service', value: props.serviceName || '' }
+                  ]
+                  return fieldsToSearch
+                    .filter(field => field.value.toLowerCase().includes(query))
+                    .map(field => field.name)
+                })()
+
+          if (eventMatchedFields.length > 0) {
+            matchedIds.add(event.id)
+            matchedFields.set(event.id, eventMatchedFields)
+          }
+        })
+      }
+
       const backgroundEvents = generateBackgroundEvents()
 
-      set({ events: [...apiEvents, ...backgroundEvents], isLoading: false })
+      set({
+        events: [...apiEvents, ...backgroundEvents],
+        searchMatchedEventIds: trimmedSearch ? matchedIds : new Set<string>(),
+        searchMatchedFields: trimmedSearch ? matchedFields : new Map<string, string[]>(),
+        isSearchActive: !!trimmedSearch,
+        isLoading: false
+      })
     } catch (error) {
       console.error('Failed to fetch events:', error)
       set({ isLoading: false, lastActionError: 'Failed to load bookings' })
@@ -951,8 +1003,8 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   },
 
   isStaffAvailableForBooking: (staffId, start, end, excludeEventId) => {
-    // Get the staff member from store (API data) first, fallback to mock
-    const staffMember = get().staff.find((s: any) => s.id === staffId) || fallbackMockStaff.find(s => s.id === staffId)
+    // Read max concurrency from loaded staff state
+    const staffMember = get().staff.find((s: any) => s.id === staffId)
     const maxAllowed = staffMember?.maxConcurrentBookings || 1 // Default to 1 if not specified
 
     // Get concurrent bookings
@@ -1241,67 +1293,32 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
   // Search actions
   setSearchQuery: (query: string) => {
-    const { events } = get()
-    const trimmedQuery = query.trim().toLowerCase()
+    const trimmedQuery = query.trim()
+    const { visibleDateRange } = get()
 
     if (!trimmedQuery) {
-      // Clear search when query is empty
       set({
         searchQuery: '',
         searchMatchedEventIds: new Set<string>(),
         searchMatchedFields: new Map<string, string[]>(),
         isSearchActive: false
       })
+      if (visibleDateRange) {
+        void get().fetchEvents(visibleDateRange)
+      }
       return
     }
 
-    // Search through events by:
-    // - Booking reference (bookingId)
-    // - Customer name
-    // - Customer phone
-    // - Customer email
-    // - Staff name
-    // - Service name
-    const matchedIds = new Set<string>()
-    const matchedFields = new Map<string, string[]>()
-
-    events.forEach(event => {
-      const props = event.extendedProps
-
-      // Skip non-booking events (time off, reservations)
-      if (props.type === 'timeOff' || props.type === 'reservation') {
-        return
-      }
-
-      const fieldsToSearch = [
-        { name: 'Ref', value: props.bookingId?.toLowerCase() || '' },
-        { name: 'Name', value: props.customerName?.toLowerCase() || '' },
-        { name: 'Phone', value: props.customerPhone?.toLowerCase() || '' },
-        { name: 'Email', value: props.customerEmail?.toLowerCase() || '' },
-        { name: 'Staff', value: props.staffName?.toLowerCase() || '' },
-        { name: 'Service', value: props.serviceName?.toLowerCase() || '' }
-      ]
-
-      // Check which fields match and track them
-      const eventMatchedFields: string[] = []
-      fieldsToSearch.forEach(field => {
-        if (field.value.includes(trimmedQuery)) {
-          eventMatchedFields.push(field.name)
-        }
-      })
-
-      if (eventMatchedFields.length > 0) {
-        matchedIds.add(event.id)
-        matchedFields.set(event.id, eventMatchedFields)
-      }
-    })
-
     set({
       searchQuery: query,
-      searchMatchedEventIds: matchedIds,
-      searchMatchedFields: matchedFields,
+      searchMatchedEventIds: new Set<string>(),
+      searchMatchedFields: new Map<string, string[]>(),
       isSearchActive: true
     })
+
+    if (visibleDateRange) {
+      void get().fetchEvents(visibleDateRange)
+    }
   },
 
   clearSearch: () => {
@@ -1311,6 +1328,10 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
       searchMatchedFields: new Map<string, string[]>(),
       isSearchActive: false
     })
+    const range = get().visibleDateRange
+    if (range) {
+      void get().fetchEvents(range)
+    }
   },
 
   isEventMatchedBySearch: (eventId: string) => {

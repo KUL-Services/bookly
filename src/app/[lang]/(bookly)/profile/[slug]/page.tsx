@@ -17,24 +17,7 @@ import {
   Phone,
   MapPin
 } from 'lucide-react'
-import { mockBusinesses } from '@/bookly/data/mock-data'
 import { useAuthStore } from '@/stores/auth.store'
-
-const mockData = mockBusinesses[0]
-
-// Mock user data
-const userData = {
-  name: 'Aly Lashin',
-  email: 'aly@example.com',
-  phone: '+20 100 123 4567',
-  avatar: mockData.coverImage,
-  memberSince: 'June 2023',
-  stats: {
-    totalBookings: 12,
-    favourites: 2,
-    avgRating: 4.8
-  }
-}
 
 // Menu items
 const menuItems = [
@@ -81,10 +64,24 @@ function ProfilePage() {
   const router = useRouter()
   const params = useParams<{ lang: string }>()
   const lang = params?.lang || 'en'
-  const logout = useAuthStore(s => s.logout)
+  const booklyUser = useAuthStore(s => s.booklyUser)
+  const logoutCustomer = useAuthStore(s => s.logoutCustomer)
+
+  const userData = {
+    name: booklyUser?.name || 'Customer',
+    email: booklyUser?.email || 'no-email@example.com',
+    phone: booklyUser?.phone || '+20 000 000 0000',
+    avatar: booklyUser?.avatar || '/images/avatars/1.png',
+    memberSince: 'June 2023',
+    stats: {
+      totalBookings: 0,
+      favourites: 0,
+      avgRating: 0
+    }
+  }
 
   const handleLogout = () => {
-    logout()
+    logoutCustomer()
     router.push(`/${lang}/landpage`)
   }
 

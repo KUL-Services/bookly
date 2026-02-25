@@ -32,42 +32,11 @@ const BusinessApprovals = () => {
   const fetchPendingBusinesses = async () => {
     try {
       setLoading(true)
-      // Using mock data for now since API endpoint may not be implemented yet
-      const mockPendingBusinesses: Business[] = [
-        {
-          id: '1',
-          name: 'Bella Vista Salon',
-          email: 'admin@bellavista.com',
-          description: 'Premium beauty salon offering hair, nails, and spa services',
-          socialLinks: [
-            { platform: 'instagram', url: 'https://instagram.com/bellavistasalon' },
-            { platform: 'facebook', url: 'https://facebook.com/bellavistasalon' }
-          ],
-          owner: {
-            name: 'Maria Rodriguez',
-            email: 'maria@bellavista.com'
-          },
-          status: 'pending',
-          createdAt: new Date('2024-01-15').toISOString(),
-          updatedAt: new Date('2024-01-15').toISOString()
-        },
-        {
-          id: '2',
-          name: 'TechFix Repair Center',
-          email: 'info@techfix.com',
-          description: 'Professional electronics and computer repair services',
-          socialLinks: [{ platform: 'linkedin', url: 'https://linkedin.com/company/techfix' }],
-          owner: {
-            name: 'John Smith',
-            email: 'john@techfix.com'
-          },
-          status: 'pending',
-          createdAt: new Date('2024-01-20').toISOString(),
-          updatedAt: new Date('2024-01-20').toISOString()
-        }
-      ]
-
-      setPendingBusinesses(mockPendingBusinesses)
+      const response = await BusinessService.getPendingBusinesses()
+      if (response.error) {
+        throw new Error(response.error)
+      }
+      setPendingBusinesses(Array.isArray(response.data) ? response.data : [])
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch pending businesses')
@@ -84,11 +53,10 @@ const BusinessApprovals = () => {
     setActionLoading(prev => ({ ...prev, [businessId]: true }))
 
     try {
-      // Mock approval - replace with actual API call
-      console.log('Approving business:', businessId)
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await BusinessService.approveBusiness({ id: businessId })
+      if (response.error) {
+        throw new Error(response.error)
+      }
 
       // Remove from pending list
       setPendingBusinesses(prev => prev.filter(business => business.id !== businessId))
@@ -108,11 +76,10 @@ const BusinessApprovals = () => {
     setActionLoading(prev => ({ ...prev, [businessId]: true }))
 
     try {
-      // Mock rejection - replace with actual API call
-      console.log('Rejecting business:', businessId)
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await BusinessService.rejectBusiness({ id: businessId })
+      if (response.error) {
+        throw new Error(response.error)
+      }
 
       // Remove from pending list
       setPendingBusinesses(prev => prev.filter(business => business.id !== businessId))
@@ -176,9 +143,9 @@ const BusinessApprovals = () => {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <Typography variant='body2'>{business.owner.name}</Typography>
+                          <Typography variant='body2'>{business.owner?.name || 'N/A'}</Typography>
                           <Typography variant='caption' color='textSecondary'>
-                            {business.owner.email}
+                            {business.owner?.email || 'N/A'}
                           </Typography>
                         </div>
                       </TableCell>
@@ -208,7 +175,9 @@ const BusinessApprovals = () => {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>{new Date(business.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {business.createdAt ? new Date(business.createdAt).toLocaleDateString() : 'N/A'}
+                      </TableCell>
                       <TableCell align='center'>
                         <Box className='flex gap-2 justify-center'>
                           <Button

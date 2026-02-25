@@ -22,7 +22,6 @@ import {
 } from '@mui/material'
 import { useCalendarStore } from './state'
 import type { CalendarEvent, AppointmentStatus, PaymentStatus, PaymentMethod } from './types'
-import { mockStaff, mockRooms } from '@/bookly/data/mock-data'
 import { useMediaQuery, useTheme } from '@mui/material'
 import { buildEventColors, isBookingInPast, getRecommendedStatusFromPayment } from './utils'
 import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
@@ -52,6 +51,8 @@ export default function AppointmentDrawer() {
   const getSlotBookings = useCalendarStore(state => state.getSlotBookings)
   const openAppointmentDrawer = useCalendarStore(state => state.openAppointmentDrawer)
   const staticSlots = useCalendarStore(state => state.staticSlots)
+  const allStaff = useCalendarStore(state => state.staff)
+  const rooms = useCalendarStore(state => state.rooms)
   const lastActionError = useCalendarStore(state => state.lastActionError)
   const clearError = useCalendarStore(state => state.clearError)
 
@@ -258,9 +259,9 @@ export default function AppointmentDrawer() {
 
   const slot = extendedProps.slotId ? staticSlots.find(s => s.id === extendedProps.slotId) : null
 
-  const room = extendedProps.roomId ? mockRooms.find(r => r.id === extendedProps.roomId) : null
+  const room = extendedProps.roomId ? rooms.find(r => r.id === extendedProps.roomId) : null
 
-  const staff = mockStaff.find(s => s.id === extendedProps.staffId)
+  const staff = allStaff.find((s: any) => s.id === extendedProps.staffId)
 
   const isStaticSlotBooking = !!extendedProps.slotId
   const canEditTime = !isStaticSlotBooking
@@ -619,13 +620,13 @@ export default function AppointmentDrawer() {
                     value={staffId}
                     onChange={e => {
                       setStaffId(e.target.value)
-                      const selectedStaff = mockStaff.find(s => s.id === e.target.value)
+                      const selectedStaff = allStaff.find((s: any) => s.id === e.target.value)
                       if (selectedStaff) setStaffName(selectedStaff.name)
                     }}
                     size='small'
                     fullWidth
                   >
-                    {mockStaff.map(s => (
+                    {allStaff.map((s: any) => (
                       <MuiMenuItem key={s.id} value={s.id}>
                         {s.name}
                       </MuiMenuItem>
@@ -633,7 +634,7 @@ export default function AppointmentDrawer() {
                   </TextField>
                 ) : (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Avatar src={staff?.photo} sx={{ width: 28, height: 28, fontSize: '0.8rem' }}>
+                    <Avatar src={staff?.photo || staff?.profilePhotoUrl} sx={{ width: 28, height: 28, fontSize: '0.8rem' }}>
                       {staffName.charAt(0).toUpperCase()}
                     </Avatar>
                     <Typography variant='body2' fontWeight={500}>

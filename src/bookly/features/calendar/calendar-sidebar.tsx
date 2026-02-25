@@ -20,7 +20,6 @@ import {
   Typography
 } from '@mui/material'
 
-import { mockBusinesses as fallbackMockBusinesses, mockStaff as fallbackMockStaff } from '@/bookly/data/mock-data'
 import { useCalendarStore } from './state'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 
@@ -64,10 +63,11 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   const getRoomsByBranch = useCalendarStore(state => state.getRoomsByBranch)
   const toggleSidebar = useCalendarStore(state => state.toggleSidebar)
 
-  // Use API-loaded data from stores, fallback to mocks
+  // Use API-loaded data from stores
   const calendarStaff = useCalendarStore(state => state.staff)
-  const { apiBranches: storeBranches } = useStaffManagementStore()
-  const allStaff: any[] = calendarStaff?.length ? calendarStaff : (fallbackMockStaff as any[])
+  const calendarRooms = useCalendarStore(state => state.rooms)
+  const { apiBranches: storeBranches, staffMembers: storeStaffMembers } = useStaffManagementStore()
+  const allStaff: any[] = calendarStaff?.length ? calendarStaff : storeStaffMembers?.length ? storeStaffMembers : []
 
   const [pendingBranches, setPendingBranches] = useState<BranchFilter>(branchFilters)
   const [pendingStaff, setPendingStaff] = useState<StaffFilter>(staffFilters)
@@ -93,14 +93,29 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     })
   }, [branchFilters, staffFilters, roomFilters, highlights])
 
-  // Get branches from API or mock data with staff counts
+  // Get branches from API, or derive from loaded staff/rooms
   const branches = useMemo(() => {
-    const businessBranches = storeBranches?.length ? storeBranches : fallbackMockBusinesses[0]?.branches || []
-    return businessBranches.map((branch: any) => ({
-      ...branch,
-      staffCount: allStaff.filter((s: any) => s.branchId === branch.id).length
+    if (storeBranches?.length) {
+      return storeBranches.map((branch: any) => ({
+        ...branch,
+        staffCount: allStaff.filter((s: any) => s.branchId === branch.id).length
+      }))
+    }
+
+    const derivedBranchIds = Array.from(
+      new Set([
+        ...allStaff.map((s: any) => s.branchId).filter(Boolean),
+        ...calendarRooms.map(room => room.branchId).filter(Boolean),
+        ...pendingBranches.branchIds
+      ])
+    )
+
+    return derivedBranchIds.map(branchId => ({
+      id: branchId,
+      name: `Branch ${branchId}`,
+      staffCount: allStaff.filter((s: any) => s.branchId === branchId).length
     }))
-  }, [storeBranches, allStaff])
+  }, [storeBranches, allStaff, calendarRooms, pendingBranches.branchIds])
 
   // Filter staff by selected branches
   const availableStaff = useMemo(() => {

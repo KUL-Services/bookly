@@ -526,14 +526,22 @@ const ServicesSetupStep = ({
         <Button variant='outlined' onClick={handlePrev}>
           Back
         </Button>
-        <Button
-          variant='contained'
-          onClick={handleContinue}
-          disabled={!formData.services || formData.services.length === 0}
-        >
-          Continue
-        </Button>
+        <Box className='flex gap-2'>
+          <Button variant='text' color='inherit' onClick={handleNext}>
+            Skip for now
+          </Button>
+          <Button
+            variant='contained'
+            onClick={handleContinue}
+            disabled={!formData.services || formData.services.length === 0}
+          >
+            Continue
+          </Button>
+        </Box>
       </Box>
+      <Typography variant='caption' color='text.secondary' sx={{ textAlign: 'center', mt: -1 }}>
+        You can add services later from your dashboard.
+      </Typography>
     </div>
   )
 }

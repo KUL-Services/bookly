@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Drawer,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Box,
   Typography,
   TextField,
@@ -89,11 +92,21 @@ const FieldLabel = ({ label, tooltip }: { label: string; tooltip?: string }) => 
 )
 
 export function ServiceEditorDrawer() {
-  const { isServiceDialogOpen, editingService, closeServiceDialog, createService, updateService, categories } =
-    useServicesStore()
+  const {
+    isServiceDialogOpen,
+    editingService,
+    closeServiceDialog,
+    createService,
+    updateService,
+    categories,
+    services,
+    fetchCategories
+  } = useServicesStore()
 
   const [formData, setFormData] = useState<ServiceFormData>(DEFAULT_SERVICE_FORM_DATA)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false)
+  const [pendingServiceData, setPendingServiceData] = useState<Omit<ExtendedService, 'id'> | null>(null)
 
   // Initialize form when dialog opens
   useEffect(() => {
@@ -113,6 +126,7 @@ export function ServiceEditorDrawer() {
             after: { hours: 0, minutes: 0 }
           },
           taxRate: editingService.taxRate || 'tax_free',
+          customTaxRate: editingService.customTaxRate || 0,
           parallelClients: editingService.parallelClients || 1,
           clientSettings: editingService.clientSettings || DEFAULT_CLIENT_SETTINGS
         })
@@ -122,6 +136,17 @@ export function ServiceEditorDrawer() {
       setErrors({})
     }
   }, [isServiceDialogOpen, editingService])
+
+  useEffect(() => {
+    if (isServiceDialogOpen && categories.length === 0) {
+      fetchCategories()
+    }
+  }, [isServiceDialogOpen, categories.length, fetchCategories])
+
+  const getDisplayCategoryName = (name?: string) => {
+    if (!name) return 'Other'
+    return name.trim().toLowerCase() === 'uncategorized' ? 'Other' : name
+  }
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -144,31 +169,56 @@ export function ServiceEditorDrawer() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
-    if (!validateForm()) return
+  const buildServiceData = (): Omit<ExtendedService, 'id'> => ({
+    name: formData.name.trim(),
+    description: formData.description.trim() || undefined,
+    price: Number(formData.price),
+    duration: Number(formData.duration),
+    categoryId: formData.categoryId || undefined,
+    color: formData.color,
+    bookingInterval: formData.bookingInterval,
+    paddingTime: formData.paddingTime,
+    processingTime: formData.processingTime,
+    taxRate: formData.taxRate,
+    customTaxRate: formData.taxRate === 'custom' ? formData.customTaxRate : undefined,
+    parallelClients: formData.parallelClients,
+    clientSettings: formData.clientSettings
+  })
 
-    const serviceData: Omit<ExtendedService, 'id'> = {
-      name: formData.name.trim(),
-      description: formData.description.trim() || undefined,
-      price: Number(formData.price),
-      duration: Number(formData.duration),
-      categoryId: formData.categoryId || undefined,
-      color: formData.color,
-      bookingInterval: formData.bookingInterval,
-      paddingTime: formData.paddingTime,
-      processingTime: formData.processingTime,
-      taxRate: formData.taxRate,
-      parallelClients: formData.parallelClients,
-      clientSettings: formData.clientSettings
-    }
-
+  const saveService = (serviceData: Omit<ExtendedService, 'id'>) => {
     if (editingService) {
       updateService(editingService.id, serviceData)
     } else {
       createService(serviceData)
     }
-
     closeServiceDialog()
+  }
+
+  const handleSubmit = () => {
+    if (!validateForm()) return
+
+    const serviceData = buildServiceData()
+
+    // Check for duplicate name (only for new services or name changes)
+    const isDuplicate = services.some(
+      s => s.name.toLowerCase() === serviceData.name.toLowerCase() && s.id !== editingService?.id
+    )
+
+    if (isDuplicate) {
+      setPendingServiceData(serviceData)
+      setDuplicateConfirmOpen(true)
+      return
+    }
+
+    saveService(serviceData)
+  }
+
+  const handleDuplicateConfirm = () => {
+    if (pendingServiceData) {
+      saveService(pendingServiceData)
+    }
+    setDuplicateConfirmOpen(false)
+    setPendingServiceData(null)
   }
 
   const handleClose = () => {
@@ -202,36 +252,17 @@ export function ServiceEditorDrawer() {
   }
 
   return (
-    <Drawer
-      anchor='right'
-      open={isServiceDialogOpen}
-      onClose={handleClose}
-      PaperProps={{
-        sx: { width: { xs: '100%', sm: 480 }, maxWidth: '100%' }
-      }}
-    >
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        {/* Header */}
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            p: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider'
-          }}
-        >
-          <Typography variant='h6' fontWeight={600}>
-            {editingService ? 'Edit Service' : 'New Service'}
-          </Typography>
-          <IconButton onClick={handleClose}>
-            <i className='ri-close-line' />
-          </IconButton>
-        </Box>
+    <Dialog open={isServiceDialogOpen} onClose={handleClose} maxWidth='sm' fullWidth>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Typography variant='h6' fontWeight={600}>
+          {editingService ? 'Edit Service' : 'New Service'}
+        </Typography>
+        <IconButton onClick={handleClose}>
+          <i className='ri-close-line' />
+        </IconButton>
+      </DialogTitle>
 
-        {/* Content */}
-        <Box sx={{ flexGrow: 1, overflow: 'auto', p: 3 }}>
+      <DialogContent dividers sx={{ maxHeight: '70vh' }}>
           <Grid container spacing={3}>
             {/* Basic Info Section */}
             <Grid item xs={12}>
@@ -276,7 +307,7 @@ export function ServiceEditorDrawer() {
                 error={!!errors.price}
                 helperText={errors.price}
                 InputProps={{
-                  startAdornment: <InputAdornment position='start'>$</InputAdornment>
+                  startAdornment: <InputAdornment position='start'>EGP</InputAdornment>
                 }}
                 required
               />
@@ -308,11 +339,11 @@ export function ServiceEditorDrawer() {
                   label='Category'
                 >
                   <MenuItem value=''>
-                    <em>Not categorized</em>
+                    <em>Other</em>
                   </MenuItem>
                   {categories.map(category => (
                     <MenuItem key={category.id} value={category.id}>
-                      {category.name}
+                      {getDisplayCategoryName(category.name)}
                     </MenuItem>
                   ))}
                 </Select>
@@ -534,18 +565,42 @@ export function ServiceEditorDrawer() {
             {/* Tax Rate */}
             <Grid item xs={12}>
               <FieldLabel label='Tax Rate' tooltip={TOOLTIPS.taxRate} />
-              <FormControl fullWidth size='small'>
-                <Select
-                  value={formData.taxRate}
-                  onChange={e => setFormData(prev => ({ ...prev, taxRate: e.target.value as TaxRate }))}
-                >
-                  {TAX_RATE_OPTIONS.map(opt => (
-                    <MenuItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Grid container spacing={2}>
+                <Grid item xs={formData.taxRate === 'custom' ? 6 : 12}>
+                  <FormControl fullWidth size='small'>
+                    <Select
+                      value={formData.taxRate}
+                      onChange={e => setFormData(prev => ({ ...prev, taxRate: e.target.value as TaxRate }))}
+                    >
+                      {TAX_RATE_OPTIONS.map(opt => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                {formData.taxRate === 'custom' && (
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      size='small'
+                      type='number'
+                      value={formData.customTaxRate}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          customTaxRate: Math.min(100, Math.max(0, Number(e.target.value)))
+                        }))
+                      }
+                      InputProps={{
+                        endAdornment: <InputAdornment position='end'>%</InputAdornment>
+                      }}
+                      inputProps={{ min: 0, max: 100 }}
+                    />
+                  </Grid>
+                )}
+              </Grid>
             </Grid>
 
             <Grid item xs={12}>
@@ -656,26 +711,32 @@ export function ServiceEditorDrawer() {
               </Button>
             </Grid>
           </Grid>
-        </Box>
+      </DialogContent>
 
-        {/* Footer */}
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 2,
-            p: 2,
-            borderTop: '1px solid',
-            borderColor: 'divider'
-          }}
-        >
-          <Button fullWidth variant='outlined' onClick={handleClose}>
-            Cancel
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button variant='outlined' onClick={handleClose}>
+          Cancel
+        </Button>
+        <Button variant='contained' onClick={handleSubmit}>
+          {editingService ? 'Save Changes' : 'Create Service'}
+        </Button>
+      </DialogActions>
+
+      {/* Duplicate Name Confirmation */}
+      <Dialog open={duplicateConfirmOpen} onClose={() => setDuplicateConfirmOpen(false)} maxWidth='xs'>
+        <DialogTitle>Duplicate Service Name</DialogTitle>
+        <DialogContent>
+          <Typography variant='body2'>
+            A service named "<strong>{formData.name.trim()}</strong>" already exists. Do you want to create it anyway?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDuplicateConfirmOpen(false)}>Cancel</Button>
+          <Button variant='contained' onClick={handleDuplicateConfirm}>
+            Create Anyway
           </Button>
-          <Button fullWidth variant='contained' onClick={handleSubmit}>
-            {editingService ? 'Save Changes' : 'Create Service'}
-          </Button>
-        </Box>
-      </Box>
-    </Drawer>
+        </DialogActions>
+      </Dialog>
+    </Dialog>
   )
 }

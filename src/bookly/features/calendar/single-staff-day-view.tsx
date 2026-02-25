@@ -4,8 +4,8 @@ import { Box, Typography, IconButton, Avatar, Button, Chip, Select, MenuItem, Fo
 import { useTheme } from '@mui/material/styles'
 import { format, isSameDay, isToday } from 'date-fns'
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { mockServices } from '@/bookly/data/mock-data'
 import { useCalendarStore } from './state'
+import { useStaffManagementStore } from '../staff-management/staff-store'
 import { getBranchName, buildEventColors } from './utils'
 import type { CalendarEvent } from './types'
 
@@ -69,6 +69,7 @@ export default function SingleStaffDayView({
   const isSearchActive = useCalendarStore(state => state.isSearchActive)
   const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
   const staticSlots = useCalendarStore(state => state.staticSlots)
+  const storeServices = useStaffManagementStore(state => state.apiServices)
 
   // Drag-to-select state
   const [isDragging, setIsDragging] = useState(false)
@@ -772,7 +773,7 @@ export default function SingleStaffDayView({
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: height > 100 ? 0.5 : 0 }}>
                       {(() => {
-                        const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                        const service = storeServices.find((s: any) => s.name === event.extendedProps?.serviceName)
                         return service?.color ? (
                           <Box
                             sx={{

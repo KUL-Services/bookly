@@ -18,7 +18,10 @@ const statusColor: Record<Booking['status'], 'success' | 'warning' | 'error' | '
   confirmed: 'success',
   pending: 'warning',
   cancelled: 'error',
-  completed: 'default'
+  completed: 'default',
+  no_show: 'error',
+  attended: 'success',
+  needs_confirmation: 'warning'
 }
 
 const UpcomingBookings = ({ rows, lang }: { rows: Booking[]; lang?: string }) => {
@@ -28,7 +31,7 @@ const UpcomingBookings = ({ rows, lang }: { rows: Booking[]; lang?: string }) =>
         title='Upcoming Bookings'
         subheader={
           <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
-            Based on mock Bookly data
+            Upcoming appointments by branch
           </Typography>
         }
       />

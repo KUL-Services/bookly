@@ -13,7 +13,6 @@ import type { EventResizeDoneArg } from '@fullcalendar/interaction'
 
 import { buildEventColors } from './utils'
 import { useCalendarStore } from './state'
-import { mockStaff } from '@/bookly/data/mock-data'
 import type {
   CalendarEvent,
   CalendarView,
@@ -75,6 +74,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
     const visibleDateRange = useCalendarStore(state => state.visibleDateRange)
     const isSearchActive = useCalendarStore(state => state.isSearchActive)
     const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
+    const allStaff = useCalendarStore(state => state.staff)
 
     // Helper to get room info
     const getRoomById = (roomId: string | undefined) => {
@@ -839,7 +839,7 @@ const FullCalendarView = forwardRef<FullCalendar, FullCalendarViewProps>(
               schedulingMode === 'static' ||
               props.slotId ||
               props.isStaticSlot ||
-              (props.staffId && mockStaff.find(s => s.id === props.staffId)?.staffType === 'static') ||
+              (props.staffId && allStaff.find(s => s.id === props.staffId)?.staffType === 'static') ||
               (props.roomId && rooms.find(r => r.id === props.roomId)?.roomType === 'static')
 
             const isDynamic = !isStaticSlot

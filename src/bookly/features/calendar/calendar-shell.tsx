@@ -5,7 +5,6 @@ import { Box, useTheme, useMediaQuery, Snackbar, Alert } from '@mui/material'
 import FullCalendar from '@fullcalendar/react'
 import { useCalendarStore } from './state'
 import { useStaffManagementStore } from '../staff-management/staff-store'
-import { mockStaff as fallbackMockStaff } from '@/bookly/data/mock-data'
 import { addDays, addWeeks, addMonths } from './utils'
 import { startOfWeek, endOfWeek, startOfDay, endOfDay } from 'date-fns'
 import CalendarHeader from './calendar-header'
@@ -166,7 +165,6 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     }
 
     // Use allStaff from store, fallback to empty array if not loaded
-    // DO NOT fallback to mockStaff to avoid confusion
     const staffInScope =
       branchFilters.allBranches || branchFilters.branchIds.length === 0
         ? allStaff
@@ -396,9 +394,7 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
   const getTimeReservationBranchId = (staffId?: string) => {
     if (staffId) {
-      // Use API data from store first, fallback to mock
-      const staff =
-        allStaff.find((member: any) => member.id === staffId) || fallbackMockStaff.find(member => member.id === staffId)
+      const staff = allStaff.find((member: any) => member.id === staffId)
       if (staff?.branchId) return staff.branchId
     }
     if (branchFilters.allBranches || branchFilters.branchIds.length === 0) return 'all'

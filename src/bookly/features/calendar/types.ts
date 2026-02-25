@@ -152,6 +152,7 @@ export interface CalendarEvent extends EventInput {
     businessNotes?: string // Admin-only notes
     createdAt?: string // When the booking was created
     updatedAt?: string // When the booking was last updated
+    matchedFields?: string[] // Search matched fields returned by backend
   }
 }
 

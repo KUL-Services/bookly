@@ -7,6 +7,8 @@ export { StaffService } from './services/staff.service'
 export { BranchesService } from './services/branches.service'
 export { MediaService } from './services/media.service'
 export { BookingService } from './services/booking.service'
+export { WaitlistService } from './services/waitlist.service'
+export { OnboardingService } from './services/onboarding.service'
 
 // API Client
 export { apiClient } from './api-client'

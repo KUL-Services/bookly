@@ -1,5 +1,5 @@
 import { apiClient } from '../api-client'
-import type { Asset, CreateAssetResourceRequest, UpdateAssetResourceRequest } from '../types'
+import type { Asset, CreateAssetResourceRequest, UpdateAssetResourceRequest, BookingModeStatus } from '../types'
 
 export class AssetsService {
   // Admin only - Get all assets for the business
@@ -44,5 +44,10 @@ export class AssetsService {
       }
       throw deleteError
     }
+  }
+
+  // Admin only - Get booking mode scheduling status
+  static async getBookingModeStatus(id: string) {
+    return apiClient.get<BookingModeStatus>(`/admin/assets/${id}/booking-mode-status`)
   }
 }

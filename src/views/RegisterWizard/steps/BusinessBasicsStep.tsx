@@ -30,8 +30,6 @@ const BusinessBasicsStep = ({
     if (!formData.businessName) errors.businessName = 'Business name is required'
     if (!formData.businessType) errors.businessType = 'Please select a business type'
     if (!formData.staffCount) errors.staffCount = 'Please select staff count'
-    if (formData.servicesOffered.length === 0) errors.servicesOffered = 'Please select at least one service'
-
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -94,10 +92,10 @@ const BusinessBasicsStep = ({
       </FormControl>
 
       <FormControl fullWidth error={!!validationErrors.staffCount} required>
-        <InputLabel>Team Size</InputLabel>
+        <InputLabel>Team & Room Count</InputLabel>
         <Select
           value={formData.staffCount}
-          label='Team Size'
+          label='Team & Room Count'
           onChange={e => {
             updateFormData({ staffCount: e.target.value })
             if (validationErrors.staffCount) {
@@ -111,9 +109,13 @@ const BusinessBasicsStep = ({
             </MenuItem>
           ))}
         </Select>
-        {validationErrors.staffCount && (
+        {validationErrors.staffCount ? (
           <Typography variant='caption' color='error' className='mt-1 ml-3'>
             {validationErrors.staffCount}
+          </Typography>
+        ) : (
+          <Typography variant='caption' color='text.secondary' className='mt-1 ml-3'>
+            Include both staff members and rooms/spaces
           </Typography>
         )}
       </FormControl>

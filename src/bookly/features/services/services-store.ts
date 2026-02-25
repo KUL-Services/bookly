@@ -2,7 +2,9 @@ import { create } from 'zustand'
 import type { ServiceCategory, ExtendedService } from './types'
 import { ServicesService } from '@/lib/api/services/services.service'
 import { CategoriesService } from '@/lib/api/services/categories.service'
+import { BusinessService } from '@/lib/api/services/business.service'
 import type { Service as ApiService, Category as ApiCategory } from '@/lib/api/types'
+import { useAuthStore } from '@/stores/auth.store'
 
 // ============================================================================
 // Constants
@@ -39,8 +41,26 @@ function mapApiCategory(api: ApiCategory, index: number): ServiceCategory {
 }
 
 function mapApiService(api: ApiService, index: number): ExtendedService {
-  // If the API returns categories, use the first one as categoryId
-  const categoryId = api.categories && api.categories.length > 0 ? api.categories[0].id : undefined
+  const apiAsAny = api as any
+
+  // Backend may return category in different shapes depending on endpoint joins.
+  const categoryIdFromObjectArray =
+    Array.isArray(apiAsAny.categories) && apiAsAny.categories.length > 0 && typeof apiAsAny.categories[0] === 'object'
+      ? apiAsAny.categories[0]?.id
+      : undefined
+  const categoryIdFromStringArray =
+    Array.isArray(apiAsAny.categories) && apiAsAny.categories.length > 0 && typeof apiAsAny.categories[0] === 'string'
+      ? apiAsAny.categories[0]
+      : undefined
+  const categoryIdFromCategoryIds =
+    Array.isArray(apiAsAny.categoryIds) && apiAsAny.categoryIds.length > 0 ? apiAsAny.categoryIds[0] : undefined
+  const categoryIdFromSingularObject = apiAsAny.category?.id
+  const categoryId =
+    apiAsAny.categoryId ||
+    categoryIdFromSingularObject ||
+    categoryIdFromObjectArray ||
+    categoryIdFromStringArray ||
+    categoryIdFromCategoryIds
 
   return {
     id: api.id,
@@ -58,7 +78,10 @@ function mapApiService(api: ApiService, index: number): ExtendedService {
       during: { hours: 0, minutes: 0 },
       after: { hours: 0, minutes: 0 }
     },
-    taxRate: 'tax_free',
+    taxRate: (api.taxRate as ExtendedService['taxRate']) || 'tax_free',
+    customTaxRate: api.customTaxRate || undefined,
+    depositPercentage: api.depositPercentage || undefined,
+    variants: api.variants,
     parallelClients: api.maxConcurrent || 1,
     createdAt: api.createdAt,
     updatedAt: api.updatedAt
@@ -146,16 +169,57 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   fetchServices: async () => {
     set({ isLoading: true, error: null })
     try {
-      const result = await ServicesService.getServices()
-      const rawData = result.data
-      const dataArray = Array.isArray(rawData)
-        ? rawData
-        : (rawData as any)?.data && Array.isArray((rawData as any).data)
-          ? (rawData as any).data
-          : []
+      const businessId = useAuthStore.getState().materializeUser?.business?.id
+      let dataArray: ApiService[] = []
+
+      if (businessId) {
+        try {
+          const businessResult = await BusinessService.getBusiness(businessId)
+          const businessPayload: any = businessResult.data || {}
+          const business = businessPayload?.data ?? businessPayload
+          const businessServices = Array.isArray(business?.services) ? business.services : []
+
+          if (businessServices.length > 0) {
+            dataArray = businessServices
+          }
+        } catch (businessErr) {
+          console.warn('Failed to fetch business-scoped services from /business/{id}:', businessErr)
+        }
+      }
+
+      if (dataArray.length === 0) {
+        const result = await ServicesService.getServices()
+        const rawData = result.data
+        dataArray = Array.isArray(rawData)
+          ? rawData
+          : (rawData as any)?.data && Array.isArray((rawData as any).data)
+            ? (rawData as any).data
+            : []
+
+        if (businessId) {
+          dataArray = dataArray.filter(service => service.businessId === businessId)
+        }
+      }
 
       const services = dataArray.map((s: ApiService, i: number) => mapApiService(s, i))
-      set({ services, isLoading: false })
+
+      // Prefer categories actually used by this business services to avoid global category noise.
+      const categoriesMap = new Map<string, ApiCategory>()
+      dataArray.forEach(service => {
+        ;(service.categories || []).forEach(category => {
+          if (category?.id) {
+            categoriesMap.set(category.id, category)
+          }
+        })
+      })
+      const derivedCategories = Array.from(categoriesMap.values()).map((c, i) => mapApiCategory(c, i))
+      const nextCategories = derivedCategories.length > 0 ? derivedCategories : get().categories
+
+      set({
+        services,
+        categories: nextCategories,
+        isLoading: false
+      })
     } catch (err: any) {
       console.warn('Failed to fetch services from API:', err)
       set({ error: err?.message || 'Failed to fetch services', isLoading: false })
@@ -170,10 +234,31 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
         ? rawData
         : (rawData as any)?.data && Array.isArray((rawData as any).data)
           ? (rawData as any).data
+          : (rawData as any)?.items && Array.isArray((rawData as any).items)
+            ? (rawData as any).items
+            : (rawData as any)?.categories && Array.isArray((rawData as any).categories)
+              ? (rawData as any).categories
+              : (rawData as any)?.data?.categories && Array.isArray((rawData as any).data.categories)
+                ? (rawData as any).data.categories
           : []
 
-      const categories = dataArray.map((c: ApiCategory, i: number) => mapApiCategory(c, i))
-      set({ categories })
+      const apiCategories: ServiceCategory[] = dataArray.map((c: ApiCategory, i: number) => mapApiCategory(c, i))
+
+      const merged = new Map<string, ServiceCategory>()
+      apiCategories.forEach(category => merged.set(category.id, category))
+
+      // Keep service-derived categories if they don't exist in categories endpoint yet.
+      get().categories.forEach(category => {
+        if (!merged.has(category.id)) {
+          merged.set(category.id, category)
+        }
+      })
+
+      const categories = Array.from(merged.values())
+
+      if (categories.length > 0) {
+        set({ categories })
+      }
     } catch (err: any) {
       console.warn('Failed to fetch categories from API:', err)
       // Non-critical — categories may not exist yet
@@ -271,13 +356,18 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   // Service Actions — wired to API
   createService: async (service: Omit<ExtendedService, 'id'>) => {
     try {
+      const isCustomTax = service.taxRate === 'custom'
       await ServicesService.createService({
         name: service.name,
         description: service.description,
         location: 'on-site',
         price: service.price,
         duration: service.duration,
-        categoryIds: service.categoryId ? [service.categoryId] : undefined
+        categoryIds: service.categoryId ? [service.categoryId] : undefined,
+        ...(service.taxRate && service.taxRate !== 'tax_free' && { taxRate: service.taxRate }),
+        ...(isCustomTax && service.customTaxRate !== undefined && { customTaxRate: service.customTaxRate }),
+        ...(service.depositPercentage !== undefined && { depositPercentage: service.depositPercentage }),
+        ...(service.variants && service.variants.length > 0 && { variants: service.variants })
       })
       // Refetch to get server-generated ID
       await get().fetchServices()
@@ -289,13 +379,19 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
 
   updateService: async (id: string, updates: Partial<ExtendedService>) => {
     try {
+      const isCustomTax = updates.taxRate === 'custom'
       await ServicesService.updateService({
         id,
         name: updates.name,
         description: updates.description,
         price: updates.price,
         duration: updates.duration,
-        categoryIds: updates.categoryId ? [updates.categoryId] : undefined
+        categoryIds: updates.categoryId ? [updates.categoryId] : undefined,
+        ...(updates.taxRate && updates.taxRate !== 'tax_free' && { taxRate: updates.taxRate }),
+        ...(isCustomTax && updates.customTaxRate !== undefined && { customTaxRate: updates.customTaxRate }),
+        ...(updates.taxRate !== 'custom' && { customTaxRate: undefined }),
+        ...(updates.depositPercentage !== undefined && { depositPercentage: updates.depositPercentage }),
+        ...(updates.variants !== undefined && { variants: updates.variants })
       })
       await get().fetchServices()
     } catch (err: any) {

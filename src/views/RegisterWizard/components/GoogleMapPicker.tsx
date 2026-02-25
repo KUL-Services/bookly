@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography'
 import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 import Chip from '@mui/material/Chip'
+import { ensureGoogleMapsLoaded } from './google-maps-loader'
 
 interface GoogleMapPickerProps {
   latitude?: number
@@ -53,34 +54,40 @@ const GoogleMapPicker = ({
   }
 
   useEffect(() => {
-    // Check if Google Maps API is loaded
-    const checkGoogleMaps = () => {
-      return typeof window !== 'undefined' && window.google && window.google.maps
-    }
+    let isCancelled = false
 
-    const initMap = () => {
-      if (!mapRef.current || !checkGoogleMaps()) return
+    const initMap = async () => {
+      setIsLoading(true)
+      setError(null)
 
       try {
-        // Clear any existing content first
-        if (mapRef.current) {
-          mapRef.current.innerHTML = ''
+        await ensureGoogleMapsLoaded({ libraries: ['places'] })
+
+        let tries = 0
+        while (!isCancelled && !mapRef.current && tries < 40) {
+          await new Promise(resolve => setTimeout(resolve, 50))
+          tries += 1
         }
 
-        // Detect mobile device
+        if (isCancelled) return
+        if (!mapRef.current) {
+          throw new Error('Map container is not ready yet.')
+        }
+
+        mapRef.current.innerHTML = ''
+
         const isMobile = window.innerWidth < 768
 
-        // Initialize map with responsive options
         const map = new window.google.maps.Map(mapRef.current, {
           center: { lat: latitude, lng: longitude },
-          zoom: isMobile ? 14 : 15, // Slightly zoomed out on mobile for better context
-          mapTypeControl: !isMobile, // Hide map type control on mobile to save space
+          zoom: isMobile ? 14 : 15,
+          mapTypeControl: !isMobile,
           mapTypeControlOptions: {
             position: window.google.maps.ControlPosition.TOP_RIGHT,
             style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU
           },
-          streetViewControl: false, // Disabled for cleaner UI
-          fullscreenControl: !isMobile, // Only show on desktop
+          streetViewControl: false,
+          fullscreenControl: !isMobile,
           fullscreenControlOptions: {
             position: window.google.maps.ControlPosition.RIGHT_TOP
           },
@@ -90,24 +97,21 @@ const GoogleMapPicker = ({
               ? window.google.maps.ControlPosition.RIGHT_BOTTOM
               : window.google.maps.ControlPosition.RIGHT_CENTER
           },
-          gestureHandling: 'greedy', // No need for Ctrl+scroll, better for mobile
+          gestureHandling: 'greedy',
           disableDefaultUI: false,
-          clickableIcons: false, // Prevent clicking on POIs
+          clickableIcons: false,
           styles: [
             {
               featureType: 'poi',
               elementType: 'labels',
-              stylers: [{ visibility: 'off' }] // Hide POI labels for cleaner look
+              stylers: [{ visibility: 'off' }]
             }
           ]
         })
 
         mapInstanceRef.current = map
-
-        // Initialize geocoder
         geocoderRef.current = new window.google.maps.Geocoder()
 
-        // Create draggable marker - default Google Maps marker (simple and recognizable)
         const marker = new window.google.maps.Marker({
           position: { lat: latitude, lng: longitude },
           map: map,
@@ -118,77 +122,49 @@ const GoogleMapPicker = ({
 
         markerRef.current = marker
 
-        // Handle marker drag end
         marker.addListener('dragend', () => {
           const position = marker.getPosition()
-          if (position) {
-            const lat = position.lat()
-            const lng = position.lng()
-            reverseGeocode(lat, lng)
-          }
+          if (!position) return
+          reverseGeocode(position.lat(), position.lng())
         })
 
-        // Handle map click to move marker
         map.addListener('click', (e: google.maps.MapMouseEvent) => {
-          if (e.latLng) {
-            const lat = e.latLng.lat()
-            const lng = e.latLng.lng()
-            marker.setPosition(e.latLng)
-            map.panTo(e.latLng)
-            reverseGeocode(lat, lng)
-          }
+          if (!e.latLng) return
+          const lat = e.latLng.lat()
+          const lng = e.latLng.lng()
+          marker.setPosition(e.latLng)
+          map.panTo(e.latLng)
+          reverseGeocode(lat, lng)
         })
 
-        // Initial reverse geocode
         reverseGeocode(latitude, longitude)
 
-        setIsLoading(false)
-        setError(null)
+        if (!isCancelled) {
+          setIsLoading(false)
+          setError(null)
+        }
       } catch (err) {
+        if (isCancelled) return
         console.error('Failed to initialize Google Map:', err)
         setError('Failed to load map. Please try again.')
         setIsLoading(false)
       }
     }
 
-    // Wait for Google Maps to load
-    if (checkGoogleMaps()) {
-      initMap()
-    } else {
-      const interval = setInterval(() => {
-        if (checkGoogleMaps()) {
-          clearInterval(interval)
-          initMap()
-        }
-      }, 100)
+    initMap()
 
-      const timeout = setTimeout(() => {
-        clearInterval(interval)
-        if (!checkGoogleMaps()) {
-          setError('Google Maps failed to load. Please check your internet connection.')
-          setIsLoading(false)
-        }
-      }, 10000)
-
-      return () => {
-        clearInterval(interval)
-        clearTimeout(timeout)
-      }
-    }
-
-    // Cleanup function
     return () => {
+      isCancelled = true
       if (markerRef.current) {
         markerRef.current.setMap(null)
         markerRef.current = null
       }
       if (mapInstanceRef.current) {
-        // Clear all event listeners
         window.google?.maps?.event?.clearInstanceListeners(mapInstanceRef.current)
         mapInstanceRef.current = null
       }
     }
-  }, []) // Only run once on mount
+  }, [])
 
   // Update map when coordinates change externally (from search)
   useEffect(() => {

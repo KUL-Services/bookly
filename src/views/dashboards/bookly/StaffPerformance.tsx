@@ -9,9 +9,6 @@ import TableCell from '@mui/material/TableCell'
 import TableBody from '@mui/material/TableBody'
 import Typography from '@mui/material/Typography'
 
-// Data Imports
-import { mockBookings, mockStaff, mockBusinesses } from '@/bookly/data/mock-data'
-
 type Row = {
   id: string
   name: string
@@ -22,30 +19,7 @@ type Row = {
   revenue: number
 }
 
-const StaffPerformance = () => {
-  const rows: Row[] = mockStaff.map(st => {
-    const staffBookings = mockBookings.filter(b => b.staffMemberName === st.name)
-    const completed = staffBookings.filter(b => b.status === 'completed')
-    const revenue = completed.reduce((sum, b) => sum + b.price, 0)
-    const businessName = mockBusinesses.find(b => b.id === st.businessId)?.name || '—'
-    const branchName = businessName
-      ? mockBusinesses.find(b => b.id === st.businessId)?.branches.find(br => br.id === st.branchId)?.name || '—'
-      : '—'
-
-    return {
-      id: st.id,
-      name: st.name,
-      title: st.title,
-      business: businessName,
-      branch: branchName,
-      completed: completed.length,
-      revenue
-    }
-  })
-
-  // Sort by revenue desc
-  rows.sort((a, b) => b.revenue - a.revenue)
-
+const StaffPerformance = ({ rows }: { rows: Row[] }) => {
   return (
     <Card>
       <CardHeader

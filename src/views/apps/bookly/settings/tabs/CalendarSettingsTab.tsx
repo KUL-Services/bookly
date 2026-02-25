@@ -85,7 +85,7 @@ const CalendarSettingsTab = () => {
                   <Box>
                     <Typography variant='body1'>Show Weekends</Typography>
                     <Typography variant='caption' color='text.secondary'>
-                      Display Saturday and Sunday in calendar views
+                      Display Friday and Saturday in calendar views
                     </Typography>
                   </Box>
                 }
@@ -128,9 +128,14 @@ const CalendarSettingsTab = () => {
 
               <Divider />
 
-              <Typography variant='body2' color='text.secondary'>
-                Working Hours Display Range
-              </Typography>
+              <Box>
+                <Typography variant='body2' color='text.secondary'>
+                  Working Hours Display Range
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  This controls which hours are visible in the calendar view, not your actual business hours. Business hours are configured per branch.
+                </Typography>
+              </Box>
 
               <Grid container spacing={2}>
                 <Grid item xs={6}>

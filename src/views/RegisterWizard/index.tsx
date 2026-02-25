@@ -202,13 +202,8 @@ const RegisterWizard = ({ mode }: RegisterWizardProps) => {
         throw new Error(res.error)
       }
 
-      // Clear draft — registration submitted successfully
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(`business-register-draft:v1:${locale}`)
-      }
-
       // 2. Redirect to verify page — the account must be verified before login
-      //    Branches/services/staff are created after first verified login via the dashboard
+      //    Full onboarding data will be completed after first successful business login.
       const verifyUrl = getLocalizedUrl(
         `/verify?email=${encodeURIComponent(formData.email)}`,
         locale as Locale

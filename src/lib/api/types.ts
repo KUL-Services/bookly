@@ -68,7 +68,11 @@ export interface Service {
   description?: string
   location?: string
   price: number
+  taxRate?: '5' | '10' | '12' | '15' | '20' | 'custom'
+  customTaxRate?: number | null
+  depositPercentage?: number | null
   duration: number
+  variants?: ServiceVariant[]
   maxConcurrent?: number | null
   businessId: string
   gallery?: string[]
@@ -83,6 +87,19 @@ export interface Service {
 
 // Booking mode for resources (staff/assets)
 export type BookingMode = 'STATIC' | 'DYNAMIC'
+
+export interface BookingModeStatus {
+  currentBookingMode?: BookingMode | string
+  pendingBookingMode?: BookingMode | string | null
+  bookingModeEffectiveDate?: string | null
+  effectiveDate?: string | null
+  estimatedEffectiveDate?: string | null
+  latestBookingEnd?: string | null
+  latestExistingBookingEnd?: string | null
+  lastExistingBookingEnd?: string | null
+  hasFutureBookings?: boolean
+  canApplyImmediately?: boolean
+}
 
 export interface Resource {
   id: string
@@ -192,6 +209,12 @@ export interface AssetFile {
   updatedAt: string
 }
 
+export interface ServiceVariant {
+  name?: string
+  duration: number
+  price: number
+}
+
 export interface BusinessChangeRequest {
   id: string
   businessId: string
@@ -267,6 +290,102 @@ export interface RegisterBusinessRequest {
   }
 }
 
+export interface CompleteOnboardingRequest {
+  businessProfile?: {
+    slug?: string
+    timezone?: string
+    description?: string
+    acceptsOnlineBooking?: boolean
+    mobileOnly?: boolean
+  }
+  branches?: Array<{
+    id?: string
+    tempId?: string
+    name: string
+    addressLine1?: string
+    addressLine2?: string
+    city?: string
+    state?: string
+    postalCode?: string
+    country?: string
+    phone?: string
+    timezone?: string
+    isMainBranch?: boolean
+    latitude?: number
+    longitude?: number
+    placeId?: string
+    formattedAddress?: string
+  }>
+  workingHours?: Record<string, { open: string; close: string; isOpen: boolean }>
+  staff?: Array<{
+    id?: string
+    tempId?: string
+    name: string
+    role?: string
+    email?: string
+    phone?: string
+    color?: string
+    branchRefs?: string[]
+    branchIds?: string[]
+    serviceRefs?: string[]
+    serviceIds?: string[]
+    bookingMode?: 'STATIC' | 'DYNAMIC'
+    workingHours?: Record<string, { open: string; close: string; isOpen: boolean }>
+  }>
+  services?: Array<{
+    id?: string
+    tempId?: string
+    name: string
+    description?: string
+    price: number
+    duration: number
+    color?: string
+    branchRefs?: string[]
+    branchIds?: string[]
+    staffRefs?: string[]
+    staffIds?: string[]
+    roomRefs?: string[]
+    roomIds?: string[]
+    categoryRef?: string
+    categoryId?: string
+  }>
+  rooms?: Array<{
+    id?: string
+    tempId?: string
+    name: string
+    branchRef?: string
+    branchId?: string
+    capacity?: number
+    floor?: string
+    amenities?: string[]
+    serviceRefs?: string[]
+    serviceIds?: string[]
+  }>
+  legal?: {
+    acceptTerms?: boolean
+    acceptPrivacy?: boolean
+    marketingOptIn?: boolean
+  }
+}
+
+export interface CompleteOnboardingResponse {
+  businessId: string
+  completedAt: string
+  idempotencyReplay?: boolean
+  mapping?: {
+    branches?: Record<string, string>
+    staff?: Record<string, string>
+    services?: Record<string, string>
+    rooms?: Record<string, string>
+  }
+  entities?: {
+    branches?: any[]
+    staff?: any[]
+    services?: any[]
+    rooms?: any[]
+  }
+}
+
 export interface VerifyAccountRequest {
   email: string
   code: string
@@ -291,9 +410,14 @@ export interface CreateServiceRequest {
   description?: string
   location: string
   price: number
+  taxRate?: '5' | '10' | '12' | '15' | '20' | 'custom'
+  customTaxRate?: number
+  depositPercentage?: number
   duration: number
+  color?: string
   categoryIds?: string[]
   branchIds?: string[]
+  variants?: ServiceVariant[]
   gallery?: string[]
 }
 
@@ -303,9 +427,14 @@ export interface UpdateServiceRequest {
   description?: string
   location?: string
   price?: number
+  taxRate?: '5' | '10' | '12' | '15' | '20' | 'custom'
+  customTaxRate?: number
+  depositPercentage?: number
   duration?: number
+  color?: string
   categoryIds?: string[]
   branchIds?: string[]
+  variants?: ServiceVariant[]
   gallery?: string[]
 }
 
@@ -405,10 +534,29 @@ export interface Booking {
   serviceId: string
   branchId: string
   resourceId?: string
+  resourceType?: 'STAFF' | 'ASSET'
   startTime: string
   endTime: string
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
+  appointmentStatus?: 'confirmed' | 'pending' | 'cancelled' | 'attended' | 'no_show' | 'need_confirm'
   notes?: string
+  bookingReference?: string
+  sessionId?: string
+  partySize?: number
+  paymentStatus?: string
+  paymentStatusRaw?: string
+  paymentMethod?: string
+  paymentMethodRaw?: string
+  paymentReference?: string
+  instapayReference?: string
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  staffId?: string
+  staffName?: string
+  roomId?: string
+  roomName?: string
+  matchedFields?: string[]
   service?: {
     name: string
     duration: number
@@ -473,6 +621,104 @@ export interface AdminCreateBookingRequest {
 export interface RescheduleBookingRequest {
   startTime: string
   resourceId?: string
+}
+
+export type WaitlistStatus = 'ACTIVE' | 'NOTIFIED' | 'LEFT' | 'EXPIRED' | 'BOOKED'
+
+export interface WaitlistEntry {
+  id: string
+  status: WaitlistStatus
+  serviceId: string
+  branchId: string
+  slotStart: string
+  slotEnd?: string | null
+  resourceId?: string | null
+  sessionId?: string | null
+  userId?: string | null
+  partySize?: number | null
+  customerName?: string | null
+  customerEmail?: string | null
+  customerPhone?: string | null
+  notes?: string | null
+  removedAt?: string | null
+  leaveReason?: string | null
+  createdAt: string
+  updatedAt: string
+  service?: Service
+  branch?: Branch
+  resource?: Staff | Asset | null
+  session?: Session | null
+}
+
+export interface JoinWaitlistRequest {
+  serviceId: string
+  branchId: string
+  slotStart: string
+  slotEnd?: string
+  resourceId?: string
+  sessionId?: string
+  userId?: string
+  partySize?: number
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  notes?: string
+}
+
+export interface LeaveWaitlistRequest {
+  entryId: string
+  customerEmail?: string
+  customerPhone?: string
+  reason?: string
+}
+
+export interface NotifyWaitlistRequest {
+  entryId?: string
+  branchId?: string
+  serviceId?: string
+  slotStart?: string
+  resourceId?: string
+  sessionId?: string
+  limit?: number
+  message?: string
+}
+
+export interface WaitlistListParams {
+  branchId?: string
+  serviceId?: string
+  resourceId?: string
+  sessionId?: string
+  date?: string
+  slotStart?: string
+  status?: 'active' | 'notified' | 'left' | 'expired' | 'booked'
+  page?: number
+  pageSize?: number
+}
+
+export interface WaitlistBySlotSummary {
+  slotStart: string
+  slotEnd?: string | null
+  total: number
+  activeCount: number
+  notifiedCount: number
+  leftCount: number
+  expiredCount: number
+  bookedCount: number
+  entries: WaitlistEntry[]
+}
+
+export interface WaitlistListResponse {
+  data: WaitlistEntry[]
+  total: number
+  page: number
+  pageSize: number
+  hasNext: boolean
+  bySlot?: WaitlistBySlotSummary[]
+}
+
+export interface NotifyWaitlistResponse {
+  count: number
+  data: WaitlistEntry[]
 }
 
 // Availability - flat slot format (verified from actual API)
@@ -663,8 +909,10 @@ export interface AdminBookingsParams {
   date?: string
   fromDate?: string
   toDate?: string
+  branchId?: string
   staffId?: string
   status?: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
+  search?: string
   page?: number
   pageSize?: number
   sortBy?: string
@@ -672,6 +920,14 @@ export interface AdminBookingsParams {
 }
 
 // Business Settings — matches PATCH/GET /admin/settings backend shape exactly
+export interface ApiNoShowPolicySettings {
+  restrictFutureBookings?: boolean
+  restrictAfterCount?: number
+  chargeFee?: boolean
+  feePercentage?: number
+  restrictionDays?: number
+}
+
 export interface ApiBookingPolicies {
   bookingLeadTime?: number // min hours before booking can be made
   maxAdvanceBooking?: number // max days in advance
@@ -680,15 +936,20 @@ export interface ApiBookingPolicies {
   cancellationDeadlineHours?: number // hours before appointment cancellation is allowed
   allowReschedule?: boolean
   rescheduleDeadlineHours?: number // hours before appointment reschedule is allowed
-  noShowPolicy?: 'NONE' | 'CHARGE_FEE' | 'RESTRICT'
+  noShowPolicy?: ApiNoShowPolicySettings | 'NONE' | 'CHARGE_FEE' | 'RESTRICT'
 }
 
 export interface ApiSchedulingSettings {
-  defaultSlotDuration?: number // minutes
-  bufferTimeBetweenAppointments?: number // minutes between appointments
+  defaultSlotDuration?: number // backwards-compatible alias
+  defaultBookingDuration?: number
+  bufferTimeBetweenAppointments?: number // backwards-compatible alias
+  bufferTimeBetweenBookings?: number
   allowWalkIns?: boolean
   allowOverbooking?: boolean
   overbookingPercentage?: number
+  overbookingType?: 'percentage' | 'fixed'
+  overbookingFixedCount?: number
+  enableWaitlist?: boolean
 }
 
 export interface ApiCustomerSettings {
@@ -716,9 +977,46 @@ export interface ApiBrandingSettings {
   bookingPageTheme?: 'light' | 'dark' | 'auto'
 }
 
+export interface ApiNotificationChannel {
+  email?: boolean
+  sms?: boolean
+  push?: boolean
+}
+
+export interface ApiNotificationSettings {
+  newBookingAlert?: ApiNotificationChannel
+  cancellationAlert?: ApiNotificationChannel
+  customerReminders?: {
+    enabled?: boolean
+    beforeHours?: number[]
+  }
+  staffNotifications?: boolean
+  dailyDigest?: {
+    enabled?: boolean
+    time?: string
+    recipients?: string[]
+  }
+}
+
+export interface ApiPaymentSettings {
+  // Canonical backend fields
+  requireDeposit?: boolean
+  depositPercentage?: number
+  acceptedPaymentMethods?: string[]
+  taxRate?: number
+  taxInclusive?: boolean
+  // Backward-compatible aliases that backend may still return
+  depositRequired?: boolean
+  acceptedMethods?: string[]
+  taxPercentage?: number
+  taxEnabled?: boolean
+}
+
 export interface BusinessSettings {
   bookingPolicies?: ApiBookingPolicies
   schedulingSettings?: ApiSchedulingSettings
+  notificationSettings?: ApiNotificationSettings
+  paymentSettings?: ApiPaymentSettings
   customerSettings?: ApiCustomerSettings
   calendarSettings?: ApiCalendarSettings
   brandingSettings?: ApiBrandingSettings

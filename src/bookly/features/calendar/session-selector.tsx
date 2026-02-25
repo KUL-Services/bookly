@@ -53,10 +53,19 @@ export function SessionSelector({ resourceId, date, selectedSessionId, onSelectS
 
       try {
         const dateStr = format(date, 'yyyy-MM-dd')
-        const result = await SessionsService.getSessionsForDate({
-          date: dateStr,
-          resourceId
-        })
+        let result
+        try {
+          result = await SessionsService.getSessionsForDateWithStats({
+            date: dateStr,
+            resourceId
+          })
+        } catch {
+          // Backward-compatible fallback if stats endpoint is unavailable
+          result = await SessionsService.getSessionsForDate({
+            date: dateStr,
+            resourceId
+          })
+        }
 
         // Filter to only active sessions with available spots
         const availableSessions = (result.data || []).filter(

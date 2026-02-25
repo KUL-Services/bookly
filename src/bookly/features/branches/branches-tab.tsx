@@ -65,6 +65,20 @@ const formatWorkingHours = (hours: { day: string; isOpen: boolean; openTime: str
   return `Today: ${todayHours.openTime} - ${todayHours.closeTime}`
 }
 
+const formatBranchLocation = (branch: { city?: string; country?: string; address?: string }) => {
+  const location = [branch.city, branch.country].filter(Boolean).join(', ')
+
+  if (location) {
+    return location
+  }
+
+  if (branch.address?.trim()) {
+    return branch.address
+  }
+
+  return 'Location not set'
+}
+
 export function BranchesTab() {
   const [currentTab, setCurrentTab] = useState(0)
   const [actionMenuAnchor, setActionMenuAnchor] = useState<null | HTMLElement>(null)
@@ -247,7 +261,7 @@ export function BranchesTab() {
                   secondary={
                     <Box component='span' sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                       <Typography variant='caption' color='text.secondary'>
-                        {branch.city}, {branch.country}
+                        {formatBranchLocation(branch)}
                       </Typography>
                       <Typography variant='caption' color={branch.isActive ? 'success.main' : 'error.main'}>
                         {branch.isActive ? 'Active' : 'Inactive'}
@@ -314,7 +328,7 @@ export function BranchesTab() {
                   {selectedBranch.address}
                 </Typography>
                 <Typography variant='body2' color='text.secondary'>
-                  {selectedBranch.city}, {selectedBranch.country}
+                  {formatBranchLocation(selectedBranch)}
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 3, mt: 1.5 }}>

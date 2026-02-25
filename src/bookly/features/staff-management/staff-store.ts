@@ -7,8 +7,6 @@ import { ServicesService } from '@/lib/api/services/services.service'
 import { BranchesService } from '@/lib/api/services/branches.service'
 import { SessionsService } from '@/lib/api/services/sessions.service'
 import type { Session, CreateSessionRequest } from '@/lib/api/types'
-// Mock data imports kept as fallbacks only\nimport {} from '@/bookly/data/staff-management-mock-data'
-import { mockStaff } from '@/bookly/data/mock-data'
 import type {
   WeeklyBusinessHours,
   WeeklyStaffHours,
@@ -295,6 +293,10 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       if (result.data && Array.isArray(result.data) && result.data.length > 0) {
         // Map API staff to a shape compatible with the UI
         const apiStaff = result.data.map((s: any) => ({
+          // Support both legacy and canonical mode fields from backend
+          _currentBookingMode: s.bookingMode || s.currentBookingMode || 'DYNAMIC',
+          _pendingBookingMode: s.pendingBookingMode || null,
+          _bookingModeEffectiveDate: s.bookingModeEffectiveDate || s.effectiveDate || null,
           id: s.id,
           name: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim(),
           title: s.title || s.role || '',
@@ -305,8 +307,10 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
           branchId: s.branchId || '1-1',
           businessId: s.businessId || '',
           isActive: s.isActive !== false,
-          staffType: s.bookingMode === 'STATIC' ? 'static' : 'dynamic',
-          bookingMode: s.bookingMode || 'DYNAMIC',
+          staffType: (s.bookingMode || s.currentBookingMode) === 'STATIC' ? 'static' : 'dynamic',
+          bookingMode: s.bookingMode || s.currentBookingMode || 'DYNAMIC',
+          pendingBookingMode: s.pendingBookingMode || null,
+          bookingModeEffectiveDate: s.bookingModeEffectiveDate || s.effectiveDate || null,
           maxConcurrentBookings: s.maxConcurrentBookings || 1,
           roomAssignments: s.roomAssignments || []
         }))
@@ -324,12 +328,11 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
         set({ staffMembers: apiStaff, staffServiceAssignments: serviceAssignments, isStaffLoading: false })
         syncWithCalendar()
       } else {
-        // Fallback to mockStaff
-        set({ staffMembers: mockStaff, isStaffLoading: false })
+        set({ staffMembers: [], staffServiceAssignments: {}, isStaffLoading: false })
       }
     } catch (err) {
-      console.warn('Failed to fetch staff from API, using mock data:', err)
-      set({ staffMembers: mockStaff, isStaffLoading: false })
+      console.warn('Failed to fetch staff from API:', err)
+      set({ staffMembers: [], staffServiceAssignments: {}, isStaffLoading: false })
     }
   },
 
@@ -416,7 +419,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       const [schedulesRes, assignmentsRes, exceptionsRes, breaksRes, sessionsRes] = await Promise.all([
         SchedulingService.getSchedules(),
         SchedulingService.getAssignments().catch(() => ({ data: [] })),
-        SchedulingService.getExceptions().catch(() => ({ data: [] })),
+        SchedulingService.getExceptions({ includeBusinessWide: true }).catch(() => ({ data: [] })),
         SchedulingService.getBreaks().catch(() => ({ data: [] })),
         SessionsService.getSessions().catch(() => ({ data: [] }))
       ])
@@ -1477,13 +1480,21 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     if (state.staffTypeUpdates[staffId]) {
       return state.staffTypeUpdates[staffId]
     }
-    // Fall back to mockStaff
-    const staff = mockStaff.find(s => s.id === staffId)
+    const staff = state.staffMembers.find((s: any) => s.id === staffId)
     return staff?.staffType || 'dynamic'
   },
 
   getStaffTypeForDate: (staffId, date) => {
     const state = get()
+
+    // Prefer backend-scheduled booking mode transition when present.
+    const staff = state.staffMembers.find((s: any) => s.id === staffId)
+    if (staff?.pendingBookingMode && staff?.bookingModeEffectiveDate) {
+      const effectiveDate = new Date(staff.bookingModeEffectiveDate)
+      if (!Number.isNaN(effectiveDate.getTime()) && date >= effectiveDate) {
+        return staff.pendingBookingMode === 'STATIC' ? 'static' : 'dynamic'
+      }
+    }
 
     // Check for transitions affecting this date
     const transition = state.staffTypeTransitions.filter(t => t.staffId === staffId).find(t => date >= t.effectiveDate)
@@ -1570,6 +1581,11 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
         bookingMode: staffType === 'static' ? 'STATIC' : 'DYNAMIC'
       })
       await get().fetchStaffFromApi()
+      set(state => {
+        const nextUpdates = { ...state.staffTypeUpdates }
+        delete nextUpdates[staffId]
+        return { staffTypeUpdates: nextUpdates, updateCounter: state.updateCounter + 1 }
+      })
       syncWithCalendar()
     } catch (err: any) {
       console.error('Failed to update staff type:', err)
@@ -1620,46 +1636,58 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   assignStaffToRoom: (staffId, roomAssignment) => {
-    const staff = mockStaff.find(s => s.id === staffId)
-    if (staff) {
-      if (!staff.roomAssignments) {
-        staff.roomAssignments = []
-      }
-      staff.roomAssignments.push(roomAssignment)
-      // Automatically set staff type to static if not already
-      if (staff.staffType !== 'static') {
-        staff.staffType = 'static'
-      }
-      syncWithCalendar()
-    }
+    set(state => ({
+      staffMembers: state.staffMembers.map((staff: any) => {
+        if (staff.id !== staffId) return staff
+        const roomAssignments = [...(staff.roomAssignments || []), roomAssignment]
+        return {
+          ...staff,
+          roomAssignments,
+          staffType: 'static'
+        }
+      })
+    }))
+    syncWithCalendar()
   },
 
   removeStaffRoomAssignment: (staffId, assignmentIndex) => {
-    const staff = mockStaff.find(s => s.id === staffId)
-    if (staff && staff.roomAssignments) {
-      staff.roomAssignments.splice(assignmentIndex, 1)
-      syncWithCalendar()
-    }
+    set(state => ({
+      staffMembers: state.staffMembers.map((staff: any) => {
+        if (staff.id !== staffId) return staff
+        const roomAssignments = [...(staff.roomAssignments || [])]
+        if (assignmentIndex >= 0 && assignmentIndex < roomAssignments.length) {
+          roomAssignments.splice(assignmentIndex, 1)
+        }
+        return { ...staff, roomAssignments }
+      })
+    }))
+    syncWithCalendar()
   },
 
   updateStaffRoomAssignment: (staffId, assignmentIndex, updates) => {
-    const staff = mockStaff.find(s => s.id === staffId)
-    if (staff && staff.roomAssignments && staff.roomAssignments[assignmentIndex]) {
-      staff.roomAssignments[assignmentIndex] = {
-        ...staff.roomAssignments[assignmentIndex],
-        ...updates
-      }
-      syncWithCalendar()
-    }
+    set(state => ({
+      staffMembers: state.staffMembers.map((staff: any) => {
+        if (staff.id !== staffId) return staff
+        const roomAssignments = [...(staff.roomAssignments || [])]
+        if (roomAssignments[assignmentIndex]) {
+          roomAssignments[assignmentIndex] = {
+            ...roomAssignments[assignmentIndex],
+            ...updates
+          }
+        }
+        return { ...staff, roomAssignments }
+      })
+    }))
+    syncWithCalendar()
   },
 
   getStaffRoomAssignments: staffId => {
-    const staff = mockStaff.find(s => s.id === staffId)
+    const staff = get().staffMembers.find((s: any) => s.id === staffId)
     return staff?.roomAssignments || []
   },
 
   isStaffBusyInRoom: (staffId, date, time) => {
-    const staff = mockStaff.find(s => s.id === staffId)
+    const staff = get().staffMembers.find((s: any) => s.id === staffId)
     if (!staff || !staff.roomAssignments || staff.roomAssignments.length === 0) {
       return { busy: false }
     }

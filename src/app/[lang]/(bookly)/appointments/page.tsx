@@ -27,9 +27,6 @@ import { ReviewsService } from '@/lib/api/services/reviews.service'
 import type { Booking } from '@/lib/api/types'
 import { format, parseISO, isPast } from 'date-fns'
 
-// Mock data for favourites (no API endpoint exists)
-import { mockBusinesses } from '@/bookly/data/mock-data'
-
 type TabType = 'upcoming' | 'past' | 'favourites'
 
 const favouriteBusinesses = [
@@ -39,7 +36,7 @@ const favouriteBusinesses = [
     category: 'Hair Salon',
     rating: 4.9,
     reviewCount: 234,
-    image: mockBusinesses[0]?.coverImage || '',
+    image: '/images/illustrations/characters/10.png',
     address: '123 Beauty Lane, Cairo'
   },
   {
@@ -48,7 +45,7 @@ const favouriteBusinesses = [
     category: 'Spa & Massage',
     rating: 4.8,
     reviewCount: 189,
-    image: mockBusinesses[2]?.coverImage || mockBusinesses[0]?.coverImage || '',
+    image: '/images/illustrations/characters/12.png',
     address: '789 Wellness Ave, Cairo'
   },
   {
@@ -57,7 +54,7 @@ const favouriteBusinesses = [
     category: 'Beauty Salon',
     rating: 4.7,
     reviewCount: 156,
-    image: mockBusinesses[1]?.coverImage || mockBusinesses[0]?.coverImage || '',
+    image: '/images/illustrations/characters/11.png',
     address: '555 Glow Street, Cairo'
   }
 ]

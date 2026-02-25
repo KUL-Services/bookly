@@ -45,9 +45,6 @@ import { BookingService } from '@/lib/api/services/booking.service'
 import { StaffService } from '@/lib/api/services/staff.service'
 import type { Booking, Staff } from '@/lib/api/types'
 
-// Fallback mock data removed
-// import { mockBookings } from '@/bookly/data/mock-data'
-
 const statusColor = {
   CONFIRMED: 'success',
   PENDING: 'warning',

@@ -133,7 +133,7 @@ const StaffManagementStep = ({
   }
 
   const handleSaveStaff = () => {
-    if (!newStaffName.trim() || !newStaffRole.trim() || newStaffBranchIds.length === 0) return
+    if (!newStaffName.trim() || newStaffBranchIds.length === 0) return
 
     const currentStaff = formData.staff || []
 
@@ -281,12 +281,11 @@ const StaffManagementStep = ({
             />
             <TextField
               fullWidth
-              label='Role / Position'
+              label='Role / Position (Optional)'
               value={newStaffRole}
               onChange={e => setNewStaffRole(e.target.value)}
               placeholder='e.g., Barber, Stylist, Manager, Instructor'
               helperText='The role or specialty of this staff member'
-              required
             />
 
             <TextField
@@ -355,7 +354,7 @@ const StaffManagementStep = ({
           <Button
             variant='contained'
             onClick={handleSaveStaff}
-            disabled={!newStaffName.trim() || !newStaffRole.trim() || newStaffBranchIds.length === 0}
+            disabled={!newStaffName.trim() || newStaffBranchIds.length === 0}
           >
             {editingId ? 'Save Changes' : 'Add Staff'}
           </Button>
@@ -375,10 +374,18 @@ const StaffManagementStep = ({
         <Button variant='outlined' onClick={handlePrev}>
           Back
         </Button>
-        <Button variant='contained' onClick={handleContinue} disabled={!formData.staff || formData.staff.length === 0}>
-          Continue
-        </Button>
+        <Box className='flex gap-2'>
+          <Button variant='text' color='inherit' onClick={handleNext}>
+            Skip for now
+          </Button>
+          <Button variant='contained' onClick={handleContinue} disabled={!formData.staff || formData.staff.length === 0}>
+            Continue
+          </Button>
+        </Box>
       </Box>
+      <Typography variant='caption' color='text.secondary' sx={{ textAlign: 'center', mt: -1 }}>
+        You can add staff and services later from your dashboard.
+      </Typography>
     </div>
   )
 }

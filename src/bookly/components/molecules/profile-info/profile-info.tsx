@@ -1,16 +1,13 @@
 import Avatar from '../avatar/avatar.component'
-import { H1, H2, KulIcon } from '../../atoms'
+import { H1, KulIcon } from '../../atoms'
 import Button from '../button/button.component'
-import { mockBusinesses } from '@/bookly/data/mock-data'
 import { Card } from '../../ui/card'
 
 function ProfileInfo() {
-  const mockData = mockBusinesses[0]
-
   return (
     <Card className='p-8 border border-gray-300 shadow-lg'>
       <div className='flex flex-col md:flex-row items-start gap-6'>
-        <Avatar avatarTitle='Aly Lashin' imageUrl={mockData.coverImage} size='6XL' alt='Aly Lashin' />
+        <Avatar avatarTitle='Aly Lashin' imageUrl='/images/avatars/1.png' size='6XL' alt='Aly Lashin' />
 
         <div className='flex-1 space-y-4'>
           <div className='flex flex-col md:flex-row md:items-start md:justify-between gap-4 '>

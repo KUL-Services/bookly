@@ -10,27 +10,44 @@ import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
 import InputAdornment from '@mui/material/InputAdornment'
 import Alert from '@mui/material/Alert'
 import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
 import Chip from '@mui/material/Chip'
+import ToggleButton from '@mui/material/ToggleButton'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 
 // Store
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 
 const SchedulingSettingsTab = () => {
-  const { schedulingSettings, updateSchedulingSettings } = useBusinessSettingsStore()
+  const { schedulingSettings, updateSchedulingSettings, saveSchedulingSettings, isSaving } = useBusinessSettingsStore()
 
   return (
     <Grid container spacing={6}>
+      <Grid item xs={12}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant='contained'
+            onClick={saveSchedulingSettings}
+            disabled={isSaving}
+            startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
+          >
+            {isSaving ? 'Saving...' : 'Save Scheduling'}
+          </Button>
+        </Box>
+      </Grid>
+
       {/* Info Card about Scheduling Modes */}
       <Grid item xs={12}>
         <Alert severity='info' icon={<i className='ri-information-line' />}>
           <Typography variant='body2'>
-            <strong>Scheduling Mode is Per Staff/Room:</strong> In Bookly, each staff member and room can be configured
-            as either <Chip label='Dynamic' size='small' color='primary' sx={{ mx: 0.5 }} /> (appointment-based) or
-            <Chip label='Static' size='small' color='secondary' sx={{ mx: 0.5 }} /> (class/slot-based). Configure this
+            <strong>Scheduling Mode is Per Staff/Room:</strong> Each staff member and room can be configured
+            as either <Chip label='Flex' size='small' color='primary' sx={{ mx: 0.5 }} /> (appointment-based) or
+            <Chip label='Fixed' size='small' color='secondary' sx={{ mx: 0.5 }} /> (class/session-based). Configure this
             in the <strong>Staff</strong> and <strong>Rooms</strong> management sections.
           </Typography>
         </Alert>
@@ -152,27 +169,89 @@ const SchedulingSettingsTab = () => {
 
               {schedulingSettings.allowOverbooking && (
                 <>
-                  <TextField
-                    label='Overbooking Limit'
-                    type='number'
-                    value={schedulingSettings.overbookingPercentage}
-                    onChange={e =>
-                      updateSchedulingSettings({
-                        overbookingPercentage: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
-                      })
-                    }
-                    InputProps={{
-                      endAdornment: <InputAdornment position='end'>%</InputAdornment>
-                    }}
-                    helperText='Maximum overbooking percentage above normal capacity'
+                  <ToggleButtonGroup
+                    value={schedulingSettings.overbookingType || 'percentage'}
+                    exclusive
+                    onChange={(_, value) => value && updateSchedulingSettings({ overbookingType: value })}
                     size='small'
-                  />
+                    fullWidth
+                  >
+                    <ToggleButton value='percentage'>Percentage</ToggleButton>
+                    <ToggleButton value='fixed'>Fixed Number</ToggleButton>
+                  </ToggleButtonGroup>
+
+                  {(schedulingSettings.overbookingType || 'percentage') === 'percentage' ? (
+                    <TextField
+                      label='Overbooking Limit'
+                      type='number'
+                      value={schedulingSettings.overbookingPercentage}
+                      onChange={e =>
+                        updateSchedulingSettings({
+                          overbookingPercentage: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
+                        })
+                      }
+                      InputProps={{
+                        endAdornment: <InputAdornment position='end'>%</InputAdornment>
+                      }}
+                      helperText='Maximum overbooking percentage above normal capacity'
+                      size='small'
+                    />
+                  ) : (
+                    <TextField
+                      label='Extra Bookings Allowed'
+                      type='number'
+                      value={schedulingSettings.overbookingFixedCount || 0}
+                      onChange={e =>
+                        updateSchedulingSettings({
+                          overbookingFixedCount: Math.max(0, parseInt(e.target.value) || 0)
+                        })
+                      }
+                      InputProps={{
+                        endAdornment: <InputAdornment position='end'>extra bookings</InputAdornment>
+                      }}
+                      helperText='Maximum additional bookings beyond normal capacity'
+                      size='small'
+                    />
+                  )}
 
                   <Alert severity='warning' sx={{ fontSize: '0.875rem' }}>
                     <strong>Warning:</strong> Overbooking may lead to scheduling conflicts and customer dissatisfaction.
                     Use this feature carefully.
                   </Alert>
                 </>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Waitlist */}
+      <Grid item xs={12} md={6}>
+        <Card>
+          <CardHeader title='Waitlist' subheader='Allow customers to join a waitlist for full slots' />
+          <CardContent>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={schedulingSettings.enableWaitlist || false}
+                    onChange={e => updateSchedulingSettings({ enableWaitlist: e.target.checked })}
+                  />
+                }
+                label={
+                  <Box>
+                    <Typography variant='body1'>Enable Waitlist</Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      When a slot is full, customers can join a waitlist. If a cancellation occurs, the first person on the waitlist is notified.
+                    </Typography>
+                  </Box>
+                }
+              />
+
+              {schedulingSettings.enableWaitlist && (
+                <Alert severity='info' sx={{ fontSize: '0.875rem' }}>
+                  Waitlist management will be available in the Calendar view. Customers will be automatically notified when a spot opens up.
+                </Alert>
               )}
             </Box>
           </CardContent>

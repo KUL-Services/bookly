@@ -144,7 +144,7 @@ const BusinessProfileStep = ({
         InputProps={{
           startAdornment: (
             <Typography color='text.secondary' className='mr-1'>
-              bookly.com/
+              zerv.app/
             </Typography>
           )
         }}
@@ -178,12 +178,18 @@ const BusinessProfileStep = ({
             onChange={e => updateFormData({ acceptsOnlineBooking: e.target.checked })}
           />
         }
-        label='Accept online bookings'
+        label='Make business visible to customers'
       />
+      <Typography variant='caption' color='text.secondary' sx={{ mt: -1, ml: 4 }}>
+        When enabled, your business page will be publicly accessible. You can change this later in settings.
+      </Typography>
 
       <Paper variant='outlined' className='p-4'>
-        <Typography variant='subtitle2' className='mb-3'>
+        <Typography variant='subtitle2' className='mb-1'>
           Working Hours
+        </Typography>
+        <Typography variant='caption' color='text.secondary' className='mb-3 block'>
+          These are your default business hours. You can customize them per branch later in Management &gt; Shifts.
         </Typography>
         <div className='flex flex-col gap-2'>
           {DAYS_OF_WEEK.map(day => {

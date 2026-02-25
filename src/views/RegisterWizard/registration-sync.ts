@@ -13,7 +13,6 @@ import { DEFAULT_SERVICE_CATEGORIES } from './types'
 import type { ExtendedService } from '@/bookly/features/services/types'
 import { useServicesStore } from '@/bookly/features/services/services-store'
 import { useStaffManagementStore } from '@/bookly/features/staff-management/staff-store'
-import { mockStaff } from '@/bookly/data/mock-data'
 import type { WeeklyStaffHours, DayOfWeek } from '@/bookly/features/calendar/types'
 
 // ============================================================================
@@ -32,23 +31,24 @@ function convertToExtendedService(service: RegistrationService, businessId: stri
     duration: service.duration,
     categoryId: service.categoryId,
     color: service.color,
-    // Extended fields
-    bufferTime: 0,
-    minBookingNotice: 60, // 1 hour default
-    maxAdvanceBooking: 60 * 24 * 30, // 30 days default
-    allowOnlineBooking: true,
-    requireDeposit: false,
-    depositAmount: 0,
-    isActive: true,
+    bookingInterval: { hours: 0, minutes: 15 },
+    paddingTime: { rule: 'none', minutes: 0 },
+    processingTime: {
+      during: { hours: 0, minutes: 0 },
+      after: { hours: 0, minutes: 0 }
+    },
+    taxRate: 'tax_free',
+    parallelClients: 1,
+    clientSettings: { message: '', questions: [] },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
 }
 
 /**
- * Convert registration staff to mock staff format
+ * Convert registration staff to staff-store shape
  */
-function convertToMockStaff(staff: StaffMember, businessId: string = '1') {
+function convertToStaffStoreMember(staff: StaffMember, businessId: string = '1') {
   return {
     id: staff.id,
     name: staff.name,
@@ -180,29 +180,24 @@ export function syncStaffToStore(
   const defaultHours = convertToStaffWorkingHours(workingHours)
 
   staff.forEach(member => {
-    // Check if staff member already exists in mockStaff
-    const existingIndex = mockStaff.findIndex(s => s.id === member.id)
-    const mockStaffData = convertToMockStaff(member)
+    const existingStaff = staffStore.staffMembers.find((s: any) => s.id === member.id)
+    const staffMemberData = convertToStaffStoreMember(member)
 
     // Staff type defaults to 'dynamic', can be changed individually in staff management
-    mockStaffData.staffType = 'dynamic'
+    staffMemberData.staffType = 'dynamic'
 
-    if (existingIndex >= 0) {
-      // Update existing staff
-      mockStaff[existingIndex] = {
-        ...mockStaff[existingIndex],
-        ...mockStaffData
-      }
+    if (existingStaff) {
+      staffStore.updateStaffMember(member.id, {
+        ...staffMemberData,
+        workingHours: defaultHours
+      })
     } else {
-      // Add new staff to mockStaff array
-      mockStaff.push(mockStaffData)
+      // Create staff member in store (this will add working hours)
+      staffStore.createStaffMember({
+        ...staffMemberData,
+        workingHours: defaultHours
+      })
     }
-
-    // Create staff member in store (this will add working hours)
-    staffStore.createStaffMember({
-      ...mockStaffData,
-      workingHours: defaultHours
-    })
 
     // Assign services to staff based on registration service assignments
     const assignedServices = services.filter(s => s.staffIds?.includes(member.id)).map(s => s.id)
@@ -262,7 +257,7 @@ export function syncBusinessHoursToStore(
       if (dayOfWeek && hours) {
         staffStore.updateBusinessHours(branch.id, dayOfWeek, {
           isOpen: hours.isOpen,
-          shifts: hours.isOpen ? [{ id: `biz-${dayOfWeek}`, start: hours.open, end: hours.close }] : []
+          shifts: hours.isOpen ? [{ start: hours.open, end: hours.close }] : []
         })
       }
     })
@@ -322,7 +317,7 @@ export function needsRegistrationSync(formData: BusinessRegistrationData): boole
   // Check if any registration data exists but isn't in stores
   const hasUnSyncedServices = formData.services?.some(s => !servicesStore.getServiceById(s.id))
 
-  const hasUnSyncedStaff = formData.staff?.some(s => !mockStaff.find(m => m.id === s.id))
+  const hasUnSyncedStaff = formData.staff?.some(s => !staffStore.staffMembers.find((m: any) => m.id === s.id))
 
   return Boolean(hasUnSyncedServices || hasUnSyncedStaff)
 }

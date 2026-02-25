@@ -4,7 +4,6 @@ import { Box, Typography, Avatar, Chip, Divider, Tooltip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, addMinutes, isSameDay, isToday } from 'date-fns'
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { mockStaff as fallbackMockStaff, mockServices as fallbackMockServices } from '@/bookly/data/mock-data'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import { useCalendarStore } from './state'
 import { BrandWatermark } from '@/bookly/components/atoms/brand-watermark'
@@ -246,13 +245,13 @@ export default function UnifiedMultiResourceDayView({
   const branchFilters = useCalendarStore(state => state.branchFilters)
   const staffFilters = useCalendarStore(state => state.staffFilters)
   const roomFilters = useCalendarStore(state => state.roomFilters)
-  const { rooms, staffWorkingHours } = useStaffManagementStore()
+  const { rooms, staffWorkingHours, staffMembers: storeStaffMembers, apiServices: storeServices } =
+    useStaffManagementStore()
 
-  // Use API-loaded data from stores, fallback to mocks
+  // Use API-loaded data from stores
   const calendarStaff = useCalendarStore(state => state.staff)
-  const { apiServices: storeServices } = useStaffManagementStore()
-  const allStaff: any[] = calendarStaff?.length ? calendarStaff : (fallbackMockStaff as any[])
-  const allServices: any[] = storeServices?.length ? storeServices : (fallbackMockServices as any[])
+  const allStaff: any[] = calendarStaff?.length ? calendarStaff : storeStaffMembers?.length ? storeStaffMembers : []
+  const allServices: any[] = storeServices?.length ? storeServices : []
 
   // Refs for scroll synchronization
   const headerScrollRef = useRef<HTMLDivElement>(null)

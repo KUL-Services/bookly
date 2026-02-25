@@ -8,9 +8,7 @@ import TableRow from '@mui/material/TableRow'
 import TableCell from '@mui/material/TableCell'
 import TableBody from '@mui/material/TableBody'
 import Typography from '@mui/material/Typography'
-
-// Data Imports
-import { mockBookings, mockServices, mockBusinesses } from '@/bookly/data/mock-data'
+import type { Booking } from '@/bookly/data/types'
 
 type Row = {
   key: string
@@ -21,12 +19,12 @@ type Row = {
   revenue: number
 }
 
-const TopServices = () => {
+const TopServices = ({ bookings }: { bookings: Booking[] }) => {
   const map = new Map<string, Row>() // key: businessId|serviceName
 
-  mockBookings.forEach(b => {
+  bookings.forEach(b => {
     const key = `${b.businessId}|${b.serviceName}`
-    const businessName = mockBusinesses.find(x => x.id === b.businessId)?.name || '—'
+    const businessName = b.businessName || b.businessId || '—'
     const row = map.get(key) || {
       key,
       serviceName: b.serviceName,
@@ -40,12 +38,9 @@ const TopServices = () => {
     map.set(key, row)
   })
 
-  // Compute avg price using mockServices if possible
+  // Compute avg price from observed booking values
   for (const row of map.values()) {
-    const svc = mockServices.find(
-      s => s.name === row.serviceName && mockBusinesses.find(b => b.id === s.businessId)?.name === row.business
-    )
-    row.avgPrice = svc ? svc.price : row.revenue / Math.max(1, row.bookings)
+    row.avgPrice = row.revenue / Math.max(1, row.bookings)
   }
 
   const rows = Array.from(map.values())

@@ -1,5 +1,5 @@
 import { apiClient } from '../api-client'
-import type { Staff, CreateStaffRequest, UpdateStaffRequest } from '../types'
+import type { Staff, CreateStaffRequest, UpdateStaffRequest, BookingModeStatus } from '../types'
 
 export class StaffService {
   // Admin only - Get staff members for admin's business
@@ -25,5 +25,10 @@ export class StaffService {
   // Admin only - Cancel pending booking mode transition
   static async cancelBookingModeTransition(id: string) {
     return apiClient.delete<Staff>(`/admin/staff/${id}/booking-mode-transition`)
+  }
+
+  // Admin only - Get booking mode scheduling status
+  static async getBookingModeStatus(id: string) {
+    return apiClient.get<BookingModeStatus>(`/admin/staff/${id}/booking-mode-status`)
   }
 }

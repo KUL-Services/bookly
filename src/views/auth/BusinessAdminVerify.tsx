@@ -174,16 +174,25 @@ const BusinessAdminVerify = ({ mode }: { mode: Mode }) => {
 
               <div className='flex justify-center items-center flex-wrap gap-2'>
                 <Typography>Didn't receive the code?</Typography>
-                <Typography
-                  component='button'
+                <Button
+                  size='small'
+                  variant='outlined'
                   color='primary'
                   onClick={() => {
                     // Resend verification code logic would go here
                     console.log('Resend verification code')
                   }}
+                  sx={{
+                    textTransform: 'none',
+                    borderRadius: 999,
+                    px: 2,
+                    py: 0.5,
+                    minHeight: 32,
+                    fontWeight: 600
+                  }}
                 >
                   Resend Code
-                </Typography>
+                </Button>
               </div>
 
               <div className='flex justify-center items-center flex-wrap gap-2'>

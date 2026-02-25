@@ -6,16 +6,15 @@ import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 
-// Data Imports
-import { mockBookings } from '@/bookly/data/mock-data'
+import type { Booking } from '@/bookly/data/types'
 
-const ClientsActivity = () => {
+const ClientsActivity = ({ bookings }: { bookings: Booking[] }) => {
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const thisMonth = mockBookings.filter(b => new Date(b.date) >= monthStart && new Date(b.date) <= now)
+  const thisMonth = bookings.filter(b => new Date(b.date) >= monthStart && new Date(b.date) <= now)
 
   const total = thisMonth.length
-  const completed = thisMonth.filter(b => b.status === 'completed').length
+  const completed = thisMonth.filter(b => b.status === 'completed' || b.status === 'attended').length
   const cancelled = thisMonth.filter(b => b.status === 'cancelled').length
   const activeBusinesses = new Set(thisMonth.map(b => b.businessId)).size
   const uniqueServices = new Set(thisMonth.map(b => b.serviceName)).size

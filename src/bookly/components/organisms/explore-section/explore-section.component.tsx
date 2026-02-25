@@ -2,7 +2,6 @@
 
 import { H2 } from '@/bookly/components/atoms'
 import { CategoryCard } from '@/bookly/components/molecules'
-import { categories } from '@/bookly/data/mock-data'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
@@ -38,9 +37,16 @@ function getSlugForCategory(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
+const DEFAULT_CATEGORIES = [
+  { id: 'beauty', name: 'Beauty', slug: 'beauty', icon: 'ri-heart-pulse-line', image: '/images/categories/beauty.jpg' },
+  { id: 'fitness', name: 'Fitness', slug: 'fitness', icon: 'ri-run-line', image: '/images/categories/fitness.jpg' },
+  { id: 'wellness', name: 'Wellness', slug: 'wellness', icon: 'ri-heart-pulse-line', image: '/images/categories/wellness.jpg' },
+  { id: 'education', name: 'Education', slug: 'education', icon: 'ri-book-open-line', image: '/images/categories/education.jpg' }
+]
+
 export const ExploreSection = () => {
   const params = useParams<{ lang: string }>()
-  const [categoriesData, setCategoriesData] = useState(categories)
+  const [categoriesData, setCategoriesData] = useState(DEFAULT_CATEGORIES)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -58,7 +64,7 @@ export const ExploreSection = () => {
           setCategoriesData(mapped)
         }
       } catch {
-        // On error, keep mock categories as fallback
+        // Keep local defaults as fallback
       } finally {
         setLoading(false)
       }

@@ -518,6 +518,29 @@ const LocationStep = ({
               required
             />
 
+            <GooglePlacesAutocomplete
+              value={tempBranch.formattedAddress || tempBranch.addressLine1 || ''}
+              onChange={value => setTempBranch(prev => ({ ...prev, addressLine1: value, formattedAddress: '' }))}
+              onPlaceSelected={place => handlePlaceSelected(place, true)}
+              label='Search Branch Address'
+              helperText='Start typing to search for your address'
+            />
+
+            <GoogleMapPicker
+              latitude={tempBranch.latitude}
+              longitude={tempBranch.longitude}
+              onLocationChange={(lat, lng, address) => {
+                setTempBranch(prev => ({
+                  ...prev,
+                  latitude: lat,
+                  longitude: lng,
+                  formattedAddress: address,
+                  addressLine1: address.split(',')[0] || address
+                }))
+              }}
+              height='min(320px, 40vh)'
+            />
+
             <TextField
               fullWidth
               label='Address Line 1'

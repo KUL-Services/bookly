@@ -1,9 +1,3 @@
-import {
-  mockStaff as fallbackMockStaff,
-  mockBusinesses as fallbackMockBusinesses,
-  mockServices as fallbackMockServices
-} from '@/bookly/data/mock-data'
-import { mockTimeOffRequests } from '@/bookly/data/staff-management-mock-data'
 import type { Booking } from '@/bookly/data/types'
 import type { Booking as ApiBooking } from '@/lib/api/types'
 import type {
@@ -16,18 +10,23 @@ import type {
   DateRange,
   AppointmentStatus,
   PaymentStatus,
+  PaymentMethod,
   SelectionMethod,
   SchedulingMode
 } from './types'
 
-// Store accessor helpers — these read from stores at call time, falling back to mocks
+// Store accessor helpers — these read from stores at call time
 function getStaffFromStore(): any[] {
   try {
     const { useCalendarStore } = require('./state')
     const calendarStaff = useCalendarStore.getState().staff
     if (calendarStaff?.length) return calendarStaff
+
+    const { useStaffManagementStore } = require('../staff-management/staff-store')
+    const staffMembers = useStaffManagementStore.getState().staffMembers
+    if (staffMembers?.length) return staffMembers
   } catch {}
-  return fallbackMockStaff as any[]
+  return []
 }
 
 function getBranchesFromStore(): any[] {
@@ -36,7 +35,7 @@ function getBranchesFromStore(): any[] {
     const branches = useStaffManagementStore.getState().apiBranches
     if (branches?.length) return branches
   } catch {}
-  return fallbackMockBusinesses.flatMap((b: any) => b.branches || []) as any[]
+  return []
 }
 
 function getServicesFromStore(): any[] {
@@ -45,7 +44,16 @@ function getServicesFromStore(): any[] {
     const services = useStaffManagementStore.getState().apiServices
     if (services?.length) return services
   } catch {}
-  return fallbackMockServices as any[]
+  return []
+}
+
+function getApprovedTimeOffRequestsFromStore(): any[] {
+  try {
+    const { useStaffManagementStore } = require('../staff-management/staff-store')
+    const requests = useStaffManagementStore.getState().timeOffRequests
+    if (requests?.length) return requests.filter((req: any) => req.approved)
+  } catch {}
+  return []
 }
 
 const getDateKey = (date: Date): string => {
@@ -286,43 +294,90 @@ export function mapBookingToEvent(
 export function mapApiBookingToEvent(booking: ApiBooking, starredIds: Set<string> = new Set()): CalendarEvent {
   const start = new Date(booking.startTime)
   const end = new Date(booking.endTime)
-
-  // Map API status to AppointmentStatus
+  const normalizedStatus = String((booking as any).appointmentStatus || booking.status || '')
+    .trim()
+    .toUpperCase()
   const statusMap: Record<string, AppointmentStatus> = {
     CONFIRMED: 'confirmed',
     PENDING: 'pending',
     CANCELLED: 'cancelled',
     COMPLETED: 'attended',
-    NO_SHOW: 'no_show'
+    ATTENDED: 'attended',
+    NO_SHOW: 'no_show',
+    NEED_CONFIRM: 'need_confirm'
   }
+  const status = statusMap[normalizedStatus] || 'pending'
 
-  const status = statusMap[booking.status] || 'pending'
+  const rawPaymentStatus = String((booking as any).paymentStatus || (booking as any).paymentStatusRaw || 'UNPAID')
+    .trim()
+    .toUpperCase()
+  const paymentStatusMap: Record<string, PaymentStatus> = {
+    PAID: 'paid',
+    UNPAID: 'unpaid',
+    NEED_CONFIRM: 'need_confirm'
+  }
+  const paymentStatus = paymentStatusMap[rawPaymentStatus] || 'unpaid'
+
+  const rawPaymentMethod = String((booking as any).paymentMethod || (booking as any).paymentMethodRaw || '')
+    .trim()
+    .toUpperCase()
+  const paymentMethodMap: Record<string, PaymentMethod> = {
+    BANK_TRANSFER: 'bank_transfer',
+    CASH_ON_ARRIVAL: 'cash_on_arrival',
+    CARD_ON_ARRIVAL: 'card_on_arrival',
+    ONLINE_PAYMENT: 'online_payment',
+    INSTAPAY: 'instapay'
+  }
+  const paymentMethod = paymentMethodMap[rawPaymentMethod]
 
   // Look up staff in store to find branchId
   const allStaff = getStaffFromStore()
   const staffId =
-    booking.resourceId && booking.resource?.type === 'STAFF' ? booking.resourceId : booking.resourceId || '1'
+    (booking as any).staffId ||
+    (booking.resourceId && booking.resource?.type === 'STAFF' ? booking.resourceId : booking.resourceId) ||
+    '1'
   const staff = allStaff.find((s: any) => s.id === staffId)
-  const branchId = staff?.branchId || ''
-
-  const staffName = booking.resource?.name || staff?.name || 'Staff Member'
+  const branchId = booking.branchId || staff?.branchId || ''
+  const staffName = (booking as any).staffName || booking.resource?.name || staff?.name || 'Staff Member'
+  const roomId =
+    (booking as any).roomId || (booking.resourceId && booking.resource?.type === 'ASSET' ? booking.resourceId : '')
+  const roomName = (booking as any).roomName || (booking.resource?.type === 'ASSET' ? booking.resource?.name : '')
+  const customerName =
+    (booking as any).customerName || (booking.user ? `${booking.user.firstName} ${booking.user.lastName}` : 'Guest')
+  const customerEmail = (booking as any).customerEmail || booking.user?.email
+  const customerPhone = (booking as any).customerPhone || (booking.user as any)?.mobile || undefined
+  const paymentReference = (booking as any).paymentReference || (booking as any).instapayReference || undefined
+  const matchedFields = Array.isArray((booking as any).matchedFields) ? (booking as any).matchedFields : undefined
 
   // Generate extended props
   const extendedProps = {
     status,
-    paymentStatus: 'paid' as PaymentStatus, // Default to paid for now, or derive if API has it
+    paymentStatus,
+    paymentMethod,
+    paymentReference,
+    instapayReference: (booking as any).instapayReference || undefined,
     staffId,
     staffName,
     branchId, // Used for filtering
+    branchName: (booking.branch as any)?.name || undefined,
+    roomId,
+    roomName,
     selectionMethod: 'by_client' as SelectionMethod,
     starred: starredIds.has(booking.id),
     serviceId: booking.serviceId,
     serviceName: booking.service?.name || 'Service',
-    customerName: booking.user ? `${booking.user.firstName} ${booking.user.lastName}` : 'Guest',
-    customerEmail: booking.user?.email,
+    customerName,
+    customerEmail,
+    customerPhone,
     price: booking.service?.price || 0,
     notes: booking.notes,
     bookingId: booking.id,
+    bookingReference: (booking as any).bookingReference || booking.id,
+    sessionId: (booking as any).sessionId || undefined,
+    partySize: typeof (booking as any).partySize === 'number' ? (booking as any).partySize : undefined,
+    createdAt: (booking as any).createdAt,
+    updatedAt: (booking as any).updatedAt,
+    matchedFields,
     bookedBy: 'client' as import('./types').BookedBy
   }
 
@@ -834,9 +889,8 @@ export function getSlotsForDate(
       const slotStartMins = slotStartH * 60 + slotStartM
       const slotEndMins = slotEndH * 60 + slotEndM
 
-      const hasConflict = mockTimeOffRequests.some(req => {
+      const hasConflict = getApprovedTimeOffRequestsFromStore().some((req: any) => {
         if (req.staffId !== slot.instructorStaffId) return false
-        if (!req.approved) return false
 
         // Check if Time Off covers this date
         const reqStart = new Date(req.range.start)

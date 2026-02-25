@@ -3,7 +3,6 @@ import { useParams } from 'next/navigation'
 
 // MUI Imports
 import { useTheme } from '@mui/material/styles'
-import Chip from '@mui/material/Chip'
 
 // Third-party Imports
 import PerfectScrollbar from 'react-perfect-scrollbar'
@@ -26,7 +25,6 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 // Style Imports
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
-import { mockBookings } from '@/bookly/data/mock-data'
 import GreenWordLogo from '@/assets/logos/words/Green_Word.png'
 import WhiteWordLogo from '@/assets/logos/words/White_Word.png'
 
@@ -84,13 +82,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='ri-circle-fill' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <SubMenu
-          label={dictionary['navigation'].dashboards}
-          icon={<i className='ri-home-smile-line' />}
-          suffix={
-            <Chip label={mockBookings.filter(b => b.status === 'completed').length} size='small' color='success' />
-          }
-        >
+        <SubMenu label={dictionary['navigation'].dashboards} icon={<i className='ri-home-smile-line' />}>
           <MenuItem href={`/${locale}/apps/bookly/dashboard`}>
             <img src={WhiteWordLogo.src} alt='Bookly' style={{ height: 22, marginTop: 4 }} />
           </MenuItem>

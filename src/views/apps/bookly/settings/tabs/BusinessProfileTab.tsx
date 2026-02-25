@@ -234,12 +234,12 @@ const BusinessProfileTab = () => {
                   placeholder='luxe-beauty-salon'
                   size='small'
                   error={!!slugError}
-                  helperText={slugError || `bookly.com/${businessProfile.publicUrlSlug || 'your-business'}`}
+                  helperText={slugError || `zerv.app/${businessProfile.publicUrlSlug || 'your-business'}`}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position='start'>
                         <Typography variant='body2' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
-                          bookly.com/
+                          zerv.app/
                         </Typography>
                       </InputAdornment>
                     )

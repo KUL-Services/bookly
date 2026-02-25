@@ -49,6 +49,15 @@ export class SessionsService {
     return apiClient.get<Session[]>(`/admin/sessions/by-date?${queryParams.toString()}`)
   }
 
+  // Admin - Get sessions for a specific date with authoritative stats
+  static async getSessionsForDateWithStats(params: { date: string; resourceId?: string; branchId?: string }) {
+    const queryParams = new URLSearchParams({ date: params.date })
+    if (params.resourceId) queryParams.append('resourceId', params.resourceId)
+    if (params.branchId) queryParams.append('branchId', params.branchId)
+
+    return apiClient.get<Session[]>(`/admin/sessions/by-date-with-stats?${queryParams.toString()}`)
+  }
+
   // Admin - Get participants for a session on a specific date
   static async getSessionParticipants(sessionId: string, date: string) {
     return apiClient.get<any[]>(`/admin/sessions/${sessionId}/participants?date=${date}`)

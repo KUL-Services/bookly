@@ -25,6 +25,7 @@ import AccordionDetails from '@mui/material/AccordionDetails'
 
 // API Imports
 import { BusinessService } from '@/lib/api'
+import type { BusinessChangeRequest, Business } from '@/lib/api/types'
 
 interface ChangeRequest {
   id: string
@@ -51,50 +52,40 @@ const ChangeRequests = () => {
   const fetchChangeRequests = async () => {
     try {
       setLoading(true)
-      // Using mock data for now since API endpoint may not be implemented yet
-      const mockChangeRequests: ChangeRequest[] = [
-        {
-          id: '1',
-          businessId: 'business_1',
-          businessName: 'Bella Vista Salon',
-          requestType: 'profile_update',
-          status: 'pending',
-          requestedChanges: [
-            {
-              field: 'description',
-              oldValue: 'Premium beauty salon offering hair, nails, and spa services',
-              newValue: 'Premium beauty salon offering hair, nails, spa services, and massage therapy'
-            },
-            {
-              field: 'email',
-              oldValue: 'admin@bellavista.com',
-              newValue: 'contact@bellavistasalon.com'
-            }
-          ],
-          requestedBy: 'Maria Rodriguez',
-          requestedAt: new Date('2024-01-22').toISOString(),
-          reason: 'Updated business services and contact information'
-        },
-        {
-          id: '2',
-          businessId: 'business_2',
-          businessName: 'TechFix Repair Center',
-          requestType: 'info_change',
-          status: 'pending',
-          requestedChanges: [
-            {
-              field: 'name',
-              oldValue: 'TechFix Repair Center',
-              newValue: 'TechFix Pro Repair Center'
-            }
-          ],
-          requestedBy: 'John Smith',
-          requestedAt: new Date('2024-01-24').toISOString(),
-          reason: 'Rebranding to TechFix Pro'
-        }
-      ]
+      const [requestsResponse, businessesResponse] = await Promise.all([
+        BusinessService.getPendingChangeRequests(),
+        BusinessService.getApprovedBusinesses({ pageSize: 200 })
+      ])
 
-      setChangeRequests(mockChangeRequests)
+      if (requestsResponse.error) {
+        throw new Error(requestsResponse.error)
+      }
+
+      const requestRows = Array.isArray(requestsResponse.data) ? (requestsResponse.data as BusinessChangeRequest[]) : []
+      const businessRows = Array.isArray(businessesResponse.data) ? (businessesResponse.data as Business[]) : []
+      const businessNameById = new Map<string, string>(businessRows.map(b => [b.id, b.name]))
+
+      const mapped: ChangeRequest[] = requestRows.map(request => {
+        const requestedChanges = [
+          request.name ? { field: 'name', oldValue: '-', newValue: request.name } : null,
+          request.email ? { field: 'email', oldValue: '-', newValue: request.email } : null,
+          request.description ? { field: 'description', oldValue: '-', newValue: request.description } : null
+        ].filter(Boolean) as ChangeRequest['requestedChanges']
+
+        return {
+          id: request.id,
+          businessId: request.businessId,
+          businessName: businessNameById.get(request.businessId) || request.businessId,
+          requestType: request.description ? 'profile_update' : 'info_change',
+          status: request.status,
+          requestedChanges,
+          requestedBy: 'Business Admin',
+          requestedAt: request.createdAt,
+          reason: undefined
+        }
+      })
+
+      setChangeRequests(mapped)
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch change requests')
@@ -111,11 +102,10 @@ const ChangeRequests = () => {
     setActionLoading(prev => ({ ...prev, [requestId]: true }))
 
     try {
-      // Mock approval - replace with actual API call
-      console.log('Approving change request:', requestId)
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await BusinessService.approveChangeRequest({ id: requestId })
+      if (response.error) {
+        throw new Error(response.error)
+      }
 
       // Remove from pending list
       setChangeRequests(prev => prev.filter(request => request.id !== requestId))
@@ -135,11 +125,10 @@ const ChangeRequests = () => {
     setActionLoading(prev => ({ ...prev, [requestId]: true }))
 
     try {
-      // Mock rejection - replace with actual API call
-      console.log('Rejecting change request:', requestId)
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const response = await BusinessService.rejectChangeRequest({ id: requestId })
+      if (response.error) {
+        throw new Error(response.error)
+      }
 
       // Remove from pending list
       setChangeRequests(prev => prev.filter(request => request.id !== requestId))

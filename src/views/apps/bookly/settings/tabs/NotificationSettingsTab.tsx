@@ -15,15 +15,19 @@ import Divider from '@mui/material/Divider'
 import Chip from '@mui/material/Chip'
 import IconButton from '@mui/material/IconButton'
 import FormGroup from '@mui/material/FormGroup'
+import Button from '@mui/material/Button'
+
+import Alert from '@mui/material/Alert'
 
 // Components
 import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 
 // Store
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
+import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
 
 const NotificationSettingsTab = () => {
-  const { notificationSettings, updateNotificationSettings } = useBusinessSettingsStore()
+  const { notificationSettings, updateNotificationSettings, saveNotificationSettings, isSaving } = useBusinessSettingsStore()
 
   const handleReminderToggle = (hours: number) => {
     const currentHours = notificationSettings.customerReminders.beforeHours
@@ -66,6 +70,19 @@ const NotificationSettingsTab = () => {
 
   return (
     <Grid container spacing={6}>
+      <Grid item xs={12}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant='contained'
+            onClick={saveNotificationSettings}
+            disabled={isSaving}
+            startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
+          >
+            {isSaving ? 'Saving...' : 'Save Notifications'}
+          </Button>
+        </Box>
+      </Grid>
+
       {/* New Booking Alerts */}
       <Grid item xs={12} md={6}>
         <Card>
@@ -191,6 +208,28 @@ const NotificationSettingsTab = () => {
                   </Box>
                 }
               />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={notificationSettings.cancellationAlert.push || false}
+                    onChange={e =>
+                      updateNotificationSettings({
+                        cancellationAlert: {
+                          ...notificationSettings.cancellationAlert,
+                          push: e.target.checked
+                        }
+                      })
+                    }
+                  />
+                }
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <i className='ri-notification-4-line' />
+                    <Typography>Push Notifications</Typography>
+                  </Box>
+                }
+              />
             </FormGroup>
           </CardContent>
         </Card>
@@ -303,6 +342,13 @@ const NotificationSettingsTab = () => {
                 </Box>
               }
             />
+            {notificationSettings.staffNotifications && (
+              <Alert severity='info' sx={{ mt: 2 }} icon={<i className='ri-information-line' />}>
+                <Typography variant='caption'>
+                  Staff will receive notifications via their registered email or phone number. Ensure staff contact details are up to date in Staff Management.
+                </Typography>
+              </Alert>
+            )}
           </CardContent>
         </Card>
       </Grid>
