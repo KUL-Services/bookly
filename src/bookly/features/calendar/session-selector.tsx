@@ -124,6 +124,10 @@ export function SessionSelector({ resourceId, date, selectedSessionId, onSelectS
         {sessions.map(session => {
           const isSelected = selectedSessionId === session.id
           const isFull = session.availableSpots !== undefined && session.availableSpots <= 0
+          const remainingSpots =
+            session.availableSpots !== undefined
+              ? session.availableSpots
+              : Math.max(session.maxParticipants - (session.currentParticipants || 0), 0)
           const occupancyPercent =
             session.maxParticipants > 0 ? ((session.currentParticipants || 0) / session.maxParticipants) * 100 : 0
 
@@ -159,6 +163,12 @@ export function SessionSelector({ resourceId, date, selectedSessionId, onSelectS
                         {session.price !== undefined && session.price > 0 && (
                           <Chip size='small' label={`EGP ${session.price}`} color='primary' variant='outlined' />
                         )}
+                        <Chip
+                          size='small'
+                          label={`${remainingSpots} left`}
+                          color={remainingSpots === 0 ? 'error' : remainingSpots <= 2 ? 'warning' : 'success'}
+                          variant='outlined'
+                        />
                         {isFull && <Chip size='small' label='Full' color='error' variant='filled' />}
                       </Box>
                     </Box>

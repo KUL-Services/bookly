@@ -168,6 +168,7 @@ export function StaffMembersTab() {
     // Set calendar to show only this staff member
     setStaffFilters({
       onlyMe: false,
+      workingStaffOnly: false,
       staffIds: [selectedStaffId],
       selectedStaffId: selectedStaffId
     })
@@ -239,7 +240,7 @@ export function StaffMembersTab() {
         <Box
           sx={{
             p: 2,
-            bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.15)' : 'rgba(10, 44, 36, 0.04)'),
+            bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.06)'),
             borderBottom: '1px solid',
             borderColor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)')
           }}
@@ -273,13 +274,23 @@ export function StaffMembersTab() {
             InputProps={{
               startAdornment: (
                 <InputAdornment position='start'>
-                  <i className='ri-search-line' style={{ fontSize: 16, opacity: 0.6 }} />
+                  <i className='ri-search-line' style={{ fontSize: 16, color: '#0a2c24', opacity: 0.8 }} />
                 </InputAdornment>
               )
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                borderRadius: 2
+                borderRadius: 2,
+                '& fieldset': {
+                  borderColor: 'rgba(10, 44, 36, 0.2)'
+                },
+                '&:hover fieldset': {
+                  borderColor: '#0a2c24'
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#0a2c24',
+                  borderWidth: '1px'
+                }
               }
             }}
           />
@@ -320,7 +331,7 @@ export function StaffMembersTab() {
                 sx={{
                   px: 2,
                   py: 1.25,
-                  bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
+                  bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10,44,36,0.25)' : 'rgba(10,44,36,0.08)'),
                   borderBottom: '1px solid',
                   borderColor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
                   position: 'sticky',
@@ -339,11 +350,11 @@ export function StaffMembersTab() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 0.75,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.6,
                     fontFamily: 'var(--font-fira-code)'
                   }}
                 >
-                  <i className='ri-map-pin-2-line' style={{ fontSize: 14, opacity: 0.7 }} />
+                  <i className='ri-building-line' style={{ fontSize: 14, color: '#0a2c24' }} />
                   {group.name}
                 </Typography>
                 <Typography
@@ -364,15 +375,17 @@ export function StaffMembersTab() {
                   onClick={() => selectStaff(staff.id)}
                   sx={{
                     py: 1.5,
-                    borderLeft: 3,
-                    borderColor: selectedStaffId === staff.id ? 'primary.main' : 'transparent',
+                    borderLeft: 0,
+                    borderBottom: '1px solid',
+                    borderColor: theme => (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
                     transition: 'all 0.15s ease',
                     '&.Mui-selected': {
                       bgcolor: theme =>
-                        theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.2)' : 'rgba(10, 44, 36, 0.06)',
+                        theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.28)' : 'rgba(10, 44, 36, 0.1)',
+                      boxShadow: 'inset 0 0 0 1px rgba(10, 44, 36, 0.25)',
                       '&:hover': {
                         bgcolor: theme =>
-                          theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.25)' : 'rgba(10, 44, 36, 0.08)'
+                          theme.palette.mode === 'dark' ? 'rgba(10, 44, 36, 0.32)' : 'rgba(10, 44, 36, 0.14)'
                       }
                     },
                     '&:hover': {
@@ -475,13 +488,14 @@ export function StaffMembersTab() {
                         px: 1.5,
                         py: 0.5,
                         borderRadius: 1.5,
-                        bgcolor: theme =>
-                          theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                        bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10,44,36,0.25)' : 'rgba(10,44,36,0.08)'),
+                        border: '1px solid',
+                        borderColor: 'rgba(10,44,36,0.2)',
                         fontSize: '0.8rem'
                       }}
                     >
-                      <i className='ri-mail-line' style={{ fontSize: 14, opacity: 0.7 }} />
-                      <Typography variant='caption' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                      <i className='ri-mail-line' style={{ fontSize: 14, color: '#0a2c24' }} />
+                      <Typography variant='caption' color='text.primary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
                         {selectedStaff.email}
                       </Typography>
                     </Box>
@@ -495,13 +509,14 @@ export function StaffMembersTab() {
                         px: 1.5,
                         py: 0.5,
                         borderRadius: 1.5,
-                        bgcolor: theme =>
-                          theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                        bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(119,182,163,0.25)' : 'rgba(119,182,163,0.18)'),
+                        border: '1px solid',
+                        borderColor: 'rgba(119,182,163,0.35)',
                         fontSize: '0.8rem'
                       }}
                     >
-                      <i className='ri-phone-line' style={{ fontSize: 14, opacity: 0.7 }} />
-                      <Typography variant='caption' color='text.secondary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
+                      <i className='ri-phone-line' style={{ fontSize: 14, color: '#0a2c24' }} />
+                      <Typography variant='caption' color='text.primary' sx={{ fontFamily: 'var(--font-fira-code)' }}>
                         {selectedStaff.phone}
                       </Typography>
                     </Box>
@@ -634,7 +649,7 @@ export function StaffMembersTab() {
                 <Typography variant='h6' sx={{ mb: 3 }}>
                   Weekly Schedule
                 </Typography>
-                <WorkingHoursEditor staffId={selectedStaffId} />
+                <WorkingHoursEditor staffId={selectedStaffId || ''} />
               </Box>
             </TabPanel>
           </Box>

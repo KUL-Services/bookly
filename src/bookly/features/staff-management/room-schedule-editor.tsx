@@ -22,7 +22,8 @@ import {
   TextField,
   Alert,
   Checkbox,
-  ListItemText
+  ListItemText,
+  Tooltip
 } from '@mui/material'
 
 import { useStaffManagementStore } from './staff-store'
@@ -65,6 +66,22 @@ export function RoomScheduleEditor({
   const isFlexibleCapacity = roomType === 'dynamic'
   const isStaticCapacity = roomType === 'static'
   const slotLabel = isStaticCapacity ? 'Session' : 'Shift'
+  const dayLabel =
+    dayOfWeek === 'Sun'
+      ? 'Sunday'
+      : dayOfWeek === 'Mon'
+        ? 'Monday'
+        : dayOfWeek === 'Tue'
+          ? 'Tuesday'
+          : dayOfWeek === 'Wed'
+            ? 'Wednesday'
+            : dayOfWeek === 'Thu'
+              ? 'Thursday'
+              : dayOfWeek === 'Fri'
+                ? 'Friday'
+                : dayOfWeek === 'Sat'
+                  ? 'Saturday'
+                  : dayOfWeek
 
   useEffect(() => {
     if (open && roomId && dayOfWeek) {
@@ -237,13 +254,26 @@ export function RoomScheduleEditor({
   return (
     <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
       <DialogTitle>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <Box>
-            <Typography variant='h6' fontWeight={600}>
-              Edit Room Availability
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Typography variant='h6' fontWeight={600}>
+                Edit Room Schedule
+              </Typography>
+              <Tooltip
+                arrow
+                placement='right'
+                title={
+                  isStaticCapacity
+                    ? 'Fixed rooms run sessions with capacity per session.'
+                    : 'Flex rooms follow availability windows for individual appointments.'
+                }
+              >
+                <i className='ri-information-line' style={{ fontSize: 15, color: 'var(--mui-palette-primary-main)' }} />
+              </Tooltip>
+            </Box>
             <Typography variant='caption' color='text.secondary'>
-              {roomName} - <strong>{dayOfWeek}</strong>
+              {roomName} - <strong>{dayLabel}</strong>
             </Typography>
           </Box>
           <IconButton onClick={onClose} size='small'>
@@ -281,7 +311,7 @@ export function RoomScheduleEditor({
             label={
               <Box>
                 <Typography variant='body2' fontWeight={500}>
-                  Room Available on {dayOfWeek}
+                  Room Available on {dayLabel}
                 </Typography>
                 <Typography variant='caption' color='text.secondary'>
                   Toggle to make room available or closed

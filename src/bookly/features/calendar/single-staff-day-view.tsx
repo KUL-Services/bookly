@@ -1,9 +1,9 @@
 'use client'
 
-import { Box, Typography, IconButton, Avatar, Button, Chip, Select, MenuItem, FormControl } from '@mui/material'
+import { Box, Typography, IconButton, Avatar, Button, Chip, Select, MenuItem, FormControl, Tooltip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, isSameDay, isToday } from 'date-fns'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { mockServices } from '@/bookly/data/mock-data'
 import { useCalendarStore } from './state'
 import { getBranchName, buildEventColors } from './utils'
@@ -42,6 +42,16 @@ interface SingleStaffDayViewProps {
   onStaffChange?: (staffId: string) => void
 }
 
+interface DisplayStaffEvent {
+  event: CalendarEvent
+  isConsolidated: boolean
+  bookingCount: number
+  totalCapacity: number
+  attendedCount: number
+  attendanceBase: number
+  slotEvents: CalendarEvent[]
+}
+
 export default function SingleStaffDayView({
   events,
   staff,
@@ -54,9 +64,11 @@ export default function SingleStaffDayView({
 }: SingleStaffDayViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+  const brandPrimary = '#0a2c24'
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const isSearchActive = useCalendarStore(state => state.isSearchActive)
   const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
+  const staticSlots = useCalendarStore(state => state.staticSlots)
 
   // Drag-to-select state
   const [isDragging, setIsDragging] = useState(false)
@@ -224,6 +236,51 @@ export default function SingleStaffDayView({
 
   const currentTimeIndicator = getCurrentTimePosition()
 
+  const displayEvents = useMemo<DisplayStaffEvent[]>(() => {
+    const entries: DisplayStaffEvent[] = []
+    const slotGroups = new Map<string, CalendarEvent[]>()
+
+    todayEvents.forEach(event => {
+      const slotId = event.extendedProps?.slotId
+      if (slotId) {
+        if (!slotGroups.has(slotId)) slotGroups.set(slotId, [])
+        slotGroups.get(slotId)!.push(event)
+        return
+      }
+
+      entries.push({
+        event,
+        isConsolidated: false,
+        bookingCount: 1,
+        totalCapacity: 1,
+        attendedCount: event.extendedProps.status === 'attended' ? 1 : 0,
+        attendanceBase: 1,
+        slotEvents: [event]
+      })
+    })
+
+    slotGroups.forEach((slotEvents, slotId) => {
+      const firstEvent = slotEvents[0]
+      const activeBookings = slotEvents.filter(e => e.extendedProps?.status !== 'cancelled')
+      const attendedCount = activeBookings.filter(e => e.extendedProps?.status === 'attended').length
+      const staticSlot = staticSlots.find(s => s.id === slotId)
+      const totalCapacity = staticSlot?.capacity || activeBookings.length
+      const attendanceBase = activeBookings.length > 0 ? activeBookings.length : totalCapacity
+
+      entries.push({
+        event: firstEvent,
+        isConsolidated: true,
+        bookingCount: activeBookings.length,
+        totalCapacity,
+        attendedCount,
+        attendanceBase,
+        slotEvents
+      })
+    })
+
+    return entries.sort((a, b) => new Date(a.event.start).getTime() - new Date(b.event.start).getTime())
+  }, [todayEvents, staticSlots])
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       {/* Header with back button and staff info */}
@@ -231,7 +288,7 @@ export default function SingleStaffDayView({
         sx={{
           p: 2,
           borderBottom: 1,
-          borderColor: 'divider',
+          borderColor: 'rgba(10,44,36,0.16)',
           bgcolor: 'background.paper',
           display: 'flex',
           alignItems: 'center',
@@ -292,7 +349,7 @@ export default function SingleStaffDayView({
             sx={{
               width: 48,
               height: 48,
-              bgcolor: theme.palette.primary.main,
+              bgcolor: brandPrimary,
               fontSize: '1rem',
               fontWeight: 600
             }}
@@ -352,8 +409,8 @@ export default function SingleStaffDayView({
               const minutes = slot.getMinutes()
               const showDashedLine = minutes === 15 || minutes === 30 || minutes === 45
 
-              return (
-                <Box
+                return (
+                  <Box
                   key={index}
                   sx={{
                     height: 40,
@@ -573,12 +630,13 @@ export default function SingleStaffDayView({
             })()}
 
             {/* Events */}
-            {todayEvents.map(event => {
+            {displayEvents.map(item => {
+              const event = item.event
               const { top, height } = getEventStyle(event)
-              const colors = buildEventColors(colorScheme, event.extendedProps.status)
+              const colors = buildEventColors(colorScheme, item.isConsolidated ? 'confirmed' : event.extendedProps.status)
 
               // Search highlighting logic
-              const isMatchedBySearch = isEventMatchedBySearch(event.id)
+              const isMatchedBySearch = item.slotEvents.some(slotEvent => isEventMatchedBySearch(slotEvent.id))
               const isFaded = isSearchActive && !isMatchedBySearch
               const isHighlighted = isSearchActive && isMatchedBySearch
 
@@ -593,124 +651,187 @@ export default function SingleStaffDayView({
               const effectiveTextColor = isFaded ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6) : baseTextColor
 
               return (
-                <Box
+                <Tooltip
                   key={event.id}
-                  data-event='true'
-                  onClick={() => onEventClick?.(event)}
-                  sx={{
-                    position: 'absolute',
-                    top: `${top}px`,
-                    left: 8,
-                    right: 8,
-                    height: `${height}px`,
-                    bgcolor: effectiveBgColor,
-                    border: 'none',
-                    borderLeft: `4px solid ${effectiveBorderColor}`,
-                    borderRadius: 1.5,
-                    p: 1.5,
-                    cursor: 'pointer',
-                    overflow: 'hidden',
-                    transition: 'all 0.3s ease',
-                    opacity: isFaded ? 0.4 : 1,
-                    filter: isFaded ? 'grayscale(50%)' : 'none',
-                    boxShadow: isHighlighted
-                      ? '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
-                      : 2,
-                    transform: isHighlighted ? 'scale(1.02)' : 'none',
-                    zIndex: isHighlighted ? 5 : 'auto',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    '&:hover': {
-                      boxShadow: isHighlighted
-                        ? '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
-                        : 6,
-                      transform: isHighlighted ? 'scale(1.03) translateX(4px)' : 'translateX(4px)',
-                      zIndex: 5,
-                      opacity: isFaded ? 0.6 : 1
-                    }
-                  }}
+                  title={
+                    item.isConsolidated ? (
+                      <Box sx={{ p: 1, minWidth: 220 }}>
+                        <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 700 }}>
+                          {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
+                        </Typography>
+                        <Typography
+                          variant='caption'
+                          sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.5, mb: 0.75 }}
+                        >
+                          {item.attendedCount}/{item.attendanceBase} Attended • {item.bookingCount}/{item.totalCapacity}{' '}
+                          booked
+                        </Typography>
+                        {item.slotEvents
+                          .filter(slotEvent => slotEvent.extendedProps?.status !== 'cancelled')
+                          .slice(0, 8)
+                          .map(slotEvent => (
+                            <Box
+                              key={slotEvent.id}
+                              sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 0.25 }}
+                            >
+                              <Typography variant='caption' sx={{ color: 'common.white', fontSize: '0.68rem' }}>
+                                {slotEvent.extendedProps.customerName || 'Client'}
+                              </Typography>
+                              <Typography
+                                variant='caption'
+                                sx={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.65rem', textTransform: 'capitalize' }}
+                              >
+                                {(slotEvent.extendedProps.status || 'pending').replace('_', ' ')}
+                              </Typography>
+                            </Box>
+                          ))}
+                      </Box>
+                    ) : (
+                      ''
+                    )
+                  }
+                  arrow={item.isConsolidated}
+                  disableHoverListener={!item.isConsolidated}
+                  placement='top'
                 >
-                  <Typography
-                    variant='caption'
+                  <Box
+                    data-event='true'
+                    onClick={() => onEventClick?.(event)}
                     sx={{
-                      display: 'block',
-                      fontWeight: 700,
-                      color: effectiveTextColor,
-                      fontSize: '0.75rem',
-                      mb: 0.5,
-                      whiteSpace: 'nowrap',
+                      position: 'absolute',
+                      top: `${top}px`,
+                      left: 8,
+                      right: 8,
+                      height: `${height}px`,
+                      bgcolor: effectiveBgColor,
+                      border: 'none',
+                      borderLeft: `4px solid ${effectiveBorderColor}`,
+                      borderRadius: 1.5,
+                      p: 1.5,
+                      cursor: 'pointer',
                       overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      flexShrink: 0
+                      transition: 'all 0.3s ease',
+                      opacity: isFaded ? 0.4 : 1,
+                      filter: isFaded ? 'grayscale(50%)' : 'none',
+                      boxShadow: isHighlighted
+                        ? '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                        : 2,
+                      transform: isHighlighted ? 'scale(1.02)' : 'none',
+                      zIndex: isHighlighted ? 5 : 'auto',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      '&:hover': {
+                        boxShadow: isHighlighted
+                          ? '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                          : 6,
+                        transform: isHighlighted ? 'scale(1.03) translateX(4px)' : 'translateX(4px)',
+                        zIndex: 5,
+                        opacity: isFaded ? 0.6 : 1
+                      }
                     }}
                   >
-                    {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
-                  </Typography>
-                  <Typography
-                    variant='body1'
-                    sx={{
-                      fontWeight: 700,
-                      color: effectiveTextColor,
-                      fontSize: '0.95rem',
-                      lineHeight: 1.4,
-                      mb: 0.5,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      wordBreak: 'break-word',
-                      flexShrink: 1
-                    }}
-                  >
-                    {event.extendedProps.starred && '⭐ '}
-                    {event.extendedProps.customerName}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: height > 100 ? 0.5 : 0 }}>
-                    {(() => {
-                      const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
-                      return service?.color ? (
-                        <Box
-                          sx={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: '50%',
-                            bgcolor: isFaded ? adjustColorOpacity(service.color, 0.3) : service.color,
-                            flexShrink: 0
-                          }}
-                        />
-                      ) : null
-                    })()}
+                    {(item.isConsolidated || event.extendedProps.slotId) && (
+                      <Box sx={{ position: 'absolute', top: 6, right: 6, lineHeight: 1 }}>
+                        <i className='ri-star-fill' style={{ fontSize: 11, color: '#fbbf24' }} />
+                      </Box>
+                    )}
                     <Typography
-                      variant='body2'
+                      variant='caption'
                       sx={{
+                        display: 'block',
+                        fontWeight: 700,
                         color: effectiveTextColor,
-                        fontSize: '0.8rem',
-                        opacity: isFaded ? 0.5 : 0.9,
+                        fontSize: '0.75rem',
+                        mb: 0.5,
+                        whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
                         flexShrink: 0
                       }}
                     >
-                      {event.extendedProps.serviceName || event.title}
+                      {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
                     </Typography>
-                  </Box>
-                  {height > 100 && (
+                    <Typography
+                      variant='body1'
+                      sx={{
+                        fontWeight: 700,
+                        color: effectiveTextColor,
+                        fontSize: '0.95rem',
+                        lineHeight: 1.4,
+                        mb: 0.5,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        wordBreak: 'break-word',
+                        flexShrink: 1
+                      }}
+                    >
+                      {item.isConsolidated ? event.extendedProps.serviceName || event.title : event.extendedProps.customerName}
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: height > 100 ? 0.5 : 0 }}>
+                      {(() => {
+                        const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                        return service?.color ? (
+                          <Box
+                            sx={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: '50%',
+                              bgcolor: isFaded ? adjustColorOpacity(service.color, 0.3) : service.color,
+                              flexShrink: 0
+                            }}
+                          />
+                        ) : null
+                      })()}
+                      <Typography
+                        variant='body2'
+                        sx={{
+                          color: effectiveTextColor,
+                          fontSize: '0.8rem',
+                          opacity: isFaded ? 0.5 : 0.9,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0
+                        }}
+                      >
+                        {item.isConsolidated
+                          ? `${item.bookingCount}/${item.totalCapacity} booked`
+                          : event.extendedProps.serviceName || event.title}
+                      </Typography>
+                    </Box>
                     <Typography
                       variant='caption'
                       sx={{
                         display: 'block',
                         color: effectiveTextColor,
-                        fontSize: '0.7rem',
+                        fontSize: '0.68rem',
                         opacity: isFaded ? 0.4 : 0.8,
-                        flexShrink: 0
+                        textTransform: 'capitalize'
                       }}
                     >
-                      EGP {event.extendedProps.price}
+                      {item.isConsolidated
+                        ? `${item.attendedCount}/${item.attendanceBase} Attended`
+                        : (event.extendedProps.status || 'pending').replace('_', ' ')}
                     </Typography>
-                  )}
-                </Box>
+                    {height > 100 && !item.isConsolidated && (
+                      <Typography
+                        variant='caption'
+                        sx={{
+                          display: 'block',
+                          color: effectiveTextColor,
+                          fontSize: '0.7rem',
+                          opacity: isFaded ? 0.4 : 0.8,
+                          flexShrink: 0
+                        }}
+                      >
+                        EGP {event.extendedProps.price}
+                      </Typography>
+                    )}
+                  </Box>
+                </Tooltip>
               )
             })}
           </Box>

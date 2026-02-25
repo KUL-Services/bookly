@@ -244,7 +244,7 @@ export function SessionEditorDrawer({
               {staticResources.length === 0 ? (
                 <MenuItem disabled>
                   <Typography variant='body2' color='text.secondary'>
-                    No STATIC mode resources available
+                    No FIXED mode resources available
                   </Typography>
                 </MenuItem>
               ) : (
@@ -256,7 +256,7 @@ export function SessionEditorDrawer({
               )}
             </Select>
             {staticResources.length === 0 && (
-              <FormHelperText error>Create a resource with STATIC booking mode first</FormHelperText>
+              <FormHelperText error>Create a resource with FIXED booking mode first</FormHelperText>
             )}
           </FormControl>
 

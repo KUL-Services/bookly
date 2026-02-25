@@ -191,7 +191,7 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
                     className={value === 'STATIC' ? 'ri-calendar-check-line' : 'ri-time-line'}
                     style={{ opacity: 0.7 }}
                   />
-                  {value === 'STATIC' ? 'Static (Pre-defined Sessions)' : 'Dynamic (Flexible Time Slots)'}
+                  {value === 'STATIC' ? 'Fixed (Pre-defined Sessions)' : 'Flex (Flexible Appointments)'}
                 </Box>
               )}
             >
@@ -200,7 +200,7 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
                   <i className='ri-time-line' style={{ marginTop: 2, opacity: 0.7 }} />
                   <Box>
                     <Typography variant='body2' fontWeight={500}>
-                      Dynamic (Flexible Time Slots)
+                      Flex (Flexible Appointments)
                     </Typography>
                     <Typography variant='caption' color='text.secondary'>
                       Clients can book any available time slot
@@ -213,7 +213,7 @@ export function ResourceEditorDrawer({ open, onClose, resource, selectedBranchId
                   <i className='ri-calendar-check-line' style={{ marginTop: 2, opacity: 0.7 }} />
                   <Box>
                     <Typography variant='body2' fontWeight={500}>
-                      Static (Pre-defined Sessions)
+                      Fixed (Pre-defined Sessions)
                     </Typography>
                     <Typography variant='caption' color='text.secondary'>
                       Clients join pre-defined sessions with fixed times

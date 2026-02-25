@@ -236,14 +236,14 @@ export function SessionsTab() {
                       <Chip
                         size='small'
                         icon={<i className='ri-calendar-schedule-line' />}
-                        label={`${staticCount} Static Resource${staticCount !== 1 ? 's' : ''}`}
+                        label={`${staticCount} Fixed Resource${staticCount !== 1 ? 's' : ''}`}
                         color={staticCount > 0 ? 'primary' : 'default'}
                         variant={staticCount > 0 ? 'filled' : 'outlined'}
                       />
                     </Box>
                     {staticCount === 0 && (
                       <Typography variant='caption' color='text.secondary' sx={{ mt: 1, display: 'block' }}>
-                        No resources with STATIC booking mode
+                        No resources with FIXED booking mode
                       </Typography>
                     )}
                   </CardContent>
@@ -274,8 +274,8 @@ export function SessionsTab() {
         {branchStaticResources.length === 0 ? (
           <BrandedEmptyState
             icon={<i className='ri-calendar-schedule-line' style={{ fontSize: 48 }} />}
-            title='No Static Resources'
-            description='Create a resource with STATIC booking mode to manage sessions.'
+            title='No Fixed Resources'
+            description='Create a resource with FIXED booking mode to manage sessions.'
           />
         ) : (
           <Grid container spacing={2}>
@@ -306,7 +306,7 @@ export function SessionsTab() {
                         </Typography>
                       </Box>
                     </Box>
-                    <Chip size='small' label='STATIC Mode' color='info' variant='outlined' />
+                    <Chip size='small' label='FIXED Mode' color='info' variant='outlined' />
                   </CardContent>
                 </Card>
               </Grid>
@@ -527,7 +527,7 @@ export function SessionsTab() {
       {/* Info Banner */}
       <Alert severity='info' sx={{ mb: 3 }}>
         <Typography variant='body2'>
-          <strong>Sessions</strong> are pre-defined time slots for STATIC booking mode resources. Clients can join
+          <strong>Sessions</strong> are pre-defined time slots for FIXED booking mode resources. Clients can join
           available sessions instead of booking flexible time slots. Ideal for classes, group activities, and recurring
           appointments.
         </Typography>

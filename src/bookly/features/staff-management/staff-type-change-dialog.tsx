@@ -9,9 +9,7 @@ import {
   Typography,
   Box,
   Alert,
-  AlertTitle,
-  Stack,
-  Divider
+  Stack
 } from '@mui/material'
 
 import type { StaffType } from '@/bookly/data/types'
@@ -39,6 +37,12 @@ export function StaffTypeChangeDialog({
   const handleConfirm = () => {
     onConfirm()
   }
+  const isCurrentFixed = currentType === 'static' || currentType === 'STATIC'
+  const isTargetFixed = targetType === 'static' || targetType === 'STATIC'
+  const currentLabel = isCurrentFixed ? 'Fixed' : 'Flex'
+  const targetLabel = isTargetFixed ? 'Fixed' : 'Flex'
+  const currentIcon = isCurrentFixed ? 'ri-calendar-schedule-line' : 'ri-time-line'
+  const targetIcon = isTargetFixed ? 'ri-calendar-schedule-line' : 'ri-time-line'
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
@@ -52,7 +56,7 @@ export function StaffTypeChangeDialog({
       </DialogTitle>
 
       <DialogContent>
-        <Stack spacing={3}>
+        <Stack spacing={2.5}>
           {/* Staff Info */}
           <Box>
             <Typography variant='body2' color='text.secondary' gutterBottom>
@@ -61,71 +65,68 @@ export function StaffTypeChangeDialog({
             <Typography variant='h6'>{staffName}</Typography>
           </Box>
 
-          <Divider />
-
-          {/* Type Change */}
+          {/* Transition */}
           <Box>
             <Typography variant='body2' color='text.secondary' gutterBottom>
-              Schedule Type Transition
+              Booking Mode Transition
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              {/* Current type */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box
+                sx={{
+                  px: 1.25,
+                  py: 0.75,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75
+                }}
+              >
                 <i
-                  className={
-                    currentType === 'static' || currentType === 'STATIC' ? 'ri-calendar-schedule-line' : 'ri-time-line'
-                  }
+                  className={currentIcon}
                   style={{ fontSize: '1rem', color: 'var(--mui-palette-text-secondary)' }}
                 />
                 <Typography variant='body2' fontWeight={500} color='text.secondary'>
-                  {currentType === 'static' || currentType === 'STATIC' ? 'Fixed' : 'Flex'}
+                  {currentLabel}
                 </Typography>
               </Box>
 
-              {/* Arrow */}
               <i
                 className='ri-arrow-right-line'
                 style={{ fontSize: '1.25rem', color: 'var(--mui-palette-primary-main)' }}
               />
 
-              {/* Target type */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <Box
+                sx={{
+                  px: 1.25,
+                  py: 0.75,
+                  border: '1px solid',
+                  borderColor: 'primary.main',
+                  borderRadius: 1.5,
+                  bgcolor: 'rgba(10, 44, 36, 0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75
+                }}
+              >
                 <i
-                  className={
-                    targetType === 'static' || targetType === 'STATIC' ? 'ri-calendar-schedule-line' : 'ri-time-line'
-                  }
+                  className={targetIcon}
                   style={{ fontSize: '1rem', color: 'var(--mui-palette-primary-main)' }}
                 />
                 <Typography variant='body2' fontWeight={600} color='primary'>
-                  {targetType === 'static' || targetType === 'STATIC' ? 'Fixed' : 'Flex'}
+                  {targetLabel}
                 </Typography>
               </Box>
             </Box>
           </Box>
 
-          <Divider />
-
-          <Alert severity='warning'>
-            <AlertTitle>Pending Transition Trigger</AlertTitle>
-            <Typography variant='body2' gutterBottom>
-              Changing the Booking Mode while existing bookings are scheduled can cause overlapping data.
+          <Alert severity='warning' icon={<i className='ri-alert-line' />}>
+            <Typography variant='body2' sx={{ mb: 0.5 }}>
+              This change is scheduled automatically after the latest existing booking ends.
             </Typography>
-            <Typography variant='body2'>
-              The system will queue this transition by putting the resource into a <strong>Pending State</strong>. The
-              exact effective date is automatically determined by the backend to take place exactly after the latest
-              booked appointment finishes.
-            </Typography>
-          </Alert>
-
-          <Alert severity='info' icon={<i className='ri-information-line' />}>
-            <AlertTitle>What to expect</AlertTitle>
-            <Typography variant='body2' component='div'>
-              <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
-                <li>
-                  A yellow warning flag will appear next to this staff member indicating the transition is queued.
-                </li>
-                <li>You can cancel the transition at any time before it takes effect from the Staff Details editor.</li>
-              </ul>
+            <Typography variant='caption' color='text.secondary'>
+              Until then, the resource stays in its current mode and shows as pending in the list.
             </Typography>
           </Alert>
         </Stack>

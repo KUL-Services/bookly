@@ -95,6 +95,7 @@ export function RoomEditWorkingHoursModal({
 
   const isStaticRoom = roomType === 'static'
   const isDynamicRoom = roomType === 'dynamic'
+  const slotLabel = isStaticRoom ? 'Session' : 'Shift'
 
   // Dynamic rooms: Default ON (apply to all future weeks)
   // Static rooms: Default OFF (this week only)
@@ -278,7 +279,7 @@ export function RoomEditWorkingHoursModal({
         for (let i = 0; i < daySchedule.shifts.length; i++) {
           const shift = daySchedule.shifts[i]
           if (!shift.serviceId) {
-            alert(`${DAY_LABELS[day]}, Shift ${i + 1}: Please select a service`)
+            alert(`${DAY_LABELS[day]}, ${slotLabel} ${i + 1}: Please select a service`)
             return
           }
         }
@@ -313,7 +314,7 @@ export function RoomEditWorkingHoursModal({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
           <Chip
             size='small'
-            label={isStaticRoom ? 'Fixed Capacity' : 'Flexible Capacity'}
+            label={isStaticRoom ? 'Default Capacity' : 'Flex Availability'}
             color={isStaticRoom ? 'primary' : 'success'}
             variant='outlined'
           />
@@ -347,7 +348,14 @@ export function RoomEditWorkingHoursModal({
                 <Box>
                   <Typography fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <i className='ri-repeat-line' style={{ fontSize: 18 }} />
-                    {applyToAllWeeks ? 'Apply to All Future Weeks' : 'This Week Only'}
+                    Apply to Future Weeks
+                    <Chip
+                      size='small'
+                      label={applyToAllWeeks ? 'On' : 'Off'}
+                      color={applyToAllWeeks ? 'primary' : 'default'}
+                      variant={applyToAllWeeks ? 'filled' : 'outlined'}
+                      sx={{ height: 18, fontWeight: 700, '& .MuiChip-label': { px: 0.75 } }}
+                    />
                   </Typography>
                   <Typography variant='caption' color='text.secondary'>
                     {applyToAllWeeks
@@ -365,7 +373,7 @@ export function RoomEditWorkingHoursModal({
           {isStaticRoom && (
             <Alert severity='info' sx={{ py: 0.5 }}>
               <Typography variant='caption'>
-                <strong>Static Room:</strong> Each shift requires a service, staff assignment, and capacity.
+                <strong>Fixed Room:</strong> Each session requires a service, staff assignment, and capacity.
               </Typography>
             </Alert>
           )}
@@ -373,7 +381,7 @@ export function RoomEditWorkingHoursModal({
           {isDynamicRoom && (
             <Alert severity='success' sx={{ py: 0.5 }}>
               <Typography variant='caption'>
-                <strong>Dynamic Room:</strong> Services are inherited from room settings. Just set availability times.
+                <strong>Flex Room:</strong> Services are inherited from room settings. Just set availability times.
               </Typography>
             </Alert>
           )}
@@ -412,7 +420,7 @@ export function RoomEditWorkingHoursModal({
                   {daySchedule.isAvailable && daySchedule.shifts.length > 0 && (
                     <Chip
                       size='small'
-                      label={`${daySchedule.shifts.length} shift${daySchedule.shifts.length > 1 ? 's' : ''}`}
+                      label={`${daySchedule.shifts.length} ${slotLabel.toLowerCase()}${daySchedule.shifts.length > 1 ? 's' : ''}`}
                       color='primary'
                       variant='outlined'
                     />
@@ -438,7 +446,7 @@ export function RoomEditWorkingHoursModal({
                         {daySchedule.shifts.length > 1 && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                             <Typography variant='caption' fontWeight={600} color='text.secondary'>
-                              Shift {shiftIndex + 1}
+                              {slotLabel} {shiftIndex + 1}
                             </Typography>
                             <Box sx={{ flexGrow: 1 }} />
                             <IconButton size='small' color='error' onClick={() => handleRemoveShift(day, shift.id)}>
@@ -471,11 +479,13 @@ export function RoomEditWorkingHoursModal({
                             sx={{ minWidth: 120 }}
                           />
 
-                          <Chip
-                            icon={<i className='ri-time-line' style={{ fontSize: 16 }} />}
-                            size='small'
-                            label={calculateDuration(shift.start, shift.end)}
-                          />
+                          {!isStaticRoom && (
+                            <Chip
+                              icon={<i className='ri-time-line' style={{ fontSize: 16 }} />}
+                              size='small'
+                              label={calculateDuration(shift.start, shift.end)}
+                            />
+                          )}
 
                           {daySchedule.shifts.length === 1 && (
                             <IconButton
@@ -502,12 +512,7 @@ export function RoomEditWorkingHoursModal({
                               >
                                 {availableServices.map(service => (
                                   <MenuItem key={service.id} value={service.id}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                                      <Typography>{service.name}</Typography>
-                                      <Typography variant='caption' color='text.secondary'>
-                                        {service.duration} min
-                                      </Typography>
-                                    </Box>
+                                    <Typography>{service.name}</Typography>
                                   </MenuItem>
                                 ))}
                               </Select>
@@ -551,7 +556,7 @@ export function RoomEditWorkingHoursModal({
                             {/* Capacity */}
                             <TextField
                               type='number'
-                              label='Capacity'
+                              label='Session Capacity'
                               value={shift.capacity ?? defaultCapacity}
                               onChange={e => handleUpdateShift(day, shift.id, 'capacity', Number(e.target.value))}
                               size='small'
@@ -574,7 +579,7 @@ export function RoomEditWorkingHoursModal({
                       onClick={() => handleAddShift(day)}
                       sx={{ alignSelf: 'flex-start' }}
                     >
-                      Add Another Shift
+                      Add Another {slotLabel}
                     </Button>
 
                     {/* Overlap Warning */}
@@ -598,13 +603,13 @@ export function RoomEditWorkingHoursModal({
                         />
                         <Box sx={{ flex: 1 }}>
                           <Typography variant='body2' fontWeight={600} color='error.main'>
-                            Overlapping Shifts Detected
+                            Overlapping {slotLabel}s Detected
                           </Typography>
                           {shiftOverlaps.map((overlap, idx) => (
                             <Typography key={idx} variant='caption' color='error.dark' display='block'>
                               {overlap.shift1 === overlap.shift2
-                                ? `Shift ${overlap.shift1 + 1}: End time must be after start time`
-                                : `Shift ${overlap.shift1 + 1} and Shift ${overlap.shift2 + 1} overlap`}
+                                ? `${slotLabel} ${overlap.shift1 + 1}: End time must be after start time`
+                                : `${slotLabel} ${overlap.shift1 + 1} and ${slotLabel} ${overlap.shift2 + 1} overlap`}
                             </Typography>
                           ))}
                         </Box>

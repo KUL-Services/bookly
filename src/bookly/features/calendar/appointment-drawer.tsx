@@ -17,7 +17,8 @@ import {
   FormControlLabel,
   Menu,
   MenuItem as MuiMenuItem,
-  Alert
+  Alert,
+  LinearProgress
 } from '@mui/material'
 import { useCalendarStore } from './state'
 import type { CalendarEvent, AppointmentStatus, PaymentStatus, PaymentMethod } from './types'
@@ -46,9 +47,10 @@ export default function AppointmentDrawer() {
   const deleteEvent = useCalendarStore(state => state.deleteEvent)
   const toggleStarred = useCalendarStore(state => state.toggleStarred)
   const closeAppointmentDrawer = useCalendarStore(state => state.closeAppointmentDrawer)
-  const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
+  const getSlotBookings = useCalendarStore(state => state.getSlotBookings)
+  const openAppointmentDrawer = useCalendarStore(state => state.openAppointmentDrawer)
   const staticSlots = useCalendarStore(state => state.staticSlots)
   const lastActionError = useCalendarStore(state => state.lastActionError)
   const clearError = useCalendarStore(state => state.clearError)
@@ -144,6 +146,14 @@ export default function AppointmentDrawer() {
     return colors
   }
 
+  const getStatusChipColor = (value: AppointmentStatus): 'success' | 'warning' | 'default' | 'error' | 'info' => {
+    if (value === 'attended' || value === 'confirmed') return 'success'
+    if (value === 'pending' || value === 'need_confirm') return 'warning'
+    if (value === 'no_show') return 'default'
+    if (value === 'cancelled') return 'error'
+    return 'info'
+  }
+
   const handleSave = () => {
     if (!event) return
 
@@ -171,7 +181,7 @@ export default function AppointmentDrawer() {
         notes,
         selectionMethod: requestedByClient ? 'by_client' : 'automatically',
         starred,
-        partySize: schedulingMode === 'static' && extendedProps.slotId ? partySize : 1
+        partySize: extendedProps.slotId ? partySize : 1
       }
     }
 
@@ -244,19 +254,26 @@ export default function AppointmentDrawer() {
 
   // Get capacity info for static mode
   const capacityInfo =
-    schedulingMode === 'static' && extendedProps.slotId
-      ? isSlotAvailable(extendedProps.slotId, new Date(event.start))
-      : null
+    extendedProps.slotId ? isSlotAvailable(extendedProps.slotId, new Date(event.start)) : null
 
-  const slot =
-    schedulingMode === 'static' && extendedProps.slotId ? staticSlots.find(s => s.id === extendedProps.slotId) : null
+  const slot = extendedProps.slotId ? staticSlots.find(s => s.id === extendedProps.slotId) : null
 
   const room = extendedProps.roomId ? mockRooms.find(r => r.id === extendedProps.roomId) : null
 
   const staff = mockStaff.find(s => s.id === extendedProps.staffId)
 
-  const isStaticSlotBooking = schedulingMode === 'static' && !!extendedProps.slotId
+  const isStaticSlotBooking = !!extendedProps.slotId
   const canEditTime = !isStaticSlotBooking
+  const slotBookings =
+    isStaticSlotBooking && extendedProps.slotId
+      ? getSlotBookings(extendedProps.slotId, new Date(event.start)).sort((a, b) =>
+          (a.extendedProps.customerName || '').localeCompare(b.extendedProps.customerName || '')
+        )
+      : []
+  const slotAttendedCount = slotBookings.filter(b => b.extendedProps.status === 'attended').length
+  const slotBookedCount = slotBookings.length
+  const slotProgress = slotBookedCount > 0 ? (slotAttendedCount / slotBookedCount) * 100 : 0
+  const slotOccupiedSpots = slotBookings.reduce((sum, booking) => sum + (booking.extendedProps.partySize || 1), 0)
 
   const statusColors = getStatusColor(status)
 
@@ -387,19 +404,43 @@ export default function AppointmentDrawer() {
       {/* Static Slot Info */}
       {isStaticSlotBooking && slot && capacityInfo && (
         <Box sx={{ p: 2, bgcolor: 'info.lighter', borderBottom: 1, borderColor: 'divider' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
             <Box>
               <Typography variant='body2' fontWeight={600} color='info.dark'>
                 <i className='ri-calendar-event-line' style={{ marginRight: 4 }} />
-                Static Slot Booking
+                Fixed Session Booking
               </Typography>
               <Typography variant='caption' color='text.secondary'>
                 {slot.startTime} - {slot.endTime}
+                {staffName && ` • ${staffName}`}
                 {room && ` • ${room.name}`}
               </Typography>
             </Box>
+            <Box sx={{ textAlign: 'right', minWidth: 120 }}>
+              <Typography variant='caption' color='info.dark' fontWeight={700}>
+                {slotAttendedCount}/{slotBookedCount || 0} Attended
+              </Typography>
+              <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+                {slotOccupiedSpots}/{capacityInfo.total} spots used
+              </Typography>
+            </Box>
+          </Box>
+          <LinearProgress
+            variant='determinate'
+            value={slotProgress}
+            sx={{
+              mt: 1,
+              height: 8,
+              borderRadius: 999,
+              bgcolor: 'rgba(0,0,0,0.08)',
+              '& .MuiLinearProgress-bar': {
+                bgcolor: 'success.main'
+              }
+            }}
+          />
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.75 }}>
             <Chip
-              label={`${capacityInfo.remainingCapacity}/${capacityInfo.total} spots`}
+              label={`${capacityInfo.remainingCapacity}/${capacityInfo.total} spots left`}
               size='small'
               color={capacityInfo.available ? 'success' : 'error'}
               sx={{ fontWeight: 600 }}
@@ -446,6 +487,75 @@ export default function AppointmentDrawer() {
                 </Typography>
               )}
             </Box>
+
+            {isStaticSlotBooking && slotBookings.length > 0 && (
+              <>
+                <Divider />
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      sx={{ fontFamily: 'var(--font-fira-code)', fontWeight: 600 }}
+                    >
+                      SESSION CLIENTS
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      {slotAttendedCount}/{slotBookedCount} Attended
+                    </Typography>
+                  </Box>
+
+                  <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
+                    {slotBookings.map((booking, idx) => (
+                      <Box
+                        key={booking.id}
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: '22px minmax(0,1fr) auto auto auto',
+                          alignItems: 'center',
+                          gap: 0.75,
+                          px: 1,
+                          py: 0.75,
+                          bgcolor: booking.id === event.id ? 'action.selected' : 'background.paper',
+                          borderTop: idx === 0 ? 'none' : '1px solid',
+                          borderColor: 'divider'
+                        }}
+                      >
+                        <Avatar sx={{ width: 20, height: 20, fontSize: '0.65rem' }}>
+                          {(booking.extendedProps.customerName || '?').charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Typography variant='caption' noWrap>
+                          {booking.extendedProps.customerName || 'Client'}
+                        </Typography>
+                        <Chip
+                          size='small'
+                          label={getStatusLabel(booking.extendedProps.status)}
+                          color={getStatusChipColor(booking.extendedProps.status)}
+                          sx={{ height: 20, '& .MuiChip-label': { px: 0.75, fontSize: '0.65rem' } }}
+                        />
+                        <IconButton
+                          size='small'
+                          onClick={() => toggleStarred(booking.id)}
+                          sx={{ width: 22, height: 22 }}
+                        >
+                          <i
+                            className={booking.extendedProps.starred ? 'ri-star-fill' : 'ri-star-line'}
+                            style={{ color: booking.extendedProps.starred ? '#fbbf24' : undefined, fontSize: 14 }}
+                          />
+                        </IconButton>
+                        <IconButton
+                          size='small'
+                          onClick={() => openAppointmentDrawer(booking)}
+                          sx={{ width: 22, height: 22 }}
+                        >
+                          <i className='ri-edit-line' style={{ fontSize: 14 }} />
+                        </IconButton>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </>
+            )}
 
             <Divider />
 

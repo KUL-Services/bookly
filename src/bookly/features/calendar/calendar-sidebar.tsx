@@ -17,8 +17,6 @@ import {
   FormControlLabel,
   FormGroup,
   IconButton,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography
 } from '@mui/material'
 
@@ -44,6 +42,7 @@ interface CalendarSidebarProps {
 }
 
 export default function CalendarSidebar({ currentDate, onDateChange, isMobile }: CalendarSidebarProps) {
+  const brandPrimary = '#0a2c24'
   const isSidebarOpen = useCalendarStore(state => state.isSidebarOpen)
   const view = useCalendarStore(state => state.view)
   const setView = useCalendarStore(state => state.setView)
@@ -82,9 +81,6 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     rooms: true,
     highlight: true
   })
-
-  // Staff/Resources tab selection
-  const [resourceTab, setResourceTab] = useState<'staff' | 'resources'>('staff')
 
   useEffect(() => {
     setPendingBranches(branchFilters)
@@ -335,6 +331,32 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
     setExpandedAccordions(prev => ({ ...prev, [panel]: isExpanded }))
   }
 
+  const accordionSx = {
+    mb: 1.5,
+    '&:before': { display: 'none' },
+    boxShadow: 'none',
+    bgcolor: 'transparent',
+    border: '1px solid',
+    borderColor: 'rgba(10,44,36,0.15)',
+    borderRadius: 2,
+    overflow: 'hidden'
+  }
+
+  const accordionSummarySx = {
+    minHeight: 46,
+    px: 1.25,
+    bgcolor: 'rgba(10,44,36,0.04)',
+    '&.Mui-expanded': { minHeight: 46 },
+    '& .MuiAccordionSummary-content': { my: 0.75 },
+    '& .MuiAccordionSummary-expandIconWrapper': { color: brandPrimary }
+  }
+
+  const accordionDetailsSx = {
+    px: 1.25,
+    pt: 1,
+    pb: 1
+  }
+
   const SidebarContent = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Mobile Header */}
@@ -357,25 +379,32 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
       )}
 
       {/* Scrollable Content */}
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflow: 'auto',
+          p: 2,
+          '& .MuiFormControlLabel-root': {
+            mx: 0,
+            px: 0.5,
+            borderRadius: 1,
+            '&:hover': {
+              bgcolor: 'rgba(10,44,36,0.05)'
+            }
+          },
+          '& .MuiCheckbox-root': {
+            color: 'rgba(10,44,36,0.5)',
+            '&.Mui-checked': {
+              color: brandPrimary
+            }
+          }
+        }}
+      >
         {/* Branches */}
-        <Accordion
-          expanded={expandedAccordions.branches}
-          onChange={handleAccordionChange('branches')}
-          sx={{
-            mb: 2,
-            '&:before': { display: 'none' },
-            boxShadow: 'none',
-            bgcolor: 'transparent'
-          }}
-        >
+        <Accordion expanded={expandedAccordions.branches} onChange={handleAccordionChange('branches')} sx={accordionSx}>
           <AccordionSummary
             expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
-            sx={{
-              minHeight: 48,
-              px: 0,
-              '& .MuiAccordionSummary-content': { my: 1 }
-            }}
+            sx={accordionSummarySx}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 1 }}>
               <Typography
@@ -388,7 +417,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                   fontFamily: 'var(--font-fira-code)'
                 }}
               >
-                <i className='ri-map-pin-line' style={{ fontSize: '1.1rem' }} />
+                <i className='ri-building-line' style={{ fontSize: '1.1rem', color: brandPrimary }} />
                 Branches
               </Typography>
               {!pendingBranches.allBranches && pendingBranches.branchIds.length > 0 && (
@@ -406,12 +435,12 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
               )}
             </Box>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+          <AccordionDetails sx={accordionDetailsSx}>
             <FormGroup>
               <FormControlLabel
                 control={<Checkbox checked={pendingBranches.allBranches} onChange={() => handleAllBranches()} />}
                 label={
-                  <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 600 }}>
                     All Branches
                   </Typography>
                 }
@@ -436,9 +465,9 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                         sx={{
                           height: 20,
                           fontSize: '0.7rem',
-                          bgcolor: theme =>
-                            theme.palette.mode === 'dark' ? 'rgba(144, 202, 249, 0.12)' : 'rgba(25, 118, 210, 0.08)',
-                          color: theme => (theme.palette.mode === 'dark' ? 'rgb(144, 202, 249)' : 'rgb(25, 118, 210)')
+                          bgcolor: 'rgba(119, 182, 163, 0.18)',
+                          color: brandPrimary,
+                          border: '1px solid rgba(119, 182, 163, 0.35)'
                         }}
                       />
                     </Box>
@@ -449,33 +478,20 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
           </AccordionDetails>
         </Accordion>
 
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 1.5 }} />
 
         {/* Staff */}
-        <Accordion
-          expanded={expandedAccordions.staff}
-          onChange={handleAccordionChange('staff')}
-          sx={{
-            mb: 2,
-            '&:before': { display: 'none' },
-            boxShadow: 'none',
-            bgcolor: 'transparent'
-          }}
-        >
+        <Accordion expanded={expandedAccordions.staff} onChange={handleAccordionChange('staff')} sx={accordionSx}>
           <AccordionSummary
             expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
-            sx={{
-              minHeight: 48,
-              px: 0,
-              '& .MuiAccordionSummary-content': { my: 1 }
-            }}
+            sx={accordionSummarySx}
           >
             <Typography variant='subtitle2' sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <i className='ri-user-line' style={{ fontSize: '1.1rem' }} />
+              <i className='ri-user-line' style={{ fontSize: '1.1rem', color: brandPrimary }} />
               Staff Members
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+          <AccordionDetails sx={accordionDetailsSx}>
             {/* Back to All Staff button (shown in single-staff view) */}
             {staffFilters.selectedStaffId && previousStaffFilters && (
               <Button
@@ -574,6 +590,9 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                               height: 18,
                               fontSize: '0.65rem',
                               ml: 'auto',
+                              color: brandPrimary,
+                              borderColor: 'rgba(10,44,36,0.25)',
+                              bgcolor: 'rgba(10,44,36,0.03)',
                               '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
                             }}
                           />
@@ -587,26 +606,13 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
           </AccordionDetails>
         </Accordion>
 
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 1.5 }} />
 
         {/* Rooms */}
-        <Accordion
-          expanded={expandedAccordions.rooms}
-          onChange={handleAccordionChange('rooms')}
-          sx={{
-            mb: 2,
-            '&:before': { display: 'none' },
-            boxShadow: 'none',
-            bgcolor: 'transparent'
-          }}
-        >
+        <Accordion expanded={expandedAccordions.rooms} onChange={handleAccordionChange('rooms')} sx={accordionSx}>
           <AccordionSummary
             expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
-            sx={{
-              minHeight: 48,
-              px: 0,
-              '& .MuiAccordionSummary-content': { my: 1 }
-            }}
+            sx={accordionSummarySx}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 1 }}>
               <Typography
@@ -619,7 +625,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                   fontFamily: 'var(--font-fira-code)'
                 }}
               >
-                <i className='ri-door-line' style={{ fontSize: '1.1rem' }} />
+                <i className='ri-door-line' style={{ fontSize: '1.1rem', color: brandPrimary }} />
                 Rooms
               </Typography>
               {!pendingRooms.allRooms && pendingRooms.roomIds.length > 0 && (
@@ -637,12 +643,12 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
               )}
             </Box>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+          <AccordionDetails sx={accordionDetailsSx}>
             <FormGroup>
               <FormControlLabel
                 control={<Checkbox checked={pendingRooms.allRooms} onChange={handleAllRooms} />}
                 label={
-                  <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                  <Typography variant='body2' sx={{ fontWeight: 600 }}>
                     All Rooms
                   </Typography>
                 }
@@ -718,6 +724,9 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
                               height: 18,
                               fontSize: '0.65rem',
                               ml: 'auto',
+                              color: brandPrimary,
+                              borderColor: 'rgba(10,44,36,0.25)',
+                              bgcolor: 'rgba(10,44,36,0.03)',
                               '& .MuiChip-icon': { fontSize: '0.75rem', ml: 0.5 }
                             }}
                           />
@@ -731,32 +740,22 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
           </AccordionDetails>
         </Accordion>
 
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ my: 1.5 }} />
 
         {/* Highlight Filters */}
-        <Accordion
-          expanded={expandedAccordions.highlight}
-          onChange={handleAccordionChange('highlight')}
-          sx={{
-            mb: 2,
-            '&:before': { display: 'none' },
-            boxShadow: 'none',
-            bgcolor: 'transparent'
-          }}
-        >
+        <Accordion expanded={expandedAccordions.highlight} onChange={handleAccordionChange('highlight')} sx={accordionSx}>
           <AccordionSummary
             expandIcon={<i className='ri-arrow-down-s-line' style={{ fontSize: '1.25rem' }} />}
-            sx={{
-              minHeight: 48,
-              px: 0,
-              '& .MuiAccordionSummary-content': { my: 1 }
-            }}
+            sx={accordionSummarySx}
           >
-            <Typography variant='subtitle2' sx={{ fontWeight: 600, fontFamily: 'var(--font-fira-code)' }}>
+            <Typography
+              variant='subtitle2'
+              sx={{ fontWeight: 600, fontFamily: 'var(--font-fira-code)', color: brandPrimary }}
+            >
               Highlight
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+          <AccordionDetails sx={accordionDetailsSx}>
             {/* Payments */}
             <Typography
               variant='caption'
@@ -913,7 +912,17 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
           fullWidth
           onClick={handleClear}
           startIcon={<i className='ri-delete-bin-line' />}
-          sx={{ textTransform: 'uppercase', fontWeight: 600, fontSize: '0.75rem' }}
+          sx={{
+            textTransform: 'uppercase',
+            fontWeight: 700,
+            fontSize: '0.75rem',
+            borderColor: 'rgba(10,44,36,0.35)',
+            color: brandPrimary,
+            '&:hover': {
+              borderColor: brandPrimary,
+              bgcolor: 'rgba(10,44,36,0.06)'
+            }
+          }}
         >
           Clear All Filters
         </Button>
@@ -930,6 +939,15 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
   }
 
   return (
-    <Box sx={{ width: 320, borderRight: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>{SidebarContent}</Box>
+    <Box
+      sx={{
+        width: 320,
+        borderRight: 1,
+        borderColor: 'rgba(10,44,36,0.14)',
+        bgcolor: 'background.paper'
+      }}
+    >
+      {SidebarContent}
+    </Box>
   )
 }

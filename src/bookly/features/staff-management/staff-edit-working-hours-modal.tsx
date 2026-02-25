@@ -294,7 +294,14 @@ export function StaffEditWorkingHoursModal({
                 <Box>
                   <Typography fontWeight={600} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <i className='ri-repeat-line' style={{ fontSize: 18 }} />
-                    {applyToAllWeeks ? 'Apply to All Future Weeks' : 'This Week Only'}
+                    Apply to Future Weeks
+                    <Chip
+                      size='small'
+                      label={applyToAllWeeks ? 'On' : 'Off'}
+                      color={applyToAllWeeks ? 'primary' : 'default'}
+                      variant={applyToAllWeeks ? 'filled' : 'outlined'}
+                      sx={{ height: 18, fontWeight: 700, '& .MuiChip-label': { px: 0.75 } }}
+                    />
                   </Typography>
                   <Typography variant='caption' color='text.secondary'>
                     {applyToAllWeeks

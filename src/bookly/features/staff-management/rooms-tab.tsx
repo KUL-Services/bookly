@@ -530,25 +530,23 @@ export function RoomsTab() {
     </Box>
   )
 
+  const getEffectiveRoomType = (room: any) => {
+    if (room.pendingBookingMode && room.bookingModeEffectiveDate) {
+      const effectiveDate = new Date(room.bookingModeEffectiveDate)
+      effectiveDate.setHours(0, 0, 0, 0)
+      const viewDate = new Date(selectedDate)
+      viewDate.setHours(0, 0, 0, 0)
+      if (viewDate >= effectiveDate) {
+        return room.pendingBookingMode === 'STATIC' ? 'static' : 'dynamic'
+      }
+    }
+    return room.roomType || 'dynamic'
+  }
+
   const renderRoomRow = (room: any) => {
     const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as DayOfWeek
     const schedule = getRoomSchedule(room.id, dayOfWeek)
-
-    // Compute the effective room type for the selected date:
-    // If there's a pending mode change and the selected date is on/after the effective date,
-    // treat the room as already in the new mode for display purposes.
-    const effectiveRoomType = (() => {
-      if (room.pendingBookingMode && room.bookingModeEffectiveDate) {
-        const effectiveDate = new Date(room.bookingModeEffectiveDate)
-        effectiveDate.setHours(0, 0, 0, 0)
-        const viewDate = new Date(selectedDate)
-        viewDate.setHours(0, 0, 0, 0)
-        if (viewDate >= effectiveDate) {
-          return room.pendingBookingMode === 'STATIC' ? 'static' : 'dynamic'
-        }
-      }
-      return room.roomType || 'dynamic'
-    })()
+    const effectiveRoomType = getEffectiveRoomType(room)
 
     const isFlexible = effectiveRoomType !== 'static'
 
@@ -754,17 +752,9 @@ export function RoomsTab() {
                   color='text.primary'
                   sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
                 >
-                  {formatTime12Hour(businessHours.shifts[0].start).toLowerCase()} -{' '}
+                  Business Hours: {formatTime12Hour(businessHours.shifts[0].start).toLowerCase()} -{' '}
                   {formatTime12Hour(businessHours.shifts[0].end).toLowerCase()}
                 </Typography>
-                {/* <Typography
-                  variant='caption'
-                  color='text.secondary'
-                  sx={{ fontSize: '0.6rem', display: 'flex', alignItems: 'center', gap: 0.5 }}
-                >
-                  <i className='ri-time-line' style={{ fontSize: 10 }} />
-                  Follows Business Hours
-                </Typography> */}
               </Box>
             ) : (
               <Box
@@ -782,7 +772,7 @@ export function RoomsTab() {
                 }}
               >
                 <Typography variant='body2' color='text.secondary' fontWeight={500}>
-                  Branch closed
+                  Closed
                 </Typography>
               </Box>
             )
@@ -899,7 +889,7 @@ export function RoomsTab() {
               }}
             >
               <Typography variant='body2' color='text.secondary' fontWeight={500}>
-                Click to add schedule
+                {isFlexible ? 'Click to add business hours' : 'Click to add session'}
               </Typography>
             </Box>
           )}
@@ -954,6 +944,8 @@ export function RoomsTab() {
         {/* Rooms grouped by branches */}
         {Object.entries(roomsByBranch).map(([branchId, branchRooms]) => {
           const branch = apiBranches.find(b => b.id === branchId)
+          const fixedRooms = branchRooms.filter(room => getEffectiveRoomType(room) === 'static')
+          const flexRooms = branchRooms.filter(room => getEffectiveRoomType(room) !== 'static')
 
           return (
             <Box key={branchId}>
@@ -962,9 +954,9 @@ export function RoomsTab() {
                 sx={{
                   px: 2,
                   py: 1.5,
-                  bgcolor: 'action.selected',
+                  bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10,44,36,0.28)' : 'rgba(10,44,36,0.1)'),
                   borderBottom: 2,
-                  borderColor: 'divider',
+                  borderColor: 'rgba(10,44,36,0.2)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1
@@ -979,8 +971,57 @@ export function RoomsTab() {
                 </Typography>
               </Box>
 
-              {/* Rooms in this branch */}
-              {branchRooms.map(renderRoomRow)}
+              {fixedRooms.length > 0 && (
+                <>
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(119,182,163,0.14)' : 'rgba(119,182,163,0.12)'),
+                      borderBottom: '1px solid',
+                      borderColor: 'divider'
+                    }}
+                  >
+                    <i className='ri-calendar-schedule-line' style={{ fontSize: 14, color: '#0a2c24' }} />
+                    <Typography variant='caption' fontWeight={700} sx={{ letterSpacing: 0.4 }}>
+                      FIXED ROOMS
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      ({fixedRooms.length})
+                    </Typography>
+                  </Box>
+                  {fixedRooms.map(renderRoomRow)}
+                </>
+              )}
+
+              {flexRooms.length > 0 && (
+                <>
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 0.75,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.18)' : 'rgba(0,0,0,0.04)'),
+                      borderBottom: '1px solid',
+                      borderColor: 'divider'
+                    }}
+                  >
+                    <i className='ri-time-line' style={{ fontSize: 14, color: 'rgba(0,0,0,0.7)' }} />
+                    <Typography variant='caption' fontWeight={700} sx={{ letterSpacing: 0.4 }}>
+                      FLEX ROOMS
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      ({flexRooms.length})
+                    </Typography>
+                  </Box>
+                  {flexRooms.map(renderRoomRow)}
+                </>
+              )}
             </Box>
           )
         })}

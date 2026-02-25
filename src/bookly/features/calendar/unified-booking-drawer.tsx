@@ -300,6 +300,7 @@ export default function UnifiedBookingDrawer({
   const allServices: any[] = (storeServices?.length ? storeServices : fallbackMockServices) as any[]
   const allRooms: any[] = (calendarRooms?.length ? calendarRooms : fallbackMockRooms) as any[]
   const AUTO_STAFF_ID = 'no-preference'
+  const AUTO_ROOM_ID = 'no-preference-room'
 
   // Dynamic mode form state
   const [bookingReference, setBookingReference] = useState('')
@@ -308,6 +309,7 @@ export default function UnifiedBookingDrawer({
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('09:30')
   const [staffId, setStaffId] = useState(initialStaffId || '')
+  const [roomId, setRoomId] = useState(AUTO_ROOM_ID)
   const [selectedClient, setSelectedClient] = useState<User | null>(null)
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
@@ -355,11 +357,17 @@ export default function UnifiedBookingDrawer({
 
   // Get only dynamic staff for selection, filtered by branch
   const dynamicStaff = allStaff.filter((s: any) => s.staffType === 'dynamic' && (!branchId || s.branchId === branchId))
+  const availableRooms = allRooms.filter((room: any) => !branchId || room.branchId === branchId)
   const isAutoStaffSelection = staffId === AUTO_STAFF_ID
+  const isAutoRoomSelection = roomId === AUTO_ROOM_ID
 
   // Check if selected staff has STATIC booking mode (for session-based booking)
   const selectedStaffData = isAutoStaffSelection ? null : allStaff.find((s: any) => s.id === staffId)
   const isStaffStaticBookingMode = !isAutoStaffSelection && selectedStaffData?.bookingMode === 'STATIC'
+  const selectedRoomData = isAutoRoomSelection ? null : allRooms.find((r: any) => r.id === roomId)
+  const isRoomStaticBookingMode =
+    !isAutoRoomSelection && (selectedRoomData?.roomType === 'static' || selectedRoomData?.bookingMode === 'STATIC')
+  const staticSessionResourceId = isStaffStaticBookingMode ? staffId : isRoomStaticBookingMode ? roomId : null
 
   // Get branches for dropdown
   const { apiBranches } = useStaffManagementStore()
@@ -392,7 +400,7 @@ export default function UnifiedBookingDrawer({
 
       // Check if the room is static/fixed type
       const eventRoom = allRooms.find((r: any) => r.id === props.roomId)
-      if (eventRoom?.roomType === 'static' || eventRoom?.roomType === 'fixed') {
+      if (eventRoom?.roomType === 'static' || (eventRoom as any)?.bookingMode === 'STATIC') {
         return true
       }
     }
@@ -410,6 +418,7 @@ export default function UnifiedBookingDrawer({
       setStartTime('09:00')
       setEndTime('09:30')
       setStaffId(initialStaffId || '')
+      setRoomId(AUTO_ROOM_ID)
       setBranchId('') // Reset branch on open
       setSelectedClient(null)
       setClientName('')
@@ -458,13 +467,6 @@ export default function UnifiedBookingDrawer({
       setAvailabilityWarning(null)
 
       const props = existingEvent.extendedProps as any
-      console.log('🎯 DRAWER Opening in edit mode:', {
-        eventId: existingEvent.id,
-        props,
-        hasSlotId: !!props.slotId,
-        isStaticSlot: props.isStaticSlot,
-        effectiveSchedulingMode
-      })
 
       const start = new Date(existingEvent.start)
       const end = new Date(existingEvent.end)
@@ -472,6 +474,7 @@ export default function UnifiedBookingDrawer({
       setStartTime(start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
       setEndTime(end.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }))
       setStaffId(props.staffId || '')
+      setRoomId(props.roomId || AUTO_ROOM_ID)
       setClientName(props.customerName || '')
       setClientEmail(props.email || props.customerEmail || '')
       setClientPhone(props.phone || props.customerPhone || '')
@@ -520,14 +523,6 @@ export default function UnifiedBookingDrawer({
 
         setSelectedSlotId(slotId)
 
-        console.log('🔍 DRAWER Loading slot data:', {
-          slotId,
-          foundSlot: !!slot,
-          slot,
-          effectiveSchedulingMode,
-          allStaticSlotsCount: staticSlots.length,
-          searchMethod: props.slotId ? 'direct' : slot ? 'matched' : 'fallback'
-        })
         setRealSlotData(slot)
 
         // Load service name from slot if available
@@ -563,15 +558,9 @@ export default function UnifiedBookingDrawer({
 
             return false
           })
-          console.log('📋 DRAWER Slot bookings by time/location (primary):', { slotBookings })
         } else {
           // Fallback to slotId-only matching if we don't have slot data
           slotBookings = getSlotBookings(slotId, start)
-          console.log('📋 DRAWER Slot bookings by slotId (fallback):', {
-            slotId,
-            bookingsCount: slotBookings.length,
-            slotBookings
-          })
         }
 
         // Convert events to SlotClient format
@@ -924,9 +913,9 @@ export default function UnifiedBookingDrawer({
         return
       }
 
-      // Validate session selection for STATIC booking mode
-      if (isStaffStaticBookingMode && !selectedSession) {
-        alert('Please select a session for this staff member')
+      // Validate session selection for STATIC/FIXED resource mode
+      if (staticSessionResourceId && !selectedSession) {
+        alert('Please select an available session')
         return
       }
 
@@ -940,6 +929,7 @@ export default function UnifiedBookingDrawer({
         const endDate = new Date(date)
         endDate.setHours(endHours, endMinutes, 0, 0)
         const selectedStaff = allStaff.find((s: any) => s.id === staffId)
+        const selectedRoom = isAutoRoomSelection ? null : allRooms.find((r: any) => r.id === roomId)
 
         const newEvent: CalendarEvent = {
           id: bookingReference,
@@ -952,6 +942,8 @@ export default function UnifiedBookingDrawer({
             staffId,
             staffName: isAutoStaffSelection ? 'Automatic Assignment' : selectedStaff?.name || '',
             branchId: branchId || selectedStaff?.branchId || '',
+            roomId: selectedRoom?.id || '',
+            roomName: selectedRoom?.name || '',
             selectionMethod: requestedByClient ? 'by_client' : 'automatically',
             bookedBy: 'business', // Created by business admin
             starred,
@@ -980,6 +972,11 @@ export default function UnifiedBookingDrawer({
               starred,
               instapayReference: instapayReference || undefined,
               paymentStatus,
+              roomId: isAutoRoomSelection ? '' : roomId,
+              roomName:
+                isAutoRoomSelection
+                  ? ''
+                  : allRooms.find((r: any) => r.id === roomId)?.name || existingEvent.extendedProps.roomName || '',
               businessNotes: businessNotes.trim() || undefined
             }
           }
@@ -1024,7 +1021,6 @@ export default function UnifiedBookingDrawer({
               endTime,
               capacity: 10 // Default capacity
             }
-            console.warn('⚠️ DRAWER Using fallback slot data:', slotDataForSave)
           } else {
             console.error('Session data not available - please refresh and try again')
             return
@@ -1056,17 +1052,9 @@ export default function UnifiedBookingDrawer({
 
           return false
         })
-        console.log('💾 DRAWER Save: Found existing bookings by time/location:', {
-          count: existingBookings.length,
-          existingBookings
-        })
       } else {
         // Fallback to slotId-only matching
         existingBookings = getSlotBookings(slotIdForSave, date)
-        console.log('💾 DRAWER Save: Found existing bookings by slotId:', {
-          count: existingBookings.length,
-          existingBookings
-        })
       }
 
       const existingBookingIds = new Set(existingBookings.map(b => b.id))
@@ -1075,7 +1063,6 @@ export default function UnifiedBookingDrawer({
       // Delete removed clients
       existingBookings.forEach(booking => {
         if (!currentClientIds.has(booking.id)) {
-          console.log('🗑️ DRAWER Deleting removed client:', booking.id)
           deleteEvent(booking.id)
         }
       })
@@ -1110,7 +1097,6 @@ export default function UnifiedBookingDrawer({
                 businessNotes: client.businessNotes || undefined
               }
             }
-            console.log('✏️ DRAWER Updating existing booking:', client.id)
             updateEvent(updatedEvent)
           }
         } else {
@@ -1144,7 +1130,6 @@ export default function UnifiedBookingDrawer({
               businessNotes: client.businessNotes || undefined
             }
           }
-          console.log('➕ DRAWER Creating new booking:', client.id)
           createEvent(newEvent)
         }
       })
@@ -1156,6 +1141,7 @@ export default function UnifiedBookingDrawer({
       startTime,
       endTime,
       staffId,
+      roomId: isAutoRoomSelection ? '' : roomId,
       clientName,
       clientEmail,
       clientPhone,
@@ -1310,6 +1296,7 @@ export default function UnifiedBookingDrawer({
                         onChange={e => {
                           setBranchId(e.target.value)
                           setStaffId('') // Reset staff when branch changes
+                          setRoomId(AUTO_ROOM_ID)
                         }}
                       >
                         <MenuItem value=''>All Branches</MenuItem>
@@ -1460,6 +1447,43 @@ export default function UnifiedBookingDrawer({
 
                   <Divider />
 
+                  {/* Room Selection */}
+                  <Box>
+                    <Typography
+                      variant='caption'
+                      color='text.secondary'
+                      fontWeight={600}
+                      sx={{ mb: 1, display: 'block' }}
+                    >
+                      SELECT ROOM
+                    </Typography>
+                    <FormControl fullWidth size='small'>
+                      <InputLabel>Room</InputLabel>
+                      <Select value={roomId} label='Room' onChange={e => setRoomId(e.target.value)}>
+                        <MenuItem value={AUTO_ROOM_ID}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: 'primary.light' }}>
+                              <i className='ri-magic-line' style={{ fontSize: '0.8rem' }} />
+                            </Avatar>
+                            Automatic (No Preference)
+                          </Box>
+                        </MenuItem>
+                        {availableRooms.map((room: any) => (
+                          <MenuItem key={room.id} value={room.id}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: 'success.light' }}>
+                                <i className='ri-home-4-line' style={{ fontSize: '0.75rem' }} />
+                              </Avatar>
+                              {room.name}
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Box>
+
+                  <Divider />
+
                   {/* Service Selection */}
                   <Box>
                     <Typography
@@ -1524,10 +1548,10 @@ export default function UnifiedBookingDrawer({
                     {/* Available Time Slots OR Session Selector */}
                     {staffId && serviceId ? (
                       <Box sx={{ mt: 2 }}>
-                        {isStaffStaticBookingMode ? (
+                        {staticSessionResourceId ? (
                           // STATIC BOOKING MODE - Show session selector
                           <SessionSelector
-                            resourceId={staffId}
+                            resourceId={staticSessionResourceId}
                             date={date}
                             selectedSessionId={selectedSession?.id || null}
                             onSelectSession={session => {
@@ -1603,6 +1627,9 @@ export default function UnifiedBookingDrawer({
                                     Staff will be assigned automatically based on availability.
                                   </Typography>
                                 )}
+                                <Typography variant='caption' color='text.secondary' sx={{ mb: 1, display: 'block' }}>
+                                  Start times use 15-minute steps; longer services still reserve their full duration.
+                                </Typography>
                                 <Box
                                   sx={{
                                     display: 'grid',
@@ -1963,11 +1990,6 @@ export default function UnifiedBookingDrawer({
               // Get slot data synchronously for display (if not already set above)
               if (effectiveSlotId && !displaySlotData) {
                 displaySlotData = staticSlots.find(s => s.id === effectiveSlotId)
-                console.log('⚠️ DRAWER Sync slot data fetch:', {
-                  effectiveSlotId,
-                  found: !!displaySlotData,
-                  displaySlotData
-                })
               }
 
               // Get total capacity from slot data
@@ -1976,18 +1998,6 @@ export default function UnifiedBookingDrawer({
               // Use slotClients.length for real-time capacity tracking
               // This ensures the UI updates immediately when adding/removing clients
               const bookedCount = slotClients.length
-
-              console.log('💡 DRAWER Capacity calculation:', {
-                selectedSlotId,
-                effectiveSlotId,
-                hasRealSlotData: !!realSlotData,
-                hasDisplaySlotData: !!displaySlotData,
-                totalCapacity,
-                bookedCount,
-                slotClientsLength: slotClients.length,
-                slotClients,
-                calculationMethod: 'slotClients.length (real-time)'
-              })
               const availableCapacity = totalCapacity - bookedCount
               const isLow = availableCapacity < totalCapacity * 0.3
               const isFull = availableCapacity === 0
@@ -2039,7 +2049,7 @@ export default function UnifiedBookingDrawer({
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
                             {isSessionInPast
-                              ? `${attendedCount} attended • ${noShowCount} no-show${pendingCount > 0 ? ` • ${pendingCount} unmarked` : ''}`
+                              ? `${attendedCount} Attended • ${noShowCount} No Show${pendingCount > 0 ? ` • ${pendingCount} Unmarked` : ''}`
                               : `${bookedCount} booked • ${availableCapacity} spots remaining`}
                           </Typography>
                           <Typography variant='caption' color='text.secondary' sx={{ display: 'block', mt: 0.5 }}>
@@ -2055,7 +2065,7 @@ export default function UnifiedBookingDrawer({
                           />
                           {isSessionInPast && bookedCount > 0 && (
                             <Chip
-                              label={`${attendedCount}/${bookedCount} attended`}
+                              label={`${attendedCount}/${bookedCount} Attended`}
                               size='small'
                               variant='outlined'
                               color={

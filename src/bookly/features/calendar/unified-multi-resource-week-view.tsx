@@ -246,6 +246,8 @@ export default function UnifiedMultiResourceWeekView({
 }: UnifiedMultiResourceWeekViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+  const brandPrimary = '#0a2c24'
+  const brandAccent = '#77b6a3'
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
   const allEvents = useCalendarStore(state => state.events)
@@ -256,7 +258,6 @@ export default function UnifiedMultiResourceWeekView({
   const branchFilters = useCalendarStore(state => state.branchFilters)
   const staffFilters = useCalendarStore(state => state.staffFilters)
   const roomFilters = useCalendarStore(state => state.roomFilters)
-  const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const { rooms, staffWorkingHours } = useStaffManagementStore()
 
   // Use API-loaded data from stores, fallback to mocks
@@ -449,7 +450,7 @@ export default function UnifiedMultiResourceWeekView({
     const dayOfWeek = dayNames[day.getDay()]
 
     // Return room assignment for BOTH dynamic and static staff
-    return staff.roomAssignments.find(assignment => assignment.dayOfWeek === dayOfWeek)
+    return staff.roomAssignments.find((assignment: any) => assignment.dayOfWeek === dayOfWeek)
   }
 
   const renderResourceRow = (resource: any, resourceIndex: number) => {
@@ -466,9 +467,10 @@ export default function UnifiedMultiResourceWeekView({
             md: `220px repeat(${weekDays.length}, 1fr)`
           },
           borderBottom: 1,
-          borderColor: 'divider',
+          borderColor: 'rgba(10,44,36,0.14)',
           minHeight: 100,
-          bgcolor: resourceIndex % 2 === 0 ? 'transparent' : isDark ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)',
+          bgcolor:
+            resourceIndex % 2 === 0 ? 'transparent' : isDark ? 'rgba(10,44,36,0.08)' : 'rgba(10,44,36,0.025)',
           '& > *': {
             minWidth: 0,
             overflow: 'hidden'
@@ -481,12 +483,12 @@ export default function UnifiedMultiResourceWeekView({
           sx={{
             p: 2,
             borderRight: 1,
-            borderColor: 'divider',
+            borderColor: 'rgba(10,44,36,0.14)',
             display: 'flex',
             alignItems: 'center',
             gap: 1.5,
             // cursor: 'pointer', // Disabled - only slots/bookings are clickable
-            bgcolor: isRoom ? (isDark ? 'rgba(10, 44, 36, 0.05)' : 'rgba(10, 44, 36, 0.02)') : 'transparent'
+            bgcolor: isRoom ? (isDark ? 'rgba(10,44,36,0.12)' : 'rgba(10,44,36,0.05)') : 'transparent'
             // '&:hover': { // Disabled - only slots/bookings are clickable
             //   bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'
             // }
@@ -504,7 +506,7 @@ export default function UnifiedMultiResourceWeekView({
             sx={{
               width: 40,
               height: 40,
-              bgcolor: isStaff ? 'primary.main' : 'success.main',
+              bgcolor: isStaff ? brandPrimary : 'success.main',
               color: 'common.white',
               fontSize: '0.9rem',
               fontWeight: 600
@@ -543,7 +545,7 @@ export default function UnifiedMultiResourceWeekView({
           // Check resource type first
           let isStaticType = isStaff
             ? resource.staffType === 'static'
-            : resource.roomType === 'static' || resource.roomType === 'fixed'
+            : (resource as any).roomType === 'static' || (resource as any).bookingMode === 'STATIC'
 
           // Also check if events themselves indicate static slots:
           // - Events with slotId are from static scheduling
@@ -556,7 +558,7 @@ export default function UnifiedMultiResourceWeekView({
               const eventRoomId = event.extendedProps?.roomId
               if (eventRoomId) {
                 const eventRoom = rooms.find(r => r.id === eventRoomId)
-                if (eventRoom?.roomType === 'static' || eventRoom?.roomType === 'fixed') return true
+                if (eventRoom?.roomType === 'static' || (eventRoom as any)?.bookingMode === 'STATIC') return true
               }
               return false
             })
@@ -571,6 +573,8 @@ export default function UnifiedMultiResourceWeekView({
             isConsolidated: boolean
             bookingCount: number
             totalCapacity: number
+            attendedCount: number
+            attendanceBase: number
             allEvents: CalendarEvent[]
           }> = []
 
@@ -590,12 +594,16 @@ export default function UnifiedMultiResourceWeekView({
               const firstEvent = slotEvents[0]
               const activeBookings = slotEvents.filter(e => e.extendedProps?.status !== 'cancelled')
               const staticSlot = staticSlots.find(s => s.id === firstEvent.extendedProps?.slotId)
+              const attendedCount = activeBookings.filter(e => e.extendedProps?.status === 'attended').length
+              const attendanceBase = activeBookings.length > 0 ? activeBookings.length : staticSlot?.capacity || 0
               consolidatedEvents.push({
                 event: firstEvent,
                 isConsolidated: true,
                 bookingCount: activeBookings.length,
                 totalCapacity: staticSlot?.capacity || activeBookings.length,
-                allEvents: slotEvents
+                allEvents: slotEvents,
+                attendedCount,
+                attendanceBase
               })
             })
           } else {
@@ -605,7 +613,9 @@ export default function UnifiedMultiResourceWeekView({
               isConsolidated: false,
               bookingCount: 1,
               totalCapacity: 1,
-              allEvents: [event]
+              allEvents: [event],
+              attendedCount: event.extendedProps?.status === 'attended' ? 1 : 0,
+              attendanceBase: 1
             }))
           }
 
@@ -621,7 +631,7 @@ export default function UnifiedMultiResourceWeekView({
               sx={{
                 p: 1,
                 borderRight: 1,
-                borderColor: 'divider',
+                borderColor: 'rgba(10,44,36,0.12)',
                 position: 'relative',
                 bgcolor: isToday(day)
                   ? isDark
@@ -700,7 +710,8 @@ export default function UnifiedMultiResourceWeekView({
               )}
 
               {/* Events - Limited to show max 2, with overflow count */}
-              {visibleEvents.map(({ event, isConsolidated, bookingCount, totalCapacity, allEvents: slotEvents }) => {
+              {visibleEvents.map(
+                ({ event, isConsolidated, bookingCount, totalCapacity, attendedCount, attendanceBase, allEvents: slotEvents }) => {
                 const colors = buildEventColors(colorScheme, isConsolidated ? 'confirmed' : event.extendedProps.status)
 
                 // Search highlighting - check if event (or any in slot) matches search
@@ -744,23 +755,29 @@ export default function UnifiedMultiResourceWeekView({
                             variant='caption'
                             sx={{ display: 'block', mb: 0.75, color: 'rgba(255,255,255,0.9)' }}
                           >
-                            {bookingCount} / {totalCapacity} booked
+                            {attendedCount} / {attendanceBase} Attended • {bookingCount} / {totalCapacity} Booked
                           </Typography>
                           {slotEvents.filter(e => e.extendedProps?.status !== 'cancelled').length > 0 && (
                             <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.2)', pt: 0.75 }}>
-                              <Typography
-                                variant='caption'
-                                sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)' }}
-                              >
-                                Clients:{' '}
-                                {slotEvents
-                                  .filter(e => e.extendedProps?.status !== 'cancelled')
-                                  .slice(0, 5)
-                                  .map(e => e.extendedProps?.customerName || 'Client')
-                                  .join(', ')}
-                                {slotEvents.filter(e => e.extendedProps?.status !== 'cancelled').length > 5 &&
-                                  ` +${slotEvents.filter(e => e.extendedProps?.status !== 'cancelled').length - 5} more`}
-                              </Typography>
+                              {slotEvents
+                                .filter(e => e.extendedProps?.status !== 'cancelled')
+                                .slice(0, 8)
+                                .map((clientEvent, idx) => (
+                                  <Typography
+                                    key={`${clientEvent.id}-${idx}`}
+                                    variant='caption'
+                                    sx={{ display: 'block', fontSize: '0.65rem', color: 'rgba(255,255,255,0.78)' }}
+                                  >
+                                    • {clientEvent.extendedProps?.customerName || 'Client'} -{' '}
+                                    {(clientEvent.extendedProps?.status || 'pending').replace('_', ' ')}
+                                  </Typography>
+                                ))}
+                              {slotEvents.filter(e => e.extendedProps?.status !== 'cancelled').length > 8 && (
+                                <Typography variant='caption' sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)' }}>
+                                  +
+                                  {slotEvents.filter(e => e.extendedProps?.status !== 'cancelled').length - 8} more
+                                </Typography>
+                              )}
                             </Box>
                           )}
                         </Box>
@@ -826,19 +843,24 @@ export default function UnifiedMultiResourceWeekView({
                         }
                       }}
                     >
-                      <Typography
-                        variant='caption'
-                        sx={{
-                          fontSize: '0.65rem',
-                          fontWeight: 500,
-                          display: 'block',
-                          color: effectiveTextColor,
-                          lineHeight: 1.2
-                        }}
-                        noWrap
-                      >
-                        {format(event.start, 'h:mm a')}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography
+                          variant='caption'
+                          sx={{
+                            fontSize: '0.65rem',
+                            fontWeight: 500,
+                            display: 'block',
+                            color: effectiveTextColor,
+                            lineHeight: 1.2
+                          }}
+                          noWrap
+                        >
+                          {format(event.start, 'h:mm a')}
+                        </Typography>
+                        {isConsolidated && (
+                          <i className='ri-star-fill' style={{ fontSize: 10, color: '#fbbf24', flexShrink: 0 }} />
+                        )}
+                      </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         {(() => {
                           const service = allServices.find((s: any) => s.name === event.extendedProps?.serviceName)
@@ -890,7 +912,7 @@ export default function UnifiedMultiResourceWeekView({
                         <Box sx={{ mt: 0.25 }}>
                           <Chip
                             icon={<i className='ri-user-line' style={{ fontSize: '0.6rem' }} />}
-                            label={`${bookingCount}/${totalCapacity}`}
+                            label={`${attendedCount}/${attendanceBase} Attended`}
                             size='small'
                             sx={{
                               height: '14px',
@@ -1009,7 +1031,7 @@ export default function UnifiedMultiResourceWeekView({
           }}
         >
           {/* Brand Watermark - Inside scrollable content */}
-          <BrandWatermark position='bottom-right' size={500} offsetX={-50} offsetY={50} rotate={-20} />
+          <BrandWatermark placement='bottom-right' size={500} offsetX={-50} offsetY={50} rotate={-20} />
 
           {/* Week header */}
           <Box
@@ -1020,7 +1042,7 @@ export default function UnifiedMultiResourceWeekView({
                 md: `220px repeat(${weekDays.length}, 1fr)`
               },
               borderBottom: 1,
-              borderColor: 'divider',
+              borderColor: 'rgba(10,44,36,0.16)',
               bgcolor: 'background.paper',
               position: 'sticky',
               top: 0,
@@ -1032,8 +1054,19 @@ export default function UnifiedMultiResourceWeekView({
             }}
           >
             {/* Resource column header */}
-            <Box sx={{ p: 2, borderRight: 1, borderColor: 'divider' }}>
-              <Typography variant='subtitle2' fontWeight={600} color='text.secondary'>
+            <Box
+              sx={{
+                p: 2,
+                borderRight: 1,
+                borderColor: 'rgba(10,44,36,0.16)',
+                bgcolor: isDark ? 'rgba(10,44,36,0.12)' : 'rgba(10,44,36,0.06)'
+              }}
+            >
+              <Typography
+                variant='subtitle2'
+                fontWeight={700}
+                sx={{ color: isDark ? brandAccent : brandPrimary, fontFamily: 'var(--font-fira-code)' }}
+              >
                 Resources
               </Typography>
             </Box>
@@ -1047,7 +1080,7 @@ export default function UnifiedMultiResourceWeekView({
                   sx={{
                     p: 2,
                     borderRight: 1,
-                    borderColor: 'divider',
+                    borderColor: 'rgba(10,44,36,0.12)',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -1113,7 +1146,7 @@ export default function UnifiedMultiResourceWeekView({
                     },
                     bgcolor: isDark ? 'rgba(10, 44, 36, 0.12)' : 'rgba(10, 44, 36, 0.1)',
                     borderBottom: 1,
-                    borderColor: 'divider'
+                    borderColor: 'rgba(10,44,36,0.16)'
                   }}
                 >
                   {/* Branch name column */}
@@ -1125,10 +1158,10 @@ export default function UnifiedMultiResourceWeekView({
                       alignItems: 'center',
                       gap: 1,
                       borderRight: 1,
-                      borderColor: 'divider'
+                      borderColor: 'rgba(10,44,36,0.16)'
                     }}
                   >
-                    <i className='ri-building-line' style={{ fontSize: 14, color: isDark ? '#77b6a3' : '#0a2c24' }} />
+                    <i className='ri-building-line' style={{ fontSize: 14, color: isDark ? brandAccent : brandPrimary }} />
                     <Typography variant='body2' fontWeight={700} color='primary.dark'>
                       {branchName}
                     </Typography>
@@ -1160,7 +1193,7 @@ export default function UnifiedMultiResourceWeekView({
                           alignItems: 'center',
                           justifyContent: 'center',
                           borderRight: 1,
-                          borderColor: 'divider',
+                          borderColor: 'rgba(10,44,36,0.12)',
                           bgcolor: isClosed ? (isDark ? 'rgba(255,0,0,0.05)' : 'rgba(255,0,0,0.03)') : 'transparent'
                         }}
                       >

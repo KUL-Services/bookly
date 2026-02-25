@@ -1,9 +1,9 @@
 'use client'
 
-import { Box, Typography, Avatar, Button, Select, MenuItem, FormControl } from '@mui/material'
+import { Box, Typography, Avatar, Button, Select, MenuItem, FormControl, Popover, List, ListItemButton, Tooltip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, isToday } from 'date-fns'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { mockServices } from '@/bookly/data/mock-data'
 import { useCalendarStore } from './state'
 import { buildEventColors } from './utils'
@@ -37,6 +37,16 @@ interface SingleStaffWeekViewProps {
   onStaffChange?: (staffId: string) => void
 }
 
+interface DisplayWeekEvent {
+  event: CalendarEvent
+  isConsolidated: boolean
+  bookingCount: number
+  totalCapacity: number
+  attendedCount: number
+  attendanceBase: number
+  slotEvents: CalendarEvent[]
+}
+
 export default function SingleStaffWeekView({
   events,
   staff,
@@ -49,12 +59,23 @@ export default function SingleStaffWeekView({
 }: SingleStaffWeekViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+  const brandPrimary = '#0a2c24'
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const isSearchActive = useCalendarStore(state => state.isSearchActive)
   const isEventMatchedBySearch = useCalendarStore(state => state.isEventMatchedBySearch)
+  const staticSlots = useCalendarStore(state => state.staticSlots)
 
   // Current time tracking for live indicator
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [overflowAnchorEl, setOverflowAnchorEl] = useState<HTMLElement | null>(null)
+  const [overflowItems, setOverflowItems] = useState<DisplayWeekEvent[]>([])
+  const [overflowDay, setOverflowDay] = useState<Date | null>(null)
+
+  const handleOverflowClose = () => {
+    setOverflowAnchorEl(null)
+    setOverflowItems([])
+    setOverflowDay(null)
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -76,6 +97,53 @@ export default function SingleStaffWeekView({
   const getDayEvents = (day: Date) => {
     return staffEvents.filter(event => isSameDay(new Date(event.start), day))
   }
+
+  const consolidateDayEvents = useMemo(() => {
+    return (dayEvents: CalendarEvent[]): DisplayWeekEvent[] => {
+      const entries: DisplayWeekEvent[] = []
+      const slotGroups = new Map<string, CalendarEvent[]>()
+
+      dayEvents.forEach(event => {
+        const slotId = event.extendedProps?.slotId
+        if (slotId) {
+          if (!slotGroups.has(slotId)) slotGroups.set(slotId, [])
+          slotGroups.get(slotId)!.push(event)
+          return
+        }
+
+        entries.push({
+          event,
+          isConsolidated: false,
+          bookingCount: 1,
+          totalCapacity: 1,
+          attendedCount: event.extendedProps.status === 'attended' ? 1 : 0,
+          attendanceBase: 1,
+          slotEvents: [event]
+        })
+      })
+
+      slotGroups.forEach((slotEvents, slotId) => {
+        const firstEvent = slotEvents[0]
+        const activeBookings = slotEvents.filter(e => e.extendedProps?.status !== 'cancelled')
+        const attendedCount = activeBookings.filter(e => e.extendedProps?.status === 'attended').length
+        const staticSlot = staticSlots.find(s => s.id === slotId)
+        const totalCapacity = staticSlot?.capacity || activeBookings.length
+        const attendanceBase = activeBookings.length > 0 ? activeBookings.length : totalCapacity
+
+        entries.push({
+          event: firstEvent,
+          isConsolidated: true,
+          bookingCount: activeBookings.length,
+          totalCapacity,
+          attendedCount,
+          attendanceBase,
+          slotEvents
+        })
+      })
+
+      return entries.sort((a, b) => new Date(a.event.start).getTime() - new Date(b.event.start).getTime())
+    }
+  }, [staticSlots])
 
   // Get total appointments for the week
   const weekAppointments = staffEvents.filter(event => {
@@ -108,7 +176,7 @@ export default function SingleStaffWeekView({
         sx={{
           p: 2,
           borderBottom: 1,
-          borderColor: 'divider',
+          borderColor: 'rgba(10,44,36,0.16)',
           bgcolor: 'background.paper',
           display: 'flex',
           alignItems: 'center',
@@ -169,7 +237,7 @@ export default function SingleStaffWeekView({
             sx={{
               width: 48,
               height: 48,
-              bgcolor: theme.palette.primary.main,
+              bgcolor: brandPrimary,
               fontSize: '1rem',
               fontWeight: 600
             }}
@@ -224,7 +292,7 @@ export default function SingleStaffWeekView({
                     p: 2,
                     bgcolor: isToday(day) ? 'primary.main' : isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
                     borderBottom: 1,
-                    borderColor: 'divider',
+                    borderColor: 'rgba(10,44,36,0.12)',
                     textAlign: 'center',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s',
@@ -357,11 +425,20 @@ export default function SingleStaffWeekView({
                       </Typography>
                     </Box>
                   ) : (
-                    dayEvents.map(event => {
-                      const colors = buildEventColors(colorScheme, event.extendedProps.status)
+                    (() => {
+                      const consolidatedEvents = consolidateDayEvents(dayEvents)
+                      const maxVisibleEvents = 4
+                      const visibleEvents = consolidatedEvents.slice(0, maxVisibleEvents)
+                      const overflowCount = consolidatedEvents.length - maxVisibleEvents
+
+                      return (
+                        <>
+                          {visibleEvents.map(item => {
+                      const event = item.event
+                      const colors = buildEventColors(colorScheme, item.isConsolidated ? 'confirmed' : event.extendedProps.status)
 
                       // Search highlighting logic
-                      const isMatchedBySearch = isEventMatchedBySearch(event.id)
+                      const isMatchedBySearch = item.slotEvents.some(slotEvent => isEventMatchedBySearch(slotEvent.id))
                       const isFaded = isSearchActive && !isMatchedBySearch
                       const isHighlighted = isSearchActive && isMatchedBySearch
 
@@ -376,91 +453,192 @@ export default function SingleStaffWeekView({
                         ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6)
                         : baseTextColor
 
-                      return (
-                        <Box
-                          key={event.id}
-                          onClick={() => onEventClick?.(event)}
-                          sx={{
-                            bgcolor: effectiveBgColor,
-                            border: 'none',
-                            borderLeft: `4px solid ${effectiveBorderColor}`,
-                            borderRadius: 1.5,
-                            p: 1.5,
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
-                            opacity: isFaded ? 0.4 : 1,
-                            filter: isFaded ? 'grayscale(50%)' : 'none',
-                            boxShadow: isHighlighted
-                              ? '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
-                              : 'none',
-                            transform: isHighlighted ? 'scale(1.02)' : 'none',
-                            zIndex: isHighlighted ? 5 : 'auto',
-                            '&:hover': {
-                              boxShadow: isHighlighted
-                                ? '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
-                                : 3,
-                              transform: 'scale(1.02)',
-                              opacity: isFaded ? 0.6 : 1
-                            }
-                          }}
-                        >
-                          <Typography
-                            variant='caption'
-                            fontFamily='var(--font-fira-code)'
-                            sx={{
-                              display: 'block',
-                              fontWeight: 700,
-                              color: effectiveTextColor,
-                              fontSize: '0.7rem',
-                              mb: 0.5
-                            }}
-                          >
-                            {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
-                          </Typography>
-                          <Typography
-                            variant='body2'
-                            fontFamily='var(--font-fira-code)'
-                            sx={{
-                              fontWeight: 700,
-                              color: effectiveTextColor,
-                              fontSize: '0.85rem',
-                              lineHeight: 1.4,
-                              mb: 0.25
-                            }}
-                          >
-                            {event.extendedProps.starred && '⭐ '}
-                            {event.extendedProps.customerName}
-                          </Typography>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                            {(() => {
-                              const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
-                              return service?.color ? (
-                                <Box
+                          return (
+                            <Tooltip
+                              key={event.id}
+                              title={
+                                item.isConsolidated ? (
+                                  <Box sx={{ p: 1, minWidth: 220 }}>
+                                    <Typography variant='caption' sx={{ color: 'common.white', fontWeight: 700 }}>
+                                      {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
+                                    </Typography>
+                                    <Typography
+                                      variant='caption'
+                                      sx={{ color: 'rgba(255,255,255,0.9)', display: 'block', mt: 0.5, mb: 0.75 }}
+                                    >
+                                      {item.attendedCount}/{item.attendanceBase} Attended • {item.bookingCount}/
+                                      {item.totalCapacity} booked
+                                    </Typography>
+                                    {item.slotEvents
+                                      .filter(slotEvent => slotEvent.extendedProps?.status !== 'cancelled')
+                                      .slice(0, 8)
+                                      .map(slotEvent => (
+                                        <Box
+                                          key={slotEvent.id}
+                                          sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 0.25 }}
+                                        >
+                                          <Typography
+                                            variant='caption'
+                                            sx={{ color: 'common.white', fontSize: '0.68rem' }}
+                                          >
+                                            {slotEvent.extendedProps.customerName || 'Client'}
+                                          </Typography>
+                                          <Typography
+                                            variant='caption'
+                                            sx={{
+                                              color: 'rgba(255,255,255,0.85)',
+                                              fontSize: '0.65rem',
+                                              textTransform: 'capitalize'
+                                            }}
+                                          >
+                                            {(slotEvent.extendedProps.status || 'pending').replace('_', ' ')}
+                                          </Typography>
+                                        </Box>
+                                      ))}
+                                  </Box>
+                                ) : (
+                                  ''
+                                )
+                              }
+                              arrow={item.isConsolidated}
+                              disableHoverListener={!item.isConsolidated}
+                              placement='top'
+                            >
+                              <Box
+                                onClick={() => onEventClick?.(event)}
+                                sx={{
+                                  position: 'relative',
+                                  bgcolor: effectiveBgColor,
+                                  border: 'none',
+                                  borderLeft: `4px solid ${effectiveBorderColor}`,
+                                  borderRadius: 1.5,
+                                  p: 1.5,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.3s ease',
+                                  opacity: isFaded ? 0.4 : 1,
+                                  filter: isFaded ? 'grayscale(50%)' : 'none',
+                                  boxShadow: isHighlighted
+                                    ? '0px 0px 0px 3px rgba(10, 44, 36, 0.5), 0px 4px 12px rgba(0,0,0,0.15)'
+                                    : 'none',
+                                  transform: isHighlighted ? 'scale(1.02)' : 'none',
+                                  zIndex: isHighlighted ? 5 : 'auto',
+                                  '&:hover': {
+                                    boxShadow: isHighlighted
+                                      ? '0px 0px 0px 3px rgba(10, 44, 36, 0.7), 0px 6px 16px rgba(0,0,0,0.2)'
+                                      : 3,
+                                    transform: 'scale(1.02)',
+                                    opacity: isFaded ? 0.6 : 1
+                                  }
+                                }}
+                              >
+                                {(item.isConsolidated || event.extendedProps.slotId) && (
+                                  <Box sx={{ position: 'absolute', top: 6, right: 6, lineHeight: 1 }}>
+                                    <i className='ri-star-fill' style={{ fontSize: 10, color: '#fbbf24' }} />
+                                  </Box>
+                                )}
+                                <Typography
+                                  variant='caption'
+                                  fontFamily='var(--font-fira-code)'
                                   sx={{
-                                    width: 5,
-                                    height: 5,
-                                    borderRadius: '50%',
-                                    bgcolor: isFaded ? adjustColorOpacity(service.color, 0.3) : service.color,
-                                    flexShrink: 0
+                                    display: 'block',
+                                    fontWeight: 700,
+                                    color: effectiveTextColor,
+                                    fontSize: '0.7rem',
+                                    mb: 0.5
                                   }}
-                                />
-                              ) : null
-                            })()}
-                            <Typography
-                              variant='caption'
+                                >
+                                  {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
+                                </Typography>
+                                <Typography
+                                  variant='body2'
+                                  fontFamily='var(--font-fira-code)'
+                                  sx={{
+                                    fontWeight: 700,
+                                    color: effectiveTextColor,
+                                    fontSize: '0.85rem',
+                                    lineHeight: 1.4,
+                                    mb: 0.25
+                                  }}
+                                >
+                                  {item.isConsolidated
+                                    ? event.extendedProps.serviceName || event.title
+                                    : event.extendedProps.customerName}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  {(() => {
+                                    const service = mockServices.find(s => s.name === event.extendedProps?.serviceName)
+                                    return service?.color ? (
+                                      <Box
+                                        sx={{
+                                          width: 5,
+                                          height: 5,
+                                          borderRadius: '50%',
+                                          bgcolor: isFaded ? adjustColorOpacity(service.color, 0.3) : service.color,
+                                          flexShrink: 0
+                                        }}
+                                      />
+                                    ) : null
+                                  })()}
+                                  <Typography
+                                    variant='caption'
+                                    sx={{
+                                      color: effectiveTextColor,
+                                      fontSize: '0.7rem',
+                                      opacity: isFaded ? 0.5 : 0.9,
+                                      lineHeight: 1.3
+                                    }}
+                                  >
+                                    {item.isConsolidated
+                                      ? `${item.bookingCount}/${item.totalCapacity} booked`
+                                      : event.extendedProps.serviceName || event.title}
+                                  </Typography>
+                                </Box>
+                                <Typography
+                                  variant='caption'
+                                  sx={{
+                                    color: effectiveTextColor,
+                                    fontSize: '0.68rem',
+                                    opacity: isFaded ? 0.4 : 0.8,
+                                    textTransform: 'capitalize',
+                                    display: 'block',
+                                    mt: 0.25
+                                  }}
+                                >
+                                  {item.isConsolidated
+                                    ? `${item.attendedCount}/${item.attendanceBase} Attended`
+                                    : (event.extendedProps.status || 'pending').replace('_', ' ')}
+                                </Typography>
+                              </Box>
+                            </Tooltip>
+                          )
+                        })}
+
+                          {overflowCount > 0 && (
+                            <Box
+                              onClick={e => {
+                                e.stopPropagation()
+                                setOverflowAnchorEl(e.currentTarget)
+                                setOverflowItems(consolidatedEvents.slice(maxVisibleEvents))
+                                setOverflowDay(day)
+                              }}
                               sx={{
-                                color: effectiveTextColor,
-                                fontSize: '0.7rem',
-                                opacity: isFaded ? 0.5 : 0.9,
-                                lineHeight: 1.3
+                                mt: 0.5,
+                                p: 0.75,
+                                bgcolor: 'action.hover',
+                                borderRadius: 1,
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                '&:hover': { bgcolor: 'action.selected' }
                               }}
                             >
-                              {event.extendedProps.serviceName || event.title}
-                            </Typography>
-                          </Box>
-                        </Box>
+                              <Typography variant='caption' sx={{ fontWeight: 600, color: 'primary.main' }}>
+                                +{overflowCount} more
+                              </Typography>
+                            </Box>
+                          )}
+                        </>
                       )
-                    })
+                    })()
                   )}
                 </Box>
               </Box>
@@ -468,6 +646,46 @@ export default function SingleStaffWeekView({
           })}
         </Box>
       </Box>
+
+      <Popover
+        open={Boolean(overflowAnchorEl)}
+        anchorEl={overflowAnchorEl}
+        onClose={handleOverflowClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Box sx={{ minWidth: 280, maxWidth: 360, p: 1 }}>
+          <Typography variant='subtitle2' fontWeight={700} sx={{ px: 1, pb: 0.5 }}>
+            {overflowDay ? format(overflowDay, 'EEE, MMM d') : 'More bookings'}
+          </Typography>
+          <List dense disablePadding>
+            {overflowItems.map(item => (
+              <ListItemButton
+                key={item.event.id}
+                onClick={() => {
+                  onEventClick?.(item.event)
+                  handleOverflowClose()
+                }}
+                sx={{ borderRadius: 1, alignItems: 'flex-start', mb: 0.25 }}
+              >
+                <Box sx={{ width: '100%' }}>
+                  <Typography variant='caption' color='text.secondary' sx={{ display: 'block' }}>
+                    {format(new Date(item.event.start), 'h:mm a')}
+                  </Typography>
+                  <Typography variant='body2' fontWeight={600} sx={{ lineHeight: 1.3 }}>
+                    {item.event.extendedProps.serviceName || item.event.title}
+                  </Typography>
+                  <Typography variant='caption' color='text.secondary'>
+                    {item.isConsolidated
+                      ? `${item.attendedCount}/${item.attendanceBase} Attended • ${item.bookingCount}/${item.totalCapacity}`
+                      : `${item.event.extendedProps.customerName || 'Client'} • ${(item.event.extendedProps.status || 'pending').replace('_', ' ')}`}
+                  </Typography>
+                </Box>
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
+      </Popover>
     </Box>
   )
 }

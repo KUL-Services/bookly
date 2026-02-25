@@ -266,6 +266,7 @@ export function ShiftsTab() {
     apiBranches,
     getStaffWorkingHours,
     getStaffShiftsForDate,
+    getRoomSchedule,
     getBusinessHours,
     updateStaffType,
     getStaffType,
@@ -1238,9 +1239,14 @@ export function ShiftsTab() {
                 '&:hover': { bgcolor: 'primary.dark' }
               }}
             >
-              <Typography variant='caption' fontWeight={600} noWrap>
-                {session.name}
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', px: 0.5, width: '100%' }}>
+                <Typography variant='caption' fontWeight={600} noWrap>
+                  {session.name}
+                </Typography>
+                <Typography variant='caption' sx={{ fontSize: '0.6rem', opacity: 0.9 }}>
+                  Cap: {session.maxParticipants}
+                </Typography>
+              </Box>
             </Box>
           ))}
 
@@ -1443,6 +1449,125 @@ export function ShiftsTab() {
                         <i className='ri-edit-line' style={{ fontSize: 16 }} />
                       </IconButton>
                     </Box>
+                  </Box>
+                )
+              })()}
+
+            {/* Room Working Hours - Only show when a specific branch is selected */}
+            {selectedBranch !== 'all' &&
+              (() => {
+                const branchRooms = rooms.filter(r => r.branchId === selectedBranch)
+                if (branchRooms.length === 0) return null
+
+                const formatTime12Hour = (time24: string) => {
+                  const [hourStr, minStr] = time24.split(':')
+                  let hour = parseInt(hourStr)
+                  const minute = minStr
+                  const period = hour >= 12 ? 'PM' : 'AM'
+                  if (hour === 0) hour = 12
+                  else if (hour > 12) hour -= 12
+                  return `${hour}:${minute} ${period}`
+                }
+
+                return (
+                  <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    {branchRooms.map(room => {
+                      const roomType = room.roomType === 'static' ? 'static' : 'dynamic'
+                      const roomSchedule = getRoomSchedule(room.id, dayOfWeek)
+                      const businessHours = getBusinessHours(selectedBranch, dayOfWeek)
+
+                      const isOpen =
+                        roomType === 'static'
+                          ? roomSchedule.isAvailable && roomSchedule.shifts.length > 0
+                          : businessHours.isOpen && businessHours.shifts.length > 0
+
+                      const firstShift =
+                        roomType === 'static' ? roomSchedule.shifts[0] : isOpen ? businessHours.shifts[0] : null
+                      const lastShift =
+                        roomType === 'static'
+                          ? roomSchedule.shifts[roomSchedule.shifts.length - 1]
+                          : isOpen
+                            ? businessHours.shifts[businessHours.shifts.length - 1]
+                            : null
+
+                      return (
+                        <Box
+                          key={`room-hours-${room.id}`}
+                          sx={{ display: 'flex', borderTop: 1, borderColor: 'divider', minHeight: 56 }}
+                        >
+                          <Box
+                            sx={{
+                              width: 200,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                              p: 1.5,
+                              bgcolor: 'action.hover'
+                            }}
+                          >
+                            <i className='ri-home-4-line' style={{ fontSize: 15 }} />
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography variant='body2' fontWeight={600} noWrap>
+                                {room.name}
+                              </Typography>
+                              <Typography variant='caption' color='text.secondary'>
+                                {roomType === 'static' ? 'Fixed' : 'Flex'} room
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Box sx={{ flex: 1, position: 'relative', m: 0.75, borderRadius: 1, overflow: 'hidden' }}>
+                            {isOpen && firstShift && lastShift ? (
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  left: `${timeToPosition(formatTime12Hour(firstShift.start), dayOfWeek)}%`,
+                                  width: `${calculateWidth(
+                                    formatTime12Hour(firstShift.start),
+                                    formatTime12Hour(lastShift.end),
+                                    dayOfWeek
+                                  )}%`,
+                                  top: 2,
+                                  bottom: 2,
+                                  borderRadius: 1,
+                                  border: '1px solid',
+                                  borderColor: roomType === 'static' ? '#81C784' : '#64B5F6',
+                                  bgcolor:
+                                    roomType === 'static'
+                                      ? 'rgba(129, 199, 132, 0.22)'
+                                      : 'rgba(100, 181, 246, 0.2)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  px: 1
+                                }}
+                              >
+                                <Typography variant='caption' sx={{ fontSize: '0.65rem', fontWeight: 600 }}>
+                                  {formatTime12Hour(firstShift.start).toLowerCase()} -{' '}
+                                  {formatTime12Hour(lastShift.end).toLowerCase()}
+                                  {roomType === 'static' && roomSchedule.shifts.length > 1
+                                    ? ` • ${roomSchedule.shifts.length} sessions`
+                                    : ''}
+                                </Typography>
+                              </Box>
+                            ) : (
+                              <Box
+                                sx={{
+                                  position: 'absolute',
+                                  inset: 0,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center'
+                                }}
+                              >
+                                <Typography variant='caption' color='text.secondary'>
+                                  Closed
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+                      )
+                    })}
                   </Box>
                 )
               })()}
@@ -2976,6 +3101,9 @@ export function ShiftsTab() {
                                     </Typography>
                                     <Typography variant='caption' sx={{ fontSize: '0.6rem' }}>
                                       {session.startTime} - {session.endTime}
+                                    </Typography>
+                                    <Typography variant='caption' sx={{ fontSize: '0.58rem', opacity: 0.9 }}>
+                                      Cap: {session.maxParticipants}
                                     </Typography>
                                   </Box>
                                 ))}

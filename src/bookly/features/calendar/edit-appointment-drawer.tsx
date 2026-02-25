@@ -359,7 +359,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                         <i className='ri-information-line' />
                         <Box sx={{ flex: 1 }}>
                           <Typography variant='body2' fontWeight={600}>
-                            Static Slot Booking
+                            Fixed Session Booking
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
                             Time and instructor are locked to the scheduled slot

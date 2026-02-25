@@ -234,6 +234,8 @@ export default function UnifiedMultiResourceDayView({
 }: UnifiedMultiResourceDayViewProps) {
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
+  const brandPrimary = '#0a2c24'
+  const brandAccent = '#77b6a3'
   const colorScheme = useCalendarStore(state => state.colorScheme)
   const isSlotAvailable = useCalendarStore(state => state.isSlotAvailable)
   const allEvents = useCalendarStore(state => state.events)
@@ -244,7 +246,6 @@ export default function UnifiedMultiResourceDayView({
   const branchFilters = useCalendarStore(state => state.branchFilters)
   const staffFilters = useCalendarStore(state => state.staffFilters)
   const roomFilters = useCalendarStore(state => state.roomFilters)
-  const schedulingMode = useCalendarStore(state => state.schedulingMode)
   const { rooms, staffWorkingHours } = useStaffManagementStore()
 
   // Use API-loaded data from stores, fallback to mocks
@@ -542,7 +543,7 @@ export default function UnifiedMultiResourceDayView({
     const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const dayOfWeek = dayNames[currentDate.getDay()]
 
-    return staff.roomAssignments.filter(assignment => assignment.dayOfWeek === dayOfWeek)
+    return staff.roomAssignments.filter((assignment: any) => assignment.dayOfWeek === dayOfWeek)
   }
 
   // Calculate event position and height
@@ -697,7 +698,7 @@ export default function UnifiedMultiResourceDayView({
           />
         ))}
         {/* Room assignment blocks (for static staff) */}
-        {roomBlocks.map((block, idx) => {
+        {roomBlocks.map((block: any, idx: number) => {
           const style = getRoomBlockStyle(block.startTime, block.endTime)
           return (
             <Box
@@ -731,7 +732,7 @@ export default function UnifiedMultiResourceDayView({
           // Check resource type first
           let isStaticType = isStaff
             ? resource.staffType === 'static'
-            : resource.roomType === 'static' || resource.roomType === 'fixed'
+            : (resource as any).roomType === 'static' || (resource as any).bookingMode === 'STATIC'
 
           // Also check if events themselves indicate static slots:
           // - Events with slotId are from static scheduling
@@ -744,7 +745,7 @@ export default function UnifiedMultiResourceDayView({
               const eventRoomId = event.extendedProps?.roomId
               if (eventRoomId) {
                 const eventRoom = rooms.find(r => r.id === eventRoomId)
-                if (eventRoom?.roomType === 'static' || eventRoom?.roomType === 'fixed') return true
+                if (eventRoom?.roomType === 'static' || (eventRoom as any)?.bookingMode === 'STATIC') return true
               }
               return false
             })
@@ -774,6 +775,7 @@ export default function UnifiedMultiResourceDayView({
               // Count active bookings (exclude cancelled)
               const activeBookings = slotEvents.filter(e => e.extendedProps?.status !== 'cancelled')
               const bookingCount = activeBookings.length
+              const attendedCount = activeBookings.filter(e => e.extendedProps?.status === 'attended').length
 
               // Use confirmed status color for the card, or first event's status
               const colors = buildEventColors(colorScheme, 'confirmed')
@@ -796,6 +798,7 @@ export default function UnifiedMultiResourceDayView({
               // Get slot capacity from static slots
               const staticSlot = staticSlots.find(s => s.id === firstEvent.extendedProps?.slotId)
               const totalCapacity = staticSlot?.capacity || bookingCount
+              const attendanceBase = bookingCount > 0 ? bookingCount : totalCapacity
 
               return (
                 <Tooltip
@@ -809,18 +812,25 @@ export default function UnifiedMultiResourceDayView({
                         {format(firstEvent.start, 'h:mm a')} - {format(firstEvent.end, 'h:mm a')}
                       </Typography>
                       <Typography variant='caption' sx={{ display: 'block', mb: 0.75, color: 'rgba(255,255,255,0.9)' }}>
-                        {bookingCount} / {totalCapacity} booked
+                        {attendedCount} / {attendanceBase} Attended • {bookingCount} / {totalCapacity} Booked
                       </Typography>
                       {activeBookings.length > 0 && (
                         <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.2)', pt: 0.75 }}>
-                          <Typography variant='caption' sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)' }}>
-                            Clients:{' '}
-                            {activeBookings
-                              .slice(0, 5)
-                              .map(e => e.extendedProps?.customerName || 'Client')
-                              .join(', ')}
-                            {activeBookings.length > 5 && ` +${activeBookings.length - 5} more`}
-                          </Typography>
+                          {activeBookings.slice(0, 8).map((clientEvent, idx) => (
+                            <Typography
+                              key={`${clientEvent.id}-${idx}`}
+                              variant='caption'
+                              sx={{ display: 'block', fontSize: '0.65rem', color: 'rgba(255,255,255,0.78)' }}
+                            >
+                              • {clientEvent.extendedProps?.customerName || 'Client'} -{' '}
+                              {(clientEvent.extendedProps?.status || 'pending').replace('_', ' ')}
+                            </Typography>
+                          ))}
+                          {activeBookings.length > 8 && (
+                            <Typography variant='caption' sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)' }}>
+                              +{activeBookings.length - 8} more
+                            </Typography>
+                          )}
                         </Box>
                       )}
                     </Box>
@@ -883,20 +893,21 @@ export default function UnifiedMultiResourceDayView({
                     }}
                   >
                     {/* Time */}
-                    <Typography
-                      variant='caption'
-                      sx={{
-                        fontSize: '0.7rem',
-                        fontWeight: 500,
-                        color: effectiveTextColor,
-                        lineHeight: 1.2,
-                        display: 'block',
-                        mb: 0.25
-                      }}
-                      noWrap
-                    >
-                      {format(firstEvent.start, 'h:mm a')}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
+                      <Typography
+                        variant='caption'
+                        sx={{
+                          fontSize: '0.7rem',
+                          fontWeight: 500,
+                          color: effectiveTextColor,
+                          lineHeight: 1.2
+                        }}
+                        noWrap
+                      >
+                        {format(firstEvent.start, 'h:mm a')}
+                      </Typography>
+                      <i className='ri-star-fill' style={{ fontSize: 11, color: '#fbbf24', flexShrink: 0 }} />
+                    </Box>
                     {/* Service name */}
                     <Typography
                       variant='caption'
@@ -915,7 +926,7 @@ export default function UnifiedMultiResourceDayView({
                     {/* Capacity chip */}
                     <Chip
                       size='small'
-                      label={`${bookingCount}/${totalCapacity}`}
+                      label={`${attendedCount}/${attendanceBase} Attended`}
                       sx={{
                         height: 18,
                         fontSize: '0.65rem',
@@ -1256,7 +1267,7 @@ export default function UnifiedMultiResourceDayView({
           <Box
             sx={{
               borderBottom: 1,
-              borderColor: 'divider',
+              borderColor: 'rgba(10,44,36,0.16)',
               bgcolor: 'background.paper',
               position: 'sticky',
               top: 0,
@@ -1266,7 +1277,7 @@ export default function UnifiedMultiResourceDayView({
             }}
           >
             {/* Empty time column space for header alignment */}
-            <Box sx={{ width: 60, flexShrink: 0, borderRight: 1, borderColor: 'divider' }} />
+            <Box sx={{ width: 60, flexShrink: 0, borderRight: 1, borderColor: 'rgba(10,44,36,0.16)' }} />
 
             {/* Header scroll container - synced with time grid scroll */}
             <Box
@@ -1291,7 +1302,7 @@ export default function UnifiedMultiResourceDayView({
                     md: `repeat(${orderedResources.length}, minmax(180px, 1fr))`
                   },
                   borderBottom: 1,
-                  borderColor: 'divider',
+                  borderColor: 'rgba(10,44,36,0.16)',
                   minWidth: 'min-content',
                   '& > *': {
                     minWidth: 0,
@@ -1304,7 +1315,7 @@ export default function UnifiedMultiResourceDayView({
                   const resourcesInPrimaryGroup = Object.values(secondaryGroups).flat().flat()
                   const isLastGroup = groupIndex === primaryGroups.length - 1
                   const borderRightWidth = isLastGroup ? 1 : branchDividerWidth
-                  const borderRightColor = isLastGroup ? 'divider' : branchDividerColor
+                  const borderRightColor = isLastGroup ? 'rgba(10,44,36,0.16)' : branchDividerColor
                   const branchHours = getBranchHours(primaryGroup, currentDate)
                   return (
                     <Box
@@ -1324,8 +1335,8 @@ export default function UnifiedMultiResourceDayView({
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <i className='ri-building-line' style={{ fontSize: 16 }} />
-                        <Typography variant='body2' fontWeight={700} color='text.primary'>
+                        <i className='ri-building-line' style={{ fontSize: 16, color: isDark ? brandAccent : brandPrimary }} />
+                        <Typography variant='body2' fontWeight={700} sx={{ color: isDark ? brandAccent : brandPrimary }}>
                           {getPrimaryGroupLabel(primaryGroup)}
                         </Typography>
                         <Chip
@@ -1362,7 +1373,7 @@ export default function UnifiedMultiResourceDayView({
                     md: `repeat(${orderedResources.length}, minmax(180px, 1fr))`
                   },
                   borderBottom: 1,
-                  borderColor: 'divider',
+                  borderColor: 'rgba(10,44,36,0.14)',
                   minWidth: 'min-content',
                   '& > *': {
                     minWidth: 0,
@@ -1388,7 +1399,7 @@ export default function UnifiedMultiResourceDayView({
                       ? branchDividerColor
                       : isStaffRoomsBoundary
                         ? staffRoomDividerColor
-                        : 'divider'
+                        : 'rgba(10,44,36,0.14)'
                     return (
                       <Box
                         key={`secondary-${primaryGroup}-${secondaryGroup}`}
@@ -1417,7 +1428,7 @@ export default function UnifiedMultiResourceDayView({
                         <Typography
                           variant='caption'
                           fontWeight={600}
-                          color='text.secondary'
+                          color={isDark ? 'rgba(119,182,163,0.95)' : 'rgba(10,44,36,0.85)'}
                           sx={{ fontSize: '0.75rem' }}
                         >
                           {getSecondaryGroupLabel(secondaryGroup)}
