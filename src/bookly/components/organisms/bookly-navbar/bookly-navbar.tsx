@@ -139,10 +139,10 @@ const BooklyNavbar = () => {
           {/* Right Section */}
           <div className='flex items-center gap-3'>
             {/* Language and Theme Toggles */}
-            <div className='hidden sm:flex items-center gap-1'>
+            {/* <div className='hidden sm:flex items-center gap-1'>
               <BooklyLanguageDropdown />
               <BooklyThemeToggle />
-            </div>
+            </div> */}
 
             {booklyUser ? (
               <div className='flex items-center gap-2'>

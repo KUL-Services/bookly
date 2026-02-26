@@ -72,17 +72,17 @@ const NAV_ITEMS = {
       { icon: Sparkles, label: 'Spas', href: '/business/types?type=spa' },
       { icon: Users, label: 'Health & Wellness', href: '/business/types?type=wellness' }
     ]
-  },
-  resources: {
-    label: 'Resources',
-    type: 'dropdown',
-    cols: 1,
-    items: [
-      { icon: HelpCircle, label: 'Help Center', href: '/help' },
-      { icon: BookOpen, label: 'Blog', href: '/blog' },
-      { icon: Mail, label: 'Contact Us', href: '/contact' }
-    ]
   }
+  // resources: {
+  //   label: 'Resources',
+  //   type: 'dropdown',
+  //   cols: 1,
+  //   items: [
+  //     { icon: HelpCircle, label: 'Help Center', href: '/help' },
+  //     { icon: BookOpen, label: 'Blog', href: '/blog' },
+  //     { icon: Mail, label: 'Contact Us', href: '/contact' }
+  //   ]
+  // }
 }
 
 export const BusinessNavigation = ({
