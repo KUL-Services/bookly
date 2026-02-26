@@ -241,7 +241,7 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
         location: firstService.service.location,
         startTime,
         endTime,
-        organizer: { name: 'Bookly', email: 'noreply@bookly.com' }
+        organizer: { name: 'Zerv', email: 'noreply@zerv.app' }
       },
       `booking-${bookingReference}.ics`
     )

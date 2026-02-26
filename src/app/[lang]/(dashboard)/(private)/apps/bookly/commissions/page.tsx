@@ -2,7 +2,7 @@
 import { CommissionsTab } from '@/bookly/features/staff-management/commissions-tab'
 
 export const metadata = {
-  title: 'Commissions - Bookly',
+  title: 'Commissions - Zerv',
   description: 'Manage staff commission policies and payouts'
 }
 

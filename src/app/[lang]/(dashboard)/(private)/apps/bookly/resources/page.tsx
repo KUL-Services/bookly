@@ -2,7 +2,7 @@
 import { ResourcesTab } from '@/bookly/features/staff-management/resources-tab'
 
 export const metadata = {
-  title: 'Resources - Bookly',
+  title: 'Resources - Zerv',
   description: 'Manage rooms, facilities, and resources'
 }
 

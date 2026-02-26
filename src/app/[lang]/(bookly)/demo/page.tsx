@@ -11,7 +11,7 @@ export default function DemoPage() {
       <Card className='w-full max-w-xl'>
         <CardHeader>
           <CardTitle>
-            <H1 stringProps={{ plainText: 'Welcome to Bookly' }} />
+            <H1 stringProps={{ plainText: 'Welcome to Zerv' }} />
           </CardTitle>
           <CardDescription>
             <P stringProps={{ plainText: 'Please login or create a new account to continue' }} />

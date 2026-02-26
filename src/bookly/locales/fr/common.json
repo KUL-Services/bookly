@@ -6,7 +6,7 @@
     "profile": "Profile"
   },
   "profile": {
-    "title": "Bookly",
+    "title": "Zerv",
     "editProfile": "Modifier le Profil",
     "memberSince": "Membre depuis {{date}}",
     "totalBookings": "Total des Réservations",
@@ -168,7 +168,7 @@
   "auth": {
     "login": {
       "title": "Bon retour",
-      "description": "Connectez-vous à votre compte Bookly",
+      "description": "Connectez-vous à votre compte Zerv",
       "emailLabel": "Adresse e-mail",
       "emailPlaceholder": "Entrez votre e-mail",
       "passwordLabel": "Mot de passe",
@@ -181,7 +181,7 @@
     },
     "register": {
       "title": "Créer un compte",
-      "description": "Entrez vos informations pour créer un compte Bookly",
+      "description": "Entrez vos informations pour créer un compte Zerv",
       "emailLabel": "Adresse e-mail",
       "emailPlaceholder": "Entrez votre e-mail",
       "passwordLabel": "Mot de passe",

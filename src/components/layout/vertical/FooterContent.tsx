@@ -24,14 +24,14 @@ const FooterContent = () => {
         <span className='text-textSecondary'>{`© ${new Date().getFullYear()}, Made with `}</span>
         <span>{`❤️`}</span>
         <span className='text-textSecondary'>{` For `}</span>
-        <Link href='https://bookly.com' target='_blank' className='text-primary capitalize'>
+        <Link href='https://zerv.app' target='_blank' className='text-primary capitalize'>
           Zerv
         </Link>
       </p>
       {!isBreakpointReached && (
         <div className='flex items-center gap-4'>
           {/* Todo: to be changed to bookly license etc.. */}
-          <Link href='https://bookly.com/license' target='_blank' className='text-primary'>
+          <Link href='https://zerv.app/license' target='_blank' className='text-primary'>
             License
           </Link>
           {/* <Link href='https://themeforest.net/user/pixinvent/portfolio' target='_blank' className='text-primary'>
@@ -44,7 +44,7 @@ const FooterContent = () => {
           >
             Documentation
           </Link> */}
-          <Link href='https://bookly.com/support' target='_blank' className='text-primary'>
+          <Link href='https://zerv.app/support' target='_blank' className='text-primary'>
             Support
           </Link>
         </div>

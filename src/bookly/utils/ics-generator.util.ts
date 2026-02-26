@@ -33,11 +33,11 @@ export function generateICS(event: ICSEvent): string {
   const lines: string[] = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Bookly//Booking System//EN',
+    'PRODID:-//Zerv//Booking System//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `UID:${Date.now()}@bookly.com`,
+    `UID:${Date.now()}@zerv.app`,
     `DTSTAMP:${formatICSDate(new Date())}`,
     `DTSTART:${formatICSDate(event.startTime)}`,
     `DTEND:${formatICSDate(event.endTime)}`,

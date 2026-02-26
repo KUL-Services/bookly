@@ -22,7 +22,7 @@ export const mockBranchesData: Branch[] = [
     city: 'New York',
     country: 'United States',
     mobile: '+1 (555) 123-4567',
-    email: 'downtown@bookly.com',
+    email: 'downtown@zerv.app',
     businessId: 'business-1',
     services: [
       { id: 'svc-1', name: 'Haircut', price: 35, duration: 45 },
@@ -53,7 +53,7 @@ export const mockBranchesData: Branch[] = [
     city: 'Los Angeles',
     country: 'United States',
     mobile: '+1 (555) 987-6543',
-    email: 'westside@bookly.com',
+    email: 'westside@zerv.app',
     businessId: 'business-1',
     services: [
       { id: 'svc-5', name: 'Manicure', price: 28, duration: 30 },
@@ -90,7 +90,7 @@ export const mockBranchesData: Branch[] = [
     city: 'Chicago',
     country: 'United States',
     mobile: '+1 (555) 456-7890',
-    email: 'uptown@bookly.com',
+    email: 'uptown@zerv.app',
     businessId: 'business-1',
     services: [
       { id: 'svc-9', name: 'Facial Treatment', price: 65, duration: 60 },
@@ -130,7 +130,7 @@ export const mockBranchesData: Branch[] = [
     city: 'Miami',
     country: 'United States',
     mobile: '+1 (555) 321-9876',
-    email: 'midtown@bookly.com',
+    email: 'midtown@zerv.app',
     businessId: 'business-1',
     services: [
       { id: 'svc-13', name: 'Classic Haircut', price: 30, duration: 30 },

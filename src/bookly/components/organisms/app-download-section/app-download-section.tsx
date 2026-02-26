@@ -34,7 +34,7 @@ function AppDownloadSection() {
           <div className='flex justify-center'>
             <div className='bg-white/15 backdrop-blur-sm rounded-[28px] p-5 sm:p-7 lg:p-8'>
               <div className='bg-white rounded-[20px] p-5 sm:p-7 text-center'>
-                <div className='text-lg sm:text-2xl font-semibold text-primary-700 mb-1 sm:mb-2'>Bookly</div>
+                <div className='text-lg sm:text-2xl font-semibold text-primary-700 mb-1 sm:mb-2'>Zerv</div>
                 <div className='text-xs sm:text-sm text-gray-600'>Mobile app preview</div>
               </div>
             </div>

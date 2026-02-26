@@ -14,7 +14,7 @@
     "appointments": "Appointments"
   },
   "profile": {
-    "title": "Bookly",
+    "title": "Zerv",
     "editProfile": "Edit Profile",
     "memberSince": "Member since {{date}}",
     "totalBookings": "Total Bookings",
@@ -186,7 +186,7 @@
     "orContinueWith": "Or continue with",
     "login": {
       "title": "Welcome back",
-      "description": "Log in to your Bookly account",
+      "description": "Log in to your Zerv account",
       "emailLabel": "Email address",
       "emailPlaceholder": "Enter your email",
       "passwordLabel": "Password",
@@ -200,7 +200,7 @@
     },
     "register": {
       "title": "Create an account",
-      "description": "Join Bookly and start booking services",
+      "description": "Join Zerv and start booking services",
       "firstName": "First name",
       "firstNamePlaceholder": "First name",
       "lastName": "Last name",

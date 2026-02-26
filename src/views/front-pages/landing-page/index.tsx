@@ -94,9 +94,9 @@ const LandingPageWrapper = ({ mode }: { mode: Mode }) => {
       {/* 4. Promotional Banner (Provider Acquisition) */}
       <section className='bg-gray-50 py-16 md:py-24 border-t border-gray-100'>
         <div className='max-w-7xl mx-auto px-4 text-center'>
-          <h2 className='text-3xl md:text-4xl font-bold text-gray-900 mb-4'>Grow your business with Bookly</h2>
+          <h2 className='text-3xl md:text-4xl font-bold text-gray-900 mb-4'>Grow your business with Zerv</h2>
           <p className='text-gray-500 mb-8 max-w-2xl mx-auto text-lg'>
-            Join thousands of beauty and wellness professionals who use Bookly to manage their appointments and grow
+            Join thousands of beauty and wellness professionals who use Zerv to manage their appointments and grow
             their client base.
           </p>
           <div className='flex gap-4 justify-center'>

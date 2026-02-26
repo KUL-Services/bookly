@@ -3,8 +3,8 @@ import './globals.css'
 import { helveticaWorld, firaCode } from '@/configs/fonts'
 
 export const metadata: Metadata = {
-  title: 'Bookly',
-  description: 'Bookly app root layout'
+  title: 'Zerv',
+  description: 'Zerv app root layout'
 }
 
 export default function RootAppLayout({ children }: { children: React.ReactNode }) {

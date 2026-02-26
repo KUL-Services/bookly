@@ -19,7 +19,7 @@ const AggressiveLanguageGuard = () => {
 
     console.log(`🛡️ AggressiveLanguageGuard initialized for ${pathname}`)
     console.log(`   Current language: ${currentLang}`)
-    console.log(`   Environment: ${pathname.includes('/apps/') ? 'Dashboard' : 'Bookly'}`)
+    console.log(`   Environment: ${pathname.includes('/apps/') ? 'Dashboard' : 'Zerv'}`)
 
     // Function to correct language in URL
     const correctLanguageInUrl = (url: string): string => {

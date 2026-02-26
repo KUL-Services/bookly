@@ -2,7 +2,7 @@
 import { StaffMembersTab } from '@/bookly/features/staff-management/staff-members-tab'
 
 export const metadata = {
-  title: 'Staff Management - Bookly',
+  title: 'Staff Management - Zerv',
   description: 'Manage staff members, services, and working hours'
 }
 

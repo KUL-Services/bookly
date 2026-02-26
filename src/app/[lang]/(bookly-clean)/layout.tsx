@@ -12,8 +12,8 @@ import initTranslations from '@/app/i18n/i18n'
 import LanguageNavigationGuard from '@/components/LanguageNavigationGuard'
 
 export const metadata: Metadata = {
-  title: 'Bookly',
-  description: 'Bookly Booking Platform'
+  title: 'Zerv',
+  description: 'Zerv Booking Platform'
 }
 
 export default async function RootLayout({

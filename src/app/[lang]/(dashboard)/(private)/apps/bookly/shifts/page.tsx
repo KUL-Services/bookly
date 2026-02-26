@@ -2,7 +2,7 @@
 import { ShiftsTab } from '@/bookly/features/staff-management/shifts-tab'
 
 export const metadata = {
-  title: 'Shifts - Bookly',
+  title: 'Shifts - Zerv',
   description: 'Manage staff shifts, breaks, time off, and reservations'
 }
 

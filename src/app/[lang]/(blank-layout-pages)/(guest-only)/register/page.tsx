@@ -10,7 +10,7 @@ import { getServerMode } from '@core/utils/serverHelpers'
 
 export const metadata: Metadata = {
   title: 'Business Registration',
-  description: 'Register your business with Bookly'
+  description: 'Register your business with Zerv'
 }
 
 const RegisterPage = () => {

@@ -84,7 +84,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       >
         <SubMenu label={dictionary['navigation'].dashboards} icon={<i className='ri-home-smile-line' />}>
           <MenuItem href={`/${locale}/apps/bookly/dashboard`}>
-            <img src={WhiteWordLogo.src} alt='Bookly' style={{ height: 22, marginTop: 4 }} />
+            <img src={WhiteWordLogo.src} alt='Zerv' style={{ height: 22, marginTop: 4 }} />
           </MenuItem>
           {/* <MenuItem href={`/${locale}/dashboards/crm`}>{dictionary['navigation'].crm}</MenuItem>
           <MenuItem href={`/${locale}/dashboards/analytics`}>{dictionary['navigation'].analytics}</MenuItem>

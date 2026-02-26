@@ -319,8 +319,8 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
         startTime,
         endTime,
         organizer: {
-          name: 'Bookly',
-          email: 'noreply@bookly.com'
+          name: 'Zerv',
+          email: 'noreply@zerv.app'
         }
       },
       `booking-${bookingReference}.ics`

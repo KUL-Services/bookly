@@ -104,12 +104,12 @@ export function MarketplaceHero() {
       */}
       <div className='md:hidden bg-gradient-to-b from-gray-900 to-gray-800 text-white p-6 pb-8'>
         <div className='flex items-center justify-between mb-6'>
-          <h1 className='text-2xl font-bold tracking-tight'>Bookly</h1>
+          <h1 className='text-2xl font-bold tracking-tight'>Zerv</h1>
           <button className='text-sm font-medium text-white/80 hover:text-white'>List your business</button>
         </div>
 
         <h2 className='text-3xl font-bold mb-6 leading-tight'>
-          Be confident using <br /> <span className='text-emerald-400'>Bookly</span>
+          Be confident using <br /> <span className='text-emerald-400'>Zerv</span>
         </h2>
 
         {/* Mobile Search Input */}

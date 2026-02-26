@@ -16,7 +16,7 @@ const LanguageNavigationGuard = () => {
     console.log(`🛡️ LanguageNavigationGuard initialized`)
     console.log(`   Current language: ${currentLang}`)
     console.log(`   Current pathname: ${pathname}`)
-    console.log(`   Environment: ${pathname.includes('/apps/') ? 'Dashboard' : 'Bookly'}`)
+    console.log(`   Environment: ${pathname.includes('/apps/') ? 'Dashboard' : 'Zerv'}`)
 
     // Function to rewrite URL path with current language
     const rewritePathWithLanguage = (path: string): string => {
