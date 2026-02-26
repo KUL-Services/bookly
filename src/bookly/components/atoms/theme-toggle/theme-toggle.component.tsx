@@ -28,15 +28,18 @@ const BooklyThemeToggle = () => {
   useEffect(() => {
     setMounted(true)
 
-    // Get theme from localStorage or detect from system preference
+    // Get theme from localStorage, otherwise default to light mode
     const savedTheme = localStorage.getItem('theme') as Theme
-    let initialTheme: Theme
+    // Revert option (system detect fallback):
+    // const initialTheme: Theme =
+    //   savedTheme === 'light' || savedTheme === 'dark'
+    //     ? savedTheme
+    //     : window.matchMedia('(prefers-color-scheme: dark)').matches
+    //       ? 'dark'
+    //       : 'light'
+    const initialTheme: Theme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'light'
 
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      initialTheme = savedTheme
-    } else {
-      // Detect system preference and set to light or dark
-      initialTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    if (savedTheme !== 'light' && savedTheme !== 'dark') {
       localStorage.setItem('theme', initialTheme)
     }
 

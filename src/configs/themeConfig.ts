@@ -57,7 +57,8 @@ const themeConfig: Config = {
   templateName: 'Zerv',
   homePageUrl: '/landpage',
   settingsCookieName: 'materialize-mui-next-demo-1',
-  mode: 'system', // 'system', 'light', 'dark'
+  // Revert option: mode: 'system' to follow OS preference again.
+  mode: 'light', // 'system', 'light', 'dark'
   skin: 'default', // 'default', 'bordered'
   semiDark: false, // true, false
   layout: 'vertical', // 'vertical', 'collapsed', 'horizontal'

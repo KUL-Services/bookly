@@ -28,7 +28,8 @@ export default async function RootLayout({
 
   return (
     <TranslationsProvider locale={locale || 'en'} resources={resources}>
-      <ThemeProvider attribute='class' enableSystem>
+      {/* Revert option: <ThemeProvider attribute='class' enableSystem> */}
+      <ThemeProvider attribute='class' defaultTheme='light' enableSystem={false}>
         <SettingsProvider>
           <AuthInitializer />
           <LanguageNavigationGuard />
