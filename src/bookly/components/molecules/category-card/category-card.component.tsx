@@ -84,22 +84,29 @@ export const CategoryCard = ({
         role='button'
         tabIndex={0}
         onKeyDown={e => e.key === 'Enter' && onClick?.()}
-        className={cn('group flex flex-col items-center gap-2 cursor-pointer touch-manipulation', className)}
+        className={cn(
+          'group relative w-[108px] rounded-[24px] px-3 py-3.5 cursor-pointer touch-manipulation',
+          'bg-white/[0.08] backdrop-blur-md border border-white/15 shadow-[0_10px_24px_rgba(0,0,0,0.24)]',
+          'transition-all duration-300 hover:bg-white/[0.14] hover:-translate-y-0.5 active:scale-[0.97]',
+          className
+        )}
       >
-        {/* Circular Icon Container */}
+        <div className='pointer-events-none absolute inset-x-2 bottom-2 h-8 rounded-2xl bg-gradient-to-t from-black/25 to-transparent opacity-60' />
+
+        {/* Icon Container */}
         <div
           className={cn(
-            'w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-full flex items-center justify-center',
-            'bg-gradient-to-br shadow-lg',
-            'transition-all duration-300 group-hover:scale-110 group-active:scale-95',
-            'border-2 border-white/20',
+            'relative mx-auto w-12 h-12 rounded-2xl flex items-center justify-center',
+            'bg-gradient-to-br border border-white/25 shadow-[0_6px_18px_rgba(0,0,0,0.28)]',
+            'transition-all duration-300 group-hover:scale-110',
             getMobileGradient(category.slug)
           )}
         >
-          <i className={cn(category.icon, 'text-2xl sm:text-3xl text-white drop-shadow-sm')} />
+          <i className={cn(category.icon, 'text-[22px] text-white drop-shadow-sm')} />
         </div>
+
         {/* Label */}
-        <span className='text-xs sm:text-sm font-semibold text-white text-center leading-tight max-w-[80px] line-clamp-2'>
+        <span className='relative mt-2.5 block min-h-8 text-[12px] font-semibold text-white text-center leading-tight line-clamp-2 tracking-[0.01em]'>
           {category.name}
         </span>
       </div>

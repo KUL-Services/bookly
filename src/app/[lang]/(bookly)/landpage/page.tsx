@@ -4,7 +4,7 @@ import { Button } from '@/bookly/components/molecules'
 import { ExploreSection } from '@/bookly/components/organisms'
 import { FeaturesSection } from '@/bookly/components/organisms/features-section/features-section.component'
 import FooterSection from '@/bookly/components/organisms/footer-section/footer-section'
-import { MapPin } from 'lucide-react'
+import { MapPin, Scissors, Search as SearchIcon, Sparkles, UserRound } from 'lucide-react'
 import { RecommendedSection } from '@/bookly/components/organisms/recommended-section'
 import { BusinessGrowthBanner } from '@/bookly/components/organisms/business-growth-banner'
 import { useState, type KeyboardEvent } from 'react'
@@ -20,6 +20,7 @@ function LandPage() {
   const { t } = useTranslation()
   const params = useParams<{ lang: string }>()
   const router = useRouter()
+  const lang = params?.lang || 'en'
 
   const handleSearchKey = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -32,7 +33,14 @@ function LandPage() {
     const sp = new URLSearchParams()
     if (q) sp.set('q', q)
     if (loc) sp.set('loc', loc)
-    router.push(`/${params?.lang}/search${sp.toString() ? `?${sp.toString()}` : ''}`)
+    router.push(`/${lang}/search${sp.toString() ? `?${sp.toString()}` : ''}`)
+  }
+
+  const goCategorySearch = (category: string) => {
+    const sp = new URLSearchParams()
+    sp.set('category', category)
+    if (q) sp.set('q', q)
+    router.push(`/${lang}/search?${sp.toString()}`)
   }
   return (
     <div className='min-h-screen dark:bg-[#0a2c24] font-sans'>
@@ -88,9 +96,36 @@ function LandPage() {
                       className='w-12 h-12 p-0 bg-[#0a2c24] text-white rounded-xl flex items-center justify-center hover:bg-[#0a2c24]/90 transition-all touch-manipulation active:scale-95'
                       aria-label='Search'
                     >
-                      <MapPin className='w-5 h-5' />
+                      <SearchIcon className='w-5 h-5' />
                     </button>
                   </div>
+                </div>
+
+                <div className='mt-4 flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1'>
+                  <button
+                    type='button'
+                    onClick={() => goCategorySearch('spa')}
+                    className='inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 text-white px-3 py-1.5 text-xs font-semibold whitespace-nowrap hover:bg-white/20 transition-all'
+                  >
+                    <Sparkles className='w-3.5 h-3.5' />
+                    Spa
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => goCategorySearch('hair')}
+                    className='inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 text-white px-3 py-1.5 text-xs font-semibold whitespace-nowrap hover:bg-white/20 transition-all'
+                  >
+                    <Scissors className='w-3.5 h-3.5' />
+                    Hair
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => goCategorySearch('barber')}
+                    className='inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 text-white px-3 py-1.5 text-xs font-semibold whitespace-nowrap hover:bg-white/20 transition-all'
+                  >
+                    <UserRound className='w-3.5 h-3.5' />
+                    Barber
+                  </button>
                 </div>
               </div>
 
@@ -171,15 +206,15 @@ function LandPage() {
         </section>
 
         {/* Categories Section */}
-        <ScrollReveal animation='fade-up' delay={200} className='relative bg-[#0a2c24] pt-8 pb-16 sm:pb-24'>
+        <div className='relative bg-[#0a2c24] pt-8 pb-16 sm:pb-24'>
           <ExploreSection />
-        </ScrollReveal>
+        </div>
 
         {/* Recommended Businesses Section */}
-        <ScrollReveal animation='fade-up' delay={100} className='relative bg-gray-50/50 dark:bg-[#202c39]/30'>
+        <div className='relative bg-gray-50/50 dark:bg-[#202c39]/30'>
           <ZDivider className='absolute top-0 transform -translate-y-1/2 z-10 text-white' />
           <RecommendedSection />
-        </ScrollReveal>
+        </div>
 
         {/* Business Growth Banner */}
         {/* <ScrollReveal animation='slide-in-left' delay={100}>
@@ -187,7 +222,7 @@ function LandPage() {
         </ScrollReveal> */}
 
         {/* Features Section */}
-        <div className='relative bg-[#f7f8f9] dark:bg-[#0a2c24] py-12 sm:py-16'>
+        <div className='relative bg-[#f7f8f9] dark:bg-[#0a2c24]'>
           <ScrollReveal animation='fade-up'>
             <FeaturesSection />
           </ScrollReveal>

@@ -46,6 +46,7 @@ const DEFAULT_CATEGORIES = [
 
 export const ExploreSection = () => {
   const params = useParams<{ lang: string }>()
+  const lang = params?.lang || 'en'
   const [categoriesData, setCategoriesData] = useState(DEFAULT_CATEGORIES)
   const [loading, setLoading] = useState(true)
 
@@ -77,6 +78,14 @@ export const ExploreSection = () => {
       {/* Categories Section */}
       <section className='container mx-auto py-8 sm:py-12 lg:py-16'>
         <div className='max-w-6xl mx-auto px-4 sm:px-6'>
+          <div className='lg:hidden mb-4'>
+            <p className='text-[10px] uppercase tracking-[0.22em] text-white/65 mb-2'>Explore</p>
+            <div className='flex items-end justify-between gap-3'>
+              <h2 className='text-2xl font-semibold text-white leading-tight'>Popular categories</h2>
+              <span className='text-xs text-white/60'>Swipe</span>
+            </div>
+          </div>
+
           <H2
             stringProps={{ localeKey: 'categories.title' }}
             className='hidden lg:block text-xl sm:text-2xl lg:text-3xl font-semibold text-left text-white mb-8'
@@ -84,23 +93,29 @@ export const ExploreSection = () => {
         </div>
 
         {/* Mobile Horizontal Scroll Carousel */}
-        <div className='lg:hidden px-4 -mx-4 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory flex gap-4 scroll-pl-4'>
+        <div className='lg:hidden px-4 sm:px-6 overflow-x-auto pb-4 scrollbar-hide'>
+          <div className='flex gap-3 snap-x snap-mandatory scroll-pl-4'>
           {loading
             ? Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className='animate-pulse flex flex-col items-center gap-2 min-w-[72px] snap-start'>
-                  <div className='w-[72px] h-[72px] bg-white/10 rounded-full' />
-                  <div className='w-12 h-3 bg-white/10 rounded' />
+                <div key={index} className='animate-pulse min-w-[108px] rounded-[24px] bg-white/[0.08] p-3 snap-start'>
+                  <div className='w-12 h-12 bg-white/20 rounded-2xl mx-auto mb-2.5' />
+                  <div className='w-16 h-3 bg-white/20 rounded mx-auto' />
                 </div>
               ))
             : categoriesData.map(category => (
                 <Link
                   key={category.id}
-                  href={`/${params?.lang}/search?category=${category.slug}`}
-                  className='min-w-[80px] snap-start flex flex-col items-center'
+                  href={`/${lang}/search?category=${category.slug}`}
+                  className='snap-start'
                 >
                   <CategoryCard category={category} mobile />
                 </Link>
               ))}
+          </div>
+        </div>
+
+        <div className='lg:hidden px-4 sm:px-6'>
+          <div className='h-px bg-white/20' />
         </div>
 
         {/* Desktop Horizontal Scroll Carousel */}
@@ -119,7 +134,7 @@ export const ExploreSection = () => {
                   return (
                     <Link
                       key={category.id}
-                      href={`/${params?.lang}/search?category=${category.slug}`}
+                      href={`/${lang}/search?category=${category.slug}`}
                       className='min-w-[160px] sm:min-w-[190px] lg:min-w-[210px] snap-start'
                     >
                       <CategoryCard category={category} variant={variant} />

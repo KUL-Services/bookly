@@ -32,7 +32,7 @@ export const FeaturesSection = () => {
   ]
 
   return (
-    <section className='py-16 sm:py-24 lg:py-32 overflow-hidden bg-[#f7f8f9] dark:bg-[#0a2c24] relative'>
+    <section className='py-8 sm:py-24 lg:py-32 overflow-hidden bg-[#f7f8f9] dark:bg-[#0a2c24] relative'>
       <div className='container mx-auto px-4 sm:px-6 relative z-10'>
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center'>
           {/* Left Side: Content */}

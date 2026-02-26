@@ -72,9 +72,20 @@ export function RecommendedSection() {
 
   if (loading) {
     return (
-      <section className='py-12 sm:py-16 md:py-20 bg-gray-50 dark:bg-[#0a2c24]/5'>
+      <section className='py-8 sm:py-16 md:py-20 bg-gray-50 dark:bg-[#0a2c24]/5'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+          <div className='sm:hidden overflow-x-auto overflow-y-visible pt-4 pb-2 -mx-4 px-4'>
+            <div className='flex gap-3'>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className='animate-pulse min-w-[86vw] max-w-[340px] h-28 bg-white dark:bg-gray-800 rounded-2xl'
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className='hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-6'>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className='animate-pulse bg-white dark:bg-gray-800 rounded-2xl h-72' />
             ))}
@@ -87,13 +98,21 @@ export function RecommendedSection() {
   if (businesses.length === 0) return null
 
   return (
-    <section className='py-12 sm:py-16 md:py-20 bg-gray-50 dark:bg-[#0a2c24]/5'>
+    <section className='py-8 sm:py-16 md:py-20 bg-gray-50 dark:bg-[#0a2c24]/5'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        <div className='flex justify-between items-end mb-8 md:mb-12'>
+        <div className='flex justify-between items-end mb-6 md:mb-12'>
           <div>
-            <h2 className='text-3xl md:text-4xl font-bold text-[#0a2c24] dark:text-white mb-2'>Recommended for you</h2>
-            <p className='text-gray-600 dark:text-gray-300 text-lg'>Top rated professionals in your area</p>
+            <h2 className='text-2xl sm:text-3xl md:text-4xl font-bold text-[#0a2c24] dark:text-white mb-2'>
+              Recommended for you
+            </h2>
+            <p className='text-sm sm:text-lg text-gray-600 dark:text-gray-300'>Top rated professionals in your area</p>
           </div>
+          <Link href={`/${params?.lang ?? 'en'}/search`} className='inline-flex sm:hidden'>
+            <div className='inline-flex items-center text-sm text-[#0a2c24] font-semibold'>
+              <span className='mr-1'>All</span>
+              <ArrowRight className='w-4 h-4' />
+            </div>
+          </Link>
           <Link href={`/${params?.lang ?? 'en'}/search`} className='hidden sm:block'>
             <div className='inline-flex items-center text-[#0a2c24] font-semibold hover:text-[#0a2c24]/80 transition-colors'>
               <span className='mr-2'>View All</span>
@@ -102,7 +121,27 @@ export function RecommendedSection() {
           </Link>
         </div>
 
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+        <div className='sm:hidden overflow-x-auto overflow-y-visible pt-4 pb-2 -mx-4 px-4'>
+          <div className='flex items-start gap-3 snap-x snap-mandatory py-1'>
+            {businesses.map((business, index) => (
+              <div key={business.id} className='min-w-[86vw] max-w-[340px] snap-start'>
+                <BusinessCard
+                  id={business.id}
+                  slug={business.slug}
+                  name={business.name}
+                  rating={business.rating}
+                  reviewCount={business.reviewCount}
+                  address={business.address}
+                  image={business.image}
+                  isPromoted={index % 3 === 0}
+                  mobile
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className='hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-6'>
           {businesses.map((business, index) => (
             <BusinessCard
               key={business.id}
@@ -118,7 +157,7 @@ export function RecommendedSection() {
           ))}
         </div>
 
-        <div className='mt-8 text-center sm:hidden'>
+        <div className='mt-4 text-center sm:hidden'>
           <Link
             href={`/${params?.lang ?? 'en'}/search`}
             className='block w-full bg-transparent border border-[#0a2c24] text-[#0a2c24] font-semibold py-3 rounded-xl hover:bg-[#0a2c24] hover:text-white transition-colors'
