@@ -18,7 +18,6 @@ const BooklyNavbar = () => {
   const params = useParams<{ lang: string }>()
 
   const booklyUser = useAuthStore(s => s.booklyUser)
-  const materializeUser = useAuthStore(s => s.materializeUser)
   const userType = useAuthStore(s => s.userType)
   const token = useAuthStore(s => s.token)
   const logoutCustomer = useAuthStore(s => s.logoutCustomer)
@@ -128,17 +127,7 @@ const BooklyNavbar = () => {
           {/* Center Navigation - Desktop */}
           <nav className='hidden md:flex items-center gap-8'>
             <button
-              onClick={() => {
-                console.log('For Businesses (desktop) clicked', { userType, materializeUser })
-                // Check if user is already authenticated as business user
-                if (materializeUser || userType === 'business') {
-                  // Already logged in as business, go to dashboard
-                  router.push(`/${currentLang}/apps/bookly/dashboard`)
-                } else {
-                  // Not business user, go to business login
-                  router.push(`/${currentLang}/login`)
-                }
-              }}
+              onClick={() => router.push(`/${currentLang}/business`)}
               className='flex items-center gap-2 px-3 py-2 rounded-full text-sm text-[#0a2c24] dark:text-white hover:bg-[#0a2c24] hover:text-white dark:hover:bg-[#77b6a3] dark:hover:text-[#0a2c24] transition-all duration-300 border border-[#0a2c24]/20 dark:border-white/20'
               aria-label='For Businesses'
             >
@@ -159,14 +148,14 @@ const BooklyNavbar = () => {
               <div className='flex items-center gap-2'>
                 <div className='hidden sm:flex items-center gap-1'>
                   <button
-                    onClick={() => to('/profile?section=appointments')}
+                    onClick={() => to('/appointments')}
                     className='inline-flex items-center justify-center w-9 h-9 rounded-full border border-[#0a2c24]/10 dark:border-white/10 text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 transition-all duration-300'
                     aria-label='Appointments'
                   >
                     <CalendarCheck className='w-4 h-4' />
                   </button>
                   <button
-                    onClick={() => to('/profile?section=favorites')}
+                    onClick={() => to('/appointments?tab=favourites')}
                     className='inline-flex items-center justify-center w-9 h-9 rounded-full border border-[#0a2c24]/10 dark:border-white/10 text-[#0a2c24] dark:text-white hover:bg-[#77b6a3]/10 dark:hover:bg-[#77b6a3]/20 transition-all duration-300'
                     aria-label='Favorites'
                   >
@@ -240,17 +229,9 @@ const BooklyNavbar = () => {
                 onClick={e => {
                   e.preventDefault()
                   e.stopPropagation()
-                  console.log('For Businesses clicked', { userType, materializeUser })
                   setMobileMenuOpen(false)
                   setTimeout(() => {
-                    // Check if user is already authenticated as business user
-                    if (materializeUser || userType === 'business') {
-                      // Already logged in as business, go to dashboard
-                      router.push(`/${currentLang}/apps/bookly/dashboard`)
-                    } else {
-                      // Not business user, go to business login
-                      router.push(`/${currentLang}/login`)
-                    }
+                    router.push(`/${currentLang}/business`)
                   }, 100)
                 }}
                 className='flex items-center gap-3 w-full px-4 py-4 text-left bg-transparent text-[#0a2c24] dark:text-white hover:bg-[#0a2c24] hover:text-white dark:hover:bg-[#77b6a3] dark:hover:text-[#0a2c24] rounded-full transition-all duration-300 touch-manipulation text-base border border-[#0a2c24]/10 dark:border-white/10'

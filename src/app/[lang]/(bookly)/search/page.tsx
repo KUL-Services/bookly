@@ -251,6 +251,7 @@ export default function SearchPage() {
                     <BusinessCard
                       key={b.id}
                       id={b.id}
+                      slug={b.slug}
                       name={b.name}
                       rating={b.rating ?? 0}
                       reviewCount={b.reviews?.length ?? 0}
@@ -280,6 +281,7 @@ export default function SearchPage() {
                     <BusinessCard
                       key={b.id}
                       id={b.id}
+                      slug={b.slug}
                       name={b.name}
                       rating={b.rating ?? 0}
                       reviewCount={b.reviews?.length ?? 0}

@@ -11,6 +11,7 @@ export interface BusinessBranch {
 
 export interface BusinessLocation {
   id: string
+  slug?: string
   name: string
   country: string
   city: string

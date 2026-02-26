@@ -9,7 +9,59 @@ import type { Branch as ApiBranch, Service as ApiService } from '@/lib/api/types
 // Helper: Map API Branch → Frontend Branch
 // ============================================================================
 
+const dayToApiKey: Record<string, string> = {
+  Sun: 'sunday',
+  Mon: 'monday',
+  Tue: 'tuesday',
+  Wed: 'wednesday',
+  Thu: 'thursday',
+  Fri: 'friday',
+  Sat: 'saturday'
+}
+
+function mapApiWorkingHours(
+  hours?: Record<string, { open?: string; close?: string; isOpen?: boolean }>
+): Branch['workingHours'] {
+  const defaults = DEFAULT_WORKING_HOURS.map(item => ({ ...item }))
+  if (!hours) return defaults
+
+  return defaults.map(item => {
+    const apiKey = dayToApiKey[item.day]
+    const entry = hours[apiKey]
+    if (!entry) return item
+    return {
+      ...item,
+      isOpen: entry.isOpen ?? item.isOpen,
+      openTime: entry.open || item.openTime,
+      closeTime: entry.close || item.closeTime
+    }
+  })
+}
+
+function toApiWorkingHours(hours: BranchFormData['workingHours'] | undefined) {
+  if (!hours || hours.length === 0) return undefined
+  const payload: Record<string, { open: string; close: string; isOpen: boolean }> = {}
+  hours.forEach(item => {
+    const dayKey = dayToApiKey[item.day]
+    if (!dayKey) return
+    payload[dayKey] = {
+      open: item.openTime,
+      close: item.closeTime,
+      isOpen: item.isOpen
+    }
+  })
+  return payload
+}
+
 function mapApiBranch(api: ApiBranch): Branch {
+  const sanitizeLocationPart = (value?: string) => {
+    const cleaned = (value || '').trim()
+    if (!cleaned) return ''
+    // Avoid placeholder punctuation values like "," that render as orphan lines.
+    if (/^[,.\-_/\\\s]+$/.test(cleaned)) return ''
+    return cleaned
+  }
+
   // Extract staff from resources array (staff are resources with type: 'STAFF')
   const staffFromResources = (api.resources || [])
     .filter((r: any) => r.type === 'STAFF')
@@ -37,18 +89,21 @@ function mapApiBranch(api: ApiBranch): Branch {
     .filter(Boolean)
   const guessedCountry = addressParts.length > 0 ? addressParts[addressParts.length - 1] : ''
   const guessedCity = addressParts.length > 1 ? addressParts[addressParts.length - 2] : ''
+  const apiWorkingHours = mapApiWorkingHours((api as any).workingHours)
 
   return {
     id: api.id,
     name: api.name,
     address: api.address || '',
-    city: guessedCity,
-    country: guessedCountry,
+    city: sanitizeLocationPart((api as any).city) || sanitizeLocationPart(guessedCity),
+    country: sanitizeLocationPart((api as any).country) || sanitizeLocationPart(guessedCountry),
     mobile: api.mobile || '',
-    email: '', // Not in API
+    email: (api as any).email || '',
     businessId: api.businessId,
     latitude: api.latitude,
     longitude: api.longitude,
+    formattedAddress: (api as any).formattedAddress || api.address || '',
+    placeId: (api as any).placeId || '',
 
     // Map nested services from API if present
     services: (api.services || []).map(s => ({
@@ -60,9 +115,9 @@ function mapApiBranch(api: ApiBranch): Branch {
     // Use merged staff from resources and/or staff array
     staff: allStaff,
     galleryUrls: api.galleryUrls || api.gallery || [],
-    workingHours: DEFAULT_WORKING_HOURS,
+    workingHours: apiWorkingHours,
 
-    isActive: true,
+    isActive: (api as any).isActive !== false,
     isPrimary: false,
     createdAt: api.createdAt,
     updatedAt: api.updatedAt
@@ -240,9 +295,18 @@ export const useBranchesStore = create<BranchesState>((set, get) => ({
     try {
       await BranchesService.createBranch({
         name: data.name,
-        address: data.address,
+        address: data.formattedAddress || data.address,
+        email: data.email,
+        city: data.city,
+        country: data.country,
+        formattedAddress: data.formattedAddress,
+        placeId: data.placeId,
+        timezone: 'Africa/Cairo',
+        workingHours: toApiWorkingHours(data.workingHours),
+        isActive: data.isActive,
         mobile: data.mobile,
         serviceIds: data.serviceIds,
+        gallery: data.galleryUrls,
         latitude: data.latitude,
         longitude: data.longitude
       })
@@ -256,12 +320,22 @@ export const useBranchesStore = create<BranchesState>((set, get) => ({
 
   updateBranch: async (id: string, data: Partial<BranchFormData>) => {
     try {
+      const existing = get().getBranchById(id)
       await BranchesService.updateBranch({
         id,
-        name: data.name || get().getBranchById(id)?.name || '',
-        address: data.address,
+        name: data.name || existing?.name || '',
+        address: data.formattedAddress || data.address,
+        email: data.email,
+        city: data.city,
+        country: data.country,
+        formattedAddress: data.formattedAddress,
+        placeId: data.placeId,
+        timezone: 'Africa/Cairo',
+        workingHours: toApiWorkingHours(data.workingHours),
+        isActive: data.isActive,
         mobile: data.mobile,
         serviceIds: data.serviceIds,
+        gallery: data.galleryUrls,
         latitude: data.latitude,
         longitude: data.longitude
       })
@@ -289,12 +363,20 @@ export const useBranchesStore = create<BranchesState>((set, get) => ({
   },
 
   toggleBranchStatus: (id: string) => {
-    // Local-only: API doesn't support isActive toggle
-    set(state => ({
-      branches: state.branches.map(branch =>
-        branch.id === id ? { ...branch, isActive: !branch.isActive, updatedAt: new Date().toISOString() } : branch
-      )
-    }))
+    const branch = get().getBranchById(id)
+    if (!branch) return
+
+    void (async () => {
+      try {
+        const result = await BranchesService.updateBranchStatus(id, !branch.isActive)
+        if (result.error) {
+          throw new Error(result.error)
+        }
+        await get().fetchBranches()
+      } catch (err: any) {
+        set({ error: err?.message || 'Failed to update branch status' })
+      }
+    })()
   },
 
   setPrimaryBranch: (id: string) => {

@@ -5,6 +5,7 @@ import { GoogleMap, useJsApiLoader, OverlayView, MarkerF } from '@react-google-m
 import { BusinessLocation } from '@/mocks/businesses'
 import { MapPin } from 'lucide-react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import GreenIcon from '@/assets/logos/icons/Green_Icon_filled_transparent.png'
 
 type SearchMapProps = {
@@ -70,6 +71,8 @@ const MapMarker = memo(function MapMarker({
 })
 
 export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
+  const params = useParams<{ lang: string }>()
+  const lang = params?.lang || 'en'
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
@@ -215,7 +218,7 @@ export function SearchMap({ businesses, height = '600px' }: SearchMapProps) {
                   <p className='text-sm text-gray-500 line-clamp-1 mb-3'>{activeBusiness.address}</p>
 
                   <Link
-                    href={`/en/business/${activeBusiness.id}`} // Should ideally use current lang from context/params
+                    href={`/${lang}/business/${activeBusiness.slug || activeBusiness.id}`}
                     className='inline-flex items-center justify-center w-full px-4 py-2.5 bg-transparent border border-[#0a2c24] text-[#0a2c24] text-sm font-bold rounded-lg hover:bg-[#0a2c24] hover:text-white transition-all active:scale-95 shadow-md'
                   >
                     View Profile

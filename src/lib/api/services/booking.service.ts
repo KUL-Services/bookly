@@ -7,7 +7,10 @@ import type {
   AdminBookingsParams,
   AdminCreateBookingRequest,
   GuestBookingRequest,
-  RescheduleBookingRequest
+  RescheduleBookingRequest,
+  Addon,
+  ValidateCouponRequest,
+  ValidateCouponResponse
 } from '../types'
 
 export class BookingService {
@@ -40,6 +43,16 @@ export class BookingService {
   // Create a guest booking (no auth)
   static async createGuestBooking(data: GuestBookingRequest) {
     return apiClient.post<Booking>('/bookings', data)
+  }
+
+  // Get optional addons for a service (if backend supports them)
+  static async getAddons(serviceId: string) {
+    return apiClient.get<Addon[]>(`/services/${serviceId}/addons`)
+  }
+
+  // Validate a coupon code (if backend supports promotions)
+  static async validateCoupon(data: ValidateCouponRequest) {
+    return apiClient.post<ValidateCouponResponse>('/bookings/validate-coupon', data)
   }
 
   // Reschedule a booking (User)
@@ -83,8 +96,7 @@ export class BookingService {
 
   // Admin - Reschedule a booking
   static async adminRescheduleBooking(bookingId: string, data: RescheduleBookingRequest) {
-    // Admin endpoint seems to be missing, trying standard endpoint with admin auth
-    return apiClient.patch<Booking>(`/bookings/${bookingId}/reschedule`, data)
+    return apiClient.patch<Booking>(`/admin/bookings/${bookingId}/reschedule`, data)
   }
 
   // Admin - Create a booking on behalf of a customer
@@ -94,7 +106,6 @@ export class BookingService {
 
   // Admin - Delete/cancel a booking
   static async deleteBooking(bookingId: string) {
-    // Try standard delete if admin delete is missing
-    return apiClient.delete<{ message: string }>(`/bookings/${bookingId}`)
+    return apiClient.delete<{ message: string }>(`/admin/bookings/${bookingId}`)
   }
 }

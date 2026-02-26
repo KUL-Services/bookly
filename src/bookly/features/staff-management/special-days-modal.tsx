@@ -62,13 +62,17 @@ export function SpecialDaysModal({ open, onClose }: SpecialDaysModalProps) {
     setView('edit')
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this rule?')) {
-      deleteSpecialRule(id)
+      try {
+        await deleteSpecialRule(id)
+      } catch (error: any) {
+        alert(error?.message || 'Failed to delete holiday hours rule')
+      }
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingRule || !editingRule.name || !editingRule.startDate || !editingRule.endDate) return
 
     // Ensure shifts array exists and is valid
@@ -79,12 +83,16 @@ export function SpecialDaysModal({ open, onClose }: SpecialDaysModalProps) {
         : []
     }
 
-    if (editingRule.id) {
-      updateSpecialRule(editingRule.id, ruleToSave)
-    } else {
-      addSpecialRule(ruleToSave as Omit<SpecialRule, 'id'>)
+    try {
+      if (editingRule.id) {
+        await updateSpecialRule(editingRule.id, ruleToSave)
+      } else {
+        await addSpecialRule(ruleToSave as Omit<SpecialRule, 'id'>)
+      }
+      handleBackToList()
+    } catch (error: any) {
+      alert(error?.message || 'Failed to save holiday hours rule')
     }
-    handleBackToList()
   }
 
   const handleBackToList = () => {

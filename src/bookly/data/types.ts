@@ -74,6 +74,7 @@ export interface StaffAppointment {
 export type StaffType = 'dynamic' | 'static'
 
 export interface RoomAssignment {
+  id?: string
   roomId: string
   roomName: string
   dayOfWeek: 'Sun' | 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat'

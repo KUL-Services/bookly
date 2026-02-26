@@ -7,18 +7,21 @@ export class BranchesService {
     return apiClient.get<Branch[]>('/admin/branches')
   }
 
-  // Admin only - Create branch (API spec supports name, address, mobile, serviceIds)
+  // Admin only - Create branch
   static async createBranch(data: CreateBranchRequest) {
-    // Remove any unsupported fields like staff assignments
     const { staff, ...branchData } = data as any
     return apiClient.post<Branch>('/admin/branches', branchData)
   }
 
-  // Admin only - Update branch (API spec requires id, name and supports address, mobile, serviceIds)
+  // Admin only - Update branch
   static async updateBranch(data: UpdateBranchRequest) {
-    // Remove any unsupported fields like staff assignments
     const { staff, ...branchData } = data as any
     return apiClient.patch<Branch>('/admin/branches', branchData)
+  }
+
+  // Admin only - Toggle active status
+  static async updateBranchStatus(id: string, isActive: boolean) {
+    return apiClient.patch<Branch>(`/admin/branches/${id}/status`, { isActive })
   }
 
   // Admin only - Delete branch

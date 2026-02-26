@@ -99,9 +99,7 @@ export default function ServiceDetailPage() {
                           variant='text'
                           className='text-primary-800 hover:text-primary-900 p-0 text-lg'
                           onClick={() =>
-                            router.push(
-                              `/${params.lang}/business/${service.business?.name.toLowerCase().replace(/\s+/g, '-')}`
-                            )
+                            router.push(`/${params.lang}/business/${service.business?.slug || service.business?.id}`)
                           }
                         />
                       </div>

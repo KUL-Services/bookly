@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 // Type Imports
 import type { Mode } from '@core/types'
@@ -11,14 +11,16 @@ import { MarketplaceHero } from '@/bookly/components/marketplace/marketplace-her
 import { CategoryNav } from '@/bookly/components/marketplace/category-nav'
 import { BusinessCard } from '@/bookly/components/marketplace/business-card'
 import { useSettings } from '@core/hooks/useSettings'
-import { MOCK_BUSINESSES } from '@/mocks/businesses'
 import { Button } from '@/bookly/components/ui/button'
 import Link from 'next/link'
 import Footer from '@/components/layout/front-pages/Footer'
+import { BusinessService } from '@/lib/api/services/business.service'
+import type { Business } from '@/lib/api/types'
 
 const LandingPageWrapper = ({ mode }: { mode: Mode }) => {
   // Hooks
   const { updatePageSettings } = useSettings()
+  const [recommendedBusinesses, setRecommendedBusinesses] = useState<Business[]>([])
 
   // For Page specific settings
   useEffect(() => {
@@ -28,8 +30,30 @@ const LandingPageWrapper = ({ mode }: { mode: Mode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Use recommended businesses
-  const recommendedBusinesses = MOCK_BUSINESSES.slice(0, 4)
+  useEffect(() => {
+    let mounted = true
+    BusinessService.getApprovedBusinesses({ pageSize: 4 })
+      .then(result => {
+        if (!mounted) return
+        const payload = result.data as any
+        const list: Business[] = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : Array.isArray(payload?.items)
+              ? payload.items
+              : []
+        setRecommendedBusinesses(list.slice(0, 4))
+      })
+      .catch(() => {
+        if (!mounted) return
+        setRecommendedBusinesses([])
+      })
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <div className='bg-white min-h-screen'>
@@ -57,10 +81,10 @@ const LandingPageWrapper = ({ mode }: { mode: Mode }) => {
               key={business.id}
               id={business.id}
               name={business.name}
-              rating={business.rating}
-              reviewCount={120}
-              address={business.address}
-              image={business.coverImageUrl || business.imageUrl || ''}
+              rating={business.rating || 0}
+              reviewCount={business.reviews?.length || 0}
+              address={business.branches?.[0]?.address || ''}
+              image={business.coverImageUrl || business.logoUrl || ''}
               isPromoted={Math.random() > 0.7}
             />
           ))}

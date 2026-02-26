@@ -11,6 +11,7 @@ import { Building2, ChevronRight } from 'lucide-react'
 
 interface BusinessCardProps {
   id: string
+  slug?: string
   name: string
   rating: number
   reviewCount: number
@@ -24,6 +25,7 @@ interface BusinessCardProps {
 
 export function BusinessCard({
   id,
+  slug,
   name,
   rating,
   reviewCount,
@@ -36,12 +38,13 @@ export function BusinessCard({
   const { t } = useTranslation()
   const params = useParams<{ lang: string }>()
   const lang = params?.lang ?? 'en'
+  const businessPathId = slug || id
   const [imgError, setImgError] = useState(false)
 
   // Mobile horizontal compact variant
   if (mobile) {
     return (
-      <Link href={`/${lang}/business/${id}`} className='block'>
+      <Link href={`/${lang}/business/${businessPathId}`} className='block'>
         <div
           className={cn(
             'flex items-center gap-4 p-3 bg-white dark:bg-[#202c39] rounded-2xl',
@@ -100,7 +103,7 @@ export function BusinessCard({
 
   // Desktop vertical card (original)
   return (
-    <Link href={`/${lang}/business/${id}`} className='block h-full'>
+    <Link href={`/${lang}/business/${businessPathId}`} className='block h-full'>
       <Card
         className={cn(
           'h-full shadow-none hover:shadow-[0_30px_60px_rgba(10,44,36,0.2)] transition-all duration-300 group overflow-hidden bg-white dark:bg-[#202c39] border border-gray-200 dark:border-white/10 hover:border-[#0a2c24] dark:hover:border-[#77b6a3] rounded-tl-[2rem] rounded-tr-[3.5rem] rounded-bl-[3.5rem] rounded-br-[2rem] relative z-0 isolate',

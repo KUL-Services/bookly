@@ -86,6 +86,7 @@ export const buildOnboardingPayload = (formData: BusinessRegistrationData): Comp
 
   return {
     businessProfile: {
+      name: formData.businessName || undefined,
       slug: formData.publicUrlSlug || undefined,
       timezone: formData.timezone || 'Africa/Cairo',
       description: formData.businessType || undefined,

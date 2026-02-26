@@ -56,7 +56,7 @@ export function CommissionsTab() {
   // Filter policies by selected staff
   const filteredPolicies = commissionPolicies.filter(policy => {
     if (selectedStaffId === 'all') {
-      return policy.staffScope === 'all'
+      return true
     } else {
       return (
         policy.staffScope !== 'all' &&
@@ -82,9 +82,13 @@ export function CommissionsTab() {
     setIsEditorOpen(true)
   }
 
-  const handleDeletePolicy = (id: string) => {
+  const handleDeletePolicy = async (id: string) => {
     if (confirm('Are you sure you want to delete this commission policy?')) {
-      deleteCommissionPolicy(id)
+      try {
+        await deleteCommissionPolicy(id)
+      } catch (error: any) {
+        alert(error?.message || 'Failed to delete commission policy')
+      }
     }
   }
 

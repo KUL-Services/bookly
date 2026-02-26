@@ -32,21 +32,7 @@ class ApiClient {
         },
       }
 
-      console.log('🚀 API Request:', {
-        url,
-        method: config.method || 'GET',
-        headers: config.headers,
-        body: config.body,
-        hasAuthHeader: !!(config.headers as any)?.Authorization,
-      })
-
       const response = await fetch(url, config)
-
-      console.log('📡 API Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-      })
 
       if (!response.ok) {
         const errorText = await response.text()
@@ -63,14 +49,6 @@ class ApiClient {
           console.warn('Could not parse error response as JSON:', parseError)
         }
 
-        console.error('❌ API Error Response:', {
-          status: response.status,
-          statusText: response.statusText,
-          errorText,
-          errorMessage,
-          url
-        })
-
         // Check if this is an auth error that should trigger logout
         if (response.status === 401) {
           console.warn('🔒 401 Unauthorized - Token may be invalid or expired')
@@ -81,8 +59,7 @@ class ApiClient {
 
           // Check which user type is logged in and logout accordingly
           if (store.booklyUser && store.userType === 'customer') {
-            console.log('🚪 Logging out customer user due to 401')
-            store.logoutCustomer()
+              store.logoutCustomer()
 
             // Redirect to customer login
             if (typeof window !== 'undefined') {
@@ -93,8 +70,7 @@ class ApiClient {
               window.location.href = `/${lang}/customer/login`
             }
           } else if (store.materializeUser && store.userType === 'business') {
-            console.log('🚪 Logging out business user due to 401')
-            store.logoutBusiness()
+              store.logoutBusiness()
 
             // Redirect to business login
             if (typeof window !== 'undefined') {
@@ -107,7 +83,6 @@ class ApiClient {
       }
 
       const data = await response.json()
-      console.log('✅ API Success:', data)
       return { data }
     } catch (error) {
       console.error('❌ API request failed:', error)

@@ -23,7 +23,7 @@ import {
   ChevronLeft
 } from 'lucide-react'
 import { PageLoader } from '@/components/LoadingStates'
-import { useState, useEffect, useMemo, useCallback, useRef, TouchEvent, MouseEvent } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, TouchEvent, MouseEvent, SyntheticEvent } from 'react'
 import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { BusinessService, ServicesService, BranchesService, StaffService } from '@/lib/api'
 import { GoogleMap, useJsApiLoader, OverlayView, Marker } from '@react-google-maps/api'
@@ -47,6 +47,10 @@ interface Review {
   authorImage?: string
   businessId?: string
 }
+
+const FALLBACK_COVER_IMAGE = '/images/front-pages/landing-page/hero-bg-light.png'
+const FALLBACK_LOGO_IMAGE = '/images/avatars/1.png'
+const FALLBACK_BRANCH_IMAGE = '/images/front-pages/landing-page/hero-bg-light.png'
 
 function BusinessDetailsPage() {
   const params = useParams<{ slug: string; lang: string }>()
@@ -99,9 +103,9 @@ function BusinessDetailsPage() {
     const fetchBusinessData = async () => {
       try {
         setLoading(true)
-        console.log('🔍 Fetching business data for ID:', params.slug)
+        console.log('🔍 Fetching business data for slugOrId:', params.slug)
 
-        const businessResponse = await BusinessService.getBusiness(params.slug)
+        const businessResponse = await BusinessService.getBusinessBySlugOrId(params.slug)
 
         if (businessResponse.error) {
           throw new Error(businessResponse.error)
@@ -243,6 +247,17 @@ function BusinessDetailsPage() {
     setIsBookingModalOpen(true)
   }
 
+  const handleImageError = useCallback((event: SyntheticEvent<HTMLImageElement>, fallbackSrc: string) => {
+    const image = event.currentTarget
+
+    if (image.dataset.fallbackApplied === 'true') {
+      return
+    }
+
+    image.dataset.fallbackApplied = 'true'
+    image.src = fallbackSrc
+  }, [])
+
   if (loading) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-[#f7f8f9] dark:bg-[#0a2c24] relative overflow-hidden font-sans'>
@@ -322,9 +337,10 @@ function BusinessDetailsPage() {
       <div className='relative h-[40vh] min-h-[300px] lg:h-[50vh] lg:min-h-[550px] w-full overflow-hidden group rounded-b-[2rem] lg:rounded-b-[4rem] border-b-2 border-[#0a2c24]'>
         <div className='absolute inset-0 bg-gray-900'>
           <img
-            src={(business as any).coverImageUrl || '/images/business-placeholder.jpg'}
+            src={(business as any).coverImageUrl || FALLBACK_COVER_IMAGE}
             alt='Cover'
             className='w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-1000'
+            onError={event => handleImageError(event, FALLBACK_COVER_IMAGE)}
           />
           <div className='absolute inset-0 bg-[#202c39]/60' />
         </div>
@@ -335,10 +351,12 @@ function BusinessDetailsPage() {
             {/* Logo - Smaller on mobile */}
             <div className='relative -mb-10 lg:-mb-16 flex-shrink-0'>
               <div className='w-20 h-20 lg:w-40 lg:h-40 rounded-xl lg:rounded-2xl p-1 bg-white dark:bg-[#202c39] shadow-2xl'>
-                <img
-                  src={(business as any).logoUrl || '/images/business-placeholder.jpg'}
-                  alt='Logo'
-                  className='w-full h-full object-cover rounded-lg lg:rounded-xl'
+                <BusinessAvatar
+                  businessName={business.name}
+                  imageSrc={(business as any).logoUrl || FALLBACK_LOGO_IMAGE}
+                  imageAlt='Logo'
+                  size='xl'
+                  className='w-full h-full rounded-lg lg:rounded-xl'
                 />
               </div>
             </div>
@@ -625,9 +643,10 @@ function BusinessDetailsPage() {
                           >
                             <div className='w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100 relative'>
                               <img
-                                src={(branch.galleryUrls && branch.galleryUrls[0]) || '/images/placeholder-image2.jpg'}
+                                src={(branch.galleryUrls && branch.galleryUrls[0]) || FALLBACK_BRANCH_IMAGE}
                                 className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
                                 alt={branch.name}
+                                onError={event => handleImageError(event, FALLBACK_BRANCH_IMAGE)}
                               />
                             </div>
                             <div className='flex-1'>

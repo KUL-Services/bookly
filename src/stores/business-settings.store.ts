@@ -8,7 +8,10 @@ import { persist } from 'zustand/middleware'
 import { SettingsService } from '@/lib/api/services/settings.service'
 import { BusinessService } from '@/lib/api/services/business.service'
 import type {
+  ApiBrandingSettings,
   ApiBookingPolicies,
+  ApiCalendarSettings,
+  ApiCustomerSettings,
   ApiNotificationSettings,
   ApiPaymentSettings,
   ApiSchedulingSettings,
@@ -346,6 +349,31 @@ const toApiPaymentSettings = (settings: PaymentSettings): ApiPaymentSettings => 
   taxInclusive: settings.taxInclusive
 })
 
+const toApiCalendarSettings = (settings: CalendarDisplaySettings): ApiCalendarSettings => ({
+  defaultView: settings.defaultView,
+  timeSlotDuration: settings.timeSlotDuration,
+  startOfWeek: settings.startOfWeek,
+  timeFormat: settings.timeFormat,
+  colorScheme: settings.colorScheme,
+  showWeekends: settings.showWeekends,
+  workingHoursStart: settings.workingHoursStart,
+  workingHoursEnd: settings.workingHoursEnd
+})
+
+const toApiCustomerSettings = (settings: CustomerSettings): ApiCustomerSettings => ({
+  guestCheckout: settings.guestCheckout,
+  requireEmail: settings.requireEmail,
+  requirePhone: settings.requirePhone,
+  showCustomerNotesToStaff: settings.showCustomerNotesToStaff
+})
+
+const toApiBrandingSettings = (settings: BrandingSettings): ApiBrandingSettings => ({
+  primaryColor: settings.primaryColor,
+  welcomeMessage: settings.welcomeMessage,
+  confirmationMessage: settings.confirmationMessage,
+  bookingPageTheme: settings.bookingPageTheme
+})
+
 const mapApiSettingsToStore = (
   api: ApiBusinessSettings,
   current: Pick<
@@ -543,6 +571,9 @@ interface BusinessSettingsActions {
   saveSchedulingSettings: () => Promise<void>
   saveNotificationSettings: () => Promise<void>
   savePaymentSettings: () => Promise<void>
+  saveCalendarSettings: () => Promise<void>
+  saveCustomerSettings: () => Promise<void>
+  saveBrandingSettings: () => Promise<void>
   loadSettings: () => Promise<void>
 
   // UI actions
@@ -725,26 +756,14 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
             throw new Error(paymentResult.error)
           }
 
-          // Keep legacy/global settings in sync for tabs that still use /admin/settings
-          const settingsPayload: ApiBusinessSettings = {
-            customerSettings: state.customerSettings,
-            calendarSettings: {
-              defaultView: state.calendarSettings.defaultView,
-              timeSlotDuration: state.calendarSettings.timeSlotDuration,
-              startOfWeek: state.calendarSettings.startOfWeek,
-              timeFormat: state.calendarSettings.timeFormat,
-              colorScheme: state.calendarSettings.colorScheme,
-              showWeekends: state.calendarSettings.showWeekends,
-              workingHoursStart: state.calendarSettings.workingHoursStart,
-              workingHoursEnd: state.calendarSettings.workingHoursEnd
-            },
-            brandingSettings: state.brandingSettings
-          }
+          const calendarResult = await SettingsService.updateCalendarSettings(toApiCalendarSettings(state.calendarSettings))
+          if (calendarResult.error) throw new Error(calendarResult.error)
 
-          const settingsResult = await SettingsService.updateSettings(settingsPayload)
-          if (settingsResult.error) {
-            throw new Error(settingsResult.error)
-          }
+          const customerResult = await SettingsService.updateCustomerSettings(toApiCustomerSettings(state.customerSettings))
+          if (customerResult.error) throw new Error(customerResult.error)
+
+          const brandingResult = await SettingsService.updateBrandingSettings(toApiBrandingSettings(state.brandingSettings))
+          if (brandingResult.error) throw new Error(brandingResult.error)
 
           set({
             isSaving: false,
@@ -883,6 +902,100 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
           set({
             isSaving: false,
             error: error instanceof Error ? error.message : 'Failed to save payment settings'
+          })
+        }
+      },
+
+      saveCalendarSettings: async () => {
+        set({ isSaving: true, error: null })
+        try {
+          const calendarPayload = {
+            ...toApiCalendarSettings(get().calendarSettings)
+          }
+
+          const result = await SettingsService.updateCalendarSettings(calendarPayload)
+          if (result.error) {
+            throw new Error(result.error)
+          }
+
+          if (result.data) {
+            const current = get()
+            const updates = mapApiSettingsToStore(result.data as ApiBusinessSettings, current)
+            set({ ...updates })
+          }
+
+          set({
+            isSaving: false,
+            hasUnsavedChanges: false,
+            successMessage: 'Calendar settings saved successfully!'
+          })
+          setTimeout(() => {
+            set({ successMessage: null })
+          }, 3000)
+        } catch (error) {
+          set({
+            isSaving: false,
+            error: error instanceof Error ? error.message : 'Failed to save calendar settings'
+          })
+        }
+      },
+
+      saveCustomerSettings: async () => {
+        set({ isSaving: true, error: null })
+        try {
+          const result = await SettingsService.updateCustomerSettings(toApiCustomerSettings(get().customerSettings))
+          if (result.error) {
+            throw new Error(result.error)
+          }
+
+          if (result.data) {
+            const current = get()
+            const updates = mapApiSettingsToStore(result.data as ApiBusinessSettings, current)
+            set({ ...updates })
+          }
+
+          set({
+            isSaving: false,
+            hasUnsavedChanges: false,
+            successMessage: 'Customer settings saved successfully!'
+          })
+          setTimeout(() => {
+            set({ successMessage: null })
+          }, 3000)
+        } catch (error) {
+          set({
+            isSaving: false,
+            error: error instanceof Error ? error.message : 'Failed to save customer settings'
+          })
+        }
+      },
+
+      saveBrandingSettings: async () => {
+        set({ isSaving: true, error: null })
+        try {
+          const result = await SettingsService.updateBrandingSettings(toApiBrandingSettings(get().brandingSettings))
+          if (result.error) {
+            throw new Error(result.error)
+          }
+
+          if (result.data) {
+            const current = get()
+            const updates = mapApiSettingsToStore(result.data as ApiBusinessSettings, current)
+            set({ ...updates })
+          }
+
+          set({
+            isSaving: false,
+            hasUnsavedChanges: false,
+            successMessage: 'Branding settings saved successfully!'
+          })
+          setTimeout(() => {
+            set({ successMessage: null })
+          }, 3000)
+        } catch (error) {
+          set({
+            isSaving: false,
+            error: error instanceof Error ? error.message : 'Failed to save branding settings'
           })
         }
       },

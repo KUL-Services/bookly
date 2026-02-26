@@ -273,6 +273,7 @@ export type WeeklyBusinessHours = {
 
 export interface TimeReservation {
   id: string
+  branchId?: string
   staffIds: string[]
   roomIds: string[]
   start: Date

@@ -195,7 +195,7 @@ export function TimeOffModal({
     }
   }, [open, editTimeOffId, initialStaffId, initialDate, timeOffRequests, reset])
 
-  const onSubmit = (data: TimeOffFormValues) => {
+  const onSubmit = async (data: TimeOffFormValues) => {
     const startDateTime = data.allDay
       ? new Date(data.startDate.setHours(0, 0, 0, 0))
       : new Date(`${data.startDate.toISOString().split('T')[0]}T${data.startTime}`)
@@ -217,19 +217,26 @@ export function TimeOffModal({
       note: data.note
     }
 
-    if (editTimeOffId) {
-      updateTimeOff(editTimeOffId, payload)
-    } else {
-      createTimeOff(payload)
+    try {
+      if (editTimeOffId) {
+        await updateTimeOff(editTimeOffId, payload)
+      } else {
+        await createTimeOff(payload)
+      }
+      handleCancel()
+    } catch (error: any) {
+      alert(error?.message || 'Failed to save time off')
     }
-
-    handleCancel()
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (editTimeOffId && confirm('Are you sure you want to delete this time off?')) {
-      deleteTimeOff(editTimeOffId)
-      handleCancel()
+      try {
+        await deleteTimeOff(editTimeOffId)
+        handleCancel()
+      } catch (error: any) {
+        alert(error?.message || 'Failed to delete time off')
+      }
     }
   }
 

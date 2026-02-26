@@ -28,6 +28,7 @@ export interface Admin {
 
 export interface Business {
   id: string
+  slug?: string
   name: string
   email?: string
   description?: string
@@ -68,6 +69,11 @@ export interface Service {
   description?: string
   location?: string
   price: number
+  bookingInterval?: number | null
+  paddingTime?: number | null
+  processingTime?: number | null
+  parallelClients?: number | null
+  clientSettings?: Record<string, any> | null
   taxRate?: '5' | '10' | '12' | '15' | '20' | 'custom'
   customTaxRate?: number | null
   depositPercentage?: number | null
@@ -83,6 +89,18 @@ export interface Service {
   reviews?: Review[]
   createdAt: string
   updatedAt: string
+}
+
+export interface Addon {
+  id: string
+  serviceId?: string
+  name: string
+  price?: number
+  priceCents?: number
+  description?: string
+  isActive?: boolean
+  createdAt?: string
+  updatedAt?: string
 }
 
 // Booking mode for resources (staff/assets)
@@ -165,6 +183,15 @@ export interface Branch {
   id: string
   name: string
   address?: string
+  email?: string
+  city?: string
+  country?: string
+  formattedAddress?: string
+  placeId?: string
+  timezone?: string
+  workingHours?: Record<string, { open: string; close: string; isOpen: boolean }>
+  isActive?: boolean
+  staffIds?: string[]
   mobile?: string
   businessId: string
   latitude?: number
@@ -192,6 +219,7 @@ export interface Review {
   service?: Service
   business?: {
     id: string
+    slug?: string
     name: string
     logo?: string | null
   }
@@ -292,6 +320,7 @@ export interface RegisterBusinessRequest {
 
 export interface CompleteOnboardingRequest {
   businessProfile?: {
+    name?: string
     slug?: string
     timezone?: string
     description?: string
@@ -410,6 +439,11 @@ export interface CreateServiceRequest {
   description?: string
   location: string
   price: number
+  bookingInterval?: number
+  paddingTime?: number
+  processingTime?: number
+  parallelClients?: number
+  clientSettings?: Record<string, any>
   taxRate?: '5' | '10' | '12' | '15' | '20' | 'custom'
   customTaxRate?: number
   depositPercentage?: number
@@ -427,6 +461,11 @@ export interface UpdateServiceRequest {
   description?: string
   location?: string
   price?: number
+  bookingInterval?: number
+  paddingTime?: number
+  processingTime?: number
+  parallelClients?: number
+  clientSettings?: Record<string, any>
   taxRate?: '5' | '10' | '12' | '15' | '20' | 'custom'
   customTaxRate?: number
   depositPercentage?: number
@@ -466,6 +505,14 @@ export interface UpdateStaffRequest {
 export interface CreateBranchRequest {
   name: string
   address?: string
+  email?: string
+  city?: string
+  country?: string
+  formattedAddress?: string
+  placeId?: string
+  timezone?: string
+  workingHours?: Record<string, { open: string; close: string; isOpen: boolean }>
+  isActive?: boolean
   mobile?: string
   serviceIds?: string[]
   gallery?: string[]
@@ -477,11 +524,23 @@ export interface UpdateBranchRequest {
   id: string
   name: string
   address?: string
+  email?: string
+  city?: string
+  country?: string
+  formattedAddress?: string
+  placeId?: string
+  timezone?: string
+  workingHours?: Record<string, { open: string; close: string; isOpen: boolean }>
+  isActive?: boolean
   mobile?: string
   serviceIds?: string[]
   gallery?: string[]
   latitude?: number
   longitude?: number
+}
+
+export interface UpdateBranchStatusRequest {
+  isActive: boolean
 }
 
 export interface UpdateBusinessRequest {
@@ -587,21 +646,49 @@ export interface Booking {
   canReschedule?: boolean
   rescheduleDeadlineHours?: number
   rescheduleCutoffTime?: string
+  addons?: Array<{
+    id: string
+    addonId: string
+    name: string
+    quantity: number
+    unitPrice: number
+    totalPrice: number
+  }>
+  addonsTotal?: number
+}
+
+export interface BookingAddonSelection {
+  addonId: string
+  quantity: number
 }
 
 export interface CreateBookingRequest {
   serviceId: string
   branchId: string
   resourceId?: string
+  staffId?: string
+  roomId?: string
   sessionId?: string // NEW: Required for STATIC mode bookings
   startTime: string
   notes?: string
+  addons?: BookingAddonSelection[]
+}
+
+export interface ValidateCouponRequest {
+  code: string
+  serviceId: string
+}
+
+export interface ValidateCouponResponse {
+  valid: boolean
+  discountPercent?: number
 }
 
 export interface GuestBookingRequest extends CreateBookingRequest {
   customerName: string
   customerEmail: string
   customerPhone: string
+  addons?: BookingAddonSelection[]
 }
 
 export interface AdminCreateBookingRequest {
@@ -609,6 +696,7 @@ export interface AdminCreateBookingRequest {
   branchId: string
   resourceId?: string
   staffId?: string
+  roomId?: string
   sessionId?: string // NEW: Required for STATIC mode bookings
   startTime: string
   customerName: string
@@ -616,11 +704,14 @@ export interface AdminCreateBookingRequest {
   customerPhone?: string
   status?: string
   notes?: string
+  addons?: BookingAddonSelection[]
 }
 
 export interface RescheduleBookingRequest {
   startTime: string
   resourceId?: string
+  staffId?: string
+  roomId?: string
 }
 
 export type WaitlistStatus = 'ACTIVE' | 'NOTIFIED' | 'LEFT' | 'EXPIRED' | 'BOOKED'
@@ -830,6 +921,8 @@ export interface ScheduleException {
   isAvailable: boolean
   resourceId?: string
   branchId?: string
+  scope?: 'RESOURCE' | 'BRANCH' | 'BUSINESS'
+  precedence?: number
   createdAt: string
   updatedAt: string
 }
@@ -842,6 +935,16 @@ export interface CreateExceptionRequest {
   isAvailable: boolean
   resourceId?: string
   branchId?: string
+}
+
+export interface UpdateExceptionRequest {
+  date?: string
+  startTime?: string | null
+  endTime?: string | null
+  reason?: string
+  isAvailable?: boolean
+  resourceId?: string | null
+  branchId?: string | null
 }
 
 export interface ResourceAssignment {
@@ -863,20 +966,137 @@ export interface CreateAssignmentRequest {
   endTime: string
 }
 
+export type TimeOffApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+export interface TimeOffEntry {
+  id: string
+  businessId?: string
+  branchId?: string | null
+  staffId: string
+  startTime: string
+  endTime: string
+  allDay?: boolean
+  reason?: string
+  note?: string
+  approvalStatus?: TimeOffApprovalStatus
+  createdAt?: string
+  updatedAt?: string
+  staff?: {
+    id: string
+    name: string
+    branchId?: string
+  }
+  branch?: {
+    id: string
+    name: string
+  }
+}
+
+export interface CreateTimeOffRequest {
+  staffId: string
+  branchId?: string
+  startTime: string
+  endTime: string
+  allDay?: boolean
+  reason?: string
+  note?: string
+  approvalStatus?: TimeOffApprovalStatus
+  rejectOverlaps?: boolean
+}
+
+export interface UpdateTimeOffRequest {
+  staffId?: string
+  branchId?: string
+  startTime?: string
+  endTime?: string
+  allDay?: boolean
+  reason?: string
+  note?: string
+  approvalStatus?: TimeOffApprovalStatus
+  rejectOverlaps?: boolean
+}
+
+export interface GetTimeOffParams {
+  staffId?: string
+  branchId?: string
+  fromDate?: string
+  toDate?: string
+}
+
+export interface TimeReservationEntry {
+  id: string
+  businessId?: string
+  branchId: string
+  startTime: string
+  endTime: string
+  staffIds: string[]
+  roomIds: string[]
+  reason?: string
+  note?: string
+  rejectOverlaps?: boolean
+  createdByAdminId?: string
+  createdAt?: string
+  updatedAt?: string
+  branch?: {
+    id: string
+    name: string
+  }
+}
+
+export interface CreateTimeReservationRequest {
+  branchId: string
+  startTime: string
+  endTime: string
+  staffIds?: string[]
+  roomIds?: string[]
+  reason?: string
+  note?: string
+  rejectOverlaps?: boolean
+}
+
+export interface UpdateTimeReservationRequest {
+  branchId?: string
+  startTime?: string
+  endTime?: string
+  staffIds?: string[]
+  roomIds?: string[]
+  reason?: string
+  note?: string
+  rejectOverlaps?: boolean
+}
+
+export interface GetTimeReservationParams {
+  branchId?: string
+  fromDate?: string
+  toDate?: string
+}
+
 // Commission types
 export interface Commission {
   id: string
-  serviceId: string
-  resourceId: string
-  percentage: number
+  staffId?: string
+  type?: 'PERCENTAGE' | 'FIXED'
+  value?: number
+  scope?: 'SERVICE' | 'PRODUCT' | 'GLOBAL'
+  scopeId?: string
+  // Legacy fields kept for backward compatibility with older payloads.
+  serviceId?: string
+  resourceId?: string
+  percentage?: number
   createdAt: string
   updatedAt: string
 }
 
 export interface CreateCommissionRequest {
-  serviceId: string
-  resourceId: string
-  percentage: number
+  staffId: string
+  type: 'PERCENTAGE' | 'FIXED'
+  value: number
+  scope: 'SERVICE' | 'PRODUCT' | 'GLOBAL'
+  scopeId?: string
+}
+
+export interface UpdateCommissionRequest extends CreateCommissionRequest {
+  id: string
 }
 
 // Review types
@@ -968,10 +1188,13 @@ export interface ApiCalendarSettings {
   showWeekends?: boolean
   workingHoursStart?: string // "HH:MM"
   workingHoursEnd?: string // "HH:MM"
+  weekendDays?: string[]
 }
 
 export interface ApiBrandingSettings {
+  brandName?: string
   primaryColor?: string
+  logo?: string
   welcomeMessage?: string
   confirmationMessage?: string
   bookingPageTheme?: 'light' | 'dark' | 'auto'

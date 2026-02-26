@@ -4,7 +4,7 @@ import { Card } from '../../ui/card'
 import Button from '../button/button.component'
 import { Badge } from '../../atoms/base-badge/badge'
 import { H3, H4, KulIcon, P } from '../../atoms'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 
 const upcomingBookings = [
   {
@@ -66,6 +66,8 @@ function BookingsTabs() {
   const currentBookings = activeTab === 'upcoming' ? upcomingBookings : pastBookings
 
   const router = useRouter()
+  const params = useParams<{ lang: string }>()
+  const lang = params?.lang || 'en'
   return (
     <Card className='p-6 border border-gray-300'>
       <H3 stringProps={{ plainText: 'Your Bookings' }} className='text-xl font-bold text-gray-900 mb-4' />
@@ -148,7 +150,9 @@ function BookingsTabs() {
                       variant='text'
                       size='sm'
                       buttonText={{ plainText: 'View Business' }}
-                      onClick={() => router.push(`/business/${2}`)}
+                      onClick={() =>
+                        router.push(`/${lang}/business/${booking.businessName.toLowerCase().trim().replace(/\s+/g, '-')}`)
+                      }
                       className='bg-white border border-gray-300 text-gray-800 hover:bg-gray-300'
                     />
 

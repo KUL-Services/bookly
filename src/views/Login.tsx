@@ -152,27 +152,6 @@ const Login = ({ mode }: { mode: Mode }) => {
         return
       }
 
-      // Only fallback to NextAuth for the demo credentials
-      if (data.email === 'admin@materialize.com' && data.password === 'admin') {
-        try {
-          const res = await signIn('credentials', {
-            email: data.email,
-            password: data.password,
-            redirect: false
-          })
-
-          if (res && res.ok && res.error === null) {
-            // Mark current auth domain as business in our Zustand store
-            useAuthStore.getState().setUserType('business')
-            const redirectURL = searchParams.get('redirectTo') ?? '/apps/bookly/dashboard'
-            router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-            return
-          }
-        } catch (nextAuthError) {
-          console.log('NextAuth fallback also failed:', nextAuthError)
-        }
-      }
-
       // Show the exact API error message to user
       setErrorState({
         message: [apiError?.message || 'Login failed. Please check your credentials.']

@@ -12,6 +12,8 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '../../ui/fo
 import { combineDateTimeToUTC } from '@/bookly/utils/timezone.util'
 import { downloadICS } from '@/bookly/utils/ics-generator.util'
 import { BookingService } from '@/lib/api'
+import { StaffService } from '@/lib/api/services/staff.service'
+import { ServicesService } from '@/lib/api/services/services.service'
 import type { Service, Staff, Addon } from '@/lib/api/types'
 
 interface BookingModalV2Props {
@@ -34,7 +36,7 @@ type Period = 'Morning' | 'Afternoon' | 'Evening'
 
 const detailsFormSchema = z.object({
   name: z.string().min(2, 'Name required'),
-  email: z.email('Invalid email'),
+  email: z.string().email('Invalid email'),
   phone: z.string().optional(),
   notes: z.string().optional()
 })
@@ -80,43 +82,42 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
   }, [isOpen])
 
   const loadMockData = async () => {
-    const mockData = await import('@/bookly/data/mock-booking-data.json')
+    try {
+      // Load services from API
+      const servicesResult = await ServicesService.getServices()
+      const services = (Array.isArray(servicesResult.data) ? servicesResult.data : []).map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        price: s.price,
+        duration: s.duration,
+        location: s.location || 'on-site',
+        business: s.business || { name: '' }
+      }))
+      setAvailableServices(services)
 
-    // Load services
-    const services = mockData.default.services.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      description: s.description,
-      price: s.price,
-      duration: s.duration,
-      location: s.location,
-      business: { name: s.location }
-    }))
-    setAvailableServices(services)
-
-    // Load staff
-    const staff = mockData.default.staff.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      branchId: s.branchId,
-      profilePhotoUrl: s.photo,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }))
-    setAvailableStaff([
-      {
-        id: 'no-preference',
-        name: 'No preference',
-        branchId: branchId || '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      },
-      ...staff
-    ])
-
-    // If initial service provided, add it
-    if (initialService) {
-      // Don't auto-add, let user select
+      // Load staff from API
+      const staffResult = await StaffService.getStaff()
+      const staff = (Array.isArray(staffResult.data) ? staffResult.data : []).map((s: any) => ({
+        id: s.id,
+        name: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim(),
+        branchId: s.branchId,
+        profilePhotoUrl: s.profilePhoto || s.photo,
+        createdAt: s.createdAt || new Date().toISOString(),
+        updatedAt: s.updatedAt || new Date().toISOString()
+      }))
+      setAvailableStaff([
+        {
+          id: 'no-preference',
+          name: 'No preference',
+          branchId: branchId || '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        ...staff
+      ])
+    } catch (err) {
+      console.warn('Failed to load booking modal data:', err)
     }
   }
 
@@ -128,23 +129,35 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
   }, [selectedDate, selectedPeriod])
 
   const loadTimeSlots = async () => {
-    const mockData = await import('@/bookly/data/mock-booking-data.json')
     const dateStr = format(selectedDate, 'yyyy-MM-dd')
-    const slots = mockData.default.timeSlots[dateStr as keyof typeof mockData.default.timeSlots] || []
 
-    // Filter by period
-    const periodSlots = slots
-      .filter((slot: any) => {
-        const hour = parseInt(slot.time.split(':')[0])
-        if (selectedPeriod === 'Morning') return hour < 12
-        if (selectedPeriod === 'Afternoon') return hour >= 12 && hour < 17
-        if (selectedPeriod === 'Evening') return hour >= 17
-        return false
-      })
-      .filter((slot: any) => slot.available)
-      .map((slot: any) => slot.time)
+    // If we have a service and branch, fetch real availability
+    const serviceId = initialService?.id || selectedServices[0]?.service.id
+    if (serviceId && branchId) {
+      try {
+        const result = await BookingService.getAvailability({ serviceId, branchId, date: dateStr })
+        const apiSlots = Array.isArray(result.data) ? result.data : []
 
-    setAvailableTimeSlots(periodSlots)
+        const periodSlots = apiSlots
+          .filter((slot: any) => {
+            const time = slot.startTime || slot.time || ''
+            const hour = parseInt(time.split(':')[0])
+            if (selectedPeriod === 'Morning') return hour < 12
+            if (selectedPeriod === 'Afternoon') return hour >= 12 && hour < 17
+            if (selectedPeriod === 'Evening') return hour >= 17
+            return false
+          })
+          .filter((slot: any) => slot.available !== false)
+          .map((slot: any) => slot.startTime || slot.time)
+
+        setAvailableTimeSlots(periodSlots)
+        return
+      } catch {
+        // Fall through to empty slots
+      }
+    }
+
+    setAvailableTimeSlots([])
   }
 
   const handleAddService = (service: Service, providerId: string, time: string) => {

@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { LucideIcon } from 'lucide-react'
-import { motion } from 'framer-motion'
 import { cn } from '@/bookly/lib/utils'
 
 interface FeatureItem {
@@ -57,19 +56,15 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({
           <div className='w-full md:w-2/3'>
             <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
               {features.map((feature, idx) => (
-                <motion.div
+                <div
                   key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: idx * 0.05 }}
-                  viewport={{ once: true }}
                   className='bg-white dark:bg-[#154036] p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md transition-shadow'
                 >
                   <h3 className='text-xl font-bold text-[#202c39] dark:text-white mb-2'>{feature.name}</h3>
                   {feature.description && (
                     <p className='text-gray-600 dark:text-gray-300 leading-relaxed'>{feature.description}</p>
                   )}
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>

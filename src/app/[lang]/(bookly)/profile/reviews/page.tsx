@@ -203,7 +203,7 @@ export default function ProfileReviewsPage() {
 
                           {review.business && (
                             <button
-                              onClick={() => router.push(`/${lang}/business/${review.business!.id}`)}
+                              onClick={() => router.push(`/${lang}/business/${review.business!.slug || review.business!.id}`)}
                               className='inline-flex h-8 items-center justify-center gap-2 rounded-lg border border-[#0a2c24]/20 dark:border-white/20 bg-white dark:bg-white/10 px-2.5 text-xs font-medium text-[#0a2c24] dark:text-[#77b6a3] transition-all hover:bg-gray-50 dark:hover:bg-white/15 active:scale-95'
                             >
                               {review.business.logo ? (

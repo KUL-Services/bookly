@@ -58,7 +58,7 @@ export const BusinessHeader = () => {
               {t('nav.login', 'Log In')}
             </Link>
             <Button
-              onClick={() => router.push(`/${currentLang}/customer/register?type=business`)}
+              onClick={() => router.push(`/${currentLang}/register`)}
               className='bg-[#77b6a3] hover:bg-[#5da891] text-white px-6 py-2 rounded-full font-bold shadow-lg transform hover:-translate-y-0.5 transition-all text-sm'
               buttonText={{ plainText: t('business.hero.cta', 'Try it free') }}
             />
@@ -93,7 +93,7 @@ export const BusinessHeader = () => {
             <Button
               onClick={() => {
                 setMobileMenuOpen(false)
-                router.push(`/${currentLang}/customer/register?type=business`)
+                router.push(`/${currentLang}/register`)
               }}
               className='w-full bg-[#77b6a3] text-white py-3 rounded-full font-bold shadow-lg'
               buttonText={{ plainText: t('business.hero.cta', 'Try it free') }}

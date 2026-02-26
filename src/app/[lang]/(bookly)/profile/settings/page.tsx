@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 import { useParams, useRouter } from 'next/navigation'
 
-import { AlertCircle, ArrowLeft, CheckCircle, Save, X } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Camera, CheckCircle, Save, X } from 'lucide-react'
 
 import { H1, P } from '@/bookly/components/atoms'
 import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
@@ -32,7 +32,8 @@ export default function ProfileSettingsPage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    mobile: ''
+    mobile: '',
+    profilePhoto: '' as string | null
   })
 
   useEffect(() => setHydrated(true), [])
@@ -60,13 +61,15 @@ export default function ProfileSettingsPage() {
           setFormData({
             firstName: details.firstName || booklyUser.name?.split(' ')[0] || '',
             lastName: details.lastName || booklyUser.name?.split(' ').slice(1).join(' ') || '',
-            mobile: details.mobile || ''
+            mobile: details.mobile || '',
+            profilePhoto: details.profilePhoto || details.profilePhotoUrl || null
           })
         } else {
           setFormData({
             firstName: booklyUser.name?.split(' ')[0] || '',
             lastName: booklyUser.name?.split(' ').slice(1).join(' ') || '',
-            mobile: ''
+            mobile: '',
+            profilePhoto: null
           })
         }
       })
@@ -74,7 +77,8 @@ export default function ProfileSettingsPage() {
         setFormData({
           firstName: booklyUser.name?.split(' ')[0] || '',
           lastName: booklyUser.name?.split(' ').slice(1).join(' ') || '',
-          mobile: ''
+          mobile: '',
+          profilePhoto: null
         })
       })
       .finally(() => setFetchingDetails(false))
@@ -127,7 +131,8 @@ export default function ProfileSettingsPage() {
       const res = await AuthService.updateUser({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
-        mobile: formData.mobile.trim()
+        mobile: formData.mobile.trim(),
+        profilePhoto: formData.profilePhoto
       })
 
       if (res.error) {
@@ -219,6 +224,45 @@ export default function ProfileSettingsPage() {
             )}
 
             <form id='profile-settings-form' onSubmit={handleSubmit} className='space-y-6 lg:space-y-6'>
+              {/* Profile Photo */}
+              {/* <div className='flex flex-col items-center gap-3'>
+                <div className='relative'>
+                  {formData.profilePhoto ? (
+                    <img
+                      src={formData.profilePhoto}
+                      alt='Profile'
+                      className='w-24 h-24 rounded-full object-cover border-2 border-[#0a2c24]/20 dark:border-white/20'
+                    />
+                  ) : (
+                    <div className='w-24 h-24 rounded-full bg-[#0a2c24]/10 dark:bg-white/10 flex items-center justify-center text-2xl font-bold text-[#0a2c24] dark:text-white'>
+                      {formData.firstName?.charAt(0)?.toUpperCase() || '?'}
+                      {formData.lastName?.charAt(0)?.toUpperCase() || ''}
+                    </div>
+                  )}
+                  <label className='absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#0a2c24] dark:bg-[#77b6a3] text-white flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity'>
+                    <Camera className='w-4 h-4' />
+                    <input
+                      type='file'
+                      accept='image/*'
+                      className='hidden'
+                      disabled={loading}
+                      onChange={e => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        const reader = new FileReader()
+                        reader.onload = ev => {
+                          handleInputChange('profilePhoto', ev.target?.result as string)
+                        }
+                        reader.readAsDataURL(file)
+                      }}
+                    />
+                  </label>
+                </div>
+                <p className='text-xs text-gray-500 dark:text-gray-400'>
+                  {t('profile.settings.changePhoto') || 'Tap to change photo'}
+                </p>
+              </div> */}
+
               <div className='rounded-2xl border border-[#0a2c24]/10 dark:border-white/10 bg-white dark:bg-[#202c39]/80 p-4 lg:p-5 space-y-4'>
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                   <div className='space-y-2'>

@@ -81,22 +81,21 @@ export async function verifyOtp(countryCode: string, phone: string, otp: string)
  * Expected response: { available: boolean, slug: string }
  */
 export async function checkSlugAvailable(slug: string): Promise<boolean> {
-  console.log('🔍 [STUB] Checking slug availability:', slug)
+  const normalized = slug.trim().toLowerCase()
+  if (!normalized) return false
 
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  // TODO: Replace with actual API call
-  // const response = await fetch(`/api/business/check-slug?slug=${encodeURIComponent(slug)}`)
-  // const data = await response.json()
-  // return data.available
-
-  // For demo: reject common/reserved slugs
-  const reserved = ['test', 'admin', 'api', 'reserved', 'bookly', 'demo']
-  const available = !reserved.includes(slug.toLowerCase())
-
-  console.log(`${available ? '✅' : '❌'} [STUB] Slug ${slug} is ${available ? 'available' : 'taken'}`)
-  return available
+  try {
+    const result = await BusinessService.getBusinessBySlug(normalized)
+    if (result.data) return false
+    const errorMessage = (result.error || '').toLowerCase()
+    if (errorMessage.includes('404') || errorMessage.includes('not found')) return true
+    return false
+  } catch (error: any) {
+    const message = String(error?.message || '').toLowerCase()
+    // 404 means slug is available. Any other unknown failures fail closed.
+    if (message.includes('404') || message.includes('not found')) return true
+    return false
+  }
 }
 
 /**

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter, useParams, useSearchParams } from 'next/navigation'
 
 import {
   Calendar,
@@ -29,9 +29,20 @@ import { format, parseISO, isPast } from 'date-fns'
 
 type TabType = 'upcoming' | 'past' | 'favourites'
 
+const resolveTabFromQuery = (value: string | null | undefined): TabType => {
+  const normalized = (value || '').toLowerCase()
+
+  if (normalized === 'past') return 'past'
+  if (normalized === 'favourites' || normalized === 'favorites' || normalized === 'favourite' || normalized === 'favorite')
+    return 'favourites'
+
+  return 'upcoming'
+}
+
 const favouriteBusinesses = [
   {
     id: '1',
+    slug: 'luxe-hair-studio',
     name: 'Luxe Hair Studio',
     category: 'Hair Salon',
     rating: 4.9,
@@ -41,6 +52,7 @@ const favouriteBusinesses = [
   },
   {
     id: '3',
+    slug: 'zen-spa-wellness',
     name: 'Zen Spa & Wellness',
     category: 'Spa & Massage',
     rating: 4.8,
@@ -50,6 +62,7 @@ const favouriteBusinesses = [
   },
   {
     id: '2',
+    slug: 'glow-beauty-lounge',
     name: 'Glow Beauty Lounge',
     category: 'Beauty Salon',
     rating: 4.7,
@@ -67,6 +80,7 @@ export default function AppointmentsPage() {
   const [cancellingId, setCancellingId] = useState<string | null>(null)
   const router = useRouter()
   const params = useParams<{ lang: string }>()
+  const searchParams = useSearchParams()
   const lang = params?.lang || 'en'
 
   // Cancel Confirmation Modal State
@@ -103,6 +117,11 @@ export default function AppointmentsPage() {
 
     fetchBookings()
   }, [])
+
+  useEffect(() => {
+    const requestedTab = searchParams.get('tab') || searchParams.get('section')
+    setActiveTab(resolveTabFromQuery(requestedTab))
+  }, [searchParams])
 
   // Split bookings into upcoming and past
   const { upcomingBookings, pastBookings } = useMemo(() => {
@@ -302,11 +321,18 @@ export default function AppointmentsPage() {
           )}
 
           <div className='grid grid-cols-2 gap-2'>
-            <button
-              onClick={() => {
-                const businessId = booking.branch?.businessId || booking.service?.businessId
-                if (businessId) {
-                  router.push(`/${lang}/business/${businessId}`)
+              <button
+                onClick={() => {
+                const businessRouteKey =
+                  (booking.branch as any)?.businessSlug ||
+                  (booking.service as any)?.businessSlug ||
+                  (booking.branch as any)?.business?.slug ||
+                  (booking.service as any)?.business?.slug ||
+                  booking.branch?.businessId ||
+                  booking.service?.businessId
+
+                if (businessRouteKey) {
+                  router.push(`/${lang}/business/${businessRouteKey}`)
                 }
               }}
               className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[#0a2c24]/20 dark:border-white/20 bg-white dark:bg-white/10 text-xs sm:text-sm font-medium text-[#0a2c24] dark:text-[#77b6a3]'
@@ -534,14 +560,14 @@ export default function AppointmentsPage() {
 
                   <div className='grid grid-cols-2 gap-2 border-t border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/5 p-3'>
                     <button
-                      onClick={() => router.push(`/${lang}/business/${business.id}`)}
+                      onClick={() => router.push(`/${lang}/business/${business.slug || business.id}`)}
                       className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[#0a2c24]/20 dark:border-white/20 bg-white dark:bg-white/10 text-xs sm:text-sm font-medium text-[#0a2c24] dark:text-[#77b6a3]'
                     >
                       <ArrowUpRight className='h-4 w-4' />
                       View Business
                     </button>
                     <button
-                      onClick={() => router.push(`/${lang}/business/${business.id}`)}
+                      onClick={() => router.push(`/${lang}/business/${business.slug || business.id}`)}
                       className='inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#0a2c24] dark:bg-[#77b6a3] text-xs sm:text-sm font-semibold text-white dark:text-[#0a2c24]'
                     >
                       <CalendarDays className='h-4 w-4' />

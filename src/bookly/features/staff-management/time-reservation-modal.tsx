@@ -266,7 +266,7 @@ export function TimeReservationModal({
     calendarRooms
   ])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!date || !startTime || !endTime || !reason.trim()) {
       setValidationError('Please fill in all required fields')
       return
@@ -283,16 +283,21 @@ export function TimeReservationModal({
     const startDateTime = new Date(`${dateKey}T${startTime}`)
     const endDateTime = new Date(`${dateKey}T${endTime}`)
 
-    createTimeReservation({
-      staffIds,
-      roomIds,
-      start: startDateTime,
-      end: endDateTime,
-      reason: reason.trim(),
-      note
-    })
+    try {
+      await createTimeReservation({
+        branchId: hasKnownBranch ? branchId : undefined,
+        staffIds,
+        roomIds,
+        start: startDateTime,
+        end: endDateTime,
+        reason: reason.trim(),
+        note
+      })
 
-    handleCancel()
+      handleCancel()
+    } catch (error: any) {
+      setValidationError(error?.message || 'Failed to save reservation')
+    }
   }
 
   const handleCancel = () => {

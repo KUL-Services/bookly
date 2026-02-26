@@ -12,6 +12,7 @@ import type {
   WeeklyStaffHours,
   TimeReservation,
   TimeOffRequest,
+  TimeOffReasonGroup,
   Resource,
   CommissionPolicy,
   ShiftRuleSet,
@@ -34,6 +35,7 @@ export interface SpecialRule {
   endDate: string // YYYY-MM-DD
   type: 'closed' | 'custom'
   shifts: { start: string; end: string }[]
+  exceptionIds?: string[]
   color?: string
 }
 
@@ -46,6 +48,83 @@ function generateColorFromName(name: string): string {
   }
   const hue = Math.abs(hash % 360)
   return `hsl(${hue}, 55%, 45%)`
+}
+
+const FE_TO_API_COMMISSION_TYPE: Record<CommissionPolicy['type'], 'PERCENTAGE' | 'FIXED'> = {
+  percent: 'PERCENTAGE',
+  fixed: 'FIXED'
+}
+
+function mapApiCommissionScopeToFe(scope?: string): CommissionPolicy['scope'] {
+  switch (scope) {
+    case 'PRODUCT':
+      return 'product'
+    case 'GLOBAL':
+      return 'service'
+    case 'SERVICE':
+    default:
+      return 'service'
+  }
+}
+
+function mapFeCommissionScopeToApi(scope: CommissionPolicy['scope']): 'SERVICE' | 'PRODUCT' | 'GLOBAL' {
+  if (scope === 'product') return 'PRODUCT'
+  if (scope === 'service') return 'SERVICE'
+  return 'GLOBAL'
+}
+
+const DAY_NAMES: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const toIsoDate = (date: Date) => date.toISOString().split('T')[0]
+
+function eachDateInRange(startDate: string, endDate: string): string[] {
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return []
+
+  const dates: string[] = []
+  for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
+    dates.push(toIsoDate(cursor))
+  }
+  return dates
+}
+
+function buildExceptionsForRule(rule: Omit<SpecialRule, 'id'> | SpecialRule) {
+  const dates = eachDateInRange(rule.startDate, rule.endDate)
+  if (!dates.length) return []
+
+  return dates.flatMap(date => {
+    if (rule.type === 'custom' && rule.shifts?.length) {
+      return rule.shifts.map(shift => ({
+        date,
+        startTime: shift.start,
+        endTime: shift.end,
+        isAvailable: true,
+        reason: rule.name
+      }))
+    }
+
+    return [
+      {
+        date,
+        isAvailable: false,
+        reason: rule.name
+      }
+    ]
+  })
+}
+
+function mapApiReasonToTimeOffGroup(reason?: string): TimeOffReasonGroup {
+  const normalized = (reason || '').trim().toLowerCase()
+  if (normalized.includes('vacation') || normalized.includes('holiday')) return 'Vacation'
+  if (normalized.includes('sick') || normalized.includes('medical')) return 'Sick'
+  if (normalized.includes('train') || normalized.includes('workshop') || normalized.includes('conference')) {
+    return 'Training'
+  }
+  if (normalized.includes('no-show') || normalized.includes('no show')) return 'No-Show'
+  if (normalized.includes('late') || normalized.includes('tardy')) return 'Late'
+  if (normalized.includes('personal') || normalized.includes('family')) return 'Personal'
+  return 'Other'
 }
 
 // Helper to sync changes with calendar
@@ -120,9 +199,9 @@ export interface StaffManagementState {
 
   // Special Rules
   specialRules: SpecialRule[]
-  addSpecialRule: (rule: Omit<SpecialRule, 'id'>) => void
-  updateSpecialRule: (id: string, updates: Partial<SpecialRule>) => void
-  deleteSpecialRule: (id: string) => void
+  addSpecialRule: (rule: Omit<SpecialRule, 'id'>) => Promise<void>
+  updateSpecialRule: (id: string, updates: Partial<SpecialRule>) => Promise<void>
+  deleteSpecialRule: (id: string) => Promise<void>
 
   // Actions - Business Hours
   updateBusinessHours: (branchId: string, day: DayOfWeek, hours: WeeklyBusinessHours[DayOfWeek]) => void
@@ -138,7 +217,7 @@ export interface StaffManagementState {
   saveStaffWorkingHours: (staffId: string) => Promise<void>
   saveShiftsExceptions: (staffId: string, date: string, shifts: StaffShiftInstance[]) => Promise<void>
   deleteShiftInstance: (staffId: string, date: string, shiftId: string) => void
-  duplicateShifts: (staffId: string, fromDate: string, toRange: { start: string; end: string }) => void
+  duplicateShifts: (staffId: string, fromDate: string, toRange: { start: string; end: string }) => Promise<void>
   addBreak: (staffId: string, shiftId: string, breakRange: { start: string; end: string }) => void
   removeBreak: (staffId: string, shiftId: string, breakId: string) => void
 
@@ -147,16 +226,16 @@ export interface StaffManagementState {
   getStaffServices: (staffId: string) => string[]
 
   // Actions - Time Reservations
-  createTimeReservation: (reservation: Omit<TimeReservation, 'id'>) => void
-  updateTimeReservation: (id: string, updates: Partial<TimeReservation>) => void
-  deleteTimeReservation: (id: string) => void
+  createTimeReservation: (reservation: Omit<TimeReservation, 'id'> & { branchId?: string }) => Promise<void>
+  updateTimeReservation: (id: string, updates: Partial<TimeReservation> & { branchId?: string }) => Promise<void>
+  deleteTimeReservation: (id: string) => Promise<void>
   getTimeReservationsForStaff: (staffId: string) => TimeReservation[]
 
   // Actions - Time Off
-  createTimeOff: (request: Omit<TimeOffRequest, 'id'>) => void
-  updateTimeOff: (id: string, updates: Partial<TimeOffRequest>) => void
-  deleteTimeOff: (id: string) => void
-  toggleApproval: (id: string) => void
+  createTimeOff: (request: Omit<TimeOffRequest, 'id'>) => Promise<void>
+  updateTimeOff: (id: string, updates: Partial<TimeOffRequest>) => Promise<void>
+  deleteTimeOff: (id: string) => Promise<void>
+  toggleApproval: (id: string) => Promise<void>
   getTimeOffForStaff: (staffId: string) => TimeOffRequest[]
 
   // Actions - Resources
@@ -187,9 +266,9 @@ export interface StaffManagementState {
   duplicateRoomShifts: (roomId: string, fromDate: string, toRange: { start: string; end: string }) => void
 
   // Actions - Commissions
-  createCommissionPolicy: (policy: Omit<CommissionPolicy, 'id'>) => void
-  updateCommissionPolicy: (id: string, updates: Partial<CommissionPolicy>) => void
-  deleteCommissionPolicy: (id: string) => void
+  createCommissionPolicy: (policy: Omit<CommissionPolicy, 'id'>) => Promise<void>
+  updateCommissionPolicy: (id: string, updates: Partial<CommissionPolicy>) => Promise<void>
+  deleteCommissionPolicy: (id: string) => Promise<void>
   getCommissionPolicies: (scope?: CommissionPolicy['scope']) => CommissionPolicy[]
 
   // Actions - Staff Type & Room Assignments
@@ -201,9 +280,9 @@ export interface StaffManagementState {
   updateStaffType: (staffId: string, staffType: StaffType) => Promise<void>
   updateRoomType: (roomId: string, roomType: 'dynamic' | 'static') => Promise<void>
   cancelRoomBookingModeTransition: (roomId: string) => Promise<void>
-  assignStaffToRoom: (staffId: string, roomAssignment: RoomAssignment) => void
-  removeStaffRoomAssignment: (staffId: string, assignmentIndex: number) => void
-  updateStaffRoomAssignment: (staffId: string, assignmentIndex: number, updates: Partial<RoomAssignment>) => void
+  assignStaffToRoom: (staffId: string, roomAssignment: RoomAssignment) => Promise<void>
+  removeStaffRoomAssignment: (staffId: string, assignmentIndex: number) => Promise<void>
+  updateStaffRoomAssignment: (staffId: string, assignmentIndex: number, updates: Partial<RoomAssignment>) => Promise<void>
   getStaffRoomAssignments: (staffId: string) => RoomAssignment[]
   isStaffBusyInRoom: (staffId: string, date: Date, time: string) => { busy: boolean; assignment?: RoomAssignment }
 
@@ -416,12 +495,14 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
 
   fetchSchedulesFromApi: async () => {
     try {
-      const [schedulesRes, assignmentsRes, exceptionsRes, breaksRes, sessionsRes] = await Promise.all([
+      const [schedulesRes, assignmentsRes, exceptionsRes, breaksRes, sessionsRes, timeOffRes, reservationsRes] = await Promise.all([
         SchedulingService.getSchedules(),
         SchedulingService.getAssignments().catch(() => ({ data: [] })),
         SchedulingService.getExceptions({ includeBusinessWide: true }).catch(() => ({ data: [] })),
         SchedulingService.getBreaks().catch(() => ({ data: [] })),
-        SessionsService.getSessions().catch(() => ({ data: [] }))
+        SessionsService.getSessions().catch(() => ({ data: [] })),
+        SchedulingService.getTimeOff().catch(() => ({ data: [] })),
+        SchedulingService.getReservations().catch(() => ({ data: [] }))
       ])
 
       if (schedulesRes.data && Array.isArray(schedulesRes.data) && schedulesRes.data.length > 0) {
@@ -581,6 +662,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       // 3. Process Schedule Exceptions
       if (exceptionsRes.data && Array.isArray(exceptionsRes.data)) {
         const overrides: Record<string, any[]> = {}
+        const holidayRules: SpecialRule[] = []
         exceptionsRes.data.forEach((ex: any) => {
           if (ex.resourceId) {
             if (!overrides[ex.resourceId]) overrides[ex.resourceId] = []
@@ -592,14 +674,56 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
               end: ex.isAvailable ? ex.endTime || '17:00' : '00:00',
               reason: ex.reason || 'manual'
             })
+          } else {
+            holidayRules.push({
+              id: ex.id,
+              name: ex.reason || 'Holiday Hours',
+              startDate: ex.date,
+              endDate: ex.date,
+              type: ex.isAvailable ? 'custom' : 'closed',
+              shifts: ex.isAvailable && ex.startTime && ex.endTime ? [{ start: ex.startTime, end: ex.endTime }] : [],
+              exceptionIds: [ex.id]
+            })
           }
         })
-        set({ shiftOverrides: overrides })
+        set({ shiftOverrides: overrides, specialRules: holidayRules })
       }
 
       // 4. Process Sessions
       if (sessionsRes.data && Array.isArray(sessionsRes.data)) {
         set({ sessions: sessionsRes.data })
+      }
+
+      // 5. Process Time Off
+      if (timeOffRes.data && Array.isArray(timeOffRes.data)) {
+        const mappedTimeOff: TimeOffRequest[] = timeOffRes.data.map((entry: any) => ({
+          id: entry.id,
+          staffId: entry.staffId || entry.staff?.id || '',
+          range: {
+            start: new Date(entry.startTime),
+            end: new Date(entry.endTime)
+          },
+          allDay: !!entry.allDay,
+          reason: mapApiReasonToTimeOffGroup(entry.reason),
+          approved: entry.approvalStatus === 'APPROVED',
+          note: entry.note || undefined
+        }))
+        set({ timeOffRequests: mappedTimeOff })
+      }
+
+      // 6. Process Time Reservations
+      if (reservationsRes.data && Array.isArray(reservationsRes.data)) {
+        const mappedReservations: TimeReservation[] = reservationsRes.data.map((entry: any) => ({
+          id: entry.id,
+          branchId: entry.branchId,
+          staffIds: entry.staffIds || [],
+          roomIds: entry.roomIds || [],
+          start: new Date(entry.startTime),
+          end: new Date(entry.endTime),
+          reason: entry.reason || 'Reserved',
+          note: entry.note || undefined
+        }))
+        set({ timeReservations: mappedReservations })
       }
 
       syncWithCalendar()
@@ -611,29 +735,115 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   fetchCommissionsFromApi: async () => {
     try {
       const result = await CommissionsService.getCommissions()
-      if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-        // Map API Commission[] { id, serviceId, resourceId, percentage } → CommissionPolicy[]
-        const mapped = result.data.map((c: any) => ({
-          id: c.id,
-          scope: 'service' as const,
-          scopeRefId: c.serviceId,
-          type: 'percent' as const,
-          value: c.percentage,
-          appliesTo: 'serviceProvider' as const,
-          staffScope: c.resourceId ? { staffIds: [c.resourceId] } : ('all' as const)
-        }))
-        set({ commissionPolicies: mapped })
-      }
+      const payload: any = result.data
+      const data = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : []
+
+      const mapped = data.map((c: any) => ({
+        id: c.id,
+        scope: mapApiCommissionScopeToFe(c.scope),
+        scopeRefId: c.scopeId || c.serviceId,
+        type: c.type === 'FIXED' ? ('fixed' as const) : ('percent' as const),
+        value: typeof c.value === 'number' ? c.value : c.percentage || 0,
+        appliesTo: 'serviceProvider' as const,
+        staffScope: c.staffId ? ({ staffIds: [c.staffId] } as const) : ('all' as const)
+      }))
+
+      set({ commissionPolicies: mapped })
     } catch (err) {
       console.warn('Failed to fetch commissions from API:', err)
     }
   },
 
-  addSpecialRule: (rule: Omit<SpecialRule, 'id'>) =>
-    set(state => ({ specialRules: [...state.specialRules, { ...rule, id: `rule-${Date.now()}` }] })),
-  updateSpecialRule: (id, updates) =>
-    set(state => ({ specialRules: state.specialRules.map(r => (r.id === id ? { ...r, ...updates } : r)) })),
-  deleteSpecialRule: id => set(state => ({ specialRules: state.specialRules.filter(r => r.id !== id) })),
+  addSpecialRule: async (rule: Omit<SpecialRule, 'id'>) => {
+    const payloads = buildExceptionsForRule(rule)
+    if (payloads.length === 0) {
+      throw new Error('Invalid holiday hours date range.')
+    }
+
+    const createdIds: string[] = []
+    try {
+      for (const payload of payloads) {
+        const result = await SchedulingService.createException(payload as any)
+        const id = (result.data as any)?.id
+        if (id) createdIds.push(id)
+      }
+
+      set(state => ({
+        specialRules: [
+          ...state.specialRules,
+          {
+            ...rule,
+            id: createdIds[0] || `rule-${Date.now()}`,
+            exceptionIds: createdIds
+          }
+        ]
+      }))
+    } catch (err) {
+      await Promise.all(createdIds.map(id => SchedulingService.deleteException(id).catch(() => undefined)))
+      throw err
+    }
+  },
+  updateSpecialRule: async (id, updates) => {
+    const previousRules = get().specialRules
+    const existingRule = previousRules.find(rule => rule.id === id)
+    if (!existingRule) return
+
+    const mergedRule = { ...existingRule, ...updates }
+    const previousExceptionIds =
+      existingRule.exceptionIds && existingRule.exceptionIds.length > 0 ? existingRule.exceptionIds : [existingRule.id]
+
+    set(state => ({
+      specialRules: state.specialRules.map(rule => (rule.id === id ? mergedRule : rule))
+    }))
+
+    try {
+      await Promise.all(previousExceptionIds.map(exceptionId => SchedulingService.deleteException(exceptionId)))
+
+      const payloads = buildExceptionsForRule(mergedRule)
+      if (payloads.length === 0) {
+        throw new Error('Invalid holiday hours date range.')
+      }
+
+      const createdIds: string[] = []
+      for (const payload of payloads) {
+        const result = await SchedulingService.createException(payload as any)
+        const newId = (result.data as any)?.id
+        if (newId) createdIds.push(newId)
+      }
+
+      set(state => ({
+        specialRules: state.specialRules.map(ruleItem =>
+          ruleItem.id === id
+            ? {
+                ...mergedRule,
+                id: createdIds[0] || id,
+                exceptionIds: createdIds
+              }
+            : ruleItem
+        )
+      }))
+    } catch (err) {
+      set({ specialRules: previousRules })
+      throw err
+    }
+  },
+  deleteSpecialRule: async id => {
+    const currentRules = get().specialRules
+    const existingRule = currentRules.find(rule => rule.id === id)
+    if (!existingRule) return
+
+    const exceptionIds =
+      existingRule.exceptionIds && existingRule.exceptionIds.length > 0 ? existingRule.exceptionIds : [existingRule.id]
+
+    set(state => ({ specialRules: state.specialRules.filter(rule => rule.id !== id) }))
+
+    try {
+      await Promise.all(exceptionIds.map(exceptionId => SchedulingService.deleteException(exceptionId)))
+    } catch (err) {
+      set({ specialRules: currentRules })
+      throw err
+    }
+  },
 
   // Business Hours Actions
   updateBusinessHours: async (branchId, day, hours) => {
@@ -991,7 +1201,7 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     })
   },
 
-  duplicateShifts: (staffId, fromDate, toRange) => {
+  duplicateShifts: async (staffId, fromDate, toRange) => {
     const sourceShift = get().getStaffShiftForDate(staffId, fromDate)
     if (!sourceShift) return
 
@@ -1014,6 +1224,11 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
         [staffId]: [...(state.shiftOverrides[staffId] || []), ...newOverrides]
       }
     }))
+
+    // Persist copied overrides to backend exceptions so they survive refresh.
+    for (const override of newOverrides) {
+      await get().saveShiftsExceptions(staffId, override.date, [override])
+    }
   },
 
   addBreak: (staffId, shiftId, breakRange) => {
@@ -1055,21 +1270,107 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   // Time Reservation Actions
-  createTimeReservation: reservation => {
+  createTimeReservation: async reservation => {
+    const staff = get().staffMembers.find(member => member.id === reservation.staffIds[0])
+    const room = get().rooms.find(item => item.id === reservation.roomIds[0])
+    const resolvedBranchId = reservation.branchId || staff?.branchId || room?.branchId
+
+    if (!resolvedBranchId) {
+      throw new Error('Unable to determine branch for reservation')
+    }
+
+    const result = await SchedulingService.createReservation({
+      branchId: resolvedBranchId,
+      startTime: reservation.start.toISOString(),
+      endTime: reservation.end.toISOString(),
+      staffIds: reservation.staffIds,
+      roomIds: reservation.roomIds,
+      reason: reservation.reason,
+      note: reservation.note,
+      rejectOverlaps: true
+    })
+
+    if (result.error) throw new Error(result.error)
+
+    const created = result.data
+    if (created) {
+      set(state => ({
+        timeReservations: [
+          ...state.timeReservations,
+          {
+            id: created.id,
+            branchId: created.branchId || resolvedBranchId,
+            staffIds: created.staffIds || reservation.staffIds,
+            roomIds: created.roomIds || reservation.roomIds,
+            start: new Date(created.startTime),
+            end: new Date(created.endTime),
+            reason: created.reason || reservation.reason,
+            note: created.note || reservation.note
+          }
+        ]
+      }))
+    } else {
+      await get().fetchSchedulesFromApi()
+    }
+
+    syncWithCalendar()
+  },
+
+  updateTimeReservation: async (id, updates) => {
+    const current = get().timeReservations.find(res => res.id === id)
+    if (!current) return
+
+    const staff = get().staffMembers.find(member => member.id === (updates.staffIds?.[0] || current.staffIds[0]))
+    const room = get().rooms.find(item => item.id === (updates.roomIds?.[0] || current.roomIds[0]))
+    const resolvedBranchId = updates.branchId || staff?.branchId || room?.branchId
+
+    if (!resolvedBranchId) {
+      throw new Error('Unable to determine branch for reservation')
+    }
+
+    const result = await SchedulingService.updateReservation(id, {
+      branchId: resolvedBranchId,
+      startTime: updates.start ? updates.start.toISOString() : undefined,
+      endTime: updates.end ? updates.end.toISOString() : undefined,
+      staffIds: updates.staffIds,
+      roomIds: updates.roomIds,
+      reason: updates.reason,
+      note: updates.note,
+      rejectOverlaps: true
+    })
+
+    if (result.error) throw new Error(result.error)
+
+    const updated = result.data
     set(state => ({
-      timeReservations: [...state.timeReservations, { ...reservation, id: `res-${Date.now()}` }]
+      timeReservations: state.timeReservations.map(res =>
+        res.id === id
+          ? {
+              ...res,
+              ...(updated?.staffIds && { staffIds: updated.staffIds }),
+              ...(updated?.roomIds && { roomIds: updated.roomIds }),
+              ...(updated?.startTime && { start: new Date(updated.startTime) }),
+              ...(updated?.endTime && { end: new Date(updated.endTime) }),
+              ...(updated?.reason !== undefined && { reason: updated.reason || res.reason }),
+              ...(updated?.note !== undefined && { note: updated.note || undefined }),
+              ...(updates.start && !updated?.startTime && { start: updates.start }),
+              ...(updates.end && !updated?.endTime && { end: updates.end }),
+              ...(updates.staffIds && !updated?.staffIds && { staffIds: updates.staffIds }),
+              ...(updates.roomIds && !updated?.roomIds && { roomIds: updates.roomIds }),
+              ...(resolvedBranchId && { branchId: updated?.branchId || resolvedBranchId }),
+              ...(updates.reason && updated?.reason === undefined && { reason: updates.reason }),
+              ...(updates.note !== undefined && updated?.note === undefined && { note: updates.note })
+            }
+          : res
+      )
     }))
     syncWithCalendar()
   },
 
-  updateTimeReservation: (id, updates) => {
-    set(state => ({
-      timeReservations: state.timeReservations.map(res => (res.id === id ? { ...res, ...updates } : res))
-    }))
-    syncWithCalendar()
-  },
+  deleteTimeReservation: async id => {
+    const result = await SchedulingService.deleteReservation(id)
+    if (result.error) throw new Error(result.error)
 
-  deleteTimeReservation: id => {
     set(state => ({
       timeReservations: state.timeReservations.filter(res => res.id !== id)
     }))
@@ -1081,62 +1382,118 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   // Time Off Actions
-  createTimeOff: request => {
-    const newRequest: TimeOffRequest = {
-      ...request,
-      id: `off-${Date.now()}`
-    }
+  createTimeOff: async request => {
+    const staff = get().staffMembers.find(member => member.id === request.staffId)
+    const branchId = staff?.branchId
+    const requestsToCreate: Array<{ start: Date; end: Date }> = [{ start: request.range.start, end: request.range.end }]
 
-    // Handle repeat logic
-    if (request.repeat) {
-      const requests: TimeOffRequest[] = [newRequest]
+    if (request.repeat?.until) {
       const start = new Date(request.range.start)
       const until = new Date(request.repeat.until)
+      const startMinutes = start.getHours() * 60 + start.getMinutes()
+      const endMinutes = request.range.end.getHours() * 60 + request.range.end.getMinutes()
 
-      for (let d = new Date(start); d <= until; d.setDate(d.getDate() + 1)) {
-        if (d.getTime() === start.getTime()) continue // Skip first day (already added)
-
-        const end = new Date(d)
-        end.setHours(request.range.end.getHours())
-        end.setMinutes(request.range.end.getMinutes())
-
-        requests.push({
-          ...request,
-          id: `off-${Date.now()}-${d.getTime()}`,
-          range: { start: new Date(d), end }
-        })
+      for (let cursor = new Date(start); cursor <= until; cursor.setDate(cursor.getDate() + 1)) {
+        if (cursor.toDateString() === start.toDateString()) continue
+        const dayStart = new Date(cursor)
+        dayStart.setHours(Math.floor(startMinutes / 60), startMinutes % 60, 0, 0)
+        const dayEnd = new Date(cursor)
+        dayEnd.setHours(Math.floor(endMinutes / 60), endMinutes % 60, 0, 0)
+        if (dayEnd <= dayStart) {
+          dayEnd.setDate(dayEnd.getDate() + 1)
+        }
+        requestsToCreate.push({ start: dayStart, end: dayEnd })
       }
-
-      set(state => ({
-        timeOffRequests: [...state.timeOffRequests, ...requests]
-      }))
-    } else {
-      set(state => ({
-        timeOffRequests: [...state.timeOffRequests, newRequest]
-      }))
     }
-    syncWithCalendar()
+
+    for (const item of requestsToCreate) {
+      const result = await SchedulingService.createTimeOff({
+        staffId: request.staffId,
+        branchId,
+        startTime: item.start.toISOString(),
+        endTime: item.end.toISOString(),
+        allDay: request.allDay,
+        reason: request.reason,
+        note: request.note,
+        approvalStatus: request.approved ? 'APPROVED' : 'PENDING',
+        rejectOverlaps: true
+      })
+      if (result.error) {
+        throw new Error(result.error)
+      }
+    }
+
+    await get().fetchSchedulesFromApi()
   },
 
-  updateTimeOff: (id, updates) => {
+  updateTimeOff: async (id, updates) => {
+    const current = get().timeOffRequests.find(req => req.id === id)
+    if (!current) return
+
+    const staffId = updates.staffId || current.staffId
+    const staff = get().staffMembers.find(member => member.id === staffId)
+    const branchId = staff?.branchId
+
+    const result = await SchedulingService.updateTimeOff(id, {
+      staffId,
+      branchId,
+      startTime: updates.range?.start ? updates.range.start.toISOString() : undefined,
+      endTime: updates.range?.end ? updates.range.end.toISOString() : undefined,
+      allDay: updates.allDay,
+      reason: updates.reason,
+      note: updates.note,
+      approvalStatus: updates.approved === undefined ? undefined : updates.approved ? 'APPROVED' : 'PENDING',
+      rejectOverlaps: true
+    })
+
+    if (result.error) throw new Error(result.error)
+
+    const updated = result.data
     set(state => ({
-      timeOffRequests: state.timeOffRequests.map(req => (req.id === id ? { ...req, ...updates } : req))
+      timeOffRequests: state.timeOffRequests.map(req =>
+        req.id !== id
+          ? req
+          : {
+              ...req,
+              ...(updated?.staffId && { staffId: updated.staffId }),
+              range: {
+                start: updated?.startTime
+                  ? new Date(updated.startTime)
+                  : updates.range?.start
+                    ? updates.range.start
+                    : req.range.start,
+                end: updated?.endTime ? new Date(updated.endTime) : updates.range?.end ? updates.range.end : req.range.end
+              },
+              allDay: updated?.allDay ?? updates.allDay ?? req.allDay,
+              reason:
+                updated?.reason !== undefined
+                  ? mapApiReasonToTimeOffGroup(updated.reason)
+                  : updates.reason ?? req.reason,
+              note: updated?.note !== undefined ? updated.note || undefined : updates.note ?? req.note,
+              approved:
+                updated?.approvalStatus !== undefined
+                  ? updated.approvalStatus === 'APPROVED'
+                  : updates.approved ?? req.approved
+            }
+      )
     }))
     syncWithCalendar()
   },
 
-  deleteTimeOff: id => {
+  deleteTimeOff: async id => {
+    const result = await SchedulingService.deleteTimeOff(id)
+    if (result.error) throw new Error(result.error)
+
     set(state => ({
       timeOffRequests: state.timeOffRequests.filter(req => req.id !== id)
     }))
     syncWithCalendar()
   },
 
-  toggleApproval: id => {
-    set(state => ({
-      timeOffRequests: state.timeOffRequests.map(req => (req.id === id ? { ...req, approved: !req.approved } : req))
-    }))
-    syncWithCalendar()
+  toggleApproval: async id => {
+    const current = get().timeOffRequests.find(req => req.id === id)
+    if (!current) return
+    await get().updateTimeOff(id, { approved: !current.approved })
   },
 
   getTimeOffForStaff: staffId => {
@@ -1450,22 +1807,91 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
   },
 
   // Commission Actions
-  createCommissionPolicy: policy => {
-    set(state => ({
-      commissionPolicies: [...state.commissionPolicies, { ...policy, id: `comm-${Date.now()}` }]
-    }))
+  createCommissionPolicy: async policy => {
+    const previous = get().commissionPolicies
+    const targetStaffIds =
+      policy.staffScope === 'all'
+        ? get()
+            .staffMembers.map((s: any) => s.id)
+            .filter(Boolean)
+        : policy.staffScope.staffIds
+
+    if (targetStaffIds.length === 0) {
+      throw new Error('Select at least one staff member for this commission policy.')
+    }
+
+    try {
+      set(state => ({
+        commissionPolicies: [...state.commissionPolicies, { ...policy, id: `comm-temp-${Date.now()}` }]
+      }))
+
+      await Promise.all(
+        targetStaffIds.map(staffId =>
+          CommissionsService.createCommission({
+            staffId,
+            type: FE_TO_API_COMMISSION_TYPE[policy.type],
+            value: policy.value,
+            scope: mapFeCommissionScopeToApi(policy.scope),
+            ...(policy.scopeRefId && { scopeId: policy.scopeRefId })
+          })
+        )
+      )
+      await get().fetchCommissionsFromApi()
+    } catch (err) {
+      set({ commissionPolicies: previous })
+      throw err
+    }
   },
 
-  updateCommissionPolicy: (id, updates) => {
-    set(state => ({
-      commissionPolicies: state.commissionPolicies.map(pol => (pol.id === id ? { ...pol, ...updates } : pol))
-    }))
+  updateCommissionPolicy: async (id, updates) => {
+    const previous = get().commissionPolicies
+    const existing = previous.find(policy => policy.id === id)
+    if (!existing) return
+
+    const merged = { ...existing, ...updates }
+    const targetStaffId =
+      merged.staffScope === 'all'
+        ? get()
+            .staffMembers.map((s: any) => s.id)
+            .find(Boolean)
+        : merged.staffScope.staffIds[0]
+
+    if (!targetStaffId) {
+      throw new Error('Select at least one staff member for this commission policy.')
+    }
+
+    try {
+      set(state => ({
+        commissionPolicies: state.commissionPolicies.map(policyItem => (policyItem.id === id ? merged : policyItem))
+      }))
+
+      await CommissionsService.updateCommission({
+        id,
+        staffId: targetStaffId,
+        type: FE_TO_API_COMMISSION_TYPE[merged.type],
+        value: merged.value,
+        scope: mapFeCommissionScopeToApi(merged.scope),
+        ...(merged.scopeRefId && { scopeId: merged.scopeRefId })
+      })
+      await get().fetchCommissionsFromApi()
+    } catch (err) {
+      set({ commissionPolicies: previous })
+      throw err
+    }
   },
 
-  deleteCommissionPolicy: id => {
+  deleteCommissionPolicy: async id => {
+    const previous = get().commissionPolicies
     set(state => ({
-      commissionPolicies: state.commissionPolicies.filter(pol => pol.id !== id)
+      commissionPolicies: state.commissionPolicies.filter(policy => policy.id !== id)
     }))
+
+    try {
+      await CommissionsService.deleteCommission(id)
+    } catch (err) {
+      set({ commissionPolicies: previous })
+      throw err
+    }
   },
 
   getCommissionPolicies: scope => {
@@ -1635,7 +2061,8 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     }
   },
 
-  assignStaffToRoom: (staffId, roomAssignment) => {
+  assignStaffToRoom: async (staffId, roomAssignment) => {
+    const previousStaff = get().staffMembers
     set(state => ({
       staffMembers: state.staffMembers.map((staff: any) => {
         if (staff.id !== staffId) return staff
@@ -1647,38 +2074,96 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
         }
       })
     }))
-    syncWithCalendar()
+
+    try {
+      const dayOfWeek = DAY_NAMES.indexOf(roomAssignment.dayOfWeek as DayOfWeek)
+      if (dayOfWeek < 0) throw new Error('Invalid day of week for room assignment.')
+      await SchedulingService.createAssignment({
+        staffId,
+        assetId: roomAssignment.roomId,
+        dayOfWeek,
+        startTime: roomAssignment.startTime,
+        endTime: roomAssignment.endTime
+      })
+      await get().fetchSchedulesFromApi()
+      syncWithCalendar()
+    } catch (err) {
+      set({ staffMembers: previousStaff })
+      throw err
+    }
   },
 
-  removeStaffRoomAssignment: (staffId, assignmentIndex) => {
+  removeStaffRoomAssignment: async (staffId, assignmentIndex) => {
+    const previousStaff = get().staffMembers
+    const staff = previousStaff.find((item: any) => item.id === staffId)
+    const assignment = staff?.roomAssignments?.[assignmentIndex] as RoomAssignment | undefined
+
     set(state => ({
-      staffMembers: state.staffMembers.map((staff: any) => {
-        if (staff.id !== staffId) return staff
-        const roomAssignments = [...(staff.roomAssignments || [])]
+      staffMembers: state.staffMembers.map((member: any) => {
+        if (member.id !== staffId) return member
+        const roomAssignments = [...(member.roomAssignments || [])]
         if (assignmentIndex >= 0 && assignmentIndex < roomAssignments.length) {
           roomAssignments.splice(assignmentIndex, 1)
         }
-        return { ...staff, roomAssignments }
+        return { ...member, roomAssignments }
       })
     }))
-    syncWithCalendar()
+
+    try {
+      if (assignment?.id) {
+        await SchedulingService.deleteAssignment(assignment.id)
+        await get().fetchSchedulesFromApi()
+      }
+      syncWithCalendar()
+    } catch (err) {
+      set({ staffMembers: previousStaff })
+      throw err
+    }
   },
 
-  updateStaffRoomAssignment: (staffId, assignmentIndex, updates) => {
+  updateStaffRoomAssignment: async (staffId, assignmentIndex, updates) => {
+    const previousStaff = get().staffMembers
+    const staff = previousStaff.find((item: any) => item.id === staffId)
+    const currentAssignment = staff?.roomAssignments?.[assignmentIndex] as RoomAssignment | undefined
+    if (!currentAssignment) return
+
+    const nextAssignment = { ...currentAssignment, ...updates }
+
     set(state => ({
-      staffMembers: state.staffMembers.map((staff: any) => {
-        if (staff.id !== staffId) return staff
-        const roomAssignments = [...(staff.roomAssignments || [])]
+      staffMembers: state.staffMembers.map((member: any) => {
+        if (member.id !== staffId) return member
+        const roomAssignments = [...(member.roomAssignments || [])]
         if (roomAssignments[assignmentIndex]) {
           roomAssignments[assignmentIndex] = {
             ...roomAssignments[assignmentIndex],
             ...updates
           }
         }
-        return { ...staff, roomAssignments }
+        return { ...member, roomAssignments }
       })
     }))
-    syncWithCalendar()
+
+    try {
+      const dayOfWeek = DAY_NAMES.indexOf(nextAssignment.dayOfWeek as DayOfWeek)
+      if (dayOfWeek < 0) throw new Error('Invalid day of week for room assignment.')
+
+      // No PATCH endpoint for assignments in API: replace by delete + create.
+      if (currentAssignment.id) {
+        await SchedulingService.deleteAssignment(currentAssignment.id)
+      }
+      await SchedulingService.createAssignment({
+        staffId,
+        assetId: nextAssignment.roomId,
+        dayOfWeek,
+        startTime: nextAssignment.startTime,
+        endTime: nextAssignment.endTime
+      })
+      await get().fetchSchedulesFromApi()
+      syncWithCalendar()
+    } catch (err) {
+      set({ staffMembers: previousStaff })
+      throw err
+    }
   },
 
   getStaffRoomAssignments: staffId => {

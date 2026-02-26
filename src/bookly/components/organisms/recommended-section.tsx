@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react'
 
 interface RecommendedBusiness {
   id: string
+  slug?: string
   name: string
   rating: number
   reviewCount: number
@@ -29,6 +30,7 @@ export function RecommendedSection() {
         if (response.data && response.data.length > 0) {
           const mapped = response.data.map(b => ({
             id: b.id,
+            slug: b.slug,
             name: b.name,
             rating: b.rating ?? 0,
             reviewCount: b.reviews?.length ?? 0,
@@ -40,6 +42,7 @@ export function RecommendedSection() {
           // Fallback to mock data if API returns empty
           const fallback = MOCK_BUSINESSES.slice(0, 4).map(b => ({
             id: b.id,
+            slug: b.slug,
             name: b.name,
             rating: b.rating ?? 0,
             reviewCount: 0,
@@ -52,6 +55,7 @@ export function RecommendedSection() {
         // Fallback to mock
         const fallback = MOCK_BUSINESSES.slice(0, 4).map(b => ({
           id: b.id,
+          slug: b.slug,
           name: b.name,
           rating: b.rating ?? 0,
           reviewCount: 0,
@@ -103,6 +107,7 @@ export function RecommendedSection() {
             <BusinessCard
               key={business.id}
               id={business.id}
+              slug={business.slug}
               name={business.name}
               rating={business.rating}
               reviewCount={business.reviewCount}

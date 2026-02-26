@@ -25,8 +25,6 @@ export class BusinessService {
     const queryParams = new URLSearchParams()
 
     if (params) {
-      console.log('🔍 BusinessService - Raw params:', params)
-
       // Handle each parameter explicitly to ensure proper validation
       if (params.page) {
         queryParams.append('page', String(params.page))
@@ -47,16 +45,13 @@ export class BusinessService {
       // Price parameters are always sent (required by API)
       if (params.priceFrom !== undefined) {
         queryParams.append('priceFrom', String(params.priceFrom))
-        console.log(`✅ Added priceFrom: ${params.priceFrom}`)
       }
       if (params.priceTo !== undefined) {
         queryParams.append('priceTo', String(params.priceTo))
-        console.log(`✅ Added priceTo: ${params.priceTo}`)
       }
     }
 
     const url = queryParams.toString() ? `/business?${queryParams.toString()}` : '/business'
-    console.log('🌐 Final URL:', url)
     return apiClient.get<Business[]>(url)
   }
 
@@ -68,6 +63,17 @@ export class BusinessService {
   // Public - Get business by slug
   static async getBusinessBySlug(slug: string) {
     return apiClient.get<Business>(`/business/by-slug/${slug}`)
+  }
+
+  // Public - Get business details by slug first, then fallback to ID
+  static async getBusinessBySlugOrId(identifier: string) {
+    const bySlug = await this.getBusinessBySlug(identifier)
+    if (bySlug.data) return bySlug
+
+    const byId = await this.getBusiness(identifier)
+    if (byId.data) return byId
+
+    return bySlug.error ? bySlug : byId
   }
 
   // Public - Get booking settings enforced by the business (for booking page pre-flight)

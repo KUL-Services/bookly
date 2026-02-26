@@ -270,7 +270,7 @@ export function BranchEditorDrawer() {
                   py: 0.75,
                   borderRadius: 2,
                   bgcolor: isActive ? 'primary.main' : isCompleted ? 'primary.lighter' : 'transparent',
-                  color: isActive ? '#fff' : isCompleted ? 'primary.main' : 'text.secondary',
+                  color: isActive ? '#ffffff' : isCompleted ? 'primary.main' : 'text.secondary',
                   transition: 'all 0.2s',
                   '&:hover': { bgcolor: isActive ? 'primary.main' : 'action.hover' }
                 }}
@@ -286,15 +286,15 @@ export function BranchEditorDrawer() {
                     fontSize: 12,
                     fontWeight: 600,
                     bgcolor: isActive ? 'rgba(255,255,255,0.2)' : isCompleted ? 'primary.main' : 'action.hover',
-                    color: isActive ? '#fff' : isCompleted ? 'primary.contrastText' : 'text.secondary'
+                    color: isActive ? '#ffffff' : isCompleted ? 'primary.contrastText' : 'text.secondary'
                   }}
                 >
                   {isCompleted ? <i className='ri-check-line' style={{ fontSize: 14 }} /> : index + 1}
                 </Box>
                 <Typography
                   variant='caption'
-                  fontWeight={isActive ? 600 : 400}
-                  sx={{ color: isActive ? '#fff' : isCompleted ? 'primary.main' : 'text.secondary' }}
+                  fontWeight={isActive ? 700 : 500}
+                  sx={{ color: isActive ? '#ffffff' : isCompleted ? 'primary.main' : 'text.secondary' }}
                 >
                   {step.label}
                 </Typography>

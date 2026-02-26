@@ -36,7 +36,7 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
 
   const sourceDateStr = sourceDate.toISOString().split('T')[0]
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!staffId || !startDate || !endDate) {
       alert('Please fill in all fields')
       return
@@ -47,12 +47,15 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
       return
     }
 
-    duplicateShifts(staffId, sourceDateStr, {
-      start: startDate,
-      end: endDate
-    })
-
-    handleCancel()
+    try {
+      await duplicateShifts(staffId, sourceDateStr, {
+        start: startDate,
+        end: endDate
+      })
+      handleCancel()
+    } catch (error: any) {
+      alert(error?.message || 'Failed to copy shifts')
+    }
   }
 
   const handleCancel = () => {

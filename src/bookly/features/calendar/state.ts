@@ -5,7 +5,7 @@ import {
   reservationToCalendarEvents,
   validateBookingTime
 } from './staff-management-integration'
-// import { useStaffManagementStore } from '../staff-management/staff-store'
+import { useStaffManagementStore } from '../staff-management/staff-store'
 import { BookingService, StaffService } from '@/lib/api'
 import { AssetsService } from '@/lib/api/services/assets.service'
 import { SchedulingService } from '@/lib/api/services/scheduling.service'
@@ -596,8 +596,6 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         oldEvent?.end.toString() !== updatedEvent.end.toString()
 
       if (staffChanged || roomChanged || timeChanged) {
-        // TODO: Re-enable when Staff Management is fully integrated
-        /*
         const staffManagementState = useStaffManagementStore.getState()
         const validation = validateBookingTime(
           updatedEvent.extendedProps.staffId || null,
@@ -612,7 +610,6 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
           set({ lastActionError: validation.error })
           return
         }
-        */
       }
     }
 
@@ -681,9 +678,14 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
     // Update status if changed
     if (oldProps.status !== props.status && props.status) {
-      BookingService.updateBookingStatus(updatedEvent.id, props.status.toUpperCase()).catch(err =>
+      BookingService.updateBookingStatus(updatedEvent.id, props.status.toUpperCase()).catch(err => {
         console.warn('API updateBookingStatus failed:', err)
-      )
+        if (!oldEvent) return
+        set(state => ({
+          events: state.events.map(event => (event.id === oldEvent.id ? oldEvent : event)),
+          lastActionError: err?.message || 'Failed to update booking status'
+        }))
+      })
     }
 
     // Reschedule if time changed
@@ -693,13 +695,23 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         startTime: new Date(
           new Date(updatedEvent.start).getTime() - new Date(updatedEvent.start).getTimezoneOffset() * 60000
         ).toISOString(),
+        staffId: props.staffId,
+        roomId: props.roomId,
         resourceId: props.staffId
-      }).catch(err => console.warn('API adminRescheduleBooking failed:', err))
+      }).catch(err => {
+        console.warn('API adminRescheduleBooking failed:', err)
+        if (!oldEvent) return
+        set(state => ({
+          events: state.events.map(event => (event.id === oldEvent.id ? oldEvent : event)),
+          lastActionError: err?.message || 'Failed to reschedule booking'
+        }))
+      })
     }
   },
 
   deleteEvent: eventId => {
     const { events, starredIds, selectedEvent } = get()
+    const deletedEvent = events.find(event => event.id === eventId) || null
     const newEvents = events.filter(event => event.id !== eventId)
     const newStarredIds = new Set(starredIds)
     newStarredIds.delete(eventId)
@@ -715,6 +727,11 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     // Fire API delete in background (optimistic)
     BookingService.deleteBooking(eventId).catch(err => {
       console.warn('API deleteBooking failed, local state already updated:', err)
+      if (!deletedEvent) return
+      set(state => ({
+        events: [...state.events, deletedEvent],
+        lastActionError: err?.message || 'Failed to delete booking'
+      }))
     })
   },
 

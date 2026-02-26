@@ -25,6 +25,19 @@ const SERVICE_COLORS = [
   '#607d8b'
 ]
 
+const toInterval = (totalMinutes?: number | null) => {
+  const minutesValue = Math.max(0, Number(totalMinutes || 0))
+  return {
+    hours: Math.floor(minutesValue / 60),
+    minutes: minutesValue % 60
+  }
+}
+
+const toTotalMinutes = (value?: { hours?: number; minutes?: number }) => {
+  if (!value) return 0
+  return Math.max(0, (Number(value.hours) || 0) * 60 + (Number(value.minutes) || 0))
+}
+
 // ============================================================================
 // Helpers: Map API types → Frontend types
 // ============================================================================
@@ -72,17 +85,21 @@ function mapApiService(api: ApiService, index: number): ExtendedService {
     color: SERVICE_COLORS[index % SERVICE_COLORS.length],
     businessId: api.businessId,
     // Frontend-only defaults
-    bookingInterval: { hours: 0, minutes: 15 },
-    paddingTime: { rule: 'none', minutes: 0 },
+    bookingInterval: toInterval((apiAsAny.bookingInterval as number | null | undefined) ?? 15),
+    paddingTime: {
+      rule: apiAsAny.paddingTime && Number(apiAsAny.paddingTime) > 0 ? 'after' : 'none',
+      minutes: Number(apiAsAny.paddingTime || 0)
+    },
     processingTime: {
       during: { hours: 0, minutes: 0 },
-      after: { hours: 0, minutes: 0 }
+      after: toInterval(apiAsAny.processingTime as number | null | undefined)
     },
     taxRate: (api.taxRate as ExtendedService['taxRate']) || 'tax_free',
     customTaxRate: api.customTaxRate || undefined,
     depositPercentage: api.depositPercentage || undefined,
     variants: api.variants,
-    parallelClients: api.maxConcurrent || 1,
+    parallelClients: (apiAsAny.parallelClients as number | undefined) || api.maxConcurrent || 1,
+    clientSettings: (apiAsAny.clientSettings as ExtendedService['clientSettings']) || { message: '', questions: [] },
     createdAt: api.createdAt,
     updatedAt: api.updatedAt
   }
@@ -357,12 +374,20 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   createService: async (service: Omit<ExtendedService, 'id'>) => {
     try {
       const isCustomTax = service.taxRate === 'custom'
+      const bookingIntervalMinutes = toTotalMinutes(service.bookingInterval)
+      const processingTimeMinutes = toTotalMinutes(service.processingTime?.during) + toTotalMinutes(service.processingTime?.after)
+      const paddingTimeMinutes = service.paddingTime?.rule === 'none' ? 0 : Number(service.paddingTime?.minutes || 0)
       await ServicesService.createService({
         name: service.name,
         description: service.description,
         location: 'on-site',
         price: service.price,
         duration: service.duration,
+        bookingInterval: bookingIntervalMinutes || undefined,
+        paddingTime: paddingTimeMinutes || undefined,
+        processingTime: processingTimeMinutes || undefined,
+        parallelClients: service.parallelClients,
+        clientSettings: service.clientSettings,
         categoryIds: service.categoryId ? [service.categoryId] : undefined,
         ...(service.taxRate && service.taxRate !== 'tax_free' && { taxRate: service.taxRate }),
         ...(isCustomTax && service.customTaxRate !== undefined && { customTaxRate: service.customTaxRate }),
@@ -380,12 +405,28 @@ export const useServicesStore = create<ServicesState>((set, get) => ({
   updateService: async (id: string, updates: Partial<ExtendedService>) => {
     try {
       const isCustomTax = updates.taxRate === 'custom'
+      const bookingIntervalMinutes = updates.bookingInterval ? toTotalMinutes(updates.bookingInterval) : undefined
+      const processingTimeMinutes =
+        updates.processingTime !== undefined
+          ? toTotalMinutes(updates.processingTime?.during) + toTotalMinutes(updates.processingTime?.after)
+          : undefined
+      const paddingTimeMinutes =
+        updates.paddingTime !== undefined
+          ? updates.paddingTime.rule === 'none'
+            ? 0
+            : Number(updates.paddingTime.minutes || 0)
+          : undefined
       await ServicesService.updateService({
         id,
         name: updates.name,
         description: updates.description,
         price: updates.price,
         duration: updates.duration,
+        ...(bookingIntervalMinutes !== undefined && { bookingInterval: bookingIntervalMinutes }),
+        ...(paddingTimeMinutes !== undefined && { paddingTime: paddingTimeMinutes }),
+        ...(processingTimeMinutes !== undefined && { processingTime: processingTimeMinutes }),
+        ...(updates.parallelClients !== undefined && { parallelClients: updates.parallelClients }),
+        ...(updates.clientSettings !== undefined && { clientSettings: updates.clientSettings }),
         categoryIds: updates.categoryId ? [updates.categoryId] : undefined,
         ...(updates.taxRate && updates.taxRate !== 'tax_free' && { taxRate: updates.taxRate }),
         ...(isCustomTax && updates.customTaxRate !== undefined && { customTaxRate: updates.customTaxRate }),

@@ -6,8 +6,17 @@ import type {
   CreateBreakRequest,
   ScheduleException,
   CreateExceptionRequest,
+  UpdateExceptionRequest,
   ResourceAssignment,
   CreateAssignmentRequest,
+  TimeOffEntry,
+  CreateTimeOffRequest,
+  UpdateTimeOffRequest,
+  GetTimeOffParams,
+  TimeReservationEntry,
+  CreateTimeReservationRequest,
+  UpdateTimeReservationRequest,
+  GetTimeReservationParams,
 } from '../types'
 
 export class SchedulingService {
@@ -68,6 +77,10 @@ export class SchedulingService {
     return apiClient.post<ScheduleException>('/admin/scheduling/exceptions', data)
   }
 
+  static async updateException(id: string, data: UpdateExceptionRequest) {
+    return apiClient.patch<ScheduleException>(`/admin/scheduling/exceptions/${id}`, data)
+  }
+
   static async deleteException(id: string) {
     return apiClient.delete<{ message: string }>(`/admin/scheduling/exceptions/${id}`)
   }
@@ -89,5 +102,56 @@ export class SchedulingService {
 
   static async deleteAssignment(id: string) {
     return apiClient.delete<{ message: string }>(`/admin/scheduling/assignments/${id}`)
+  }
+
+  // --- Time Off ---
+
+  static async getTimeOff(params?: GetTimeOffParams) {
+    const queryParams = new URLSearchParams()
+    if (params?.staffId) queryParams.append('staffId', params.staffId)
+    if (params?.branchId) queryParams.append('branchId', params.branchId)
+    if (params?.fromDate) queryParams.append('fromDate', params.fromDate)
+    if (params?.toDate) queryParams.append('toDate', params.toDate)
+    const url = queryParams.toString()
+      ? `/admin/scheduling/time-off?${queryParams.toString()}`
+      : '/admin/scheduling/time-off'
+    return apiClient.get<TimeOffEntry[]>(url)
+  }
+
+  static async createTimeOff(data: CreateTimeOffRequest) {
+    return apiClient.post<TimeOffEntry>('/admin/scheduling/time-off', data)
+  }
+
+  static async updateTimeOff(id: string, data: UpdateTimeOffRequest) {
+    return apiClient.patch<TimeOffEntry>(`/admin/scheduling/time-off/${id}`, data)
+  }
+
+  static async deleteTimeOff(id: string) {
+    return apiClient.delete<TimeOffEntry>(`/admin/scheduling/time-off/${id}`)
+  }
+
+  // --- Reservations ---
+
+  static async getReservations(params?: GetTimeReservationParams) {
+    const queryParams = new URLSearchParams()
+    if (params?.branchId) queryParams.append('branchId', params.branchId)
+    if (params?.fromDate) queryParams.append('fromDate', params.fromDate)
+    if (params?.toDate) queryParams.append('toDate', params.toDate)
+    const url = queryParams.toString()
+      ? `/admin/scheduling/reservations?${queryParams.toString()}`
+      : '/admin/scheduling/reservations'
+    return apiClient.get<TimeReservationEntry[]>(url)
+  }
+
+  static async createReservation(data: CreateTimeReservationRequest) {
+    return apiClient.post<TimeReservationEntry>('/admin/scheduling/reservations', data)
+  }
+
+  static async updateReservation(id: string, data: UpdateTimeReservationRequest) {
+    return apiClient.patch<TimeReservationEntry>(`/admin/scheduling/reservations/${id}`, data)
+  }
+
+  static async deleteReservation(id: string) {
+    return apiClient.delete<TimeReservationEntry>(`/admin/scheduling/reservations/${id}`)
   }
 }

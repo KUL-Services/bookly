@@ -58,26 +58,29 @@ export function CommissionEditorModal({ open, onClose, policy, scope, selectedSt
     }
   }, [policy, scope, selectedStaffId, open])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!scope) return
 
-    const policyData = {
+    const policyData: Omit<CommissionPolicy, 'id'> = {
       scope,
       type,
       value,
       appliesTo,
-      staffScope: staffScope === 'all' ? 'all' : { staffIds: staffScope as string[] }
+      staffScope: staffScope === 'all' ? ('all' as const) : { staffIds: staffScope as string[] }
     }
 
-    if (policy) {
-      // Update existing
-      updateCommissionPolicy(policy.id, policyData)
-    } else {
-      // Create new
-      createCommissionPolicy(policyData as Omit<CommissionPolicy, 'id'>)
+    try {
+      if (policy) {
+        // Update existing
+        await updateCommissionPolicy(policy.id, policyData)
+      } else {
+        // Create new
+        await createCommissionPolicy(policyData as Omit<CommissionPolicy, 'id'>)
+      }
+      onClose()
+    } catch (error: any) {
+      alert(error?.message || 'Failed to save commission policy')
     }
-
-    onClose()
   }
 
   const handleCancel = () => {

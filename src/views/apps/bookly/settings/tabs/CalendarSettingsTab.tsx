@@ -16,6 +16,7 @@ import MenuItem from '@mui/material/MenuItem'
 import ToggleButton from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import Divider from '@mui/material/Divider'
+import Button from '@mui/material/Button'
 
 // Components
 import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
@@ -24,10 +25,18 @@ import { TimeSelectField } from '@/bookly/features/staff-management/time-select-
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
 
 const CalendarSettingsTab = () => {
-  const { calendarSettings, updateCalendarSettings } = useBusinessSettingsStore()
+  const { calendarSettings, updateCalendarSettings, saveCalendarSettings, isSaving } = useBusinessSettingsStore()
 
   return (
     <Grid container spacing={6}>
+      <Grid item xs={12}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant='contained' onClick={saveCalendarSettings} disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Calendar Settings'}
+          </Button>
+        </Box>
+      </Grid>
+
       {/* View Preferences */}
       <Grid item xs={12} md={6}>
         <Card>

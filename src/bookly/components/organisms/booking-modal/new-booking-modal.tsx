@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from '../../ui/radio-group'
 import { combineDateTimeToUTC, formatCairoDate, formatCairoTime } from '@/bookly/utils/timezone.util'
 import { downloadICS } from '@/bookly/utils/ics-generator.util'
 import { BookingService } from '@/lib/api'
+import { StaffService } from '@/lib/api/services/staff.service'
 import type { Service, Staff, Addon } from '@/lib/api/types'
 
 interface BookingModalProps {
@@ -36,7 +37,7 @@ const STEPS = {
 // Form schemas
 const detailsFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
-  email: z.email({ message: 'Please enter a valid email address.' }),
+  email: z.string().email('Please enter a valid email address.'),
   phone: z.string().optional(),
   notes: z.string().optional(),
   couponCode: z.string().optional(),
@@ -93,7 +94,8 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
     selectedAddons.forEach((quantity, addonId) => {
       const addon = availableAddons.find(a => a.id === addonId)
       if (addon) {
-        total += addon.priceCents * quantity
+        const addonPriceCents = addon.priceCents ?? Math.round((addon.price || 0) * 100)
+        total += addonPriceCents * quantity
       }
     })
 
@@ -108,17 +110,17 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
   // Fetch available staff when service changes
   useEffect(() => {
     if (service && branchId) {
-      // Fetch staff from mock data
-      import('@/bookly/data/mock-booking-data.json').then(mockData => {
-        const staff = mockData.default.staff
+      StaffService.getStaff().then(result => {
+        const allStaff = Array.isArray(result.data) ? result.data : []
+        const staff = allStaff
           .filter((s: any) => s.branchId === branchId || s.businessId === service.business?.id)
           .map((s: any) => ({
             id: s.id,
-            name: s.name,
+            name: s.name || `${s.firstName || ''} ${s.lastName || ''}`.trim(),
             branchId: s.branchId,
-            profilePhotoUrl: s.photo,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            profilePhotoUrl: s.profilePhoto || s.photo,
+            createdAt: s.createdAt || new Date().toISOString(),
+            updatedAt: s.updatedAt || new Date().toISOString()
           }))
 
         // Add "No preference" option
@@ -134,6 +136,15 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
         ]
 
         setAvailableStaff(staffWithNoPreference)
+      }).catch(() => {
+        // Fallback: just show "No preference" if API fails
+        setAvailableStaff([{
+          id: 'no-preference',
+          name: 'No preference',
+          branchId: branchId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }])
       })
     }
   }, [service, branchId])
@@ -153,21 +164,24 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
   }, [service])
 
   const fetchAvailability = async () => {
-    if (!selectedProvider || !selectedDate || !service) return
+    if (!selectedProvider || !selectedDate || !service || !branchId) return
 
     setLoading(true)
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
       const result = await BookingService.getAvailability({
-        providerId: selectedProvider.id,
         serviceId: service.id,
-        date: dateStr
+        branchId,
+        date: dateStr,
+        resourceId: selectedProvider.id === 'no-preference' ? undefined : selectedProvider.id
       })
 
       if (result.data) {
         // Group time slots by period
-        const slots: TimeSlot[] = result.data.slots.map(slot => {
-          const hour = parseInt(slot.time.split(':')[0])
+        const slots: TimeSlot[] = result.data.map(slot => {
+          const slotDate = new Date(slot.startTime)
+          const time = slotDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
+          const hour = parseInt(time.split(':')[0])
           let period: 'Morning' | 'Afternoon' | 'Evening'
 
           if (hour < 12) period = 'Morning'
@@ -175,7 +189,8 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
           else period = 'Evening'
 
           return {
-            ...slot,
+            time,
+            available: true,
             period
           }
         })
@@ -246,7 +261,7 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
   }
 
   const handleConfirmBooking = async () => {
-    if (!service || !selectedProvider || !selectedDate || !selectedTime) return
+    if (!service || !selectedProvider || !selectedDate || !selectedTime || !branchId) return
 
     setLoading(true)
     setError(null)
@@ -261,32 +276,22 @@ function NewBookingModal({ isOpen, onClose, service, branchId }: BookingModalPro
       // Create booking
       const bookingData = {
         serviceId: service.id,
-        providerId: selectedProvider.id,
-        startsAtUtc,
-        customer: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone
-        },
-        addons: Array.from(selectedAddons.entries()).map(([id, quantity]) => ({
-          id,
-          quantity
-        })),
-        notes: formData.notes,
-        couponCode: formData.couponCode
+        branchId,
+        resourceId: selectedProvider.id === 'no-preference' ? undefined : selectedProvider.id,
+        startTime: startsAtUtc,
+        notes: formData.notes ? String(formData.notes) : undefined,
+        customerName: String(formData.name),
+        customerEmail: String(formData.email),
+        customerPhone: String(formData.phone || ''),
+        addons:
+          selectedAddons.size > 0
+            ? Array.from(selectedAddons.entries()).map(([addonId, quantity]) => ({ addonId, quantity }))
+            : undefined
       }
 
-      const result = await BookingService.createBooking(bookingData)
+      const result = await BookingService.createGuestBooking(bookingData)
 
       if (result.data) {
-        // If mock card payment selected, process payment
-        if (formData.paymentMethod === 'card_on_arrival') {
-          await BookingService.mockPayment({
-            bookingId: result.data.id,
-            amount: calculateTotal()
-          })
-        }
-
         setBookingReference(result.data.id)
         setStep(STEPS.SUCCESS)
       } else if (result.error) {
