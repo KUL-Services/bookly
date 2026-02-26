@@ -18,6 +18,48 @@ class ApiClient {
     }
   }
 
+  private getLangFromPath(pathname: string): string {
+    const langMatch = pathname.match(/^\/([a-z]{2})(?:\/|$)/)
+    return langMatch ? langMatch[1] : 'en'
+  }
+
+  private getPathWithoutLang(pathname: string): string {
+    return pathname.replace(/^\/[a-z]{2}(?=\/|$)/, '') || '/'
+  }
+
+  private resolveUnauthorizedRedirect(pathname: string, userType?: string | null): string {
+    const lang = this.getLangFromPath(pathname)
+    const cleanPath = this.getPathWithoutLang(pathname)
+
+    const dashboardPrefixes = ['/apps', '/dashboards', '/pages', '/forms', '/charts', '/react-table', '/super-admin']
+    const customerPrefixes = [
+      '/landpage',
+      '/search',
+      '/profile',
+      '/appointments',
+      '/business',
+      '/service',
+      '/category',
+      '/customer'
+    ]
+
+    if (dashboardPrefixes.some(prefix => cleanPath === prefix || cleanPath.startsWith(`${prefix}/`))) {
+      return `/${lang}/login`
+    }
+
+    if (customerPrefixes.some(prefix => cleanPath === prefix || cleanPath.startsWith(`${prefix}/`))) {
+      return `/${lang}/customer/login`
+    }
+
+    return userType === 'business' ? `/${lang}/login` : `/${lang}/customer/login`
+  }
+
+  private shouldSkipAuthRedirect(endpoint: string): boolean {
+    return /\/(?:admin\/|superadmin\/)?auth\/(?:login|register|verify|forget-password|forgot-password|reset-password|resend-code)/.test(
+      endpoint
+    )
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -49,32 +91,24 @@ class ApiClient {
           console.warn('Could not parse error response as JSON:', parseError)
         }
 
-        // Check if this is an auth error that should trigger logout
-        if (response.status === 401) {
+        // Handle unauthorized globally (except auth endpoints)
+        if (response.status === 401 && !this.shouldSkipAuthRedirect(endpoint)) {
           console.warn('🔒 401 Unauthorized - Token may be invalid or expired')
 
           // Import auth store dynamically to avoid circular dependencies
           const { useAuthStore } = await import('@/stores/auth.store')
           const store = useAuthStore.getState()
 
-          // Check which user type is logged in and logout accordingly
-          if (store.booklyUser && store.userType === 'customer') {
-              store.logoutCustomer()
+          if (store.booklyUser || store.userType === 'customer') {
+            store.logoutCustomer()
+          } else if (store.materializeUser || store.userType === 'business') {
+            store.logoutBusiness()
+          }
 
-            // Redirect to customer login
-            if (typeof window !== 'undefined') {
-              // Get current language from URL
-              const path = window.location.pathname
-              const langMatch = path.match(/^\/([a-z]{2})\//)
-              const lang = langMatch ? langMatch[1] : 'en'
-              window.location.href = `/${lang}/customer/login`
-            }
-          } else if (store.materializeUser && store.userType === 'business') {
-              store.logoutBusiness()
-
-            // Redirect to business login
-            if (typeof window !== 'undefined') {
-              window.location.href = '/admin/login'
+          if (typeof window !== 'undefined') {
+            const redirectPath = this.resolveUnauthorizedRedirect(window.location.pathname, store.userType)
+            if (window.location.pathname !== redirectPath) {
+              window.location.href = redirectPath
             }
           }
         }
