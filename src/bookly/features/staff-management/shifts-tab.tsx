@@ -1104,7 +1104,12 @@ export function ShiftsTab() {
                 right: 0,
                 bottom: 0,
                 zIndex: 1,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                borderRadius: 1,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: 'rgba(158, 158, 158, 0.15)'
+                }
               }}
             />
           )}
@@ -1234,34 +1239,64 @@ export function ShiftsTab() {
               onClick={e => {
                 e.stopPropagation()
                 setSelectedSession(session)
+                setSessionResourceFilter(staff.id)
                 setIsSessionEditorOpen(true)
               }}
               sx={{
                 position: 'absolute',
-                top: 8,
-                bottom: 8,
+                top: 4,
+                bottom: 4,
                 left: `${timeToPosition(session.startTime, dayOfWeek)}%`,
                 width: `${calculateWidth(session.startTime, session.endTime, dayOfWeek)}%`,
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
+                bgcolor: 'rgba(10, 44, 36, 0.3)',
                 borderRadius: 1,
+                border: '1px solid',
+                borderColor: 'success.light',
                 display: 'flex',
+                flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'space-between',
+                px: 1.5,
+                py: 0.5,
                 cursor: 'pointer',
                 zIndex: 3,
-                boxShadow: 2,
-                '&:hover': { bgcolor: 'primary.dark' }
+                transition: 'all 0.2s',
+                overflow: 'hidden',
+                '&:hover': {
+                  bgcolor: 'rgba(139, 195, 74, 0.4)',
+                  borderColor: 'success.main',
+                  boxShadow: 1
+                }
               }}
             >
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', px: 0.5, width: '100%' }}>
-                <Typography variant='caption' fontWeight={600} noWrap>
+              <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 60 }}>
+                <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
+                  {formatTime12Hour(session.startTime).toLowerCase()}
+                </Typography>
+                <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
+                  {formatTime12Hour(session.endTime).toLowerCase()}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, mx: 1, minWidth: 0 }}>
+                <Typography variant='caption' fontWeight={600} noWrap sx={{ fontSize: '0.7rem' }}>
                   {session.name}
                 </Typography>
-                <Typography variant='caption' sx={{ fontSize: '0.6rem', opacity: 0.9 }}>
+                <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.6rem' }}>
                   Cap: {session.maxParticipants}
                 </Typography>
               </Box>
+              <IconButton
+                size='small'
+                sx={{ p: 0.25, opacity: 0.6, '&:hover': { opacity: 1 } }}
+                onClick={e => {
+                  e.stopPropagation()
+                  setSelectedSession(session)
+                  setSessionResourceFilter(staff.id)
+                  setIsSessionEditorOpen(true)
+                }}
+              >
+                <i className='ri-edit-line' style={{ fontSize: 14 }} />
+              </IconButton>
             </Box>
           ))}
 
@@ -3170,6 +3205,7 @@ export function ShiftsTab() {
                                     onClick={e => {
                                       e.stopPropagation()
                                       setSelectedSession(session)
+                                      setSessionResourceFilter(staff.id)
                                       setIsSessionEditorOpen(true)
                                     }}
                                     sx={{
@@ -3179,19 +3215,22 @@ export function ShiftsTab() {
                                       left: `${4 + sIdx * 52}%`,
                                       right: staffSessions.length === 1 ? 4 : undefined,
                                       width: staffSessions.length > 1 ? '48%' : undefined,
-                                      bgcolor: 'primary.main',
-                                      color: 'primary.contrastText',
+                                      bgcolor: 'rgba(10, 44, 36, 0.3)',
                                       borderRadius: 1,
+                                      border: '1px solid',
+                                      borderColor: 'success.light',
                                       display: 'flex',
                                       flexDirection: 'column',
                                       alignItems: 'center',
                                       justifyContent: 'center',
                                       cursor: 'pointer',
                                       zIndex: 2,
-                                      boxShadow: 2,
                                       overflow: 'hidden',
+                                      transition: 'all 0.2s',
                                       '&:hover': {
-                                        bgcolor: 'primary.dark'
+                                        bgcolor: 'rgba(139, 195, 74, 0.4)',
+                                        borderColor: 'success.main',
+                                        boxShadow: 1
                                       }
                                     }}
                                   >
@@ -3199,9 +3238,9 @@ export function ShiftsTab() {
                                       {session.name}
                                     </Typography>
                                     <Typography variant='caption' sx={{ fontSize: '0.55rem' }} noWrap>
-                                      {session.startTime} - {session.endTime}
+                                      {formatTime12Hour(session.startTime).toLowerCase()} - {formatTime12Hour(session.endTime).toLowerCase()}
                                     </Typography>
-                                    <Typography variant='caption' sx={{ fontSize: '0.5rem', opacity: 0.9 }} noWrap>
+                                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.5rem' }} noWrap>
                                       Cap: {session.maxParticipants}
                                     </Typography>
                                   </Box>
