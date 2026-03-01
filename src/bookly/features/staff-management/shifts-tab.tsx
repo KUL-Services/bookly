@@ -1092,7 +1092,11 @@ export function ShiftsTab() {
           {/* Timeline background / Add slot for static */}
           {staffTypeForDate === 'static' && (
             <Box
-              onClick={() => openShiftEditor({ id: staff.id, name: staff.name, type: 'staff' }, selectedDate, null)}
+              onClick={() => {
+                setSessionResourceFilter(staff.id)
+                setSelectedSession(null)
+                setIsSessionEditorOpen(true)
+              }}
               sx={{
                 position: 'absolute',
                 top: 0,
@@ -1118,14 +1122,20 @@ export function ShiftsTab() {
               return (
                 <Box
                   key={shift.id}
-                  onClick={() =>
-                    openShiftEditor({ id: staff.id, name: staff.name, type: 'staff' }, selectedDate, {
-                      id: shift.id,
-                      start: shift.start,
-                      end: shift.end,
-                      date: format(selectedDate, 'yyyy-MM-dd')
-                    })
-                  }
+                  onClick={() => {
+                    if (staffTypeForDate === 'dynamic') {
+                      openShiftEditor({ id: staff.id, name: staff.name, type: 'staff' }, selectedDate, {
+                        id: shift.id,
+                        start: shift.start,
+                        end: shift.end,
+                        date: format(selectedDate, 'yyyy-MM-dd')
+                      })
+                    } else {
+                      setSessionResourceFilter(staff.id)
+                      setSelectedSession(null) // New session
+                      setIsSessionEditorOpen(true)
+                    }
+                  }}
                   sx={{
                     position: 'absolute',
                     left: `${timeToPosition(formatTime12Hour(shift.start), dayOfWeek)}%`,
@@ -1255,7 +1265,7 @@ export function ShiftsTab() {
             </Box>
           ))}
 
-          {!hasShift && !timeOff && (
+          {!hasShift && !timeOff && staffTypeForDate !== 'static' && (
             <Box
               onClick={() => openShiftEditor({ id: staff.id, name: staff.name, type: 'staff' }, selectedDate, null)}
               sx={{
@@ -1275,6 +1285,30 @@ export function ShiftsTab() {
             >
               <Typography variant='caption' color='text.secondary'>
                 No Shift
+              </Typography>
+            </Box>
+          )}
+
+          {/* Visible placeholder for static staff with no sessions */}
+          {staffTypeForDate === 'static' && staffSessions.length === 0 && !timeOff && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px dashed',
+                borderColor: 'grey.300',
+                borderRadius: 1,
+                pointerEvents: 'none'
+              }}
+            >
+              <Typography variant='caption' color='text.secondary' sx={{ opacity: 0.6 }}>
+                Click to add session
               </Typography>
             </Box>
           )}
@@ -1537,9 +1571,7 @@ export function ShiftsTab() {
                                   border: '1px solid',
                                   borderColor: roomType === 'static' ? '#81C784' : '#64B5F6',
                                   bgcolor:
-                                    roomType === 'static'
-                                      ? 'rgba(129, 199, 132, 0.22)'
-                                      : 'rgba(100, 181, 246, 0.2)',
+                                    roomType === 'static' ? 'rgba(129, 199, 132, 0.22)' : 'rgba(100, 181, 246, 0.2)',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
@@ -2049,6 +2081,44 @@ export function ShiftsTab() {
               </Button>
             </DialogActions>
           </Dialog>
+
+          {/* Session Editor Drawer for STATIC resources (Day View) */}
+          <SessionEditorDrawer
+            open={isSessionEditorOpen}
+            onClose={closeSessionEditor}
+            session={selectedSession}
+            onSave={handleSessionSave}
+            selectedResourceId={sessionResourceFilter}
+            resources={[
+              ...staffMembers
+                .filter(s => getStaffTypeForDate(s.id, selectedDate) === 'static')
+                .map(s => ({
+                  id: s.id,
+                  name: s.name,
+                  branchId: s.branchId || (apiBranches.length > 0 ? apiBranches[0].id : '1-1'),
+                  type: 'staff',
+                  bookingMode: 'STATIC' as const,
+                  capacity: 1,
+                  serviceIds: s.serviceIds || []
+                })),
+              ...rooms
+                .filter(r => r.roomType === 'static')
+                .map(r => ({
+                  id: r.id,
+                  name: r.name,
+                  branchId: r.branchId || (apiBranches.length > 0 ? apiBranches[0].id : '1-1'),
+                  type: 'room',
+                  bookingMode: 'STATIC' as const,
+                  capacity: r.capacity || 1,
+                  serviceIds: r.serviceIds || []
+                }))
+            ]}
+            services={apiServices.map(s => ({
+              id: s.id,
+              name: s.name,
+              duration: s.duration || 60
+            }))}
+          />
         </Box>
       </DndContext>
     )
@@ -2697,35 +2767,53 @@ export function ShiftsTab() {
                                     return (
                                       <Box
                                         key={shift.id}
-                                        onClick={() =>
-                                          openShiftEditor({ id: staff.id, name: staff.name, type: 'staff' }, date, {
-                                            id: shift.id,
-                                            start: shift.start,
-                                            end: shift.end,
-                                            date: format(date, 'yyyy-MM-dd')
-                                          })
-                                        }
+                                        onClick={() => {
+                                          if (getStaffTypeForDate(staff.id, date) === 'dynamic') {
+                                            openShiftEditor({ id: staff.id, name: staff.name, type: 'staff' }, date, {
+                                              id: shift.id,
+                                              start: shift.start,
+                                              end: shift.end,
+                                              date: format(date, 'yyyy-MM-dd')
+                                            })
+                                          } else {
+                                            setSessionResourceFilter(staff.id)
+                                            setSelectedSession(null) // New session
+                                            setIsSessionEditorOpen(true)
+                                          }
+                                        }}
                                         sx={{
                                           position: 'relative',
                                           width: '100%',
                                           height: shifts.length > 1 ? `calc(${100 / shifts.length}% - 4px)` : '100%',
                                           mb: shifts.length > 1 && idx < shifts.length - 1 ? 0.5 : 0,
-                                          bgcolor: 'rgba(10, 44, 36, 0.3)',
+                                          bgcolor:
+                                            getStaffTypeForDate(staff.id, date) === 'dynamic'
+                                              ? 'rgba(10, 44, 36, 0.3)'
+                                              : 'rgba(158, 158, 158, 0.2)',
                                           borderRadius: 1,
                                           display: 'flex',
                                           flexDirection: 'column',
                                           alignItems: 'center',
                                           justifyContent: 'center',
                                           border: 1,
-                                          borderColor: 'success.light',
+                                          borderColor:
+                                            getStaffTypeForDate(staff.id, date) === 'dynamic'
+                                              ? 'success.light'
+                                              : 'grey.400',
                                           px: 0.5,
                                           py: shifts.length > 1 ? 0.25 : 0.5,
                                           cursor: 'pointer',
                                           transition: 'all 0.2s',
                                           overflow: 'hidden',
                                           '&:hover': {
-                                            bgcolor: 'rgba(139, 195, 74, 0.4)',
-                                            borderColor: 'success.main'
+                                            bgcolor:
+                                              getStaffTypeForDate(staff.id, date) === 'dynamic'
+                                                ? 'rgba(139, 195, 74, 0.4)'
+                                                : 'rgba(158, 158, 158, 0.3)',
+                                            borderColor:
+                                              getStaffTypeForDate(staff.id, date) === 'dynamic'
+                                                ? 'success.main'
+                                                : 'grey.500'
                                           }
                                         }}
                                       >
@@ -2847,34 +2935,36 @@ export function ShiftsTab() {
                                             </Box>
                                           )}
                                         </Box>
-                                        <IconButton
-                                          size='small'
-                                          sx={{
-                                            position: 'absolute',
-                                            top: 1,
-                                            right: 1,
-                                            color: 'text.primary',
-                                            padding: '2px',
-                                            '& i': {
-                                              fontSize: 12
-                                            }
-                                          }}
-                                          onClick={e => {
-                                            e.stopPropagation()
-                                            openShiftEditor({ id: staff.id, name: staff.name, type: 'staff' }, date, {
-                                              id: shift.id,
-                                              start: shift.start,
-                                              end: shift.end,
-                                              date: format(date, 'yyyy-MM-dd')
-                                            })
-                                          }}
-                                        >
-                                          <i className='ri-edit-line' />
-                                        </IconButton>
+                                        {getStaffTypeForDate(staff.id, date) === 'dynamic' && (
+                                          <IconButton
+                                            size='small'
+                                            sx={{
+                                              position: 'absolute',
+                                              top: 1,
+                                              right: 1,
+                                              color: 'text.primary',
+                                              padding: '2px',
+                                              '& i': {
+                                                fontSize: 12
+                                              }
+                                            }}
+                                            onClick={e => {
+                                              e.stopPropagation()
+                                              openShiftEditor({ id: staff.id, name: staff.name, type: 'staff' }, date, {
+                                                id: shift.id,
+                                                start: shift.start,
+                                                end: shift.end,
+                                                date: format(date, 'yyyy-MM-dd')
+                                              })
+                                            }}
+                                          >
+                                            <i className='ri-edit-line' />
+                                          </IconButton>
+                                        )}
                                       </Box>
                                     )
                                   })}
-                                {!hasShift && !timeOff && (
+                                {!hasShift && !timeOff && getStaffTypeForDate(staff.id, date) !== 'static' && (
                                   <Box
                                     onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, null)}
                                     sx={{
@@ -3074,7 +3164,7 @@ export function ShiftsTab() {
                                   })}
 
                                 {/* Render Sessions as absolute tiles */}
-                                {staffSessions.map(session => (
+                                {staffSessions.map((session, sIdx) => (
                                   <Box
                                     key={session.id}
                                     onClick={e => {
@@ -3084,10 +3174,11 @@ export function ShiftsTab() {
                                     }}
                                     sx={{
                                       position: 'absolute',
-                                      top: 8,
-                                      bottom: 8,
-                                      left: '5%', // Simple fallback for now
-                                      width: '120px',
+                                      top: 4,
+                                      bottom: 4,
+                                      left: `${4 + sIdx * 52}%`,
+                                      right: staffSessions.length === 1 ? 4 : undefined,
+                                      width: staffSessions.length > 1 ? '48%' : undefined,
                                       bgcolor: 'primary.main',
                                       color: 'primary.contrastText',
                                       borderRadius: 1,
@@ -3098,18 +3189,19 @@ export function ShiftsTab() {
                                       cursor: 'pointer',
                                       zIndex: 2,
                                       boxShadow: 2,
+                                      overflow: 'hidden',
                                       '&:hover': {
                                         bgcolor: 'primary.dark'
                                       }
                                     }}
                                   >
-                                    <Typography variant='caption' fontWeight={600} noWrap>
+                                    <Typography variant='caption' fontWeight={600} noWrap sx={{ fontSize: '0.6rem', px: 0.5 }}>
                                       {session.name}
                                     </Typography>
-                                    <Typography variant='caption' sx={{ fontSize: '0.6rem' }}>
+                                    <Typography variant='caption' sx={{ fontSize: '0.55rem' }} noWrap>
                                       {session.startTime} - {session.endTime}
                                     </Typography>
-                                    <Typography variant='caption' sx={{ fontSize: '0.58rem', opacity: 0.9 }}>
+                                    <Typography variant='caption' sx={{ fontSize: '0.5rem', opacity: 0.9 }} noWrap>
                                       Cap: {session.maxParticipants}
                                     </Typography>
                                   </Box>
@@ -3117,7 +3209,15 @@ export function ShiftsTab() {
 
                                 {/* Click to add session area (covering whole background) */}
                                 <Box
-                                  onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, null)}
+                                  onClick={() => {
+                                    if (getStaffTypeForDate(staff.id, date) === 'dynamic') {
+                                      openShiftEditor({ id: staff.id, name: staff.name }, date, null)
+                                    } else {
+                                      setSessionResourceFilter(staff.id)
+                                      setSelectedSession(null)
+                                      setIsSessionEditorOpen(true)
+                                    }
+                                  }}
                                   sx={{
                                     position: 'absolute',
                                     top: 0,
@@ -3129,9 +3229,17 @@ export function ShiftsTab() {
                                   }}
                                 />
 
-                                {!hasShift && !timeOff && (
+                                {!hasShift && !timeOff && getStaffTypeForDate(staff.id, date) !== 'static' && (
                                   <Box
-                                    onClick={() => openShiftEditor({ id: staff.id, name: staff.name }, date, null)}
+                                    onClick={() => {
+                                      if (getStaffTypeForDate(staff.id, date) === 'dynamic') {
+                                        openShiftEditor({ id: staff.id, name: staff.name }, date, null)
+                                      } else {
+                                        setSessionResourceFilter(staff.id)
+                                        setSelectedSession(null)
+                                        setIsSessionEditorOpen(true)
+                                      }
+                                    }}
                                     sx={{
                                       width: '100%',
                                       height: '100%',
@@ -3158,11 +3266,38 @@ export function ShiftsTab() {
                                       sx={{ position: 'absolute', top: 2, right: 2, color: 'text.secondary' }}
                                       onClick={e => {
                                         e.stopPropagation()
-                                        openShiftEditor({ id: staff.id, name: staff.name }, date, null)
+                                        if (getStaffTypeForDate(staff.id, date) === 'dynamic') {
+                                          openShiftEditor({ id: staff.id, name: staff.name }, date, null)
+                                        } else {
+                                          setSessionResourceFilter(staff.id)
+                                          setSelectedSession(null)
+                                          setIsSessionEditorOpen(true)
+                                        }
                                       }}
                                     >
                                       <i className='ri-edit-line' style={{ fontSize: 14 }} />
                                     </IconButton>
+                                  </Box>
+                                )}
+
+                                {/* Visible placeholder for static staff with no sessions */}
+                                {getStaffTypeForDate(staff.id, date) === 'static' && staffSessions.length === 0 && !timeOff && (
+                                  <Box
+                                    sx={{
+                                      width: '100%',
+                                      height: '100%',
+                                      borderRadius: 1,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      border: '1px dashed',
+                                      borderColor: 'grey.300',
+                                      pointerEvents: 'none'
+                                    }}
+                                  >
+                                    <Typography variant='caption' color='text.secondary' sx={{ opacity: 0.6, fontSize: '0.6rem' }}>
+                                      No sessions
+                                    </Typography>
                                   </Box>
                                 )}
                                 {timeOff && (

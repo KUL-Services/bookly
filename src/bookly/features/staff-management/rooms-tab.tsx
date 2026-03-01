@@ -29,8 +29,10 @@ import { useStaffManagementStore } from './staff-store'
 import { CalendarPopover } from './calendar-popover'
 import { RoomEditorDrawer } from './room-editor-drawer'
 import { RoomScheduleEditor } from './room-schedule-editor'
+import { SessionEditorDrawer } from './session-editor-drawer'
 import { StaffTypeChangeDialog } from './staff-type-change-dialog'
 import type { DayOfWeek } from '../calendar/types'
+import type { Session, CreateSessionRequest } from '@/lib/api/types'
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -71,6 +73,11 @@ export function RoomsTab() {
   const calendarOpen = Boolean(calendarAnchor)
   const roomMenuOpen = Boolean(roomMenuAnchor)
 
+  // Session Editor state
+  const [isSessionEditorOpen, setIsSessionEditorOpen] = useState(false)
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
+  const [sessionResourceFilter, setSessionResourceFilter] = useState<string | null>(null)
+
   const {
     rooms,
     apiBranches,
@@ -84,7 +91,8 @@ export function RoomsTab() {
     fetchResourcesFromApi,
     fetchServicesFromApi,
     fetchBranchesFromApi,
-    fetchSchedulesFromApi
+    fetchSchedulesFromApi,
+    sessions
   } = useStaffManagementStore()
 
   // Fetch data on mount
@@ -401,6 +409,7 @@ export function RoomsTab() {
   }
 
   const weekStart = startOfWeek(selectedDate)
+  const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
 
   const getDateDisplay = () => {
     if (viewMode === 'Week') {
@@ -425,8 +434,7 @@ export function RoomsTab() {
       <FormControl size='small' sx={{ minWidth: 120 }}>
         <Select value={viewMode} onChange={e => setViewMode(e.target.value)}>
           <MenuItem value='Day'>Day</MenuItem>
-          {/* Week view temporarily disabled as focus is on Day timeline */}
-          {/* <MenuItem value='Week'>Week</MenuItem> */}
+          <MenuItem value='Week'>Week</MenuItem>
         </Select>
       </FormControl>
 
@@ -551,6 +559,19 @@ export function RoomsTab() {
     // For flexible rooms, get business hours instead of room schedule
     const businessHours = isFlexible ? getBusinessHours(room.branchId, dayOfWeek) : null
 
+    const dayOfWeekMap: Record<DayOfWeek, number> = {
+      Sun: 0,
+      Mon: 1,
+      Tue: 2,
+      Wed: 3,
+      Thu: 4,
+      Fri: 5,
+      Sat: 6
+    }
+
+    // Filter sessions for this room and date
+    const roomSessions = sessions.filter(s => s.resourceId === room.id && s.dayOfWeek === dayOfWeekMap[dayOfWeek])
+
     // Helper function to convert 24h time to 12h format
     const formatTime12Hour = (time24: string) => {
       const [hourStr, minStr] = time24.split(':')
@@ -565,11 +586,11 @@ export function RoomsTab() {
     }
 
     // Calculate dynamic height based on number of shifts (or 80 for flexible rooms)
-    const rowHeight = isFlexible ? 80 : schedule.shifts.length > 0 ? Math.max(80, schedule.shifts.length * 50) : 80
+    const rowHeight = isFlexible ? 80 : schedule.shifts.length > 1 ? Math.max(80, schedule.shifts.length * 50) : 80
 
     return (
       <Box key={room.id} sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: rowHeight }}>
-        <Box sx={{ width: 250, display: 'flex', flexDirection: 'column', gap: 0.5, p: 2, flexShrink: 0 }}>
+        <Box sx={{ width: 200, display: 'flex', flexDirection: 'column', gap: 0.5, p: 2, flexShrink: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant='body2' fontWeight={600} noWrap sx={{ flex: 1 }}>
               {room.name}
@@ -592,7 +613,11 @@ export function RoomsTab() {
                   if (!room.pendingBookingMode || !room.bookingModeEffectiveDate) return false
                   const effectiveDate = new Date(room.bookingModeEffectiveDate)
                   const viewDate = new Date(selectedDate)
-                  return !Number.isNaN(effectiveDate.getTime()) && !Number.isNaN(viewDate.getTime()) && viewDate >= effectiveDate
+                  return (
+                    !Number.isNaN(effectiveDate.getTime()) &&
+                    !Number.isNaN(viewDate.getTime()) &&
+                    viewDate >= effectiveDate
+                  )
                 })()
 
                 return (
@@ -694,14 +719,16 @@ export function RoomsTab() {
                 const effectiveDate = new Date((room as any).bookingModeEffectiveDate)
                 const viewDate = new Date(selectedDate)
                 const isPendingEffective =
-                  !Number.isNaN(effectiveDate.getTime()) && !Number.isNaN(viewDate.getTime()) && viewDate >= effectiveDate
+                  !Number.isNaN(effectiveDate.getTime()) &&
+                  !Number.isNaN(viewDate.getTime()) &&
+                  viewDate >= effectiveDate
 
                 // Don't show the chip if viewing a date where change has taken effect
                 if (isPendingEffective) return null
 
                 return (
                   <Chip
-                    label={`→ ${(room as any).pendingBookingMode === 'STATIC' ? 'Fixed' : 'Flex'} on ${(room as any).bookingModeEffectiveDate ? format(new Date((room as any).bookingModeEffectiveDate), "MMM d, h:mm a") : '...'}`}
+                    label={`→ ${(room as any).pendingBookingMode === 'STATIC' ? 'Fixed' : 'Flex'} on ${(room as any).bookingModeEffectiveDate ? format(new Date((room as any).bookingModeEffectiveDate), 'MMM d, h:mm a') : '...'}`}
                     size='small'
                     color='warning'
                     variant='filled'
@@ -771,122 +798,159 @@ export function RoomsTab() {
                 </Typography>
               </Box>
             )
-          ) : schedule.isAvailable && schedule.shifts.length > 0 ? (
-            schedule.shifts.map((shift, idx) => {
-              const shiftStart = formatTime12Hour(shift.start)
-              const shiftEnd = formatTime12Hour(shift.end)
-              const shiftServices = apiServices.filter(s => shift.serviceIds?.includes(s.id))
+          ) : (
+            <>
+              {/* Static Room: Invisible click area to add sessions */}
+              <Box
+                onClick={() => {
+                  setSessionResourceFilter(room.id)
+                  setSelectedSession(null)
+                  setIsSessionEditorOpen(true)
+                }}
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 1,
+                  cursor: 'pointer'
+                }}
+              />
 
-              return (
+              {/* Static Room: Show shift blocks as grey background (like shifts-tab static staff) */}
+              {schedule.isAvailable &&
+                schedule.shifts.length > 0 &&
+                schedule.shifts.map((shift, idx) => {
+                  const shiftStart = formatTime12Hour(shift.start)
+                  const shiftEnd = formatTime12Hour(shift.end)
+
+                  return (
+                    <Box
+                      key={idx}
+                      onClick={() => {
+                        setSessionResourceFilter(room.id)
+                        setSelectedSession(null)
+                        setIsSessionEditorOpen(true)
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        left: `${timeToPosition(shiftStart, dayOfWeek)}%`,
+                        width: `${calculateWidth(shiftStart, shiftEnd, dayOfWeek)}%`,
+                        top: schedule.shifts.length > 1 ? `${idx * (100 / schedule.shifts.length)}%` : 0,
+                        height: schedule.shifts.length > 1 ? `${Math.floor(90 / schedule.shifts.length)}%` : '100%',
+                        bgcolor: 'rgba(158, 158, 158, 0.2)',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'grey.400',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        px: 1.5,
+                        py: 0.5,
+                        zIndex: 2,
+                        transition: 'all 0.2s',
+                        overflow: 'hidden',
+                        '&:hover': {
+                          bgcolor: 'rgba(158, 158, 158, 0.3)',
+                          borderColor: 'grey.500',
+                          boxShadow: 1
+                        }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 60 }}>
+                        <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
+                          {shiftStart.toLowerCase()}
+                        </Typography>
+                        <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
+                          {shiftEnd.toLowerCase()}
+                        </Typography>
+                      </Box>
+                      <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.6rem' }}>
+                        Cap: {shift.capacity ?? room.capacity}
+                      </Typography>
+                    </Box>
+                  )
+                })}
+
+              {/* Static Room: No shift placeholder */}
+              {(!schedule.isAvailable || schedule.shifts.length === 0) && roomSessions.length === 0 && (
                 <Box
-                  key={idx}
-                  onClick={() => handleEditShift(room, shift, dayOfWeek)}
                   sx={{
                     position: 'absolute',
-                    left: `${timeToPosition(shiftStart, dayOfWeek)}%`,
-                    width: `${calculateWidth(shiftStart, shiftEnd, dayOfWeek)}%`,
-                    top: idx * 48 + 2,
-                    height: 42,
-                    bgcolor: theme => (theme.palette.mode === 'dark' ? '#424242' : '#E8F5E9'),
-                    borderRadius: 1,
-                    border: 1,
-                    borderColor: theme => (theme.palette.mode === 'dark' ? '#616161' : '#81C784'),
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     display: 'flex',
-                    flexDirection: 'column',
-                    p: 0.5,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    overflow: 'hidden',
-                    '&:hover': {
-                      bgcolor: theme => (theme.palette.mode === 'dark' ? '#616161' : '#C8E6C9'),
-                      transform: 'translateY(-2px)',
-                      boxShadow: 2,
-                      zIndex: 10
-                    }
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px dashed',
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    zIndex: 0
                   }}
                 >
-                  <Typography
-                    variant='caption'
-                    fontWeight={500}
-                    color='text.primary'
-                    sx={{ fontSize: '0.65rem', lineHeight: 1.2 }}
-                  >
-                    {shiftStart.toLowerCase()} - {shiftEnd.toLowerCase()}
+                  <Typography variant='caption' color='text.secondary'>
+                    Click to add session
                   </Typography>
-                  <Typography
-                    variant='caption'
-                    color='text.secondary'
-                    sx={{ fontSize: '0.6rem', lineHeight: 1.1, display: 'block' }}
-                  >
-                    Cap: {shift.capacity ?? room.capacity}
-                  </Typography>
-                  {shiftServices.length > 0 && (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
-                      {shiftServices.slice(0, 2).map(service => (
-                        <Chip
-                          key={service.id}
-                          label={service.name}
-                          size='small'
-                          sx={{
-                            height: 16,
-                            fontSize: '0.6rem',
-                            bgcolor: service.color ? `${service.color}20` : 'rgba(0,0,0,0.08)',
-                            color: service.color || 'text.primary',
-                            border: service.color ? `1px solid ${service.color}40` : 'none',
-                            fontWeight: 500,
-                            '& .MuiChip-label': {
-                              px: 0.5
-                            }
-                          }}
-                        />
-                      ))}
-                      {shiftServices.length > 2 && (
-                        <Chip
-                          label={`+${shiftServices.length - 2}`}
-                          size='small'
-                          sx={{
-                            height: 16,
-                            fontSize: '0.6rem',
-                            bgcolor: 'rgba(0,0,0,0.08)',
-                            '& .MuiChip-label': {
-                              px: 0.5
-                            }
-                          }}
-                        />
-                      )}
-                    </Box>
-                  )}
                 </Box>
-              )
-            })
-          ) : (
-            <Box
-              onClick={() => handleEditShift(room, null, dayOfWeek)}
-              sx={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                top: 0,
-                bottom: 0,
-                bgcolor: 'transparent',
-                borderRadius: 1,
-                border: '2px dashed',
-                borderColor: 'divider',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  bgcolor: 'rgba(0, 0, 0, 0.02)',
-                  borderColor: 'primary.main'
-                }
-              }}
-            >
-              <Typography variant='body2' color='text.secondary' fontWeight={500}>
-                {isFlexible ? 'Click to add business hours' : 'Click to add session'}
-              </Typography>
-            </Box>
+              )}
+
+              {/* Static Room: Render Sessions */}
+              {roomSessions.map(session => {
+                const sessionStart12h = formatTime12Hour(session.startTime)
+                const sessionEnd12h = formatTime12Hour(session.endTime)
+
+                return (
+                  <Box
+                    key={session.id}
+                    onClick={e => {
+                      e.stopPropagation()
+                      setSessionResourceFilter(room.id)
+                      setSelectedSession(session)
+                      setIsSessionEditorOpen(true)
+                    }}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      bottom: 8,
+                      left: `${timeToPosition(sessionStart12h, dayOfWeek)}%`,
+                      width: `${calculateWidth(sessionStart12h, sessionEnd12h, dayOfWeek)}%`,
+                      bgcolor: 'primary.main',
+                      color: 'primary.contrastText',
+                      borderRadius: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      zIndex: 3,
+                      boxShadow: 2,
+                      '&:hover': { bgcolor: 'primary.dark' }
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        px: 0.5,
+                        width: '100%'
+                      }}
+                    >
+                      <Typography variant='caption' fontWeight={600} noWrap>
+                        {session.name}
+                      </Typography>
+                      <Typography variant='caption' sx={{ fontSize: '0.6rem', opacity: 0.9 }}>
+                        Cap: {session.maxParticipants}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )
+              })}
+            </>
           )}
         </Box>
       </Box>
@@ -897,165 +961,734 @@ export function RoomsTab() {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
       {renderHeader()}
 
-      <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.paper' }}>
-        <Box
-          sx={{
-            display: 'flex',
-            borderBottom: 1,
-            borderColor: 'divider',
-            position: 'sticky',
-            top: 0,
-            bgcolor: 'background.paper',
-            zIndex: 2
-          }}
-        >
-          <Box sx={{ width: 250, p: 2, flexShrink: 0, borderRight: 1, borderColor: 'divider' }}>
-            <Typography variant='body2' fontWeight={600}>
-              Rooms
-            </Typography>
-          </Box>
-          <Box sx={{ flex: 1, display: 'flex' }}>
-            {generateTimelineHours(
-              ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as DayOfWeek
-            ).map((hour, idx) => (
-              <Box
-                key={idx}
-                sx={{
-                  flex: 1,
-                  textAlign: 'center',
-                  py: 1,
-                  borderRight: 1,
-                  borderColor: 'divider'
-                }}
-              >
-                <Typography variant='caption' color='text.secondary'>
-                  {hour}
+      {viewMode === 'Day' ? (
+        <>
+          <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.paper' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                borderBottom: 1,
+                borderColor: 'divider',
+                position: 'sticky',
+                top: 0,
+                bgcolor: 'background.paper',
+                zIndex: 2
+              }}
+            >
+              <Box sx={{ width: 200, p: 2 }}>
+                <Typography variant='body2' fontWeight={600}>
+                  Rooms
                 </Typography>
               </Box>
-            ))}
-          </Box>
-        </Box>
-
-        {/* Rooms grouped by branches */}
-        {Object.entries(roomsByBranch).map(([branchId, branchRooms]) => {
-          const branch = apiBranches.find(b => b.id === branchId)
-          const fixedRooms = branchRooms.filter(room => getEffectiveRoomType(room) === 'static')
-          const flexRooms = branchRooms.filter(room => getEffectiveRoomType(room) !== 'static')
-
-          return (
-            <Box key={branchId}>
-              {/* Branch Header */}
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.5,
-                  bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10,44,36,0.28)' : 'rgba(10,44,36,0.1)'),
-                  borderBottom: 2,
-                  borderColor: 'rgba(10,44,36,0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1
-                }}
-              >
-                <i className='ri-building-line' style={{ fontSize: 16 }} />
-                <Typography variant='subtitle2' fontWeight={600}>
-                  {branch?.name || branchId}
-                </Typography>
-                <Typography variant='caption' color='text.secondary'>
-                  ({branchRooms.length} room{branchRooms.length === 1 ? '' : 's'})
-                </Typography>
+              <Box sx={{ flex: 1, display: 'flex', px: 2 }}>
+                {generateTimelineHours(
+                  ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][selectedDate.getDay()] as DayOfWeek
+                ).map((hour, idx) => (
+                  <Box key={idx} sx={{ flex: 1, textAlign: 'center', py: 1 }}>
+                    <Typography variant='caption' color='text.secondary'>
+                      {hour}
+                    </Typography>
+                  </Box>
+                ))}
               </Box>
-
-              {fixedRooms.length > 0 && (
-                <>
-                  <Box
-                    sx={{
-                      px: 2,
-                      py: 0.75,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(119,182,163,0.14)' : 'rgba(119,182,163,0.12)'),
-                      borderBottom: '1px solid',
-                      borderColor: 'divider'
-                    }}
-                  >
-                    <i className='ri-calendar-schedule-line' style={{ fontSize: 14, color: '#0a2c24' }} />
-                    <Typography variant='caption' fontWeight={700} sx={{ letterSpacing: 0.4 }}>
-                      FIXED ROOMS
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary'>
-                      ({fixedRooms.length})
-                    </Typography>
-                  </Box>
-                  {fixedRooms.map(renderRoomRow)}
-                </>
-              )}
-
-              {flexRooms.length > 0 && (
-                <>
-                  <Box
-                    sx={{
-                      px: 2,
-                      py: 0.75,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.18)' : 'rgba(0,0,0,0.04)'),
-                      borderBottom: '1px solid',
-                      borderColor: 'divider'
-                    }}
-                  >
-                    <i className='ri-time-line' style={{ fontSize: 14, color: 'rgba(0,0,0,0.7)' }} />
-                    <Typography variant='caption' fontWeight={700} sx={{ letterSpacing: 0.4 }}>
-                      FLEX ROOMS
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary'>
-                      ({flexRooms.length})
-                    </Typography>
-                  </Box>
-                  {flexRooms.map(renderRoomRow)}
-                </>
-              )}
             </Box>
-          )
-        })}
 
-        {displayRooms.length === 0 && (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <i className='ri-hotel-bed-line' style={{ fontSize: 64, opacity: 0.3 }} />
-            <Typography variant='h6' sx={{ mt: 2 }}>
-              No rooms found
-            </Typography>
-            <Typography variant='body2' color='text.secondary'>
-              {selectedBranch === 'all' ? 'No rooms have been created yet' : 'No rooms in this branch'}
-            </Typography>
+            {/* Rooms grouped by branches */}
+            {Object.entries(roomsByBranch).map(([branchId, branchRooms]) => {
+              const branch = apiBranches.find(b => b.id === branchId)
+              const fixedRooms = branchRooms.filter(room => getEffectiveRoomType(room) === 'static')
+              const flexRooms = branchRooms.filter(room => getEffectiveRoomType(room) !== 'static')
+
+              return (
+                <Box key={branchId}>
+                  {/* Branch Header */}
+                  <Box
+                    sx={{
+                      px: 2,
+                      py: 1.5,
+                      bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(10,44,36,0.28)' : 'rgba(10,44,36,0.1)'),
+                      borderBottom: 2,
+                      borderColor: 'rgba(10,44,36,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}
+                  >
+                    <i className='ri-building-line' style={{ fontSize: 16 }} />
+                    <Typography variant='subtitle2' fontWeight={600}>
+                      {branch?.name || branchId}
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      ({branchRooms.length} room{branchRooms.length === 1 ? '' : 's'})
+                    </Typography>
+                  </Box>
+
+                  {fixedRooms.length > 0 && (
+                    <>
+                      <Box
+                        sx={{
+                          px: 2,
+                          py: 0.75,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          bgcolor: theme =>
+                            theme.palette.mode === 'dark' ? 'rgba(119,182,163,0.14)' : 'rgba(119,182,163,0.12)',
+                          borderBottom: '1px solid',
+                          borderColor: 'divider'
+                        }}
+                      >
+                        <i className='ri-calendar-schedule-line' style={{ fontSize: 14, color: '#0a2c24' }} />
+                        <Typography variant='caption' fontWeight={700} sx={{ letterSpacing: 0.4 }}>
+                          FIXED ROOMS
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          ({fixedRooms.length})
+                        </Typography>
+                      </Box>
+                      {fixedRooms.map(renderRoomRow)}
+                    </>
+                  )}
+
+                  {flexRooms.length > 0 && (
+                    <>
+                      <Box
+                        sx={{
+                          px: 2,
+                          py: 0.75,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          bgcolor: theme => (theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.18)' : 'rgba(0,0,0,0.04)'),
+                          borderBottom: '1px solid',
+                          borderColor: 'divider'
+                        }}
+                      >
+                        <i className='ri-time-line' style={{ fontSize: 14, color: 'rgba(0,0,0,0.7)' }} />
+                        <Typography variant='caption' fontWeight={700} sx={{ letterSpacing: 0.4 }}>
+                          FLEX ROOMS
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          ({flexRooms.length})
+                        </Typography>
+                      </Box>
+                      {flexRooms.map(renderRoomRow)}
+                    </>
+                  )}
+                </Box>
+              )
+            })}
+
+            {displayRooms.length === 0 && (
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <i className='ri-hotel-bed-line' style={{ fontSize: 64, opacity: 0.3 }} />
+                <Typography variant='h6' sx={{ mt: 2 }}>
+                  No rooms found
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  {selectedBranch === 'all' ? 'No rooms have been created yet' : 'No rooms in this branch'}
+                </Typography>
+              </Box>
+            )}
           </Box>
-        )}
-      </Box>
 
-      {/* Day View Footer */}
-      <Box
-        sx={{
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 2,
-          borderTop: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper'
-        }}
-      >
-        <Button
-          variant='outlined'
-          size='small'
-          onClick={() => setSelectedDate(new Date())}
-          sx={{ borderRadius: 2, textTransform: 'uppercase', px: 3 }}
-        >
-          Today
-        </Button>
-      </Box>
+          {/* Day View Footer */}
+          <Box
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 2,
+              borderTop: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper'
+            }}
+          >
+            <Button
+              variant='outlined'
+              size='small'
+              onClick={() => setSelectedDate(new Date())}
+              sx={{ borderRadius: 2, textTransform: 'uppercase', px: 3 }}
+            >
+              Today
+            </Button>
+          </Box>
+        </>
+      ) : (
+        <>
+          {/* ====== WEEK VIEW ====== */}
+          <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.paper' }}>
+            <Box sx={{ display: 'flex', minWidth: 'max-content' }}>
+              {/* Left sidebar: Room names */}
+              <Box sx={{ width: 200, flexShrink: 0, borderRight: 1, borderColor: 'divider' }}>
+                {/* Empty header cell */}
+                <Box sx={{ height: 60, borderBottom: 1, borderColor: 'divider' }} />
+
+                {/* Room names grouped by branches */}
+                {Object.entries(roomsByBranch).map(([branchId, branchRooms]) => {
+                  const branch = apiBranches.find(b => b.id === branchId)
+                  const fixedRooms = branchRooms.filter(room => getEffectiveRoomType(room) === 'static')
+                  const flexRooms = branchRooms.filter(room => getEffectiveRoomType(room) !== 'static')
+                  const showBranchHeader = selectedBranch === 'all'
+
+                  return (
+                    <Box key={branchId}>
+                      {showBranchHeader && (
+                        <Box
+                          sx={{
+                            height: 56,
+                            px: 2,
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                            bgcolor: 'action.selected',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1
+                          }}
+                        >
+                          <i className='ri-building-line' style={{ fontSize: 14 }} />
+                          <Typography variant='caption' fontWeight={600} noWrap>
+                            {branch?.name || branchId}
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {/* Flex Section */}
+                      {flexRooms.length > 0 && (
+                        <>
+                          <Box
+                            sx={{
+                              height: 27,
+                              px: 2,
+                              borderBottom: 1,
+                              borderTop: showBranchHeader ? 0 : 1,
+                              borderColor: 'divider',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5
+                            }}
+                          >
+                            <i
+                              className='ri-time-line'
+                              style={{ fontSize: 12, color: 'var(--mui-palette-text-secondary)' }}
+                            />
+                            <Typography variant='caption' fontWeight={600} fontSize='0.65rem' color='text.secondary'>
+                              Flex
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                              fontSize='0.6rem'
+                              sx={{ opacity: 0.7 }}
+                            >
+                              {flexRooms.length}
+                            </Typography>
+                          </Box>
+                          {flexRooms.map(room => (
+                            <Box
+                              key={room.id}
+                              sx={{
+                                height: 80,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                px: 2,
+                                borderBottom: 1,
+                                borderColor: 'divider'
+                              }}
+                            >
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant='body2' fontWeight={600} noWrap>
+                                  {room.name}
+                                </Typography>
+                              </Box>
+                              <IconButton size='small' onClick={e => handleOpenRoomMenu(e, room)}>
+                                <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Box>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Fixed Section */}
+                      {fixedRooms.length > 0 && (
+                        <>
+                          <Box
+                            sx={{
+                              height: 27,
+                              px: 2,
+                              borderBottom: 1,
+                              borderTop: 1,
+                              borderColor: 'divider',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5
+                            }}
+                          >
+                            <i
+                              className='ri-calendar-schedule-line'
+                              style={{ fontSize: 12, color: 'var(--mui-palette-text-secondary)' }}
+                            />
+                            <Typography variant='caption' fontWeight={600} fontSize='0.65rem' color='text.secondary'>
+                              Fixed
+                            </Typography>
+                            <Typography
+                              variant='caption'
+                              color='text.secondary'
+                              fontSize='0.6rem'
+                              sx={{ opacity: 0.7 }}
+                            >
+                              {fixedRooms.length}
+                            </Typography>
+                          </Box>
+                          {fixedRooms.map(room => (
+                            <Box
+                              key={room.id}
+                              sx={{
+                                height: 80,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                                px: 2,
+                                borderBottom: 1,
+                                borderColor: 'divider'
+                              }}
+                            >
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant='body2' fontWeight={600} noWrap>
+                                  {room.name}
+                                </Typography>
+                                <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem' }}>
+                                  Cap: {room.capacity}
+                                </Typography>
+                              </Box>
+                              <IconButton size='small' onClick={e => handleOpenRoomMenu(e, room)}>
+                                <i className='ri-edit-line' style={{ fontSize: 16 }} />
+                              </IconButton>
+                            </Box>
+                          ))}
+                        </>
+                      )}
+                    </Box>
+                  )
+                })}
+              </Box>
+
+              {/* Day columns */}
+              {weekDates.map((date, dayIndex) => {
+                const isSelected = isSameDay(date, selectedDate)
+                const dayName = WEEK_DAYS[dayIndex]
+                const dayOfWeek = WEEK_DAYS[dayIndex] as DayOfWeek
+
+                return (
+                  <Box
+                    key={dayIndex}
+                    sx={{
+                      minWidth: 150,
+                      flexShrink: 0,
+                      borderRight: 1,
+                      borderColor: 'divider',
+                      bgcolor: isSelected ? 'rgba(10, 44, 36, 0.05)' : 'transparent'
+                    }}
+                  >
+                    {/* Day header */}
+                    <Box
+                      onClick={() => {
+                        setSelectedDate(date)
+                        setViewMode('Day')
+                      }}
+                      sx={{
+                        height: 60,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderBottom: 1,
+                        borderColor: 'divider',
+                        bgcolor: isSelected ? 'primary.main' : 'transparent',
+                        color: isSelected ? 'white' : 'text.primary',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        '&:hover': {
+                          bgcolor: isSelected ? 'primary.main' : 'action.hover'
+                        }
+                      }}
+                    >
+                      <Typography variant='caption' fontWeight={600}>
+                        {dayName} {format(date, 'd')}
+                      </Typography>
+                    </Box>
+
+                    {/* Room cells grouped by branches */}
+                    {Object.entries(roomsByBranch).map(([branchId, branchRooms]) => {
+                      const showBranchHeader = selectedBranch === 'all'
+                      const fixedRooms = branchRooms.filter(room => getEffectiveRoomType(room) === 'static')
+                      const flexRooms = branchRooms.filter(room => getEffectiveRoomType(room) !== 'static')
+
+                      const formatTime12Hour = (time24: string) => {
+                        const [hourStr, minStr] = time24.split(':')
+                        let hour = parseInt(hourStr)
+                        const minute = minStr
+                        const period = hour >= 12 ? 'PM' : 'AM'
+                        if (hour === 0) hour = 12
+                        else if (hour > 12) hour -= 12
+                        return `${hour}:${minute} ${period}`
+                      }
+
+                      const dayOfWeekMap: Record<DayOfWeek, number> = {
+                        Sun: 0,
+                        Mon: 1,
+                        Tue: 2,
+                        Wed: 3,
+                        Thu: 4,
+                        Fri: 5,
+                        Sat: 6
+                      }
+
+                      return (
+                        <Box key={branchId}>
+                          {/* Branch header cell */}
+                          {showBranchHeader &&
+                            (() => {
+                              const targetBranchId =
+                                branchId === 'all' ? (apiBranches.length > 0 ? apiBranches[0].id : '1-1') : branchId
+                              const businessHours = getBusinessHours(targetBranchId, dayOfWeek)
+                              const isOpen = businessHours?.isOpen && businessHours.shifts.length > 0
+
+                              const formatTime = (time24: string) => {
+                                const [hourStr, minStr] = time24.split(':')
+                                let hour = parseInt(hourStr)
+                                const minute = minStr
+                                const period = hour >= 12 ? 'PM' : 'AM'
+                                if (hour === 0) hour = 12
+                                else if (hour > 12) hour -= 12
+                                return `${hour}:${minute} ${period.toLowerCase()}`
+                              }
+
+                              return (
+                                <Box
+                                  sx={{
+                                    height: 56,
+                                    borderBottom: 1,
+                                    borderColor: 'divider',
+                                    bgcolor: 'action.selected',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    p: 0.5
+                                  }}
+                                >
+                                  {isOpen ? (
+                                    <Box
+                                      sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        bgcolor: 'rgba(10, 44, 36, 0.15)',
+                                        borderRadius: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        border: '1px solid',
+                                        borderColor: 'success.light'
+                                      }}
+                                    >
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={500}
+                                        sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}
+                                      >
+                                        {formatTime(businessHours.shifts[0].start)}
+                                      </Typography>
+                                      <Typography
+                                        variant='caption'
+                                        fontWeight={500}
+                                        sx={{ fontSize: '0.6rem', lineHeight: 1.2 }}
+                                      >
+                                        {formatTime(businessHours.shifts[0].end)}
+                                      </Typography>
+                                    </Box>
+                                  ) : (
+                                    <Box
+                                      sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        bgcolor: 'grey.800',
+                                        borderRadius: 1,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                      }}
+                                    >
+                                      <Typography variant='caption' color='grey.400' sx={{ fontSize: '0.6rem' }}>
+                                        Closed
+                                      </Typography>
+                                    </Box>
+                                  )}
+                                </Box>
+                              )
+                            })()}
+
+                          {/* Flex rooms cells */}
+                          {flexRooms.length > 0 && (
+                            <>
+                              <Box
+                                sx={{
+                                  height: 27,
+                                  borderBottom: 1,
+                                  borderTop: showBranchHeader ? 0 : 1,
+                                  borderColor: 'divider'
+                                }}
+                              />
+                              {flexRooms.map(room => {
+                                const businessHours = getBusinessHours(room.branchId, dayOfWeek)
+                                const isOpen = businessHours?.isOpen && businessHours.shifts.length > 0
+
+                                return (
+                                  <Box
+                                    key={room.id}
+                                    sx={{
+                                      height: 80,
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'stretch',
+                                      justifyContent: 'center',
+                                      borderBottom: 1,
+                                      borderColor: 'divider',
+                                      position: 'relative',
+                                      p: 1
+                                    }}
+                                  >
+                                    {isOpen ? (
+                                      <Box
+                                        onClick={() => handleEditShift(room, null, dayOfWeek)}
+                                        sx={{
+                                          width: '100%',
+                                          height: '100%',
+                                          bgcolor: 'rgba(10, 44, 36, 0.3)',
+                                          borderRadius: 1,
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          border: 1,
+                                          borderColor: 'success.light',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s',
+                                          '&:hover': {
+                                            bgcolor: 'rgba(139, 195, 74, 0.4)',
+                                            borderColor: 'success.main'
+                                          }
+                                        }}
+                                      >
+                                        <Typography
+                                          variant='caption'
+                                          fontWeight={500}
+                                          sx={{ fontSize: '0.65rem', lineHeight: 1.1 }}
+                                        >
+                                          {formatTime12Hour(businessHours.shifts[0].start).toLowerCase()}
+                                        </Typography>
+                                        <Typography
+                                          variant='caption'
+                                          fontWeight={500}
+                                          sx={{ fontSize: '0.65rem', lineHeight: 1.1 }}
+                                        >
+                                          {formatTime12Hour(businessHours.shifts[0].end).toLowerCase()}
+                                        </Typography>
+                                      </Box>
+                                    ) : (
+                                      <Box
+                                        sx={{
+                                          width: '100%',
+                                          height: '100%',
+                                          bgcolor: 'transparent',
+                                          borderRadius: 1,
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          border: '2px dashed',
+                                          borderColor: 'divider'
+                                        }}
+                                      >
+                                        <Typography
+                                          variant='caption'
+                                          color='text.secondary'
+                                          sx={{ fontSize: '0.6rem' }}
+                                        >
+                                          Closed
+                                        </Typography>
+                                      </Box>
+                                    )}
+                                  </Box>
+                                )
+                              })}
+                            </>
+                          )}
+
+                          {/* Fixed rooms cells */}
+                          {fixedRooms.length > 0 && (
+                            <>
+                              <Box
+                                sx={{
+                                  height: 27,
+                                  borderBottom: 1,
+                                  borderTop: 1,
+                                  borderColor: 'divider'
+                                }}
+                              />
+                              {fixedRooms.map(room => {
+                                const dateStr = date.toISOString().split('T')[0]
+                                const roomSessions = sessions.filter(
+                                  s =>
+                                    s.resourceId === room.id &&
+                                    (s.date === dateStr || s.dayOfWeek === dayOfWeekMap[dayOfWeek])
+                                )
+
+                                return (
+                                  <Box
+                                    key={room.id}
+                                    sx={{
+                                      height: 80,
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'stretch',
+                                      justifyContent: 'center',
+                                      borderBottom: 1,
+                                      borderColor: 'divider',
+                                      position: 'relative',
+                                      p: 1
+                                    }}
+                                  >
+                                    {/* Click to add session area */}
+                                    <Box
+                                      onClick={() => {
+                                        setSessionResourceFilter(room.id)
+                                        setSelectedSession(null)
+                                        setIsSessionEditorOpen(true)
+                                      }}
+                                      sx={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        zIndex: 1,
+                                        cursor: 'pointer'
+                                      }}
+                                    />
+
+                                    {/* Render Sessions */}
+                                    {roomSessions.map(session => (
+                                      <Box
+                                        key={session.id}
+                                        onClick={e => {
+                                          e.stopPropagation()
+                                          setSelectedSession(session)
+                                          setSessionResourceFilter(room.id)
+                                          setIsSessionEditorOpen(true)
+                                        }}
+                                        sx={{
+                                          position: 'absolute',
+                                          top: 8,
+                                          bottom: 8,
+                                          left: '5%',
+                                          width: '120px',
+                                          bgcolor: 'primary.main',
+                                          color: 'primary.contrastText',
+                                          borderRadius: 1,
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          cursor: 'pointer',
+                                          zIndex: 2,
+                                          boxShadow: 2,
+                                          '&:hover': {
+                                            bgcolor: 'primary.dark'
+                                          }
+                                        }}
+                                      >
+                                        <Typography variant='caption' fontWeight={600} noWrap>
+                                          {session.name}
+                                        </Typography>
+                                        <Typography variant='caption' sx={{ fontSize: '0.6rem' }}>
+                                          {session.startTime} - {session.endTime}
+                                        </Typography>
+                                        <Typography
+                                          variant='caption'
+                                          sx={{
+                                            fontSize: '0.58rem',
+                                            opacity: 0.9
+                                          }}
+                                        >
+                                          Cap: {session.maxParticipants}
+                                        </Typography>
+                                      </Box>
+                                    ))}
+
+                                    {/* No sessions placeholder */}
+                                    {roomSessions.length === 0 && (
+                                      <Box
+                                        sx={{
+                                          width: '100%',
+                                          height: '100%',
+                                          bgcolor: 'transparent',
+                                          borderRadius: 1,
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          border: '1px dashed',
+                                          borderColor: 'divider'
+                                        }}
+                                      >
+                                        <Typography
+                                          variant='caption'
+                                          color='text.secondary'
+                                          sx={{ fontSize: '0.6rem' }}
+                                        >
+                                          No sessions
+                                        </Typography>
+                                      </Box>
+                                    )}
+                                  </Box>
+                                )
+                              })}
+                            </>
+                          )}
+                        </Box>
+                      )
+                    })}
+                  </Box>
+                )
+              })}
+            </Box>
+          </Box>
+
+          {/* Week View Footer */}
+          <Box
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 2,
+              borderTop: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper'
+            }}
+          >
+            <Button
+              variant='outlined'
+              size='small'
+              onClick={() => setSelectedDate(startOfWeek(new Date()))}
+              sx={{ borderRadius: 2, textTransform: 'uppercase', px: 3 }}
+            >
+              Current Week
+            </Button>
+          </Box>
+        </>
+      )}
 
       {/* Calendar Picker Popover */}
       <CalendarPopover
@@ -1204,6 +1837,51 @@ export function RoomsTab() {
           {cancelError || modeChangeError}
         </Alert>
       </Snackbar>
+
+      {/* Session Editor Drawer for STATIC rooms */}
+      <SessionEditorDrawer
+        open={isSessionEditorOpen}
+        onClose={() => {
+          setIsSessionEditorOpen(false)
+          setSelectedSession(null)
+          setSessionResourceFilter(null)
+        }}
+        session={selectedSession}
+        resources={rooms
+          .filter(r => r.roomType === 'static' || r.bookingMode === 'STATIC')
+          .map(r => ({
+            id: r.id,
+            name: r.name,
+            branchId: r.branchId || (apiBranches.length > 0 ? apiBranches[0].id : '1-1'),
+            type: 'room',
+            bookingMode: 'STATIC' as const,
+            capacity: r.capacity || 1,
+            serviceIds: r.serviceIds || []
+          }))}
+        services={apiServices.map(s => ({
+          id: s.id,
+          name: s.name,
+          duration: s.duration || 60
+        }))}
+        onSave={async (data: CreateSessionRequest | Partial<Session>) => {
+          try {
+            const { SessionsService } = await import('@/lib/api/services/sessions.service')
+            if ('id' in data && data.id) {
+              await SessionsService.updateSession(data.id, data as any)
+            } else {
+              await SessionsService.createSession(data as CreateSessionRequest)
+            }
+            setIsSessionEditorOpen(false)
+            setSelectedSession(null)
+            setSessionResourceFilter(null)
+            fetchSchedulesFromApi()
+          } catch (error) {
+            console.error('Failed to save session:', error)
+            alert('Failed to save session. Please try again.')
+          }
+        }}
+        selectedResourceId={sessionResourceFilter}
+      />
     </Box>
   )
 }
