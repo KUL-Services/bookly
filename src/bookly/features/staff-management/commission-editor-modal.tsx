@@ -20,7 +20,9 @@ import {
   OutlinedInput,
   Chip,
   ToggleButtonGroup,
-  ToggleButton
+  ToggleButton,
+  Snackbar,
+  Alert
 } from '@mui/material'
 
 import { useStaffManagementStore } from './staff-store'
@@ -41,6 +43,11 @@ export function CommissionEditorModal({ open, onClose, policy, scope, selectedSt
   const [value, setValue] = useState(40)
   const [appliesTo, setAppliesTo] = useState<'serviceProvider' | 'seller'>('serviceProvider')
   const [staffScope, setStaffScope] = useState<'all' | string[]>('all')
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
 
   // Load policy data if editing
   useEffect(() => {
@@ -79,7 +86,7 @@ export function CommissionEditorModal({ open, onClose, policy, scope, selectedSt
       }
       onClose()
     } catch (error: any) {
-      alert(error?.message || 'Failed to save commission policy')
+      setSnackbar({ open: true, message: error?.message || 'Failed to save commission policy', severity: 'error' })
     }
   }
 
@@ -246,6 +253,22 @@ export function CommissionEditorModal({ open, onClose, policy, scope, selectedSt
           {policy ? 'Save Changes' : 'Create Policy'}
         </Button>
       </DialogActions>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   )
 }

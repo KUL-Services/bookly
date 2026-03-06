@@ -1921,6 +1921,18 @@ export function ShiftsTab() {
               staffType={getStaffType(selectedStaffForEdit.id)}
               referenceDate={selectedDate}
               bulkStaffIds={bulkMode && selectedStaffIds.length > 1 ? selectedStaffIds : undefined}
+              onEditSession={session => {
+                setIsWorkingHoursModalOpen(false)
+                setSelectedSession(session)
+                setSessionResourceFilter(session.resourceId)
+                setIsSessionEditorOpen(true)
+              }}
+              onAddSession={resourceId => {
+                setIsWorkingHoursModalOpen(false)
+                setSelectedSession(null)
+                setSessionResourceFilter(resourceId)
+                setIsSessionEditorOpen(true)
+              }}
             />
           )}
 
@@ -3555,6 +3567,18 @@ export function ShiftsTab() {
           staffType={getStaffType(selectedStaffForEdit.id)}
           referenceDate={selectedDate}
           bulkStaffIds={bulkMode && selectedStaffIds.length > 1 ? selectedStaffIds : undefined}
+          onEditSession={session => {
+            setIsWorkingHoursModalOpen(false)
+            setSelectedSession(session)
+            setSessionResourceFilter(session.resourceId)
+            setIsSessionEditorOpen(true)
+          }}
+          onAddSession={resourceId => {
+            setIsWorkingHoursModalOpen(false)
+            setSelectedSession(null)
+            setSessionResourceFilter(resourceId)
+            setIsSessionEditorOpen(true)
+          }}
         />
       )}
 

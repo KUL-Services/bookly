@@ -1,7 +1,21 @@
 'use client'
 
-import { Drawer, Box, Typography, IconButton, Button, List, ListItem, Chip, Stack, Divider, Alert } from '@mui/material'
+import {
+  Drawer,
+  Box,
+  Typography,
+  IconButton,
+  Button,
+  List,
+  ListItem,
+  Chip,
+  Stack,
+  Divider,
+  Alert,
+  Snackbar
+} from '@mui/material'
 import { useTheme } from '@mui/material/styles'
+import { useState } from 'react'
 import { format } from 'date-fns'
 import { useCalendarStore } from './state'
 import type { ScheduleTemplate } from './types'
@@ -17,6 +31,12 @@ export default function TemplateManagementDrawer() {
   const deleteTemplate = useCalendarStore(state => state.deleteTemplate)
   const generateSlotsFromTemplate = useCalendarStore(state => state.generateSlotsFromTemplate)
 
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'success'
+  })
+
   const handleGenerateSlots = (template: ScheduleTemplate) => {
     const startDate = new Date(template.activeFrom)
     const endDate = template.activeUntil ? new Date(template.activeUntil) : new Date()
@@ -29,7 +49,11 @@ export default function TemplateManagementDrawer() {
     const generatedSlots = generateSlotsFromTemplate(template.id, startDate, endDate)
 
     // Show success message
-    alert(`Successfully generated ${generatedSlots.length} slots from template "${template.name}"`)
+    setSnackbar({
+      open: true,
+      message: `Successfully generated ${generatedSlots.length} slots from template "${template.name}"`,
+      severity: 'success'
+    })
   }
 
   const handleDeleteTemplate = (templateId: string) => {
@@ -264,6 +288,22 @@ export default function TemplateManagementDrawer() {
           )}
         </Box>
       </Box>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Drawer>
   )
 }

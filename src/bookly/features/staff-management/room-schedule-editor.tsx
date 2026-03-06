@@ -23,7 +23,8 @@ import {
   Alert,
   Checkbox,
   ListItemText,
-  Tooltip
+  Tooltip,
+  Snackbar
 } from '@mui/material'
 
 import { useStaffManagementStore } from './staff-store'
@@ -59,6 +60,11 @@ export function RoomScheduleEditor({
   const availableServices =
     roomServiceIds.length > 0 ? apiServices.filter(s => roomServiceIds.includes(s.id)) : apiServices
 
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
   const [isAvailable, setIsAvailable] = useState(false)
   const [shifts, setShifts] = useState<
     Array<{ id: string; start: string; end: string; serviceIds: string[]; capacity?: number; staffIds?: string[] }>
@@ -183,7 +189,11 @@ export function RoomScheduleEditor({
     if (!roomId || !dayOfWeek) return
 
     if (isAvailable && shifts.length === 0) {
-      alert(`Please add at least one ${slotLabel.toLowerCase()} or mark the day as unavailable`)
+      setSnackbar({
+        open: true,
+        message: `Please add at least one ${slotLabel.toLowerCase()} or mark the day as unavailable`,
+        severity: 'error'
+      })
       return
     }
 
@@ -199,7 +209,11 @@ export function RoomScheduleEditor({
 
         // Validate end time is after start time
         if (end1 <= start1) {
-          alert(`${slotLabel} ${i + 1}: End time must be after start time`)
+          setSnackbar({
+            open: true,
+            message: `${slotLabel} ${i + 1}: End time must be after start time`,
+            severity: 'error'
+          })
           return
         }
 
@@ -212,9 +226,11 @@ export function RoomScheduleEditor({
 
           // Check for overlap
           if (start1 < end2 && end1 > start2) {
-            alert(
-              `${slotLabel} ${i + 1} and ${slotLabel} ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`
-            )
+            setSnackbar({
+              open: true,
+              message: `${slotLabel} ${i + 1} and ${slotLabel} ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`,
+              severity: 'error'
+            })
             return
           }
         }
@@ -223,7 +239,7 @@ export function RoomScheduleEditor({
       // Validate single shift
       const shift = shifts[0]
       if (shift.start >= shift.end) {
-        alert('End time must be after start time')
+        setSnackbar({ open: true, message: 'End time must be after start time', severity: 'error' })
         return
       }
     }
@@ -232,7 +248,7 @@ export function RoomScheduleEditor({
       for (let i = 0; i < shifts.length; i++) {
         const sessionCapacity = shifts[i].capacity
         if (!sessionCapacity || sessionCapacity < 1) {
-          alert(`Session ${i + 1}: Capacity is required`)
+          setSnackbar({ open: true, message: `Session ${i + 1}: Capacity is required`, severity: 'error' })
           return
         }
       }
@@ -558,8 +574,8 @@ export function RoomScheduleEditor({
                 }}
               >
                 <Typography variant='caption' color='info.dark'>
-                  <strong>Tip:</strong> You can add multiple {slotLabel.toLowerCase()}s per day and assign services
-                  per {slotLabel.toLowerCase()}.
+                  <strong>Tip:</strong> You can add multiple {slotLabel.toLowerCase()}s per day and assign services per{' '}
+                  {slotLabel.toLowerCase()}.
                 </Typography>
               </Box>
             </>
@@ -575,6 +591,22 @@ export function RoomScheduleEditor({
           Save Schedule
         </Button>
       </DialogActions>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   )
 }

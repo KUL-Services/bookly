@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -22,12 +22,15 @@ import {
   OutlinedInput,
   Checkbox,
   ListItemText,
-  Avatar
+  Avatar,
+  Alert,
+  Snackbar
 } from '@mui/material'
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns'
 import { useStaffManagementStore } from './staff-store'
 
 import type { DayOfWeek } from '../calendar/types'
+import type { Session } from '@/lib/api/types'
 import { TimeSelectField } from './time-select-field'
 
 interface StaffEditWorkingHoursModalProps {
@@ -38,6 +41,8 @@ interface StaffEditWorkingHoursModalProps {
   staffType?: 'dynamic' | 'static'
   referenceDate?: Date // The date/week being viewed
   bulkStaffIds?: string[] // For bulk editing multiple staff
+  onEditSession?: (session: Session) => void
+  onAddSession?: (resourceId: string) => void
 }
 
 const DAYS_OF_WEEK: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -73,7 +78,9 @@ export function StaffEditWorkingHoursModal({
   staffName,
   staffType = 'dynamic',
   referenceDate,
-  bulkStaffIds
+  bulkStaffIds,
+  onEditSession,
+  onAddSession
 }: StaffEditWorkingHoursModalProps) {
   const {
     getStaffWorkingHours,
@@ -82,13 +89,37 @@ export function StaffEditWorkingHoursModal({
     staffMembers,
     apiServices,
     saveStaffWorkingHours,
-    saveShiftsExceptions
+    saveShiftsExceptions,
+    sessions
   } = useStaffManagementStore()
   const [effectiveDate, setEffectiveDate] = useState('immediately')
-  // Dynamic staff: Default ON (apply to all future weeks)
-  // Static staff: Default OFF (this week only)
   const [applyToAllWeeks, setApplyToAllWeeks] = useState(staffType === 'dynamic')
   const [isSaving, setIsSaving] = useState(false)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
+
+  // Session data for static staff
+  const staffSessions = useMemo(() => {
+    if (staffType !== 'static') return []
+    return sessions.filter((s: Session) => s.resourceId === staffId)
+  }, [staffType, sessions, staffId])
+
+  const sessionsByDay = useMemo(() => {
+    const byDay: Record<number, Session[]> = {}
+    const oneTime: Session[] = []
+    for (const session of staffSessions) {
+      if (session.dayOfWeek != null) {
+        if (!byDay[session.dayOfWeek]) byDay[session.dayOfWeek] = []
+        byDay[session.dayOfWeek].push(session)
+      } else if (session.date) {
+        oneTime.push(session)
+      }
+    }
+    return { byDay, oneTime }
+  }, [staffSessions])
 
   // Determine if this is bulk mode
   const isBulkMode = bulkStaffIds && bulkStaffIds.length > 0
@@ -133,7 +164,11 @@ export function StaffEditWorkingHoursModal({
 
             // Validate end time is after start time
             if (end1 <= start1) {
-              alert(`${DAY_LABELS[day]}: Shift ${i + 1} end time must be after start time`)
+              setSnackbar({
+                open: true,
+                message: `${DAY_LABELS[day]}: Shift ${i + 1} end time must be after start time`,
+                severity: 'error'
+              })
               return
             }
 
@@ -146,9 +181,11 @@ export function StaffEditWorkingHoursModal({
 
               // Check for overlap
               if (start1 < end2 && end1 > start2) {
-                alert(
-                  `${DAY_LABELS[day]}: Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`
-                )
+                setSnackbar({
+                  open: true,
+                  message: `${DAY_LABELS[day]}: Shift ${i + 1} and Shift ${j + 1} have overlapping times. Please adjust the times so they don't conflict.`,
+                  severity: 'error'
+                })
                 return
               }
             }
@@ -216,10 +253,197 @@ export function StaffEditWorkingHoursModal({
       }
     } catch (err) {
       console.error('Failed to save staff hours:', err)
-      alert('Failed to save working hours. Please try again.')
+      setSnackbar({ open: true, message: 'Failed to save working hours. Please try again.', severity: 'error' })
     } finally {
       setIsSaving(false)
     }
+  }
+
+  // Static staff: render sessions view instead of shifts
+  if (staffType === 'static') {
+    const formatTime12h = (time24: string): string => {
+      const [hourStr, minStr] = time24.split(':')
+      let hour = parseInt(hourStr)
+      const minute = minStr
+      const period = hour >= 12 ? 'PM' : 'AM'
+      if (hour === 0) hour = 12
+      else if (hour > 12) hour -= 12
+      return `${hour}:${minute} ${period}`
+    }
+
+    return (
+      <Dialog open={open} onClose={onClose} maxWidth='md' fullWidth>
+        <DialogTitle>
+          <Typography variant='h6' fontWeight={600}>
+            {staffName} &mdash; Sessions
+          </Typography>
+          <Typography variant='body2' color='text.secondary'>
+            Schedule is defined by sessions for this fixed-mode staff member
+          </Typography>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Alert severity='info' sx={{ py: 0.5 }}>
+              <Typography variant='caption'>
+                <strong>Fixed Mode</strong> &mdash; This staff member&apos;s schedule is defined by sessions. Click on a
+                session to edit it, or add new sessions.
+              </Typography>
+            </Alert>
+
+            {[0, 1, 2, 3, 4, 5, 6].map(dayNum => {
+              const dayLabel = DAY_LABELS[DAYS_OF_WEEK[dayNum]]
+              const daySessions = sessionsByDay.byDay[dayNum] || []
+
+              return (
+                <Paper
+                  key={dayNum}
+                  variant='outlined'
+                  sx={{ p: 2, bgcolor: daySessions.length > 0 ? 'background.paper' : 'action.hover' }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: daySessions.length > 0 ? 1.5 : 0 }}>
+                    <Typography variant='subtitle1' fontWeight={600} sx={{ minWidth: 100 }}>
+                      {dayLabel}
+                    </Typography>
+                    {daySessions.length === 0 && <Chip size='small' label='No Sessions' color='default' />}
+                    {daySessions.length > 0 && (
+                      <Chip
+                        size='small'
+                        label={`${daySessions.length} session${daySessions.length > 1 ? 's' : ''}`}
+                        color='primary'
+                        variant='outlined'
+                      />
+                    )}
+                  </Box>
+                  {daySessions.map(session => (
+                    <Box
+                      key={session.id}
+                      onClick={() => onEditSession?.(session)}
+                      sx={{
+                        p: 1.5,
+                        mb: 1,
+                        border: '1px solid',
+                        borderColor: 'info.light',
+                        borderRadius: 1,
+                        bgcolor: 'rgba(33, 150, 243, 0.06)',
+                        cursor: onEditSession ? 'pointer' : 'default',
+                        transition: 'all 0.2s',
+                        '&:hover': onEditSession
+                          ? { bgcolor: 'rgba(33, 150, 243, 0.12)', borderColor: 'info.main' }
+                          : {},
+                        '&:last-child': { mb: 0 }
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography variant='body2' fontWeight={600}>
+                          {session.name}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          {formatTime12h(session.startTime)} - {formatTime12h(session.endTime)}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', gap: 1.5, mt: 0.5, flexWrap: 'wrap' }}>
+                        <Typography variant='caption' color='text.secondary'>
+                          <i className='ri-group-line' style={{ fontSize: 12, marginRight: 2 }} />{' '}
+                          {session.maxParticipants} spots
+                        </Typography>
+                        {session.price != null && (
+                          <Typography variant='caption' color='text.secondary'>
+                            ${session.price}
+                          </Typography>
+                        )}
+                        {session.serviceId && (
+                          <Typography variant='caption' color='info.main' fontWeight={500}>
+                            {apiServices.find((s: any) => s.id === session.serviceId)?.name || 'Service'}
+                          </Typography>
+                        )}
+                        {!session.isActive && (
+                          <Chip
+                            size='small'
+                            label='Inactive'
+                            color='default'
+                            sx={{ height: 18, '& .MuiChip-label': { px: 0.5, fontSize: '0.6rem' } }}
+                          />
+                        )}
+                      </Box>
+                    </Box>
+                  ))}
+                </Paper>
+              )
+            })}
+
+            {sessionsByDay.oneTime.length > 0 && (
+              <>
+                <Typography variant='subtitle2' fontWeight={600} sx={{ mt: 1 }}>
+                  One-Time Sessions
+                </Typography>
+                {sessionsByDay.oneTime.map(session => (
+                  <Paper
+                    key={session.id}
+                    variant='outlined'
+                    onClick={() => onEditSession?.(session)}
+                    sx={{
+                      p: 1.5,
+                      cursor: onEditSession ? 'pointer' : 'default',
+                      border: '1px solid',
+                      borderColor: 'warning.light',
+                      bgcolor: 'rgba(255, 152, 0, 0.06)',
+                      transition: 'all 0.2s',
+                      '&:hover': onEditSession
+                        ? { bgcolor: 'rgba(255, 152, 0, 0.12)', borderColor: 'warning.main' }
+                        : {}
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <Typography variant='body2' fontWeight={600}>
+                        {session.name}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <Chip size='small' label={session.date ? session.date.split('T')[0] : ''} variant='outlined' />
+                        <Typography variant='caption' color='text.secondary'>
+                          {formatTime12h(session.startTime)} - {formatTime12h(session.endTime)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1.5, mt: 0.5 }}>
+                      <Typography variant='caption' color='text.secondary'>
+                        {session.maxParticipants} spots
+                      </Typography>
+                      {session.price != null && (
+                        <Typography variant='caption' color='text.secondary'>
+                          ${session.price}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Paper>
+                ))}
+              </>
+            )}
+
+            {staffSessions.length === 0 && (
+              <Box sx={{ p: 4, textAlign: 'center', border: '2px dashed', borderColor: 'divider', borderRadius: 1 }}>
+                <i className='ri-calendar-schedule-line' style={{ fontSize: 48, opacity: 0.3 }} />
+                <Typography variant='body2' color='text.secondary' sx={{ mt: 1 }}>
+                  No sessions created yet
+                </Typography>
+                <Typography variant='caption' color='text.secondary'>
+                  Add sessions to define when this staff member is available
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button onClick={onClose} variant='outlined'>
+            Close
+          </Button>
+          {onAddSession && (
+            <Button onClick={() => onAddSession(staffId)} variant='contained' startIcon={<i className='ri-add-line' />}>
+              Add Session
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+    )
   }
 
   return (
@@ -563,49 +787,6 @@ export function StaffEditWorkingHoursModal({
                             sx={{ ml: 1 }}
                           />
 
-                          {staffType === 'static' && (
-                            <>
-                              <TextField
-                                type='number'
-                                label='Capacity'
-                                value={shift.capacity || 10}
-                                onChange={e => handleUpdateCapacity(shiftIndex, Number(e.target.value))}
-                                size='small'
-                                InputProps={{
-                                  inputProps: { min: 1, max: 100 },
-                                  startAdornment: <i className='ri-group-line' style={{ marginRight: 8 }} />
-                                }}
-                                sx={{ minWidth: 140 }}
-                              />
-                              <FormControl size='small' sx={{ minWidth: 200 }}>
-                                <InputLabel>Services</InputLabel>
-                                <Select
-                                  multiple
-                                  value={shift.serviceIds || []}
-                                  onChange={e =>
-                                    handleUpdateServices(
-                                      shiftIndex,
-                                      typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value
-                                    )
-                                  }
-                                  input={<OutlinedInput label='Services' />}
-                                  renderValue={selected => {
-                                    if (selected.length === 0) return 'All Services'
-                                    if (selected.length === apiServices.length) return 'All Services'
-                                    return `${selected.length} selected`
-                                  }}
-                                >
-                                  {apiServices.map(service => (
-                                    <MenuItem key={service.id} value={service.id}>
-                                      <Checkbox checked={(shift.serviceIds || []).includes(service.id)} />
-                                      <ListItemText primary={service.name} />
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </FormControl>
-                            </>
-                          )}
-
                           <Button
                             size='small'
                             variant='text'
@@ -777,6 +958,22 @@ export function StaffEditWorkingHoursModal({
           {isSaving ? 'SAVING...' : 'SAVE'}
         </Button>
       </DialogActions>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   )
 }

@@ -20,7 +20,8 @@ import {
   IconButton,
   Chip,
   Alert,
-  Popover
+  Popover,
+  Snackbar
 } from '@mui/material'
 import { useStaffManagementStore } from './staff-store'
 import { CommissionEditorModal } from './commission-editor-modal'
@@ -45,8 +46,20 @@ export function CommissionsTab() {
   const [showTutorial, setShowTutorial] = useState(true)
   const [tutorialStep, setTutorialStep] = useState(0)
   const [tutorialAnchor, setTutorialAnchor] = useState<HTMLElement | null>(null)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
 
-  const { commissionPolicies, getCommissionPolicies, deleteCommissionPolicy, staffMembers, fetchCommissionsFromApi, fetchStaffFromApi } = useStaffManagementStore()
+  const {
+    commissionPolicies,
+    getCommissionPolicies,
+    deleteCommissionPolicy,
+    staffMembers,
+    fetchCommissionsFromApi,
+    fetchStaffFromApi
+  } = useStaffManagementStore()
 
   useEffect(() => {
     fetchStaffFromApi()
@@ -87,7 +100,7 @@ export function CommissionsTab() {
       try {
         await deleteCommissionPolicy(id)
       } catch (error: any) {
-        alert(error?.message || 'Failed to delete commission policy')
+        setSnackbar({ open: true, message: error?.message || 'Failed to delete commission policy', severity: 'error' })
       }
     }
   }
@@ -320,6 +333,22 @@ export function CommissionsTab() {
         scope={editingScope}
         selectedStaffId={selectedStaffId}
       />
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

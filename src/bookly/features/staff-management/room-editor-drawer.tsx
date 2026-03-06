@@ -25,7 +25,8 @@ import {
   Checkbox,
   ListItemText,
   useTheme,
-  Avatar
+  Avatar,
+  Snackbar
 } from '@mui/material'
 import { format } from 'date-fns'
 import { useStaffManagementStore } from './staff-store'
@@ -92,6 +93,11 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
   const [bookingMode, setBookingMode] = useState<'STATIC' | 'DYNAMIC'>('DYNAMIC')
   const [cancelError, setCancelError] = useState<string | null>(null)
   const [isCancelling, setIsCancelling] = useState(false)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
 
   // Load room data if editing
   useEffect(() => {
@@ -121,12 +127,12 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
 
   const handleSave = () => {
     if (!name || !branchId) {
-      alert('Please fill in all required fields (Name and Branch)')
+      setSnackbar({ open: true, message: 'Please fill in all required fields (Name and Branch)', severity: 'error' })
       return
     }
 
     if (bookingMode === 'STATIC' && (!capacity || capacity < 1)) {
-      alert('Default Capacity is required for Fixed rooms')
+      setSnackbar({ open: true, message: 'Default Capacity is required for Fixed rooms', severity: 'error' })
       return
     }
 
@@ -599,7 +605,6 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
         </Box>
       </DialogContent>
 
-      {/* Actions */}
       <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider', gap: 1 }}>
         <Button variant='outlined' onClick={handleCancel} sx={{ minWidth: 100 }}>
           Cancel
@@ -608,6 +613,22 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
           {room ? 'Save Changes' : 'Add Room'}
         </Button>
       </DialogActions>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   )
 }

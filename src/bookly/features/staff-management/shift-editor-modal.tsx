@@ -17,7 +17,8 @@ import {
   List,
   ListItem,
   InputAdornment,
-  Alert
+  Alert,
+  Snackbar
 } from '@mui/material'
 import type { BreakRange, DayOfWeek } from '../calendar/types'
 import { TimeSelectField } from './time-select-field'
@@ -78,6 +79,7 @@ export function ShiftEditorModal({
   const { updateShiftsForDate, getStaffShiftsForDate, getBusinessHours } = useStaffManagementStore()
   const [isWorking, setIsWorking] = useState(hasShift)
   const [capacity, setCapacity] = useState<number>(10) // Default capacity for static staff
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({ open: false, message: '' })
   const [shifts, setShifts] = useState<ShiftData[]>([
     {
       id: crypto.randomUUID(),
@@ -322,7 +324,7 @@ export function ShiftEditorModal({
       const endMinutes = endH * 60 + endM
 
       if (startMinutes >= endMinutes) {
-        alert('End time must be after start time for all shifts')
+        setSnackbar({ open: true, message: 'End time must be after start time for all shifts' })
         return
       }
     }
@@ -392,6 +394,7 @@ export function ShiftEditorModal({
   }
 
   return (
+    <>
     <Dialog open={open} onClose={handleCancel} maxWidth='md' fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -634,5 +637,11 @@ export function ShiftEditorModal({
         </Button>
       </DialogActions>
     </Dialog>
+    <Snackbar open={snackbar.open} autoHideDuration={5000} onClose={() => setSnackbar({ open: false, message: '' })} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+      <Alert severity='warning' onClose={() => setSnackbar({ open: false, message: '' })} variant='filled'>
+        {snackbar.message}
+      </Alert>
+    </Snackbar>
+    </>
   )
 }

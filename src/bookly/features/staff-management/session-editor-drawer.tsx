@@ -23,7 +23,8 @@ import {
   InputAdornment,
   Switch,
   FormControlLabel,
-  Chip
+  Chip,
+  Snackbar
 } from '@mui/material'
 import { format } from 'date-fns'
 import type { Session, CreateSessionRequest } from '@/lib/api/types'
@@ -70,12 +71,13 @@ export function SessionEditorDrawer({
   const [date, setDate] = useState('')
   const [startTime, setStartTime] = useState('09:00')
   const [endTime, setEndTime] = useState('10:00')
-  const [maxParticipants, setMaxParticipants] = useState(10)
-  const [price, setPrice] = useState<number | ''>('')
+  const [maxParticipants, setMaxParticipants] = useState('10')
+  const [price, setPrice] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'warning' }>({ open: false, message: '', severity: 'error' })
 
   const isEditMode = !!session
 
@@ -120,8 +122,8 @@ export function SessionEditorDrawer({
         setDate(session.date ? session.date.split('T')[0] : '')
         setStartTime(session.startTime)
         setEndTime(session.endTime)
-        setMaxParticipants(session.maxParticipants)
-        setPrice(session.price ?? '')
+        setMaxParticipants(String(session.maxParticipants))
+        setPrice(session.price != null ? String(session.price) : '')
         setIsActive(session.isActive)
       } else {
         // Reset for new session
@@ -134,8 +136,8 @@ export function SessionEditorDrawer({
         setDate(format(new Date(), 'yyyy-MM-dd'))
         setStartTime('09:00')
         setEndTime('10:00')
-        setMaxParticipants(10)
-        setPrice('')
+        setMaxParticipants('10')
+        setPrice('0')
         setIsActive(true)
       }
     }
@@ -144,23 +146,27 @@ export function SessionEditorDrawer({
   const handleSave = async () => {
     // Validation
     if (!name.trim()) {
-      alert('Please enter a session name')
+      setSnackbar({ open: true, message: 'Please enter a session name', severity: 'warning' })
       return
     }
     if (!resourceId) {
-      alert('Please select a resource')
+      setSnackbar({ open: true, message: 'Please select a resource', severity: 'warning' })
       return
     }
     if (!startTime || !endTime) {
-      alert('Please set start and end times')
+      setSnackbar({ open: true, message: 'Please set start and end times', severity: 'warning' })
       return
     }
     if (sessionType === 'one-time' && !date) {
-      alert('Please select a date for the one-time session')
+      setSnackbar({ open: true, message: 'Please select a date for the one-time session', severity: 'warning' })
       return
     }
-    if (maxParticipants < 1) {
-      alert('Maximum participants must be at least 1')
+    if (!maxParticipants || parseInt(maxParticipants) < 1) {
+      setSnackbar({ open: true, message: 'Maximum participants must be at least 1', severity: 'warning' })
+      return
+    }
+    if (price === '' || isNaN(parseFloat(price))) {
+      setSnackbar({ open: true, message: 'Price is required', severity: 'warning' })
       return
     }
 
@@ -180,17 +186,17 @@ export function SessionEditorDrawer({
         serviceId: serviceId || undefined,
         startTime,
         endTime,
-        maxParticipants,
-        price: price !== '' ? Number(price) : undefined,
+        maxParticipants: parseInt(maxParticipants),
+        price: parseFloat(price),
         ...(sessionType === 'recurring' ? { dayOfWeek } : { date }),
         ...(isEditMode ? { isActive } : {})
       }
 
       await onSave(sessionData)
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save session:', error)
-      alert('Failed to save session. Please try again.')
+      setSnackbar({ open: true, message: error?.message || 'Failed to save session. Please try again.', severity: 'error' })
     } finally {
       setIsSaving(false)
     }
@@ -203,9 +209,9 @@ export function SessionEditorDrawer({
       await onDelete(session.id)
       setShowDeleteConfirm(false)
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete session:', error)
-      alert('Failed to delete session. Please try again.')
+      setSnackbar({ open: true, message: error?.message || 'Failed to delete session. Please try again.', severity: 'error' })
     } finally {
       setIsDeleting(false)
     }
@@ -215,6 +221,7 @@ export function SessionEditorDrawer({
   const staticResources = resources.filter(r => (r as any).bookingMode === 'STATIC')
 
   return (
+    <>
     <Dialog open={open} onClose={onClose} maxWidth='sm' fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -411,7 +418,7 @@ export function SessionEditorDrawer({
             type='number'
             label='Max Participants'
             value={maxParticipants}
-            onChange={e => setMaxParticipants(Number(e.target.value))}
+            onChange={e => setMaxParticipants(e.target.value)}
             InputProps={{
               startAdornment: (
                 <InputAdornment position='start'>
@@ -422,17 +429,22 @@ export function SessionEditorDrawer({
             }}
             required
             fullWidth
+            error={maxParticipants === '' || parseInt(maxParticipants) < 1}
+            helperText={maxParticipants === '' ? 'Required' : parseInt(maxParticipants) < 1 ? 'Must be at least 1' : ''}
           />
           <TextField
             type='number'
-            label='Price (Optional)'
+            label='Price'
             value={price}
-            onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
+            onChange={e => setPrice(e.target.value)}
             InputProps={{
               startAdornment: <InputAdornment position='start'>$</InputAdornment>,
               inputProps: { min: 0, step: 0.01 }
             }}
+            required
             fullWidth
+            error={price === ''}
+            helperText={price === '' ? 'Required' : ''}
           />
         </Box>
 
@@ -498,12 +510,18 @@ export function SessionEditorDrawer({
           <Button
             variant='contained'
             onClick={handleSave}
-            disabled={isSaving || isDeleting || staticResources.length === 0 || timeValidation.hasError}
+            disabled={isSaving || isDeleting || staticResources.length === 0 || timeValidation.hasError || !maxParticipants || parseInt(maxParticipants) < 1 || price === ''}
           >
             {isSaving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Session'}
           </Button>
         </Box>
       </DialogActions>
     </Dialog>
+    <Snackbar open={snackbar.open} autoHideDuration={5000} onClose={() => setSnackbar(s => ({ ...s, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+      <Alert severity={snackbar.severity} onClose={() => setSnackbar(s => ({ ...s, open: false }))} variant='filled'>
+        {snackbar.message}
+      </Alert>
+    </Snackbar>
+    </>
   )
 }

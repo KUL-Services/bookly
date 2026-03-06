@@ -14,7 +14,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Alert
+  Alert,
+  Snackbar
 } from '@mui/material'
 import { format } from 'date-fns'
 import { DatePickerField } from './date-picker-field'
@@ -33,17 +34,22 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
   const [staffId, setStaffId] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
 
   const sourceDateStr = sourceDate.toISOString().split('T')[0]
 
   const handleCopy = async () => {
     if (!staffId || !startDate || !endDate) {
-      alert('Please fill in all fields')
+      setSnackbar({ open: true, message: 'Please fill in all fields', severity: 'error' })
       return
     }
 
     if (new Date(startDate) > new Date(endDate)) {
-      alert('End date must be after start date')
+      setSnackbar({ open: true, message: 'End date must be after start date', severity: 'error' })
       return
     }
 
@@ -54,7 +60,7 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
       })
       handleCancel()
     } catch (error: any) {
-      alert(error?.message || 'Failed to copy shifts')
+      setSnackbar({ open: true, message: error?.message || 'Failed to copy shifts', severity: 'error' })
     }
   }
 
@@ -152,6 +158,22 @@ export function CopyShiftsModal({ open, onClose, sourceDate }: CopyShiftsModalPr
           Copy Shifts
         </Button>
       </DialogActions>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   )
 }

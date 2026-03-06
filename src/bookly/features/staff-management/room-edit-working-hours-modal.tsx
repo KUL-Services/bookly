@@ -22,7 +22,8 @@ import {
   OutlinedInput,
   Alert,
   Checkbox,
-  ListItemText
+  ListItemText,
+  Snackbar
 } from '@mui/material'
 import { startOfWeek, endOfWeek, eachDayOfInterval, format } from 'date-fns'
 
@@ -97,9 +98,12 @@ export function RoomEditWorkingHoursModal({
   const isDynamicRoom = roomType === 'dynamic'
   const slotLabel = isStaticRoom ? 'Session' : 'Shift'
 
-  // Dynamic rooms: Default ON (apply to all future weeks)
-  // Static rooms: Default OFF (this week only)
   const [applyToAllWeeks, setApplyToAllWeeks] = useState(isDynamicRoom)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
 
   // Local state for each day's schedule
   const [scheduleByDay, setScheduleByDay] = useState<
@@ -269,7 +273,11 @@ export function RoomEditWorkingHoursModal({
       if (daySchedule.isAvailable && daySchedule.shifts.length > 1) {
         const overlaps = checkShiftOverlaps(daySchedule.shifts)
         if (overlaps.length > 0) {
-          alert(`${DAY_LABELS[day]}: Please resolve overlapping shifts before saving`)
+          setSnackbar({
+            open: true,
+            message: `${DAY_LABELS[day]}: Please resolve overlapping shifts before saving`,
+            severity: 'error'
+          })
           return
         }
       }
@@ -279,7 +287,11 @@ export function RoomEditWorkingHoursModal({
         for (let i = 0; i < daySchedule.shifts.length; i++) {
           const shift = daySchedule.shifts[i]
           if (!shift.serviceId) {
-            alert(`${DAY_LABELS[day]}, ${slotLabel} ${i + 1}: Please select a service`)
+            setSnackbar({
+              open: true,
+              message: `${DAY_LABELS[day]}, ${slotLabel} ${i + 1}: Please select a service`,
+              severity: 'error'
+            })
             return
           }
         }
@@ -646,6 +658,22 @@ export function RoomEditWorkingHoursModal({
           SAVE
         </Button>
       </DialogActions>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   )
 }

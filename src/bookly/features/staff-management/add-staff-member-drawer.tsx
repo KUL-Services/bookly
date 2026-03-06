@@ -22,7 +22,9 @@ import {
   OutlinedInput,
   Checkbox,
   ListItemText,
-  useTheme
+  useTheme,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import { format } from 'date-fns'
 import { DatePickerField } from './date-picker-field'
@@ -89,6 +91,11 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
   const [emergencyPhone, setEmergencyPhone] = useState('')
   const [cancelError, setCancelError] = useState<string | null>(null)
   const [isCancelling, setIsCancelling] = useState(false)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
 
   // Reset form when modal opens
   useEffect(() => {
@@ -145,7 +152,11 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
   const handleSave = () => {
     // Validation - only first name, last name, and main branch are required
     if (!firstName || !lastName || !mainBranchId) {
-      alert('Please fill in all required fields (First Name, Last Name, Main Branch)')
+      setSnackbar({
+        open: true,
+        message: 'Please fill in all required fields (First Name, Last Name, Main Branch)',
+        severity: 'error'
+      })
       return
     }
 
@@ -153,7 +164,7 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
     if (email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(email)) {
-        alert('Please enter a valid email address')
+        setSnackbar({ open: true, message: 'Please enter a valid email address', severity: 'error' })
         return
       }
     }
@@ -569,7 +580,8 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
                       Fixed (Pre-defined Sessions)
                     </Typography>
                     <Typography variant='caption' color='text.secondary'>
-                      Staff works in scheduled sessions with set times and capacity (e.g., yoga classes, group workshops)
+                      Staff works in scheduled sessions with set times and capacity (e.g., yoga classes, group
+                      workshops)
                     </Typography>
                   </Box>
                 </Box>
@@ -633,7 +645,6 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
         </Box>
       </DialogContent>
 
-      {/* Actions */}
       <DialogActions sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider', gap: 1 }}>
         <Button variant='outlined' onClick={handleCancel} sx={{ minWidth: 100 }}>
           Cancel
@@ -642,6 +653,22 @@ export function AddStaffMemberDrawer({ open, onClose, editingStaff }: AddStaffMe
           {isEditMode ? 'Save Changes' : 'Add Staff Member'}
         </Button>
       </DialogActions>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   )
 }

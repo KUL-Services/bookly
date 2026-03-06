@@ -18,7 +18,9 @@ import {
   FormControlLabel,
   Chip,
   Stack,
-  Paper
+  Paper,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import type {
   AppointmentStatus,
@@ -31,7 +33,13 @@ import type {
 } from './types'
 import type { User } from '@/bookly/data/types'
 import { useCalendarStore } from './state'
-import { isStaffAvailable, hasConflict, getStaffAvailableCapacity, getStaffRoomAssignment, formatDuration } from './utils'
+import {
+  isStaffAvailable,
+  hasConflict,
+  getStaffAvailableCapacity,
+  getStaffRoomAssignment,
+  formatDuration
+} from './utils'
 import { hasTimeOffConflict } from './staff-management-integration'
 import { useStaffManagementStore } from '../staff-management/staff-store'
 import ClientPickerDialog from './client-picker-dialog'
@@ -289,7 +297,9 @@ export default function UnifiedBookingDrawer({
   const calendarRooms = useCalendarStore(state => state.rooms)
 
   // Use API/store data only
-  const allStaff: any[] = (calendarStaff?.length ? calendarStaff : storeStaffMembers?.length ? storeStaffMembers : []) as any[]
+  const allStaff: any[] = (
+    calendarStaff?.length ? calendarStaff : storeStaffMembers?.length ? storeStaffMembers : []
+  ) as any[]
   const allServices: any[] = (storeServices?.length ? storeServices : []) as any[]
   const allRooms: any[] = (calendarRooms?.length ? calendarRooms : storeRooms?.length ? storeRooms : []) as any[]
   const AUTO_STAFF_ID = 'no-preference'
@@ -347,6 +357,11 @@ export default function UnifiedBookingDrawer({
   const [isClientPickerOpen, setIsClientPickerOpen] = useState(false)
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
   const [showAvailableSlots, setShowAvailableSlots] = useState(true)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
 
   // Get only dynamic staff for selection, filtered by branch
   const dynamicStaff = allStaff.filter((s: any) => s.staffType === 'dynamic' && (!branchId || s.branchId === branchId))
@@ -630,7 +645,8 @@ export default function UnifiedBookingDrawer({
 
   const getSlotCapacity = () => {
     const fallbackSlot = selectedSlotId ? staticSlots.find(s => s.id === selectedSlotId) : null
-    const staffCapacity = staffId && staffId !== AUTO_STAFF_ID ? allStaff.find((s: any) => s.id === staffId)?.maxConcurrentBookings : null
+    const staffCapacity =
+      staffId && staffId !== AUTO_STAFF_ID ? allStaff.find((s: any) => s.id === staffId)?.maxConcurrentBookings : null
     const roomId = existingEvent?.extendedProps?.roomId
     const roomCapacity = roomId ? allRooms.find((r: any) => r.id === roomId)?.capacity : null
     return realSlotData?.capacity ?? fallbackSlot?.capacity ?? roomCapacity ?? staffCapacity ?? 10
@@ -908,7 +924,7 @@ export default function UnifiedBookingDrawer({
 
       // Validate session selection for STATIC/FIXED resource mode
       if (staticSessionResourceId && !selectedSession) {
-        alert('Please select an available session')
+        setSnackbar({ open: true, message: 'Please select an available session', severity: 'error' })
         return
       }
 
@@ -966,10 +982,9 @@ export default function UnifiedBookingDrawer({
               instapayReference: instapayReference || undefined,
               paymentStatus,
               roomId: isAutoRoomSelection ? '' : roomId,
-              roomName:
-                isAutoRoomSelection
-                  ? ''
-                  : allRooms.find((r: any) => r.id === roomId)?.name || existingEvent.extendedProps.roomName || '',
+              roomName: isAutoRoomSelection
+                ? ''
+                : allRooms.find((r: any) => r.id === roomId)?.name || existingEvent.extendedProps.roomName || '',
               businessNotes: businessNotes.trim() || undefined
             }
           }
@@ -2521,6 +2536,22 @@ export default function UnifiedBookingDrawer({
           </Box>
         </Box>
       </Box>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
       {/* Client Picker Dialog */}
       <ClientPickerDialog

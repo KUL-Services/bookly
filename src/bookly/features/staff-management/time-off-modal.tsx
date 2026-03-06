@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -18,7 +18,9 @@ import {
   Checkbox,
   Tooltip,
   IconButton,
-  FormHelperText
+  FormHelperText,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -154,6 +156,12 @@ export function TimeOffModal({
   const endTime = watch('endTime')
   const hasRepeat = watch('repeat')
 
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
+
   // Load existing data when modal opens
   useEffect(() => {
     if (open) {
@@ -225,7 +233,7 @@ export function TimeOffModal({
       }
       handleCancel()
     } catch (error: any) {
-      alert(error?.message || 'Failed to save time off')
+      setSnackbar({ open: true, message: error?.message || 'Failed to save time off', severity: 'error' })
     }
   }
 
@@ -235,7 +243,7 @@ export function TimeOffModal({
         await deleteTimeOff(editTimeOffId)
         handleCancel()
       } catch (error: any) {
-        alert(error?.message || 'Failed to delete time off')
+        setSnackbar({ open: true, message: error?.message || 'Failed to delete time off', severity: 'error' })
       }
     }
   }
@@ -525,6 +533,22 @@ export function TimeOffModal({
           </Button>
         </DialogActions>
       </form>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   )
 }

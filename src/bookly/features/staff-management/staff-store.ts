@@ -922,9 +922,9 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
           }
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Failed to update branch business hours on server:', e)
-      // We could optionally revert the optimistic UI update here if necessary
+      throw new Error(e?.response?.data?.message || e?.message || 'Failed to save business hours')
     }
   },
 
@@ -1105,8 +1105,9 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
         }
       }
       await get().fetchSchedulesFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save staff working hours:', err)
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to save working hours')
     }
   },
 
@@ -1181,8 +1182,9 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       }
 
       await get().fetchSchedulesFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save shift exceptions:', err)
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to save shift changes')
     }
   },
 
@@ -1260,8 +1262,9 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       }))
       await StaffService.updateStaff({ id: staffId, serviceIds })
       await get().fetchStaffFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to assign services to staff:', err)
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to assign services')
     }
   },
 
@@ -1506,9 +1509,10 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       set({ isStaffLoading: true })
       await StaffService.createStaff(staffData)
       await get().fetchStaffFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create staff member:', err)
       set({ isStaffLoading: false })
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to create staff member')
     }
   },
 
@@ -1517,9 +1521,10 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       set({ isStaffLoading: true })
       await StaffService.updateStaff({ id: staffId, ...staffData })
       await get().fetchStaffFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update staff member:', err)
       set({ isStaffLoading: false })
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to update staff member')
     }
   },
 
@@ -1528,9 +1533,10 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       set({ isStaffLoading: true })
       await StaffService.deleteStaff(staffId)
       await get().fetchStaffFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete staff member:', err)
       set({ isStaffLoading: false })
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to delete staff member')
     }
   },
 
@@ -1549,8 +1555,9 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       }
       await AssetsService.createAsset(assetData)
       await get().fetchResourcesFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create resource:', err)
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to create resource')
     }
   },
 
@@ -1568,8 +1575,9 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       }
       await AssetsService.updateAsset(assetData)
       await get().fetchResourcesFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update resource:', err)
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to update resource')
     }
   },
 
@@ -1577,8 +1585,9 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     try {
       await AssetsService.deleteAsset(id)
       await get().fetchResourcesFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete resource:', err)
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to delete resource')
     }
   },
 
@@ -1597,14 +1606,14 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
       }
       await AssetsService.createAsset(assetData)
       await get().fetchResourcesFromApi() // Rooms are fetched via resources/assets endpoint
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create room:', err)
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to create room')
     }
   },
 
   updateRoom: async (id, updates) => {
     try {
-      console.log('updateRoom called with updates:', updates)
       const assetData = {
         id,
         subType: 'ROOM' as const,
@@ -1615,11 +1624,11 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
         ...(updates.serviceIds && { serviceIds: updates.serviceIds }),
         ...((updates as any).bookingMode && { bookingMode: (updates as any).bookingMode })
       }
-      console.log('updateRoom payload assetData:', assetData)
       await AssetsService.updateAsset(assetData)
       await get().fetchResourcesFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update room:', err)
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to update room')
     }
   },
 
@@ -1627,8 +1636,9 @@ export const useStaffManagementStore = create<StaffManagementState>((set, get) =
     try {
       await AssetsService.deleteAsset(id)
       await get().fetchResourcesFromApi()
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete room:', err)
+      throw new Error(err?.response?.data?.message || err?.message || 'Failed to delete room')
     }
   },
 

@@ -16,7 +16,9 @@ import {
   Checkbox,
   FormControlLabel,
   Menu,
-  MenuItem as MuiMenuItem
+  MenuItem as MuiMenuItem,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import { useCalendarStore } from './state'
 import type { CalendarEvent, AppointmentStatus } from './types'
@@ -54,6 +56,11 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
 
   // Static mode state
   const [partySize, setPartySize] = useState(1)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
+    open: false,
+    message: '',
+    severity: 'error'
+  })
 
   // Update local state when event changes
   useEffect(() => {
@@ -149,7 +156,11 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
       const availableForEdit = remainingCapacity + currentPartySize
 
       if (partySize > availableForEdit) {
-        alert(`Not enough capacity: Only ${availableForEdit} spot(s) available, but ${partySize} requested`)
+        setSnackbar({
+          open: true,
+          message: `Not enough capacity: Only ${availableForEdit} spot(s) available, but ${partySize} requested`,
+          severity: 'error'
+        })
         return
       }
     }
@@ -586,6 +597,22 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
           </Box>
         </Box>
       </Box>
+
+      {/* Snackbar for Notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity as any}
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Drawer>
   )
 }
