@@ -103,6 +103,13 @@ export function RoomsTab() {
     fetchSchedulesFromApi()
   }, []) // Re-fetch schedules when date changes (week changes)
 
+  // Service name lookup by ID
+  const serviceNameMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    apiServices.forEach((s: any) => { map[s.id] = s.name })
+    return map
+  }, [apiServices])
+
   // Helper functions to access store data (mirrored from ShiftsTab)
   const getBusinessHoursForDay = (day: DayOfWeek) => {
     // Use selectedBranch if set to a specific one, otherwise use the first known branch or a default '1-1'
@@ -570,7 +577,10 @@ export function RoomsTab() {
     }
 
     // Filter sessions for this room and date
-    const roomSessions = sessions.filter(s => s.resourceId === room.id && s.dayOfWeek === dayOfWeekMap[dayOfWeek])
+    const dateStr = selectedDate.toISOString().split('T')[0]
+    const roomSessions = sessions.filter(
+      s => s.resourceId === room.id && (s.date?.split('T')[0] === dateStr || s.dayOfWeek === dayOfWeekMap[dayOfWeek])
+    )
 
     // Helper function to convert 24h time to 12h format
     const formatTime12Hour = (time24: string) => {
@@ -585,8 +595,8 @@ export function RoomsTab() {
       return `${hour}:${minute} ${period}`
     }
 
-    // Calculate dynamic height based on number of shifts (or 80 for flexible rooms)
-    const rowHeight = isFlexible ? 80 : schedule.shifts.length > 1 ? Math.max(80, schedule.shifts.length * 50) : 80
+    // Fixed height — sessions positioned by time on timeline, not stacked vertically
+    const rowHeight = 80
 
     return (
       <Box key={room.id} sx={{ display: 'flex', borderBottom: 1, borderColor: 'divider', minHeight: rowHeight }}>
@@ -745,7 +755,7 @@ export function RoomsTab() {
           </Box>
         </Box>
 
-        <Box sx={{ flex: 1, position: 'relative', m: 1 }}>
+        <Box sx={{ flex: 1, position: isFlexible ? 'relative' : 'static', m: 1, ...(!isFlexible ? { display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'stretch' } : {}) }}>
           {/* Flexible Room - Show business hours */}
           {isFlexible ? (
             businessHours?.isOpen && businessHours.shifts.length > 0 ? (
@@ -800,106 +810,7 @@ export function RoomsTab() {
             )
           ) : (
             <>
-              {/* Static Room: Invisible click area to add sessions */}
-              <Box
-                onClick={() => {
-                  setSessionResourceFilter(room.id)
-                  setSelectedSession(null)
-                  setIsSessionEditorOpen(true)
-                }}
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  zIndex: 1,
-                  cursor: 'pointer'
-                }}
-              />
-
-              {/* Static Room: Show shift blocks as grey background (like shifts-tab static staff) */}
-              {schedule.isAvailable &&
-                schedule.shifts.length > 0 &&
-                schedule.shifts.map((shift, idx) => {
-                  const shiftStart = formatTime12Hour(shift.start)
-                  const shiftEnd = formatTime12Hour(shift.end)
-
-                  return (
-                    <Box
-                      key={idx}
-                      onClick={() => {
-                        setSessionResourceFilter(room.id)
-                        setSelectedSession(null)
-                        setIsSessionEditorOpen(true)
-                      }}
-                      sx={{
-                        position: 'absolute',
-                        left: `${timeToPosition(shiftStart, dayOfWeek)}%`,
-                        width: `${calculateWidth(shiftStart, shiftEnd, dayOfWeek)}%`,
-                        top: schedule.shifts.length > 1 ? `${idx * (100 / schedule.shifts.length)}%` : 0,
-                        height: schedule.shifts.length > 1 ? `${Math.floor(90 / schedule.shifts.length)}%` : '100%',
-                        bgcolor: 'rgba(158, 158, 158, 0.2)',
-                        borderRadius: 1,
-                        border: '1px solid',
-                        borderColor: 'grey.400',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        px: 1.5,
-                        py: 0.5,
-                        zIndex: 2,
-                        transition: 'all 0.2s',
-                        overflow: 'hidden',
-                        '&:hover': {
-                          bgcolor: 'rgba(158, 158, 158, 0.3)',
-                          borderColor: 'grey.500',
-                          boxShadow: 1
-                        }
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 60 }}>
-                        <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
-                          {shiftStart.toLowerCase()}
-                        </Typography>
-                        <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
-                          {shiftEnd.toLowerCase()}
-                        </Typography>
-                      </Box>
-                      <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.6rem' }}>
-                        Cap: {shift.capacity ?? room.capacity}
-                      </Typography>
-                    </Box>
-                  )
-                })}
-
-              {/* Static Room: No shift placeholder */}
-              {(!schedule.isAvailable || schedule.shifts.length === 0) && roomSessions.length === 0 && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px dashed',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    zIndex: 0
-                  }}
-                >
-                  <Typography variant='caption' color='text.secondary'>
-                    Click to add session
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Static Room: Render Sessions */}
+              {/* Static Room: Render Sessions as flex cards */}
               {roomSessions.map(session => {
                 const sessionStart12h = formatTime12Hour(session.startTime)
                 const sessionEnd12h = formatTime12Hour(session.endTime)
@@ -914,63 +825,84 @@ export function RoomsTab() {
                       setIsSessionEditorOpen(true)
                     }}
                     sx={{
-                      position: 'absolute',
-                      top: 4,
-                      bottom: 4,
-                      left: `${timeToPosition(sessionStart12h, dayOfWeek)}%`,
-                      width: `${calculateWidth(sessionStart12h, sessionEnd12h, dayOfWeek)}%`,
-                      bgcolor: 'rgba(10, 44, 36, 0.3)',
-                      borderRadius: 1,
+                      minWidth: 130,
+                      bgcolor: 'rgba(33, 150, 243, 0.12)',
+                      borderRadius: 1.5,
                       border: '1px solid',
-                      borderColor: 'success.light',
+                      borderColor: 'info.light',
                       display: 'flex',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
                       px: 1.5,
-                      py: 0.5,
+                      py: 1,
                       cursor: 'pointer',
                       zIndex: 3,
                       transition: 'all 0.2s',
-                      overflow: 'hidden',
                       '&:hover': {
-                        bgcolor: 'rgba(139, 195, 74, 0.4)',
-                        borderColor: 'success.main',
+                        bgcolor: 'rgba(33, 150, 243, 0.22)',
+                        borderColor: 'info.main',
                         boxShadow: 1
                       }
                     }}
                   >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 60 }}>
-                      <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
-                        {sessionStart12h.toLowerCase()}
-                      </Typography>
-                      <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
-                        {sessionEnd12h.toLowerCase()}
-                      </Typography>
+                    {/* Session name */}
+                    <Typography variant='caption' fontWeight={700} noWrap sx={{ fontSize: '0.75rem', lineHeight: 1.3, color: 'info.dark' }}>
+                      {session.name}
+                    </Typography>
+                    {/* Time range */}
+                    <Typography variant='caption' sx={{ fontSize: '0.7rem', lineHeight: 1.4, color: 'text.secondary' }}>
+                      {sessionStart12h.toLowerCase()} - {sessionEnd12h.toLowerCase()}
+                    </Typography>
+                    {/* Details: participants, price, service */}
+                    <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center', mt: 0.5, flexWrap: 'wrap' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                        <i className='ri-group-line' style={{ fontSize: 12, opacity: 0.6 }} />
+                        <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1 }}>
+                          {session.maxParticipants}
+                        </Typography>
+                      </Box>
+                      {session.price != null && Number(session.price) > 0 && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                          <i className='ri-money-dollar-circle-line' style={{ fontSize: 12, opacity: 0.6 }} />
+                          <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1 }}>
+                            ${session.price}
+                          </Typography>
+                        </Box>
+                      )}
+                      {session.serviceId && serviceNameMap[session.serviceId] && (
+                        <Typography variant='caption' noWrap sx={{ fontSize: '0.65rem', lineHeight: 1, color: 'info.main', fontWeight: 500 }}>
+                          {serviceNameMap[session.serviceId]}
+                        </Typography>
+                      )}
                     </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, mx: 1, minWidth: 0 }}>
-                      <Typography variant='caption' fontWeight={600} noWrap sx={{ fontSize: '0.7rem' }}>
-                        {session.name}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.6rem' }}>
-                        Cap: {session.maxParticipants}
-                      </Typography>
-                    </Box>
-                    <IconButton
-                      size='small'
-                      sx={{ p: 0.25, opacity: 0.6, '&:hover': { opacity: 1 } }}
-                      onClick={e => {
-                        e.stopPropagation()
-                        setSessionResourceFilter(room.id)
-                        setSelectedSession(session)
-                        setIsSessionEditorOpen(true)
-                      }}
-                    >
-                      <i className='ri-edit-line' style={{ fontSize: 14 }} />
-                    </IconButton>
                   </Box>
                 )
               })}
+
+              {/* Add session button */}
+              <Box
+                onClick={() => {
+                  setSessionResourceFilter(room.id)
+                  setSelectedSession(null)
+                  setIsSessionEditorOpen(true)
+                }}
+                sx={{
+                  minWidth: 50,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px dashed',
+                  borderColor: 'grey.400',
+                  borderRadius: 1.5,
+                  cursor: 'pointer',
+                  px: 1.5,
+                  py: 1,
+                  transition: 'all 0.2s',
+                  '&:hover': { bgcolor: 'action.hover', borderColor: 'info.main' }
+                }}
+              >
+                <i className='ri-add-line' style={{ fontSize: 18, opacity: 0.5 }} />
+              </Box>
             </>
           )}
         </Box>
@@ -1563,7 +1495,7 @@ export function RoomsTab() {
                                 const roomSessions = sessions.filter(
                                   s =>
                                     s.resourceId === room.id &&
-                                    (s.date === dateStr || s.dayOfWeek === dayOfWeekMap[dayOfWeek])
+                                    (s.date?.split('T')[0] === dateStr || s.dayOfWeek === dayOfWeekMap[dayOfWeek])
                                 )
 
                                 return (
@@ -1611,15 +1543,15 @@ export function RoomsTab() {
                                         }}
                                         sx={{
                                           position: 'absolute',
-                                          top: 4,
-                                          bottom: 4,
-                                          left: `${4 + sIdx * 52}%`,
-                                          right: roomSessions.length === 1 ? 4 : undefined,
-                                          width: roomSessions.length > 1 ? '48%' : undefined,
-                                          bgcolor: 'rgba(10, 44, 36, 0.3)',
+                                          top: roomSessions.length > 1 ? `${4 + sIdx * (72 / roomSessions.length)}%` : 4,
+                                          bottom: roomSessions.length > 1 ? undefined : 4,
+                                          height: roomSessions.length > 1 ? `${Math.floor(68 / roomSessions.length)}%` : undefined,
+                                          left: 4,
+                                          right: 4,
+                                          bgcolor: 'rgba(33, 150, 243, 0.15)',
                                           borderRadius: 1,
                                           border: '1px solid',
-                                          borderColor: 'success.light',
+                                          borderColor: 'info.light',
                                           display: 'flex',
                                           flexDirection: 'column',
                                           alignItems: 'center',
@@ -1629,8 +1561,8 @@ export function RoomsTab() {
                                           overflow: 'hidden',
                                           transition: 'all 0.2s',
                                           '&:hover': {
-                                            bgcolor: 'rgba(139, 195, 74, 0.4)',
-                                            borderColor: 'success.main',
+                                            bgcolor: 'rgba(33, 150, 243, 0.25)',
+                                            borderColor: 'info.main',
                                             boxShadow: 1
                                           }
                                         }}
@@ -1641,9 +1573,27 @@ export function RoomsTab() {
                                         <Typography variant='caption' sx={{ fontSize: '0.55rem' }} noWrap>
                                           {formatTime12Hour(session.startTime).toLowerCase()} - {formatTime12Hour(session.endTime).toLowerCase()}
                                         </Typography>
-                                        <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.5rem' }} noWrap>
-                                          Cap: {session.maxParticipants}
-                                        </Typography>
+                                        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                            <i className='ri-group-line' style={{ fontSize: 10, opacity: 0.5 }} />
+                                            <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.5rem' }}>
+                                              {session.maxParticipants}
+                                            </Typography>
+                                          </Box>
+                                          {session.price != null && Number(session.price) > 0 && (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                              <i className='ri-money-dollar-circle-line' style={{ fontSize: 10, opacity: 0.5 }} />
+                                              <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.5rem' }}>
+                                                ${session.price}
+                                              </Typography>
+                                            </Box>
+                                          )}
+                                        </Box>
+                                        {session.serviceId && serviceNameMap[session.serviceId] && (
+                                          <Typography variant='caption' noWrap sx={{ fontSize: '0.5rem', color: 'info.main', fontWeight: 500, px: 0.5 }}>
+                                            {serviceNameMap[session.serviceId]}
+                                          </Typography>
+                                        )}
                                       </Box>
                                     ))}
 
@@ -1899,6 +1849,14 @@ export function RoomsTab() {
             console.error('Failed to save session:', error)
             alert('Failed to save session. Please try again.')
           }
+        }}
+        onDelete={async (sessionId: string) => {
+          const { SessionsService } = await import('@/lib/api/services/sessions.service')
+          await SessionsService.deleteSession(sessionId)
+          setIsSessionEditorOpen(false)
+          setSelectedSession(null)
+          setSessionResourceFilter(null)
+          fetchSchedulesFromApi()
         }}
         selectedResourceId={sessionResourceFilter}
       />

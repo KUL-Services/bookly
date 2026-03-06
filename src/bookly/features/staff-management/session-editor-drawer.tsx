@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   Dialog,
   DialogTitle,
@@ -22,11 +22,13 @@ import {
   FormHelperText,
   InputAdornment,
   Switch,
-  FormControlLabel
+  FormControlLabel,
+  Chip
 } from '@mui/material'
-import { format, parse } from 'date-fns'
+import { format } from 'date-fns'
 import type { Session, CreateSessionRequest } from '@/lib/api/types'
 import type { Resource } from '../calendar/types'
+import { TimeSelectField } from './time-select-field'
 
 interface SessionEditorDrawerProps {
   open: boolean
@@ -35,6 +37,7 @@ interface SessionEditorDrawerProps {
   resources: Resource[] // Resources with STATIC booking mode
   services: { id: string; name: string; duration: number }[]
   onSave: (data: CreateSessionRequest | Partial<Session>) => Promise<void>
+  onDelete?: (sessionId: string) => Promise<void>
   selectedResourceId?: string | null
 }
 
@@ -55,6 +58,7 @@ export function SessionEditorDrawer({
   resources,
   services,
   onSave,
+  onDelete,
   selectedResourceId
 }: SessionEditorDrawerProps) {
   const [name, setName] = useState('')
@@ -70,11 +74,38 @@ export function SessionEditorDrawer({
   const [price, setPrice] = useState<number | ''>('')
   const [isActive, setIsActive] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const isEditMode = !!session
 
   // Get the selected resource name for title
   const selectedResource = resources.find(r => r.id === (session?.resourceId || selectedResourceId || resourceId))
+
+  // Real-time time validation
+  const timeValidation = useMemo(() => {
+    if (!startTime || !endTime) return { hasError: false, message: '' }
+    const [startH, startM] = startTime.split(':').map(Number)
+    const [endH, endM] = endTime.split(':').map(Number)
+    const startMinutes = startH * 60 + startM
+    const endMinutes = endH * 60 + endM
+
+    if (startMinutes >= endMinutes) {
+      return { hasError: true, message: 'End time must be after start time.' }
+    }
+    return { hasError: false, message: '' }
+  }, [startTime, endTime])
+
+  // Calculate session duration
+  const durationLabel = useMemo(() => {
+    if (!startTime || !endTime || timeValidation.hasError) return ''
+    const [startH, startM] = startTime.split(':').map(Number)
+    const [endH, endM] = endTime.split(':').map(Number)
+    const minutes = endH * 60 + endM - (startH * 60 + startM)
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    return `${hours}h${mins > 0 ? ` ${mins}m` : ''}`
+  }, [startTime, endTime, timeValidation.hasError])
 
   // Load session data when editing
   useEffect(() => {
@@ -84,9 +115,9 @@ export function SessionEditorDrawer({
         setDescription(session.description || '')
         setResourceId(session.resourceId)
         setServiceId(session.serviceId || '')
-        setSessionType(session.dayOfWeek !== undefined ? 'recurring' : 'one-time')
+        setSessionType(session.dayOfWeek != null ? 'recurring' : 'one-time')
         setDayOfWeek(session.dayOfWeek ?? 1)
-        setDate(session.date || '')
+        setDate(session.date ? session.date.split('T')[0] : '')
         setStartTime(session.startTime)
         setEndTime(session.endTime)
         setMaxParticipants(session.maxParticipants)
@@ -133,11 +164,8 @@ export function SessionEditorDrawer({
       return
     }
 
-    // Compare times
-    const start = parse(startTime, 'HH:mm', new Date())
-    const end = parse(endTime, 'HH:mm', new Date())
-    if (end <= start) {
-      alert('End time must be after start time')
+    // Time validation is handled by real-time validation
+    if (timeValidation.hasError) {
       return
     }
 
@@ -145,6 +173,7 @@ export function SessionEditorDrawer({
 
     try {
       const sessionData: CreateSessionRequest | Partial<Session> = {
+        ...(isEditMode && session ? { id: session.id } : {}),
         name: name.trim(),
         description: description.trim() || undefined,
         resourceId,
@@ -164,6 +193,21 @@ export function SessionEditorDrawer({
       alert('Failed to save session. Please try again.')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!session?.id || !onDelete) return
+    setIsDeleting(true)
+    try {
+      await onDelete(session.id)
+      setShowDeleteConfirm(false)
+      onClose()
+    } catch (error) {
+      console.error('Failed to delete session:', error)
+      alert('Failed to delete session. Please try again.')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -248,11 +292,18 @@ export function SessionEditorDrawer({
             <MenuItem value=''>
               <em>No specific service</em>
             </MenuItem>
-            {services.map(service => (
-              <MenuItem key={service.id} value={service.id}>
-                {service.name} ({service.duration} min)
-              </MenuItem>
-            ))}
+            {services
+              .filter(service => {
+                const resource = resources.find(r => r.id === resourceId)
+                const allowedIds = (resource as any)?.serviceIds
+                if (!Array.isArray(allowedIds)) return true
+                return allowedIds.includes(service.id)
+              })
+              .map(service => (
+                <MenuItem key={service.id} value={service.id}>
+                  {service.name} ({service.duration} min)
+                </MenuItem>
+              ))}
           </Select>
           <FormHelperText>Link this session to a specific service</FormHelperText>
         </FormControl>
@@ -318,26 +369,39 @@ export function SessionEditorDrawer({
         )}
 
         {/* Time Range */}
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <TextField
-            type='time'
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <TimeSelectField
             label='Start Time'
             value={startTime}
-            onChange={e => setStartTime(e.target.value)}
-            InputLabelProps={{ shrink: true }}
+            onChange={setStartTime}
             required
             fullWidth
+            error={timeValidation.hasError}
           />
-          <TextField
-            type='time'
+          <TimeSelectField
             label='End Time'
             value={endTime}
-            onChange={e => setEndTime(e.target.value)}
-            InputLabelProps={{ shrink: true }}
+            onChange={setEndTime}
             required
             fullWidth
+            error={timeValidation.hasError}
           />
+          {durationLabel && (
+            <Chip
+              icon={<i className='ri-time-line' style={{ fontSize: 16 }} />}
+              size='small'
+              label={durationLabel}
+              sx={{ flexShrink: 0 }}
+            />
+          )}
         </Box>
+
+        {/* Time validation error */}
+        {timeValidation.hasError && (
+          <Alert severity='error' sx={{ py: 0.5 }}>
+            <Typography variant='caption'>{timeValidation.message}</Typography>
+          </Alert>
+        )}
 
         <Divider />
 
@@ -402,13 +466,43 @@ export function SessionEditorDrawer({
         </Alert>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button variant='outlined' onClick={onClose} disabled={isSaving}>
-          Cancel
-        </Button>
-        <Button variant='contained' onClick={handleSave} disabled={isSaving || staticResources.length === 0}>
-          {isSaving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Session'}
-        </Button>
+      <DialogActions sx={{ px: 3, py: 2, justifyContent: isEditMode && onDelete ? 'space-between' : 'flex-end' }}>
+        {isEditMode &&
+          onDelete &&
+          (showDeleteConfirm ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant='body2' color='error'>
+                Delete this session?
+              </Typography>
+              <Button size='small' color='error' variant='contained' onClick={handleDelete} disabled={isDeleting}>
+                {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+              </Button>
+              <Button size='small' onClick={() => setShowDeleteConfirm(false)} disabled={isDeleting}>
+                No
+              </Button>
+            </Box>
+          ) : (
+            <Button
+              color='error'
+              startIcon={<i className='ri-delete-bin-line' />}
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isSaving}
+            >
+              Delete
+            </Button>
+          ))}
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant='outlined' onClick={onClose} disabled={isSaving || isDeleting}>
+            Cancel
+          </Button>
+          <Button
+            variant='contained'
+            onClick={handleSave}
+            disabled={isSaving || isDeleting || staticResources.length === 0 || timeValidation.hasError}
+          >
+            {isSaving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Session'}
+          </Button>
+        </Box>
       </DialogActions>
     </Dialog>
   )

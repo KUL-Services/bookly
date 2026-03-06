@@ -264,6 +264,7 @@ export function ShiftsTab() {
   const {
     timeOffRequests,
     staffMembers,
+    staffServiceAssignments,
     apiBranches,
     getStaffWorkingHours,
     getStaffShiftsForDate,
@@ -295,6 +296,15 @@ export function ShiftsTab() {
     fetchSchedulesFromApi()
     fetchResourcesFromApi()
   }, [])
+
+  // Service name lookup by ID
+  const serviceNameMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    apiServices.forEach((s: any) => {
+      map[s.id] = s.name
+    })
+    return map
+  }, [apiServices])
 
   // Helper functions to access store data
   const getBusinessHoursForDay = (day: DayOfWeek) => {
@@ -546,6 +556,13 @@ export function ShiftsTab() {
       console.error('Failed to save session:', error)
       alert('Failed to save session. Please try again.')
     }
+  }
+
+  const handleSessionDelete = async (sessionId: string) => {
+    const { SessionsService } = await import('@/lib/api/services/sessions.service')
+    await SessionsService.deleteSession(sessionId)
+    closeSessionEditor()
+    fetchSchedulesFromApi()
   }
 
   const closeShiftEditor = () => {
@@ -955,16 +972,17 @@ export function ShiftsTab() {
     const shiftStart = firstShift ? formatTime12Hour(firstShift.start) : '10:00 AM'
     const shiftEnd = firstShift ? formatTime12Hour(firstShift.end) : '7:00 PM'
 
-    // Calculate dynamic height based on number of shifts
-    const containerMinHeight = shifts.length > 1 ? 80 + (shifts.length - 1) * 50 : 80
-
     // Filter sessions for this staff and date
     const staffSessions = sessions.filter(
-      s => s.resourceId === staff.id && (s.date === dateStr || s.dayOfWeek === selectedDate.getDay())
+      s => s.resourceId === staff.id && (s.date?.split('T')[0] === dateStr || s.dayOfWeek === selectedDate.getDay())
     )
 
     // Use date-based staff type for display
     const staffTypeForDate = getStaffTypeForDate(staff.id, selectedDate)
+
+    // Calculate dynamic height — static staff use auto height (flex cards), dynamic use fixed
+    const itemCount = staffTypeForDate === 'static' ? 1 : Math.max(1, shifts.length)
+    const containerMinHeight = itemCount > 1 ? 80 + (itemCount - 1) * 50 : 80
 
     return (
       <Box
@@ -1079,43 +1097,32 @@ export function ShiftsTab() {
                 }}
               >
                 <Typography variant='caption'>
-                  {hasShift && firstShift
-                    ? `D ${Math.floor((parseInt(firstShift.end.split(':')[0]) * 60 + parseInt(firstShift.end.split(':')[1]) - (parseInt(firstShift.start.split(':')[0]) * 60 + parseInt(firstShift.start.split(':')[1]))) / 60)}h`
-                    : 'D 0h'}
+                  {staffTypeForDate === 'static'
+                    ? `${staffSessions.length} session${staffSessions.length !== 1 ? 's' : ''}`
+                    : hasShift && firstShift
+                      ? `D ${Math.floor((parseInt(firstShift.end.split(':')[0]) * 60 + parseInt(firstShift.end.split(':')[1]) - (parseInt(firstShift.start.split(':')[0]) * 60 + parseInt(firstShift.start.split(':')[1]))) / 60)}h`
+                      : 'D 0h'}
                 </Typography>
               </Box>
             </Box>
           </Box>
         </Box>
 
-        <Box sx={{ flex: 1, position: 'relative', m: 1 }}>
-          {/* Timeline background / Add slot for static */}
-          {staffTypeForDate === 'static' && (
-            <Box
-              onClick={() => {
-                setSessionResourceFilter(staff.id)
-                setSelectedSession(null)
-                setIsSessionEditorOpen(true)
-              }}
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 1,
-                cursor: 'pointer',
-                borderRadius: 1,
-                transition: 'all 0.2s',
-                '&:hover': {
-                  bgcolor: 'rgba(158, 158, 158, 0.15)'
-                }
-              }}
-            />
-          )}
+        <Box
+          sx={{
+            flex: 1,
+            position: staffTypeForDate === 'static' ? 'static' : 'relative',
+            m: 1,
+            ...(staffTypeForDate === 'static'
+              ? { display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'stretch' }
+              : {})
+          }}
+        >
+          {/* Timeline background / Add slot for static (hidden when sessions exist — + button used instead) */}
 
           {hasShift &&
             !timeOff &&
+            staffTypeForDate !== 'static' &&
             shifts.map((shift, idx) => {
               // Calculate break duration for display
               const getBreakDuration = (brk: { start: string; end: string }) => {
@@ -1232,7 +1239,7 @@ export function ShiftsTab() {
               )
             })}
 
-          {/* Sessions */}
+          {/* Sessions — flex cards with dynamic width for static staff */}
           {staffSessions.map(session => (
             <Box
               key={session.id}
@@ -1243,62 +1250,94 @@ export function ShiftsTab() {
                 setIsSessionEditorOpen(true)
               }}
               sx={{
-                position: 'absolute',
-                top: 4,
-                bottom: 4,
-                left: `${timeToPosition(session.startTime, dayOfWeek)}%`,
-                width: `${calculateWidth(session.startTime, session.endTime, dayOfWeek)}%`,
-                bgcolor: 'rgba(10, 44, 36, 0.3)',
-                borderRadius: 1,
+                minWidth: 130,
+                bgcolor: 'rgba(33, 150, 243, 0.12)',
+                borderRadius: 1.5,
                 border: '1px solid',
-                borderColor: 'success.light',
+                borderColor: 'info.light',
                 display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                flexDirection: 'column',
+                justifyContent: 'center',
                 px: 1.5,
-                py: 0.5,
+                py: 1,
                 cursor: 'pointer',
                 zIndex: 3,
                 transition: 'all 0.2s',
-                overflow: 'hidden',
                 '&:hover': {
-                  bgcolor: 'rgba(139, 195, 74, 0.4)',
-                  borderColor: 'success.main',
+                  bgcolor: 'rgba(33, 150, 243, 0.22)',
+                  borderColor: 'info.main',
                   boxShadow: 1
                 }
               }}
             >
-              <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 60 }}>
-                <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
-                  {formatTime12Hour(session.startTime).toLowerCase()}
-                </Typography>
-                <Typography variant='caption' fontWeight={500} sx={{ fontSize: '0.7rem', lineHeight: 1.3 }}>
-                  {formatTime12Hour(session.endTime).toLowerCase()}
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, mx: 1, minWidth: 0 }}>
-                <Typography variant='caption' fontWeight={600} noWrap sx={{ fontSize: '0.7rem' }}>
-                  {session.name}
-                </Typography>
-                <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.6rem' }}>
-                  Cap: {session.maxParticipants}
-                </Typography>
-              </Box>
-              <IconButton
-                size='small'
-                sx={{ p: 0.25, opacity: 0.6, '&:hover': { opacity: 1 } }}
-                onClick={e => {
-                  e.stopPropagation()
-                  setSelectedSession(session)
-                  setSessionResourceFilter(staff.id)
-                  setIsSessionEditorOpen(true)
-                }}
+              {/* Session name */}
+              <Typography
+                variant='caption'
+                fontWeight={700}
+                noWrap
+                sx={{ fontSize: '0.75rem', lineHeight: 1.3, color: 'info.dark' }}
               >
-                <i className='ri-edit-line' style={{ fontSize: 14 }} />
-              </IconButton>
+                {session.name}
+              </Typography>
+              {/* Time range */}
+              <Typography variant='caption' sx={{ fontSize: '0.7rem', lineHeight: 1.4, color: 'text.secondary' }}>
+                {formatTime12Hour(session.startTime).toLowerCase()} - {formatTime12Hour(session.endTime).toLowerCase()}
+              </Typography>
+              {/* Details: participants, price, service */}
+              <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center', mt: 0.5, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                  <i className='ri-group-line' style={{ fontSize: 12, opacity: 0.6 }} />
+                  <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1 }}>
+                    {session.maxParticipants}
+                  </Typography>
+                </Box>
+                {session.price != null && Number(session.price) > 0 && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                    <i className='ri-money-dollar-circle-line' style={{ fontSize: 12, opacity: 0.6 }} />
+                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.65rem', lineHeight: 1 }}>
+                      ${session.price}
+                    </Typography>
+                  </Box>
+                )}
+                {session.serviceId && serviceNameMap[session.serviceId] && (
+                  <Typography
+                    variant='caption'
+                    noWrap
+                    sx={{ fontSize: '0.65rem', lineHeight: 1, color: 'info.main', fontWeight: 500 }}
+                  >
+                    {serviceNameMap[session.serviceId]}
+                  </Typography>
+                )}
+              </Box>
             </Box>
           ))}
+
+          {/* Add session button for static staff */}
+          {staffTypeForDate === 'static' && (
+            <Box
+              onClick={() => {
+                setSessionResourceFilter(staff.id)
+                setSelectedSession(null)
+                setIsSessionEditorOpen(true)
+              }}
+              sx={{
+                minWidth: 50,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px dashed',
+                borderColor: 'grey.400',
+                borderRadius: 1.5,
+                cursor: 'pointer',
+                px: 1.5,
+                py: 1,
+                transition: 'all 0.2s',
+                '&:hover': { bgcolor: 'action.hover', borderColor: 'info.main' }
+              }}
+            >
+              <i className='ri-add-line' style={{ fontSize: 18, opacity: 0.5 }} />
+            </Box>
+          )}
 
           {!hasShift && !timeOff && staffTypeForDate !== 'static' && (
             <Box
@@ -1320,30 +1359,6 @@ export function ShiftsTab() {
             >
               <Typography variant='caption' color='text.secondary'>
                 No Shift
-              </Typography>
-            </Box>
-          )}
-
-          {/* Visible placeholder for static staff with no sessions */}
-          {staffTypeForDate === 'static' && staffSessions.length === 0 && !timeOff && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px dashed',
-                borderColor: 'grey.300',
-                borderRadius: 1,
-                pointerEvents: 'none'
-              }}
-            >
-              <Typography variant='caption' color='text.secondary' sx={{ opacity: 0.6 }}>
-                Click to add session
               </Typography>
             </Box>
           )}
@@ -2123,6 +2138,7 @@ export function ShiftsTab() {
             onClose={closeSessionEditor}
             session={selectedSession}
             onSave={handleSessionSave}
+            onDelete={handleSessionDelete}
             selectedResourceId={sessionResourceFilter}
             resources={[
               ...staffMembers
@@ -2134,7 +2150,7 @@ export function ShiftsTab() {
                   type: 'staff',
                   bookingMode: 'STATIC' as const,
                   capacity: 1,
-                  serviceIds: s.serviceIds || []
+                  serviceIds: staffServiceAssignments[s.id] || s.serviceIds || []
                 })),
               ...rooms
                 .filter(r => r.roomType === 'static')
@@ -3141,7 +3157,9 @@ export function ShiftsTab() {
 
                             // Filter sessions for this staff and date
                             const staffSessions = sessions.filter(
-                              s => s.resourceId === staff.id && (s.date === dateStr || s.dayOfWeek === date.getDay())
+                              s =>
+                                s.resourceId === staff.id &&
+                                (s.date?.split('T')[0] === dateStr || s.dayOfWeek === date.getDay())
                             )
 
                             // Helper function to convert 24h time to 12h format
@@ -3172,32 +3190,6 @@ export function ShiftsTab() {
                                   p: 1
                                 }}
                               >
-                                {hasShift &&
-                                  !timeOff &&
-                                  shifts.map((shift, idx) => {
-                                    const shiftStart = formatTime12Hour(shift.start)
-                                    const shiftEnd = formatTime12Hour(shift.end)
-
-                                    return (
-                                      <Box
-                                        key={idx}
-                                        sx={{
-                                          position: 'relative',
-                                          width: '100%',
-                                          height: '100%',
-                                          bgcolor: theme =>
-                                            theme.palette.mode === 'dark'
-                                              ? 'rgba(120, 120, 120, 0.1)'
-                                              : 'rgba(158, 158, 158, 0.1)',
-                                          borderRadius: 1,
-                                          border: '1px dashed',
-                                          borderColor: 'grey.300',
-                                          pointerEvents: 'none'
-                                        }}
-                                      />
-                                    )
-                                  })}
-
                                 {/* Render Sessions as absolute tiles */}
                                 {staffSessions.map((session, sIdx) => (
                                   <Box
@@ -3210,15 +3202,18 @@ export function ShiftsTab() {
                                     }}
                                     sx={{
                                       position: 'absolute',
-                                      top: 4,
-                                      bottom: 4,
-                                      left: `${4 + sIdx * 52}%`,
-                                      right: staffSessions.length === 1 ? 4 : undefined,
-                                      width: staffSessions.length > 1 ? '48%' : undefined,
-                                      bgcolor: 'rgba(10, 44, 36, 0.3)',
+                                      top: staffSessions.length > 1 ? `${4 + sIdx * (72 / staffSessions.length)}%` : 4,
+                                      bottom: staffSessions.length > 1 ? undefined : 4,
+                                      height:
+                                        staffSessions.length > 1
+                                          ? `${Math.floor(68 / staffSessions.length)}%`
+                                          : undefined,
+                                      left: 4,
+                                      right: 4,
+                                      bgcolor: 'rgba(33, 150, 243, 0.15)',
                                       borderRadius: 1,
                                       border: '1px solid',
-                                      borderColor: 'success.light',
+                                      borderColor: 'info.light',
                                       display: 'flex',
                                       flexDirection: 'column',
                                       alignItems: 'center',
@@ -3228,21 +3223,60 @@ export function ShiftsTab() {
                                       overflow: 'hidden',
                                       transition: 'all 0.2s',
                                       '&:hover': {
-                                        bgcolor: 'rgba(139, 195, 74, 0.4)',
-                                        borderColor: 'success.main',
+                                        bgcolor: 'rgba(33, 150, 243, 0.25)',
+                                        borderColor: 'info.main',
                                         boxShadow: 1
                                       }
                                     }}
                                   >
-                                    <Typography variant='caption' fontWeight={600} noWrap sx={{ fontSize: '0.6rem', px: 0.5 }}>
+                                    <Typography
+                                      variant='caption'
+                                      fontWeight={600}
+                                      noWrap
+                                      sx={{ fontSize: '0.6rem', px: 0.5 }}
+                                    >
                                       {session.name}
                                     </Typography>
                                     <Typography variant='caption' sx={{ fontSize: '0.55rem' }} noWrap>
-                                      {formatTime12Hour(session.startTime).toLowerCase()} - {formatTime12Hour(session.endTime).toLowerCase()}
+                                      {formatTime12Hour(session.startTime).toLowerCase()} -{' '}
+                                      {formatTime12Hour(session.endTime).toLowerCase()}
                                     </Typography>
-                                    <Typography variant='caption' color='text.secondary' sx={{ fontSize: '0.5rem' }} noWrap>
-                                      Cap: {session.maxParticipants}
-                                    </Typography>
+                                    <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                        <i className='ri-group-line' style={{ fontSize: 10, opacity: 0.5 }} />
+                                        <Typography
+                                          variant='caption'
+                                          color='text.secondary'
+                                          sx={{ fontSize: '0.5rem' }}
+                                        >
+                                          {session.maxParticipants}
+                                        </Typography>
+                                      </Box>
+                                      {session.price != null && Number(session.price) > 0 && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                          <i
+                                            className='ri-money-dollar-circle-line'
+                                            style={{ fontSize: 10, opacity: 0.5 }}
+                                          />
+                                          <Typography
+                                            variant='caption'
+                                            color='text.secondary'
+                                            sx={{ fontSize: '0.5rem' }}
+                                          >
+                                            ${session.price}
+                                          </Typography>
+                                        </Box>
+                                      )}
+                                    </Box>
+                                    {session.serviceId && serviceNameMap[session.serviceId] && (
+                                      <Typography
+                                        variant='caption'
+                                        noWrap
+                                        sx={{ fontSize: '0.5rem', color: 'info.main', fontWeight: 500, px: 0.5 }}
+                                      >
+                                        {serviceNameMap[session.serviceId]}
+                                      </Typography>
+                                    )}
                                   </Box>
                                 ))}
 
@@ -3320,25 +3354,31 @@ export function ShiftsTab() {
                                 )}
 
                                 {/* Visible placeholder for static staff with no sessions */}
-                                {getStaffTypeForDate(staff.id, date) === 'static' && staffSessions.length === 0 && !timeOff && (
-                                  <Box
-                                    sx={{
-                                      width: '100%',
-                                      height: '100%',
-                                      borderRadius: 1,
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      border: '1px dashed',
-                                      borderColor: 'grey.300',
-                                      pointerEvents: 'none'
-                                    }}
-                                  >
-                                    <Typography variant='caption' color='text.secondary' sx={{ opacity: 0.6, fontSize: '0.6rem' }}>
-                                      No sessions
-                                    </Typography>
-                                  </Box>
-                                )}
+                                {getStaffTypeForDate(staff.id, date) === 'static' &&
+                                  staffSessions.length === 0 &&
+                                  !timeOff && (
+                                    <Box
+                                      sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        borderRadius: 1,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        border: '1px dashed',
+                                        borderColor: 'grey.300',
+                                        pointerEvents: 'none'
+                                      }}
+                                    >
+                                      <Typography
+                                        variant='caption'
+                                        color='text.secondary'
+                                        sx={{ opacity: 0.6, fontSize: '0.6rem' }}
+                                      >
+                                        No sessions
+                                      </Typography>
+                                    </Box>
+                                  )}
                                 {timeOff && (
                                   <Box
                                     onClick={() =>
@@ -3676,6 +3716,7 @@ export function ShiftsTab() {
         onClose={closeSessionEditor}
         session={selectedSession}
         onSave={handleSessionSave}
+        onDelete={handleSessionDelete}
         selectedResourceId={sessionResourceFilter}
         resources={[
           ...staffMembers
@@ -3687,7 +3728,7 @@ export function ShiftsTab() {
               type: 'staff',
               bookingMode: 'STATIC' as const,
               capacity: 1,
-              serviceIds: s.serviceIds || []
+              serviceIds: staffServiceAssignments[s.id] || s.serviceIds || []
             })),
           ...rooms
             .filter(r => r.roomType === 'static')
