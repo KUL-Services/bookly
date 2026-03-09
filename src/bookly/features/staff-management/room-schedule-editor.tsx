@@ -468,12 +468,26 @@ export function RoomScheduleEditor({
                             </Select>
                           )}
                           {isStaticCapacity ? (
-                            <Typography variant='caption' color={!shift.serviceIds || shift.serviceIds.length === 0 ? 'error' : 'text.secondary'} sx={{ mt: 0.5 }}>
-                              {!shift.serviceIds || shift.serviceIds.length === 0 ? 'Please select a service' : 'Each fixed session requires one service.'}
+                            <Typography
+                              variant='caption'
+                              color={!shift.serviceIds || shift.serviceIds.length === 0 ? 'error' : 'text.secondary'}
+                              sx={{ mt: 0.5 }}
+                            >
+                              {!shift.serviceIds || shift.serviceIds.length === 0
+                                ? 'Please select a service'
+                                : 'Each fixed session requires one service.'}
                             </Typography>
                           ) : (
-                            <Typography variant='caption' color={!shift.serviceIds || shift.serviceIds.length === 0 ? 'error' : 'text.secondary'} sx={{ mt: 0.5 }}>
-                              {!shift.serviceIds || shift.serviceIds.length === 0 ? 'Please select at least one service' : roomServiceIds.length > 0 ? 'Only services assigned to this room are shown' : 'Select services for this shift'}
+                            <Typography
+                              variant='caption'
+                              color={!shift.serviceIds || shift.serviceIds.length === 0 ? 'error' : 'text.secondary'}
+                              sx={{ mt: 0.5 }}
+                            >
+                              {!shift.serviceIds || shift.serviceIds.length === 0
+                                ? 'Please select at least one service'
+                                : roomServiceIds.length > 0
+                                  ? 'Only services assigned to this room are shown'
+                                  : 'Select services for this shift'}
                             </Typography>
                           )}
                         </FormControl>
@@ -596,7 +610,11 @@ export function RoomScheduleEditor({
         <Button onClick={onClose} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant='contained' disabled={hasOverlaps || (isAvailable && shifts.some(s => !s.serviceIds || s.serviceIds.length === 0))}>
+        <Button
+          onClick={handleSave}
+          variant='contained'
+          disabled={hasOverlaps || (isAvailable && shifts.some(s => !s.serviceIds || s.serviceIds.length === 0))}
+        >
           Save Schedule
         </Button>
       </DialogActions>

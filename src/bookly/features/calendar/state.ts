@@ -360,58 +360,89 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
       const backgroundEvents = generateBackgroundEvents()
 
+      // Early abort: if a newer fetch started during the bookings call, skip sessions fetch
+      if (myFetchId !== currentFetchId) {
+        return
+      }
+
       // Fetch API sessions for static resources and create session slot events
       let sessionEvents: CalendarEvent[] = []
       try {
+        // Get staff and rooms to determine if a session's resourceId is staff or room
+        const { staff, rooms } = get()
+        const staffIds = new Set(staff.map((s: any) => s.id))
+        const roomIds = new Set(rooms.map(r => r.id))
+
+        // Single API call for all sessions — fast, avoids stale-fetch aborts on navigation
         const sessionsRes = await SessionsService.getSessions()
         const allSessions: Session[] = Array.isArray(sessionsRes?.data) ? sessionsRes.data : []
 
-        if (allSessions.length > 0) {
-          // Get staff and rooms to determine if a session's resourceId is staff or room
-          const { staff, rooms } = get()
-          const staffIds = new Set(staff.map((s: any) => s.id))
-          const roomIds = new Set(rooms.map(r => r.id))
-
-          // Iterate through each day in the visible range
-          const currentDate = new Date(range.start)
-          const rangeEnd = new Date(range.end)
-
-          while (currentDate <= rangeEnd) {
-            const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`
-            const dayOfWeek = currentDate.getDay()
-
-            // Find sessions applicable to this day
-            const daySessions = allSessions.filter(s => {
-              if (!s.isActive) return false
-              if (s.dayOfWeek != null) return s.dayOfWeek === dayOfWeek
-              if (s.date) return s.date.split('T')[0] === dateStr
-              return false
-            })
-
-            for (const session of daySessions) {
-              const [startH, startM] = session.startTime.split(':').map(Number)
-              const [endH, endM] = session.endTime.split(':').map(Number)
-              const sessionStart = new Date(currentDate)
-              sessionStart.setHours(startH, startM, 0, 0)
-              const sessionEnd = new Date(currentDate)
-              sessionEnd.setHours(endH, endM, 0, 0)
-
-              const isStaffResource = staffIds.has(session.resourceId)
-              const isRoomResource = roomIds.has(session.resourceId)
-              const staffMember = isStaffResource ? staff.find((s: any) => s.id === session.resourceId) : null
-              const room = isRoomResource ? rooms.find(r => r.id === session.resourceId) : null
-
-              // Resolve serviceId: prefer session's serviceId, then try resource's first assigned service
-              let resolvedServiceId = session.serviceId || ''
-              if (!resolvedServiceId) {
-                const resourceServiceIds = (staffMember as any)?.serviceIds || (room as any)?.serviceIds
-                if (Array.isArray(resourceServiceIds) && resourceServiceIds.length > 0) {
-                  resolvedServiceId = resourceServiceIds[0]
-                }
+        // Helper: check if a resource is static on a given date (mode transition guard)
+        const isResourceStaticOnDate = (resourceId: string, date: Date): boolean => {
+          const staffMember = staff.find((s: any) => s.id === resourceId)
+          if (staffMember) {
+            if ((staffMember as any).pendingBookingMode && (staffMember as any).bookingModeEffectiveDate) {
+              const effectiveDate = new Date((staffMember as any).bookingModeEffectiveDate)
+              if (!Number.isNaN(effectiveDate.getTime()) && date >= effectiveDate) {
+                return (staffMember as any).pendingBookingMode === 'STATIC'
               }
+            }
+            if ((staffMember as any).bookingMode === 'DYNAMIC' && !(staffMember as any).pendingBookingMode) return false
+            return (staffMember as any).staffType === 'static' || (staffMember as any).bookingMode === 'STATIC'
+          }
+          const room = rooms.find(r => r.id === resourceId)
+          if (room) {
+            if ((room as any).pendingBookingMode && (room as any).bookingModeEffectiveDate) {
+              const effectiveDate = new Date((room as any).bookingModeEffectiveDate)
+              if (!Number.isNaN(effectiveDate.getTime()) && date >= effectiveDate) {
+                return (room as any).pendingBookingMode === 'STATIC'
+              }
+            }
+            if ((room as any).bookingMode === 'DYNAMIC' && !(room as any).pendingBookingMode) return false
+            return (room as any).roomType === 'static' || (room as any).bookingMode === 'STATIC'
+          }
+          return true // Unknown resource — show session
+        }
+
+        // Expand sessions into per-day events across the visible range
+        const rangeStart = new Date(range.start)
+        const rangeEnd = new Date(range.end)
+
+        for (const session of allSessions) {
+          if (!session.isActive) continue
+          const [startH, startM] = session.startTime.split(':').map(Number)
+          const [endH, endM] = session.endTime.split(':').map(Number)
+
+          const isStaffResource = staffIds.has(session.resourceId)
+          const isRoomResource = roomIds.has(session.resourceId)
+          const staffMember = isStaffResource ? staff.find((s: any) => s.id === session.resourceId) : null
+          const room = isRoomResource ? rooms.find(r => r.id === session.resourceId) : null
+
+          // Resolve serviceId
+          let resolvedServiceId = session.serviceId || ''
+          if (!resolvedServiceId) {
+            const resourceServiceIds = (staffMember as any)?.serviceIds || (room as any)?.serviceIds
+            if (Array.isArray(resourceServiceIds) && resourceServiceIds.length > 0) {
+              resolvedServiceId = resourceServiceIds[0]
+            }
+          }
+
+          // For recurring sessions (dayOfWeek), expand across visible range
+          // For one-time sessions (date), only show on that specific date
+          if (session.date) {
+            // One-time session
+            const sessionDate = new Date(session.date.split('T')[0] + 'T00:00:00')
+            if (sessionDate >= rangeStart && sessionDate <= rangeEnd) {
+              if (!isResourceStaticOnDate(session.resourceId, sessionDate)) continue
+
+              const sessionStart = new Date(sessionDate)
+              sessionStart.setHours(startH, startM, 0, 0)
+              const sessionEnd = new Date(sessionDate)
+              sessionEnd.setHours(endH, endM, 0, 0)
+              const evtDateStr = sessionDate.toISOString().split('T')[0]
 
               sessionEvents.push({
-                id: `session-def-${session.id}-${dateStr}`,
+                id: `session-def-${session.id}-${evtDateStr}`,
                 title: session.name,
                 start: sessionStart,
                 end: sessionEnd,
@@ -439,8 +470,57 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
                 }
               })
             }
+          } else if (session.dayOfWeek !== undefined && session.dayOfWeek !== null) {
+            // Recurring session — expand for each matching day in the visible range
+            const dayMap: Record<string, number> = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 }
+            const targetDay = typeof session.dayOfWeek === 'number' ? session.dayOfWeek : dayMap[session.dayOfWeek] ?? -1
+            if (targetDay < 0) continue
 
-            currentDate.setDate(currentDate.getDate() + 1)
+            const current = new Date(rangeStart)
+            while (current <= rangeEnd) {
+              if (current.getDay() === targetDay) {
+                if (!isResourceStaticOnDate(session.resourceId, current)) {
+                  current.setDate(current.getDate() + 1)
+                  continue
+                }
+
+                const sessionStart = new Date(current)
+                sessionStart.setHours(startH, startM, 0, 0)
+                const sessionEnd = new Date(current)
+                sessionEnd.setHours(endH, endM, 0, 0)
+                const evtDateStr = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, '0')}-${String(current.getDate()).padStart(2, '0')}`
+
+                sessionEvents.push({
+                  id: `session-def-${session.id}-${evtDateStr}`,
+                  title: session.name,
+                  start: sessionStart,
+                  end: sessionEnd,
+                  extendedProps: {
+                    isSessionDefinition: true,
+                    sessionId: session.id,
+                    slotId: session.id,
+                    sessionName: session.name,
+                    maxParticipants: session.maxParticipants,
+                    status: 'confirmed' as const,
+                    paymentStatus: 'unpaid' as const,
+                    staffId: isStaffResource ? session.resourceId : '',
+                    staffName: (staffMember as any)?.name || session.name,
+                    roomId: isRoomResource ? session.resourceId : '',
+                    roomName: room?.name || '',
+                    serviceId: resolvedServiceId,
+                    serviceName: session.name,
+                    selectionMethod: 'by_client' as const,
+                    bookedBy: 'business' as const,
+                    starred: false,
+                    customerName: '',
+                    price: session.price ?? 0,
+                    bookingId: session.id,
+                    branchId: (staffMember as any)?.branchId || room?.branchId || ''
+                  }
+                })
+              }
+              current.setDate(current.getDate() + 1)
+            }
           }
         }
       } catch (error) {

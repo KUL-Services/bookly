@@ -109,6 +109,11 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
   const staff = useCalendarStore(state => state.staff)
   const rooms = useCalendarStore(state => state.rooms)
+  const isLoading = useCalendarStore(state => state.isLoading)
+
+  // Subscribe to raw events so component re-renders when fetchEvents completes.
+  // getFilteredEvents is a stable function ref that doesn't trigger re-renders by itself.
+  const storeEvents = useCalendarStore(state => state.events)
 
   // Fetch events when date range changes, or when resources load (sessions need them for mapping)
   useEffect(() => {
@@ -155,8 +160,9 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [])
 
-  // Get filtered events
-  const events = getFilteredEvents()
+  // Compute filtered events — depends on storeEvents so it recomputes when fetchEvents completes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const events = useMemo(() => getFilteredEvents(), [storeEvents, visibleDateRange, branchFilters, staffFilters, roomFilters, highlights, schedulingMode])
   const allStaff = useCalendarStore(state => state.staff)
 
   // Determine which staff are being shown (dynamic mode)

@@ -972,13 +972,18 @@ export function ShiftsTab() {
     const shiftStart = firstShift ? formatTime12Hour(firstShift.start) : '10:00 AM'
     const shiftEnd = firstShift ? formatTime12Hour(firstShift.end) : '7:00 PM'
 
-    // Filter sessions for this staff and date
-    const staffSessions = sessions.filter(
-      s => s.resourceId === staff.id && (s.date?.split('T')[0] === dateStr || s.dayOfWeek === selectedDate.getDay())
-    )
-
     // Use date-based staff type for display
     const staffTypeForDate = getStaffTypeForDate(staff.id, selectedDate)
+
+    // Filter sessions for this staff and date (only when staff is static on this date)
+    const staffSessions =
+      staffTypeForDate === 'static'
+        ? sessions.filter(
+            s =>
+              s.resourceId === staff.id &&
+              (s.date?.split('T')[0] === dateStr || s.dayOfWeek === selectedDate.getDay())
+          )
+        : []
 
     // Calculate dynamic height — static staff use auto height (flex cards), dynamic use fixed
     const itemCount = staffTypeForDate === 'static' ? 1 : Math.max(1, shifts.length)
@@ -3167,12 +3172,16 @@ export function ShiftsTab() {
                             const shifts = getStaffShiftsForDate(staff.id, dateStr)
                             const hasShift = !timeOff && shifts.length > 0 && shifts[0].start !== '00:00'
 
-                            // Filter sessions for this staff and date
-                            const staffSessions = sessions.filter(
-                              s =>
-                                s.resourceId === staff.id &&
-                                (s.date?.split('T')[0] === dateStr || s.dayOfWeek === date.getDay())
-                            )
+                            // Filter sessions for this staff and date (only when staff is static on this date)
+                            const staffTypeOnDate = getStaffTypeForDate(staff.id, date)
+                            const staffSessions =
+                              staffTypeOnDate === 'static'
+                                ? sessions.filter(
+                                    s =>
+                                      s.resourceId === staff.id &&
+                                      (s.date?.split('T')[0] === dateStr || s.dayOfWeek === date.getDay())
+                                  )
+                                : []
 
                             // Helper function to convert 24h time to 12h format
                             const formatTime12Hour = (time24: string) => {

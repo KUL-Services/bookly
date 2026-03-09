@@ -545,14 +545,16 @@ export function RoomsTab() {
     </Box>
   )
 
-  const getEffectiveRoomType = (room: any) => {
+  const getEffectiveRoomType = (room: any, forDate?: Date) => {
     if (room.pendingBookingMode && room.bookingModeEffectiveDate) {
       const effectiveDate = new Date(room.bookingModeEffectiveDate)
-      const viewDate = new Date(selectedDate)
+      const viewDate = new Date(forDate || selectedDate)
       if (!Number.isNaN(effectiveDate.getTime()) && !Number.isNaN(viewDate.getTime()) && viewDate >= effectiveDate) {
         return room.pendingBookingMode === 'STATIC' ? 'static' : 'dynamic'
       }
     }
+    // Also check if mode already switched (no pending, current is DYNAMIC)
+    if (room.bookingMode === 'DYNAMIC' && !room.pendingBookingMode) return 'dynamic'
     return room.roomType || 'dynamic'
   }
 
@@ -576,11 +578,17 @@ export function RoomsTab() {
       Sat: 6
     }
 
-    // Filter sessions for this room and date
+    // Filter sessions for this room and date (only when room is static on this date)
     const dateStr = selectedDate.toISOString().split('T')[0]
-    const roomSessions = sessions.filter(
-      s => s.resourceId === room.id && (s.date?.split('T')[0] === dateStr || s.dayOfWeek === dayOfWeekMap[dayOfWeek])
-    )
+    const effectiveType = getEffectiveRoomType(room)
+    const roomSessions =
+      effectiveType === 'static'
+        ? sessions.filter(
+            s =>
+              s.resourceId === room.id &&
+              (s.date?.split('T')[0] === dateStr || s.dayOfWeek === dayOfWeekMap[dayOfWeek])
+          )
+        : []
 
     // Helper function to convert 24h time to 12h format
     const formatTime12Hour = (time24: string) => {
@@ -1492,11 +1500,16 @@ export function RoomsTab() {
                               />
                               {fixedRooms.map(room => {
                                 const dateStr = date.toISOString().split('T')[0]
-                                const roomSessions = sessions.filter(
-                                  s =>
-                                    s.resourceId === room.id &&
-                                    (s.date?.split('T')[0] === dateStr || s.dayOfWeek === dayOfWeekMap[dayOfWeek])
-                                )
+                                const effectiveTypeOnDate = getEffectiveRoomType(room, date)
+                                const roomSessions =
+                                  effectiveTypeOnDate === 'static'
+                                    ? sessions.filter(
+                                        s =>
+                                          s.resourceId === room.id &&
+                                          (s.date?.split('T')[0] === dateStr ||
+                                            s.dayOfWeek === dayOfWeekMap[dayOfWeek])
+                                      )
+                                    : []
 
                                 return (
                                   <Box
