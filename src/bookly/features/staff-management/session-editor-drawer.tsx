@@ -153,6 +153,10 @@ export function SessionEditorDrawer({
       setSnackbar({ open: true, message: 'Please select a resource', severity: 'warning' })
       return
     }
+    if (!serviceId) {
+      setSnackbar({ open: true, message: 'Please select a service', severity: 'warning' })
+      return
+    }
     if (!startTime || !endTime) {
       setSnackbar({ open: true, message: 'Please set start and end times', severity: 'warning' })
       return
@@ -183,7 +187,7 @@ export function SessionEditorDrawer({
         name: name.trim(),
         description: description.trim() || undefined,
         resourceId,
-        serviceId: serviceId || undefined,
+        serviceId,
         startTime,
         endTime,
         maxParticipants: parseInt(maxParticipants),
@@ -292,13 +296,10 @@ export function SessionEditorDrawer({
           )}
         </FormControl>
 
-        {/* Service (Optional) */}
-        <FormControl fullWidth>
-          <InputLabel>Service (Optional)</InputLabel>
-          <Select value={serviceId} onChange={e => setServiceId(e.target.value)} label='Service (Optional)'>
-            <MenuItem value=''>
-              <em>No specific service</em>
-            </MenuItem>
+        {/* Service (Required) */}
+        <FormControl fullWidth required error={!serviceId}>
+          <InputLabel>Service</InputLabel>
+          <Select value={serviceId} onChange={e => setServiceId(e.target.value)} label='Service'>
             {services
               .filter(service => {
                 const resource = resources.find(r => r.id === resourceId)
@@ -312,7 +313,7 @@ export function SessionEditorDrawer({
                 </MenuItem>
               ))}
           </Select>
-          <FormHelperText>Link this session to a specific service</FormHelperText>
+          <FormHelperText>{!serviceId ? 'Please select a service' : 'Link this session to a specific service'}</FormHelperText>
         </FormControl>
 
         <Divider />
@@ -510,7 +511,7 @@ export function SessionEditorDrawer({
           <Button
             variant='contained'
             onClick={handleSave}
-            disabled={isSaving || isDeleting || staticResources.length === 0 || timeValidation.hasError || !maxParticipants || parseInt(maxParticipants) < 1 || price === ''}
+            disabled={isSaving || isDeleting || staticResources.length === 0 || timeValidation.hasError || !maxParticipants || parseInt(maxParticipants) < 1 || price === '' || !serviceId}
           >
             {isSaving ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Session'}
           </Button>

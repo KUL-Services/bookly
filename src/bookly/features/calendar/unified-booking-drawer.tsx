@@ -46,6 +46,7 @@ import ClientPickerDialog from './client-picker-dialog'
 import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
 import { DatePickerField } from '@/bookly/features/staff-management/date-picker-field'
 import { SessionSelector } from './session-selector'
+import { SessionsService } from '@/lib/api/services/sessions.service'
 import type { Session } from '@/lib/api/types'
 
 // Helper function to get 2 initials from a name
@@ -337,6 +338,7 @@ export default function UnifiedBookingDrawer({
   // Static mode state
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null)
   const [slotClients, setSlotClients] = useState<SlotClient[]>([])
+  const [apiLoadedBookingIds, setApiLoadedBookingIds] = useState<Set<string>>(new Set()) // Track IDs loaded from API
   const [realSlotData, setRealSlotData] = useState<any>(null)
   const [isAddingClient, setIsAddingClient] = useState(false)
   const [newClientName, setNewClientName] = useState('')
@@ -409,8 +411,12 @@ export default function UnifiedBookingDrawer({
       const props = existingEvent.extendedProps as any
       const eventStaff = allStaff.find((s: any) => s.id === props.staffId)
 
+      // Check if staff is static (by staffType or bookingMode)
+      const isStaffStatic =
+        eventStaff?.staffType === 'static' || (eventStaff as any)?.bookingMode === 'STATIC'
+
       // Dynamic staff should always open as dynamic, even if slot data exists.
-      if (eventStaff?.staffType === 'dynamic') {
+      if (!isStaffStatic && eventStaff?.staffType === 'dynamic') {
         return false
       }
 
@@ -420,7 +426,7 @@ export default function UnifiedBookingDrawer({
       }
 
       // Check if the staff is static type
-      if (eventStaff?.staffType === 'static') {
+      if (isStaffStatic) {
         return true
       }
 
@@ -479,6 +485,7 @@ export default function UnifiedBookingDrawer({
     if (mode === 'edit' && existingEvent && existingEvent.extendedProps && open) {
       setSelectedSlotId(null)
       setSlotClients([])
+      setApiLoadedBookingIds(new Set())
       setRealSlotData(null)
       setIsAddingClient(false)
       setNewClientName('')
@@ -560,61 +567,92 @@ export default function UnifiedBookingDrawer({
           setEndTime(slot.endTime)
         }
 
-        // Get all real bookings for this slot
-        // IMPORTANT: Always use time/location matching to catch ALL bookings in this slot,
-        // even if they have wrong/missing slotId
+        // Fetch session clients from API (authoritative source)
+        // Backend: GET /admin/sessions/:id returns session with bookings[]
+        const sessionId = props.sessionId || props.slotId || slotId
         const dateStr = getDateKey(start)
-        let slotBookings: CalendarEvent[] = []
 
-        if (slot) {
-          // Find ALL events that match this slot's time and location
-          slotBookings = events.filter(e => {
-            const eventStart = new Date(e.start)
-            const eventDateStr = getDateKey(eventStart)
-            if (eventDateStr !== dateStr) return false
-            if (e.extendedProps.status === 'cancelled') return false
-            if (e.extendedProps.type === 'timeOff' || e.extendedProps.type === 'reservation') return false
+        if (sessionId) {
+          // Use getSession which returns the full session object with bookings[]
+          SessionsService.getSession(sessionId)
+            .then(res => {
+              const session = res?.data as any
+              if (!session) {
+                console.warn('Session not found, falling back to events')
+                loadClientsFromEvents(start, slot, slotId)
+                return
+              }
 
-            const eventTime = getTimeKey(eventStart)
-            if (!isTimeWithinSlot(eventTime, slot.startTime, slot.endTime)) return false
+              // Backend returns bookings[] on the session object
+              // Handle multiple possible response shapes
+              const bookings: any[] =
+                session.bookings ||
+                session.participants ||
+                (Array.isArray(session) ? session : [])
 
-            // Match by room or staff
-            if (slot.roomId && e.extendedProps.roomId === slot.roomId) return true
-            if (slot.instructorStaffId && e.extendedProps.staffId === slot.instructorStaffId) return true
+              // Filter bookings to this specific date for recurring sessions
+              const dateFilteredBookings = bookings.filter((b: any) => {
+                if (!b.startTime) return true // No date info, include it
+                const bookingDate = new Date(b.startTime)
+                return getDateKey(bookingDate) === dateStr
+              })
 
-            return false
-          })
+              const clients: SlotClient[] = dateFilteredBookings.map((booking: any) => {
+                const user = booking.user
+                const statusStr = String(booking.status || booking.appointmentStatus || 'CONFIRMED')
+                  .trim()
+                  .toUpperCase()
+                const statusMap: Record<string, 'confirmed' | 'no_show' | 'attended' | 'pending'> = {
+                  CONFIRMED: 'confirmed',
+                  PENDING: 'pending',
+                  COMPLETED: 'attended',
+                  ATTENDED: 'attended',
+                  NO_SHOW: 'no_show',
+                  NEED_CONFIRM: 'pending'
+                }
+                const paymentStr = String(booking.paymentStatus || 'UNPAID').trim().toUpperCase()
+                const paymentMethodStr = String(booking.paymentMethod || '').trim().toUpperCase()
+                const paymentMethodMap: Record<string, PaymentMethod> = {
+                  BANK_TRANSFER: 'bank_transfer',
+                  CASH_ON_ARRIVAL: 'cash_on_arrival',
+                  CARD_ON_ARRIVAL: 'card_on_arrival',
+                  ONLINE_PAYMENT: 'online_payment',
+                  INSTAPAY: 'instapay'
+                }
+
+                const customerName =
+                  booking.customerName ||
+                  (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '') ||
+                  'Walk-in Client'
+
+                return {
+                  id: booking.id,
+                  bookingRef: booking.bookingReference || booking.id,
+                  name: customerName,
+                  email: booking.customerEmail || user?.email || '',
+                  phone: booking.customerPhone || user?.mobile || '',
+                  bookedAt: booking.createdAt || new Date(booking.startTime || start).toISOString(),
+                  status: statusMap[statusStr] || 'confirmed',
+                  arrivalTime: booking.arrivalTime || '',
+                  paymentStatus: paymentStr === 'PAID' ? 'paid' : 'unpaid',
+                  paymentMethod: paymentMethodMap[paymentMethodStr] || 'cash_on_arrival',
+                  paymentReference: booking.paymentReference || booking.instapayReference || '',
+                  businessNotes: booking.businessNotes || ''
+                }
+              })
+
+              console.log(`Session ${sessionId}: loaded ${clients.length} clients from API`)
+              setApiLoadedBookingIds(new Set(clients.map(c => c.id)))
+              setSlotClients(clients)
+            })
+            .catch(err => {
+              console.warn('Failed to fetch session, falling back to events:', err)
+              loadClientsFromEvents(start, slot, slotId)
+            })
         } else {
-          // Fallback to slotId-only matching if we don't have slot data
-          slotBookings = getSlotBookings(slotId, start)
+          // No sessionId — fall back to calendar events matching
+          loadClientsFromEvents(start, slot, slotId)
         }
-
-        // Convert events to SlotClient format
-        const clients: SlotClient[] = slotBookings.map(booking => {
-          // Extract email/phone from notes field (format: "Email: xxx, Phone: yyy")
-          const notes = booking.extendedProps.notes || ''
-          const emailMatch = notes.match(/Email:\s*([^,]+)/)
-          const phoneMatch = notes.match(/Phone:\s*(.+)/)
-
-          return {
-            id: booking.id,
-            bookingRef: booking.extendedProps.bookingId || booking.id,
-            name: booking.extendedProps.customerName || 'Walk-in Client',
-            email: emailMatch ? emailMatch[1].trim() : '',
-            phone: phoneMatch ? phoneMatch[1].trim() : '',
-            bookedAt: new Date(booking.start).toISOString(),
-            status: ['confirmed', 'no_show', 'attended', 'pending'].includes(booking.extendedProps.status)
-              ? (booking.extendedProps.status as 'confirmed' | 'no_show' | 'attended' | 'pending')
-              : 'confirmed',
-            arrivalTime: booking.extendedProps.arrivalTime || '',
-            paymentStatus: booking.extendedProps.paymentStatus === 'paid' ? 'paid' : 'unpaid',
-            paymentMethod: booking.extendedProps.paymentMethod || 'cash_on_arrival',
-            paymentReference: booking.extendedProps.instapayReference || '',
-            businessNotes: booking.extendedProps.businessNotes || ''
-          }
-        })
-
-        setSlotClients(clients)
       }
     }
   }, [mode, existingEvent, open, staticSlots, getSlotBookings, events])
@@ -662,18 +700,76 @@ export default function UnifiedBookingDrawer({
   }, [staffId, date, startTime, endTime, events, effectiveSchedulingMode, mode])
 
   const getSlotCapacity = () => {
+    // Prefer session maxParticipants from the event (for API-based sessions)
+    const sessionCapacity = (existingEvent?.extendedProps as any)?.maxParticipants
     const fallbackSlot = selectedSlotId ? staticSlots.find(s => s.id === selectedSlotId) : null
     const staffCapacity =
       staffId && staffId !== AUTO_STAFF_ID ? allStaff.find((s: any) => s.id === staffId)?.maxConcurrentBookings : null
     const roomId = existingEvent?.extendedProps?.roomId
     const roomCapacity = roomId ? allRooms.find((r: any) => r.id === roomId)?.capacity : null
-    return realSlotData?.capacity ?? fallbackSlot?.capacity ?? roomCapacity ?? staffCapacity ?? 10
+    return realSlotData?.capacity ?? sessionCapacity ?? fallbackSlot?.capacity ?? roomCapacity ?? staffCapacity ?? 10
   }
 
   const hasDuplicateEmail = (email: string) => {
     const normalized = normalizeEmail(email)
     if (!normalized) return false
     return slotClients.some(client => normalizeEmail(client.email) === normalized)
+  }
+
+  // Fallback: load clients from calendar events when API is unavailable
+  const loadClientsFromEvents = (eventDate: Date, slot: any, slotId: string) => {
+    const dateStr = getDateKey(eventDate)
+    let slotBookings: CalendarEvent[] = []
+
+    if (slot) {
+      slotBookings = events.filter(e => {
+        const eventStart = new Date(e.start)
+        const eventDateStr = getDateKey(eventStart)
+        if (eventDateStr !== dateStr) return false
+        if (e.extendedProps.status === 'cancelled') return false
+        if (e.extendedProps.type === 'timeOff' || e.extendedProps.type === 'reservation') return false
+        if ((e.extendedProps as any).isSessionDefinition) return false
+
+        const eventTime = getTimeKey(eventStart)
+        if (!isTimeWithinSlot(eventTime, slot.startTime, slot.endTime)) return false
+
+        if (slot.roomId && e.extendedProps.roomId === slot.roomId) return true
+        if (slot.instructorStaffId && e.extendedProps.staffId === slot.instructorStaffId) return true
+
+        // Also match by slotId (sessionId) for API-based sessions
+        if ((e.extendedProps as any).slotId === slotId) return true
+
+        return false
+      })
+    } else {
+      slotBookings = getSlotBookings(slotId, eventDate)
+    }
+
+    const clients: SlotClient[] = slotBookings.map(booking => {
+      const notes = booking.extendedProps.notes || ''
+      const emailMatch = notes.match(/Email:\s*([^,]+)/)
+      const phoneMatch = notes.match(/Phone:\s*(.+)/)
+
+      return {
+        id: booking.id,
+        bookingRef: booking.extendedProps.bookingId || booking.id,
+        name: booking.extendedProps.customerName || 'Walk-in Client',
+        email: booking.extendedProps.customerEmail || (emailMatch ? emailMatch[1].trim() : ''),
+        phone: booking.extendedProps.customerPhone || (phoneMatch ? phoneMatch[1].trim() : ''),
+        bookedAt: new Date(booking.start).toISOString(),
+        status: ['confirmed', 'no_show', 'attended', 'pending'].includes(booking.extendedProps.status)
+          ? (booking.extendedProps.status as 'confirmed' | 'no_show' | 'attended' | 'pending')
+          : 'confirmed',
+        arrivalTime: booking.extendedProps.arrivalTime || '',
+        paymentStatus: booking.extendedProps.paymentStatus === 'paid' ? 'paid' : 'unpaid',
+        paymentMethod: booking.extendedProps.paymentMethod || 'cash_on_arrival',
+        paymentReference: booking.extendedProps.instapayReference || '',
+        businessNotes: booking.extendedProps.businessNotes || ''
+      }
+    })
+
+    setApiLoadedBookingIds(new Set(clients.map(c => c.id)))
+    setSlotClients(clients)
   }
 
   const resolveSlotForEvent = (event?: CalendarEvent | null) => {
@@ -740,7 +836,7 @@ export default function UnifiedBookingDrawer({
       endTime,
       serviceId: props?.serviceId || '',
       serviceName: props?.serviceName || event.title || 'Service',
-      capacity: room?.capacity ?? staff?.maxConcurrentBookings ?? 10,
+      capacity: props?.maxParticipants || (room?.capacity ?? staff?.maxConcurrentBookings ?? 10),
       instructorStaffId: staffId || '',
       price: props?.price || 0
     }
@@ -941,12 +1037,6 @@ export default function UnifiedBookingDrawer({
         return
       }
 
-      // Validate session selection for STATIC/FIXED resource mode
-      if (staticSessionResourceId && !selectedSession) {
-        setSnackbar({ open: true, message: 'Please select an available session', severity: 'error' })
-        return
-      }
-
       // Create or update dynamic booking
       if (mode === 'create') {
         const [hours, minutes] = startTime.split(':').map(Number)
@@ -1066,42 +1156,15 @@ export default function UnifiedBookingDrawer({
         }
       }
 
-      // Get existing bookings for this slot using time/location matching
-      // CRITICAL: Must use same matching logic as when loading to avoid creating duplicates
-      const dateStr = getDateKey(date)
-      let existingBookings: CalendarEvent[] = []
-
-      if (slotDataForSave && (slotDataForSave.roomId || slotDataForSave.instructorStaffId)) {
-        // Find ALL events matching this slot's time and location
-        existingBookings = events.filter(e => {
-          const eventStart = new Date(e.start)
-          const eventDateStr = getDateKey(eventStart)
-          if (eventDateStr !== dateStr) return false
-          if (e.extendedProps.status === 'cancelled') return false
-          if (e.extendedProps.type === 'timeOff' || e.extendedProps.type === 'reservation') return false
-
-          const eventTime = getTimeKey(eventStart)
-          if (!isTimeWithinSlot(eventTime, slotDataForSave.startTime, slotDataForSave.endTime)) return false
-
-          // Match by room or staff
-          if (slotDataForSave.roomId && e.extendedProps.roomId === slotDataForSave.roomId) return true
-          if (slotDataForSave.instructorStaffId && e.extendedProps.staffId === slotDataForSave.instructorStaffId)
-            return true
-
-          return false
-        })
-      } else {
-        // Fallback to slotId-only matching
-        existingBookings = getSlotBookings(slotIdForSave, date)
-      }
-
-      const existingBookingIds = new Set(existingBookings.map(b => b.id))
+      // Use apiLoadedBookingIds as the authoritative set of "existing" bookings
+      // This avoids fragile time/location event matching that can miss bookings
+      const existingBookingIds = apiLoadedBookingIds
       const currentClientIds = new Set(slotClients.map(c => c.id))
 
-      // Delete removed clients
-      existingBookings.forEach(booking => {
-        if (!currentClientIds.has(booking.id)) {
-          deleteEvent(booking.id)
+      // Delete removed clients — these were loaded from API but removed by user
+      existingBookingIds.forEach(bookingId => {
+        if (!currentClientIds.has(bookingId)) {
+          deleteEvent(bookingId)
         }
       })
 
@@ -1117,7 +1180,7 @@ export default function UnifiedBookingDrawer({
 
         if (existingBookingIds.has(client.id)) {
           // Update existing booking - IMPORTANT: Also update slotId to ensure consistency
-          const existingBooking = existingBookings.find(b => b.id === client.id)
+          const existingBooking = events.find(e => e.id === client.id)
           if (existingBooking) {
             const updatedEvent: CalendarEvent = {
               ...existingBooking,
@@ -1139,6 +1202,8 @@ export default function UnifiedBookingDrawer({
           }
         } else {
           // Create new booking for this client in the slot
+          const staffForSlot = allStaff.find((s: any) => s.id === slotDataForSave.instructorStaffId)
+          const roomForSlot = allRooms.find((r: any) => r.id === slotDataForSave.roomId)
           const newEvent: CalendarEvent = {
             id: client.id,
             title: slotDataForSave.serviceName,
@@ -1149,7 +1214,8 @@ export default function UnifiedBookingDrawer({
               paymentStatus: client.paymentStatus,
               paymentMethod: client.paymentMethod,
               staffId: slotDataForSave.instructorStaffId || '',
-              staffName: allStaff.find((s: any) => s.id === slotDataForSave.instructorStaffId)?.name || '',
+              staffName: staffForSlot?.name || '',
+              branchId: staffForSlot?.branchId || roomForSlot?.branchId || '',
               selectionMethod: 'automatically',
               bookedBy: 'business',
               starred: false,
@@ -1161,6 +1227,7 @@ export default function UnifiedBookingDrawer({
               slotId: resolvedSlotId,
               isStaticSlot: true, // Mark as static slot for future detection
               roomId: slotDataForSave.roomId,
+              roomName: roomForSlot?.name || '',
               partySize: 1,
               arrivalTime: client.arrivalTime,
               instapayReference: client.paymentReference || undefined,

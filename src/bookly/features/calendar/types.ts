@@ -56,6 +56,7 @@ export interface Room {
   branchId: string
   color?: string
   roomType?: RoomType
+  serviceIds?: string[]
 }
 
 export interface StaticServiceSlot {

@@ -251,6 +251,19 @@ export function RoomScheduleEditor({
           setSnackbar({ open: true, message: `Session ${i + 1}: Capacity is required`, severity: 'error' })
           return
         }
+        // Validate service is selected for static sessions
+        if (!shifts[i].serviceIds || shifts[i].serviceIds.length === 0) {
+          setSnackbar({ open: true, message: `Session ${i + 1}: Please select a service`, severity: 'error' })
+          return
+        }
+      }
+    } else {
+      // For dynamic rooms, also require at least one service per shift
+      for (let i = 0; i < shifts.length; i++) {
+        if (!shifts[i].serviceIds || shifts[i].serviceIds.length === 0) {
+          setSnackbar({ open: true, message: `Shift ${i + 1}: Please select at least one service`, severity: 'error' })
+          return
+        }
       }
     }
 
@@ -406,7 +419,7 @@ export function RoomScheduleEditor({
                           />
                         </Box>
 
-                        <FormControl fullWidth>
+                        <FormControl fullWidth required error={!shift.serviceIds || shift.serviceIds.length === 0}>
                           <InputLabel>
                             {isStaticCapacity ? 'Service for this session' : 'Services for this shift'}
                           </InputLabel>
@@ -420,9 +433,6 @@ export function RoomScheduleEditor({
                               }}
                               input={<OutlinedInput label='Service for this session' />}
                             >
-                              <MenuItem value=''>
-                                <em>Select a service</em>
-                              </MenuItem>
                               {availableServices.map(service => (
                                 <MenuItem key={service.id} value={service.id}>
                                   {service.name}
@@ -458,15 +468,14 @@ export function RoomScheduleEditor({
                             </Select>
                           )}
                           {isStaticCapacity ? (
-                            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
-                              Each fixed session can have one service. Create additional sessions for different
-                              services.
+                            <Typography variant='caption' color={!shift.serviceIds || shift.serviceIds.length === 0 ? 'error' : 'text.secondary'} sx={{ mt: 0.5 }}>
+                              {!shift.serviceIds || shift.serviceIds.length === 0 ? 'Please select a service' : 'Each fixed session requires one service.'}
                             </Typography>
-                          ) : roomServiceIds.length > 0 ? (
-                            <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
-                              Only services assigned to this room are shown
+                          ) : (
+                            <Typography variant='caption' color={!shift.serviceIds || shift.serviceIds.length === 0 ? 'error' : 'text.secondary'} sx={{ mt: 0.5 }}>
+                              {!shift.serviceIds || shift.serviceIds.length === 0 ? 'Please select at least one service' : roomServiceIds.length > 0 ? 'Only services assigned to this room are shown' : 'Select services for this shift'}
                             </Typography>
-                          ) : null}
+                          )}
                         </FormControl>
 
                         {/* Capacity and Staff Assignment for static rooms */}
@@ -587,7 +596,7 @@ export function RoomScheduleEditor({
         <Button onClick={onClose} variant='outlined'>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant='contained' disabled={hasOverlaps}>
+        <Button onClick={handleSave} variant='contained' disabled={hasOverlaps || (isAvailable && shifts.some(s => !s.serviceIds || s.serviceIds.length === 0))}>
           Save Schedule
         </Button>
       </DialogActions>

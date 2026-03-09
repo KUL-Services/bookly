@@ -401,6 +401,15 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
               const staffMember = isStaffResource ? staff.find((s: any) => s.id === session.resourceId) : null
               const room = isRoomResource ? rooms.find(r => r.id === session.resourceId) : null
 
+              // Resolve serviceId: prefer session's serviceId, then try resource's first assigned service
+              let resolvedServiceId = session.serviceId || ''
+              if (!resolvedServiceId) {
+                const resourceServiceIds = (staffMember as any)?.serviceIds || (room as any)?.serviceIds
+                if (Array.isArray(resourceServiceIds) && resourceServiceIds.length > 0) {
+                  resolvedServiceId = resourceServiceIds[0]
+                }
+              }
+
               sessionEvents.push({
                 id: `session-def-${session.id}-${dateStr}`,
                 title: session.name,
@@ -418,7 +427,7 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
                   staffName: (staffMember as any)?.name || session.name,
                   roomId: isRoomResource ? session.resourceId : '',
                   roomName: room?.name || '',
-                  serviceId: session.serviceId || '',
+                  serviceId: resolvedServiceId,
                   serviceName: session.name,
                   selectionMethod: 'by_client' as const,
                   bookedBy: 'business' as const,
@@ -483,7 +492,8 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
           id: asset.id,
           name: asset.name,
           branchId: asset.branchId,
-          roomType: 'static' // Assuming assets are static resources for now
+          roomType: 'static', // Assuming assets are static resources for now
+          serviceIds: asset.serviceIds
         }))
         set({ rooms: mappedRooms })
       }
@@ -600,22 +610,14 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     }
     */
 
-    // Validate capacity for static scheduling
-    if (schedulingMode === 'static' && newEvent.extendedProps.slotId) {
-      const slotDate = new Date(newEvent.start)
-      const { available, remainingCapacity } = get().isSlotAvailable(newEvent.extendedProps.slotId, slotDate)
-      const partySize = newEvent.extendedProps.partySize || 1
+    // Determine if this event is for a static session (per-event, not global mode)
+    const isStaticEvent = !!(newEvent.extendedProps.slotId || newEvent.extendedProps.isStaticSlot || newEvent.extendedProps.sessionId)
 
-      if (!available || remainingCapacity < partySize) {
-        set({
-          lastActionError: `Cannot book: Only ${remainingCapacity} spot(s) remaining, but ${partySize} requested.`
-        })
-        return
-      }
-    }
+    // Static capacity is enforced by the backend — skip frontend validation
+    // The frontend isSlotAvailable only works for localStorage-based slots, not API sessions
 
-    // Validate concurrent bookings for dynamic scheduling
-    if (schedulingMode === 'dynamic' && newEvent.extendedProps.staffId) {
+    // Validate concurrent bookings for dynamic scheduling (skip for static session events)
+    if (!isStaticEvent && newEvent.extendedProps.staffId) {
       const { available, currentCount, maxAllowed } = get().isStaffAvailableForBooking(
         newEvent.extendedProps.staffId,
         new Date(newEvent.start),
@@ -639,13 +641,29 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     const notesStr: string = props.notes || ''
     const extractedEmail = notesStr.match?.(/Email:\s*([^,]+)/)?.[1]?.trim() || ''
     const extractedPhone = notesStr.match?.(/Phone:\s*(.+)/)?.[1]?.trim() || ''
+
+    // Resolve serviceId and branchId — fallback to resource data if not set on event
+    const { staff: calStaff, rooms: calRooms } = get()
+    const resourceStaff = props.staffId ? calStaff.find(s => s.id === props.staffId) : null
+    const resourceRoom = props.roomId ? calRooms.find(r => r.id === props.roomId) : null
+
+    let resolvedServiceId = props.serviceId || ''
+    if (!resolvedServiceId) {
+      const resourceServiceIds = (resourceStaff as any)?.serviceIds || resourceRoom?.serviceIds
+      if (Array.isArray(resourceServiceIds) && resourceServiceIds.length > 0) {
+        resolvedServiceId = resourceServiceIds[0]
+      }
+    }
+
+    const resolvedBranchId = props.branchId || (resourceStaff as any)?.branchId || resourceRoom?.branchId || ''
+
     BookingService.createAdminBooking({
-      serviceId: props.serviceId || '',
-      branchId: props.branchId || '1-1',
-      resourceId: props.staffId || props.roomId, // Map to either staff or room
-      staffId: props.staffId,
-      roomId: props.roomId,
-      sessionId: props.slotId || undefined, // Add sessionId for static slots
+      serviceId: resolvedServiceId,
+      branchId: resolvedBranchId,
+      resourceId: props.staffId || props.roomId || undefined,
+      staffId: props.staffId || undefined,
+      roomId: props.roomId || undefined,
+      sessionId: props.slotId || undefined,
       startTime: new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000).toISOString(),
       customerName: props.customerName || '',
       customerEmail: extractedEmail,
