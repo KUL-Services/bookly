@@ -1,6 +1,8 @@
 'use client'
 
-// MUI Imports
+import { useState } from 'react'
+
+// MUI
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -15,8 +17,6 @@ import Divider from '@mui/material/Divider'
 import Chip from '@mui/material/Chip'
 import IconButton from '@mui/material/IconButton'
 import FormGroup from '@mui/material/FormGroup'
-import Button from '@mui/material/Button'
-
 import Alert from '@mui/material/Alert'
 
 // Components
@@ -24,63 +24,75 @@ import { TimeSelectField } from '@/bookly/features/staff-management/time-select-
 
 // Store
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
-import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
+
+// Draft infra
+import { useTabDraft } from '@/bookly/hooks/use-tab-draft'
+import { TabSaveBar } from '@/bookly/components/molecules/tab-save-bar'
+import { ConfirmChangesDialog } from '@/bookly/components/molecules/confirm-changes-dialog'
+
+const LABELS: Record<string, string> = {
+  'newBookingAlert.email': 'New booking – email',
+  'newBookingAlert.sms': 'New booking – SMS',
+  'newBookingAlert.push': 'New booking – push',
+  'cancellationAlert.email': 'Cancellation – email',
+  'cancellationAlert.sms': 'Cancellation – SMS',
+  'cancellationAlert.push': 'Cancellation – push',
+  'customerReminders.enabled': 'Customer reminders enabled',
+  'customerReminders.beforeHours': 'Reminder times',
+  staffNotifications: 'Staff notifications',
+  'dailyDigest.enabled': 'Daily digest enabled',
+  'dailyDigest.time': 'Daily digest send time',
+  'dailyDigest.recipients': 'Daily digest recipients'
+}
 
 const NotificationSettingsTab = () => {
-  const { notificationSettings, updateNotificationSettings, saveNotificationSettings, isSaving } = useBusinessSettingsStore()
+  const { notificationSettings, updateNotificationSettings, saveNotificationSettings, isSaving } =
+    useBusinessSettingsStore()
+
+  const [recipientInput, setRecipientInput] = useState('')
+
+  const { draft, setDraft, isDirty, changes, confirmOpen, setConfirmOpen, handleCancel, handleConfirm } = useTabDraft({
+    tabId: 'notifications',
+    labels: LABELS,
+    saved: notificationSettings as unknown as Record<string, unknown>,
+    applyDraft: d => updateNotificationSettings(d as unknown as typeof notificationSettings),
+    saveAction: saveNotificationSettings
+  })
+
+  const set = (patch: Partial<typeof notificationSettings>) =>
+    setDraft(prev => ({ ...prev, ...patch }) as unknown as Record<string, unknown>)
+
+  const ns = draft as unknown as typeof notificationSettings
 
   const handleReminderToggle = (hours: number) => {
-    const currentHours = notificationSettings.customerReminders.beforeHours
-    if (currentHours.includes(hours)) {
-      updateNotificationSettings({
-        customerReminders: {
-          ...notificationSettings.customerReminders,
-          beforeHours: currentHours.filter(h => h !== hours)
-        }
-      })
-    } else {
-      updateNotificationSettings({
-        customerReminders: {
-          ...notificationSettings.customerReminders,
-          beforeHours: [...currentHours, hours].sort((a, b) => b - a)
-        }
-      })
+    const current = ns.customerReminders.beforeHours
+    const next = current.includes(hours) ? current.filter(h => h !== hours) : [...current, hours].sort((a, b) => b - a)
+    set({ customerReminders: { ...ns.customerReminders, beforeHours: next } })
+  }
+
+  const handleAddRecipient = () => {
+    const email = recipientInput.trim()
+    if (email && !ns.dailyDigest.recipients.includes(email)) {
+      set({ dailyDigest: { ...ns.dailyDigest, recipients: [...ns.dailyDigest.recipients, email] } })
+      setRecipientInput('')
     }
   }
 
-  const handleRemoveRecipient = (email: string) => {
-    updateNotificationSettings({
-      dailyDigest: {
-        ...notificationSettings.dailyDigest,
-        recipients: notificationSettings.dailyDigest.recipients.filter(e => e !== email)
-      }
-    })
-  }
-
-  const handleAddRecipient = (email: string) => {
-    if (email && !notificationSettings.dailyDigest.recipients.includes(email)) {
-      updateNotificationSettings({
-        dailyDigest: {
-          ...notificationSettings.dailyDigest,
-          recipients: [...notificationSettings.dailyDigest.recipients, email]
-        }
-      })
-    }
-  }
+  const handleRemoveRecipient = (email: string) =>
+    set({ dailyDigest: { ...ns.dailyDigest, recipients: ns.dailyDigest.recipients.filter(e => e !== email) } })
 
   return (
     <Grid container spacing={6}>
+      {/* Inline dirty bar */}
       <Grid item xs={12}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant='contained'
-            onClick={saveNotificationSettings}
-            disabled={isSaving}
-            startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
-          >
-            {isSaving ? 'Saving...' : 'Save Notifications'}
-          </Button>
-        </Box>
+        <TabSaveBar
+          isDirty={isDirty}
+          changes={changes}
+          isSaving={isSaving}
+          saveLabel='Save Notifications'
+          onSave={() => setConfirmOpen(true)}
+          onCancel={handleCancel}
+        />
       </Grid>
 
       {/* New Booking Alerts */}
@@ -89,71 +101,32 @@ const NotificationSettingsTab = () => {
           <CardHeader title='New Booking Alerts' subheader='Get notified when customers make new bookings' />
           <CardContent>
             <FormGroup>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={notificationSettings.newBookingAlert.email}
-                    onChange={e =>
-                      updateNotificationSettings({
-                        newBookingAlert: {
-                          ...notificationSettings.newBookingAlert,
-                          email: e.target.checked
-                        }
-                      })
-                    }
-                  />
+              {[
+                { key: 'email', icon: 'ri-mail-line', label: 'Email Notifications', checked: ns.newBookingAlert.email },
+                { key: 'sms', icon: 'ri-message-2-line', label: 'SMS Notifications', checked: ns.newBookingAlert.sms },
+                {
+                  key: 'push',
+                  icon: 'ri-notification-4-line',
+                  label: 'Push Notifications',
+                  checked: ns.newBookingAlert.push
                 }
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <i className='ri-mail-line' />
-                    <Typography>Email Notifications</Typography>
-                  </Box>
-                }
-              />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={notificationSettings.newBookingAlert.sms}
-                    onChange={e =>
-                      updateNotificationSettings({
-                        newBookingAlert: {
-                          ...notificationSettings.newBookingAlert,
-                          sms: e.target.checked
-                        }
-                      })
-                    }
-                  />
-                }
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <i className='ri-message-2-line' />
-                    <Typography>SMS Notifications</Typography>
-                  </Box>
-                }
-              />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={notificationSettings.newBookingAlert.push}
-                    onChange={e =>
-                      updateNotificationSettings({
-                        newBookingAlert: {
-                          ...notificationSettings.newBookingAlert,
-                          push: e.target.checked
-                        }
-                      })
-                    }
-                  />
-                }
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <i className='ri-notification-4-line' />
-                    <Typography>Push Notifications</Typography>
-                  </Box>
-                }
-              />
+              ].map(item => (
+                <FormControlLabel
+                  key={item.key}
+                  control={
+                    <Checkbox
+                      checked={item.checked}
+                      onChange={e => set({ newBookingAlert: { ...ns.newBookingAlert, [item.key]: e.target.checked } })}
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <i className={item.icon} />
+                      <Typography>{item.label}</Typography>
+                    </Box>
+                  }
+                />
+              ))}
             </FormGroup>
           </CardContent>
         </Card>
@@ -165,71 +138,44 @@ const NotificationSettingsTab = () => {
           <CardHeader title='Cancellation Alerts' subheader='Get notified when customers cancel bookings' />
           <CardContent>
             <FormGroup>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={notificationSettings.cancellationAlert.email}
-                    onChange={e =>
-                      updateNotificationSettings({
-                        cancellationAlert: {
-                          ...notificationSettings.cancellationAlert,
-                          email: e.target.checked
-                        }
-                      })
-                    }
-                  />
+              {[
+                {
+                  key: 'email',
+                  icon: 'ri-mail-line',
+                  label: 'Email Notifications',
+                  checked: ns.cancellationAlert.email
+                },
+                {
+                  key: 'sms',
+                  icon: 'ri-message-2-line',
+                  label: 'SMS Notifications',
+                  checked: ns.cancellationAlert.sms
+                },
+                {
+                  key: 'push',
+                  icon: 'ri-notification-4-line',
+                  label: 'Push Notifications',
+                  checked: ns.cancellationAlert.push || false
                 }
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <i className='ri-mail-line' />
-                    <Typography>Email Notifications</Typography>
-                  </Box>
-                }
-              />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={notificationSettings.cancellationAlert.sms}
-                    onChange={e =>
-                      updateNotificationSettings({
-                        cancellationAlert: {
-                          ...notificationSettings.cancellationAlert,
-                          sms: e.target.checked
-                        }
-                      })
-                    }
-                  />
-                }
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <i className='ri-message-2-line' />
-                    <Typography>SMS Notifications</Typography>
-                  </Box>
-                }
-              />
-
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={notificationSettings.cancellationAlert.push || false}
-                    onChange={e =>
-                      updateNotificationSettings({
-                        cancellationAlert: {
-                          ...notificationSettings.cancellationAlert,
-                          push: e.target.checked
-                        }
-                      })
-                    }
-                  />
-                }
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <i className='ri-notification-4-line' />
-                    <Typography>Push Notifications</Typography>
-                  </Box>
-                }
-              />
+              ].map(item => (
+                <FormControlLabel
+                  key={item.key}
+                  control={
+                    <Checkbox
+                      checked={item.checked}
+                      onChange={e =>
+                        set({ cancellationAlert: { ...ns.cancellationAlert, [item.key]: e.target.checked } })
+                      }
+                    />
+                  }
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <i className={item.icon} />
+                      <Typography>{item.label}</Typography>
+                    </Box>
+                  }
+                />
+              ))}
             </FormGroup>
           </CardContent>
         </Card>
@@ -247,15 +193,8 @@ const NotificationSettingsTab = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={notificationSettings.customerReminders.enabled}
-                    onChange={e =>
-                      updateNotificationSettings({
-                        customerReminders: {
-                          ...notificationSettings.customerReminders,
-                          enabled: e.target.checked
-                        }
-                      })
-                    }
+                    checked={ns.customerReminders.enabled}
+                    onChange={e => set({ customerReminders: { ...ns.customerReminders, enabled: e.target.checked } })}
                   />
                 }
                 label={
@@ -268,7 +207,7 @@ const NotificationSettingsTab = () => {
                 }
               />
 
-              {notificationSettings.customerReminders.enabled && (
+              {ns.customerReminders.enabled && (
                 <>
                   <Divider />
                   <Typography variant='body2' color='text.secondary'>
@@ -280,7 +219,7 @@ const NotificationSettingsTab = () => {
                         key={hours}
                         control={
                           <Checkbox
-                            checked={notificationSettings.customerReminders.beforeHours.includes(hours)}
+                            checked={ns.customerReminders.beforeHours.includes(hours)}
                             onChange={() => handleReminderToggle(hours)}
                           />
                         }
@@ -293,12 +232,12 @@ const NotificationSettingsTab = () => {
                     <Typography variant='body2' color='text.secondary' sx={{ width: '100%' }}>
                       Selected:
                     </Typography>
-                    {notificationSettings.customerReminders.beforeHours.length === 0 ? (
+                    {ns.customerReminders.beforeHours.length === 0 ? (
                       <Typography variant='caption' color='text.secondary'>
                         No reminders selected
                       </Typography>
                     ) : (
-                      notificationSettings.customerReminders.beforeHours.map(hours => (
+                      ns.customerReminders.beforeHours.map(hours => (
                         <Chip
                           key={hours}
                           label={
@@ -328,10 +267,7 @@ const NotificationSettingsTab = () => {
           <CardContent>
             <FormControlLabel
               control={
-                <Switch
-                  checked={notificationSettings.staffNotifications}
-                  onChange={e => updateNotificationSettings({ staffNotifications: e.target.checked })}
-                />
+                <Switch checked={ns.staffNotifications} onChange={e => set({ staffNotifications: e.target.checked })} />
               }
               label={
                 <Box>
@@ -342,10 +278,11 @@ const NotificationSettingsTab = () => {
                 </Box>
               }
             />
-            {notificationSettings.staffNotifications && (
+            {ns.staffNotifications && (
               <Alert severity='info' sx={{ mt: 2 }} icon={<i className='ri-information-line' />}>
                 <Typography variant='caption'>
-                  Staff will receive notifications via their registered email or phone number. Ensure staff contact details are up to date in Staff Management.
+                  Staff will receive notifications via their registered email or phone number. Ensure staff contact
+                  details are up to date in Staff Management.
                 </Typography>
               </Alert>
             )}
@@ -362,15 +299,8 @@ const NotificationSettingsTab = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={notificationSettings.dailyDigest.enabled}
-                    onChange={e =>
-                      updateNotificationSettings({
-                        dailyDigest: {
-                          ...notificationSettings.dailyDigest,
-                          enabled: e.target.checked
-                        }
-                      })
-                    }
+                    checked={ns.dailyDigest.enabled}
+                    onChange={e => set({ dailyDigest: { ...ns.dailyDigest, enabled: e.target.checked } })}
                   />
                 }
                 label={
@@ -383,20 +313,13 @@ const NotificationSettingsTab = () => {
                 }
               />
 
-              {notificationSettings.dailyDigest.enabled && (
+              {ns.dailyDigest.enabled && (
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={4}>
                     <TimeSelectField
                       label='Send Time'
-                      value={notificationSettings.dailyDigest.time}
-                      onChange={value =>
-                        updateNotificationSettings({
-                          dailyDigest: {
-                            ...notificationSettings.dailyDigest,
-                            time: value
-                          }
-                        })
-                      }
+                      value={ns.dailyDigest.time}
+                      onChange={value => set({ dailyDigest: { ...ns.dailyDigest, time: value } })}
                       size='small'
                       fullWidth
                     />
@@ -404,28 +327,33 @@ const NotificationSettingsTab = () => {
 
                   <Grid item xs={12} md={8}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <TextField
-                        fullWidth
-                        label='Add Recipient Email'
-                        placeholder='Enter email and press Enter'
-                        size='small'
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault()
-                            const input = e.target as HTMLInputElement
-                            handleAddRecipient(input.value)
-                            input.value = ''
-                          }
-                        }}
-                      />
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <TextField
+                          fullWidth
+                          label='Add Recipient Email'
+                          placeholder='Enter email and press Enter or +'
+                          size='small'
+                          value={recipientInput}
+                          onChange={e => setRecipientInput(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleAddRecipient()
+                            }
+                          }}
+                        />
+                        <IconButton onClick={handleAddRecipient} color='primary'>
+                          <i className='ri-add-line' />
+                        </IconButton>
+                      </Box>
 
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {notificationSettings.dailyDigest.recipients.length === 0 ? (
+                        {ns.dailyDigest.recipients.length === 0 ? (
                           <Typography variant='caption' color='text.secondary'>
                             No recipients added. Add email addresses to receive daily digest.
                           </Typography>
                         ) : (
-                          notificationSettings.dailyDigest.recipients.map(email => (
+                          ns.dailyDigest.recipients.map(email => (
                             <Chip
                               key={email}
                               label={email}
@@ -443,6 +371,14 @@ const NotificationSettingsTab = () => {
           </CardContent>
         </Card>
       </Grid>
+
+      <ConfirmChangesDialog
+        open={confirmOpen}
+        title='Save Notification Settings'
+        changes={changes}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Grid>
   )
 }

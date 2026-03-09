@@ -374,6 +374,7 @@ export function mapApiBookingToEvent(booking: ApiBooking, starredIds: Set<string
     bookingId: booking.id,
     bookingReference: (booking as any).bookingReference || booking.id,
     sessionId: (booking as any).sessionId || undefined,
+    slotId: (booking as any).sessionId || undefined, // Group bookings by session for static rendering
     partySize: typeof (booking as any).partySize === 'number' ? (booking as any).partySize : undefined,
     createdAt: (booking as any).createdAt,
     updatedAt: (booking as any).updatedAt,

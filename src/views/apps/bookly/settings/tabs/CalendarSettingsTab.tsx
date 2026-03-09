@@ -1,6 +1,6 @@
 'use client'
 
-// MUI Imports
+// MUI
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -16,7 +16,6 @@ import MenuItem from '@mui/material/MenuItem'
 import ToggleButton from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import Divider from '@mui/material/Divider'
-import Button from '@mui/material/Button'
 
 // Components
 import { TimeSelectField } from '@/bookly/features/staff-management/time-select-field'
@@ -24,17 +23,50 @@ import { TimeSelectField } from '@/bookly/features/staff-management/time-select-
 // Store
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
 
+// Draft infra
+import { useTabDraft } from '@/bookly/hooks/use-tab-draft'
+import { TabSaveBar } from '@/bookly/components/molecules/tab-save-bar'
+import { ConfirmChangesDialog } from '@/bookly/components/molecules/confirm-changes-dialog'
+
+const LABELS: Record<string, string> = {
+  defaultView: 'Default calendar view',
+  startOfWeek: 'Start of week',
+  showWeekends: 'Show weekends',
+  timeFormat: 'Time format',
+  timeSlotDuration: 'Time slot duration (min)',
+  workingHoursStart: 'Working hours start',
+  workingHoursEnd: 'Working hours end',
+  colorScheme: 'Color scheme'
+}
+
 const CalendarSettingsTab = () => {
   const { calendarSettings, updateCalendarSettings, saveCalendarSettings, isSaving } = useBusinessSettingsStore()
 
+  const { draft, setDraft, isDirty, changes, confirmOpen, setConfirmOpen, handleCancel, handleConfirm } = useTabDraft({
+    tabId: 'calendar',
+    labels: LABELS,
+    saved: calendarSettings as unknown as Record<string, unknown>,
+    applyDraft: d => updateCalendarSettings(d as unknown as typeof calendarSettings),
+    saveAction: saveCalendarSettings
+  })
+
+  const set = (patch: Partial<typeof calendarSettings>) =>
+    setDraft(prev => ({ ...prev, ...patch }) as unknown as Record<string, unknown>)
+
+  const cs = draft as unknown as typeof calendarSettings
+
   return (
     <Grid container spacing={6}>
+      {/* Inline dirty bar */}
       <Grid item xs={12}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button variant='contained' onClick={saveCalendarSettings} disabled={isSaving}>
-            {isSaving ? 'Saving...' : 'Save Calendar Settings'}
-          </Button>
-        </Box>
+        <TabSaveBar
+          isDirty={isDirty}
+          changes={changes}
+          isSaving={isSaving}
+          saveLabel='Save Calendar Settings'
+          onSave={() => setConfirmOpen(true)}
+          onCancel={handleCancel}
+        />
       </Grid>
 
       {/* View Preferences */}
@@ -44,29 +76,23 @@ const CalendarSettingsTab = () => {
           <CardContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <ToggleButtonGroup
-                value={calendarSettings.defaultView}
+                value={cs.defaultView}
                 exclusive
-                onChange={(_, value) => value && updateCalendarSettings({ defaultView: value })}
+                onChange={(_, value) => value && set({ defaultView: value })}
                 fullWidth
               >
-                <ToggleButton value='month'>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1 }}>
-                    <i className='ri-calendar-line' style={{ fontSize: '1.5rem' }} />
-                    <Typography variant='caption'>Month</Typography>
-                  </Box>
-                </ToggleButton>
-                <ToggleButton value='week'>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1 }}>
-                    <i className='ri-calendar-2-line' style={{ fontSize: '1.5rem' }} />
-                    <Typography variant='caption'>Week</Typography>
-                  </Box>
-                </ToggleButton>
-                <ToggleButton value='day'>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1 }}>
-                    <i className='ri-calendar-check-line' style={{ fontSize: '1.5rem' }} />
-                    <Typography variant='caption'>Day</Typography>
-                  </Box>
-                </ToggleButton>
+                {[
+                  { value: 'month', icon: 'ri-calendar-line', label: 'Month' },
+                  { value: 'week', icon: 'ri-calendar-2-line', label: 'Week' },
+                  { value: 'day', icon: 'ri-calendar-check-line', label: 'Day' }
+                ].map(v => (
+                  <ToggleButton key={v.value} value={v.value}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1 }}>
+                      <i className={v.icon} style={{ fontSize: '1.5rem' }} />
+                      <Typography variant='caption'>{v.label}</Typography>
+                    </Box>
+                  </ToggleButton>
+                ))}
               </ToggleButtonGroup>
 
               <Divider />
@@ -74,9 +100,9 @@ const CalendarSettingsTab = () => {
               <FormControl fullWidth size='small'>
                 <InputLabel>Start of Week</InputLabel>
                 <Select
-                  value={calendarSettings.startOfWeek}
+                  value={cs.startOfWeek}
                   label='Start of Week'
-                  onChange={e => updateCalendarSettings({ startOfWeek: e.target.value as 'sunday' | 'monday' })}
+                  onChange={e => set({ startOfWeek: e.target.value as 'sunday' | 'monday' })}
                 >
                   <MenuItem value='sunday'>Sunday</MenuItem>
                   <MenuItem value='monday'>Monday</MenuItem>
@@ -84,12 +110,7 @@ const CalendarSettingsTab = () => {
               </FormControl>
 
               <FormControlLabel
-                control={
-                  <Switch
-                    checked={calendarSettings.showWeekends}
-                    onChange={e => updateCalendarSettings({ showWeekends: e.target.checked })}
-                  />
-                }
+                control={<Switch checked={cs.showWeekends} onChange={e => set({ showWeekends: e.target.checked })} />}
                 label={
                   <Box>
                     <Typography variant='body1'>Show Weekends</Typography>
@@ -113,9 +134,9 @@ const CalendarSettingsTab = () => {
               <FormControl fullWidth size='small'>
                 <InputLabel>Time Format</InputLabel>
                 <Select
-                  value={calendarSettings.timeFormat}
+                  value={cs.timeFormat}
                   label='Time Format'
-                  onChange={e => updateCalendarSettings({ timeFormat: e.target.value as '12h' | '24h' })}
+                  onChange={e => set({ timeFormat: e.target.value as '12h' | '24h' })}
                 >
                   <MenuItem value='12h'>12-hour (9:00 AM)</MenuItem>
                   <MenuItem value='24h'>24-hour (09:00)</MenuItem>
@@ -125,9 +146,9 @@ const CalendarSettingsTab = () => {
               <FormControl fullWidth size='small'>
                 <InputLabel>Time Slot Duration</InputLabel>
                 <Select
-                  value={calendarSettings.timeSlotDuration}
+                  value={cs.timeSlotDuration}
                   label='Time Slot Duration'
-                  onChange={e => updateCalendarSettings({ timeSlotDuration: e.target.value as 15 | 30 | 60 })}
+                  onChange={e => set({ timeSlotDuration: e.target.value as 15 | 30 | 60 })}
                 >
                   <MenuItem value={15}>15 minutes</MenuItem>
                   <MenuItem value={30}>30 minutes</MenuItem>
@@ -142,7 +163,7 @@ const CalendarSettingsTab = () => {
                   Working Hours Display Range
                 </Typography>
                 <Typography variant='caption' color='text.secondary'>
-                  This controls which hours are visible in the calendar view, not your actual business hours. Business hours are configured per branch.
+                  This controls which hours are visible in the calendar view, not your actual business hours.
                 </Typography>
               </Box>
 
@@ -150,8 +171,8 @@ const CalendarSettingsTab = () => {
                 <Grid item xs={6}>
                   <TimeSelectField
                     label='Start Time'
-                    value={calendarSettings.workingHoursStart}
-                    onChange={value => updateCalendarSettings({ workingHoursStart: value })}
+                    value={cs.workingHoursStart}
+                    onChange={value => set({ workingHoursStart: value })}
                     size='small'
                     fullWidth
                   />
@@ -159,8 +180,8 @@ const CalendarSettingsTab = () => {
                 <Grid item xs={6}>
                   <TimeSelectField
                     label='End Time'
-                    value={calendarSettings.workingHoursEnd}
-                    onChange={value => updateCalendarSettings({ workingHoursEnd: value })}
+                    value={cs.workingHoursEnd}
+                    onChange={value => set({ workingHoursEnd: value })}
                     size='small'
                     fullWidth
                   />
@@ -177,79 +198,49 @@ const CalendarSettingsTab = () => {
           <CardHeader title='Color Scheme' subheader='Choose how events and bookings are displayed' />
           <CardContent>
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Card
-                  variant='outlined'
-                  sx={{
-                    p: 2,
-                    cursor: 'pointer',
-                    borderColor: calendarSettings.colorScheme === 'vivid' ? 'primary.main' : 'divider',
-                    borderWidth: calendarSettings.colorScheme === 'vivid' ? 2 : 1
-                  }}
-                  onClick={() => updateCalendarSettings({ colorScheme: 'vivid' })}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      {['#51b4b7', '#e88682', '#77b6a3', '#202c39'].map(color => (
-                        <Box
-                          key={color}
-                          sx={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: '50%',
-                            bgcolor: color
-                          }}
-                        />
-                      ))}
+              {[
+                {
+                  value: 'vivid',
+                  title: 'Vivid Colors',
+                  desc: 'High-contrast, saturated colors for clear visibility',
+                  colors: ['#51b4b7', '#e88682', '#77b6a3', '#202c39']
+                },
+                {
+                  value: 'pastel',
+                  title: 'Pastel Colors',
+                  desc: 'Soft, muted colors that are easier on the eyes',
+                  colors: ['#a8d5d8', '#f4b4b2', '#b8d9c9', '#8a9ba8']
+                }
+              ].map(scheme => (
+                <Grid item xs={12} md={6} key={scheme.value}>
+                  <Card
+                    variant='outlined'
+                    sx={{
+                      p: 2,
+                      cursor: 'pointer',
+                      borderColor: cs.colorScheme === scheme.value ? 'primary.main' : 'divider',
+                      borderWidth: cs.colorScheme === scheme.value ? 2 : 1
+                    }}
+                    onClick={() => set({ colorScheme: scheme.value as 'vivid' | 'pastel' })}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        {scheme.colors.map(color => (
+                          <Box key={color} sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: color }} />
+                        ))}
+                      </Box>
+                      <Box>
+                        <Typography variant='body1' fontWeight={600}>
+                          {scheme.title}
+                        </Typography>
+                        <Typography variant='caption' color='text.secondary'>
+                          {scheme.desc}
+                        </Typography>
+                      </Box>
                     </Box>
-                    <Box>
-                      <Typography variant='body1' fontWeight={600}>
-                        Vivid Colors
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        High-contrast, saturated colors for clear visibility
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Card>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Card
-                  variant='outlined'
-                  sx={{
-                    p: 2,
-                    cursor: 'pointer',
-                    borderColor: calendarSettings.colorScheme === 'pastel' ? 'primary.main' : 'divider',
-                    borderWidth: calendarSettings.colorScheme === 'pastel' ? 2 : 1
-                  }}
-                  onClick={() => updateCalendarSettings({ colorScheme: 'pastel' })}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      {['#a8d5d8', '#f4b4b2', '#b8d9c9', '#8a9ba8'].map(color => (
-                        <Box
-                          key={color}
-                          sx={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: '50%',
-                            bgcolor: color
-                          }}
-                        />
-                      ))}
-                    </Box>
-                    <Box>
-                      <Typography variant='body1' fontWeight={600}>
-                        Pastel Colors
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        Soft, muted colors that are easier on the eyes
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Card>
-              </Grid>
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
           </CardContent>
         </Card>
@@ -261,117 +252,85 @@ const CalendarSettingsTab = () => {
           <CardHeader title='Preview' subheader='How your calendar will look with current settings' />
           <CardContent>
             <Box
-              sx={{
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 2,
-                p: 2,
-                bgcolor: 'background.default'
-              }}
+              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2, bgcolor: 'background.default' }}
             >
               <Grid container spacing={1}>
-                {/* Header */}
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                     <Typography variant='h6'>January 2026</Typography>
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                      <Box
-                        sx={{
-                          px: 2,
-                          py: 0.5,
-                          bgcolor: calendarSettings.defaultView === 'month' ? 'primary.main' : 'action.hover',
-                          color: calendarSettings.defaultView === 'month' ? 'white' : 'text.primary',
-                          borderRadius: 1,
-                          fontSize: '0.75rem'
-                        }}
-                      >
-                        Month
-                      </Box>
-                      <Box
-                        sx={{
-                          px: 2,
-                          py: 0.5,
-                          bgcolor: calendarSettings.defaultView === 'week' ? 'primary.main' : 'action.hover',
-                          color: calendarSettings.defaultView === 'week' ? 'white' : 'text.primary',
-                          borderRadius: 1,
-                          fontSize: '0.75rem'
-                        }}
-                      >
-                        Week
-                      </Box>
-                      <Box
-                        sx={{
-                          px: 2,
-                          py: 0.5,
-                          bgcolor: calendarSettings.defaultView === 'day' ? 'primary.main' : 'action.hover',
-                          color: calendarSettings.defaultView === 'day' ? 'white' : 'text.primary',
-                          borderRadius: 1,
-                          fontSize: '0.75rem'
-                        }}
-                      >
-                        Day
-                      </Box>
+                      {['month', 'week', 'day'].map(v => (
+                        <Box
+                          key={v}
+                          sx={{
+                            px: 2,
+                            py: 0.5,
+                            bgcolor: cs.defaultView === v ? 'primary.main' : 'action.hover',
+                            color: cs.defaultView === v ? 'white' : 'text.primary',
+                            borderRadius: 1,
+                            fontSize: '0.75rem'
+                          }}
+                        >
+                          {v.charAt(0).toUpperCase() + v.slice(1)}
+                        </Box>
+                      ))}
                     </Box>
                   </Box>
                 </Grid>
 
-                {/* Sample time slots */}
-                <Grid item xs={12}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Box sx={{ width: 60, textAlign: 'right', pr: 1, color: 'text.secondary', fontSize: '0.75rem' }}>
-                      {calendarSettings.timeFormat === '12h' ? '9:00 AM' : '09:00'}
-                    </Box>
-                    <Box
-                      sx={{
-                        flex: 1,
-                        height: 40,
-                        bgcolor: calendarSettings.colorScheme === 'vivid' ? '#51b4b7' : '#a8d5d8',
-                        borderRadius: 1,
-                        px: 1,
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <Typography
-                        variant='caption'
-                        sx={{ color: calendarSettings.colorScheme === 'vivid' ? 'white' : 'text.primary' }}
+                {[
+                  {
+                    time: '9:00',
+                    time24: '09:00',
+                    color: cs.colorScheme === 'vivid' ? '#51b4b7' : '#a8d5d8',
+                    label: 'Sample Booking'
+                  },
+                  {
+                    time: '10:00',
+                    time24: '10:00',
+                    color: cs.colorScheme === 'vivid' ? '#e88682' : '#f4b4b2',
+                    label: 'Another Booking'
+                  }
+                ].map(slot => (
+                  <Grid item xs={12} key={slot.label}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Box sx={{ width: 60, textAlign: 'right', pr: 1, color: 'text.secondary', fontSize: '0.75rem' }}>
+                        {cs.timeFormat === '12h' ? `${slot.time} AM` : slot.time24}
+                      </Box>
+                      <Box
+                        sx={{
+                          flex: 1,
+                          height: 40,
+                          bgcolor: slot.color,
+                          borderRadius: 1,
+                          px: 1,
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
                       >
-                        Sample Booking
-                      </Typography>
+                        <Typography
+                          variant='caption'
+                          sx={{ color: cs.colorScheme === 'vivid' ? 'white' : 'text.primary' }}
+                        >
+                          {slot.label}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Box sx={{ width: 60, textAlign: 'right', pr: 1, color: 'text.secondary', fontSize: '0.75rem' }}>
-                      {calendarSettings.timeFormat === '12h' ? '10:00 AM' : '10:00'}
-                    </Box>
-                    <Box
-                      sx={{
-                        flex: 1,
-                        height: 40,
-                        bgcolor: calendarSettings.colorScheme === 'vivid' ? '#e88682' : '#f4b4b2',
-                        borderRadius: 1,
-                        px: 1,
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <Typography
-                        variant='caption'
-                        sx={{ color: calendarSettings.colorScheme === 'vivid' ? 'white' : 'text.primary' }}
-                      >
-                        Another Booking
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Grid>
+                  </Grid>
+                ))}
               </Grid>
             </Box>
           </CardContent>
         </Card>
       </Grid>
+
+      <ConfirmChangesDialog
+        open={confirmOpen}
+        title='Save Calendar Settings'
+        changes={changes}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Grid>
   )
 }

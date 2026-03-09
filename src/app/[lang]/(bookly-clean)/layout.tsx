@@ -8,6 +8,7 @@ import { TranslationsProvider } from '@/bookly/providers'
 import type { PageProps } from '@/bookly/types'
 import { SettingsProvider } from '@/contexts/settings.context'
 import AuthInitializer from '@/components/AuthInitializer'
+import PushTokenInitializer from '@/components/PushTokenInitializer'
 import initTranslations from '@/app/i18n/i18n'
 import LanguageNavigationGuard from '@/components/LanguageNavigationGuard'
 
@@ -32,6 +33,7 @@ export default async function RootLayout({
       <ThemeProvider attribute='class' defaultTheme='light' enableSystem={false}>
         <SettingsProvider>
           <AuthInitializer />
+          <PushTokenInitializer />
           <LanguageNavigationGuard />
           <div
             style={{

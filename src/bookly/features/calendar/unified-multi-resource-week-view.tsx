@@ -590,16 +590,23 @@ export default function UnifiedMultiResourceWeekView({
 
             // Create consolidated entries
             slotGroups.forEach((slotEvents, slotId) => {
-              const firstEvent = slotEvents[0]
-              const activeBookings = slotEvents.filter(e => e.extendedProps?.status !== 'cancelled')
+              // Separate session definition from actual bookings
+              const sessionDef = slotEvents.find(e => e.extendedProps?.isSessionDefinition)
+              const bookingEvents = slotEvents.filter(e => !e.extendedProps?.isSessionDefinition)
+
+              // Use session definition for display if available, otherwise first booking
+              const firstEvent = sessionDef || slotEvents[0]
+              const activeBookings = bookingEvents.filter(e => e.extendedProps?.status !== 'cancelled')
+              const sessionCapacity = sessionDef?.extendedProps?.maxParticipants
               const staticSlot = staticSlots.find(s => s.id === firstEvent.extendedProps?.slotId)
+              const totalCapacity = sessionCapacity || staticSlot?.capacity || activeBookings.length || 1
               const attendedCount = activeBookings.filter(e => e.extendedProps?.status === 'attended').length
-              const attendanceBase = activeBookings.length > 0 ? activeBookings.length : staticSlot?.capacity || 0
+              const attendanceBase = activeBookings.length > 0 ? activeBookings.length : totalCapacity
               consolidatedEvents.push({
                 event: firstEvent,
                 isConsolidated: true,
                 bookingCount: activeBookings.length,
-                totalCapacity: staticSlot?.capacity || activeBookings.length,
+                totalCapacity,
                 allEvents: slotEvents,
                 attendedCount,
                 attendanceBase

@@ -92,7 +92,10 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
         price: s.price,
         duration: s.duration,
         location: s.location || 'on-site',
-        business: s.business || { name: '' }
+        business: s.business || { name: '' },
+        businessId: s.businessId || s.business?.id || '',
+        createdAt: s.createdAt || new Date().toISOString(),
+        updatedAt: s.updatedAt || new Date().toISOString()
       }))
       setAvailableServices(services)
 
@@ -198,20 +201,22 @@ function BookingModalV2({ isOpen, onClose, initialService, branchId }: BookingMo
   const handleDetailsSubmit = async (data: DetailsFormValues) => {
     setLoading(true)
     try {
-      // Create bookings
+      // Create bookings using correct backend field names
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
 
       for (const selected of selectedServices) {
-        const startsAtUtc = combineDateTimeToUTC(dateStr, selected.time)
-        await BookingService.createBooking({
+        // startTime must be a full ISO UTC datetime string
+        const startTime = combineDateTimeToUTC(dateStr, selected.time)
+        const staffIdToSend = selected.providerId === 'no-preference' ? undefined : selected.providerId
+
+        await BookingService.createGuestBooking({
           serviceId: selected.service.id,
-          providerId: selected.providerId,
-          startsAtUtc,
-          customer: {
-            name: data.name,
-            email: data.email,
-            phone: data.phone
-          },
+          branchId: branchId || '',
+          staffId: staffIdToSend,
+          startTime,
+          customerName: data.name,
+          customerEmail: data.email,
+          customerPhone: data.phone || '',
           notes: data.notes
         })
       }

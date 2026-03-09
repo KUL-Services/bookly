@@ -21,6 +21,7 @@ import Customizer from '@core/components/customizer'
 import ScrollToTop from '@core/components/scroll-to-top'
 import ClientAuthGuard from '@/components/ClientAuthGuard'
 import SessionToStoreBridge from '@/components/SessionToStoreBridge'
+import PushTokenInitializer from '@/components/PushTokenInitializer'
 import { ApprovalBanner } from '@/components/ApprovalBanner'
 import AggressiveLanguageGuard from '@/components/AggressiveLanguageGuard'
 import UltimateLanguageProtector from '@/components/UltimateLanguageProtector'
@@ -45,6 +46,7 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
       <GoogleMapsScript />
       <UltimateLanguageProtector />
       <SessionToStoreBridge />
+      <PushTokenInitializer />
       <AggressiveLanguageGuard />
       <ClientAuthGuard locale={params.lang}>
         <LayoutWrapper

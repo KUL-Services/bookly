@@ -41,6 +41,27 @@ function calculateDuration(start: string, end: string): string {
   return `${hours}h${mins > 0 ? `${mins}m` : ''}`
 }
 
+/** Format "HH:MM" to "H:MM AM/PM" */
+function fmt12(time: string): string {
+  const [h, m] = time.split(':').map(Number)
+  const suffix = h >= 12 ? 'PM' : 'AM'
+  const hour12 = h % 12 || 12
+  return `${hour12}:${m.toString().padStart(2, '0')} ${suffix}`
+}
+
+/** Convert an ISO datetime string (or Date) to "HH:MM" local time */
+function isoToTime(isoOrDate: string | Date): string {
+  const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate
+  const h = d.getHours().toString().padStart(2, '0')
+  const m = d.getMinutes().toString().padStart(2, '0')
+  return `${h}:${m}`
+}
+
+/** Get the YYYY-MM-DD portion of a date */
+function toDateKey(d: Date): string {
+  return d.toISOString().split('T')[0]
+}
+
 export function ShiftsTimeline({
   viewMode,
   selectedStaffIds,
@@ -49,8 +70,15 @@ export function ShiftsTimeline({
   onEditBusinessHours,
   onEditStaffShift
 }: ShiftsTimelineProps) {
-  const { getBusinessHours, getStaffWorkingHours, getTimeReservationsForStaff, getTimeOffForStaff, staffMembers } =
-    useStaffManagementStore()
+  const {
+    getBusinessHours,
+    getStaffWorkingHours,
+    getTimeReservationsForStaff,
+    getTimeOffForStaff,
+    staffMembers,
+    sessions,
+    rooms
+  } = useStaffManagementStore()
 
   const filteredStaff = staffMembers.filter(s => selectedStaffIds.includes(s.id))
 
@@ -92,16 +120,8 @@ export function ShiftsTimeline({
         if (workingHours.isWorking && workingHours.shifts.length > 0) {
           workingHours.shifts.forEach(shift => {
             const [startH] = shift.start.split(':').map(Number)
-            const [endH, endEnd] = shift.end.split(':').map(Number)
+            const [endH] = shift.end.split(':').map(Number)
             earliestStart = Math.min(earliestStart, startH)
-            // If shift ends at e.g. 17:30, endH is 17. Math.ceil might be safer but existing logic uses int hours
-            // If end is 17:00, it's 17. If 17:30, it's 17.5.
-            // Let's use parsing to float to be safe for late shifts?
-            // Existing logic uses split(':').map(Number) -> first is hour.
-            // So 17:30 becomes 17. If we just use max(17), we might cut off half hour?
-            // The existing logic paddedEnd = latestEnd + 1 handles this usually.
-            // But let's look at how it was done: const [endH] = shift.end.split....
-            // Yes, it takes the hour.
             latestEnd = Math.max(latestEnd, endH)
           })
         }
@@ -361,6 +381,12 @@ export function ShiftsTimeline({
           const timeOff = getTimeOffForStaff(staff.id)
           const reservations = getTimeReservationsForStaff(staff.id)
 
+          // Room assignments for this staff
+          const staffRoomAssignments: any[] = (staff as any).roomAssignments || []
+
+          // Sessions for this staff (resourceId matches staffId — static staff)
+          const staffSessions = sessions.filter((s: any) => s.resourceId === staff.id && s.isActive !== false)
+
           return (
             <Box
               key={staff.id}
@@ -368,7 +394,7 @@ export function ShiftsTimeline({
                 display: 'flex',
                 borderBottom: '1px solid',
                 borderColor: 'divider',
-                minHeight: 80,
+                minHeight: 100, // slightly taller to fit layered blocks
                 bgcolor: 'background.paper'
               }}
             >
@@ -413,7 +439,7 @@ export function ShiftsTimeline({
                   />
                 ))}
 
-                {/* Staff shifts */}
+                {/* ── LAYER 1: Staff shifts ── */}
                 {daysToShow.map((day, dayIndex) => {
                   const dayHours = getStaffWorkingHours(staff.id, day)
                   if (!dayHours.isWorking) return null
@@ -421,22 +447,26 @@ export function ShiftsTimeline({
                   return dayHours.shifts.map((shift, shiftIndex) => (
                     <Box key={`${day}-${shiftIndex}`}>
                       {/* Shift bar */}
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          left: `${timeToPosition(shift.start, startHour, hourRange)}%`,
-                          width: `${timeToPosition(shift.end, startHour, hourRange) - timeToPosition(shift.start, startHour, hourRange)}%`,
-                          top: viewMode === 'week' ? `${(dayIndex / 7) * 100 + 10}%` : '20%',
-                          height: viewMode === 'week' ? `${100 / 7 - 20}%` : '60%',
-                          bgcolor: 'var(--mui-palette-customColors-sage)',
-                          borderRadius: 1,
-                          cursor: 'pointer',
-                          '&:hover': {
-                            bgcolor: 'var(--mui-palette-customColors-teal)'
-                          }
-                        }}
-                        onClick={onEditStaffShift}
-                      />
+                      <Tooltip
+                        title={`Shift: ${fmt12(shift.start)} – ${fmt12(shift.end)} (${calculateDuration(shift.start, shift.end)})`}
+                      >
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            left: `${timeToPosition(shift.start, startHour, hourRange)}%`,
+                            width: `${timeToPosition(shift.end, startHour, hourRange) - timeToPosition(shift.start, startHour, hourRange)}%`,
+                            top: viewMode === 'week' ? `${(dayIndex / 7) * 100 + 5}%` : '10%',
+                            height: viewMode === 'week' ? `${100 / 7 - 10}%` : '30%',
+                            bgcolor: 'var(--mui-palette-customColors-sage)',
+                            borderRadius: 1,
+                            cursor: 'pointer',
+                            '&:hover': {
+                              bgcolor: 'var(--mui-palette-customColors-teal)'
+                            }
+                          }}
+                          onClick={onEditStaffShift}
+                        />
+                      </Tooltip>
 
                       {/* Break chips */}
                       {shift.breaks?.map((breakRange, breakIndex) => (
@@ -447,9 +477,9 @@ export function ShiftsTimeline({
                           sx={{
                             position: 'absolute',
                             left: `${timeToPosition(breakRange.start, startHour, hourRange)}%`,
-                            top: viewMode === 'week' ? `${(dayIndex / 7) * 100 + 15}%` : '25%',
-                            height: 20,
-                            fontSize: '0.65rem'
+                            top: viewMode === 'week' ? `${(dayIndex / 7) * 100 + 5}%` : '10%',
+                            height: 18,
+                            fontSize: '0.6rem'
                           }}
                         />
                       ))}
@@ -457,7 +487,145 @@ export function ShiftsTimeline({
                   ))
                 })}
 
-                {/* Time off overlay */}
+                {/* ── LAYER 2: Room Assignment bars (amber) ── */}
+                {daysToShow.map((day, dayIndex) =>
+                  staffRoomAssignments
+                    .filter((ra: any) => ra.dayOfWeek === day)
+                    .map((ra: any, raIndex: number) => {
+                      const room = rooms.find((r: any) => r.id === ra.roomId)
+                      const roomColor = room?.color || 'hsl(38, 92%, 50%)'
+                      return (
+                        <Tooltip
+                          key={`room-${day}-${raIndex}`}
+                          title={`Room: ${ra.roomName || room?.name || 'Unknown Room'} · ${fmt12(ra.startTime)} – ${fmt12(ra.endTime)}`}
+                        >
+                          <Box
+                            sx={{
+                              position: 'absolute',
+                              left: `${timeToPosition(ra.startTime, startHour, hourRange)}%`,
+                              width: `${timeToPosition(ra.endTime, startHour, hourRange) - timeToPosition(ra.startTime, startHour, hourRange)}%`,
+                              top: viewMode === 'week' ? `${(dayIndex / 7) * 100 + 45}%` : '42%',
+                              height: viewMode === 'week' ? `${100 / 7 - 10}%` : '22%',
+                              bgcolor: roomColor,
+                              opacity: 0.85,
+                              borderRadius: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              px: 0.5,
+                              overflow: 'hidden',
+                              cursor: 'default'
+                            }}
+                          >
+                            <Typography
+                              variant='caption'
+                              sx={{ color: 'white', fontSize: '0.6rem', fontWeight: 600, whiteSpace: 'nowrap' }}
+                            >
+                              {ra.roomName || room?.name || ''}
+                            </Typography>
+                          </Box>
+                        </Tooltip>
+                      )
+                    })
+                )}
+
+                {/* ── LAYER 3: Session blocks (teal) ── */}
+                {daysToShow.map((day, dayIndex) => {
+                  const dayIndex0 = DAY_NAMES.indexOf(day)
+                  return staffSessions
+                    .filter((session: any) => {
+                      // Match recurring (dayOfWeek) or one-off (date matches selected date)
+                      if (session.dayOfWeek !== undefined) return session.dayOfWeek === dayIndex0
+                      if (session.date) {
+                        const sessionDay = DAY_NAMES[new Date(session.date).getDay()]
+                        return sessionDay === day
+                      }
+                      return false
+                    })
+                    .map((session: any, sIdx: number) => (
+                      <Tooltip
+                        key={`session-${day}-${sIdx}`}
+                        title={`Session: ${session.name} · ${fmt12(session.startTime)} – ${fmt12(session.endTime)} · ${session.currentParticipants ?? 0}/${session.maxParticipants} spots`}
+                      >
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            left: `${timeToPosition(session.startTime, startHour, hourRange)}%`,
+                            width: `${timeToPosition(session.endTime, startHour, hourRange) - timeToPosition(session.startTime, startHour, hourRange)}%`,
+                            top: viewMode === 'week' ? `${(dayIndex / 7) * 100 + 70}%` : '70%',
+                            height: viewMode === 'week' ? `${100 / 7 - 10}%` : '22%',
+                            bgcolor: 'var(--mui-palette-customColors-teal)',
+                            opacity: 0.9,
+                            borderRadius: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            px: 0.5,
+                            overflow: 'hidden',
+                            cursor: 'default',
+                            border: '1px solid rgba(255,255,255,0.3)'
+                          }}
+                        >
+                          <Typography
+                            variant='caption'
+                            sx={{ color: 'white', fontSize: '0.6rem', fontWeight: 600, whiteSpace: 'nowrap' }}
+                          >
+                            {session.name}
+                          </Typography>
+                        </Box>
+                      </Tooltip>
+                    ))
+                })}
+
+                {/* ── LAYER 4: Time Reservations overlay (purple hatched) ── */}
+                {reservations.map(reservation => {
+                  const resStart = new Date(reservation.start)
+                  const resEnd = new Date(reservation.end)
+                  const resDay = DAY_NAMES[resStart.getDay()]
+                  if (!daysToShow.includes(resDay)) return null
+
+                  const dayIndex = daysToShow.indexOf(resDay)
+                  const startTimeStr = isoToTime(resStart)
+                  const endTimeStr = isoToTime(resEnd)
+
+                  return (
+                    <Tooltip
+                      key={reservation.id}
+                      title={`Reserved: ${reservation.reason} · ${fmt12(startTimeStr)} – ${fmt12(endTimeStr)}`}
+                    >
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          left: `${timeToPosition(startTimeStr, startHour, hourRange)}%`,
+                          width: `${timeToPosition(endTimeStr, startHour, hourRange) - timeToPosition(startTimeStr, startHour, hourRange)}%`,
+                          top: viewMode === 'week' ? `${(dayIndex / 7) * 100}%` : 0,
+                          height: viewMode === 'week' ? `${100 / 7}%` : '100%',
+                          bgcolor: 'rgba(149, 97, 226, 0.15)',
+                          backgroundImage:
+                            'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(149, 97, 226, 0.15) 8px, rgba(149, 97, 226, 0.15) 16px)',
+                          borderRadius: 1,
+                          border: '1px solid rgba(149, 97, 226, 0.4)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        <Chip
+                          label={reservation.reason}
+                          size='small'
+                          sx={{
+                            bgcolor: 'rgba(149, 97, 226, 0.8)',
+                            color: 'white',
+                            fontSize: '0.6rem',
+                            height: 18,
+                            pointerEvents: 'none'
+                          }}
+                        />
+                      </Box>
+                    </Tooltip>
+                  )
+                })}
+
+                {/* ── LAYER 5: Time off overlay (existing, unchanged) ── */}
                 {timeOff.map(off => {
                   const dayOfWeek = DAY_NAMES[off.range.start.getDay()]
                   if (!daysToShow.includes(dayOfWeek)) return null
@@ -519,6 +687,40 @@ export function ShiftsTimeline({
             </Box>
           )
         })}
+
+        {/* Legend */}
+        <Box sx={{ p: 2, display: 'flex', gap: 2, flexWrap: 'wrap', borderTop: '1px solid', borderColor: 'divider' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: 'var(--mui-palette-customColors-sage)' }} />
+            <Typography variant='caption' color='text.secondary'>
+              Shift
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: 'hsl(38, 92%, 50%)' }} />
+            <Typography variant='caption' color='text.secondary'>
+              Room Assignment
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: 'var(--mui-palette-customColors-teal)' }} />
+            <Typography variant='caption' color='text.secondary'>
+              Session
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: 'rgba(149,97,226,0.6)' }} />
+            <Typography variant='caption' color='text.secondary'>
+              Reserved
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: 'var(--mui-palette-customColors-coral)' }} />
+            <Typography variant='caption' color='text.secondary'>
+              Time Off
+            </Typography>
+          </Box>
+        </Box>
       </Box>
     </Box>
   )

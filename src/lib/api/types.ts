@@ -1124,6 +1124,32 @@ export interface Notification {
   updatedAt: string
 }
 
+export type PushPlatform = 'web' | 'ios' | 'android'
+
+export interface RegisterPushTokenRequest {
+  token: string
+  platform: PushPlatform
+  deviceId?: string
+  appVersion?: string
+  locale?: string
+}
+
+export interface PushTokenRecord {
+  id: string
+  token: string
+  platform: PushPlatform
+  isActive: boolean
+  lastSeenAt: string
+}
+
+export interface DeletePushTokenRequest {
+  token: string
+}
+
+export interface DeletePushTokenResponse {
+  success: boolean
+}
+
 // Admin bookings query params
 export interface AdminBookingsParams {
   date?: string

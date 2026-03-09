@@ -19,6 +19,12 @@ import Snackbar from '@mui/material/Snackbar'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
 
 // Component Imports
 import CustomTabList from '@core/components/mui/TabList'
@@ -36,8 +42,19 @@ import CustomerSettingsTab from './tabs/CustomerSettingsTab'
 import { ServicesTab } from '@/bookly/features/staff-management/services-tab'
 import { BranchesTab } from '@/bookly/features/branches'
 
-// Store
+// Stores
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
+import { useTabDirtyStore } from '@/stores/tab-dirty.store'
+
+const TAB_LABELS: Record<string, string> = {
+  'business-profile': 'Business Profile',
+  'booking-policies': 'Booking Policies',
+  payment: 'Payment',
+  notifications: 'Notifications',
+  scheduling: 'Scheduling',
+  calendar: 'Calendar Display',
+  customer: 'Customer Options'
+}
 
 const BusinessSettings = () => {
   // Store
@@ -52,6 +69,8 @@ const BusinessSettings = () => {
     clearMessages,
     resetAllSettings
   } = useBusinessSettingsStore()
+
+  const { getTab } = useTabDirtyStore()
 
   // URL params for tab navigation
   const searchParams = useSearchParams()
@@ -79,6 +98,11 @@ const BusinessSettings = () => {
   })
   const [showResetConfirm, setShowResetConfirm] = useState(false)
 
+  // Tab-switching guard state
+  const [guardOpen, setGuardOpen] = useState(false)
+  const [pendingTab, setPendingTab] = useState<string | null>(null)
+  const [guardIsSaving, setGuardIsSaving] = useState(false)
+
   // Sync tab with URL when it changes
   useEffect(() => {
     if (tabFromUrl && validTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
@@ -92,7 +116,44 @@ const BusinessSettings = () => {
   }, [loadSettings])
 
   const handleTabChange = (_event: SyntheticEvent, value: string) => {
+    const currentEntry = getTab(activeTab)
+    if (currentEntry?.isDirty) {
+      // Show leave-guard dialog instead of switching immediately
+      setPendingTab(value)
+      setGuardOpen(true)
+      return
+    }
     setActiveTab(value)
+  }
+
+  const guardCurrentEntry = getTab(activeTab)
+  const guardChanges = guardCurrentEntry ? [] : [] // used for display in modal — comes from dirty store metadata
+
+  const handleGuardStay = () => {
+    setGuardOpen(false)
+    setPendingTab(null)
+  }
+
+  const handleGuardDiscard = () => {
+    // Reset current tab draft, then navigate
+    getTab(activeTab)?.reset()
+    setGuardOpen(false)
+    if (pendingTab) setActiveTab(pendingTab)
+    setPendingTab(null)
+  }
+
+  const handleGuardSaveAndLeave = async () => {
+    setGuardIsSaving(true)
+    try {
+      await getTab(activeTab)?.save()
+      setGuardOpen(false)
+      if (pendingTab) setActiveTab(pendingTab)
+      setPendingTab(null)
+    } catch {
+      // save errors handled by the tab store
+    } finally {
+      setGuardIsSaving(false)
+    }
   }
 
   const handleSave = async () => {
@@ -107,6 +168,9 @@ const BusinessSettings = () => {
   if (isLoading) {
     return <PageLoader />
   }
+
+  const isSettingsTab = TAB_LABELS[activeTab] !== undefined
+  const currentDirtyEntry = getTab(activeTab)
 
   return (
     <>
@@ -135,35 +199,30 @@ const BusinessSettings = () => {
                   </Typography>
                 }
                 action={
-                  <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button
-                      variant='outlined'
-                      color='secondary'
-                      onClick={() => setShowResetConfirm(true)}
-                      disabled={isSaving}
-                    >
-                      Reset All
-                    </Button>
-                    <Button
-                      variant='contained'
-                      onClick={handleSave}
-                      disabled={isSaving || !hasUnsavedChanges}
-                      startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
-                    >
-                      {isSaving ? 'Saving...' : 'Save Settings'}
-                    </Button>
-                  </Box>
+                  activeTab !== 'business-profile' && !isSettingsTab ? (
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                      <Button
+                        variant='outlined'
+                        color='secondary'
+                        onClick={() => setShowResetConfirm(true)}
+                        disabled={isSaving}
+                      >
+                        Reset All
+                      </Button>
+                      <Button
+                        variant='contained'
+                        onClick={handleSave}
+                        disabled={isSaving || !hasUnsavedChanges}
+                        startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
+                      >
+                        {isSaving ? 'Saving...' : 'Save Settings'}
+                      </Button>
+                    </Box>
+                  ) : null
                 }
               />
             </Card>
           </Grid>
-
-          {/* Unsaved changes warning */}
-          {hasUnsavedChanges && (
-            <Grid item xs={12}>
-              <Alert severity='warning'>You have unsaved changes. Don't forget to save before leaving this page.</Alert>
-            </Grid>
-          )}
 
           {/* Tabs */}
           <Grid item xs={12}>
@@ -228,7 +287,13 @@ const BusinessSettings = () => {
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     Customer Options
-                    <Chip label='Coming Soon' size='small' variant='outlined' color='info' sx={{ height: 18, fontSize: '0.6rem' }} />
+                    <Chip
+                      label='Coming Soon'
+                      size='small'
+                      variant='outlined'
+                      color='info'
+                      sx={{ height: 18, fontSize: '0.6rem' }}
+                    />
                   </Box>
                 }
                 icon={<i className='ri-user-settings-line' />}
@@ -276,7 +341,64 @@ const BusinessSettings = () => {
         </Grid>
       </TabContext>
 
-      {/* Success/Error Snackbar */}
+      {/* ─── Tab-Switching Guard Dialog ───────────────────────────────────────── */}
+      <Dialog open={guardOpen} onClose={handleGuardStay} maxWidth='sm' fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <i
+              className='ri-error-warning-line'
+              style={{ fontSize: '1.4rem', color: 'var(--mui-palette-warning-main)' }}
+            />
+            <Box>
+              <Typography variant='h6' fontWeight={700}>
+                Unsaved Changes
+              </Typography>
+              {activeTab in TAB_LABELS && (
+                <Typography variant='caption' color='text.secondary'>
+                  in {TAB_LABELS[activeTab]}
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        </DialogTitle>
+
+        <DialogContent dividers>
+          {currentDirtyEntry && (
+            <Box>
+              <Typography variant='body2' color='text.secondary' sx={{ mb: 1.5 }}>
+                You have unsaved changes. What would you like to do?
+              </Typography>
+
+              {/* Show the changes from the tab dirty entry — use TabSaveBar data if available */}
+              <Alert severity='warning' sx={{ mb: 0 }}>
+                <Typography variant='body2'>
+                  Your changes in <strong>{TAB_LABELS[activeTab] ?? activeTab}</strong> have not been saved. If you
+                  leave now without saving, all changes will be lost.
+                </Typography>
+              </Alert>
+            </Box>
+          )}
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button variant='outlined' color='secondary' onClick={handleGuardStay} disabled={guardIsSaving}>
+            Stay Here
+          </Button>
+          <Button variant='outlined' color='error' onClick={handleGuardDiscard} disabled={guardIsSaving}>
+            Discard &amp; Leave
+          </Button>
+          <Button
+            variant='contained'
+            onClick={handleGuardSaveAndLeave}
+            disabled={guardIsSaving}
+            startIcon={guardIsSaving ? <BrandedSpinner size={14} color='inherit' /> : <i className='ri-save-2-line' />}
+          >
+            {guardIsSaving ? 'Saving...' : 'Save & Leave'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ─── Success/Error Snackbars ─────────────────────────────────────────── */}
       <Snackbar
         open={!!successMessage}
         autoHideDuration={3000}
@@ -299,7 +421,7 @@ const BusinessSettings = () => {
         </Alert>
       </Snackbar>
 
-      {/* Reset Confirmation Dialog */}
+      {/* ─── Reset Confirmation Dialog ───────────────────────────────────────── */}
       {showResetConfirm && (
         <Box
           sx={{

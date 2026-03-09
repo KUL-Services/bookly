@@ -567,6 +567,7 @@ interface BusinessSettingsActions {
 
   // Persistence
   saveSettings: () => Promise<void>
+  saveBusinessProfileSection: () => Promise<void>
   saveBookingPoliciesSettings: () => Promise<void>
   saveSchedulingSettings: () => Promise<void>
   saveNotificationSettings: () => Promise<void>
@@ -756,13 +757,19 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
             throw new Error(paymentResult.error)
           }
 
-          const calendarResult = await SettingsService.updateCalendarSettings(toApiCalendarSettings(state.calendarSettings))
+          const calendarResult = await SettingsService.updateCalendarSettings(
+            toApiCalendarSettings(state.calendarSettings)
+          )
           if (calendarResult.error) throw new Error(calendarResult.error)
 
-          const customerResult = await SettingsService.updateCustomerSettings(toApiCustomerSettings(state.customerSettings))
+          const customerResult = await SettingsService.updateCustomerSettings(
+            toApiCustomerSettings(state.customerSettings)
+          )
           if (customerResult.error) throw new Error(customerResult.error)
 
-          const brandingResult = await SettingsService.updateBrandingSettings(toApiBrandingSettings(state.brandingSettings))
+          const brandingResult = await SettingsService.updateBrandingSettings(
+            toApiBrandingSettings(state.brandingSettings)
+          )
           if (brandingResult.error) throw new Error(brandingResult.error)
 
           set({
@@ -778,6 +785,53 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
           set({
             isSaving: false,
             error: error instanceof Error ? error.message : 'Failed to save settings'
+          })
+        }
+      },
+
+      saveBusinessProfileSection: async () => {
+        set({ isSaving: true, error: null })
+        try {
+          const { businessProfile: profile, socialLinks } = get()
+
+          const businessPayload = {
+            name: profile.name,
+            email: profile.email,
+            description: profile.description,
+            phone: profile.phone,
+            website: profile.website,
+            language: profile.language,
+            timezone: profile.timezone,
+            slug: profile.publicUrlSlug,
+            logo: profile.logo,
+            coverImage: profile.coverImage,
+            socialLinks: [
+              ...(socialLinks.facebook ? [{ platform: 'facebook', url: socialLinks.facebook }] : []),
+              ...(socialLinks.instagram ? [{ platform: 'instagram', url: socialLinks.instagram }] : []),
+              ...(socialLinks.twitter ? [{ platform: 'twitter', url: socialLinks.twitter }] : []),
+              ...(socialLinks.linkedin ? [{ platform: 'linkedin', url: socialLinks.linkedin }] : []),
+              ...(socialLinks.tiktok ? [{ platform: 'tiktok', url: socialLinks.tiktok }] : []),
+              ...(socialLinks.youtube ? [{ platform: 'youtube', url: socialLinks.youtube }] : [])
+            ]
+          }
+
+          const result = await BusinessService.updateBusiness(businessPayload)
+          if (result.error) {
+            throw new Error(result.error)
+          }
+
+          set({
+            isSaving: false,
+            hasUnsavedChanges: false,
+            successMessage: 'Business profile saved successfully!'
+          })
+          setTimeout(() => {
+            set({ successMessage: null })
+          }, 3000)
+        } catch (error) {
+          set({
+            isSaving: false,
+            error: error instanceof Error ? error.message : 'Failed to save business profile'
           })
         }
       },
@@ -1012,7 +1066,9 @@ export const useBusinessSettingsStore = create<BusinessSettingsStore>()(
             if (bizResult.data) {
               const biz = bizResult.data
               const socialMap: Record<string, string> = {}
-              biz.socialLinks?.forEach(l => { socialMap[l.platform] = l.url })
+              biz.socialLinks?.forEach(l => {
+                socialMap[l.platform] = l.url
+              })
               set(state => ({
                 businessProfile: {
                   ...state.businessProfile,

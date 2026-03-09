@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { AuthService } from '@/lib/api'
+import { getStoredPushToken, unregisterPushTokenBestEffort } from '@/lib/push/push-token-manager'
 import type { LoginRequest, RegisterUserRequest, VerifyAccountRequest } from '@/lib/api'
 
 export type UserType = 'customer' | 'business'
@@ -254,7 +255,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logoutCustomer() {
-        const { userType } = get()
+        const { userType, token } = get()
+        const pushToken = getStoredPushToken()
+        if (pushToken && token) {
+          void unregisterPushTokenBestEffort(token, pushToken)
+        }
         AuthService.clearAuthToken()
         set({
           booklyUser: null,
@@ -321,7 +326,11 @@ export const useAuthStore = create<AuthState>()(
 
       logoutBusiness() {
         console.log('🧹 Clearing business auth state...')
-        const { userType } = get()
+        const { userType, token } = get()
+        const pushToken = getStoredPushToken()
+        if (pushToken && token) {
+          void unregisterPushTokenBestEffort(token, pushToken)
+        }
         AuthService.clearAuthToken()
 
         // Clear localStorage to ensure complete logout

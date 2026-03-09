@@ -65,7 +65,7 @@ const nextConfig = {
         locale: false
       },
       {
-        source: '/((?!(?:en|fr|ar|front-pages|favicon.ico)\\b)):path',
+        source: '/((?!(?:en|fr|ar|front-pages|favicon.ico|firebase-messaging-sw.js|test-push.html)\\b)):path',
         destination: '/en/:path',
         permanent: true,
         locale: false

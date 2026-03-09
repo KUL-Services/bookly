@@ -1,6 +1,8 @@
 'use client'
 
-// MUI Imports
+import { useState } from 'react'
+
+// MUI
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -18,28 +20,61 @@ import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
-import Button from '@mui/material/Button'
 
 // Store
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
-import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
+
+// Shared draft infra
+import { useTabDraft } from '@/bookly/hooks/use-tab-draft'
+import { TabSaveBar } from '@/bookly/components/molecules/tab-save-bar'
+import { ConfirmChangesDialog } from '@/bookly/components/molecules/confirm-changes-dialog'
+
+// ─── field labels for diffing ────────────────────────────────────────────────
+const LABELS: Record<string, string> = {
+  autoConfirmation: 'Auto-confirm bookings',
+  bookingLeadTime: 'Booking lead time (hours)',
+  maxAdvanceBooking: 'Max advance booking (days)',
+  'cancellationPolicy.enabled': 'Allow cancellations',
+  'cancellationPolicy.hoursBeforeAppointment': 'Cancellation deadline (hours)',
+  'cancellationPolicy.refundPercentage': 'Refund percentage',
+  'reschedulePolicy.enabled': 'Allow rescheduling',
+  'reschedulePolicy.hoursBeforeAppointment': 'Reschedule deadline (hours)',
+  'noShowPolicy.chargeFee': 'Charge no-show fee',
+  'noShowPolicy.feePercentage': 'No-show fee (%)',
+  'noShowPolicy.restrictFutureBookings': 'Restrict future bookings',
+  'noShowPolicy.restrictAfterCount': 'Restrict after (no-shows)',
+  'noShowPolicy.restrictionDays': 'Restriction period (days)'
+}
 
 const BookingPoliciesTab = () => {
   const { bookingPolicies, updateBookingPolicies, saveBookingPoliciesSettings, isSaving } = useBusinessSettingsStore()
 
+  const { draft, setDraft, isDirty, changes, confirmOpen, setConfirmOpen, handleCancel, handleConfirm } = useTabDraft({
+    tabId: 'booking-policies',
+    labels: LABELS,
+    saved: bookingPolicies as unknown as Record<string, unknown>,
+    applyDraft: d => updateBookingPolicies(d as unknown as typeof bookingPolicies),
+    saveAction: saveBookingPoliciesSettings
+  })
+
+  // Typed helpers to update the draft
+  const set = (patch: Partial<typeof bookingPolicies>) =>
+    setDraft(prev => ({ ...prev, ...patch }) as unknown as Record<string, unknown>)
+
+  const bp = draft as unknown as typeof bookingPolicies
+
   return (
     <Grid container spacing={6}>
+      {/* Inline dirty bar */}
       <Grid item xs={12}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant='contained'
-            onClick={saveBookingPoliciesSettings}
-            disabled={isSaving}
-            startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
-          >
-            {isSaving ? 'Saving...' : 'Save Booking Policies'}
-          </Button>
-        </Box>
+        <TabSaveBar
+          isDirty={isDirty}
+          changes={changes}
+          isSaving={isSaving}
+          saveLabel='Save Booking Policies'
+          onSave={() => setConfirmOpen(true)}
+          onCancel={handleCancel}
+        />
       </Grid>
 
       {/* General Booking Settings */}
@@ -60,10 +95,7 @@ const BookingPoliciesTab = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <FormControlLabel
                 control={
-                  <Switch
-                    checked={bookingPolicies.autoConfirmation}
-                    onChange={e => updateBookingPolicies({ autoConfirmation: e.target.checked })}
-                  />
+                  <Switch checked={bp.autoConfirmation} onChange={e => set({ autoConfirmation: e.target.checked })} />
                 }
                 label={
                   <Box>
@@ -81,11 +113,11 @@ const BookingPoliciesTab = () => {
                 <FormControl fullWidth size='small'>
                   <InputLabel>Minimum Booking Lead Time</InputLabel>
                   <Select
-                    value={[0, 1, 2, 4, 8, 12, 24].includes(bookingPolicies.bookingLeadTime) ? bookingPolicies.bookingLeadTime : 'custom'}
+                    value={[0, 1, 2, 4, 8, 12, 24].includes(bp.bookingLeadTime) ? bp.bookingLeadTime : 'custom'}
                     label='Minimum Booking Lead Time'
                     onChange={e => {
                       const val = e.target.value
-                      if (val !== 'custom') updateBookingPolicies({ bookingLeadTime: val as number })
+                      if (val !== 'custom') set({ bookingLeadTime: val as number })
                     }}
                   >
                     <MenuItem value={0}>No minimum</MenuItem>
@@ -98,11 +130,11 @@ const BookingPoliciesTab = () => {
                     <MenuItem value='custom'>Custom</MenuItem>
                   </Select>
                 </FormControl>
-                {![0, 1, 2, 4, 8, 12, 24].includes(bookingPolicies.bookingLeadTime) && (
+                {![0, 1, 2, 4, 8, 12, 24].includes(bp.bookingLeadTime) && (
                   <TextField
                     type='number'
-                    value={bookingPolicies.bookingLeadTime}
-                    onChange={e => updateBookingPolicies({ bookingLeadTime: Math.max(0, parseInt(e.target.value) || 0) })}
+                    value={bp.bookingLeadTime}
+                    onChange={e => set({ bookingLeadTime: Math.max(0, parseInt(e.target.value) || 0) })}
                     InputProps={{ endAdornment: <InputAdornment position='end'>hours</InputAdornment> }}
                     size='small'
                     fullWidth
@@ -118,11 +150,11 @@ const BookingPoliciesTab = () => {
                 <FormControl fullWidth size='small'>
                   <InputLabel>Maximum Advance Booking</InputLabel>
                   <Select
-                    value={[7, 14, 30, 60, 90].includes(bookingPolicies.maxAdvanceBooking) ? bookingPolicies.maxAdvanceBooking : 'custom'}
+                    value={[7, 14, 30, 60, 90].includes(bp.maxAdvanceBooking) ? bp.maxAdvanceBooking : 'custom'}
                     label='Maximum Advance Booking'
                     onChange={e => {
                       const val = e.target.value
-                      if (val !== 'custom') updateBookingPolicies({ maxAdvanceBooking: val as number })
+                      if (val !== 'custom') set({ maxAdvanceBooking: val as number })
                     }}
                   >
                     <MenuItem value={7}>7 days</MenuItem>
@@ -133,11 +165,11 @@ const BookingPoliciesTab = () => {
                     <MenuItem value='custom'>Custom</MenuItem>
                   </Select>
                 </FormControl>
-                {![7, 14, 30, 60, 90].includes(bookingPolicies.maxAdvanceBooking) && (
+                {![7, 14, 30, 60, 90].includes(bp.maxAdvanceBooking) && (
                   <TextField
                     type='number'
-                    value={bookingPolicies.maxAdvanceBooking}
-                    onChange={e => updateBookingPolicies({ maxAdvanceBooking: Math.max(1, parseInt(e.target.value) || 1) })}
+                    value={bp.maxAdvanceBooking}
+                    onChange={e => set({ maxAdvanceBooking: Math.max(1, parseInt(e.target.value) || 1) })}
                     InputProps={{ endAdornment: <InputAdornment position='end'>days</InputAdornment> }}
                     size='small'
                     fullWidth
@@ -162,15 +194,8 @@ const BookingPoliciesTab = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={bookingPolicies.cancellationPolicy.enabled}
-                    onChange={e =>
-                      updateBookingPolicies({
-                        cancellationPolicy: {
-                          ...bookingPolicies.cancellationPolicy,
-                          enabled: e.target.checked
-                        }
-                      })
-                    }
+                    checked={bp.cancellationPolicy.enabled}
+                    onChange={e => set({ cancellationPolicy: { ...bp.cancellationPolicy, enabled: e.target.checked } })}
                   />
                 }
                 label={
@@ -183,23 +208,21 @@ const BookingPoliciesTab = () => {
                 }
               />
 
-              {bookingPolicies.cancellationPolicy.enabled && (
+              {bp.cancellationPolicy.enabled && (
                 <>
                   <TextField
                     label='Cancellation Deadline'
                     type='number'
-                    value={bookingPolicies.cancellationPolicy.hoursBeforeAppointment}
+                    value={bp.cancellationPolicy.hoursBeforeAppointment}
                     onChange={e =>
-                      updateBookingPolicies({
+                      set({
                         cancellationPolicy: {
-                          ...bookingPolicies.cancellationPolicy,
+                          ...bp.cancellationPolicy,
                           hoursBeforeAppointment: Math.max(0, parseInt(e.target.value) || 0)
                         }
                       })
                     }
-                    InputProps={{
-                      endAdornment: <InputAdornment position='end'>hours before</InputAdornment>
-                    }}
+                    InputProps={{ endAdornment: <InputAdornment position='end'>hours before</InputAdornment> }}
                     helperText='Minimum time before appointment when cancellation is allowed'
                     size='small'
                   />
@@ -207,18 +230,16 @@ const BookingPoliciesTab = () => {
                   <TextField
                     label='Refund Percentage'
                     type='number'
-                    value={bookingPolicies.cancellationPolicy.refundPercentage}
+                    value={bp.cancellationPolicy.refundPercentage}
                     onChange={e =>
-                      updateBookingPolicies({
+                      set({
                         cancellationPolicy: {
-                          ...bookingPolicies.cancellationPolicy,
+                          ...bp.cancellationPolicy,
                           refundPercentage: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
                         }
                       })
                     }
-                    InputProps={{
-                      endAdornment: <InputAdornment position='end'>%</InputAdornment>
-                    }}
+                    InputProps={{ endAdornment: <InputAdornment position='end'>%</InputAdornment> }}
                     helperText='How much of the payment is refunded on cancellation'
                     size='small'
                   />
@@ -238,15 +259,8 @@ const BookingPoliciesTab = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={bookingPolicies.reschedulePolicy.enabled}
-                    onChange={e =>
-                      updateBookingPolicies({
-                        reschedulePolicy: {
-                          ...bookingPolicies.reschedulePolicy,
-                          enabled: e.target.checked
-                        }
-                      })
-                    }
+                    checked={bp.reschedulePolicy.enabled}
+                    onChange={e => set({ reschedulePolicy: { ...bp.reschedulePolicy, enabled: e.target.checked } })}
                   />
                 }
                 label={
@@ -259,22 +273,20 @@ const BookingPoliciesTab = () => {
                 }
               />
 
-              {bookingPolicies.reschedulePolicy.enabled && (
+              {bp.reschedulePolicy.enabled && (
                 <TextField
                   label='Reschedule Deadline'
                   type='number'
-                  value={bookingPolicies.reschedulePolicy.hoursBeforeAppointment}
+                  value={bp.reschedulePolicy.hoursBeforeAppointment}
                   onChange={e =>
-                    updateBookingPolicies({
+                    set({
                       reschedulePolicy: {
-                        ...bookingPolicies.reschedulePolicy,
+                        ...bp.reschedulePolicy,
                         hoursBeforeAppointment: Math.max(0, parseInt(e.target.value) || 0)
                       }
                     })
                   }
-                  InputProps={{
-                    endAdornment: <InputAdornment position='end'>hours before</InputAdornment>
-                  }}
+                  InputProps={{ endAdornment: <InputAdornment position='end'>hours before</InputAdornment> }}
                   helperText='Minimum time before appointment when rescheduling is allowed'
                   size='small'
                 />
@@ -293,15 +305,8 @@ const BookingPoliciesTab = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={bookingPolicies.noShowPolicy.chargeFee}
-                    onChange={e =>
-                      updateBookingPolicies({
-                        noShowPolicy: {
-                          ...bookingPolicies.noShowPolicy,
-                          chargeFee: e.target.checked
-                        }
-                      })
-                    }
+                    checked={bp.noShowPolicy.chargeFee}
+                    onChange={e => set({ noShowPolicy: { ...bp.noShowPolicy, chargeFee: e.target.checked } })}
                   />
                 }
                 label={
@@ -314,22 +319,20 @@ const BookingPoliciesTab = () => {
                 }
               />
 
-              {bookingPolicies.noShowPolicy.chargeFee && (
+              {bp.noShowPolicy.chargeFee && (
                 <TextField
                   label='No-Show Fee'
                   type='number'
-                  value={bookingPolicies.noShowPolicy.feePercentage}
+                  value={bp.noShowPolicy.feePercentage}
                   onChange={e =>
-                    updateBookingPolicies({
+                    set({
                       noShowPolicy: {
-                        ...bookingPolicies.noShowPolicy,
+                        ...bp.noShowPolicy,
                         feePercentage: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
                       }
                     })
                   }
-                  InputProps={{
-                    endAdornment: <InputAdornment position='end'>% of booking</InputAdornment>
-                  }}
+                  InputProps={{ endAdornment: <InputAdornment position='end'>% of booking</InputAdornment> }}
                   size='small'
                 />
               )}
@@ -339,14 +342,9 @@ const BookingPoliciesTab = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={bookingPolicies.noShowPolicy.restrictFutureBookings}
+                    checked={bp.noShowPolicy.restrictFutureBookings}
                     onChange={e =>
-                      updateBookingPolicies({
-                        noShowPolicy: {
-                          ...bookingPolicies.noShowPolicy,
-                          restrictFutureBookings: e.target.checked
-                        }
-                      })
+                      set({ noShowPolicy: { ...bp.noShowPolicy, restrictFutureBookings: e.target.checked } })
                     }
                   />
                 }
@@ -360,41 +358,37 @@ const BookingPoliciesTab = () => {
                 }
               />
 
-              {bookingPolicies.noShowPolicy.restrictFutureBookings && (
+              {bp.noShowPolicy.restrictFutureBookings && (
                 <>
                   <TextField
                     label='After how many no-shows?'
                     type='number'
-                    value={bookingPolicies.noShowPolicy.restrictAfterCount ?? 3}
+                    value={bp.noShowPolicy.restrictAfterCount ?? 3}
                     onChange={e =>
-                      updateBookingPolicies({
+                      set({
                         noShowPolicy: {
-                          ...bookingPolicies.noShowPolicy,
+                          ...bp.noShowPolicy,
                           restrictAfterCount: Math.max(1, parseInt(e.target.value) || 1)
                         }
                       })
                     }
-                    InputProps={{
-                      endAdornment: <InputAdornment position='end'>no-shows</InputAdornment>
-                    }}
+                    InputProps={{ endAdornment: <InputAdornment position='end'>no-shows</InputAdornment> }}
                     helperText='Number of no-shows before restrictions apply'
                     size='small'
                   />
                   <TextField
                     label='Restriction Period'
                     type='number'
-                    value={bookingPolicies.noShowPolicy.restrictionDays}
+                    value={bp.noShowPolicy.restrictionDays}
                     onChange={e =>
-                      updateBookingPolicies({
+                      set({
                         noShowPolicy: {
-                          ...bookingPolicies.noShowPolicy,
+                          ...bp.noShowPolicy,
                           restrictionDays: Math.max(1, parseInt(e.target.value) || 1)
                         }
                       })
                     }
-                    InputProps={{
-                      endAdornment: <InputAdornment position='end'>days</InputAdornment>
-                    }}
+                    InputProps={{ endAdornment: <InputAdornment position='end'>days</InputAdornment> }}
                     size='small'
                   />
                 </>
@@ -403,6 +397,14 @@ const BookingPoliciesTab = () => {
           </CardContent>
         </Card>
       </Grid>
+
+      <ConfirmChangesDialog
+        open={confirmOpen}
+        title='Save Booking Policies'
+        changes={changes}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Grid>
   )
 }

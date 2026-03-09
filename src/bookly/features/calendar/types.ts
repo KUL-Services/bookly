@@ -115,8 +115,9 @@ export interface CalendarEvent extends EventInput {
     paymentStatus: PaymentStatus
     paymentMethod?: PaymentMethod
     paymentReference?: string // Payment reference number (Instapay, bank transfer, etc.)
-    staffId: string
-    staffName: string
+    staffId: string | null // null for ASSET_ONLY (room/court) bookings
+    staffName: string | null // null for ASSET_ONLY bookings
+    primaryResourceLabel?: string // Display label: shows room when staffId is null
     selectionMethod: SelectionMethod
     bookedBy: BookedBy // Whether booked by business (in-house) or client
     starred: boolean
@@ -137,6 +138,8 @@ export interface CalendarEvent extends EventInput {
     isStaticSlot?: boolean // Flag indicating this event belongs to a static slot
     sessionId?: string // For STATIC booking mode - links booking to a pre-defined session
     sessionName?: string // Session name for display
+    isSessionDefinition?: boolean // True for session placeholder events (not actual bookings)
+    maxParticipants?: number // Session capacity for static scheduling
     partySize?: number // For group bookings (default 1)
     branchId?: string // Branch where this appointment takes place
     branchName?: string // Branch name for display

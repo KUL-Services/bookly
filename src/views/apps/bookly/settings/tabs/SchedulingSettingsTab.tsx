@@ -1,6 +1,6 @@
 'use client'
 
-// MUI Imports
+// MUI
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -10,7 +10,6 @@ import Switch from '@mui/material/Switch'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
-import Button from '@mui/material/Button'
 import InputAdornment from '@mui/material/InputAdornment'
 import Alert from '@mui/material/Alert'
 import Tooltip from '@mui/material/Tooltip'
@@ -21,32 +20,59 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 
 // Store
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
-import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
+
+// Draft infra
+import { useTabDraft } from '@/bookly/hooks/use-tab-draft'
+import { TabSaveBar } from '@/bookly/components/molecules/tab-save-bar'
+import { ConfirmChangesDialog } from '@/bookly/components/molecules/confirm-changes-dialog'
+
+const LABELS: Record<string, string> = {
+  defaultBookingDuration: 'Default booking duration (min)',
+  bufferTimeBetweenBookings: 'Buffer between bookings (min)',
+  allowWalkIns: 'Allow walk-ins',
+  allowOverbooking: 'Allow overbooking',
+  overbookingType: 'Overbooking type',
+  overbookingPercentage: 'Overbooking limit (%)',
+  overbookingFixedCount: 'Extra bookings allowed',
+  enableWaitlist: 'Enable waitlist'
+}
 
 const SchedulingSettingsTab = () => {
   const { schedulingSettings, updateSchedulingSettings, saveSchedulingSettings, isSaving } = useBusinessSettingsStore()
 
+  const { draft, setDraft, isDirty, changes, confirmOpen, setConfirmOpen, handleCancel, handleConfirm } = useTabDraft({
+    tabId: 'scheduling',
+    labels: LABELS,
+    saved: schedulingSettings as unknown as Record<string, unknown>,
+    applyDraft: d => updateSchedulingSettings(d as unknown as typeof schedulingSettings),
+    saveAction: saveSchedulingSettings
+  })
+
+  const set = (patch: Partial<typeof schedulingSettings>) =>
+    setDraft(prev => ({ ...prev, ...patch }) as unknown as Record<string, unknown>)
+
+  const ss = draft as unknown as typeof schedulingSettings
+
   return (
     <Grid container spacing={6}>
+      {/* Inline dirty bar */}
       <Grid item xs={12}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant='contained'
-            onClick={saveSchedulingSettings}
-            disabled={isSaving}
-            startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
-          >
-            {isSaving ? 'Saving...' : 'Save Scheduling'}
-          </Button>
-        </Box>
+        <TabSaveBar
+          isDirty={isDirty}
+          changes={changes}
+          isSaving={isSaving}
+          saveLabel='Save Scheduling'
+          onSave={() => setConfirmOpen(true)}
+          onCancel={handleCancel}
+        />
       </Grid>
 
-      {/* Info Card about Scheduling Modes */}
+      {/* Info Card */}
       <Grid item xs={12}>
         <Alert severity='info' icon={<i className='ri-information-line' />}>
           <Typography variant='body2'>
-            <strong>Scheduling Mode is Per Staff/Room:</strong> Each staff member and room can be configured
-            as either <Chip label='Flex' size='small' color='primary' sx={{ mx: 0.5 }} /> (appointment-based) or
+            <strong>Scheduling Mode is Per Staff/Room:</strong> Each staff member and room can be configured as either{' '}
+            <Chip label='Flex' size='small' color='primary' sx={{ mx: 0.5 }} /> (appointment-based) or{' '}
             <Chip label='Fixed' size='small' color='secondary' sx={{ mx: 0.5 }} /> (class/session-based). Configure this
             in the <strong>Staff</strong> and <strong>Rooms</strong> management sections.
           </Typography>
@@ -71,15 +97,9 @@ const SchedulingSettingsTab = () => {
             <TextField
               label='Default Duration'
               type='number'
-              value={schedulingSettings.defaultBookingDuration}
-              onChange={e =>
-                updateSchedulingSettings({
-                  defaultBookingDuration: Math.max(15, parseInt(e.target.value) || 60)
-                })
-              }
-              InputProps={{
-                endAdornment: <InputAdornment position='end'>minutes</InputAdornment>
-              }}
+              value={ss.defaultBookingDuration}
+              onChange={e => set({ defaultBookingDuration: Math.max(15, parseInt(e.target.value) || 60) })}
+              InputProps={{ endAdornment: <InputAdornment position='end'>minutes</InputAdornment> }}
               helperText='Minimum 15 minutes. Services can have their own specific duration.'
               size='small'
               fullWidth
@@ -94,12 +114,7 @@ const SchedulingSettingsTab = () => {
           <CardHeader title='Walk-in Bookings' subheader='Allow customers without appointments' />
           <CardContent>
             <FormControlLabel
-              control={
-                <Switch
-                  checked={schedulingSettings.allowWalkIns}
-                  onChange={e => updateSchedulingSettings({ allowWalkIns: e.target.checked })}
-                />
-              }
+              control={<Switch checked={ss.allowWalkIns} onChange={e => set({ allowWalkIns: e.target.checked })} />}
               label={
                 <Box>
                   <Typography variant='body1'>Allow Walk-ins</Typography>
@@ -122,19 +137,12 @@ const SchedulingSettingsTab = () => {
               <TextField
                 label='Buffer Between Bookings'
                 type='number'
-                value={schedulingSettings.bufferTimeBetweenBookings}
-                onChange={e =>
-                  updateSchedulingSettings({
-                    bufferTimeBetweenBookings: Math.max(0, parseInt(e.target.value) || 0)
-                  })
-                }
-                InputProps={{
-                  endAdornment: <InputAdornment position='end'>minutes</InputAdornment>
-                }}
+                value={ss.bufferTimeBetweenBookings}
+                onChange={e => set({ bufferTimeBetweenBookings: Math.max(0, parseInt(e.target.value) || 0) })}
+                InputProps={{ endAdornment: <InputAdornment position='end'>minutes</InputAdornment> }}
                 helperText='Time gap between the end of one booking and the start of the next'
                 size='small'
               />
-
               <Alert severity='info' sx={{ fontSize: '0.875rem' }}>
                 <strong>Example:</strong> If a service takes 60 minutes and buffer is 15 minutes, the next available
                 slot will be 75 minutes after the start of the previous booking.
@@ -152,10 +160,7 @@ const SchedulingSettingsTab = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <FormControlLabel
                 control={
-                  <Switch
-                    checked={schedulingSettings.allowOverbooking}
-                    onChange={e => updateSchedulingSettings({ allowOverbooking: e.target.checked })}
-                  />
+                  <Switch checked={ss.allowOverbooking} onChange={e => set({ allowOverbooking: e.target.checked })} />
                 }
                 label={
                   <Box>
@@ -167,12 +172,12 @@ const SchedulingSettingsTab = () => {
                 }
               />
 
-              {schedulingSettings.allowOverbooking && (
+              {ss.allowOverbooking && (
                 <>
                   <ToggleButtonGroup
-                    value={schedulingSettings.overbookingType || 'percentage'}
+                    value={ss.overbookingType || 'percentage'}
                     exclusive
-                    onChange={(_, value) => value && updateSchedulingSettings({ overbookingType: value })}
+                    onChange={(_, value) => value && set({ overbookingType: value })}
                     size='small'
                     fullWidth
                   >
@@ -180,19 +185,15 @@ const SchedulingSettingsTab = () => {
                     <ToggleButton value='fixed'>Fixed Number</ToggleButton>
                   </ToggleButtonGroup>
 
-                  {(schedulingSettings.overbookingType || 'percentage') === 'percentage' ? (
+                  {(ss.overbookingType || 'percentage') === 'percentage' ? (
                     <TextField
                       label='Overbooking Limit'
                       type='number'
-                      value={schedulingSettings.overbookingPercentage}
+                      value={ss.overbookingPercentage}
                       onChange={e =>
-                        updateSchedulingSettings({
-                          overbookingPercentage: Math.min(100, Math.max(0, parseInt(e.target.value) || 0))
-                        })
+                        set({ overbookingPercentage: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })
                       }
-                      InputProps={{
-                        endAdornment: <InputAdornment position='end'>%</InputAdornment>
-                      }}
+                      InputProps={{ endAdornment: <InputAdornment position='end'>%</InputAdornment> }}
                       helperText='Maximum overbooking percentage above normal capacity'
                       size='small'
                     />
@@ -200,15 +201,9 @@ const SchedulingSettingsTab = () => {
                     <TextField
                       label='Extra Bookings Allowed'
                       type='number'
-                      value={schedulingSettings.overbookingFixedCount || 0}
-                      onChange={e =>
-                        updateSchedulingSettings({
-                          overbookingFixedCount: Math.max(0, parseInt(e.target.value) || 0)
-                        })
-                      }
-                      InputProps={{
-                        endAdornment: <InputAdornment position='end'>extra bookings</InputAdornment>
-                      }}
+                      value={ss.overbookingFixedCount || 0}
+                      onChange={e => set({ overbookingFixedCount: Math.max(0, parseInt(e.target.value) || 0) })}
+                      InputProps={{ endAdornment: <InputAdornment position='end'>extra bookings</InputAdornment> }}
                       helperText='Maximum additional bookings beyond normal capacity'
                       size='small'
                     />
@@ -234,23 +229,24 @@ const SchedulingSettingsTab = () => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={schedulingSettings.enableWaitlist || false}
-                    onChange={e => updateSchedulingSettings({ enableWaitlist: e.target.checked })}
+                    checked={ss.enableWaitlist || false}
+                    onChange={e => set({ enableWaitlist: e.target.checked })}
                   />
                 }
                 label={
                   <Box>
                     <Typography variant='body1'>Enable Waitlist</Typography>
                     <Typography variant='caption' color='text.secondary'>
-                      When a slot is full, customers can join a waitlist. If a cancellation occurs, the first person on the waitlist is notified.
+                      When a slot is full, customers can join a waitlist. If a cancellation occurs, the first person on
+                      the waitlist is notified.
                     </Typography>
                   </Box>
                 }
               />
-
-              {schedulingSettings.enableWaitlist && (
+              {ss.enableWaitlist && (
                 <Alert severity='info' sx={{ fontSize: '0.875rem' }}>
-                  Waitlist management will be available in the Calendar view. Customers will be automatically notified when a spot opens up.
+                  Waitlist management will be available in the Calendar view. Customers will be automatically notified
+                  when a spot opens up.
                 </Alert>
               )}
             </Box>
@@ -258,63 +254,46 @@ const SchedulingSettingsTab = () => {
         </Card>
       </Grid>
 
-      {/* Current Configuration Summary */}
+      {/* Config Summary */}
       <Grid item xs={12}>
         <Card>
           <CardHeader title='Configuration Summary' />
           <CardContent>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={3}>
-                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                  <i className='ri-timer-line' style={{ fontSize: '2rem' }} />
-                  <Typography variant='body1' fontWeight={600}>
-                    {schedulingSettings.defaultBookingDuration} min
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary'>
-                    Default Duration
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={3}>
-                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                  <i className='ri-time-line' style={{ fontSize: '2rem' }} />
-                  <Typography variant='body1' fontWeight={600}>
-                    {schedulingSettings.bufferTimeBetweenBookings} min
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary'>
-                    Buffer Time
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={3}>
-                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                  <i className='ri-walk-line' style={{ fontSize: '2rem' }} />
-                  <Typography variant='body1' fontWeight={600}>
-                    {schedulingSettings.allowWalkIns ? 'Enabled' : 'Disabled'}
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary'>
-                    Walk-ins
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={3}>
-                <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                  <i className='ri-stack-line' style={{ fontSize: '2rem' }} />
-                  <Typography variant='body1' fontWeight={600}>
-                    {schedulingSettings.allowOverbooking ? `${schedulingSettings.overbookingPercentage}%` : 'None'}
-                  </Typography>
-                  <Typography variant='caption' color='text.secondary'>
-                    Overbooking
-                  </Typography>
-                </Box>
-              </Grid>
+              {[
+                { icon: 'ri-timer-line', value: `${ss.defaultBookingDuration} min`, label: 'Default Duration' },
+                { icon: 'ri-time-line', value: `${ss.bufferTimeBetweenBookings} min`, label: 'Buffer Time' },
+                { icon: 'ri-walk-line', value: ss.allowWalkIns ? 'Enabled' : 'Disabled', label: 'Walk-ins' },
+                {
+                  icon: 'ri-stack-line',
+                  value: ss.allowOverbooking ? `${ss.overbookingPercentage}%` : 'None',
+                  label: 'Overbooking'
+                }
+              ].map(item => (
+                <Grid item xs={12} md={3} key={item.label}>
+                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                    <i className={item.icon} style={{ fontSize: '2rem' }} />
+                    <Typography variant='body1' fontWeight={600}>
+                      {item.value}
+                    </Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      {item.label}
+                    </Typography>
+                  </Box>
+                </Grid>
+              ))}
             </Grid>
           </CardContent>
         </Card>
       </Grid>
+
+      <ConfirmChangesDialog
+        open={confirmOpen}
+        title='Save Scheduling Settings'
+        changes={changes}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Grid>
   )
 }

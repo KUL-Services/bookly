@@ -1,6 +1,6 @@
 'use client'
 
-// MUI Imports
+// MUI
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -15,11 +15,48 @@ import Alert from '@mui/material/Alert'
 // Store
 import { useBusinessSettingsStore } from '@/stores/business-settings.store'
 
+// Draft infra
+import { useTabDraft } from '@/bookly/hooks/use-tab-draft'
+import { TabSaveBar } from '@/bookly/components/molecules/tab-save-bar'
+import { ConfirmChangesDialog } from '@/bookly/components/molecules/confirm-changes-dialog'
+
+const LABELS: Record<string, string> = {
+  guestCheckout: 'Guest checkout',
+  requireEmail: 'Require email',
+  requirePhone: 'Require phone number',
+  showCustomerNotesToStaff: 'Show customer notes to staff'
+}
+
 const CustomerSettingsTab = () => {
-  const { customerSettings, updateCustomerSettings } = useBusinessSettingsStore()
+  const { customerSettings, updateCustomerSettings, saveCustomerSettings, isSaving } = useBusinessSettingsStore()
+
+  const { draft, setDraft, isDirty, changes, confirmOpen, setConfirmOpen, handleCancel, handleConfirm } = useTabDraft({
+    tabId: 'customers',
+    labels: LABELS,
+    saved: customerSettings as unknown as Record<string, unknown>,
+    applyDraft: d => updateCustomerSettings(d as unknown as typeof customerSettings),
+    saveAction: saveCustomerSettings
+  })
+
+  const set = (patch: Partial<typeof customerSettings>) =>
+    setDraft(prev => ({ ...prev, ...patch }) as unknown as Record<string, unknown>)
+
+  const cs = draft as unknown as typeof customerSettings
 
   return (
     <Grid container spacing={6}>
+      {/* Inline dirty bar */}
+      <Grid item xs={12}>
+        <TabSaveBar
+          isDirty={isDirty}
+          changes={changes}
+          isSaving={isSaving}
+          saveLabel='Save Customer Settings'
+          onSave={() => setConfirmOpen(true)}
+          onCancel={handleCancel}
+        />
+      </Grid>
+
       {/* Guest Checkout */}
       <Grid item xs={12} md={6}>
         <Card>
@@ -27,12 +64,7 @@ const CustomerSettingsTab = () => {
           <CardContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <FormControlLabel
-                control={
-                  <Switch
-                    checked={customerSettings.guestCheckout}
-                    onChange={e => updateCustomerSettings({ guestCheckout: e.target.checked })}
-                  />
-                }
+                control={<Switch checked={cs.guestCheckout} onChange={e => set({ guestCheckout: e.target.checked })} />}
                 label={
                   <Box>
                     <Typography variant='body1'>Enable Guest Checkout</Typography>
@@ -43,13 +75,13 @@ const CustomerSettingsTab = () => {
                 }
               />
 
-              {customerSettings.guestCheckout && (
+              {cs.guestCheckout && (
                 <Alert severity='info' sx={{ fontSize: '0.875rem' }}>
                   Guest customers will still need to provide contact information for booking confirmations.
                 </Alert>
               )}
 
-              {!customerSettings.guestCheckout && (
+              {!cs.guestCheckout && (
                 <Alert severity='warning' sx={{ fontSize: '0.875rem' }}>
                   Requiring account creation may reduce conversion rates but helps build your customer database.
                 </Alert>
@@ -69,12 +101,7 @@ const CustomerSettingsTab = () => {
           <CardContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <FormControlLabel
-                control={
-                  <Switch
-                    checked={customerSettings.requireEmail}
-                    onChange={e => updateCustomerSettings({ requireEmail: e.target.checked })}
-                  />
-                }
+                control={<Switch checked={cs.requireEmail} onChange={e => set({ requireEmail: e.target.checked })} />}
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <i className='ri-mail-line' />
@@ -91,12 +118,7 @@ const CustomerSettingsTab = () => {
               <Divider />
 
               <FormControlLabel
-                control={
-                  <Switch
-                    checked={customerSettings.requirePhone}
-                    onChange={e => updateCustomerSettings({ requirePhone: e.target.checked })}
-                  />
-                }
+                control={<Switch checked={cs.requirePhone} onChange={e => set({ requirePhone: e.target.checked })} />}
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <i className='ri-phone-line' />
@@ -110,7 +132,7 @@ const CustomerSettingsTab = () => {
                 }
               />
 
-              {!customerSettings.requireEmail && !customerSettings.requirePhone && (
+              {!cs.requireEmail && !cs.requirePhone && (
                 <Alert severity='warning' sx={{ mt: 2, fontSize: '0.875rem' }}>
                   At least one contact method (email or phone) should be required for booking confirmations.
                 </Alert>
@@ -131,8 +153,8 @@ const CustomerSettingsTab = () => {
             <FormControlLabel
               control={
                 <Switch
-                  checked={customerSettings.showCustomerNotesToStaff}
-                  onChange={e => updateCustomerSettings({ showCustomerNotesToStaff: e.target.checked })}
+                  checked={cs.showCustomerNotesToStaff}
+                  onChange={e => set({ showCustomerNotesToStaff: e.target.checked })}
                 />
               }
               label={
@@ -148,7 +170,7 @@ const CustomerSettingsTab = () => {
         </Card>
       </Grid>
 
-      {/* Current Configuration Summary */}
+      {/* Summary */}
       <Grid item xs={12} md={6}>
         <Card sx={{ height: '100%' }}>
           <CardHeader title='Customer Experience Summary' subheader='Overview of current customer settings' />
@@ -156,33 +178,38 @@ const CustomerSettingsTab = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <i className={customerSettings.guestCheckout ? 'ri-user-line' : 'ri-user-add-line'} />
+                  <i className={cs.guestCheckout ? 'ri-user-line' : 'ri-user-add-line'} />
                   <Typography color='text.secondary'>Account Requirement</Typography>
                 </Box>
-                <Typography fontWeight={600}>{customerSettings.guestCheckout ? 'Optional' : 'Required'}</Typography>
+                <Typography fontWeight={600}>{cs.guestCheckout ? 'Optional' : 'Required'}</Typography>
               </Box>
 
               <Divider />
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <i className='ri-mail-line' />
-                  <Typography color='text.secondary'>Email</Typography>
+              {[
+                {
+                  icon: 'ri-mail-line',
+                  label: 'Email',
+                  value: cs.requireEmail ? 'Required' : 'Optional',
+                  positive: cs.requireEmail
+                },
+                {
+                  icon: 'ri-phone-line',
+                  label: 'Phone',
+                  value: cs.requirePhone ? 'Required' : 'Optional',
+                  positive: cs.requirePhone
+                }
+              ].map(row => (
+                <Box key={row.label} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <i className={row.icon} />
+                    <Typography color='text.secondary'>{row.label}</Typography>
+                  </Box>
+                  <Typography fontWeight={600} color={row.positive ? 'success.main' : 'text.secondary'}>
+                    {row.value}
+                  </Typography>
                 </Box>
-                <Typography fontWeight={600} color={customerSettings.requireEmail ? 'success.main' : 'text.secondary'}>
-                  {customerSettings.requireEmail ? 'Required' : 'Optional'}
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <i className='ri-phone-line' />
-                  <Typography color='text.secondary'>Phone</Typography>
-                </Box>
-                <Typography fontWeight={600} color={customerSettings.requirePhone ? 'success.main' : 'text.secondary'}>
-                  {customerSettings.requirePhone ? 'Required' : 'Optional'}
-                </Typography>
-              </Box>
+              ))}
 
               <Divider />
 
@@ -191,96 +218,72 @@ const CustomerSettingsTab = () => {
                   <i className='ri-sticky-note-line' />
                   <Typography color='text.secondary'>Notes to Staff</Typography>
                 </Box>
-                <Typography fontWeight={600}>
-                  {customerSettings.showCustomerNotesToStaff ? 'Visible' : 'Hidden'}
-                </Typography>
+                <Typography fontWeight={600}>{cs.showCustomerNotesToStaff ? 'Visible' : 'Hidden'}</Typography>
               </Box>
             </Box>
           </CardContent>
         </Card>
       </Grid>
 
-      {/* Future Features */}
+      {/* Coming Soon */}
       <Grid item xs={12}>
         <Card>
           <CardHeader title='Coming Soon' subheader='Additional customer features in development' />
           <CardContent>
             <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: 'action.hover',
-                    opacity: 0.7,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2
-                  }}
-                >
-                  <i className='ri-gift-line' style={{ fontSize: '1.5rem' }} />
-                  <Box>
-                    <Typography variant='body1' fontWeight={600}>
-                      Loyalty Program
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary'>
-                      Reward repeat customers with points and discounts
-                    </Typography>
+              {[
+                {
+                  icon: 'ri-gift-line',
+                  title: 'Loyalty Program',
+                  desc: 'Reward repeat customers with points and discounts'
+                },
+                {
+                  icon: 'ri-vip-crown-line',
+                  title: 'VIP Customers',
+                  desc: 'Priority booking and special perks for top customers'
+                },
+                {
+                  icon: 'ri-chat-smile-3-line',
+                  title: 'Review Requests',
+                  desc: 'Automatically request reviews after appointments'
+                }
+              ].map(item => (
+                <Grid item xs={12} md={4} key={item.title}>
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor: 'action.hover',
+                      opacity: 0.7,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2
+                    }}
+                  >
+                    <i className={item.icon} style={{ fontSize: '1.5rem' }} />
+                    <Box>
+                      <Typography variant='body1' fontWeight={600}>
+                        {item.title}
+                      </Typography>
+                      <Typography variant='caption' color='text.secondary'>
+                        {item.desc}
+                      </Typography>
+                    </Box>
                   </Box>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: 'action.hover',
-                    opacity: 0.7,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2
-                  }}
-                >
-                  <i className='ri-vip-crown-line' style={{ fontSize: '1.5rem' }} />
-                  <Box>
-                    <Typography variant='body1' fontWeight={600}>
-                      VIP Customers
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary'>
-                      Priority booking and special perks for top customers
-                    </Typography>
-                  </Box>
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <Box
-                  sx={{
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor: 'action.hover',
-                    opacity: 0.7,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2
-                  }}
-                >
-                  <i className='ri-chat-smile-3-line' style={{ fontSize: '1.5rem' }} />
-                  <Box>
-                    <Typography variant='body1' fontWeight={600}>
-                      Review Requests
-                    </Typography>
-                    <Typography variant='caption' color='text.secondary'>
-                      Automatically request reviews after appointments
-                    </Typography>
-                  </Box>
-                </Box>
-              </Grid>
+                </Grid>
+              ))}
             </Grid>
           </CardContent>
         </Card>
       </Grid>
+
+      <ConfirmChangesDialog
+        open={confirmOpen}
+        title='Save Customer Settings'
+        changes={changes}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Grid>
   )
 }

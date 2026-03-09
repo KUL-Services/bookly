@@ -369,6 +369,24 @@ export default function UnifiedBookingDrawer({
   const isAutoStaffSelection = staffId === AUTO_STAFF_ID
   const isAutoRoomSelection = roomId === AUTO_ROOM_ID
 
+  // ── Booking Model Detection: STAFF vs ASSET_ONLY ──────────────────────────
+  // Backend contract: if service has no active staff resources but has active
+  // asset/room resources → ASSET_ONLY model (hide staff selector, don't send staffId)
+  const selectedServiceData = serviceId ? allServices.find((s: any) => s.id === serviceId) : null
+  const serviceStaffIds: string[] = selectedServiceData?.staffIds || []
+  const serviceRoomIds: string[] = selectedServiceData?.roomIds || selectedServiceData?.assetIds || []
+
+  // A service is ASSET_ONLY when it has room resources but zero staff resources
+  // in the current branch context
+  const branchStaffForService = serviceStaffIds.filter(sid =>
+    allStaff.some((s: any) => s.id === sid && s.isActive !== false && (!branchId || s.branchId === branchId))
+  )
+  const branchRoomsForService = serviceRoomIds.filter(rid =>
+    allRooms.some((r: any) => r.id === rid && (!branchId || r.branchId === branchId))
+  )
+  const isAssetOnlyModel = branchRoomsForService.length > 0 && branchStaffForService.length === 0
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Check if selected staff has STATIC booking mode (for session-based booking)
   const selectedStaffData = isAutoStaffSelection ? null : allStaff.find((s: any) => s.id === staffId)
   const isStaffStaticBookingMode = !isAutoStaffSelection && selectedStaffData?.bookingMode === 'STATIC'
@@ -917,7 +935,8 @@ export default function UnifiedBookingDrawer({
         setServiceError('Please select a service')
         return
       }
-      if (!staffId) {
+      // Skip staff requirement for ASSET_ONLY services (room/court booking)
+      if (!isAssetOnlyModel && !staffId) {
         setStaffError('Please select a staff member')
         return
       }
@@ -948,11 +967,22 @@ export default function UnifiedBookingDrawer({
           extendedProps: {
             status,
             paymentStatus,
-            staffId,
-            staffName: isAutoStaffSelection ? 'Automatic Assignment' : selectedStaff?.name || '',
-            branchId: branchId || selectedStaff?.branchId || '',
+            // ASSET_ONLY: staffId must be null; backend returns null for room-only bookings
+            staffId: isAssetOnlyModel ? null : staffId,
+            staffName: isAssetOnlyModel
+              ? null
+              : isAutoStaffSelection
+                ? 'Automatic Assignment'
+                : selectedStaff?.name || '',
+            branchId: branchId || selectedStaff?.branchId || selectedRoom?.branchId || '',
             roomId: selectedRoom?.id || '',
             roomName: selectedRoom?.name || '',
+            // For display: when ASSET_ONLY, show room as primary label
+            primaryResourceLabel: isAssetOnlyModel
+              ? `Room: ${selectedRoom?.name || 'Auto-assigned'}`
+              : isAutoStaffSelection
+                ? 'Automatic Assignment'
+                : selectedStaff?.name || '',
             selectionMethod: requestedByClient ? 'by_client' : 'automatically',
             bookedBy: 'business', // Created by business admin
             starred,
@@ -1405,65 +1435,89 @@ export default function UnifiedBookingDrawer({
 
                   <Divider />
 
-                  {/* Staff Selection (only dynamic staff) */}
-                  <Box>
-                    <Typography
-                      variant='caption'
-                      color='text.secondary'
-                      fontWeight={600}
-                      sx={{ mb: 1, display: 'block' }}
-                    >
-                      SELECT STAFF MEMBER
-                    </Typography>
-                    <FormControl fullWidth size='small' required error={!!staffError}>
-                      <InputLabel>Staff Member</InputLabel>
-                      <Select
-                        value={staffId}
-                        label='Staff Member'
-                        onChange={e => {
-                          setStaffId(e.target.value)
-                          if (staffError) setStaffError(null)
-                        }}
+                  {/* Staff Selection - hidden for ASSET_ONLY model (room/court-only services) */}
+                  {!isAssetOnlyModel ? (
+                    <Box>
+                      <Typography
+                        variant='caption'
+                        color='text.secondary'
+                        fontWeight={600}
+                        sx={{ mb: 1, display: 'block' }}
                       >
-                        <MenuItem value=''>Select staff</MenuItem>
-                        <MenuItem value={AUTO_STAFF_ID}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: 'primary.light' }}>
-                              <i className='ri-magic-line' style={{ fontSize: '0.8rem' }} />
-                            </Avatar>
-                            Automatic (No Preference)
-                          </Box>
-                        </MenuItem>
-                        {dynamicStaff.map(staff => (
-                          <MenuItem key={staff.id} value={staff.id}>
+                        SELECT STAFF MEMBER
+                      </Typography>
+                      <FormControl fullWidth size='small' required error={!!staffError}>
+                        <InputLabel>Staff Member</InputLabel>
+                        <Select
+                          value={staffId}
+                          label='Staff Member'
+                          onChange={e => {
+                            setStaffId(e.target.value)
+                            if (staffError) setStaffError(null)
+                          }}
+                        >
+                          <MenuItem value=''>Select staff</MenuItem>
+                          <MenuItem value={AUTO_STAFF_ID}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                                {getInitials(staff.name)}
+                              <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem', bgcolor: 'primary.light' }}>
+                                <i className='ri-magic-line' style={{ fontSize: '0.8rem' }} />
                               </Avatar>
-                              {staff.name}
+                              Automatic (No Preference)
                             </Box>
                           </MenuItem>
-                        ))}
-                      </Select>
-                      {staffError && (
-                        <Typography variant='caption' color='error' sx={{ mt: 0.5, ml: 1.75 }}>
-                          {staffError}
-                        </Typography>
-                      )}
-                    </FormControl>
-                  </Box>
+                          {dynamicStaff.map(staff => (
+                            <MenuItem key={staff.id} value={staff.id}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                                  {getInitials(staff.name)}
+                                </Avatar>
+                                {staff.name}
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {staffError && (
+                          <Typography variant='caption' color='error' sx={{ mt: 0.5, ml: 1.75 }}>
+                            {staffError}
+                          </Typography>
+                        )}
+                      </FormControl>
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 1,
+                        bgcolor: 'info.lighter',
+                        border: '1px solid',
+                        borderColor: 'info.light',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1
+                      }}
+                    >
+                      <i
+                        className='ri-information-line'
+                        style={{ color: 'var(--mui-palette-info-main)', fontSize: 18 }}
+                      />
+                      <Typography variant='caption' color='info.dark'>
+                        <strong>Room / Court booking</strong> — staff assignment is handled automatically for this
+                        service. Please select a room below.
+                      </Typography>
+                    </Box>
+                  )}
 
                   <Divider />
 
-                  {/* Room Selection */}
+                  {/* Room Selection — shown as primary selector for ASSET_ONLY services */}
                   <Box>
                     <Typography
                       variant='caption'
-                      color='text.secondary'
+                      color={isAssetOnlyModel ? 'primary.main' : 'text.secondary'}
                       fontWeight={600}
                       sx={{ mb: 1, display: 'block' }}
                     >
-                      SELECT ROOM
+                      SELECT ROOM{isAssetOnlyModel ? ' (Required)' : ''}
                     </Typography>
                     <FormControl fullWidth size='small'>
                       <InputLabel>Room</InputLabel>

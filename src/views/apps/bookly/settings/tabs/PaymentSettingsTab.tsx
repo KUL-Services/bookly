@@ -1,6 +1,6 @@
 'use client'
 
-// MUI Imports
+// MUI
 import Grid from '@mui/material/Grid'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -19,11 +19,14 @@ import MenuItem from '@mui/material/MenuItem'
 import InputAdornment from '@mui/material/InputAdornment'
 import FormGroup from '@mui/material/FormGroup'
 import Chip from '@mui/material/Chip'
-import Button from '@mui/material/Button'
 
 // Store
 import { useBusinessSettingsStore, type PaymentMethod } from '@/stores/business-settings.store'
-import { BrandedSpinner } from '@/bookly/components/atoms/branded-spinner'
+
+// Draft infra
+import { useTabDraft } from '@/bookly/hooks/use-tab-draft'
+import { TabSaveBar } from '@/bookly/components/molecules/tab-save-bar'
+import { ConfirmChangesDialog } from '@/bookly/components/molecules/confirm-changes-dialog'
 
 const paymentMethodLabels: Record<PaymentMethod, { label: string; icon: string }> = {
   pay_on_arrival: { label: 'Pay on Arrival', icon: 'ri-store-2-line' },
@@ -41,37 +44,54 @@ const currencies = [
   { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' }
 ]
 
+const LABELS: Record<string, string> = {
+  acceptedMethods: 'Accepted payment methods',
+  currency: 'Currency',
+  taxEnabled: 'Tax (VAT) enabled',
+  taxPercentage: 'Tax rate (%)',
+  taxInclusive: 'Tax inclusive pricing',
+  depositRequired: 'Deposit required',
+  depositPercentage: 'Deposit amount (%)'
+}
+
 const PaymentSettingsTab = () => {
   const { paymentSettings, updatePaymentSettings, savePaymentSettings, isSaving } = useBusinessSettingsStore()
 
+  const { draft, setDraft, isDirty, changes, confirmOpen, setConfirmOpen, handleCancel, handleConfirm } = useTabDraft({
+    tabId: 'payment',
+    labels: LABELS,
+    saved: paymentSettings as unknown as Record<string, unknown>,
+    applyDraft: d => updatePaymentSettings(d as unknown as typeof paymentSettings),
+    saveAction: savePaymentSettings
+  })
+
+  const set = (patch: Partial<typeof paymentSettings>) =>
+    setDraft(prev => ({ ...prev, ...patch }) as unknown as Record<string, unknown>)
+
+  const ps = draft as unknown as typeof paymentSettings
+
   const handleMethodToggle = (method: PaymentMethod) => {
-    const currentMethods = paymentSettings.acceptedMethods
-    if (currentMethods.includes(method)) {
-      // Don't allow removing the last payment method
-      if (currentMethods.length === 1) return
-      updatePaymentSettings({
-        acceptedMethods: currentMethods.filter(m => m !== method)
-      })
+    const current = ps.acceptedMethods
+    if (current.includes(method)) {
+      if (current.length === 1) return
+      set({ acceptedMethods: current.filter(m => m !== method) })
     } else {
-      updatePaymentSettings({
-        acceptedMethods: [...currentMethods, method]
-      })
+      set({ acceptedMethods: [...current, method] })
     }
   }
 
   return (
     <Grid container spacing={6}>
+      {/* Inline dirty bar */}
       <Grid item xs={12}>
-        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button
-            variant='contained'
-            onClick={savePaymentSettings}
-            disabled={isSaving}
-            startIcon={isSaving ? <BrandedSpinner size={16} color='inherit' /> : null}
-          >
-            {isSaving ? 'Saving...' : 'Save Payment Settings'}
-          </Button>
-        </Box>
+        <TabSaveBar
+          isDirty={isDirty}
+          changes={changes}
+          isSaving={isSaving}
+          saveLabel='Save Payment Settings'
+          onSave={() => setConfirmOpen(true)}
+          onCancel={handleCancel}
+        />
       </Grid>
 
       {/* Payment Methods */}
@@ -85,11 +105,9 @@ const PaymentSettingsTab = () => {
                   key={method}
                   control={
                     <Checkbox
-                      checked={paymentSettings.acceptedMethods.includes(method)}
+                      checked={ps.acceptedMethods.includes(method)}
                       onChange={() => handleMethodToggle(method)}
-                      disabled={
-                        paymentSettings.acceptedMethods.includes(method) && paymentSettings.acceptedMethods.length === 1
-                      }
+                      disabled={ps.acceptedMethods.includes(method) && ps.acceptedMethods.length === 1}
                     />
                   }
                   label={
@@ -114,7 +132,7 @@ const PaymentSettingsTab = () => {
               <Typography variant='body2' color='text.secondary' sx={{ width: '100%', mb: 1 }}>
                 Currently Enabled:
               </Typography>
-              {paymentSettings.acceptedMethods.map(method => (
+              {ps.acceptedMethods.map(method => (
                 <Chip
                   key={method}
                   icon={<i className={paymentMethodLabels[method]?.icon || 'ri-question-line'} />}
@@ -137,18 +155,14 @@ const PaymentSettingsTab = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <FormControl fullWidth size='small'>
                 <InputLabel>Currency</InputLabel>
-                <Select
-                  value={paymentSettings.currency}
-                  label='Currency'
-                  onChange={e => updatePaymentSettings({ currency: e.target.value })}
-                >
-                  {currencies.map(currency => (
-                    <MenuItem key={currency.code} value={currency.code}>
+                <Select value={ps.currency} label='Currency' onChange={e => set({ currency: e.target.value })}>
+                  {currencies.map(c => (
+                    <MenuItem key={c.code} value={c.code}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography sx={{ minWidth: 30 }}>{currency.symbol}</Typography>
-                        <Typography>{currency.name}</Typography>
+                        <Typography sx={{ minWidth: 30 }}>{c.symbol}</Typography>
+                        <Typography>{c.name}</Typography>
                         <Typography variant='caption' color='text.secondary'>
-                          ({currency.code})
+                          ({c.code})
                         </Typography>
                       </Box>
                     </MenuItem>
@@ -159,12 +173,7 @@ const PaymentSettingsTab = () => {
               <Divider />
 
               <FormControlLabel
-                control={
-                  <Switch
-                    checked={paymentSettings.taxEnabled}
-                    onChange={e => updatePaymentSettings({ taxEnabled: e.target.checked })}
-                  />
-                }
+                control={<Switch checked={ps.taxEnabled} onChange={e => set({ taxEnabled: e.target.checked })} />}
                 label={
                   <Box>
                     <Typography variant='body1'>Enable Tax (VAT)</Typography>
@@ -175,35 +184,25 @@ const PaymentSettingsTab = () => {
                 }
               />
 
-              {paymentSettings.taxEnabled && (
+              {ps.taxEnabled && (
                 <>
                   <TextField
                     label='Tax Rate'
                     type='number'
-                    value={paymentSettings.taxPercentage}
-                    onChange={e =>
-                      updatePaymentSettings({
-                        taxPercentage: Math.min(100, Math.max(0, parseFloat(e.target.value) || 0))
-                      })
-                    }
-                    InputProps={{
-                      endAdornment: <InputAdornment position='end'>%</InputAdornment>
-                    }}
+                    value={ps.taxPercentage}
+                    onChange={e => set({ taxPercentage: Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)) })}
+                    InputProps={{ endAdornment: <InputAdornment position='end'>%</InputAdornment> }}
                     size='small'
                   />
-
                   <FormControlLabel
                     control={
-                      <Switch
-                        checked={paymentSettings.taxInclusive}
-                        onChange={e => updatePaymentSettings({ taxInclusive: e.target.checked })}
-                      />
+                      <Switch checked={ps.taxInclusive} onChange={e => set({ taxInclusive: e.target.checked })} />
                     }
                     label={
                       <Box>
                         <Typography variant='body1'>Tax Inclusive Pricing</Typography>
                         <Typography variant='caption' color='text.secondary'>
-                          {paymentSettings.taxInclusive
+                          {ps.taxInclusive
                             ? 'Prices shown already include tax'
                             : 'Tax is added on top of displayed prices'}
                         </Typography>
@@ -225,10 +224,7 @@ const PaymentSettingsTab = () => {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <FormControlLabel
                 control={
-                  <Switch
-                    checked={paymentSettings.depositRequired}
-                    onChange={e => updatePaymentSettings({ depositRequired: e.target.checked })}
-                  />
+                  <Switch checked={ps.depositRequired} onChange={e => set({ depositRequired: e.target.checked })} />
                 }
                 label={
                   <Box>
@@ -239,20 +235,13 @@ const PaymentSettingsTab = () => {
                   </Box>
                 }
               />
-
-              {paymentSettings.depositRequired && (
+              {ps.depositRequired && (
                 <TextField
                   label='Deposit Amount'
                   type='number'
-                  value={paymentSettings.depositPercentage}
-                  onChange={e =>
-                    updatePaymentSettings({
-                      depositPercentage: Math.min(100, Math.max(1, parseInt(e.target.value) || 1))
-                    })
-                  }
-                  InputProps={{
-                    endAdornment: <InputAdornment position='end'>% of total</InputAdornment>
-                  }}
+                  value={ps.depositPercentage}
+                  onChange={e => set({ depositPercentage: Math.min(100, Math.max(1, parseInt(e.target.value) || 1)) })}
+                  InputProps={{ endAdornment: <InputAdornment position='end'>% of total</InputAdornment> }}
                   helperText='Percentage of the booking total required as deposit'
                   size='small'
                 />
@@ -262,41 +251,35 @@ const PaymentSettingsTab = () => {
         </Card>
       </Grid>
 
-      {/* Payment Info Summary */}
+      {/* Payment Summary */}
       <Grid item xs={12} md={6}>
         <Card sx={{ height: '100%' }}>
           <CardHeader title='Payment Summary' subheader='Overview of your current payment configuration' />
           <CardContent>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography color='text.secondary'>Currency</Typography>
-                <Typography fontWeight={600}>
-                  {currencies.find(c => c.code === paymentSettings.currency)?.name || paymentSettings.currency}
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography color='text.secondary'>Payment Methods</Typography>
-                <Typography fontWeight={600}>{paymentSettings.acceptedMethods.length} enabled</Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography color='text.secondary'>Tax</Typography>
-                <Typography fontWeight={600}>
-                  {paymentSettings.taxEnabled ? `${paymentSettings.taxPercentage}%` : 'Disabled'}
-                </Typography>
-              </Box>
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography color='text.secondary'>Deposit</Typography>
-                <Typography fontWeight={600}>
-                  {paymentSettings.depositRequired ? `${paymentSettings.depositPercentage}%` : 'Not required'}
-                </Typography>
-              </Box>
+              {[
+                { label: 'Currency', value: currencies.find(c => c.code === ps.currency)?.name || ps.currency },
+                { label: 'Payment Methods', value: `${ps.acceptedMethods.length} enabled` },
+                { label: 'Tax', value: ps.taxEnabled ? `${ps.taxPercentage}%` : 'Disabled' },
+                { label: 'Deposit', value: ps.depositRequired ? `${ps.depositPercentage}%` : 'Not required' }
+              ].map(row => (
+                <Box key={row.label} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography color='text.secondary'>{row.label}</Typography>
+                  <Typography fontWeight={600}>{row.value}</Typography>
+                </Box>
+              ))}
             </Box>
           </CardContent>
         </Card>
       </Grid>
+
+      <ConfirmChangesDialog
+        open={confirmOpen}
+        title='Save Payment Settings'
+        changes={changes}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Grid>
   )
 }

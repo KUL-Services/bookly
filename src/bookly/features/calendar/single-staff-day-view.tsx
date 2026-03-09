@@ -261,11 +261,14 @@ export default function SingleStaffDayView({
     })
 
     slotGroups.forEach((slotEvents, slotId) => {
-      const firstEvent = slotEvents[0]
-      const activeBookings = slotEvents.filter(e => e.extendedProps?.status !== 'cancelled')
+      const sessionDef = slotEvents.find(e => e.extendedProps?.isSessionDefinition)
+      const bookingEvents = slotEvents.filter(e => !e.extendedProps?.isSessionDefinition)
+      const firstEvent = sessionDef || slotEvents[0]
+      const activeBookings = bookingEvents.filter(e => e.extendedProps?.status !== 'cancelled')
       const attendedCount = activeBookings.filter(e => e.extendedProps?.status === 'attended').length
+      const sessionCapacity = sessionDef?.extendedProps?.maxParticipants
       const staticSlot = staticSlots.find(s => s.id === slotId)
-      const totalCapacity = staticSlot?.capacity || activeBookings.length
+      const totalCapacity = sessionCapacity || staticSlot?.capacity || activeBookings.length || 1
       const attendanceBase = activeBookings.length > 0 ? activeBookings.length : totalCapacity
 
       entries.push({

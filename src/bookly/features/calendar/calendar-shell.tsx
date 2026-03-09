@@ -107,12 +107,15 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
   const [timeReservationInitialStaffId, setTimeReservationInitialStaffId] = useState<string | undefined>(undefined)
   const [timeReservationBranchId, setTimeReservationBranchId] = useState<string | undefined>(undefined)
 
-  // Fetch events when date range changes
+  const staff = useCalendarStore(state => state.staff)
+  const rooms = useCalendarStore(state => state.rooms)
+
+  // Fetch events when date range changes, or when resources load (sessions need them for mapping)
   useEffect(() => {
     if (visibleDateRange) {
       fetchEvents(visibleDateRange)
     }
-  }, [visibleDateRange, fetchEvents])
+  }, [visibleDateRange, fetchEvents, staff.length, rooms.length])
 
   // Sync visibleDateRange with currentDate for custom views (Week/Day)
   // FullCalendar handles this internally via onDateRangeChange, but custom views don't.

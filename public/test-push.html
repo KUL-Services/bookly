@@ -1,0 +1,298 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Push Notification Test</title>
+    <style>
+      body {
+        font-family: system-ui;
+        max-width: 700px;
+        margin: 40px auto;
+        padding: 20px;
+      }
+      button {
+        padding: 12px 24px;
+        font-size: 16px;
+        margin: 10px 5px 10px 0;
+        cursor: pointer;
+      }
+      .status {
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background: #cce5ff;
+        color: #004085;
+      }
+      .warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 10px;
+        overflow-x: auto;
+        word-break: break-all;
+        white-space: pre-wrap;
+      }
+      .token-box {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .token-box input {
+        width: 100%;
+        padding: 8px;
+        font-family: monospace;
+        font-size: 12px;
+      }
+      h3 {
+        margin-top: 30px;
+        border-top: 1px solid #ddd;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Push Notification Test</h1>
+
+    <h3>Step 1: Setup</h3>
+    <button onclick="checkStatus()">Check Status</button>
+    <button onclick="requestPermission()">Request Permission</button>
+    <button onclick="registerSW()">Register Service Worker</button>
+
+    <h3>Step 2: Test Local Notification</h3>
+    <button onclick="showTestNotification()">Show Test Notification (via SW)</button>
+
+    <h3>Step 3: Get FCM Token</h3>
+    <button onclick="getToken()">Get FCM Token</button>
+    <div id="token-container"></div>
+
+    <h3>Results</h3>
+    <button onclick="clearResults()">Clear</button>
+    <div id="results"></div>
+
+    <script type="module">
+      window.log = (msg, type = 'info') => {
+        const div = document.createElement('div')
+        div.className = `status ${type}`
+        div.innerHTML = typeof msg === 'object' ? `<pre>${JSON.stringify(msg, null, 2)}</pre>` : msg
+        document.getElementById('results').prepend(div)
+      }
+
+      window.clearResults = () => {
+        document.getElementById('results').innerHTML = ''
+      }
+
+      window.checkStatus = async () => {
+        log('--- Status Check ---')
+        log(`Notifications supported: ${'Notification' in window}`)
+        log(`Service Worker supported: ${'serviceWorker' in navigator}`)
+        log(
+          `Current permission: ${Notification.permission}`,
+          Notification.permission === 'granted' ? 'success' : 'warning'
+        )
+
+        const reg = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+        if (reg && reg.active) {
+          log('Service Worker is active ✓', 'success')
+        } else if (reg) {
+          log('Service Worker registered but not active yet', 'warning')
+        } else {
+          log('No Service Worker registered - click "Register Service Worker"', 'error')
+        }
+
+        const token = localStorage.getItem('zerv_push_fcm_token')
+        if (token) {
+          log(`FCM Token stored ✓`, 'success')
+        } else {
+          log('No FCM token yet - click "Get FCM Token"', 'info')
+        }
+
+        // Check macOS notification settings
+        log("💡 If notifications don't appear, check: System Settings > Notifications > Chrome", 'info')
+      }
+
+      window.requestPermission = async () => {
+        try {
+          const permission = await Notification.requestPermission()
+          log(`Permission result: ${permission}`, permission === 'granted' ? 'success' : 'error')
+          if (permission === 'denied') {
+            log('⚠️ Permission denied! Reset in Chrome: Settings > Privacy > Site Settings > Notifications', 'warning')
+          }
+        } catch (e) {
+          log(`Permission error: ${e.message}`, 'error')
+        }
+      }
+
+      window.registerSW = async () => {
+        try {
+          const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          await reg.update()
+          log('Service Worker registered ✓', 'success')
+
+          // Wait for it to become active
+          if (!reg.active) {
+            log('Waiting for SW to activate...', 'info')
+            await new Promise(resolve => {
+              if (reg.installing) {
+                reg.installing.addEventListener('statechange', e => {
+                  if (e.target.state === 'activated') resolve()
+                })
+              } else if (reg.waiting) {
+                reg.waiting.addEventListener('statechange', e => {
+                  if (e.target.state === 'activated') resolve()
+                })
+              } else {
+                resolve()
+              }
+            })
+          }
+          log('Service Worker active ✓', 'success')
+        } catch (e) {
+          log(`SW registration failed: ${e.message}`, 'error')
+        }
+      }
+
+      window.showTestNotification = async () => {
+        if (Notification.permission !== 'granted') {
+          log('Permission not granted. Click "Request Permission" first.', 'error')
+          return
+        }
+
+        try {
+          // Use ServiceWorker to show notification (more reliable)
+          const reg = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+          if (!reg) {
+            log('No service worker. Click "Register Service Worker" first.', 'error')
+            return
+          }
+
+          await reg.showNotification('🔔 Test Push Notification', {
+            body: 'If you see this popup, notifications are working!',
+            icon: '/brand/logo.png',
+            badge: '/brand/logo.png',
+            tag: 'test-notification',
+            requireInteraction: true,
+            vibrate: [200, 100, 200]
+          })
+
+          log('✓ Notification sent via Service Worker!', 'success')
+          log('👀 Look for it in your notification center (top-right on macOS)', 'info')
+        } catch (e) {
+          log(`Notification error: ${e.message}`, 'error')
+          console.error(e)
+        }
+      }
+
+      window.getToken = async () => {
+        try {
+          const { initializeApp, getApps, getApp } = await import(
+            'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'
+          )
+          const { getMessaging, getToken } = await import(
+            'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js'
+          )
+
+          const config = {
+            apiKey: 'AIzaSyBvu8h7pwwgP14PipeM5HRqLqk0fzZIpwM',
+            authDomain: 'zerv-225e9.firebaseapp.com',
+            projectId: 'zerv-225e9',
+            storageBucket: 'zerv-225e9.firebasestorage.app',
+            messagingSenderId: '344947630052',
+            appId: '1:344947630052:web:ede5e39ca2e775965d71f1'
+          }
+
+          log('Initializing Firebase...')
+          const app = getApps().length ? getApp() : initializeApp(config)
+          const messaging = getMessaging(app)
+
+          let swReg = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+          if (!swReg) {
+            log('Registering service worker first...', 'info')
+            swReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          }
+
+          log('Getting FCM token from Firebase...')
+          const token = await getToken(messaging, {
+            vapidKey: 'BPxFYg4w-bWiJU3kdZcfU5eAeeMFP04TeTIdAkXKS1VQtuWHBg9gMfmQaU-tcdIpZ_uD880fV9sHjWMrksBEK0s',
+            serviceWorkerRegistration: swReg
+          })
+
+          if (token) {
+            log('✓ FCM Token obtained! Length: ' + token.length + ' chars', 'success')
+            localStorage.setItem('zerv_push_fcm_token', token)
+            window.currentFcmToken = token
+
+            // Show copyable token
+            document.getElementById('token-container').innerHTML = `
+            <div class="token-box">
+              <strong>Your FCM Token (copy this):</strong><br><br>
+              <textarea id="fcm-token-field" readonly style="width:100%; height:80px; font-family:monospace; font-size:11px;">${token}</textarea>
+              <br><br>
+              <button onclick="copyToken()">📋 Copy Full Token</button>
+              <span id="copy-status"></span>
+            </div>
+          `
+          } else {
+            log('No token returned - check console for errors', 'error')
+          }
+        } catch (e) {
+          log(`Token error: ${e.message}`, 'error')
+          console.error(e)
+        }
+      }
+
+      // Auto-check on load
+      window.addEventListener('load', () => {
+        setTimeout(checkStatus, 500)
+      })
+
+      window.copyToken = async () => {
+        const token = window.currentFcmToken || localStorage.getItem('zerv_push_fcm_token')
+        if (!token) {
+          log('No token to copy', 'error')
+          return
+        }
+        try {
+          await navigator.clipboard.writeText(token)
+          document.getElementById('copy-status').innerText = ' ✓ Copied!'
+          log('Full token copied to clipboard! (' + token.length + ' chars)', 'success')
+        } catch (e) {
+          // Fallback
+          const textarea = document.getElementById('fcm-token-field')
+          textarea.select()
+          document.execCommand('copy')
+          document.getElementById('copy-status').innerText = ' ✓ Copied!'
+          log('Token copied!', 'success')
+        }
+      }
+    </script>
+
+    <hr style="margin-top: 40px" />
+    <h2>How to Send from Firebase Console</h2>
+    <ol>
+      <li>
+        Go to
+        <a href="https://console.firebase.google.com/project/zerv-225e9/messaging" target="_blank"
+          >Firebase Console → Cloud Messaging</a
+        >
+      </li>
+      <li>Click <strong>"Create your first campaign"</strong> or <strong>"New campaign"</strong></li>
+      <li>Select <strong>"Firebase Notification messages"</strong></li>
+      <li>Enter a title and body text</li>
+      <li>Click <strong>"Send test message"</strong></li>
+      <li>Paste your FCM token from above</li>
+      <li>Click <strong>"Test"</strong></li>
+    </ol>
+  </body>
+</html>

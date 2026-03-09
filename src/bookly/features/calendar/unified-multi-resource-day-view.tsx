@@ -245,8 +245,12 @@ export default function UnifiedMultiResourceDayView({
   const branchFilters = useCalendarStore(state => state.branchFilters)
   const staffFilters = useCalendarStore(state => state.staffFilters)
   const roomFilters = useCalendarStore(state => state.roomFilters)
-  const { rooms, staffWorkingHours, staffMembers: storeStaffMembers, apiServices: storeServices } =
-    useStaffManagementStore()
+  const {
+    rooms,
+    staffWorkingHours,
+    staffMembers: storeStaffMembers,
+    apiServices: storeServices
+  } = useStaffManagementStore()
 
   // Use API-loaded data from stores
   const calendarStaff = useCalendarStore(state => state.staff)
@@ -766,13 +770,75 @@ export default function UnifiedMultiResourceDayView({
               slotGroups.get(slotId)!.push(event)
             })
 
+            // ── For ROOM columns: inject empty entries for slots with 0 bookings ──
+            // This ensures every room static slot renders a clickable card even when
+            // no one has booked yet, so admins can click → "Manage Session" drawer.
+            if (!isStaff) {
+              const dayNames: DayOfWeek[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+              const todayDayName = dayNames[currentDate.getDay()] as DayOfWeek
+              const todayStr = format(currentDate, 'yyyy-MM-dd')
+
+              staticSlots
+                .filter(slot => {
+                  if (slot.roomId !== resource.id) return false
+                  if (slot.isCancelled) return false
+                  // Match recurring weekly or specific-date slot
+                  if (slot.dayOfWeek) return slot.dayOfWeek === todayDayName
+                  if (slot.date) return slot.date === todayStr
+                  return false
+                })
+                .forEach(slot => {
+                  if (slotGroups.has(slot.id)) return // already have events for this slot
+
+                  // Build synthetic start/end Date objects for positioning
+                  const [startH, startM] = slot.startTime.split(':').map(Number)
+                  const [endH, endM] = slot.endTime.split(':').map(Number)
+                  const syntheticStart = new Date(currentDate)
+                  syntheticStart.setHours(startH, startM, 0, 0)
+                  const syntheticEnd = new Date(currentDate)
+                  syntheticEnd.setHours(endH, endM, 0, 0)
+
+                  // Insert a synthetic "session definition" placeholder event
+                  const syntheticEvent: CalendarEvent = {
+                    id: `session-def-${slot.id}`,
+                    title: slot.serviceName,
+                    start: syntheticStart,
+                    end: syntheticEnd,
+                    extendedProps: {
+                      status: 'confirmed',
+                      paymentStatus: 'unpaid',
+                      staffId: slot.instructorStaffId || null,
+                      staffName: null,
+                      selectionMethod: 'automatically',
+                      bookedBy: 'business',
+                      starred: false,
+                      serviceName: slot.serviceName,
+                      serviceId: slot.serviceId,
+                      customerName: '',
+                      price: slot.price,
+                      bookingId: `session-def-${slot.id}`,
+                      slotId: slot.id, // ← key: triggers isStaticSlotEvent in drawer
+                      roomId: slot.roomId,
+                      isStaticSlot: true, // ← explicit flag
+                      isSessionDefinition: true, // ← marks this as placeholder
+                      maxParticipants: slot.capacity
+                    }
+                  }
+                  slotGroups.set(slot.id, [syntheticEvent])
+                })
+            }
+
             return Array.from(slotGroups.entries()).map(([slotId, slotEvents]) => {
-              // Use first event for positioning and styling
-              const firstEvent = slotEvents[0]
+              // Separate session definition from actual bookings
+              const sessionDef = slotEvents.find(e => e.extendedProps?.isSessionDefinition)
+              const bookingEvents = slotEvents.filter(e => !e.extendedProps?.isSessionDefinition)
+
+              // Use session definition for display if available, otherwise first booking
+              const firstEvent = sessionDef || slotEvents[0]
               const style = getEventStyle(firstEvent)
 
-              // Count active bookings (exclude cancelled)
-              const activeBookings = slotEvents.filter(e => e.extendedProps?.status !== 'cancelled')
+              // Count active bookings (exclude cancelled AND session definitions)
+              const activeBookings = bookingEvents.filter(e => e.extendedProps?.status !== 'cancelled')
               const bookingCount = activeBookings.length
               const attendedCount = activeBookings.filter(e => e.extendedProps?.status === 'attended').length
 
@@ -794,9 +860,39 @@ export default function UnifiedMultiResourceDayView({
               const effectiveTextColor = isFaded ? adjustColorOpacity(baseTextColor, isDark ? 0.5 : 0.6) : baseTextColor
               const stripeColor = adjustColorOpacity(effectiveBorderColor, isFaded ? 0.2 : 0.35)
 
-              // Get slot capacity from static slots
-              const staticSlot = staticSlots.find(s => s.id === firstEvent.extendedProps?.slotId)
-              const totalCapacity = staticSlot?.capacity || bookingCount
+              // Get slot capacity: prefer session maxParticipants, then static slots, then booking count
+              const sessionCapacity = sessionDef?.extendedProps?.maxParticipants
+
+              // Resolve the real static slot — events may have been created without slotId,
+              // so fall back to matching by time + resource (staff or room)
+              const resolveStaticSlot = () => {
+                // 1. Try direct slotId lookup from event
+                if (firstEvent.extendedProps?.slotId) {
+                  const found = staticSlots.find(s => s.id === firstEvent.extendedProps?.slotId)
+                  if (found) return found
+                }
+                // 2. Map key may be a real slot ID (not time-based)
+                if (slotId && !slotId.startsWith('time-')) {
+                  const found = staticSlots.find(s => s.id === slotId)
+                  if (found) return found
+                }
+                // 3. Fall back: match by time + resource
+                const eventStartH = new Date(firstEvent.start).getHours()
+                const eventStartM = new Date(firstEvent.start).getMinutes()
+                return (
+                  staticSlots.find(s => {
+                    const [h, m] = s.startTime.split(':').map(Number)
+                    if (h !== eventStartH || m !== eventStartM) return false
+                    if (isStaff) return s.instructorStaffId === resource.id
+                    return s.roomId === resource.id
+                  }) || null
+                )
+              }
+              const staticSlot = resolveStaticSlot()
+              // The real slot ID to pass into the drawer (may differ from the map key)
+              const resolvedSlotId = staticSlot?.id || slotId
+
+              const totalCapacity = sessionCapacity || staticSlot?.capacity || bookingCount || 1
               const attendanceBase = bookingCount > 0 ? bookingCount : totalCapacity
 
               return (
@@ -853,7 +949,14 @@ export default function UnifiedMultiResourceDayView({
                   <Box
                     onClick={e => {
                       e.stopPropagation()
-                      onEventClick?.(firstEvent)
+                      onEventClick?.({
+                        ...firstEvent,
+                        extendedProps: {
+                          ...firstEvent.extendedProps,
+                          slotId: resolvedSlotId,
+                          isStaticSlot: true
+                        }
+                      })
                     }}
                     sx={{
                       position: 'absolute',
@@ -1334,8 +1437,15 @@ export default function UnifiedMultiResourceDayView({
                       }}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <i className='ri-building-line' style={{ fontSize: 16, color: isDark ? brandAccent : brandPrimary }} />
-                        <Typography variant='body2' fontWeight={700} sx={{ color: isDark ? brandAccent : brandPrimary }}>
+                        <i
+                          className='ri-building-line'
+                          style={{ fontSize: 16, color: isDark ? brandAccent : brandPrimary }}
+                        />
+                        <Typography
+                          variant='body2'
+                          fontWeight={700}
+                          sx={{ color: isDark ? brandAccent : brandPrimary }}
+                        >
                           {getPrimaryGroupLabel(primaryGroup)}
                         </Typography>
                         <Chip

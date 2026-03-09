@@ -9,6 +9,8 @@ import { useStaffManagementStore } from '../staff-management/staff-store'
 import { BookingService, StaffService } from '@/lib/api'
 import { AssetsService } from '@/lib/api/services/assets.service'
 import { SchedulingService } from '@/lib/api/services/scheduling.service'
+import { SessionsService } from '@/lib/api/services/sessions.service'
+import type { Session } from '@/lib/api/types'
 import type {
   CalendarState,
   CalendarView,
@@ -244,6 +246,8 @@ interface CalendarStore extends CalendarState {
   isSearchActive: boolean
 }
 
+let currentFetchId = 0
+
 export const useCalendarStore = create<CalendarStore>((set, get) => ({
   // Initial state
   view: loadPreference(STORAGE_KEYS.view, 'timeGridWeek' as CalendarView),
@@ -284,6 +288,9 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
   isLoading: false,
 
   fetchEvents: async (range: DateRange) => {
+    currentFetchId++
+    const myFetchId = currentFetchId
+
     set({ isLoading: true })
     try {
       const { starredIds, searchQuery, branchFilters, staffFilters } = get()
@@ -353,8 +360,91 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
 
       const backgroundEvents = generateBackgroundEvents()
 
+      // Fetch API sessions for static resources and create session slot events
+      let sessionEvents: CalendarEvent[] = []
+      try {
+        const sessionsRes = await SessionsService.getSessions()
+        const allSessions: Session[] = Array.isArray(sessionsRes?.data) ? sessionsRes.data : []
+
+        if (allSessions.length > 0) {
+          // Get staff and rooms to determine if a session's resourceId is staff or room
+          const { staff, rooms } = get()
+          const staffIds = new Set(staff.map((s: any) => s.id))
+          const roomIds = new Set(rooms.map(r => r.id))
+
+          // Iterate through each day in the visible range
+          const currentDate = new Date(range.start)
+          const rangeEnd = new Date(range.end)
+
+          while (currentDate <= rangeEnd) {
+            const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`
+            const dayOfWeek = currentDate.getDay()
+
+            // Find sessions applicable to this day
+            const daySessions = allSessions.filter(s => {
+              if (!s.isActive) return false
+              if (s.dayOfWeek != null) return s.dayOfWeek === dayOfWeek
+              if (s.date) return s.date.split('T')[0] === dateStr
+              return false
+            })
+
+            for (const session of daySessions) {
+              const [startH, startM] = session.startTime.split(':').map(Number)
+              const [endH, endM] = session.endTime.split(':').map(Number)
+              const sessionStart = new Date(currentDate)
+              sessionStart.setHours(startH, startM, 0, 0)
+              const sessionEnd = new Date(currentDate)
+              sessionEnd.setHours(endH, endM, 0, 0)
+
+              const isStaffResource = staffIds.has(session.resourceId)
+              const isRoomResource = roomIds.has(session.resourceId)
+              const staffMember = isStaffResource ? staff.find((s: any) => s.id === session.resourceId) : null
+              const room = isRoomResource ? rooms.find(r => r.id === session.resourceId) : null
+
+              sessionEvents.push({
+                id: `session-def-${session.id}-${dateStr}`,
+                title: session.name,
+                start: sessionStart,
+                end: sessionEnd,
+                extendedProps: {
+                  isSessionDefinition: true,
+                  sessionId: session.id,
+                  slotId: session.id,
+                  sessionName: session.name,
+                  maxParticipants: session.maxParticipants,
+                  status: 'confirmed' as const,
+                  paymentStatus: 'unpaid' as const,
+                  staffId: isStaffResource ? session.resourceId : '',
+                  staffName: (staffMember as any)?.name || session.name,
+                  roomId: isRoomResource ? session.resourceId : '',
+                  roomName: room?.name || '',
+                  serviceId: session.serviceId || '',
+                  serviceName: session.name,
+                  selectionMethod: 'by_client' as const,
+                  bookedBy: 'business' as const,
+                  starred: false,
+                  customerName: '',
+                  price: session.price ?? 0,
+                  bookingId: session.id,
+                  branchId: (staffMember as any)?.branchId || room?.branchId || ''
+                }
+              })
+            }
+
+            currentDate.setDate(currentDate.getDate() + 1)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch sessions for calendar:', error)
+        // Non-critical — calendar still shows bookings
+      }
+
+      if (myFetchId !== currentFetchId) {
+        return // Abort: A newer fetch has started, preventing old data from overwriting new data
+      }
+
       set({
-        events: [...apiEvents, ...backgroundEvents],
+        events: [...sessionEvents, ...apiEvents, ...backgroundEvents],
         searchMatchedEventIds: trimmedSearch ? matchedIds : new Set<string>(),
         searchMatchedFields: trimmedSearch ? matchedFields : new Map<string, string[]>(),
         isSearchActive: !!trimmedSearch,
@@ -552,8 +642,10 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
     BookingService.createAdminBooking({
       serviceId: props.serviceId || '',
       branchId: props.branchId || '1-1',
-      resourceId: props.staffId, // Map staffId to resourceId as per successful curl
+      resourceId: props.staffId || props.roomId, // Map to either staff or room
       staffId: props.staffId,
+      roomId: props.roomId,
+      sessionId: props.slotId || undefined, // Add sessionId for static slots
       startTime: new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000).toISOString(),
       customerName: props.customerName || '',
       customerEmail: extractedEmail,
@@ -695,9 +787,9 @@ export const useCalendarStore = create<CalendarStore>((set, get) => ({
         startTime: new Date(
           new Date(updatedEvent.start).getTime() - new Date(updatedEvent.start).getTimezoneOffset() * 60000
         ).toISOString(),
-        staffId: props.staffId,
-        roomId: props.roomId,
-        resourceId: props.staffId
+        staffId: props.staffId || undefined,
+        roomId: props.roomId || undefined,
+        resourceId: props.staffId || props.roomId || undefined
       }).catch(err => {
         console.warn('API adminRescheduleBooking failed:', err)
         if (!oldEvent) return
