@@ -39,97 +39,6 @@ interface ExtendedReview extends Review {
   service: Service
 }
 
-// Fallback mock data used when API is unavailable
-const fallbackMockReviews: ExtendedReview[] = [
-  {
-    id: '1',
-    rating: 5,
-    userId: 'user1',
-    serviceId: 'service1',
-    comment: 'Absolutely fantastic service! The haircut exceeded my expectations.',
-    user: {
-      id: 'user1',
-      firstName: 'Sarah',
-      lastName: 'Johnson',
-      email: 'sarah.johnson@email.com',
-      verified: true,
-      createdAt: '2024-01-10T00:00:00Z',
-      updatedAt: '2024-01-10T00:00:00Z'
-    },
-    service: {
-      id: 'service1',
-      name: 'Premium Hair Cut',
-      description: 'Professional haircut',
-      location: 'Downtown Branch',
-      price: 45,
-      duration: 60,
-      businessId: 'b1',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z'
-    },
-    createdAt: '2024-01-25T00:00:00Z',
-    updatedAt: '2024-01-25T00:00:00Z'
-  },
-  {
-    id: '2',
-    rating: 4,
-    userId: 'user2',
-    serviceId: 'service2',
-    comment: 'Great experience overall. The manicure was well done and the staff was friendly.',
-    user: {
-      id: 'user2',
-      firstName: 'Emily',
-      lastName: 'Chen',
-      email: 'emily.chen@email.com',
-      verified: true,
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: '2024-01-15T00:00:00Z'
-    },
-    service: {
-      id: 'service2',
-      name: 'Classic Manicure',
-      description: 'Nail care',
-      location: 'Westside Branch',
-      price: 25,
-      duration: 30,
-      businessId: 'b1',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z'
-    },
-    createdAt: '2024-01-24T00:00:00Z',
-    updatedAt: '2024-01-24T00:00:00Z'
-  },
-  {
-    id: '3',
-    rating: 3,
-    userId: 'user3',
-    serviceId: 'service3',
-    comment: 'Service was okay. Room for improvement.',
-    user: {
-      id: 'user3',
-      firstName: 'Michael',
-      lastName: 'Brown',
-      email: 'michael.brown@email.com',
-      verified: true,
-      createdAt: '2024-01-20T00:00:00Z',
-      updatedAt: '2024-01-20T00:00:00Z'
-    },
-    service: {
-      id: 'service3',
-      name: 'Facial Treatment',
-      description: 'Facial',
-      location: 'Downtown Branch',
-      price: 60,
-      duration: 75,
-      businessId: 'b1',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z'
-    },
-    createdAt: '2024-01-23T00:00:00Z',
-    updatedAt: '2024-01-23T00:00:00Z'
-  }
-]
-
 const ReviewsManagement = () => {
   const [reviews, setReviews] = useState<ExtendedReview[]>([])
   const [loading, setLoading] = useState(true)
@@ -147,53 +56,46 @@ const ReviewsManagement = () => {
   const fetchReviews = async () => {
     try {
       setLoading(true)
+      setError(null)
 
-      // Try real API first
       const result = await ReviewsService.getReviews()
+      const data = Array.isArray(result.data) ? result.data : (result.data as any)?.data || []
 
-      if (result.data && Array.isArray(result.data) && result.data.length > 0) {
-        // Map API response to ExtendedReview shape
-        const mapped: ExtendedReview[] = result.data.map((r: any) => ({
-          id: r.id,
-          rating: r.rating,
-          comment: r.comment || r.review || '',
-          userId: r.userId || r.user?.id || '',
-          serviceId: r.serviceId || r.service?.id || '',
-          user: r.user || {
-            id: r.userId || '',
-            firstName: 'Customer',
-            lastName: '',
-            email: '',
-            isVerified: false,
-            createdAt: r.createdAt,
-            updatedAt: r.updatedAt
-          },
-          service: r.service || {
-            id: r.serviceId || '',
-            name: 'Service',
-            description: '',
-            location: '',
-            price: 0,
-            duration: 0,
-            businessId: '',
-            createdAt: r.createdAt,
-            updatedAt: r.updatedAt
-          },
+      const mapped: ExtendedReview[] = data.map((r: any) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment || r.review || '',
+        userId: r.userId || r.user?.id || '',
+        serviceId: r.serviceId || r.service?.id || '',
+        user: r.user || {
+          id: r.userId || '',
+          firstName: 'Customer',
+          lastName: '',
+          email: '',
+          verified: false,
           createdAt: r.createdAt,
           updatedAt: r.updatedAt
-        }))
-        setReviews(mapped)
-      } else {
-        // API returned empty or error — use fallback mock data
-        console.warn('Reviews API returned no data, using fallback mock')
-        setReviews(fallbackMockReviews)
-      }
-      setError(null)
+        },
+        service: r.service || {
+          id: r.serviceId || '',
+          name: 'Service',
+          description: '',
+          location: '',
+          price: 0,
+          duration: 0,
+          businessId: '',
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt
+        },
+        createdAt: r.createdAt,
+        updatedAt: r.updatedAt
+      }))
+
+      setReviews(mapped)
     } catch (err) {
-      console.error('Failed to fetch reviews from API:', err)
-      // Fallback to mock data
-      setReviews(fallbackMockReviews)
-      setError(null) // Don't show error to user since we have fallback
+      console.error('Failed to fetch reviews:', err)
+      setReviews([])
+      setError('Failed to load reviews. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -223,7 +125,7 @@ const ReviewsManagement = () => {
     const positive = reviews.filter(r => r.rating >= 4).length
     const neutral = reviews.filter(r => r.rating === 3).length
     const negative = reviews.filter(r => r.rating <= 2).length
-    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / total
+    const avgRating = total > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / total : 0
 
     return { total, positive, neutral, negative, avgRating }
   }
@@ -396,14 +298,25 @@ const ReviewsManagement = () => {
             </Box>
 
             {filteredReviews.length === 0 ? (
-              <div className='text-center py-8'>
+              <Box sx={{ textAlign: 'center', py: 8 }}>
+                <i
+                  className='ri-chat-smile-3-line'
+                  style={{ fontSize: 48, opacity: 0.3, display: 'block', marginBottom: 16 }}
+                />
                 <Typography variant='h6' color='textSecondary'>
-                  No reviews found
+                  {reviews.length === 0 ? 'No reviews yet' : 'No reviews found'}
                 </Typography>
-                <Typography variant='body2' color='textSecondary'>
-                  No reviews match the current filter
+                <Typography variant='body2' color='textSecondary' sx={{ mt: 0.5 }}>
+                  {reviews.length === 0
+                    ? 'Reviews from your customers will appear here'
+                    : 'No reviews match the current filter'}
                 </Typography>
-              </div>
+                {reviews.length === 0 && error && (
+                  <Button variant='outlined' size='small' sx={{ mt: 2 }} onClick={fetchReviews}>
+                    Retry
+                  </Button>
+                )}
+              </Box>
             ) : (
               <div className='overflow-x-auto'>
                 <Table sx={{ minWidth: { xs: 800, md: 'auto' } }}>

@@ -980,8 +980,7 @@ export function ShiftsTab() {
       staffTypeForDate === 'static'
         ? sessions.filter(
             s =>
-              s.resourceId === staff.id &&
-              (s.date?.split('T')[0] === dateStr || s.dayOfWeek === selectedDate.getDay())
+              s.resourceId === staff.id && (s.date?.split('T')[0] === dateStr || s.dayOfWeek === selectedDate.getDay())
           )
         : []
 
