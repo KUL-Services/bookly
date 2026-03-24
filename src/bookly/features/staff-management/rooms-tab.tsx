@@ -51,6 +51,8 @@ export function RoomsTab() {
     initialShift?: { start: string; end: string; serviceIds: string[] } | null
     roomType?: 'dynamic' | 'static'
     defaultCapacity?: number
+    roomServiceIds?: string[]
+    roomBranchId?: string
   } | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [roomToDelete, setRoomToDelete] = useState<{ id: string; name: string } | null>(null)
@@ -274,7 +276,9 @@ export function RoomsTab() {
       dayOfWeek,
       initialShift: shift,
       roomType: room.roomType || 'dynamic',
-      defaultCapacity: room.capacity || 10
+      defaultCapacity: room.capacity || 10,
+      roomServiceIds: room.serviceIds || [],
+      roomBranchId: room.branchId
     })
     setIsScheduleEditorOpen(true)
   }
@@ -1701,6 +1705,8 @@ export function RoomsTab() {
         initialShift={scheduleEditorContext?.initialShift}
         roomType={scheduleEditorContext?.roomType}
         defaultCapacity={scheduleEditorContext?.defaultCapacity}
+        roomServiceIds={scheduleEditorContext?.roomServiceIds}
+        roomBranchId={scheduleEditorContext?.roomBranchId}
       />
 
       {/* Room Actions Menu */}

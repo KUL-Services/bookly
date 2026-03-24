@@ -162,7 +162,10 @@ export default function CalendarShell({ lang }: CalendarShellProps) {
 
   // Compute filtered events — depends on storeEvents so it recomputes when fetchEvents completes
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const events = useMemo(() => getFilteredEvents(), [storeEvents, visibleDateRange, branchFilters, staffFilters, roomFilters, highlights, schedulingMode])
+  const events = useMemo(
+    () => getFilteredEvents(),
+    [storeEvents, visibleDateRange, branchFilters, staffFilters, roomFilters, highlights, schedulingMode]
+  )
   const allStaff = useCalendarStore(state => state.staff)
 
   // Determine which staff are being shown (dynamic mode)

@@ -105,8 +105,8 @@ export function TimeReservationModal({
   const allRooms = calendarRooms
   const staffByBranch = hasKnownBranch ? staffMembers.filter(staff => staff.branchId === branchId) : staffMembers
   const roomsByBranch = hasKnownBranch ? allRooms.filter(room => room.branchId === branchId) : allRooms
-  const availableStaff = staffMembers // use all if no branch, handled by filtering below
-  const availableRooms = allRooms
+  const availableStaff = staffByBranch
+  const availableRooms = roomsByBranch
 
   const getSuggestedTimes = (targetStaffId: string, targetDate: Date) => {
     if (!targetStaffId) return null

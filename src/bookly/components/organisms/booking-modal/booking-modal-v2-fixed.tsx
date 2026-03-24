@@ -19,7 +19,7 @@ import {
   CheckCircle2
 } from 'lucide-react'
 import { format, addDays, startOfDay, isSameDay, isBefore } from 'date-fns'
-import type { Service as ApiService, Staff, AvailableSlotFlat } from '@/lib/api'
+import type { Service as ApiService, Staff, AvailabilitySlot, CreateBookingRequest } from '@/lib/api'
 import { BookingService } from '@/lib/api/services/booking.service'
 import { WaitlistService } from '@/lib/api/services/waitlist.service'
 import { useSettings } from '@/contexts/settings.context'
@@ -257,7 +257,14 @@ function SortableServiceItem({
                   </div>
                   <span className='text-sm font-medium dark:text-white'>No preference</span>
                 </button>
-                {availableStaff.map(staff => (
+                {availableStaff
+                  .filter(staff => {
+                    // Only show staff assigned to this service (if service has staffIds)
+                    const svc = item.service as any
+                    if (svc?.staffIds?.length > 0) return svc.staffIds.includes(staff.id)
+                    return true
+                  })
+                  .map(staff => (
                   <button
                     key={staff.id}
                     onClick={() => onChangeStaff(item.id, staff.id, staff.name)}
@@ -308,7 +315,7 @@ export function BookingModalV2Fixed({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // API availability state
-  const [apiSlots, setApiSlots] = useState<AvailableSlotFlat[]>([])
+  const [apiSlots, setApiSlots] = useState<AvailabilitySlot[]>([])
   const [isLoadingSlots, setIsLoadingSlots] = useState(false)
   const [hasFetchedAvailability, setHasFetchedAvailability] = useState(false)
   const [slotsError, setSlotsError] = useState<string | null>(null)
@@ -440,7 +447,7 @@ export function BookingModalV2Fixed({
     }
 
     fetchAvailability()
-  }, [isOpen, selectedDate, selectedServices.length > 0 ? selectedServices[0]?.service.id : null, branchId])
+  }, [isOpen, selectedDate, selectedServices.length > 0 ? selectedServices[0]?.service.id : null, selectedServices.length > 0 ? selectedServices[0]?.staffId : null, branchId])
 
   // --- Computed Values ---
 
@@ -459,21 +466,26 @@ export function BookingModalV2Fixed({
   // Use real API slots when available, fall back to generated mock slots
   const availableSlots = useMemo(() => {
     if (isLoadingSlots && !hasFetchedAvailability) {
-      return []
+      return [] as { time: string; sessionName?: string; availableSpots?: number }[]
     }
 
     if (hasFetchedAvailability && !slotsError) {
-      // Convert ISO timestamps to HH:MM strings and filter by time of day
-      const slotTimes = apiSlots.map(slot => {
+      // Convert API slots to enriched display slots
+      const enrichedSlots = apiSlots.map(slot => {
         const d = new Date(slot.startTime)
         const h = d.getHours()
         const m = d.getMinutes()
-        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+        const time = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+        return {
+          time,
+          sessionName: slot.sessionName,
+          availableSpots: slot.availableSpots
+        }
       })
 
       // Filter by selected time of day
-      const filtered = slotTimes.filter(time => {
-        const hour = parseInt(time.split(':')[0])
+      const filtered = enrichedSlots.filter(slot => {
+        const hour = parseInt(slot.time.split(':')[0])
         switch (selectedTimeOfDay) {
           case 'morning':
             return hour >= 9 && hour < 12
@@ -484,11 +496,18 @@ export function BookingModalV2Fixed({
         }
       })
 
-      // Deduplicate and sort
-      return [...new Set(filtered)].sort()
+      // Deduplicate by time and sort (keep the first occurrence which has session info)
+      const seen = new Set<string>()
+      return filtered
+        .filter(slot => {
+          if (seen.has(slot.time)) return false
+          seen.add(slot.time)
+          return true
+        })
+        .sort((a, b) => a.time.localeCompare(b.time))
     }
     // Fallback during loading/errors
-    return timeSlots
+    return timeSlots.map(time => ({ time, sessionName: undefined, availableSpots: undefined }))
   }, [apiSlots, timeSlots, selectedTimeOfDay, hasFetchedAvailability, slotsError, isLoadingSlots])
 
   const noAvailableSlots = hasFetchedAvailability && !slotsError && availableSlots.length === 0
@@ -656,7 +675,7 @@ export function BookingModalV2Fixed({
           slotStart: startDate.toISOString(),
           slotEnd: selectedSlot?.endTime || derivedEndDate.toISOString(),
           resourceId: selectedSlot?.resourceId || primaryService.staffId || undefined,
-          sessionId: undefined,
+          sessionId: selectedSlot?.sessionId || undefined,
           userId: isAuthed ? booklyUser?.id : undefined,
           partySize: 1,
           customerName: customerDetails.name || undefined,
@@ -676,21 +695,32 @@ export function BookingModalV2Fixed({
           setBookingError(result.error || 'Could not join waitlist. Please try again.')
         }
       } else {
+        // Use the exact API slot time (avoids timezone issues from manual date construction)
+        const bookingStartTime = selectedSlot?.startTime || startDate.toISOString()
+
+        // Determine resource/room IDs from matched slot
+        const isRoomSlot = selectedSlot?.resourceType === 'ASSET'
+        const bookingResourceId = isRoomSlot ? undefined : (selectedSlot?.resourceId || primaryService.staffId || undefined)
+        const bookingRoomId = isRoomSlot ? selectedSlot?.resourceId : undefined
+
+        // For STATIC mode, include sessionId from the matched slot
+        const bookingSessionId = selectedSlot?.sessionId || undefined
+
+        const bookingPayload: CreateBookingRequest = {
+          serviceId: primaryService.service.id,
+          branchId,
+          resourceId: bookingResourceId,
+          roomId: bookingRoomId,
+          sessionId: bookingSessionId,
+          startTime: bookingStartTime,
+          notes: customerDetails.notes || undefined
+        }
+
         if (isAuthenticated()) {
-          result = await BookingService.createBooking({
-            serviceId: primaryService.service.id,
-            branchId,
-            resourceId: primaryService.staffId || undefined,
-            startTime: startDate.toISOString(),
-            notes: customerDetails.notes || undefined
-          })
+          result = await BookingService.createBooking(bookingPayload)
         } else {
           result = await BookingService.createGuestBooking({
-            serviceId: primaryService.service.id,
-            branchId,
-            resourceId: primaryService.staffId || undefined,
-            startTime: startDate.toISOString(),
-            notes: customerDetails.notes || undefined,
+            ...bookingPayload,
             customerName: customerDetails.name,
             customerEmail: customerDetails.email,
             customerPhone: customerDetails.phone
@@ -998,19 +1028,24 @@ export function BookingModalV2Fixed({
               ) : null}
 
               <div className='grid grid-cols-4 gap-2'>
-                {availableSlots.map(time => {
-                  const isSelected = selectedTime === time
+                {availableSlots.map(slot => {
+                  const isSelected = selectedTime === slot.time
                   return (
                     <button
-                      key={time}
-                      onClick={() => setSelectedTime(time)}
+                      key={slot.time}
+                      onClick={() => setSelectedTime(slot.time)}
                       className={`py-3 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
                         isSelected
                           ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] shadow-md'
                           : 'bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-[#0a2c24] dark:hover:border-[#77b6a3]'
                       }`}
                     >
-                      {time}
+                      <span>{slot.time}</span>
+                      {slot.availableSpots != null && (
+                        <span className={`block text-[10px] font-normal mt-0.5 ${isSelected ? 'text-white/70' : 'text-gray-400'}`}>
+                          {slot.availableSpots} spot{slot.availableSpots !== 1 ? 's' : ''} left
+                        </span>
+                      )}
                     </button>
                   )
                 })}

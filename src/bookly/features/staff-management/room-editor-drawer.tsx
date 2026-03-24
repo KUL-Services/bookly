@@ -83,7 +83,6 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
 
   const [name, setName] = useState('')
   const [branchId, setBranchId] = useState('')
-  const [capacity, setCapacity] = useState(10)
   const [floor, setFloor] = useState('')
   const [amenities, setAmenities] = useState<string[]>([])
   const [color, setColor] = useState('#0a2c24') // Dark Green - brand primary
@@ -104,7 +103,6 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
     if (room) {
       setName(room.name)
       setBranchId(room.branchId)
-      setCapacity(room.capacity)
       setFloor(room.floor || '')
       setAmenities(room.amenities || [])
       setColor(room.color || '#0a2c24')
@@ -115,7 +113,6 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       // Reset for new room - use selectedBranchId if available
       setName('')
       setBranchId(selectedBranchId || apiBranches[0]?.id || '')
-      setCapacity(10)
       setFloor('')
       setAmenities([])
       setColor('#0a2c24')
@@ -131,15 +128,10 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
       return
     }
 
-    if (bookingMode === 'STATIC' && (!capacity || capacity < 1)) {
-      setSnackbar({ open: true, message: 'Default Capacity is required for Fixed rooms', severity: 'error' })
-      return
-    }
-
     const roomData = {
       name,
       branchId,
-      capacity,
+      capacity: 0,
       floor: floor || undefined,
       amenities,
       color,
@@ -379,35 +371,13 @@ export function RoomEditorDrawer({ open, onClose, room, selectedBranchId }: Room
             </Alert>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            {/* Capacity field only for static rooms */}
-            {bookingMode === 'STATIC' && (
-              <TextField
-                type='number'
-                label='Default Capacity'
-                value={capacity}
-                onChange={e => setCapacity(Number(e.target.value))}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <i className='ri-group-line' />
-                    </InputAdornment>
-                  )
-                }}
-                helperText='Default capacity for all sessions. Can be overridden per-session.'
-                required
-                fullWidth
-              />
-            )}
-
-            <TextField
-              label='Floor'
-              value={floor}
-              onChange={e => setFloor(e.target.value)}
-              placeholder='e.g., 1st Floor'
-              fullWidth
-            />
-          </Box>
+          <TextField
+            label='Floor'
+            value={floor}
+            onChange={e => setFloor(e.target.value)}
+            placeholder='e.g., 1st Floor'
+            fullWidth
+          />
 
           <TextField
             label='Description'

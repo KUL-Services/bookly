@@ -819,7 +819,7 @@ export default function CalendarSidebar({ currentDate, onDateChange, isMobile }:
             <FormGroup sx={{ mb: 2 }}>
               {[
                 { value: 'confirmed', label: 'Confirmed' },
-                { value: 'need_confirm', label: 'Need Confirm' },
+                { value: 'need_confirm', label: 'Needs Confirmation' },
                 { value: 'pending', label: 'Pending' },
                 { value: 'attended', label: 'Attended' },
                 { value: 'no_show', label: 'No Show' },

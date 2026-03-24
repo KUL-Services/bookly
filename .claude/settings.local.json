@@ -15,7 +15,10 @@
       "Bash(npm install:*)",
       "mcp__ide__getDiagnostics",
       "Bash(npm uninstall:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(find /Users/kareemgamal/Downloads/KUL/bookly/src/app -path \"*/\\\\[lang\\\\]/\\(dashboard\\)*\" -name \"*.tsx\" -o -path \"*/\\\\[lang\\\\]/\\(dashboard\\)*\" -name \"*.ts\")",
+      "Bash(grep -n \"FormControl\\\\|<Select\\\\|<MenuItem\\\\|allServices\\\\|staffMembers\\\\|branch\" /Users/kareemgamal/Downloads/KUL/bookly/src/app/[lang]/\\\\\\(dashboard\\\\\\)/\\\\\\(private\\\\\\)/apps/bookly/bookings/page.tsx)",
+      "Bash(grep -l \"select=\" /Users/kareemgamal/Downloads/KUL/bookly/src/bookly/features/**/*.tsx)"
     ],
     "deny": [],
     "ask": []

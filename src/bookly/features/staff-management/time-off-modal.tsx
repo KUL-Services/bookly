@@ -38,6 +38,7 @@ interface TimeOffModalProps {
   initialStaffId?: string
   initialStaffName?: string
   initialDate?: Date
+  branchId?: string
 }
 
 const TIME_OFF_REASONS: Record<TimeOffReasonGroup, string[]> = {
@@ -122,9 +123,13 @@ export function TimeOffModal({
   editTimeOffId,
   initialStaffId,
   initialStaffName,
-  initialDate
+  initialDate,
+  branchId
 }: TimeOffModalProps) {
   const { createTimeOff, timeOffRequests, updateTimeOff, deleteTimeOff, staffMembers } = useStaffManagementStore()
+
+  const hasKnownBranch = !!branchId && branchId !== 'all'
+  const availableStaff = hasKnownBranch ? staffMembers.filter(s => s.branchId === branchId) : staffMembers
 
   const {
     control,
@@ -288,7 +293,7 @@ export function TimeOffModal({
                       <MenuItem value=''>
                         <em>Select a staff member</em>
                       </MenuItem>
-                      {staffMembers.map(staff => (
+                      {availableStaff.map(staff => (
                         <MenuItem key={staff.id} value={staff.id}>
                           {staff.name}
                         </MenuItem>

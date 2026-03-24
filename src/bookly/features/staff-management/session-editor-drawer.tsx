@@ -321,7 +321,7 @@ export function SessionEditorDrawer({
                 })
                 .map(service => (
                   <MenuItem key={service.id} value={service.id}>
-                    {service.name} ({service.duration} min)
+                    {service.name}
                   </MenuItem>
                 ))}
             </Select>

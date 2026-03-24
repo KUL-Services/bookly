@@ -77,7 +77,27 @@ function BusinessDetailsPage() {
   }, [services])
 
   const branches = business?.branches || []
-  const staff = branches.flatMap(branch => branch.staff || [])
+  const [apiStaff, setApiStaff] = useState<Staff[]>([])
+
+  // Fetch staff via public endpoint when business is loaded
+  useEffect(() => {
+    if (!business?.id) return
+    const fetchStaff = async () => {
+      try {
+        const result = await StaffService.getBusinessStaff(business.id)
+        if (result.data && Array.isArray(result.data)) {
+          setApiStaff(result.data)
+        }
+      } catch {
+        // Fallback: try to extract staff from branch data
+        const branchStaff = branches.flatMap(branch => branch.staff || [])
+        if (branchStaff.length > 0) setApiStaff(branchStaff)
+      }
+    }
+    fetchStaff()
+  }, [business?.id])
+
+  const staff = apiStaff.length > 0 ? apiStaff : branches.flatMap(branch => branch.staff || [])
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',

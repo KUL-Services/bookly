@@ -2,6 +2,11 @@ import { apiClient } from '../api-client'
 import type { Staff, CreateStaffRequest, UpdateStaffRequest, BookingModeStatus } from '../types'
 
 export class StaffService {
+  // Public - Get staff for a specific business (for client booking pages)
+  static async getBusinessStaff(businessId: string) {
+    return apiClient.get<Staff[]>(`/business/${businessId}/staff`)
+  }
+
   // Admin only - Get staff members for admin's business
   static async getStaff() {
     return apiClient.get<Staff[]>('/admin/staff')

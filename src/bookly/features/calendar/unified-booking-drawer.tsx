@@ -24,6 +24,7 @@ import {
 } from '@mui/material'
 import type {
   AppointmentStatus,
+  PaymentStatus,
   DateRange,
   CalendarEvent,
   DayOfWeek,
@@ -38,7 +39,8 @@ import {
   hasConflict,
   getStaffAvailableCapacity,
   getStaffRoomAssignment,
-  formatDuration
+  formatDuration,
+  getRecommendedStatusFromPayment
 } from './utils'
 import { hasTimeOffConflict } from './staff-management-integration'
 import { useStaffManagementStore } from '../staff-management/staff-store'
@@ -244,9 +246,9 @@ interface SlotClient {
   email: string
   phone: string
   bookedAt: string
-  status: 'confirmed' | 'no_show' | 'attended' | 'pending'
+  status: AppointmentStatus
   arrivalTime?: string
-  paymentStatus: 'paid' | 'unpaid'
+  paymentStatus: PaymentStatus
   paymentMethod: PaymentMethod
   paymentReference?: string
   businessNotes?: string // Notes from business about this client/booking
@@ -331,7 +333,8 @@ export default function UnifiedBookingDrawer({
   const [status, setStatus] = useState<AppointmentStatus>('confirmed')
   const [starred, setStarred] = useState(false)
   const [instapayReference, setInstapayReference] = useState('')
-  const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid')
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('unpaid')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_on_arrival')
   const [businessNotes, setBusinessNotes] = useState('') // Business notes for dynamic mode
   const [staffError, setStaffError] = useState<string | null>(null)
 
@@ -365,18 +368,27 @@ export default function UnifiedBookingDrawer({
     severity: 'error'
   })
 
-  // Get only dynamic staff for selection, filtered by branch
-  const dynamicStaff = allStaff.filter((s: any) => s.staffType === 'dynamic' && (!branchId || s.branchId === branchId))
-  const availableRooms = allRooms.filter((room: any) => !branchId || room.branchId === branchId)
-  const isAutoStaffSelection = staffId === AUTO_STAFF_ID
-  const isAutoRoomSelection = roomId === AUTO_ROOM_ID
-
   // ── Booking Model Detection: STAFF vs ASSET_ONLY ──────────────────────────
-  // Backend contract: if service has no active staff resources but has active
-  // asset/room resources → ASSET_ONLY model (hide staff selector, don't send staffId)
   const selectedServiceData = serviceId ? allServices.find((s: any) => s.id === serviceId) : null
   const serviceStaffIds: string[] = selectedServiceData?.staffIds || []
   const serviceRoomIds: string[] = selectedServiceData?.roomIds || selectedServiceData?.assetIds || []
+
+  // Get staff filtered by branch, then further filtered by selected service
+  const branchDynamicStaff = allStaff.filter(
+    (s: any) => s.staffType === 'dynamic' && (!branchId || s.branchId === branchId)
+  )
+  const dynamicStaff = serviceId && serviceStaffIds.length > 0
+    ? branchDynamicStaff.filter((s: any) => serviceStaffIds.includes(s.id))
+    : branchDynamicStaff
+
+  // Get rooms filtered by branch, then further filtered by selected service
+  const branchRooms = allRooms.filter((room: any) => !branchId || room.branchId === branchId)
+  const availableRooms = serviceId && serviceRoomIds.length > 0
+    ? branchRooms.filter((r: any) => serviceRoomIds.includes(r.id))
+    : branchRooms
+
+  const isAutoStaffSelection = staffId === AUTO_STAFF_ID
+  const isAutoRoomSelection = roomId === AUTO_ROOM_ID
 
   // A service is ASSET_ONLY when it has room resources but zero staff resources
   // in the current branch context
@@ -525,7 +537,9 @@ export default function UnifiedBookingDrawer({
       setStarred(props.starred || false)
       setBookingReference(props.bookingId || existingEvent.id || '')
       setInstapayReference(props.instapayReference || '')
-      setPaymentStatus(props.paymentStatus === 'paid' ? 'paid' : 'unpaid')
+      const ps = props.paymentStatus
+      setPaymentStatus(ps === 'paid' ? 'paid' : ps === 'need_confirm' ? 'need_confirm' : 'unpaid')
+      setPaymentMethod(props.paymentMethod || 'cash_on_arrival')
       setBusinessNotes(props.businessNotes || '')
 
       // Load service details
@@ -602,13 +616,13 @@ export default function UnifiedBookingDrawer({
                 const statusStr = String(booking.status || booking.appointmentStatus || 'CONFIRMED')
                   .trim()
                   .toUpperCase()
-                const statusMap: Record<string, 'confirmed' | 'no_show' | 'attended' | 'pending'> = {
+                const statusMap: Record<string, AppointmentStatus> = {
                   CONFIRMED: 'confirmed',
                   PENDING: 'pending',
                   COMPLETED: 'attended',
                   ATTENDED: 'attended',
                   NO_SHOW: 'no_show',
-                  NEED_CONFIRM: 'pending'
+                  NEED_CONFIRM: 'need_confirm'
                 }
                 const paymentStr = String(booking.paymentStatus || 'UNPAID').trim().toUpperCase()
                 const paymentMethodStr = String(booking.paymentMethod || '').trim().toUpperCase()
@@ -634,7 +648,7 @@ export default function UnifiedBookingDrawer({
                   bookedAt: booking.createdAt || new Date(booking.startTime || start).toISOString(),
                   status: statusMap[statusStr] || 'confirmed',
                   arrivalTime: booking.arrivalTime || '',
-                  paymentStatus: paymentStr === 'PAID' ? 'paid' : 'unpaid',
+                  paymentStatus: paymentStr === 'PAID' ? 'paid' : paymentStr === 'NEED_CONFIRM' ? 'need_confirm' : 'unpaid',
                   paymentMethod: paymentMethodMap[paymentMethodStr] || 'cash_on_arrival',
                   paymentReference: booking.paymentReference || booking.instapayReference || '',
                   businessNotes: booking.businessNotes || ''
@@ -757,11 +771,11 @@ export default function UnifiedBookingDrawer({
         email: booking.extendedProps.customerEmail || (emailMatch ? emailMatch[1].trim() : ''),
         phone: booking.extendedProps.customerPhone || (phoneMatch ? phoneMatch[1].trim() : ''),
         bookedAt: new Date(booking.start).toISOString(),
-        status: ['confirmed', 'no_show', 'attended', 'pending'].includes(booking.extendedProps.status)
-          ? (booking.extendedProps.status as 'confirmed' | 'no_show' | 'attended' | 'pending')
+        status: ['confirmed', 'no_show', 'attended', 'pending', 'need_confirm'].includes(booking.extendedProps.status)
+          ? (booking.extendedProps.status as SlotClient['status'])
           : 'confirmed',
         arrivalTime: booking.extendedProps.arrivalTime || '',
-        paymentStatus: booking.extendedProps.paymentStatus === 'paid' ? 'paid' : 'unpaid',
+        paymentStatus: booking.extendedProps.paymentStatus === 'paid' ? 'paid' : booking.extendedProps.paymentStatus === 'need_confirm' ? 'need_confirm' : 'unpaid',
         paymentMethod: booking.extendedProps.paymentMethod || 'cash_on_arrival',
         paymentReference: booking.extendedProps.instapayReference || '',
         businessNotes: booking.extendedProps.businessNotes || ''
@@ -851,6 +865,16 @@ export default function UnifiedBookingDrawer({
       setServiceName(selectedService.name)
       setServicePrice(selectedService.price)
       setServiceDuration(selectedService.duration)
+
+      // Reset staff/room if they're not assigned to the new service
+      const newStaffIds: string[] = selectedService.staffIds || []
+      const newRoomIds: string[] = selectedService.roomIds || selectedService.assetIds || []
+      if (staffId && staffId !== AUTO_STAFF_ID && newStaffIds.length > 0 && !newStaffIds.includes(staffId)) {
+        setStaffId(AUTO_STAFF_ID)
+      }
+      if (roomId && roomId !== AUTO_ROOM_ID && newRoomIds.length > 0 && !newRoomIds.includes(roomId)) {
+        setRoomId(AUTO_ROOM_ID)
+      }
     }
   }
 
@@ -979,12 +1003,20 @@ export default function UnifiedBookingDrawer({
     )
   }
 
-  const handleClientPaymentStatusChange = (clientId: string, newStatus: 'paid' | 'unpaid') => {
-    setSlotClients(slotClients.map(c => (c.id === clientId ? { ...c, paymentStatus: newStatus } : c)))
+  const handleClientPaymentStatusChange = (clientId: string, newPaymentStatus: PaymentStatus) => {
+    setSlotClients(slotClients.map(c => {
+      if (c.id !== clientId) return c
+      const recommendedStatus = getRecommendedStatusFromPayment(newPaymentStatus, c.paymentMethod)
+      return { ...c, paymentStatus: newPaymentStatus, status: recommendedStatus }
+    }))
   }
 
   const handleClientPaymentMethodChange = (clientId: string, newMethod: PaymentMethod) => {
-    setSlotClients(slotClients.map(c => (c.id === clientId ? { ...c, paymentMethod: newMethod } : c)))
+    setSlotClients(slotClients.map(c => {
+      if (c.id !== clientId) return c
+      const recommendedStatus = getRecommendedStatusFromPayment(c.paymentStatus, newMethod)
+      return { ...c, paymentMethod: newMethod, status: recommendedStatus }
+    }))
   }
 
   const handleClientPaymentReferenceChange = (clientId: string, newReference: string) => {
@@ -1057,6 +1089,7 @@ export default function UnifiedBookingDrawer({
           extendedProps: {
             status,
             paymentStatus,
+            paymentMethod,
             // ASSET_ONLY: staffId must be null; backend returns null for room-only bookings
             staffId: isAssetOnlyModel ? null : staffId,
             staffName: isAssetOnlyModel
@@ -1101,6 +1134,7 @@ export default function UnifiedBookingDrawer({
               starred,
               instapayReference: instapayReference || undefined,
               paymentStatus,
+              paymentMethod,
               roomId: isAutoRoomSelection ? '' : roomId,
               roomName: isAutoRoomSelection
                 ? ''
@@ -1634,7 +1668,21 @@ export default function UnifiedBookingDrawer({
                         }}
                       >
                         <MenuItem value=''>Select service</MenuItem>
-                        {allServices.map((svc: any) => (
+                        {allServices
+                          .filter((svc: any) => {
+                            // Filter services by selected staff (if staff has serviceIds)
+                            if (staffId && staffId !== AUTO_STAFF_ID) {
+                              const staff = allStaff.find((s: any) => s.id === staffId)
+                              if (staff?.serviceIds?.length > 0 && !staff.serviceIds.includes(svc.id)) return false
+                            }
+                            // Filter services by selected room (if room has serviceIds)
+                            if (roomId && roomId !== AUTO_ROOM_ID) {
+                              const room = allRooms.find((r: any) => r.id === roomId)
+                              if (room?.serviceIds?.length > 0 && !room.serviceIds.includes(svc.id)) return false
+                            }
+                            return true
+                          })
+                          .map((svc: any) => (
                           <MenuItem key={svc.id} value={svc.id}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                               <span>{svc.name}</span>
@@ -1877,10 +1925,10 @@ export default function UnifiedBookingDrawer({
                       label='Booking Status'
                       onChange={e => setStatus(e.target.value as AppointmentStatus)}
                     >
-                      <MenuItem value='pending'>Pending / Unconfirmed</MenuItem>
-                      <MenuItem value='need_confirm'>Confirmation</MenuItem>
-                      <MenuItem value='attended'>Attended</MenuItem>
+                      <MenuItem value='pending'>Pending</MenuItem>
+                      <MenuItem value='need_confirm'>Needs Confirmation</MenuItem>
                       <MenuItem value='confirmed'>Confirmed</MenuItem>
+                      <MenuItem value='attended'>Attended</MenuItem>
                       <MenuItem value='no_show'>No Show</MenuItem>
                     </Select>
                   </FormControl>
@@ -1890,7 +1938,6 @@ export default function UnifiedBookingDrawer({
                       <Checkbox
                         checked={requestedByClient}
                         onChange={e => setRequestedByClient(e.target.checked)}
-                        // icon={<i className='ri-heart-line' />}
                         checkedIcon={
                           <i className='ri-heart-fill' style={{ color: 'var(--mui-palette-customColors-coral)' }} />
                         }
@@ -1902,15 +1949,40 @@ export default function UnifiedBookingDrawer({
                   <Divider />
 
                   {/* Payment Status */}
-                  <FormControl fullWidth size='small' sx={{ mb: 0.5 }}>
+                  <FormControl fullWidth size='small'>
                     <InputLabel>Payment Status</InputLabel>
                     <Select
                       value={paymentStatus}
                       label='Payment Status'
-                      onChange={e => setPaymentStatus(e.target.value as 'paid' | 'unpaid')}
+                      onChange={e => {
+                        const newPS = e.target.value as PaymentStatus
+                        setPaymentStatus(newPS)
+                        setStatus(getRecommendedStatusFromPayment(newPS, paymentMethod))
+                      }}
                     >
                       <MenuItem value='unpaid'>Unpaid</MenuItem>
+                      <MenuItem value='need_confirm'>Need Confirm</MenuItem>
                       <MenuItem value='paid'>Paid</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {/* Payment Method */}
+                  <FormControl fullWidth size='small'>
+                    <InputLabel>Payment Method</InputLabel>
+                    <Select
+                      value={paymentMethod}
+                      label='Payment Method'
+                      onChange={e => {
+                        const newPM = e.target.value as PaymentMethod
+                        setPaymentMethod(newPM)
+                        setStatus(getRecommendedStatusFromPayment(paymentStatus, newPM))
+                      }}
+                    >
+                      <MenuItem value='cash_on_arrival'>Cash on Arrival</MenuItem>
+                      <MenuItem value='card_on_arrival'>Card on Arrival</MenuItem>
+                      <MenuItem value='bank_transfer'>Bank Transfer</MenuItem>
+                      <MenuItem value='online_payment'>Online Payment</MenuItem>
+                      <MenuItem value='instapay'>Instapay</MenuItem>
                     </Select>
                   </FormControl>
 
@@ -1991,8 +2063,8 @@ export default function UnifiedBookingDrawer({
                     />
                     <Chip
                       size='small'
-                      label={paymentStatus}
-                      color={paymentStatus === 'paid' ? 'success' : 'warning'}
+                      label={paymentStatus === 'need_confirm' ? 'Need Confirm' : paymentStatus}
+                      color={paymentStatus === 'paid' ? 'success' : paymentStatus === 'need_confirm' ? 'info' : 'warning'}
                       variant='outlined'
                       sx={{ textTransform: 'capitalize' }}
                     />
@@ -2049,21 +2121,44 @@ export default function UnifiedBookingDrawer({
                           <Select
                             value={paymentStatus}
                             label='Payment'
-                            onChange={e => setPaymentStatus(e.target.value as 'paid' | 'unpaid')}
+                            onChange={e => {
+                              const newPS = e.target.value as PaymentStatus
+                              setPaymentStatus(newPS)
+                              setStatus(getRecommendedStatusFromPayment(newPS, paymentMethod))
+                            }}
                           >
                             <MenuItem value='unpaid'>Unpaid</MenuItem>
+                            <MenuItem value='need_confirm'>Need Confirm</MenuItem>
                             <MenuItem value='paid'>Paid</MenuItem>
                           </Select>
                         </FormControl>
-                        <TextField
-                          label='Reference'
-                          value={instapayReference}
-                          onChange={e => setInstapayReference(e.target.value)}
-                          size='small'
-                          placeholder='Payment ref'
-                          sx={{ flex: 1.5 }}
-                        />
+                        <FormControl size='small' sx={{ flex: 1 }}>
+                          <InputLabel>Method</InputLabel>
+                          <Select
+                            value={paymentMethod}
+                            label='Method'
+                            onChange={e => {
+                              const newPM = e.target.value as PaymentMethod
+                              setPaymentMethod(newPM)
+                              setStatus(getRecommendedStatusFromPayment(paymentStatus, newPM))
+                            }}
+                          >
+                            <MenuItem value='cash_on_arrival'>Cash</MenuItem>
+                            <MenuItem value='card_on_arrival'>Card</MenuItem>
+                            <MenuItem value='bank_transfer'>Bank Transfer</MenuItem>
+                            <MenuItem value='online_payment'>Online</MenuItem>
+                            <MenuItem value='instapay'>Instapay</MenuItem>
+                          </Select>
+                        </FormControl>
                       </Box>
+                      <TextField
+                        label='Payment Reference'
+                        value={instapayReference}
+                        onChange={e => setInstapayReference(e.target.value)}
+                        size='small'
+                        placeholder='Payment ref'
+                        fullWidth
+                      />
 
                       <FormControlLabel
                         control={
@@ -2341,40 +2436,34 @@ export default function UnifiedBookingDrawer({
                                       handleClientStatusChange(client.id, e.target.value as SlotClient['status'])
                                     }
                                   >
-                                    <MenuItem value='confirmed'>
-                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <i
-                                          className='ri-checkbox-circle-line'
-                                          style={{ color: 'var(--mui-palette-success-main)' }}
-                                        />
-                                        Confirmed
-                                      </Box>
-                                    </MenuItem>
                                     <MenuItem value='pending'>
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <i
-                                          className='ri-time-line'
-                                          style={{ color: 'var(--mui-palette-warning-main)' }}
-                                        />
-                                        Not Yet Confirmed / Pending Confirmation
+                                        <i className='ri-time-line' style={{ color: 'var(--mui-palette-warning-main)' }} />
+                                        Pending
                                       </Box>
                                     </MenuItem>
-                                    <MenuItem value='no_show'>
+                                    <MenuItem value='need_confirm'>
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <i
-                                          className='ri-close-circle-line'
-                                          style={{ color: 'var(--mui-palette-error-main)' }}
-                                        />
-                                        No Show
+                                        <i className='ri-question-line' style={{ color: 'var(--mui-palette-info-main)' }} />
+                                        Needs Confirmation
+                                      </Box>
+                                    </MenuItem>
+                                    <MenuItem value='confirmed'>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <i className='ri-checkbox-circle-line' style={{ color: 'var(--mui-palette-success-main)' }} />
+                                        Confirmed
                                       </Box>
                                     </MenuItem>
                                     <MenuItem value='attended'>
                                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <i
-                                          className='ri-check-double-line'
-                                          style={{ color: 'var(--mui-palette-info-main)' }}
-                                        />
+                                        <i className='ri-check-double-line' style={{ color: 'var(--mui-palette-success-dark)' }} />
                                         Attended
+                                      </Box>
+                                    </MenuItem>
+                                    <MenuItem value='no_show'>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <i className='ri-close-circle-line' style={{ color: 'var(--mui-palette-error-main)' }} />
+                                        No Show
                                       </Box>
                                     </MenuItem>
                                   </Select>
@@ -2397,10 +2486,11 @@ export default function UnifiedBookingDrawer({
                                     value={client.paymentStatus}
                                     label='Payment Status'
                                     onChange={e =>
-                                      handleClientPaymentStatusChange(client.id, e.target.value as 'paid' | 'unpaid')
+                                      handleClientPaymentStatusChange(client.id, e.target.value as PaymentStatus)
                                     }
                                   >
                                     <MenuItem value='unpaid'>Unpaid</MenuItem>
+                                    <MenuItem value='need_confirm'>Need Confirm</MenuItem>
                                     <MenuItem value='paid'>Paid</MenuItem>
                                   </Select>
                                 </FormControl>
@@ -2413,8 +2503,11 @@ export default function UnifiedBookingDrawer({
                                       handleClientPaymentMethodChange(client.id, e.target.value as PaymentMethod)
                                     }
                                   >
-                                    <MenuItem value='cash_on_arrival'>Pay on Arrival</MenuItem>
-                                    <MenuItem value='card_on_arrival'>Card (Mock)</MenuItem>
+                                    <MenuItem value='cash_on_arrival'>Cash on Arrival</MenuItem>
+                                    <MenuItem value='card_on_arrival'>Card on Arrival</MenuItem>
+                                    <MenuItem value='bank_transfer'>Bank Transfer</MenuItem>
+                                    <MenuItem value='online_payment'>Online Payment</MenuItem>
+                                    <MenuItem value='instapay'>Instapay</MenuItem>
                                   </Select>
                                 </FormControl>
                                 <TextField

@@ -41,6 +41,7 @@ interface RoomScheduleEditorProps {
   roomType?: 'dynamic' | 'static' // Flexible vs Fixed capacity
   defaultCapacity?: number // Room's default capacity
   roomServiceIds?: string[] // Services assigned to this room - only these can be selected per shift
+  roomBranchId?: string // Room's branch - filter staff to same branch
 }
 
 export function RoomScheduleEditor({
@@ -52,13 +53,23 @@ export function RoomScheduleEditor({
   initialShift,
   roomType = 'dynamic',
   defaultCapacity = 10,
-  roomServiceIds = []
+  roomServiceIds = [],
+  roomBranchId
 }: RoomScheduleEditorProps) {
   const { updateRoomSchedule, getRoomSchedule, apiServices, staffMembers } = useStaffManagementStore()
 
   // Filter available services to only those assigned to this room
   const availableServices =
     roomServiceIds.length > 0 ? apiServices.filter(s => roomServiceIds.includes(s.id)) : apiServices
+
+  // Filter staff to same branch as room, and optionally by room's assigned services
+  const availableStaff = staffMembers.filter((s: any) => {
+    if (roomBranchId && s.branchId && s.branchId !== roomBranchId) return false
+    if (roomServiceIds.length > 0 && s.serviceIds?.length > 0) {
+      return s.serviceIds.some((sid: string) => roomServiceIds.includes(sid))
+    }
+    return true
+  })
 
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'error' | 'success' }>({
     open: false,
@@ -535,7 +546,7 @@ export function RoomScheduleEditor({
                                   </Box>
                                 )}
                               >
-                                {staffMembers.map(staff => (
+                                {availableStaff.map(staff => (
                                   <MenuItem key={staff.id} value={staff.id}>
                                     <Checkbox checked={(shift.staffIds || []).includes(staff.id)} />
                                     <ListItemText primary={staff.name} secondary={staff.title} />

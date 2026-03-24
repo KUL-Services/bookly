@@ -758,8 +758,10 @@ export function ShiftsTab() {
 
       <FormControl size='small' sx={{ minWidth: 120 }}>
         <Select value={selectedStaff} onChange={e => setSelectedStaff(e.target.value)}>
-          <MenuItem value='Staff'>Staff</MenuItem>
-          {staffMembers.map(staff => (
+          <MenuItem value='Staff'>All Staff</MenuItem>
+          {staffMembers
+            .filter(s => selectedBranch === 'all' || s.branchId === selectedBranch)
+            .map(staff => (
             <MenuItem key={staff.id} value={staff.name}>
               {staff.name}
             </MenuItem>
@@ -768,7 +770,7 @@ export function ShiftsTab() {
       </FormControl>
 
       <FormControl size='small' sx={{ minWidth: 180 }}>
-        <Select value={selectedBranch} onChange={e => setSelectedBranch(e.target.value)}>
+        <Select value={selectedBranch} onChange={e => { setSelectedBranch(e.target.value); setSelectedStaff('Staff') }}>
           <MenuItem value='all'>All Branches</MenuItem>
           {apiBranches.map(branch => (
             <MenuItem key={branch.id} value={branch.id}>
@@ -1951,6 +1953,7 @@ export function ShiftsTab() {
             initialStaffId={timeOffModalContext?.staffId}
             initialStaffName={timeOffModalContext?.staffName}
             initialDate={timeOffModalContext?.date}
+            branchId={selectedBranch}
           />
 
           <ShiftEditorModal
@@ -3601,6 +3604,7 @@ export function ShiftsTab() {
         initialStaffId={timeOffModalContext?.staffId}
         initialStaffName={timeOffModalContext?.staffName}
         initialDate={timeOffModalContext?.date}
+        branchId={selectedBranch}
       />
 
       <ShiftEditorModal

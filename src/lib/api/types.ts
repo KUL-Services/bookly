@@ -81,6 +81,8 @@ export interface Service {
   variants?: ServiceVariant[]
   maxConcurrent?: number | null
   businessId: string
+  staffIds?: string[]
+  roomIds?: string[]
   gallery?: string[]
   galleryUrls?: string[]
   business?: Business

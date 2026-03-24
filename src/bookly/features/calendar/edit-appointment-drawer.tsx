@@ -204,6 +204,14 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
     setStatusMenuAnchor(null)
   }
 
+  // Filter staff by the event's branch (inferred from the original staff member)
+  const eventBranchId = event?.extendedProps?.staffId
+    ? allStaff.find((s: any) => s.id === event.extendedProps.staffId)?.branchId
+    : undefined
+  const filteredStaff = eventBranchId
+    ? allStaff.filter((s: any) => s.branchId === eventBranchId)
+    : allStaff
+
   const handleStaffChange = (newStaffId: string) => {
     setStaffId(newStaffId)
     const staff = allStaff.find((s: any) => s.id === newStaffId)
@@ -473,7 +481,7 @@ export default function EditAppointmentDrawer({ open, event, onClose }: EditAppo
                 }}
                 helperText={extendedProps.slotId ? 'Instructor is assigned to the slot' : undefined}
               >
-                {allStaff.map((staff: any) => (
+                {filteredStaff.map((staff: any) => (
                   <option key={staff.id} value={staff.id}>
                     {staff.name}
                   </option>
