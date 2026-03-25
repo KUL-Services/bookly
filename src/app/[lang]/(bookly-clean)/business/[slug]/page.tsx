@@ -226,6 +226,44 @@ function BusinessDetailsPage() {
   const { booklyUser } = useAuthStore()
   const router = useRouter()
   const [showLoginGuestModal, setShowLoginGuestModal] = useState(false)
+  const [loginModalMode, setLoginModalMode] = useState<'booking' | 'favourite'>('booking')
+
+  // Favourites state — persisted in localStorage
+  const [isFavourited, setIsFavourited] = useState(false)
+  useEffect(() => {
+    if (!business?.id) return
+    const favs: string[] = JSON.parse(localStorage.getItem('bookly_favourites') || '[]')
+    setIsFavourited(favs.includes(business.id))
+  }, [business?.id])
+
+  const handleToggleFavourite = () => {
+    if (!business?.id) return
+    if (!booklyUser) {
+      setLoginModalMode('favourite')
+      setShowLoginGuestModal(true)
+      return
+    }
+    const favs: string[] = JSON.parse(localStorage.getItem('bookly_favourites') || '[]')
+    const updated = isFavourited ? favs.filter(id => id !== business.id) : [...favs, business.id]
+    localStorage.setItem('bookly_favourites', JSON.stringify(updated))
+    setIsFavourited(!isFavourited)
+  }
+
+  const handleShare = async () => {
+    const url = window.location.href
+    const title = business?.name || 'Check out this business'
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url })
+      } catch {
+        // User cancelled or share failed — ignore
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+      setShareToast(true)
+    }
+  }
+  const [shareToast, setShareToast] = useState(false)
   const staffScrollRef = useRef<HTMLDivElement>(null) // Fix for Safari iOS touch issues - use standard click with touch-action CSS
   // The key fix is using touch-action: manipulation on interactive elements
   // and ensuring onClick works properly on iOS Safari
@@ -251,6 +289,7 @@ function BusinessDetailsPage() {
     if (booklyUser) {
       setIsBookingModalOpen(true)
     } else {
+      setLoginModalMode('booking')
       setShowLoginGuestModal(true)
     }
   }
@@ -264,7 +303,10 @@ function BusinessDetailsPage() {
 
   const handleContinueAsGuest = () => {
     setShowLoginGuestModal(false)
-    setIsBookingModalOpen(true)
+    if (loginModalMode === 'booking') {
+      setIsBookingModalOpen(true)
+    }
+    // For favourite mode, guest can't favourite — just close
   }
 
   const handleImageError = useCallback((event: SyntheticEvent<HTMLImageElement>, fallbackSrc: string) => {
@@ -340,12 +382,14 @@ function BusinessDetailsPage() {
         </button>
         <div className='pointer-events-auto flex gap-2'>
           <button
+            onClick={handleToggleFavourite}
             className='p-2.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] transition-all active:scale-95 shadow-lg'
             aria-label='Save'
           >
-            <Heart className='w-5 h-5' />
+            <Heart className='w-5 h-5' fill={isFavourited ? 'currentColor' : 'none'} />
           </button>
           <button
+            onClick={handleShare}
             className='p-2.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] transition-all active:scale-95 shadow-lg'
             aria-label='Share'
           >
@@ -405,12 +449,14 @@ function BusinessDetailsPage() {
             {/* Desktop Action Buttons - Hidden on mobile */}
             <div className='hidden lg:flex gap-3 mb-6'>
               <button
+                onClick={handleToggleFavourite}
                 className='p-3 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] hover:border-[#0a2c24] transition-all duration-300 hover:scale-110 active:scale-95 group'
                 aria-label='Save'
               >
-                <Heart className='w-6 h-6' />
+                <Heart className='w-6 h-6' fill={isFavourited ? 'currentColor' : 'none'} />
               </button>
               <button
+                onClick={handleShare}
                 className='p-3 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white hover:bg-[#0a2c24] hover:border-[#0a2c24] transition-all duration-300 hover:scale-110 active:scale-95'
                 aria-label='Share'
               >
@@ -922,6 +968,7 @@ function BusinessDetailsPage() {
         businessId={params.slug}
         availableServices={services}
         availableStaff={staff}
+        branches={branches}
       />
       {/* Login vs Guest Modal */}
       {showLoginGuestModal && (
@@ -934,9 +981,13 @@ function BusinessDetailsPage() {
               <div className='w-20 h-20 bg-gradient-to-br from-[#0a2c24] to-[#2a9d8f] rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg'>
                 <UserLockIcon className='w-10 h-10 text-white' />
               </div>
-              <h3 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-3'>Sign in to Book</h3>
+              <h3 className='text-2xl font-bold text-[#0a2c24] dark:text-white mb-3'>
+                {loginModalMode === 'favourite' ? 'Sign in to Save' : 'Sign in to Book'}
+              </h3>
               <p className='text-gray-500 dark:text-gray-400 text-sm leading-relaxed max-w-xs mx-auto'>
-                Sign in to save your details and manage bookings, or continue as guest.
+                {loginModalMode === 'favourite'
+                  ? 'Sign in to save this business to your favourites.'
+                  : 'Sign in to save your details and manage bookings, or continue as guest.'}
               </p>
             </div>
 
@@ -948,12 +999,14 @@ function BusinessDetailsPage() {
                 <UserLockIcon className='w-5 h-5' />
                 Sign In
               </button>
-              <button
-                onClick={handleContinueAsGuest}
-                className='w-full flex items-center justify-center gap-3 bg-gray-100 dark:bg-white/10 text-[#0a2c24] dark:text-white h-14 rounded-2xl font-bold text-base hover:bg-gray-200 dark:hover:bg-white/15 transition-all active:scale-[0.98] touch-manipulation'
-              >
-                Continue as Guest
-              </button>
+              {loginModalMode === 'booking' && (
+                <button
+                  onClick={handleContinueAsGuest}
+                  className='w-full flex items-center justify-center gap-3 bg-gray-100 dark:bg-white/10 text-[#0a2c24] dark:text-white h-14 rounded-2xl font-bold text-base hover:bg-gray-200 dark:hover:bg-white/15 transition-all active:scale-[0.98] touch-manipulation'
+                >
+                  Continue as Guest
+                </button>
+              )}
             </div>
 
             <button
@@ -981,6 +1034,7 @@ function BusinessDetailsPage() {
             <button
               onClick={() => {
                 if (!booklyUser) {
+                  setLoginModalMode('booking')
                   setShowLoginGuestModal(true)
                 } else {
                   setIsBookingModalOpen(true)
@@ -1017,6 +1071,15 @@ function BusinessDetailsPage() {
             setBranchModalOpen(false)
           }}
         />
+      )}
+      {/* Share copied toast */}
+      {shareToast && (
+        <div
+          className='fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] bg-[#0a2c24] text-white px-5 py-3 rounded-xl shadow-lg text-sm font-medium animate-in fade-in slide-in-from-bottom-2 duration-200'
+          onAnimationEnd={() => setTimeout(() => setShareToast(false), 2000)}
+        >
+          Link copied to clipboard
+        </div>
       )}
     </div>
   )

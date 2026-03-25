@@ -16,10 +16,12 @@ import {
   Phone,
   ArrowLeft,
   GripVertical,
-  CheckCircle2
+  CheckCircle2,
+  Building2,
+  MapPin
 } from 'lucide-react'
 import { format, addDays, startOfDay, isSameDay, isBefore } from 'date-fns'
-import type { Service as ApiService, Staff, AvailabilitySlot, CreateBookingRequest } from '@/lib/api'
+import type { Service as ApiService, Staff, AvailabilitySlot, CreateBookingRequest, Branch } from '@/lib/api'
 import { BookingService } from '@/lib/api/services/booking.service'
 import { WaitlistService } from '@/lib/api/services/waitlist.service'
 import { useSettings } from '@/contexts/settings.context'
@@ -66,6 +68,7 @@ interface BookingModalV2FixedProps {
   businessId: string
   availableServices?: ApiService[]
   availableStaff?: Staff[]
+  branches?: Branch[]
 }
 
 type TimeOfDay = 'morning' | 'afternoon' | 'evening'
@@ -145,6 +148,7 @@ interface SortableServiceItemProps {
   onChangeStaff: (serviceId: string, staffId: string, staffName: string) => void
   startTime?: string // e.g. "14:00"
   endTime?: string // e.g. "14:45"
+  isRoomBasedService?: boolean // Detected from availability slots or service data
 }
 
 function SortableServiceItem({
@@ -158,7 +162,8 @@ function SortableServiceItem({
   showStaffPicker,
   onChangeStaff,
   startTime,
-  endTime
+  endTime,
+  isRoomBasedService
 }: SortableServiceItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
@@ -231,58 +236,79 @@ function SortableServiceItem({
           </div>
 
           <div className='mt-3 pt-3 border-t border-gray-100 dark:border-white/10'>
-            <button
-              onClick={e => {
-                e.stopPropagation()
-                onStaffChangeClick(item.id)
-              }}
-              className='flex items-center justify-between w-full text-left'
-            >
-              <span className='text-sm text-gray-600 dark:text-gray-400'>
-                Staff: {item.staffName || 'No preference'}
-              </span>
-              <span className='text-xs font-bold px-2.5 py-1 border border-[#0a2c24] dark:border-[#77b6a3] text-[#0a2c24] dark:text-[#77b6a3] rounded-full hover:bg-[#0a2c24]/5 dark:hover:bg-[#77b6a3]/10 transition-colors'>
-                Change
-              </span>
-            </button>
+            {(() => {
+              const svc = item.service as any
+              const hasStaffIds = svc?.staffIds?.length > 0
+              const hasRoomIds = svc?.roomIds?.length > 0
+              // Room-only = has rooms but NO staff assigned. If it has both rooms + staff, show staff picker.
+              const isRoomOnly = (hasRoomIds && !hasStaffIds) || (isRoomBasedService && availableStaff.length === 0)
 
-            {showStaffPicker && !isOverlay && (
-              <div className='mt-3 p-2 bg-gray-50 dark:bg-white/5 rounded-xl space-y-1 max-h-48 overflow-y-auto border border-gray-100 dark:border-white/10 animate-in fade-in zoom-in-95 duration-200'>
-                <button
-                  onClick={() => onChangeStaff(item.id, '', 'No preference')}
-                  className='w-full flex items-center gap-3 p-2 hover:bg-white dark:hover:bg-white/10 rounded-lg transition-colors'
-                >
-                  <div className='w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center'>
-                    <User className='w-4 h-4 text-gray-500' />
+              if (isRoomOnly) {
+                return (
+                  <div className='flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400'>
+                    <Building2 className='w-4 h-4 text-[#0a2c24] dark:text-[#77b6a3]' />
+                    <span>Room-based service — room auto-assigned</span>
                   </div>
-                  <span className='text-sm font-medium dark:text-white'>No preference</span>
-                </button>
-                {availableStaff
-                  .filter(staff => {
-                    // Only show staff assigned to this service (if service has staffIds)
-                    const svc = item.service as any
-                    if (svc?.staffIds?.length > 0) return svc.staffIds.includes(staff.id)
-                    return true
-                  })
-                  .map(staff => (
+                )
+              }
+
+              return (
+                <>
                   <button
-                    key={staff.id}
-                    onClick={() => onChangeStaff(item.id, staff.id, staff.name)}
-                    className='w-full flex items-center gap-3 p-2 hover:bg-white dark:hover:bg-white/10 rounded-lg transition-colors'
+                    onClick={e => {
+                      e.stopPropagation()
+                      onStaffChangeClick(item.id)
+                    }}
+                    className='flex items-center justify-between w-full text-left'
                   >
-                    <img
-                      src={
-                        (staff as any).profilePhotoUrl ||
-                        `https://api.dicebear.com/7.x/avataaars/svg?seed=${staff.name}`
-                      }
-                      alt={staff.name}
-                      className='w-8 h-8 rounded-full object-cover bg-gray-200'
-                    />
-                    <span className='text-sm font-medium dark:text-white'>{staff.name}</span>
+                    <span className='text-sm text-gray-600 dark:text-gray-400'>
+                      Staff: {item.staffName || 'No preference'}
+                    </span>
+                    <span className='text-xs font-bold px-2.5 py-1 border border-[#0a2c24] dark:border-[#77b6a3] text-[#0a2c24] dark:text-[#77b6a3] rounded-full hover:bg-[#0a2c24]/5 dark:hover:bg-[#77b6a3]/10 transition-colors'>
+                      Change
+                    </span>
                   </button>
-                ))}
-              </div>
-            )}
+
+                  {showStaffPicker && !isOverlay && (
+                    <div className='mt-3 p-2 bg-gray-50 dark:bg-white/5 rounded-xl space-y-1 max-h-48 overflow-y-auto border border-gray-100 dark:border-white/10 animate-in fade-in zoom-in-95 duration-200'>
+                      <button
+                        onClick={() => onChangeStaff(item.id, '', 'No preference')}
+                        className='w-full flex items-center gap-3 p-2 hover:bg-white dark:hover:bg-white/10 rounded-lg transition-colors'
+                      >
+                        <div className='w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center'>
+                          <User className='w-4 h-4 text-gray-500' />
+                        </div>
+                        <span className='text-sm font-medium dark:text-white'>No preference</span>
+                      </button>
+                      {availableStaff
+                        .filter(staff => {
+                          // Only show staff assigned to this service (if service has staffIds)
+                          const svc = item.service as any
+                          if (svc?.staffIds?.length > 0) return svc.staffIds.includes(staff.id)
+                          return true
+                        })
+                        .map(staff => (
+                        <button
+                          key={staff.id}
+                          onClick={() => onChangeStaff(item.id, staff.id, staff.name)}
+                          className='w-full flex items-center gap-3 p-2 hover:bg-white dark:hover:bg-white/10 rounded-lg transition-colors'
+                        >
+                          <img
+                            src={
+                              (staff as any).profilePhotoUrl ||
+                              `https://api.dicebear.com/7.x/avataaars/svg?seed=${staff.name}`
+                            }
+                            alt={staff.name}
+                            className='w-8 h-8 rounded-full object-cover bg-gray-200'
+                          />
+                          <span className='text-sm font-medium dark:text-white'>{staff.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
           </div>
         </div>
       </div>
@@ -299,7 +325,8 @@ export function BookingModalV2Fixed({
   branchId,
   businessId,
   availableServices = [],
-  availableStaff = []
+  availableStaff = [],
+  branches = []
 }: BookingModalV2FixedProps) {
   const { currency } = useSettings()
   const isMobile = useMediaQuery('(max-width: 1023px)')
@@ -323,6 +350,29 @@ export function BookingModalV2Fixed({
   const [waitlistEntryId, setWaitlistEntryId] = useState<string | null>(null)
   const [isLeavingWaitlist, setIsLeavingWaitlist] = useState(false)
   const [submissionType, setSubmissionType] = useState<SubmissionType | null>(null)
+
+  // Branch selection
+  const [activeBranchId, setActiveBranchId] = useState<string | undefined>(branchId)
+  const hasMultipleBranches = branches.length > 1
+
+  // Filtered services/staff by active branch
+  const branchFilteredServices = useMemo(() => {
+    if (!activeBranchId || branches.length <= 1) return availableServices
+    // Filter services that belong to the active branch
+    return availableServices.filter(svc => {
+      // If service has branches array, check if active branch is included
+      if ((svc as any).branches?.length > 0) {
+        return (svc as any).branches.some((b: any) => b.id === activeBranchId)
+      }
+      // If service has no branch association, show it everywhere
+      return true
+    })
+  }, [availableServices, activeBranchId, branches.length])
+
+  const branchFilteredStaff = useMemo(() => {
+    if (!activeBranchId || branches.length <= 1) return availableStaff
+    return availableStaff.filter(s => (s as any).branchId === activeBranchId)
+  }, [availableStaff, activeBranchId, branches.length])
 
   // Modals & Pickers
   const [showServicePicker, setShowServicePicker] = useState(false)
@@ -374,6 +424,7 @@ export function BookingModalV2Fixed({
       setBookingError(null)
       setSelectedDate(new Date())
       setSelectedTime(null)
+      setActiveBranchId(branchId || branches[0]?.id)
 
       // Pre-fill customer details if logged in
       if (isAuthenticated() && booklyUser) {
@@ -406,13 +457,24 @@ export function BookingModalV2Fixed({
   }, [isOpen, initialService])
   // Updated dependency array to include initialService so it catches updates even if isOpen is already true
 
+  // Effective branch ID: use internal selection (activeBranchId) over prop
+  const effectiveBranchId = activeBranchId || branchId
+
+  // Track the primary service ID and staffId as stable values to prevent stale closure issues
+  const primaryServiceId = selectedServices.length > 0 ? selectedServices[0].service.id : null
+  const primaryStaffId = selectedServices.length > 0 ? (selectedServices[0].staffId || null) : null
+
   // Fetch real availability from API when date, services, or branch change
+  const fetchIdRef = useRef(0)
   useEffect(() => {
-    if (!isOpen || selectedServices.length === 0 || !branchId) {
+    if (!isOpen || !primaryServiceId || !effectiveBranchId) {
       setApiSlots([])
       setHasFetchedAvailability(false)
       return
     }
+
+    // Increment fetch ID to cancel stale responses (race condition guard)
+    const currentFetchId = ++fetchIdRef.current
 
     const fetchAvailability = async () => {
       setIsLoadingSlots(true)
@@ -420,34 +482,58 @@ export function BookingModalV2Fixed({
       setSlotsError(null)
       try {
         const dateStr = format(selectedDate, 'yyyy-MM-dd')
-        // Fetch availability for the first selected service (primary)
-        const primaryService = selectedServices[0]
         const result = await BookingService.getAvailability({
-          serviceId: primaryService.service.id,
-          branchId,
+          serviceId: primaryServiceId,
+          branchId: effectiveBranchId,
           date: dateStr,
-          resourceId: primaryService.staffId || undefined
+          resourceId: primaryStaffId || undefined
         })
+
+        // Discard stale response if a newer fetch has started
+        if (currentFetchId !== fetchIdRef.current) return
 
         if (result.data && Array.isArray(result.data)) {
           setApiSlots(result.data)
+
+          // Auto-detect best time period based on returned slots
+          if (result.data.length > 0) {
+            const slotHours = result.data.map(slot => new Date(slot.startTime).getHours())
+            const hasMorning = slotHours.some(h => h >= 9 && h < 12)
+            const hasAfternoon = slotHours.some(h => h >= 12 && h < 17)
+            const hasEvening = slotHours.some(h => h >= 17 && h < 21)
+
+            // Switch to the period that has slots (if current period is empty)
+            setSelectedTimeOfDay(prev => {
+              const currentHasSlots =
+                (prev === 'morning' && hasMorning) ||
+                (prev === 'afternoon' && hasAfternoon) ||
+                (prev === 'evening' && hasEvening)
+              if (currentHasSlots) return prev
+              if (hasMorning) return 'morning'
+              if (hasAfternoon) return 'afternoon'
+              if (hasEvening) return 'evening'
+              return prev
+            })
+          }
         } else {
-          // API returned no data or error — keep empty, fallback in availableSlots memo
           setApiSlots([])
           if (result.error) setSlotsError(result.error)
         }
       } catch (err) {
+        if (currentFetchId !== fetchIdRef.current) return
         console.error('Failed to fetch availability:', err)
         setSlotsError('Could not load availability')
         setApiSlots([])
       } finally {
-        setIsLoadingSlots(false)
-        setHasFetchedAvailability(true)
+        if (currentFetchId === fetchIdRef.current) {
+          setIsLoadingSlots(false)
+          setHasFetchedAvailability(true)
+        }
       }
     }
 
     fetchAvailability()
-  }, [isOpen, selectedDate, selectedServices.length > 0 ? selectedServices[0]?.service.id : null, selectedServices.length > 0 ? selectedServices[0]?.staffId : null, branchId])
+  }, [isOpen, selectedDate, primaryServiceId, primaryStaffId, effectiveBranchId])
 
   // --- Computed Values ---
 
@@ -466,7 +552,7 @@ export function BookingModalV2Fixed({
   // Use real API slots when available, fall back to generated mock slots
   const availableSlots = useMemo(() => {
     if (isLoadingSlots && !hasFetchedAvailability) {
-      return [] as { time: string; sessionName?: string; availableSpots?: number }[]
+      return [] as { time: string; sessionName?: string; availableSpots?: number; resourceName?: string; resourceType?: string }[]
     }
 
     if (hasFetchedAvailability && !slotsError) {
@@ -479,7 +565,9 @@ export function BookingModalV2Fixed({
         return {
           time,
           sessionName: slot.sessionName,
-          availableSpots: slot.availableSpots
+          availableSpots: slot.availableSpots,
+          resourceName: slot.resourceName,
+          resourceType: slot.resourceType
         }
       })
 
@@ -507,10 +595,17 @@ export function BookingModalV2Fixed({
         .sort((a, b) => a.time.localeCompare(b.time))
     }
     // Fallback during loading/errors
-    return timeSlots.map(time => ({ time, sessionName: undefined, availableSpots: undefined }))
+    return timeSlots.map(time => ({ time, sessionName: undefined, availableSpots: undefined, resourceName: undefined, resourceType: undefined }))
   }, [apiSlots, timeSlots, selectedTimeOfDay, hasFetchedAvailability, slotsError, isLoadingSlots])
 
   const noAvailableSlots = hasFetchedAvailability && !slotsError && availableSlots.length === 0
+
+  // Detect if the primary service is room-based from availability slots
+  // (fallback when public API doesn't return roomIds/staffIds on service objects)
+  const isDetectedRoomService = useMemo(() => {
+    if (apiSlots.length === 0) return false
+    return apiSlots.every(slot => slot.resourceType === 'ASSET')
+  }, [apiSlots])
 
   const totals = useMemo(() => {
     const price = selectedServices.reduce((sum, s) => sum + (s.service.price || 0), 0)
@@ -519,12 +614,9 @@ export function BookingModalV2Fixed({
   }, [selectedServices])
 
   const unselectedServices = useMemo(() => {
-    // We allow adding the same service multiple times if needed,
-    // but typically user might want to see what's NOT selected.
-    // For now, let's just show all available services in picker regardless of selection
-    // to allow adding multiple treatments.
-    return availableServices
-  }, [availableServices])
+    // Show branch-filtered services in picker
+    return branchFilteredServices
+  }, [branchFilteredServices])
 
   const canProceed = selectedServices.length > 0 && selectedTime !== null
 
@@ -651,7 +743,7 @@ export function BookingModalV2Fixed({
       startDate.setHours(hours, mins, 0, 0)
 
       const primaryService = selectedServices[0]
-      if (!primaryService || !branchId) {
+      if (!primaryService || !effectiveBranchId) {
         throw new Error('Missing service or branch')
       }
 
@@ -671,7 +763,7 @@ export function BookingModalV2Fixed({
 
         result = await WaitlistService.join({
           serviceId: primaryService.service.id,
-          branchId,
+          branchId: effectiveBranchId,
           slotStart: startDate.toISOString(),
           slotEnd: selectedSlot?.endTime || derivedEndDate.toISOString(),
           resourceId: selectedSlot?.resourceId || primaryService.staffId || undefined,
@@ -708,7 +800,7 @@ export function BookingModalV2Fixed({
 
         const bookingPayload: CreateBookingRequest = {
           serviceId: primaryService.service.id,
-          branchId,
+          branchId: effectiveBranchId,
           resourceId: bookingResourceId,
           roomId: bookingRoomId,
           sessionId: bookingSessionId,
@@ -749,7 +841,7 @@ export function BookingModalV2Fixed({
     selectedServices,
     apiSlots,
     noAvailableSlots,
-    branchId,
+    effectiveBranchId,
     customerDetails,
     isAuthenticated,
     booklyUser
@@ -873,6 +965,42 @@ export function BookingModalV2Fixed({
           <div className='p-5 space-y-6 pb-24'>
             {' '}
             {/* pb-24 for sticky footer */}
+            {/* Branch Selector — only shown for multi-branch businesses */}
+            {hasMultipleBranches && (
+              <div className='space-y-2'>
+                <h3 className='text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2'>
+                  <MapPin className='w-4 h-4 text-[#0a2c24] dark:text-[#77b6a3]' />
+                  Select Location
+                </h3>
+                <div className='-mx-5 px-5 overflow-x-auto no-scrollbar py-1'>
+                  <div className='flex gap-2'>
+                    {branches.filter(b => b.isActive !== false).map(branch => {
+                      const isSelected = activeBranchId === branch.id
+                      return (
+                        <button
+                          key={branch.id}
+                          onClick={() => {
+                            setActiveBranchId(branch.id)
+                            // Clear selected services when branch changes (they may not be available at new branch)
+                            setSelectedServices([])
+                            setSelectedTime(null)
+                            setApiSlots([])
+                            setHasFetchedAvailability(false)
+                          }}
+                          className={`flex-shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                            isSelected
+                              ? 'bg-[#0a2c24] dark:bg-[#77b6a3] text-white dark:text-[#0a2c24] shadow-md'
+                              : 'bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:border-[#0a2c24] dark:hover:border-[#77b6a3]'
+                          }`}
+                        >
+                          {branch.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
             {/* Services Section */}
             <div className='space-y-3'>
               <div className='flex items-center justify-between'>
@@ -903,13 +1031,14 @@ export function BookingModalV2Fixed({
                         index={index}
                         isMultiple={selectedServices.length > 1}
                         currencySymbol={currencySymbol}
-                        availableStaff={availableStaff}
+                        availableStaff={branchFilteredStaff}
                         onRemove={handleRemoveService}
                         onStaffChangeClick={id => setActiveStaffPickerId(activeStaffPickerId === id ? null : id)}
                         showStaffPicker={activeStaffPickerId === item.id}
                         onChangeStaff={handleChangeStaff}
                         startTime={serviceTimeRanges[item.id]?.startTime}
                         endTime={serviceTimeRanges[item.id]?.endTime}
+                        isRoomBasedService={index === 0 ? isDetectedRoomService : undefined}
                       />
                     ))}
                   </div>
@@ -934,13 +1063,14 @@ export function BookingModalV2Fixed({
                             isMultiple={true}
                             isOverlay={true}
                             currencySymbol={currencySymbol}
-                            availableStaff={availableStaff}
+                            availableStaff={branchFilteredStaff}
                             onRemove={() => {}}
                             onStaffChangeClick={() => {}}
                             showStaffPicker={false}
                             onChangeStaff={() => {}}
                             startTime={serviceTimeRanges[activeDragId]?.startTime}
                             endTime={serviceTimeRanges[activeDragId]?.endTime}
+                            isRoomBasedService={isDetectedRoomService}
                           />
                         </div>
                       ) : null}
@@ -1041,6 +1171,11 @@ export function BookingModalV2Fixed({
                       }`}
                     >
                       <span>{slot.time}</span>
+                      {slot.resourceType === 'ASSET' && slot.resourceName && (
+                        <span className={`block text-[10px] font-normal mt-0.5 ${isSelected ? 'text-white/70' : 'text-[#0a2c24]/60 dark:text-[#77b6a3]/60'}`}>
+                          {slot.resourceName}
+                        </span>
+                      )}
                       {slot.availableSpots != null && (
                         <span className={`block text-[10px] font-normal mt-0.5 ${isSelected ? 'text-white/70' : 'text-gray-400'}`}>
                           {slot.availableSpots} spot{slot.availableSpots !== 1 ? 's' : ''} left
@@ -1258,7 +1393,7 @@ export function BookingModalV2Fixed({
             </button>
           </div>
           <div className='flex-1 overflow-y-auto p-5 space-y-3'>
-            {availableServices.map(service => (
+            {branchFilteredServices.map(service => (
               <button
                 key={service.id}
                 onClick={() => handleAddService(service)}
