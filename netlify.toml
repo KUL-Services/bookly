@@ -1,0 +1,10 @@
+[build]
+  command = "npm install --ignore-scripts && NODE_OPTIONS=--max_old_space_size=4096 npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
